@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "pack": "wordpress-probes",
+  "enabled": false,
+  "rules": [
+    {"id": "WP-001", "description": "Sonde wp-login/wp-admin", "scope": ["path"], "pattern": "/wp-(login|admin)(\\.php)?", "weight": 3},
+    {"id": "WP-002", "description": "Sonde xmlrpc.php (cible frequente de brute-force/amplification)", "scope": ["path"], "pattern": "/xmlrpc\\.php$", "weight": 4},
+    {"id": "WP-003", "description": "Fichiers de configuration WordPress", "scope": ["path"], "pattern": "/wp-config\\.php(\\.bak)?$", "weight": 6},
+    {"id": "WP-004", "description": "Sonde plugin/theme WordPress generique", "scope": ["path"], "pattern": "/wp-content/(plugins|themes)/", "weight": 2}
+  ]
+}

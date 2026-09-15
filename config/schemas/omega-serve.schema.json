@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://omega-serv.local/schemas/omega-serve.schema.json",
+  "title": "Configuration OMEGA-SERV",
+  "$comment": "Reference/documentation du format (spec OMEGA-SERV_SPECIFICATION.md §5.2). La validation reelle au chargement est faite en Python pur (domain/config/validation.py), sans dependance a une bibliotheque jsonschema externe - ce fichier sert de reference lisible et d'autocompletion editeur, pas (encore) de validateur execute.",
+  "type": "object",
+  "required": ["version", "profile"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "profile": { "type": "string" },
+    "paths": {
+      "type": "object",
+      "properties": {
+        "webroot": { "type": "string" },
+        "logs": { "type": "string" },
+        "uploads": { "type": "string" },
+        "secure": { "type": "string" },
+        "auth_file": { "type": "string" },
+        "auth_zones": { "type": "string" },
+        "waf_script": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "server": {
+      "type": "object",
+      "properties": {
+        "bind": { "type": "string" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "server_name": { "type": "string" },
+        "index_files": { "type": "array", "items": { "type": "string" } },
+        "max_connections": { "type": "integer", "exclusiveMinimum": 0 },
+        "max_request_size": { "type": "integer", "exclusiveMinimum": 0 },
+        "max_header_size": { "type": "integer", "exclusiveMinimum": 0 },
+        "max_request_line_size": { "type": "integer", "exclusiveMinimum": 0 },
+        "read_timeout_seconds": { "type": "integer", "exclusiveMinimum": 0 },
+        "write_timeout_seconds": { "type": "integer", "exclusiveMinimum": 0 },
+        "keepalive_timeout_seconds": { "type": "integer", "exclusiveMinimum": 0 },
+        "max_keepalive_requests": { "type": "integer", "exclusiveMinimum": 0 },
+        "listen_backlog": { "type": "integer", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "logs": {
+      "type": "object",
+      "properties": {
+        "access": { "type": "string" },
+        "error": { "type": "string" },
+        "waf_alerts": { "type": "string" },
+        "breakage": { "type": "string" },
+        "access_format": { "type": "string" },
+        "rotation": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "max_bytes": { "type": "integer", "exclusiveMinimum": 0 },
+            "keep": { "type": "integer", "exclusiveMinimum": 0 },
+            "compress": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "allowed_methods": { "type": "array", "items": { "type": "string" } },
+        "deny_hidden_files": { "type": "boolean" },
+        "deny_sensitive_extensions": { "type": "array", "items": { "type": "string" } },
+        "deny_patterns": { "type": "array", "items": { "type": "string" } },
+        "reject_path_traversal": { "type": "boolean" },
+        "normalize_url": { "type": "boolean" },
+        "require_valid_host": { "type": "boolean" },
+        "security_headers_enabled": { "type": "boolean" },
+        "csp_mode": { "type": "string", "enum": ["enforce", "report-only"] }
+      },
+      "additionalProperties": false
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" }
+        },
+        "required": ["enabled"]
+      }
+    }
+  },
+  "additionalProperties": false
+}

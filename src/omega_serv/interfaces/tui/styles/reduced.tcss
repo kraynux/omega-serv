@@ -1,0 +1,9 @@
+/* Profil REDUCED : bordures simplifiees, terminal contraint. */
+
+.omega-home-menu {
+    border: solid $primary;
+}
+
+.omega-splash-hero {
+    display: none;
+}

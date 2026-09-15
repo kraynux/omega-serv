@@ -1,0 +1,296 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omega-serv"
+version = "0.1.0"
+description = "Serveur web HTTP Python autonome, portable et durci par defaut"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "kraynux", email = "kraynux@proton.me" }]
+dependencies = [
+    # Interface interactive (plan interface §3.2, Phase I, 2026-09-08) -
+    # premiere dependance externe reelle du projet (jusqu'ici
+    # `dependencies = []` delibere). omega-lib n'est pas publiee sur PyPI :
+    # l'archive distribuable la vendore dans vendor/omega-lib/ (meme
+    # convention que CHECK/DEEP/FOLD/FUZZ/TRACK/SCAN), voir install.sh.
+    "omega-lib>=0.1.0",
+    "textual>=0.60",
+    # Emulation de terminal pour l'ecran lnav (plan interface §3.4/§8,
+    # Phase V) - aucun stub de types publie, voir [[tool.mypy.overrides]].
+    "pyte>=0.8",
+    # Export HTML des ecrans capacites/archives de logs (retour
+    # utilisateur, 2026-09-09) - meme mecanisme que le reste de la suite
+    # (jinja2 + catalogue de themes omega_lib.theme.policies.
+    # EXPORT_PALETTES), confine a infrastructure/exporters/html_exporter.py
+    # (voir le contrat import-linter dedie plus bas).
+    "jinja2>=3.1",
+    # Ecran Etat & Ressources (retour utilisateur 2026-09-09) - sondes
+    # CPU/RAM/disque/reseau, transposees depuis omega-fire (interfaces/
+    # cli/renderers/dashboard.py::collect_os_stats(), integralement
+    # generique - aucune partie n'est specifique au pare-feu), confine a
+    # infrastructure/probe/system_stats.py.
+    "psutil>=5.9",
+]
+
+[project.scripts]
+omega-serv = "omega_serv.__main__:main"
+
+[project.optional-dependencies]
+# Test de proprietes du parseur HTTP et du resolveur de chemin (porte
+# de sortie Phase 2, decision OMEGA-SERV_PLAN_DEVELOPPEMENT.md §9.4) -
+# jamais une dependance d'execution, seulement de developpement/test.
+test = ["hypothesis>=6.100"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11", "import-linter>=2.0", "types-psutil>=5.9"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+# pyte ne publie aucun stub de types (plan interface §3.4/§8, ecran lnav).
+module = "pyte"
+ignore_missing_imports = true
+
+# Controle d'imports entre couches. PAS un copie-colle verbatim du gabarit
+# CHECK/TRACK cette fois (contrairement au reste de la config ci-dessus) :
+# verifie a l'execution que SERV n'est PAS construit sur le meme patron de
+# composition strict (application/ ne consomme QUE des ports/). Ici,
+# application/server/start_server.py (et validate_config.py, run_audit.py)
+# jouent le role d'usines de construction dependantes de la config reelle
+# (quel ServiceManager, activer le WAF ou non...) et instancient des
+# adaptateurs infrastructure/ concrets directement - constate par un
+# premier essai du contrat "layers" copie verbatim, qui a casse ~30 fois
+# sur du code deja teste (793 tests) et deliberement ecrit ainsi, pas un
+# oubli a corriger en deplacant tout dans bootstrap/. La seule regle
+# vraiment universelle ici est "domain/core ne dependent jamais des
+# couches exterieures" - c'est celle-la qui est verifiee, pas la chaine
+# complete a 6 etages.
+[tool.importlinter]
+root_package = "omega_serv"
+include_external_packages = true
+exclude_type_checking_imports = true
+
+[[tool.importlinter.contracts]]
+name = "domain et core ne dependent jamais des couches externes"
+type = "forbidden"
+source_modules = [
+    "omega_serv.domain",
+    "omega_serv.core",
+]
+forbidden_modules = [
+    "omega_serv.application",
+    "omega_serv.ports",
+    "omega_serv.infrastructure",
+    "omega_serv.interfaces",
+    "omega_serv.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+# Portee corrigee le 2026-09-08 (plan interface, ajout de
+# interfaces/cli/__init__.py manquant jusqu'ici) : ce contrat etait
+# affiche "KEPT" mais interfaces.cli n'etait en realite jamais pleinement
+# analyse (paquet namespace sans __init__.py). Une fois corrige, il
+# s'avere qu'interfaces/cli/main.py construit lui aussi des adaptateurs
+# infrastructure/ directement par commande (meme "usine par commande"
+# deja documentee pour application/ et le contrat subprocess/ssl
+# ci-dessous) - realite etablie depuis la Phase 3, pas une regression de
+# ce chantier. Seule interfaces.tui (nouvelle, Phase I) est protegee :
+# un ecran doit toujours appeler un cas d'usage application/, jamais
+# construire un adaptateur infrastructure/ lui-meme.
+name = "interfaces.tui ne dependent jamais directement de infrastructure"
+type = "forbidden"
+source_modules = ["omega_serv.interfaces.tui"]
+forbidden_modules = ["omega_serv.infrastructure"]
+
+[[tool.importlinter.contracts]]
+# textual confine a interfaces.tui (plan interface §3.1) - meme contrat
+# que CHECK/DEEP/FOLD/FUZZ/STRESS/TRACK.
+name = "textual seulement dans interfaces.tui"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.application",
+    "omega_serv.ports",
+    "omega_serv.infrastructure",
+    "omega_serv.bootstrap",
+    "omega_serv.interfaces.cli",
+]
+forbidden_modules = ["textual"]
+
+[[tool.importlinter.contracts]]
+# infrastructure/process/subprocess_runner.py (ProcessRunnerPort, "lancer
+# une commande, recuperer le resultat") ET infrastructure/lnav/ (pty
+# interactif long via pty_session.py, plan interface §3.4 - un flux
+# ouvert et un pid vivant ne rentrent pas dans le modele "run-to-
+# completion" de ProcessRunnerPort, exception scopee deliberee, meme
+# esprit que la confinement ssl ci-dessous) ont seuls le droit
+# d'importer subprocess directement. application/ ET interfaces.cli
+# sont volontairement absentes de cette liste : le CLI construit lui
+# aussi ses adaptateurs directement par commande (ex. cmd_certs_* ->
+# OpensslCertificateTool(SubprocessRunner())), meme patron "usine" que
+# application/server/start_server.py (voir le contrat "domain et core"
+# plus haut). interfaces.tui, elle, reste protegee : un ecran doit
+# toujours appeler un cas d'usage application/ plutot que construire un
+# adaptateur infrastructure/ lui-meme (plan interface §1) - meme pour
+# lnav, le runner est injecte depuis __main__.py (voir bootstrap/container.py).
+name = "subprocess seulement dans infrastructure.process.subprocess_runner ou infrastructure.lnav"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.ports",
+    "omega_serv.interfaces.tui",
+    "omega_serv.bootstrap",
+    "omega_serv.infrastructure.auth",
+    "omega_serv.infrastructure.clock",
+    "omega_serv.infrastructure.config",
+    "omega_serv.infrastructure.fastcgi",
+    "omega_serv.infrastructure.filesystem",
+    "omega_serv.infrastructure.logging",
+    "omega_serv.infrastructure.security",
+    "omega_serv.infrastructure.server",
+    "omega_serv.infrastructure.services",
+    "omega_serv.infrastructure.tls",
+    "omega_serv.infrastructure.upload",
+    "omega_serv.infrastructure.waf",
+]
+forbidden_modules = ["subprocess"]
+
+[[tool.importlinter.contracts]]
+# ssl seulement dans infrastructure/tls/ssl_context_builder.py -
+# infrastructure/server/asyncio_server.py et infrastructure/proxy/ (client
+# HTTP du reverse proxy sortant, phase 3 TLS amont) n'ont besoin de "ssl"
+# que pour une annotation de type (ssl.SSLContext) : passent sous
+# TYPE_CHECKING plutot que de trouer ce contrat par une exception -
+# OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md §5.3 : "aucune exception a
+# creer". application/ ET interfaces.cli absentes de cette liste pour la
+# meme raison que le contrat subprocess ci-dessus (interfaces.tui, elle,
+# reste protegee).
+name = "ssl seulement dans infrastructure.tls.ssl_context_builder"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.ports",
+    "omega_serv.interfaces.tui",
+    "omega_serv.bootstrap",
+    "omega_serv.infrastructure.auth",
+    "omega_serv.infrastructure.clock",
+    "omega_serv.infrastructure.config",
+    "omega_serv.infrastructure.fastcgi",
+    "omega_serv.infrastructure.filesystem",
+    "omega_serv.infrastructure.logging",
+    "omega_serv.infrastructure.process",
+    "omega_serv.infrastructure.proxy",
+    "omega_serv.infrastructure.security",
+    "omega_serv.infrastructure.server",
+    "omega_serv.infrastructure.services",
+    "omega_serv.infrastructure.tls.openssl_certificate_tool",
+    "omega_serv.infrastructure.upload",
+    "omega_serv.infrastructure.waf",
+]
+forbidden_modules = ["ssl"]
+
+[[tool.importlinter.contracts]]
+# jinja2 seulement dans infrastructure/exporters/html_exporter.py - meme
+# convention que CHECK (contrat "jinja2 seulement dans infrastructure.
+# exporters.html_exporter"), retour utilisateur 2026-09-09 : les exports
+# HTML (capacites, archives de logs) doivent utiliser le meme mecanisme
+# de templates + catalogue de themes que le reste de la suite plutot que
+# du HTML brut concatene directement dans interfaces.tui/. Contrat plus
+# strict que subprocess/ssl ci-dessus : application/ ET interfaces (cli
+# ET tui) sont TOUTES exclues (aucune raison legitime d'importer jinja2
+# ailleurs que dans ce seul module, contrairement aux usines subprocess/
+# ssl qui ont des exceptions documentees).
+name = "jinja2 seulement dans infrastructure.exporters.html_exporter"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.ports",
+    "omega_serv.application",
+    "omega_serv.interfaces",
+    "omega_serv.bootstrap",
+    "omega_serv.infrastructure.auth",
+    "omega_serv.infrastructure.clock",
+    "omega_serv.infrastructure.config",
+    "omega_serv.infrastructure.fastcgi",
+    "omega_serv.infrastructure.filesystem",
+    "omega_serv.infrastructure.lnav",
+    "omega_serv.infrastructure.logging",
+    "omega_serv.infrastructure.persistence",
+    "omega_serv.infrastructure.probe",
+    "omega_serv.infrastructure.process",
+    "omega_serv.infrastructure.security",
+    "omega_serv.infrastructure.server",
+    "omega_serv.infrastructure.services",
+    "omega_serv.infrastructure.storage",
+    "omega_serv.infrastructure.tls",
+    "omega_serv.infrastructure.upload",
+    "omega_serv.infrastructure.waf",
+]
+forbidden_modules = ["jinja2"]
+
+[[tool.importlinter.contracts]]
+# sqlite3 seulement dans infrastructure.persistence.sqlite_active_defense_
+# connection - plan_active_defense_omega_serv.md, Phase 1 : premier usage
+# de stockage relationnel dans ce projet (tout le reste est du JSON via
+# FilesystemPort). Repositories concrets (sqlite_threat_state_repository.py
+# etc.) recoivent une connexion deja ouverte et n'ont besoin de "sqlite3"
+# que pour l'annotation de type (sqlite3.Connection) : sous TYPE_CHECKING,
+# meme convention que ssl.SSLContext dans asyncio_server.py. application/
+# ET interfaces.cli absentes de cette liste (meme raison que les contrats
+# subprocess/ssl ci-dessus : application/server/start_server.py construit
+# ses collaborateurs directement par option, "usine par configuration" deja
+# etablie pour WAF/auth - transitivite d'import-linter oblige, l'exclure
+# blanket-forbid comme jinja2 aurait force un regime d'injection
+# __main__.py-only inutile ici). interfaces.tui, elle, reste protegee : un
+# ecran doit toujours appeler un cas d'usage application/ plutot que
+# construire un adaptateur infrastructure/ lui-meme.
+name = "sqlite3 seulement dans infrastructure.persistence.sqlite_active_defense_connection"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.ports",
+    "omega_serv.interfaces.tui",
+    "omega_serv.bootstrap",
+    "omega_serv.infrastructure.auth",
+    "omega_serv.infrastructure.clock",
+    "omega_serv.infrastructure.config",
+    "omega_serv.infrastructure.exporters",
+    "omega_serv.infrastructure.fastcgi",
+    "omega_serv.infrastructure.filesystem",
+    "omega_serv.infrastructure.lnav",
+    "omega_serv.infrastructure.logging",
+    "omega_serv.infrastructure.persistence.backup_metadata_store",
+    "omega_serv.infrastructure.probe",
+    "omega_serv.infrastructure.process",
+    "omega_serv.infrastructure.proxy",
+    "omega_serv.infrastructure.security",
+    "omega_serv.infrastructure.server",
+    "omega_serv.infrastructure.services",
+    "omega_serv.infrastructure.tls",
+    "omega_serv.infrastructure.upload",
+    "omega_serv.infrastructure.waf",
+]
+forbidden_modules = ["sqlite3"]

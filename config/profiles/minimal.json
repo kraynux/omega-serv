@@ -1,0 +1,25 @@
+{
+  "name": "minimal",
+  "description": "Demonstration ou environnement local simple : serveur statique uniquement, peu de headers, aucune option activee par defaut.",
+  "server": {
+    "bind": "127.0.0.1"
+  },
+  "logs": {
+    "access": "var/log/access.log",
+    "error": "var/log/error.log"
+  },
+  "security": {
+    "allowed_methods": ["GET", "HEAD"],
+    "reject_path_traversal": true,
+    "normalize_url": true,
+    "security_headers_enabled": false,
+    "csp_mode": "report-only"
+  },
+  "options": {
+    "waf": { "enabled": false },
+    "auth": { "enabled": false },
+    "dirlisting": { "enabled": false },
+    "fastcgi": { "enabled": false },
+    "trusted_proxy": { "enabled": false }
+  }
+}

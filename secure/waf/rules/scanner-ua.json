@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "pack": "scanner-ua",
+  "enabled": true,
+  "rules": [
+    {"id": "UA-001", "description": "User-Agent sqlmap", "scope": ["user_agent"], "pattern": "sqlmap", "weight": 6},
+    {"id": "UA-002", "description": "User-Agent nikto", "scope": ["user_agent"], "pattern": "nikto", "weight": 6},
+    {"id": "UA-003", "description": "User-Agent masscan", "scope": ["user_agent"], "pattern": "masscan", "weight": 5},
+    {"id": "UA-004", "description": "User-Agent nessus", "scope": ["user_agent"], "pattern": "nessus", "weight": 5},
+    {"id": "UA-005", "description": "User-Agent acunetix", "scope": ["user_agent"], "pattern": "acunetix", "weight": 5},
+    {"id": "UA-006", "description": "User-Agent w3af", "scope": ["user_agent"], "pattern": "w3af", "weight": 5},
+    {"id": "UA-007", "description": "User-Agent dirbuster/gobuster/ffuf (brute-force de chemins)", "scope": ["user_agent"], "pattern": "(dirbuster|gobuster|ffuf|feroxbuster)", "weight": 4},
+    {"id": "UA-008", "description": "User-Agent nmap script engine", "scope": ["user_agent"], "pattern": "nmap scripting engine", "weight": 5},
+    {"id": "UA-009", "description": "User-Agent zgrab/zmap", "scope": ["user_agent"], "pattern": "(zgrab|zmap)", "weight": 3}
+  ]
+}

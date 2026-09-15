@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "pack": "custom",
+  "enabled": true,
+  "rules": [
+    {
+      "id": "CUSTOM-002",
+      "description": "admin access",
+      "scope": [
+        "path"
+      ],
+      "pattern": "/admin(/|$)",
+      "weight": 5,
+      "case_insensitive": true,
+      "enabled": true
+    },
+    {
+      "id": "CUSTOM-001",
+      "description": "admin access",
+      "scope": [
+        "path",
+        "query"
+      ],
+      "pattern": "admin",
+      "weight": 3,
+      "case_insensitive": true,
+      "enabled": true
+    },
+    {
+      "id": "CUSTOM-003",
+      "description": "adminer access",
+      "scope": [
+        "path",
+        "query"
+      ],
+      "pattern": "adminer",
+      "weight": 3,
+      "case_insensitive": true,
+      "enabled": true
+    }
+  ]
+}

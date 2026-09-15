@@ -1,0 +1,21 @@
+{
+  "name": "development",
+  "description": "Developpement local uniquement - ne doit jamais etre presente comme adapte a Internet. Bind loopback obligatoire, CSP en report-only, pages d'erreurs plus detaillees.",
+  "server": {
+    "bind": "127.0.0.1"
+  },
+  "security": {
+    "allowed_methods": ["GET", "HEAD", "POST"],
+    "reject_path_traversal": true,
+    "normalize_url": true,
+    "security_headers_enabled": true,
+    "csp_mode": "report-only"
+  },
+  "options": {
+    "waf": { "enabled": false },
+    "auth": { "enabled": false },
+    "dirlisting": { "enabled": false },
+    "fastcgi": { "enabled": false },
+    "trusted_proxy": { "enabled": false }
+  }
+}

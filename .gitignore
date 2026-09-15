@@ -1,0 +1,70 @@
+# Environnement Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.import_linter_cache/
+.hypothesis/
+
+# etat runtime genere localement (recree automatiquement au demarrage)
+var/log/*
+var/cache/*
+var/run/*
+var/uploads/*
+var/backups/*
+var/exports/*
+var/screenshots/*
+var/settings.json
+!var/log/.gitkeep
+!var/cache/.gitkeep
+!var/run/.gitkeep
+!var/uploads/.gitkeep
+!var/backups/.gitkeep
+!var/exports/.gitkeep
+!var/screenshots/.gitkeep
+
+# configuration active generee (config init) - config/profiles|schemas|
+# defaults restent versionnes, ce sont des references, pas de l'etat
+config/omega-serve.json
+
+# secrets et donnees sensibles - jamais commit
+secure/auth/users.json
+secure/auth/zones.json
+secure/certificates/**/*.key
+secure/certificates/**/*.pem
+secure/certificates/**/*.crt
+secure/certificates/**/*.csr
+secure/certificates/**/*.p12
+secure/certificates/**/*.pfx
+secure/certificates/**/*.der
+secure/certificates/**/serial.txt
+secure/certificates/**/index.txt
+secure/certificates/acme/**
+secure/secrets/*
+!secure/secrets/.gitkeep
+secure/waf/blocklist.json
+secure/waf/allowlist.json
+
+# editeurs
+*~
+*.bak
+*.swp
+
+# fichiers systeme
+.DS_Store
+Thumbs.db
+
+# couverture de tests
+.coverage
+htmlcov/
+
+# archives distribuables
+omega-serv.tar.gz
+omega-serv-*.tar.gz
+vendor/
+dist/
+build/

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "pack": "body-sqli",
+  "enabled": true,
+  "rules": [
+    {"id": "SQLI-001", "description": "UNION SELECT", "scope": ["query", "body"], "pattern": "union(\\s+all)?\\s+select", "weight": 6},
+    {"id": "SQLI-002", "description": "Fonction SLEEP (injection en aveugle temporisee)", "scope": ["query", "body"], "pattern": "sleep\\s*\\(\\s*\\d+\\s*\\)", "weight": 6},
+    {"id": "SQLI-003", "description": "Fonction BENCHMARK", "scope": ["query", "body"], "pattern": "benchmark\\s*\\(", "weight": 6},
+    {"id": "SQLI-004", "description": "Acces information_schema", "scope": ["query", "body"], "pattern": "information_schema", "weight": 5},
+    {"id": "SQLI-005", "description": "Tautologie OR 1=1", "scope": ["query", "body"], "pattern": "['\"]?\\s*or\\s+1\\s*=\\s*1", "weight": 5},
+    {"id": "SQLI-006", "description": "Commentaire SQL de troncature", "scope": ["query", "body"], "pattern": "(--|#|/\\*)\\s*$", "weight": 2},
+    {"id": "SQLI-007", "description": "Procedure etendue xp_cmdshell", "scope": ["query", "body"], "pattern": "xp_cmdshell", "weight": 7},
+    {"id": "SQLI-008", "description": "Injection dans une clause WHERE via UNION", "scope": ["query", "body"], "pattern": "\\bunion\\b.{0,40}\\bselect\\b", "weight": 6},
+    {"id": "SQLI-009", "description": "Fonction EXTRACTVALUE/UPDATEXML (extraction d'erreur)", "scope": ["query", "body"], "pattern": "(extractvalue|updatexml)\\s*\\(", "weight": 6}
+  ]
+}

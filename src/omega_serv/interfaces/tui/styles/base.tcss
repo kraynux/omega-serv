@@ -1,0 +1,356 @@
+/* Regles communes aux 4 profils de rendu. Portees depuis omega-check
+   (D-007/D-008 : meme catalogue de themes, memes conventions visuelles
+   pour toute la suite omega-), reduites au sous-ensemble reellement
+   utilise par la Phase I (coquille applicative seule) - les classes
+   propres a des ecrans pas encore construits (formulaires, tableaux,
+   panneaux de progression...) seront ajoutees phase par phase, jamais
+   par anticipation (voir plan interface §12).
+
+   Boutons : patron porte tel quel. Le contour rond vit EXCLUSIVEMENT sur
+   ".omega-btn-frame" (un Container), jamais sur le Button lui-meme
+   ("border: none" partout) : remplir le fond d'un widget au survol/focus
+   peint TOUJOURS tout son rectangle, y compris l'anneau de bordure round
+   — separer decoration (frame, jamais recolore) et interactivite (Button,
+   fond $accent au survol/focus) evite ce bug tout en gardant un focus
+   colore selon le theme. ".omega-actions"/".omega-confirm-buttons" ne
+   portent PAS de contour a eux : le bouton est deja entoure par son
+   propre frame, un deuxieme cadre autour du groupe est redondant. */
+
+Screen {
+    background: $background;
+    color: $foreground;
+}
+
+.omega-title {
+    text-style: bold;
+    color: $primary;
+    border: round $accent;
+    padding: 0 1;
+    width: auto;
+    margin: 1 0;
+}
+
+.omega-subtitle {
+    color: $secondary;
+    padding: 0 0 1 0;
+}
+
+.omega-hint {
+    color: $foreground 60%;
+    padding: 0 0 1 0;
+}
+
+.omega-hidden {
+    display: none;
+}
+
+.omega-panel {
+    padding: 1 2;
+    height: 1fr;
+    overflow-y: auto;
+}
+
+.omega-form-panel {
+    padding: 1 2;
+    height: 1fr;
+    align-horizontal: center;
+    overflow-y: auto;
+}
+
+.omega-form-panel > Select,
+.omega-form-panel > Input {
+    width: 70;
+    margin-bottom: 1;
+}
+
+.omega-form-panel .omega-title,
+.omega-form-panel .omega-subtitle,
+.omega-form-panel .omega-hint {
+    width: 70;
+}
+
+.omega-form-panel .omega-title {
+    content-align: center middle;
+}
+
+.omega-form-panel > .omega-actions {
+    width: 70;
+    align: center middle;
+    height: auto;
+}
+
+.omega-home-root {
+    align: center middle;
+    height: 1fr;
+    overflow-y: auto;
+}
+
+.omega-splash-middle {
+    width: 1fr;
+}
+
+.omega-splash-hero {
+    color: $accent;
+    text-align: left;
+    width: auto;
+}
+
+.omega-splash-prompt {
+    color: $secondary;
+    width: auto;
+    margin-top: 1;
+    text-style: italic;
+}
+
+.omega-home-wordmark {
+    width: auto;
+    text-align: left;
+    padding-bottom: 1;
+}
+
+.omega-home-menu {
+    background: $panel;
+    border: round $accent;
+    border-title-align: center;
+    border-title-color: $background;
+    border-title-background: $accent;
+    border-title-style: bold;
+    padding: 1 4;
+    width: auto;
+    height: auto;
+}
+
+.omega-actions {
+    align: left middle;
+    height: auto;
+    width: auto;
+    margin-top: 1;
+    overflow-x: auto;
+}
+
+.omega-labeled-input-row {
+    /* Une ligne "Static (etiquette) + Input" sans aucun Button/
+       Container.omega-btn-frame comme troisieme enfant se retrouve
+       incorrectement bornee a la largeur CSS explicite de l'Input
+       (24, voir ".omega-actions > Input" plus bas) au lieu de la
+       largeur du panneau - bug reel trouve en testant a 80 colonnes
+       (le minimum supporte), ou "Nom du service :" disparaissait
+       entierement et le champ de saisie devenait inaccessible sans
+       defiler horizontalement. Largeur explicite en 1fr plutot que
+       "auto" pour forcer le panneau entier, contournement cible a
+       cette ligne precise (les lignes de boutons purs, elles,
+       calculent leur largeur automatique correctement). */
+    width: 1fr;
+}
+
+.omega-input-row-label {
+    /* Largeur explicite plutot que "auto" (voir .omega-labeled-input-row
+       ci-dessus - le meme calcul de largeur automatique qui posait
+       probleme sur l'Input semblait aussi affecter ce Static voisin) -
+       20 colonnes couvre "Nom du service :" (17 caracteres) avec marge. */
+    width: 20;
+}
+
+.omega-btn-frame {
+    border: round $accent;
+    padding: 0;
+    width: auto;
+    height: auto;
+}
+
+.omega-actions > Input {
+    /* Meme cause que dans omega-track (bug utilisateur deja rencontre
+       et corrige la : Input a "width: 100%" dans le CSS natif de
+       Textual, indefini dans un conteneur ".omega-actions" - "width:
+       auto" -, provoquant un ascenseur horizontal qui masque les
+       boutons suivants). Fixe la meme regle verbatim plutot que de
+       laisser le bug reapparaitre ici. */
+    width: 24;
+    height: 3;
+}
+
+.omega-home-menu .omega-btn-frame {
+    width: 32;
+    height: 3;
+    margin-bottom: 0;
+}
+
+.omega-home-menu-2col {
+    /* Variante scopee (retour utilisateur 2026-09-09) : Configuration
+       detaillee du serveur a trop de sous-ecrans (15) pour une colonne
+       unique sans defilement excessif - deux colonnes cote a cote dans
+       le meme cadre, jamais applique a .omega-home-menu seule (menu
+       principal/autres sous-menus, qui restent une seule colonne).
+       grid-rows explicite obligatoire : contrairement a une Vertical
+       (chaque enfant garde sa propre hauteur "height: 3"), un Grid
+       Textual repartit la hauteur totale disponible entre les pistes
+       de lignes lui-meme - sans grid-rows, les 8 lignes (15 boutons /
+       2 colonnes) etaient ecrasees pour tenir dans la hauteur du
+       panneau, rendant le texte des boutons invisible (bug reel trouve
+       par capture d'ecran utilisateur : cadres vides, hauteur mesuree
+       a 0 sur le Button en test). */
+    layout: grid;
+    grid-size: 2;
+    grid-gutter: 0 1;
+    grid-rows: 3;
+    grid-columns: 32;
+}
+
+.omega-home-menu-2col .omega-btn-frame {
+    /* Largeur fixe (comme la version a une colonne, jamais "1fr") -
+       retour utilisateur 2026-09-09 : "1fr" demandait a chaque bouton
+       de remplir toute la largeur disponible de sa cellule de grille,
+       ce qui, combine a un Grid dont la largeur "auto" s'etend alors
+       pour occuper tout le terminal, faisait deborder tout le cadre
+       "SOUS-ECRANS" sur la largeur complete de l'ecran au lieu de ne
+       garder que la largeur necessaire, centree. grid-columns: 32
+       (ci-dessus) fixe deja la largeur des colonnes ; ce
+       width: 32 (identique a .omega-home-menu .omega-btn-frame,
+       repete ici pour rester explicite) fait juste correspondre le
+       cadre du bouton a sa cellule. */
+    width: 32;
+}
+
+.omega-actions Button,
+.omega-confirm-buttons Button,
+.omega-home-menu Button {
+    background: $surface;
+    border: none;
+    color: $foreground;
+    min-width: 10;
+}
+
+.omega-home-menu Button {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+.omega-actions Button.-primary,
+.omega-confirm-buttons Button.-primary {
+    background: $surface;
+    border: none;
+    color: $primary;
+}
+
+.omega-actions Button.-error,
+.omega-confirm-buttons Button.-error {
+    background: $surface;
+    border: none;
+    color: $error;
+}
+
+.omega-actions Button:hover,
+.omega-confirm-buttons Button:hover,
+.omega-home-menu Button:hover,
+.omega-actions Button:focus,
+.omega-confirm-buttons Button:focus,
+.omega-home-menu Button:focus {
+    background: $accent;
+    color: $background;
+    text-style: bold;
+}
+
+.omega-actions Button.-error:hover,
+.omega-confirm-buttons Button.-error:hover,
+.omega-actions Button.-error:focus,
+.omega-confirm-buttons Button.-error:focus {
+    background: $error;
+    color: $background;
+    text-style: bold;
+}
+
+.omega-confirm-box {
+    width: 60;
+    height: auto;
+    border: round $accent;
+    padding: 1 2;
+    align: center middle;
+}
+
+.omega-confirm-title {
+    text-style: bold;
+    color: $error;
+    width: 60;
+    content-align: center middle;
+    margin-bottom: 1;
+}
+
+.omega-confirm-buttons {
+    width: 60;
+    height: auto;
+    align: center middle;
+}
+
+.omega-dynamic-form-box {
+    /* Retour utilisateur 2026-09-13 ("probleme d'ascenseur" sur le
+       formulaire WAF Custom, 7 champs - le plus grand du projet ; "le
+       container doit faire le tour du terminal comme les autres") : une
+       boite figee a 70 colonnes, centree par Middle()+Center(), forcait
+       un defilement interne pour atteindre Valider/Annuler des qu'un
+       formulaire depassait ~5 champs (chaque Input Textual occupant 3
+       lignes avec sa bordure - un formulaire a 7 champs depasse
+       largement les 80% d'un terminal de taille courante). Les autres
+       ecrans du projet (.omega-panel/.omega-form-panel) remplissent
+       tout le terminal via `height: 1fr`, sans Middle() (qui centre
+       verticalement un contenu de taille fixe - incompatible avec
+       "remplir tout l'espace") : meme traitement ici, Middle() retire
+       du compose() (dynamic_form_screen.py), seul Center() garde pour
+       centrer horizontalement une boite qui ne fait pas toute la
+       largeur.
+       ATTENTION - un `height` en POURCENTAGE (`height: 90%` essaye plus
+       tot) REGRESSE dans ce contexte : la boite se resolvait a une
+       hauteur quasi nulle (height=0 mesure reellement), rendant tout le
+       contenu invisible ("interface vide" - vrai bug reproduit et
+       corrige). `height: 1fr` (une fraction d'espace disponible, pas un
+       pourcentage) n'a PAS ce probleme - c'est la meme unite que celle
+       deja utilisee sans souci par .omega-panel/.omega-form-panel
+       partout ailleurs dans ce fichier - verifie par sonde directe
+       (region/size mesures) avant d'appliquer. Le defilement interne
+       (`overflow-y: auto`) reste en secours pour les formulaires encore
+       plus grands qu'un terminal minimal (80x24) ou qu'un tres grand
+       formulaire ne suffirait pas a eliminer completement, mais Tab
+       fait deja defiler automatiquement le champ focalise en vue
+       (verifie par sonde : scroll_offset avance quand le focus atteint
+       un champ hors-vue). */
+    width: 90%;
+    height: 1fr;
+    border: round $accent;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+.omega-dynamic-form-box .omega-title {
+    width: 100%;
+    content-align: center middle;
+}
+
+.omega-dynamic-form-box Input {
+    width: 100%;
+    margin-bottom: 1;
+}
+
+/* Ecran "Etat & Ressources" (retour utilisateur 2026-09-09) - portee
+   depuis omega-fire (interfaces/tui/styles/base.tcss::#dashboard-body/
+   .dash-col/.omega-dash-box) : 3 colonnes, chaque conteneur est un
+   Static borde (titre via border_title, jamais un Rich Panel - meme
+   convention deja etablie pour les boutons ailleurs dans ce fichier).
+   Contrairement aux ecrans-rapport existants de SERV (log_stats_screen.py
+   etc., Static plats sans cadre individuel), cet ecran demande
+   explicitement un "visu" de type tableau de bord - exception
+   deliberee, pas une derive de convention. */
+#resource-dashboard-body {
+    height: 1fr;
+}
+
+.resource-dash-col {
+    width: 1fr;
+    height: 1fr;
+}
+
+.omega-dash-box {
+    border: round $accent;
+    padding: 0 1;
+    height: 1fr;
+    overflow-y: auto;
+}

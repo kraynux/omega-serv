@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "pack": "body-xss",
+  "enabled": true,
+  "rules": [
+    {"id": "XSS-001", "description": "Balise script", "scope": ["query", "body"], "pattern": "<script[\\s>]", "weight": 6},
+    {"id": "XSS-002", "description": "Gestionnaire d'evenement onerror", "scope": ["query", "body"], "pattern": "onerror\\s*=", "weight": 5},
+    {"id": "XSS-003", "description": "Gestionnaire d'evenement onload", "scope": ["query", "body"], "pattern": "onload\\s*=", "weight": 4},
+    {"id": "XSS-004", "description": "Pseudo-protocole javascript:", "scope": ["query", "body"], "pattern": "javascript\\s*:", "weight": 5},
+    {"id": "XSS-005", "description": "SVG avec gestionnaire d'evenement", "scope": ["query", "body"], "pattern": "<svg[^>]*on\\w+\\s*=", "weight": 5},
+    {"id": "XSS-006", "description": "Acces document.cookie", "scope": ["query", "body"], "pattern": "document\\.cookie", "weight": 5},
+    {"id": "XSS-007", "description": "Balise img avec onerror (vecteur XSS classique)", "scope": ["query", "body"], "pattern": "<img[^>]*onerror", "weight": 5},
+    {"id": "XSS-008", "description": "Iframe injecte", "scope": ["query", "body"], "pattern": "<iframe[\\s>]", "weight": 4}
+  ]
+}

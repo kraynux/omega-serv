@@ -1,0 +1,35 @@
+{
+  "name": "hardened",
+  "description": "Exposition Internet avec principe de moindre privilege : bind local par defaut (reverse proxy recommande pour l'exposition publique), methodes limitees a GET/HEAD, CSP stricte sans unsafe-inline, limites anti-slowloris, logs detailles. Le WAF n'est jamais active automatiquement, meme ici - il reste une option a activer explicitement.",
+  "server": {
+    "bind": "127.0.0.1",
+    "read_timeout_seconds": 5,
+    "write_timeout_seconds": 10,
+    "keepalive_timeout_seconds": 3,
+    "max_keepalive_requests": 20
+  },
+  "logs": {
+    "rotation": {
+      "enabled": true,
+      "keep": 14,
+      "compress": true
+    }
+  },
+  "security": {
+    "allowed_methods": ["GET", "HEAD"],
+    "deny_hidden_files": true,
+    "reject_path_traversal": true,
+    "normalize_url": true,
+    "require_valid_host": true,
+    "security_headers_enabled": true,
+    "csp_mode": "enforce"
+  },
+  "options": {
+    "waf": { "enabled": false },
+    "auth": { "enabled": false },
+    "dirlisting": { "enabled": false },
+    "fastcgi": { "enabled": false },
+    "cache": { "enabled": true },
+    "trusted_proxy": { "enabled": false }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "pack": "body-cmdi",
+  "enabled": true,
+  "rules": [
+    {"id": "CMDI-001", "description": "Substitution de commande $(...)", "scope": ["query", "body"], "pattern": "\\$\\([^)]+\\)", "weight": 6},
+    {"id": "CMDI-002", "description": "Substitution de commande avec backticks", "scope": ["query", "body"], "pattern": "`[^`]+`", "weight": 5},
+    {"id": "CMDI-003", "description": "Enchainement de commande shell", "scope": ["query", "body"], "pattern": "[;&|]{1,2}\\s*(cat|whoami|id|uname|wget|curl)\\b", "weight": 6},
+    {"id": "CMDI-004", "description": "Lecture de /etc/passwd", "scope": ["query", "body"], "pattern": "/etc/passwd", "weight": 7},
+    {"id": "CMDI-005", "description": "Invocation shell explicite", "scope": ["query", "body"], "pattern": "/bin/(ba)?sh\\s+-c", "weight": 6},
+    {"id": "CMDI-006", "description": "Telechargement distant via wget/curl", "scope": ["query", "body"], "pattern": "(wget|curl)\\s+https?://", "weight": 4}
+  ]
+}

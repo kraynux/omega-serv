@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMEGA-SERV — Guide d'aide complet</title>
+<style>
+  /* Voir capabilities_report.html.j2 pour le raisonnement complet sur
+     le theme et la mise en page - meme gabarit, contenu different. */
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    line-height: 1.6;
+    color: {{ palette.foreground }};
+    background: {{ palette.background }};
+    padding: 20px;
+    margin: 0;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: {{ palette.surface }};
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  h1 {
+    font-size: 1.4rem;
+    color: {{ palette.foreground }};
+    border-bottom: 3px solid {{ palette.accent }};
+    padding-bottom: 10px;
+    margin: 0 0 20px;
+  }
+  h2 { font-size: 1.1rem; color: {{ palette.accent }}; margin: 30px 0 10px; }
+  .meta { color: {{ palette.secondary }}; margin-bottom: 20px; }
+  .box {
+    background: {{ palette.panel }};
+    border: 1px solid {{ palette.accent }};
+    border-radius: 8px;
+    padding: 8px 20px 20px;
+    margin-bottom: 20px;
+  }
+  .acces { color: {{ palette.secondary }}; font-size: 0.85rem; margin: 0 0 10px; }
+  .field { border-top: 1px solid {{ palette.surface }}; padding: 10px 0; }
+  .field-label { font-weight: bold; color: {{ palette.foreground }}; }
+  .dim { color: {{ palette.secondary }}; }
+  .vigilance { color: {{ palette.warning }}; }
+  footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid {{ palette.panel }};
+    text-align: center;
+    color: {{ palette.secondary }};
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>OMEGA-SERV — Guide d'aide complet</h1>
+    <p class="meta">Généré le {{ generated_at }} · {{ screen_guides|length }} écran(s) documenté(s)</p>
+
+    {% for guide in screen_guides %}
+    <div class="box">
+      <h2>{{ guide.title }}</h2>
+      <p class="acces">{{ guide.acces }}</p>
+      <p>{{ guide.definition }}</p>
+      {% for field in guide.fields %}
+      <div class="field">
+        <p class="field-label">{{ field.label }}</p>
+        <p><span class="dim">Définition :</span> {{ field.definition }}</p>
+        <p><span class="dim">Utilisation :</span> {{ field.utilisation }}</p>
+        <p><span class="dim">Action :</span> {{ field.action }}</p>
+        <p><span class="dim">Réaction :</span> {{ field.reaction }}</p>
+      </div>
+      {% endfor %}
+      {% if guide.consequences %}
+      <p><span class="field-label">Conséquences :</span> {{ guide.consequences }}</p>
+      {% endif %}
+      {% if guide.points_de_vigilance %}
+      <p class="vigilance"><span class="field-label">Points de vigilance :</span></p>
+      <ul class="vigilance">
+        {% for point in guide.points_de_vigilance %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <h1>FAQ</h1>
+    {% for entry in faq_entries %}
+    <div class="box">
+      <p class="acces">{{ entry.category }}</p>
+      <p><span class="field-label">Q. {{ entry.question }}</span></p>
+      <p>R. {{ entry.answer }}</p>
+    </div>
+    {% endfor %}
+
+    <footer>Guide généré par <strong>OMEGA-SERV</strong></footer>
+  </div>
+</body>
+</html>

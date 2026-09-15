@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "pack": "sensitive-paths",
+  "enabled": true,
+  "rules": [
+    {"id": "SENS-001", "description": "Fichier .env expose", "scope": ["path"], "pattern": "/\\.env($|[/?])", "weight": 6},
+    {"id": "SENS-002", "description": "Metadonnees Git exposees", "scope": ["path"], "pattern": "/\\.git/(config|HEAD|index|logs/)", "weight": 6},
+    {"id": "SENS-003", "description": "Metadonnees Subversion exposees", "scope": ["path"], "pattern": "/\\.svn/(entries|wc\\.db)", "weight": 6},
+    {"id": "SENS-004", "description": "Metadonnees Mercurial exposees", "scope": ["path"], "pattern": "/\\.hg/(store|requires)", "weight": 6},
+    {"id": "SENS-005", "description": "Metadonnees Bazaar exposees", "scope": ["path"], "pattern": "/\\.bzr/", "weight": 6},
+    {"id": "SENS-006", "description": "Fichier de sauvegarde/dump", "scope": ["path"], "pattern": "\\.(bak|old|orig|backup|dump|sql)(\\.gz)?$", "weight": 5},
+    {"id": "SENS-007", "description": "Cle privee exposee", "scope": ["path"], "pattern": "\\.(pem|key|p12|pfx)$", "weight": 7},
+    {"id": "SENS-008", "description": "Configuration Composer exposee", "scope": ["path"], "pattern": "/composer\\.(json|lock)$", "weight": 4},
+    {"id": "SENS-009", "description": "Interface d'administration base de donnees (adminer/phpMyAdmin)", "scope": ["path"], "pattern": "/(adminer|phpmyadmin|pma)(/|\\.php|$)", "weight": 5},
+    {"id": "SENS-010", "description": "Fichier de configuration serveur expose", "scope": ["path"], "pattern": "/(\\.htaccess|\\.htpasswd|web\\.config)$", "weight": 5},
+    {"id": "SENS-011", "description": "Repertoire SSH expose", "scope": ["path"], "pattern": "/\\.ssh/(id_rsa|authorized_keys|known_hosts)", "weight": 7},
+    {"id": "SENS-012", "description": "Fichier Docker/CI expose", "scope": ["path"], "pattern": "/(docker-compose\\.ya?ml|Dockerfile|\\.gitlab-ci\\.yml)$", "weight": 3}
+  ]
+}
