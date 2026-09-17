@@ -1,6 +1,6 @@
 <!-- Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE) -->
 <div align="center">
-  <img src="docs/assets/omega-serv.png" alt="Omega-Serv" width="384">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/assets/omega-serv.png" alt="Omega-Serv" width="384">
 </div>
 
 # 🔒 OMEGA-SERV
@@ -10,7 +10,7 @@
 > Élaboré par **kraynux** pour **Omega-server** 
 [kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
 
-Page officielle : [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Wiki & FAQ : [Guide d'utilisation](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html) &nbsp; Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/)  
+Page officielle : [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Référence, utilisation, Aide & FAQ : [Guide complet](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html) &nbsp; Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/)  
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)

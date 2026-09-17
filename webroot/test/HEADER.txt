@@ -1,0 +1,12 @@
+<div class="custom-header">
+<script>
+    // Modifier le titre de la page dans l'onglet du navigateur
+    document.title = "OMEGA-SERV - Accès privé / public";
+</script>
+  <h1>OMEGA-SERV</h1>
+  <p style="color: #ccc; margin-top: 0.5em; font-size: 0.95rem; line-height: 1.5;">
+    # "HEADER" de Démonstration à personnaliser, ou a retirer --> webroot/test/HEADER.txt<br>
+    Modifier ou Placer ce fichier dans chaque dossier ou vous voulez qu'il apparaisse.#
+<br>
+  </p>
+</div>

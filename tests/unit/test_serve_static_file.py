@@ -147,6 +147,24 @@ class TestServeStaticFile(unittest.TestCase):
         self.assertNotIn(b'>HEADER.txt<', response.body)
         self.assertNotIn(b'>README.txt<', response.body)
 
+    def test_directory_listing_marks_subdirectories_with_folder_icon(self):
+        # Retour utilisateur ("on ne fait pas la difference entre un
+        # fichier et un dossier") : render_directory_listing_html() reste
+        # pur (aucun FilesystemPort) - c'est bien ICI, via un vrai
+        # LocalFilesystem (jamais un fake), que la distinction
+        # fichier/dossier doit reellement se faire.
+        (self.webroot / "empty-dir").mkdir()
+        (self.webroot / "empty-dir" / "sub").mkdir()
+        (self.webroot / "empty-dir" / "data.txt").write_text("x")
+        request = _make_request("GET", "/empty-dir")
+        response = serve_static_file(
+            request, self.resolver, self.filesystem, self.security, index_files=("index.html",),
+            dirlisting_zones=(Zone("/empty-dir", True),),
+        )
+        self.assertEqual(response.status, HttpStatus.OK)
+        self.assertIn(b'<li class="omega-dir"><a href="/empty-dir/sub">sub/</a></li>', response.body)
+        self.assertIn(b'<li class="omega-file"><a href="/empty-dir/data.txt">data.txt</a></li>', response.body)
+
     def test_directory_listing_show_header_without_file_does_not_crash(self):
         (self.webroot / "empty-dir").mkdir()
         request = _make_request("GET", "/empty-dir")

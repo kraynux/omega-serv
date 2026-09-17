@@ -96,6 +96,12 @@ def _render_listing(
 ) -> HttpResponse:
     settings = dirlisting_settings or DirlistingSettings()
     entries = filesystem.list_directory_entries(directory_path)
+    # Retour utilisateur ("on ne fait pas la difference entre un fichier
+    # et un dossier") : render_directory_listing_html() reste pur (aucun
+    # FilesystemPort) - la distinction fichier/dossier est donc calculee
+    # ICI, seul endroit avec un acces I/O reel, puis transmise en pur
+    # ensemble de noms.
+    directory_names = frozenset(name for name in entries if filesystem.is_dir(directory_path / name))
     header_content = (
         _read_side_file(filesystem, directory_path, settings.header_file) if settings.show_header else None
     )
@@ -103,7 +109,7 @@ def _render_listing(
         _read_side_file(filesystem, directory_path, settings.readme_file) if settings.show_readme else None
     )
     body = render_directory_listing_html(
-        request.path, entries, security, settings, header_content, readme_content,
+        request.path, entries, security, settings, header_content, readme_content, directory_names,
     ).encode("utf-8")
 
     response = HttpResponse.empty(HttpStatus.OK)

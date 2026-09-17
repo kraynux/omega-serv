@@ -43,6 +43,7 @@ rsync -a \
     --exclude='.pytest_cache/' --exclude='.mypy_cache/' --exclude='.ruff_cache/' \
     --exclude='.import_linter_cache/' --exclude='.hypothesis/' \
     --exclude='.git/' --exclude='.claude/' \
+    --exclude='docs/assets/' \
     --exclude='var/log/*' --exclude='var/cache/*' --exclude='var/run/*' \
     --exclude='var/uploads/*' --exclude='var/backups/*' \
     --exclude='secure/auth/users.json' --exclude='secure/auth/zones.json' \

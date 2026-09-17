@@ -162,6 +162,16 @@ class OmegaServApp(App[None]):
         except UnknownThemeError as exc:
             self.notify(str(exc), severity="error")
             return
+        except OSError as exc:
+            # Retour utilisateur (GROS BUG omega-fire : "t" fermait
+            # l'application) - meme correctif applique ici par coherence
+            # (audit de la suite) : une simple erreur de persistance
+            # (permissions, disque plein, systeme de fichiers en lecture
+            # seule) faisait planter cette action sans aucun rattrapage.
+            # Le theme change quand meme visuellement (self.theme =
+            # next_name plus bas) : seule la PERSISTANCE du choix
+            # echoue, pas la fonctionnalite immediate.
+            self.notify(f"Theme applique mais non enregistre : {exc}", severity="warning")
         self.theme = next_name
 
     def action_refresh_terminal(self) -> None:
