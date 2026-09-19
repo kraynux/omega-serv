@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de ProfileRepositoryPort - lit
 config/profiles/*.json."""
 from __future__ import annotations

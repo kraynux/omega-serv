@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -65,26 +64,18 @@ class TestInMemoryRateLimitStoreSweep(unittest.TestCase):
     def setUp(self):
         self.now = datetime(2026, 9, 5, tzinfo=timezone.utc)
         self.clock = _FakeClock(self.now)
-        # TTL et intervalle de balayage courts, pour tester sans devoir
-        # simuler des heures d'ecart.
         self.store = InMemoryRateLimitStore(self.clock, ttl_seconds=100.0)
 
     def test_stale_entry_is_evicted_after_ttl_and_sweep_interval(self):
         self.store.check("203.0.113.1", requests=1, window_seconds=10)
         self.assertIn("203.0.113.1", self.store._buckets)
 
-        # Depasse a la fois le TTL (100s) et l'intervalle de balayage
-        # (60s, constante du module) en un seul bond.
         self.clock._now = self.now + timedelta(seconds=200)
         self.store.check("203.0.113.2", requests=1, window_seconds=10)  # declenche le balayage
 
         self.assertNotIn("203.0.113.1", self.store._buckets)
 
     def test_eviction_never_changes_the_allow_decision(self):
-        # Meme sequence, mais on verifie que le comportement observable
-        # (autorise/refuse) est identique avec ou sans l'entree balayee -
-        # une IP inactive depuis longtemps redemarre de toute facon a
-        # pleine capacite, balayee ou non.
         self.store.check("203.0.113.1", requests=1, window_seconds=10)
         self.clock._now = self.now + timedelta(seconds=200)
         self.store.check("203.0.113.2", requests=1, window_seconds=10)  # declenche le balayage

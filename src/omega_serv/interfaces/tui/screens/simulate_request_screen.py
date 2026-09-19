@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Simuler une requete (plan interface §10, `simulate-request`) -
 rejoue le routage reel (application/server/route_request.py, via
 application/server/simulate_request.py) sans requete reseau. Injecte via

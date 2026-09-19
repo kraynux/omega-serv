@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'acces au registre multi-instance global (OMEGA-SERV_PLAN-
 DETAILLE_MULTI_INSTANCE.md §3) - meme patron que ProfileRepositoryPort,
 mais un seul fichier JSON contenant une liste plutot qu'un dossier de

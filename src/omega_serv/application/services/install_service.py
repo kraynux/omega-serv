@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv service install/uninstall` (spec §24.3/24.4 -
 confirmation demandee par le CLI avant d'installer/supprimer, pas ici).
 Perimetre systemd uniquement en V1 : OpenRC/runit n'ont pas de fichier
@@ -97,27 +96,10 @@ def install_systemd_service(
     service_manager: ServiceManagerPort,
     installing_user: str | None = None,
 ) -> ManageServiceResult:
-    # Retour utilisateur 2026-09-10, vrai bug trouve : l'unite reference
-    # toujours User=/Group= dedies (systemd_unit.py) mais rien ne les
-    # creait jamais avant cette correction - le service echouait a
-    # chaque demarrage (compte inexistant), "connection refused" cote
-    # client sans aucun indice dans l'interface. Cree AVANT l'ecriture
-    # de l'unite, meme demande de privileges (sudo) que le reste de
-    # cette fonction, donc pas une seconde invite separee.
     create_system_user = getattr(service_manager, "create_system_user", None)
     if create_system_user is not None:
         create_system_user(params.user, params.group)
 
-    # Second vrai bug trouve juste apres le premier, meme retour
-    # utilisateur 2026-09-10 : le compte cree ci-dessus n'avait toujours
-    # aucun droit d'ecriture sur var/ (reste kraynux:kraynux 755) -
-    # `ReadWritePaths=` (systemd_unit.py) ne leve que la restriction
-    # sandbox de systemd, jamais les permissions Unix du repertoire.
-    # `installing_user` (l'utilisateur interactif qui declenche
-    # l'installation, jamais suppose - passe explicitement par l'appelant
-    # via `getpass.getuser()`) est ajoute au groupe dedie pour que
-    # l'interface (Etat & Ressources) continue de pouvoir lire ce que le
-    # service ecrit desormais.
     grant_directory_access = getattr(service_manager, "grant_directory_access", None)
     if grant_directory_access is not None and installing_user is not None:
         grant_directory_access(params.project_root / "var", params.group, installing_user)

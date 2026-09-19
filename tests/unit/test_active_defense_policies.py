@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 0 - critere de sortie :
 toutes les decisions metier sont testees sans serveur HTTP, SQLite,
 Textual ni filesystem."""
@@ -55,10 +54,6 @@ class TestScoreDeltaFromExistingWafDecisions(unittest.TestCase):
         self.assertEqual(score_delta_for_waf_decision(decision), 10)
 
     def test_log_only_waf_decision_with_findings_still_contributes(self):
-        # log-only n'est jamais bloquant par conception (WAF), mais reste
-        # un signal reel pour Active Defense - c'est le deploiement le
-        # plus prudent et le plus courant, jamais traite comme "rien
-        # detecte" juste parce qu'il ne bloque pas.
         decision = WafDecision(action="log", status_code=None, score=10, findings=(_finding(),))
         self.assertEqual(score_delta_for_waf_decision(decision), 10)
 
@@ -90,8 +85,6 @@ class TestQualifyThreatLevel(unittest.TestCase):
 
     def test_contained_requires_both_score_and_known_ban(self):
         self.assertEqual(qualify_threat_level(80, known_ban=True, **self._KWARGS), "contained")
-        # Score suffisant mais AUCUN ban connu : jamais "contained" -
-        # ne jamais affirmer un confinement qui ne s'est pas produit.
         self.assertEqual(qualify_threat_level(100, known_ban=False, **self._KWARGS), "hostile")
 
 
@@ -120,7 +113,6 @@ class TestApplyObservation(unittest.TestCase):
             current_score=50, last_updated_at=_NOW - timedelta(seconds=900), now=_NOW,
             score_delta=10, known_ban=False, **self._KWARGS,
         )
-        # 50 - 5 (une decroissance) + 10 = 55
         self.assertEqual(score, 55)
         self.assertEqual(level, "suspicious")
 
@@ -283,7 +275,6 @@ class TestBuildObservationFromWafDecision(unittest.TestCase):
         self.assertEqual(observation.attack_class, "sqli")
         self.assertEqual(observation.score_delta, 10)
         self.assertIn("R1", observation.detail)
-        # Jamais de payload brut dans le detail - seulement des identifiants de regle.
         self.assertNotIn("union select", observation.detail.lower())
 
 

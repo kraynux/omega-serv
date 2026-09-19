@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """En-tetes de securite generiques (spec §12.1) et application au
 pipeline de reponse.
 

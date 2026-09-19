@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de journalisation - ecriture de lignes deja formatees
 (le formatage lui-meme est une regle domain, voir
 domain/logging/access_log_format.py, pure et testable sans disque)."""

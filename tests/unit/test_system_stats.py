@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sonde reelle (psutil) - meme discipline que
 tests/unit/test_openssl_certificate_tool.py : verifie la forme du
 resultat contre le systeme reel, aucun mock d'une bibliotheque dont le

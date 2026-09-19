@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste les regles pures de rotation (domain/logs/rotation.py) - aucune
 I/O, uniquement le calcul de plan."""
 from __future__ import annotations

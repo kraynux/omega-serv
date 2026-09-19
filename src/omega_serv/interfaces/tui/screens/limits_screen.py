@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Resistance et limites (plan interface §7) - les 10 champs
 entiers de ServerConfig lies aux limites/delais anti-abus (spec §9.2)."""
 from __future__ import annotations
@@ -114,15 +113,6 @@ class LimitsScreen(OmegaScreen):
 
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
-        # Retour utilisateur (guide d'aide - point 4) : `listen_backlog`
-        # est passe a `asyncio.start_server(backlog=...)` au moment de la
-        # creation du socket d'ecoute (infrastructure/server/
-        # asyncio_server.py), exactement comme bind/port
-        # (base_config_screen.py) - jamais retouche par reload_scoped().
-        # Bug d'omission trouve en verifiant : cet ecran n'avertissait
-        # jamais, contrairement a base_config_screen.py pour bind/port.
-        # Les 9 autres champs de cet ecran sont lus depuis la config en
-        # memoire a chaque requete/connexion, donc rechargeables a chaud.
         if new_server.listen_backlog != load_result.config.server.listen_backlog:
             notify_restart_required(
                 self, self._container,

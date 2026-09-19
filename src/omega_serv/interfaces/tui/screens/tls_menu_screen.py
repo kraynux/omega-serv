@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran TLS (plan interface §7.3, Phase III) - sous-menu vers
 statut/generation auto-signee (6a)/assistant CA locale (6b)/revocation/
 activation-desactivation. Absent de la spec §8.3 d'origine (Phase 6
@@ -15,6 +14,8 @@ from textual.widgets import Button, Footer, Header, Static
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.ca_wizard_screen import CaWizardScreen
 from omega_serv.interfaces.tui.screens.generate_self_signed_screen import GenerateSelfSignedScreen
+from omega_serv.interfaces.tui.screens.lets_encrypt_screen import LetsEncryptScreen
+from omega_serv.interfaces.tui.screens.renewal_schedule_screen import RenewalScheduleScreen
 from omega_serv.interfaces.tui.screens.revoke_certificate_screen import RevokeCertificateScreen
 from omega_serv.interfaces.tui.screens.tls_status_screen import TlsStatusScreen
 from omega_serv.interfaces.tui.screens.tls_toggle_screen import TlsToggleScreen
@@ -26,6 +27,8 @@ _MENU_ITEMS: tuple[tuple[str, str], ...] = (
     ("status", "Statut TLS"),
     ("self-signed", "Generer un certificat auto-signe"),
     ("ca-wizard", "Assistant CA locale"),
+    ("lets-encrypt", "Assistant Let's Encrypt (Certbot)"),
+    ("renewal-schedule", "Renouvellement automatique (Certbot)"),
     ("revoke", "Revoquer un certificat"),
     ("toggle", "Activer / desactiver TLS"),
 )
@@ -61,7 +64,9 @@ class TlsMenuScreen(OmegaScreen):
     def _screen_for(self, item_id: str | None) -> Screen[None] | None:
         mapping = {
             "status": TlsStatusScreen, "self-signed": GenerateSelfSignedScreen,
-            "ca-wizard": CaWizardScreen, "revoke": RevokeCertificateScreen, "toggle": TlsToggleScreen,
+            "ca-wizard": CaWizardScreen, "lets-encrypt": LetsEncryptScreen,
+            "renewal-schedule": RenewalScheduleScreen,
+            "revoke": RevokeCertificateScreen, "toggle": TlsToggleScreen,
         }
         screen_cls = mapping.get(item_id) if item_id else None
         if screen_cls is None:

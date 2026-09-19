@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """CLI non-interactive OMEGA-SERV (spec §31).
 
 Chaque commande appelle directement un cas d'usage d'application/ via
@@ -79,6 +78,7 @@ from omega_serv.application.tls.generate_certificate_signing_request import (
     generate_certificate_signing_request,
 )
 from omega_serv.application.tls.generate_self_signed import generate_self_signed_certificate
+from omega_serv.application.tls.import_certificate import import_certificate
 from omega_serv.application.tls.inspect_certificate import (
     CertificateReport,
     inspect_certificate_report,
@@ -146,12 +146,6 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
     try:
         await server.start()
     except PermissionError:
-        # Retour utilisateur 2026-09-09 : un port < 1024 sans privilege
-        # (root ou CAP_NET_BIND_SERVICE) faisait remonter un traceback
-        # Python brut jusqu'au terminal - meme cause deja detectee par
-        # le sondage "port-80"/"port-443" du registre des capacites
-        # (infrastructure/probe/scanner.py), mais jamais geree ici au
-        # demarrage reel.
         print(
             f"Erreur : liaison sur {config.server.bind}:{config.server.port} refusee "
             "(privileges insuffisants pour un port < 1024). Solutions : choisir un port >= 1024 "
@@ -189,20 +183,6 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
 
     loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.ensure_future(_graceful_stop()))
-    # SIGINT (Ctrl+C) explicitement enregistre comme gestionnaire asyncio,
-    # pas seulement laisse au KeyboardInterrupt par defaut de Python -
-    # retour utilisateur 2026-09-10 : sur la boucle PERSISTANTE de Textual
-    # (bouton "Lancer maintenant"), un Ctrl+C ne stoppait pas du tout le
-    # serveur (verifie empiriquement : le processus continuait a servir
-    # des requetes indefiniment apres Ctrl+C) - Textual desactive ISIG
-    # tant qu'il tourne (drivers/linux_driver.py::_patch_lflag) et bien
-    # qu'App.suspend() restaure les attributs termios d'origine, le
-    # KeyboardInterrupt genere semble se perdre dans la boucle interne de
-    # Textual plutot que d'atteindre ce coroutine - contrairement a la
-    # CLI (`cmd_serve`, sa propre boucle jetable via asyncio.run(), ou le
-    # KeyboardInterrupt par defaut fonctionne correctement). Un
-    # gestionnaire de signal asyncio explicite contourne cette dependance
-    # fragile au mecanisme par defaut, pour les deux points d'entree.
     loop.add_signal_handler(signal.SIGINT, lambda: asyncio.ensure_future(_graceful_stop()))
     loop.add_signal_handler(signal.SIGHUP, lambda: asyncio.ensure_future(_reload()))
 
@@ -216,12 +196,6 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
             pass
     finally:
         remove_pid_file(container.filesystem, pid_path)
-        # Retire les gestionnaires de CETTE execution avant de rendre la
-        # main - indispensable quand cette coroutine tourne sur la
-        # boucle PERSISTANTE de Textual (bouton "Lancer maintenant")
-        # plutot que sur une boucle jetable creee par asyncio.run() : un
-        # gestionnaire laisse en place continuerait de reagir a un futur
-        # SIGTERM/SIGINT/SIGHUP reel en referencant un `server` deja arrete.
         loop.remove_signal_handler(signal.SIGTERM)
         loop.remove_signal_handler(signal.SIGINT)
         loop.remove_signal_handler(signal.SIGHUP)
@@ -250,10 +224,6 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         return 1
 
     async def _run() -> int:
-        # result.config est deja garanti non-None par l'assert plus haut,
-        # mais mypy ne propage pas ce narrowing dans une fonction imbriquee
-        # (result pourrait en theorie etre reassigne entre-temps) - rebind
-        # local explicite plutot qu'un assert redondant a chaque usage.
         config = result.config
         assert config is not None
         return await run_server_until_stopped(config, args.config, container)
@@ -566,10 +536,6 @@ def _require_active_defense(
     try:
         active_defense = build_active_defense_collaborators(load_result.config, container.project_root)
     except OSError as exc:
-        # Retour utilisateur 2026-09-13 : erreur reelle rencontree
-        # (var/lib/ appartenant au compte systeme dedie omega-serv,
-        # groupe pas encore rafraichi dans la session courante) -
-        # message clair plutot qu'une trace Python brute.
         print(f"Erreur d'acces a la base Active Defense : {exc}.", file=sys.stderr)
         print(
             "Si l'appartenance a un groupe systeme a change recemment, une nouvelle "
@@ -688,10 +654,6 @@ def cmd_incidents_close(args: argparse.Namespace, container: DependencyContainer
         return 1
     print(f"Incident {closed.incident_id!r} ferme.")
     if active_defense.config.ioc.auto_export_on_close:
-        # Plan §"Mode guerre" : "produire un export IoC a la fermeture
-        # de l'incident" - IoCConfig.auto_export_on_close existait deja
-        # (Phase 2) mais n'etait jamais lu (aucune fermeture ne
-        # l'appliquait) - corrige ici, Phase 4.
         export_dir = container.project_root / active_defense.config.storage.export_dir
         exporters: dict[str, IoCExporterPort] = {
             "json": JsonIoCExporter(container.filesystem, export_dir),
@@ -889,6 +851,43 @@ def cmd_certs_generate_ca(args: argparse.Namespace, container: DependencyContain
     print(result.message)
     if result.success:
         print(f"Importez {ca_dir / 'root-ca.pem'} dans le magasin de confiance des clients (doc TLS §7.4).")
+    return 0 if result.success else 1
+
+
+def cmd_certs_import(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """`omega-serv certs import` (doc TLS §9, §20) - comble le seul point
+    du perimetre TLS documente depuis le debut mais jamais implemente
+    (voir OMEGA-SERV_PLAN-DETAILLE_TLS_AUTO.md). Copie vers les chemins
+    DEJA CONFIGURES (`tls.certificate_path`/`private_key_path`), jamais
+    un chemin arbitraire choisi ici - meme convention que `generate-self-
+    signed`/`generate-ca` ci-dessus. Premier vrai consommateur vise : un
+    hook de renouvellement Certbot (`--cert`/`--key` pointant vers
+    `/etc/letsencrypt/live/<domaine>/`), mais generique - n'importe quelle
+    source (CA d'entreprise, certificat achete) fonctionne a l'identique."""
+    load_result = load_config(container.configuration, args.config)
+    if not load_result.success:
+        _print_errors(load_result.errors)
+        return 1
+    assert load_result.config is not None
+
+    dest_key_path = container.project_root / load_result.config.tls.private_key_path
+    dest_cert_path = container.project_root / load_result.config.tls.certificate_path
+    backups_dir = container.project_root / "var" / "backups" / "certificates"
+
+    tool = OpensslCertificateTool(SubprocessRunner())
+    try:
+        result = import_certificate(
+            Path(args.key), Path(args.cert), dest_key_path, dest_cert_path,
+            tool, container.filesystem, container.clock, backups_dir,
+            source_chain_path=Path(args.chain) if args.chain else None,
+        )
+    except CertificateToolError as e:
+        print(f"Erreur : {e}", file=sys.stderr)
+        return 1
+
+    print(result.message)
+    if result.success:
+        print("Redemarrage requis pour que le nouveau certificat soit pris en compte (`omega-serv service restart`).")
     return 0 if result.success else 1
 
 
@@ -1548,6 +1547,12 @@ def build_parser() -> argparse.ArgumentParser:
     sign_parser.add_argument("--out", required=True)
     sign_parser.add_argument("--fullchain-out", default=None)
     sign_parser.set_defaults(func=cmd_certs_sign_csr)
+
+    import_parser = certs_sub.add_parser("import")
+    import_parser.add_argument("--key", required=True)
+    import_parser.add_argument("--cert", required=True)
+    import_parser.add_argument("--chain", default=None)
+    import_parser.set_defaults(func=cmd_certs_import)
 
     revoke_parser = certs_sub.add_parser("revoke")
     revoke_parser.add_argument("--cert", required=True)

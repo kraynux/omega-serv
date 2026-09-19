@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import time
 import unittest
@@ -116,19 +115,11 @@ class TestJsonBlocklistStoreCache(unittest.TestCase):
             self.assertEqual(spy.call_count, 0, "le cache doit eviter toute relecture du fichier")
 
     def test_own_write_is_visible_immediately_without_relying_on_mtime_resolution(self):
-        # Le cache est mis a jour directement par _save() plutot que de
-        # dependre de la granularite du mtime du systeme de fichiers
-        # (parfois seulement a la seconde pres) pour detecter NOS
-        # PROPRES ecritures.
         entry = BlocklistEntry(network="203.0.113.25/32", reason="test", created_at=self.now.isoformat())
         self.store.add_entry(entry)
         self.assertIsNotNone(self.store.is_blocked("203.0.113.25"))
 
     def test_external_modification_is_picked_up_on_next_read(self):
-        # Simule le CLI modifiant le fichier pendant que le serveur
-        # tourne (angle mort deja documente) - le meme store, avec un
-        # cache deja chaud, doit voir le changement des le prochain
-        # appel, pas rester bloque sur une version perimee.
         entry = BlocklistEntry(network="203.0.113.25/32", reason="test", created_at=self.now.isoformat())
         self.store.add_entry(entry)
         self.assertIsNotNone(self.store.is_blocked("203.0.113.25"))  # cache chauffe

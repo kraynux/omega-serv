@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste les fonctions pures de domain/persistence/snapshots.py."""
 from __future__ import annotations
 

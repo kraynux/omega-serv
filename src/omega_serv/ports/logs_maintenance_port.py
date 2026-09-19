@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'entretien des logs (plan interface §3.4/§8, "retirer une IP
 des logs")."""
 from __future__ import annotations

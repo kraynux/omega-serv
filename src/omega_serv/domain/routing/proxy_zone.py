@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Zones de reverse proxy sortant (OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md,
 etude de conception validee avant ce chantier) - OMEGA-SERV agit ici
 lui-meme comme reverse proxy vers un backend, sens INVERSE de

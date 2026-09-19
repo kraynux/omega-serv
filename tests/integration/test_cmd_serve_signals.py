@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 9 : `omega-serv serve` reel, lance comme
 vrai sous-processus, vrais signaux OS (SIGTERM/SIGHUP) - la seule
 maniere de verifier honnetement l'arret propre et le rechargement, ces
@@ -44,13 +43,6 @@ def _wait_for_exit(proc: subprocess.Popen, timeout: float = 5.0) -> bool:
 
 class TestCmdServeSignals(unittest.TestCase):
     def setUp(self):
-        # bootstrap/paths.py::PROJECT_ROOT derive la racine du projet de
-        # l'emplacement REEL du fichier source (jamais du cwd, decision
-        # deliberee de la Phase 0) - --config ne change que le fichier
-        # JSON lu, pas la racine ou les chemins relatifs (webroot,
-        # var/run/...) se resolvent (lecon de la Phase 6/TLS). Pour
-        # isoler ce test sans toucher au vrai depot, on copie l'arbre
-        # src/ dans un dossier temporaire et on y pointe PYTHONPATH.
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         shutil.copytree(_REAL_SRC_DIR, self.root / "src")
@@ -101,13 +93,6 @@ class TestCmdServeSignals(unittest.TestCase):
         self.assertFalse(self.pid_path.exists(), "fichier PID toujours present apres arret propre")
 
     def test_pid_file_written_while_running_and_removed_after_sigint(self):
-        # Retour utilisateur 2026-09-10 : Ctrl+C (SIGINT) ne stoppait pas
-        # le serveur quand `run_server_until_stopped()` tournait sur la
-        # boucle PERSISTANTE de Textual (bouton "Lancer maintenant") -
-        # verifie ici via un vrai sous-processus/signal OS que SIGINT
-        # fonctionne desormais exactement comme SIGTERM, y compris via
-        # la CLI directe (gestionnaire asyncio explicite desormais,
-        # jamais laisse au seul KeyboardInterrupt par defaut).
         proc = self._spawn_server()
         self.assertTrue(_wait_for_port(18765), "le serveur n'a jamais commence a repondre")
         self.assertTrue(self.pid_path.exists(), "fichier PID absent alors que le serveur tourne")
@@ -122,12 +107,6 @@ class TestCmdServeSignals(unittest.TestCase):
         proc = self._spawn_server()
         self.assertTrue(_wait_for_port(18765))
 
-        # Connexion brute laissee delibrement incomplete (jamais la
-        # ligne vide finale d'en-tetes) - reste bloquee cote serveur en
-        # lecture, doit forcer le delai de grace (3s configures) a
-        # reellement s'ecouler avant que le processus ne quitte, plutot
-        # que de sortir immediatement (rien a drainer serait le cas
-        # normal, teste separement au niveau unitaire).
         sock = socket.create_connection(("127.0.0.1", 18765), timeout=5)
         sock.sendall(b"GET /index.html HTTP/1.1\r\n")
         time.sleep(0.2)

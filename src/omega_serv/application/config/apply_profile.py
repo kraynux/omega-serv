@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : `omega-serv profile apply` (spec §9.1).
 
 Calcule le resultat (nouvelle configuration, diff, conflits, erreurs de

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : tourner un log si necessaire (plan interface §3.4/§8).
 Construit le plan via domain/logs/rotation.py (pur) puis l'execute
 reellement : archive le fichier courant (ArchiveStore), supprime les

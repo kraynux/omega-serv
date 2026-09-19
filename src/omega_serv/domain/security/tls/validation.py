@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles de coherence TLS/HSTS pures (doc TLS §2, §13, §21 ; plan de
 developpement §6 "Portes de validation bloquantes TLS"). Toutes les
 fonctions ici prennent des FAITS deja rassembles (permissions lues,
@@ -144,4 +143,41 @@ def validate_tls_startup(facts: TlsStartupFacts) -> list[str]:
     if facts.keys_match is False:
         errors.append("la cle privee TLS ne correspond pas au certificat configure")
 
+    return errors
+
+
+@dataclass(frozen=True)
+class CertificateImportFacts:
+    """Faits deja rassembles pour valider un import de certificat externe
+    (doc TLS §9.1) - meme patron que `TlsStartupFacts` ci-dessus : ce
+    module ne fait jamais d'I/O, `application/tls/import_certificate.py`
+    rassemble ces faits avant d'appeler `validate_certificate_import`.
+
+    La correspondance SAN/nom d'hote reellement utilise (doc TLS §9.1,
+    dernier point) N'EST PAS verifiee ici deliberement : ce cas d'usage
+    est generique (n'importe quel couple cle/certificat), il ne connait
+    pas le `server_name`/bind attendu - cette verification specifique
+    reste a la charge de l'appelant (assistant TLS) qui, lui, connait la
+    configuration cible."""
+    source_key_exists: bool
+    source_cert_exists: bool
+    source_chain_path_given: bool
+    source_chain_exists: bool
+    keys_match: bool | None
+    certificate_info: CertificateInfo | None
+    now: datetime
+
+
+def validate_certificate_import(facts: CertificateImportFacts) -> list[str]:
+    errors: list[str] = []
+    if not facts.source_key_exists:
+        errors.append("la cle privee source est introuvable")
+    if not facts.source_cert_exists:
+        errors.append("le certificat source est introuvable")
+    if facts.source_chain_path_given and not facts.source_chain_exists:
+        errors.append("le fichier de chaine intermediaire indique est introuvable")
+    if facts.keys_match is False:
+        errors.append("la cle privee et le certificat fournis ne correspondent pas")
+    if facts.certificate_info is not None and facts.certificate_info.is_expired(facts.now):
+        errors.append(f"le certificat fourni est deja expire depuis le {facts.certificate_info.not_after.isoformat()}")
     return errors

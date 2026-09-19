@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles pures de resolution de chemin sure (spec §11.2, etapes 1-4).
 
 Ce module ne couvre QUE la partie decodage/normalisation, sans aucune
@@ -96,10 +95,6 @@ def normalize_uri_path(raw_path: str) -> PathDecision:
             continue
         if segment == "..":
             if not normalized:
-                # Remontee au-dessus de la racine autorisee - jamais
-                # tolere, meme si un ".." plus loin dans le chemin
-                # aurait pu "compenser" : la remontee est deja hors
-                # limites au moment ou elle se produit.
                 return PathDecision(ok=False, rejection_reason=PathRejectionReason.TRAVERSAL_ATTEMPT)
             normalized.pop()
             continue

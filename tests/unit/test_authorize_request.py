@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import base64
 import unittest
 from unittest.mock import patch
@@ -73,10 +72,6 @@ class TestAuthorizeRequest(unittest.TestCase):
         self.assertEqual(decision.realm, "Inner")
 
     def test_unknown_username_still_triggers_a_scrypt_computation(self):
-        # Protection anti-enumeration : meme sans utilisateur trouve,
-        # une verification de mot de passe doit etre executee (temps
-        # constant) - on verifie que hashlib.scrypt est bien appele au
-        # moins une fois, pas seulement que la reponse est correcte.
         with patch("omega_serv.domain.security.auth.password_hashing.hashlib.scrypt") as mock_scrypt:
             mock_scrypt.return_value = b"\x00" * 32
             header = _basic_header("nobody", "whatever")

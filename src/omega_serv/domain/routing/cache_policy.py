@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Politique Cache-Control par zone et extension (spec §18).
 
 Ordre de resolution : zone (la plus specifique, via zone_resolver)

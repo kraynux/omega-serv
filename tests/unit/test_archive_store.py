@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste ArchiveStore contre de vrais fichiers/tarballs temporaires (pas
 de mock) - creation/extraction/liste/info/suppression."""
 from __future__ import annotations
@@ -137,9 +136,6 @@ class TestSafeMembers(unittest.TestCase):
         self.assertEqual(kept, [])
 
     def test_rejects_an_absolute_path_member(self):
-        # Piege pathlib : `Path("/dest") / "/etc/passwd"` vaut
-        # `/etc/passwd` (l'operande absolu REMPLACE la base) - c'est
-        # precisement ce que _resolves_within doit intercepter.
         evil = tarfile.TarInfo(name="/etc/passwd")
         evil.size = 0
         with self._build_archive([evil]) as tar:

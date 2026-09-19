@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Bandeau texte OMEGA-SERV affiche en haut de screens/home.py. Logo
 fourni par l'utilisateur (~/DEV/SERV/ascci.txt, lignes 47-49 - caracteres
 non modifies), meme convention que le reste de la suite omega- (jamais

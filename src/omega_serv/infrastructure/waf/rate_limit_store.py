@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de RateLimitPort : etat en memoire (doc WAF
 §7 - "Utiliser JSON strict, SQLite ou une structure en memoire sans
 persistance dans la premiere version" ; "un store memoire est souvent

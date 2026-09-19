@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Chargement des packs de regles WAF depuis le disque (doc WAF,
 "Repartition Clean Architecture" : infrastructure/waf/ porte la
 compilation/chargement de regles). Delegue tout le parsing/validation

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'inspection WAF (OMEGA-SERV_WAF_LUA_DEPERSONNALISATION.md,
 "Decision d'integration recommandee" : `class WafPort(Protocol): def
 inspect(self, request: HttpRequest) -> WafDecision`). Le moteur ne

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation concrete de ConfigurationPort - chargement/ecriture
 JSON reels (spec §5.1 : JSON pour la premiere version, §5.3 : ecriture
 atomique)."""
@@ -43,8 +42,6 @@ class JsonConfigRepository:
             self._backup_existing(path)
 
         content = json.dumps(config.to_dict(), indent=2, ensure_ascii=False) + "\n"
-        # config/ peut ne pas encore exister sur un projet neuf (meme
-        # fix que infrastructure/auth/*_repository.py::save()).
         self._fs.make_directory(path.parent)
         self._fs.atomic_write_text(path, content)
 

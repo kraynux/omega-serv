@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran d'avertissement : terminal trop petit ou profil de rendu degrade.
 Porte verbatim depuis omega-check (plan interface §0/§3.1)."""
 from __future__ import annotations

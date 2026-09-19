@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Instances (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §9
 Phase B/C) - liste en lecture seule du registre global
 (`~/.config/omega-serv/instances.json`) + statut systemd de chacune
@@ -79,13 +78,6 @@ class InstancesScreen(OmegaScreen):
         entry = entries[self._selected_index]
         current_path = self._container.filesystem.resolve_real_path(self._container.project_root)
         is_current = entry.path == current_path
-        # Bascule vers soi-meme n'a pas de sens - jamais permise, meme
-        # avec confirmation (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md
-        # §9 Phase D). Desinstaller l'instance qui HEBERGE cette
-        # interface serait pire encore (supprimerait le code/venv en
-        # cours d'execution sous ses propres pieds) - jamais permis non
-        # plus, meme raison (§9 Phase E) : basculer ailleurs d'abord
-        # (Phase D) est le seul chemin pour desinstaller celle-ci.
         self.query_one("#switch-to", Button).disabled = is_current
         self.query_one("#uninstall-instance", Button).disabled = is_current
 
@@ -162,9 +154,6 @@ class InstancesScreen(OmegaScreen):
         )
 
     def _on_create_finished(self, _result: None) -> None:
-        # Succes/echec deja affiches par CreateInstanceProgressScreen
-        # elle-meme (jamais un doublon ici) - ce rafraichissement suffit
-        # a refleter l'issue reelle (nouvelle entree presente ou non).
         self._refresh_table()
 
     def _open_switch_confirmation(self) -> None:
@@ -199,11 +188,6 @@ class InstancesScreen(OmegaScreen):
             if entry.path == current_path:
                 current_name = entry.name
                 break
-        # os.execv() lui-meme n'a jamais lieu ici - seulement depose sur
-        # l'App, puis effectivement execute par omega_serv/__main__.py
-        # UNE FOIS que App.run() (donc self.app.exit() ci-dessous) sera
-        # revenu, Textual entierement arrete et le terminal restaure
-        # (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §9 Phase D).
         cast("OmegaServApp", self.app).pending_switch = PendingInstanceSwitch(
             python_executable=python_executable, source_name=current_name,
         )

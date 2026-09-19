@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Agregation reelle des statistiques d'un log d'acces (plan interface
 §3.4/§8) - inspire de la structure "parse -> agrege par cle -> trie" de
 omega-fire (infrastructure/logging/stats/log_aggregator.py) mais

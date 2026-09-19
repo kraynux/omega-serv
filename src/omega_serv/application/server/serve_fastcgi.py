@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : servir une requete via FastCGI/PHP-FPM (spec §21).
 
 Reutilise SafePathResolver.resolve() confine a script_root (meme
@@ -56,19 +55,10 @@ async def serve_fastcgi(
         return HttpResponse.empty(HttpStatus.NOT_FOUND)
 
     if fastcgi_config.allowed_scripts:
-        # Liste blanche explicite (retour utilisateur 2026-09-09) :
-        # seuls ces scripts precis sont executables, meme si d'autres
-        # fichiers .php existent sous script_root (helpers/inclusions
-        # jamais destines a etre appeles directement en URL).
         relative = target.relative_to(resolver.webroot).as_posix()
         if relative not in fastcgi_config.allowed_scripts:
             return HttpResponse.empty(HttpStatus.FORBIDDEN)
     elif not any(target.name.endswith(ext) for ext in fastcgi_config.allowed_extensions):
-        # Comportement historique (retro-compatible) si aucune liste
-        # blanche n'est configuree : un fichier existe mais n'est pas
-        # un script PHP (ex. .txt oublie sous script_root) - 403,
-        # jamais servi tel quel : ce handler ne doit jamais devenir un
-        # serveur statique alternatif.
         return HttpResponse.empty(HttpStatus.FORBIDDEN)
 
     env = build_cgi_env(

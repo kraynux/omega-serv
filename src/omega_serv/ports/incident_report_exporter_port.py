@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de generation du rapport local d'un incident
 (plan_active_defense_omega_serv.md, Phase 0/2) - Markdown local, jamais
 un envoi distant."""

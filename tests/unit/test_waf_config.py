@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.security.waf.config import WafConfig, parse_waf_config, validate_waf_config

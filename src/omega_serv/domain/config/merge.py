@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fusion de configuration (spec §6.4, "Ordre de fusion").
 
 Ordre applique ici (les etapes 5-6, exceptions de zone et resolution

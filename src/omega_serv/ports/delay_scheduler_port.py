@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de ralentissement borne (plan_active_defense_omega_serv.md,
 Phase 4, "mode guerre") - jamais une attente bloquante dans la boucle
 asyncio principale (voir "Risques et garde-fous" du plan)."""

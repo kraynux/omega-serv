@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Retour utilisateur 2026-09-13 : "Active Defense gele le terminal,
 oblige de killer" - cas reel rencontre, `var/lib/` appartenant a un
 compte systeme dedie (omega-serv, via systemd) avec une session
@@ -29,16 +28,10 @@ class TestOpenActiveDefenseConnectionPermissionError(unittest.TestCase):
         self.restricted_dir.mkdir(parents=True)
 
     def tearDown(self):
-        # Restaurer les droits AVANT le nettoyage - TemporaryDirectory
-        # doit pouvoir supprimer ce repertoire, jamais laisse verrouille.
         self.restricted_dir.chmod(0o755)
         self._tmp.cleanup()
 
     def test_permission_error_on_connect_is_translated_to_oserror(self):
-        # Le repertoire existe deja (mkdir(exist_ok=True) reussit sans
-        # jamais avoir besoin d'y entrer) mais sqlite3.connect() ne peut
-        # pas y creer de fichier - c'est bien LA, pas au mkdir, que
-        # l'erreur reelle survient.
         self.restricted_dir.chmod(0o500)
         with self.assertRaises(OSError):
             open_active_defense_connection(self.restricted_dir / "active-defense.sqlite3")

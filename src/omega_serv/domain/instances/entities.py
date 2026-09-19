@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entite du registre multi-instance (OMEGA-SERV_PLAN-DETAILLE_
 MULTI_INSTANCE.md §3) - une ligne du registre global
 `~/.config/omega-serv/instances.json`, jamais confondue avec

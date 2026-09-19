@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 1/2 - double simple de
 ThreatStateRepositoryPort pour tester l'ORCHESTRATION (jamais de vraie
 I/O ici, deja couverte par test_sqlite_threat_state_repository.py -

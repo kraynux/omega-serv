@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import json
 import unittest
 from datetime import datetime, timezone
@@ -49,11 +48,6 @@ class TestFormatWafAlertLine(unittest.TestCase):
         self.assertEqual(record["body_excerpt"], "01234")
 
     def test_password_field_in_body_excerpt_is_redacted(self):
-        # Retour utilisateur (audit securite) : `WafFinding` ne
-        # transporte jamais de texte brut par construction, mais
-        # `body_excerpt` est un champ SEPARE qui, lui, journalisait le
-        # corps verbatim - un POST /login inspecte par le WAF exposait
-        # le mot de passe soumis en clair dans l'alerte.
         config = WafLoggingConfig(include_body_excerpt=True, body_excerpt_max_bytes=200)
         line = format_waf_alert_line(_entry(body_excerpt="username=admin&password=Secret123"), config)
         record = json.loads(line)

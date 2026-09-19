@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fuzzing par proprietes du parseur HTTP (porte de sortie Phase 2).
 
 Un serveur HTTP maison est la surface de securite la plus sensible du
@@ -44,10 +43,6 @@ class TestFuzzHttpParserRawBytes(unittest.TestCase):
         asyncio.run(_parse(raw_bytes))
 
 
-# Alphabet volontairement riche en caracteres a risque (CR/LF, NUL,
-# deux-points, espaces) pour explorer les frontieres du parsing ligne
-# par ligne plutot que du binaire totalement aleatoire, rarement
-# valide au-dela de la ligne de requete.
 _RISKY_TEXT = st.text(alphabet="GETHOSPCONNAILhost: \r\n\x00\x01/.", max_size=40)
 
 

@@ -51,7 +51,7 @@ rsync -a \
     --exclude='secure/certificates/**/*.crt' --exclude='secure/certificates/**/*.csr' \
     --exclude='secure/certificates/**/*.p12' --exclude='secure/certificates/**/*.pfx' \
     --exclude='secure/certificates/**/*.der' --exclude='secure/certificates/**/serial.txt' \
-    --exclude='secure/certificates/**/index.txt' --exclude='secure/certificates/acme/**' \
+    --exclude='secure/certificates/**/index.txt' --exclude='secure/certificates/letsencrypt/**' \
     --exclude='secure/secrets/*' --exclude='secure/waf/blocklist.json' --exclude='secure/waf/allowlist.json' \
     --exclude='config/omega-serve.json' \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites de configuration OMEGA-SERV.
 
 Forme fixee par OMEGA-SERV_SPECIFICATION.md §5.2 (exemple de
@@ -121,8 +120,6 @@ class ServerConfig:
     keepalive_timeout_seconds: int = 5
     max_keepalive_requests: int = 30
     listen_backlog: int = 128
-    # Angle mort §9.2 : delai de grace pour l'arret propre (SIGTERM) -
-    # au-dela, les connexions encore actives sont fermees de force.
     shutdown_grace_period_seconds: int = 10
 
     @classmethod
@@ -178,9 +175,6 @@ class SecurityConfig:
     require_valid_host: bool = True
     security_headers_enabled: bool = True
     csp_mode: str = "enforce"
-    # HSTS (doc TLS §13) : desactive par defaut, n'a de sens que si TLS
-    # est reellement actif (verifie a l'application des en-tetes, pas
-    # ici - ce module ne fait que porter la valeur configuree).
     hsts_enabled: bool = False
     hsts_max_age: int = 31536000
     hsts_include_subdomains: bool = True

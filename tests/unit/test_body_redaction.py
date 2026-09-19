@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Retour utilisateur (audit securite) : redact_form_urlencoded_body est
 le correctif du vrai bug trouve - le corps de requete capture (Active
 Defense, alertes WAF) etait journalise verbatim, exposant en clair tout

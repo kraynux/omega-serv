@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Verifier la configuration (plan interface §10, `config check`) -
 structurel (domain/config/validation.py, deja verifie au chargement par
 load_config) puis environnement (application/config/validate_config.py,
@@ -47,12 +46,6 @@ class ConfigCheckScreen(OmegaScreen):
             self._run_check(notify=True)
 
     def _run_check(self, *, notify: bool) -> None:
-        # Retour utilisateur 2026-09-13 : "rien ne se passe quand je
-        # clique sur Verifier" - meme cause que AuditScreen (deja
-        # verifie au on_mount, re-cliquer sur une config INCHANGEE donne
-        # un texte identique sans signal explicite que l'action a
-        # reellement eu lieu). `notify=False` a l'entree, `notify=True`
-        # uniquement sur clic explicite.
         result_widget = self.query_one("#check-result", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:

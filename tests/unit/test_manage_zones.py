@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.application.auth.manage_zones import add_zone, remove_zone

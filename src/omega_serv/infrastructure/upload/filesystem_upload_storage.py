@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de UploadStoragePort - ecriture sur disque via
 FilesystemPort (jamais pathlib directement, meme discipline que les
 autres repositories infrastructure/, voir infrastructure/auth/
@@ -20,12 +19,6 @@ class FilesystemUploadStorage:
         self._project_root = project_root
 
     def store(self, request: UploadRequest, storage_relative_path: str, content: bytes) -> Path:
-        # Nom de stockage genere, jamais le nom fourni par le client
-        # directement comme nom de fichier final - meme si
-        # validate_filename() l'a deja valide, un second niveau de
-        # defense (nom aleatoire + extension conservee) evite les
-        # collisions entre deux clients uploadant un fichier de meme nom
-        # au meme instant.
         extension = "." + request.filename.rsplit(".", 1)[-1] if "." in request.filename else ""
         stored_name = f"{secrets.token_hex(_STORED_NAME_RANDOM_BYTES)}{extension}"
 

@@ -1,5 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir
-# fichier LICENSE)
 """Fiches guide : Registre des capacites, Profils, Audit de securite,
 Sauvegarde de configuration, Reglages de l'application (plan guide
 d'aide, Phase 9)."""

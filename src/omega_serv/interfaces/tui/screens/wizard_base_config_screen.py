@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 4/8 - configuration de base : bind/
 port uniquement (plan interface §11 etape 4), le reste des reglages
 reste aux valeurs du profil choisi a l'etape precedente. Meme validation

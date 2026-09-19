@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Service (plan interface §9, `service status/start/stop/restart/
 enable/disable/install/uninstall`) - toute operation mutante (start/stop/
 restart/enable/disable/install/uninstall) passe par `self.app.suspend()` :
@@ -85,14 +84,6 @@ class ServiceScreen(OmegaScreen):
                     disabled=registered_entry is not None,
                 )
             if registered_entry is not None:
-                # Retour utilisateur 2026-09-13 : renommer ce champ apres
-                # coup (surtout en multi-instance) risquerait de piloter
-                # un service DIFFERENT de celui reellement enregistre pour
-                # ce repertoire - le nom d'une instance enregistree est
-                # fige a la creation (Menu Multi-instance), jamais
-                # improvise ici. Cet ecran ne pilote QUE le service de
-                # CETTE instance ; les autres services/instances se
-                # gerent depuis Menu Multi-instance.
                 yield Static(
                     "Nom fige (instance enregistree en multi-instance) - "
                     "voir Menu Multi-instance pour gerer d'autres instances/services.",
@@ -137,14 +128,6 @@ class ServiceScreen(OmegaScreen):
         self._refresh_status()
 
     def _journey_hint(self) -> str:
-        # Retour utilisateur 2026-09-10 : "Installer l'unite"/"Demarrer"
-        # (et tout ce que ca implique - compte dedie, partage de var/,
-        # reconnexion de session) n'existe que pour systemd - le texte
-        # complet a ete deplace vers le guide d'aide (a venir) pour
-        # rester concis ici ; seul l'essentiel + le detail deja donne
-        # par le toast d'installation suffisent dans l'ecran lui-meme.
-        # Place en bas de l'ecran (sous les boutons) a la demande de
-        # l'utilisateur, jamais au-dessus.
         assert self._manager is not None
         if self._manager.manager_type() == "systemd":
             return (
@@ -153,10 +136,6 @@ class ServiceScreen(OmegaScreen):
                 "pas fait. Lancement immediat sans service : assistant premier lancement "
                 "-> 'Lancer maintenant'."
             )
-        # L'application se veut fonctionnelle sur les trois gestionnaires
-        # (systemd/OpenRC/runit, spec §24) - retour utilisateur : ne pas
-        # laisser ce cas sans indication, renvoyer vers le guide d'aide
-        # (a venir) plutot que de detailler ici un parcours non outille.
         return (
             f"{self._manager.manager_type().upper()} : service deja configure sur le "
             "systeme requis (installation/desinstallation non proposees ici) - voir le "
@@ -168,11 +147,6 @@ class ServiceScreen(OmegaScreen):
             self._container.settings_store.set(_SERVICE_NAME_KEY, event.value)
 
     def _directory_hint(self) -> str:
-        # Retour utilisateur (plan multi-instance §7, corrige la
-        # confusion round 14 : "comment savoir quel repertoire est
-        # pilote depuis cet ecran ?") - invisible pour le cas
-        # tres majoritaire (0/1 instance connue), jamais de bruit pour
-        # rien.
         if len(self._container.instance_registry.load()) <= 1:
             return ""
         return f"Repertoire pilote : {self._container.project_root}"
@@ -185,10 +159,6 @@ class ServiceScreen(OmegaScreen):
         return self.query_one("#service-name", Input).value.strip() or _DEFAULT_SERVICE_NAME
 
     def _registered_entry_for_this_instance(self) -> InstanceEntry | None:
-        # Meme logique exacte que instances_screen.py (jamais une
-        # comparaison de chemin brut - un lien symbolique doit resoudre
-        # vers la meme entree) : cette instance est-elle enregistree en
-        # multi-instance, et si oui, sous quel nom de service ?
         current_path = self._container.filesystem.resolve_real_path(self._container.project_root)
         for entry in self._container.instance_registry.load():
             if entry.path == current_path:
@@ -228,13 +198,6 @@ class ServiceScreen(OmegaScreen):
             self._run_control(button_id)
             return
         if button_id == "install":
-            # Retour utilisateur 2026-09-10 : garde-fou minimal avant
-            # d'installer - une AUTRE unite deja installee pointant vers
-            # ce meme repertoire projet partagerait silencieusement
-            # var/ (fichier PID), la config et le compte systeme dedie
-            # (tous codes en dur par repertoire, jamais par nom de
-            # service) - jamais une vraie multi-instance, juste un
-            # conflit. Lecture seule, aucun privilege requis.
             conflict = check_for_conflicting_unit(
                 self._container.filesystem, self._container.systemd_unit_dir,
                 self._container.project_root, self._service_name(),
@@ -253,11 +216,6 @@ class ServiceScreen(OmegaScreen):
                     timeout=15,
                 )
                 return
-            # Sens inverse, meme retour utilisateur : ce nom de service
-            # est-il deja utilise par une AUTRE installation (autre
-            # repertoire) ? L'installer ici volerait silencieusement le
-            # nom (ecrase le fichier d'unite existant), orphelinant le
-            # controle de l'installation d'origine.
             hijack = check_for_name_hijack(
                 self._container.filesystem, self._container.systemd_unit_dir,
                 self._container.project_root, self._service_name(),

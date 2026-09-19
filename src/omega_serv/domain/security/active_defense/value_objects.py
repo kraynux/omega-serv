@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Value objects Active Defense (plan_active_defense_omega_serv.md,
 Phase 0) - evitent les chaines/dictionnaires non types dans le coeur
 metier, meme convention que domain/security/waf/entities.py (Literal

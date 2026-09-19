@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv service start/stop/restart/enable/disable/status`
 (spec §24.2). Traduit les exceptions du domaine en resultat structure -
 meme patron que manage_users.py/manage_zones.py/manage_blocklist.py."""
@@ -45,10 +44,6 @@ def restart_service(manager: ServiceManagerPort, service_name: str) -> ManageSer
 
 
 def reload_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    # Retour utilisateur 2026-09-11 : distinct de restart_service -
-    # garde les connexions actives, ne fait que relire la config deja
-    # codee cote applicatif (SIGHUP) ; echoue proprement si l'unite
-    # n'a pas ExecReload= (systemd) ou l'equivalent (OpenRC/runit).
     return _control(manager, service_name, "reload", "recharge")
 
 

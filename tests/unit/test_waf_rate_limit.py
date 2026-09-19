@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.security.waf.rate_limit import consume_token
@@ -25,10 +24,8 @@ class TestConsumeToken(unittest.TestCase):
         result = consume_token(state, now=1000.0, capacity=1, window_seconds=10)
         self.assertTrue(result.allowed)
         state = result.new_state
-        # immediat : plus de jeton
         result = consume_token(state, now=1000.0, capacity=1, window_seconds=10)
         self.assertFalse(result.allowed)
-        # 10s plus tard : jeton entierement reconstitue
         result = consume_token(state, now=1010.0, capacity=1, window_seconds=10)
         self.assertTrue(result.allowed)
 

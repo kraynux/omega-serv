@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Rendu live de l'analyse lnav (plan interface §3.4/§8, port direct
 depuis omega-fire interfaces/cli/renderers/lnav_live.py). Encapsule lnav
 dans un pty avec un header/footer OMEGA-SERV persistants autour, et
@@ -61,8 +60,6 @@ SHOW_CURSOR = CSI + "?25h"
 CLEAR_SCREEN = CSI + "2J"
 
 MAX_DRAIN_SECONDS = 0.02  # plafond dur : on rend la main au clavier au
-                          # moins toutes les 20ms, meme si lnav continue
-                          # d'ecrire (horloge d'en-tete, curseur...).
 
 _NAMED_HUES = {
     "red": "red", "green": "green", "yellow": "yellow", "blue": "blue",
@@ -174,15 +171,6 @@ def render_row_colored(screen: pyte.Screen, y: int, cols: int, palette: Palette,
 
 _BREADCRUMB_ISO_TS_RE = re.compile(r"\d{4}-\d{2}-\d{2}T(\d{2}:\d{2}:\d{2})")
 
-# Repli defensif protocole clavier Kitty (voir commentaire dans
-# render_lnav_live pres du `\x1b[<u` envoye au demarrage) : reconnait
-# Ctrl-C/Ctrl-Q encodes en CSI-u ("\x1b[<codepoint>;<modificateurs>u",
-# https://sw.kovidgoyal.net/kitty/keyboard-protocol/) si jamais le
-# terminal est encore en mode etendu au moment ou notre lecture brute
-# du clavier commence - 99 = 'c', 113 = 'q', modificateur 5 = Ctrl seul
-# (valeur = 1 + bit Ctrl(4)). Sans ceci, ces sequences ne contiennent
-# jamais l'octet legacy 0x03/0x11 attendu par la detection habituelle
-# et passent totalement inapercues.
 _KITTY_CTRL_C_RE = re.compile(rb"\x1b\[99;5u")
 _KITTY_CTRL_Q_RE = re.compile(rb"\x1b\[113;5u")
 
@@ -258,20 +246,6 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
     lnav. Doit etre appele depuis un vrai terminal interactif (le
     handoff `App.suspend()` cote TUI garantit deja ca)."""
     out_fd = sys.stdout.fileno()
-    # Retour utilisateur ("Ctrl+C ne fonctionne toujours pas", terminaux
-    # Konsole/Alacritty - tous deux compatibles protocole clavier Kitty)
-    # - Textual (LinuxDriver) active ce protocole au demarrage
-    # (`\x1b[>{flags}u`) et le desactive avant de suspendre (`\x1b[<u`),
-    # mais rien ne garantit empiriquement que la desactivation ait deja
-    # ete traitee par le terminal au moment ou NOTRE PROPRE lecture
-    # brute du clavier commence : un terminal encore en mode Kitty
-    # rapporterait Ctrl-C comme la sequence CSI-u "\x1b[99;5u" plutot
-    # que le simple octet legacy 0x03, que notre detection plus bas ne
-    # reconnaissait pas du tout - echec totalement silencieux, aucun
-    # octet 0x03 a intercepter. On desactive nous-memes le protocole
-    # avant de lire le clavier, en repli defensif : `\x1b[<u` (pop d'un
-    # niveau) est un no-op inoffensif sur un terminal qui ne supporte
-    # pas ce protocole.
     os.write(out_fd, b"\x1b[<u")
     term_cols, term_rows = shutil.get_terminal_size()
     inner_rows = max(term_rows - HEADER_ROWS - FOOTER_ROWS, 5)
@@ -279,28 +253,14 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
     master_fd, pid = spawn_lnav(inner_rows, term_cols, log_paths)
     screen = pyte.Screen(term_cols, inner_rows)
     stream = pyte.Stream(screen)
-    # Meme raison que fire : lnav utilise encore le changement de
-    # charset legacy VT100 (bordures/traits) meme en UTF-8 ; comme on
-    # decode nous-memes l'UTF-8 avant de nourrir le stream, desactiver
-    # ce mode ne casse pas les vrais caracteres UTF-8.
     stream.use_utf8 = False
     responder = TerminalResponder(master_fd, inner_rows, term_cols)
 
     baseline_bg = "default"
     copy_status: str | None = None
-    # Retour utilisateur ("Ctrl+C ne fonctionne toujours pas") - l'echec
-    # de extraction/copie etait jusqu'ici totalement SILENCIEUX (aucune
-    # indication si `current_line` valait None ou si la copie a
-    # reellement ete tentee), rendant le diagnostic impossible depuis
-    # l'exterieur. `copy_status` remplace temporairement la ligne de
-    # statut (fichiers) pour rendre visible ce qui s'est reellement
-    # passe au dernier Ctrl-C.
 
     stdin_fd = sys.stdin.fileno()
     old_term = termios.tcgetattr(stdin_fd)
-    # setraw (pas setcbreak) : cbreak laisse ISIG actif, Ctrl-C
-    # genererait un vrai SIGINT sur notre propre process au lieu d'etre
-    # transmis en octets a lnav.
     tty.setraw(stdin_fd)
 
     def draw_chrome(cols: int, rows: int) -> None:
@@ -386,11 +346,6 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
     signal.signal(signal.SIGWINCH, handle_resize)
 
     os.write(out_fd, (ALT_SCREEN_ON + HIDE_CURSOR).encode())
-    # Nombre de redraws complets a faire au demarrage avant de basculer
-    # sur le diff_redraw leger habituel : au tout premier affichage,
-    # lnav n'a souvent rendu qu'un etat transitoire (indexation pas
-    # terminee) - baseline_bg calcule a ce moment-la peut etre faux et
-    # resterait fige indefiniment sinon.
     settle_redraws_remaining = 5
 
     try:
@@ -399,9 +354,6 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
 
             if stdin_fd in r:
                 key = os.read(stdin_fd, 4096)
-                # Repli CSI-u (protocole clavier Kitty encore actif cote
-                # terminal) : normalise vers les octets legacy attendus
-                # par la detection ci-dessous avant tout le reste.
                 key = _KITTY_CTRL_C_RE.sub(b"\x03", key)
                 key = _KITTY_CTRL_Q_RE.sub(b"\x11", key)
 
@@ -409,10 +361,6 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
                     break
 
                 if b"\x03" in key:
-                    # Ctrl-C : jamais transmise telle quelle. Marque
-                    # cosmetique ('m') puis copie nous-memes la ligne
-                    # courante via OSC 52 (jamais 'c', voir
-                    # extract_current_line_text).
                     os.write(master_fd, b"m")
                     current_line = extract_current_line_text(screen)
                     if current_line:

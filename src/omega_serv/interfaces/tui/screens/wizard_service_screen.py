@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 8/8 - propose d'installer le
 service systeme maintenant (plan interface §11, §9), de lancer le
 serveur reellement au premier plan tout de suite, ou de le rappeler pour
@@ -91,10 +90,5 @@ class WizardServiceScreen(OmegaScreen):
             self.app.notify("Serveur arrete.")
 
     def _pop_to_home(self) -> None:
-        # Depile jusqu'a HomeScreen (comparaison par nom de classe plutot
-        # qu'un import direct - importer home.py depuis ici creerait un
-        # cycle : home -> wizard_welcome_screen -> ... -> ce module ->
-        # home). L'index 0 de la pile est un ecran implicite pose par
-        # Textual lui-meme (jamais HomeScreen), d'ou la double condition.
         while len(self.app.screen_stack) > 1 and type(self.app.screen).__name__ != "HomeScreen":
             self.app.pop_screen()

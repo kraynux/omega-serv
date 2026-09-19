@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 4 : alias, redirections, rewrites,
 directory listing, cache, proxy de confiance - contre un serveur reel."""
 import asyncio
@@ -131,6 +130,46 @@ class TestDirectoryListing(_ServerTestBase):
         status, _, _ = await self._request("GET", "/other-empty/")
         self.assertEqual(status, 404)
 
+    async def test_listing_entries_reference_the_reserved_icon_route(self):
+        status, _, data = await self._request("GET", "/public/")
+        self.assertEqual(status, 200)
+        self.assertIn(b'src="/.omega-serv-icons/text-generic.svg"', data)
+
+    async def test_icon_referenced_by_the_listing_is_actually_servable(self):
+        status, headers, data = await self._request("GET", "/.omega-serv-icons/text-generic.svg")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Content-Type"], "image/svg+xml")
+        self.assertIn(b"<svg", data)
+
+
+class TestIconRoute(_ServerTestBase):
+    """Chemin reserve (meme statut que /healthz) - toujours actif, sans
+    aucune option a activer (le directory listing lui-meme en depend)."""
+
+    async def test_known_icon_is_servable_even_without_dirlisting_enabled(self):
+        status, headers, data = await self._request("GET", "/.omega-serv-icons/folder.svg")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Content-Type"], "image/svg+xml")
+        self.assertIn(b"<svg", data)
+
+    async def test_unknown_icon_name_is_404(self):
+        status, _, _ = await self._request("GET", "/.omega-serv-icons/not-a-real-icon.svg")
+        self.assertEqual(status, 404)
+
+
+class TestIconRouteBypassesUserRules(_ServerTestBase):
+    config_overrides: ClassVar[dict] = {
+        "options": {"redirects": {
+            "enabled": True,
+            "list": [{"url_prefix": "/", "destination": "/index.html", "status_code": 301}],
+        }},
+    }
+
+    async def test_icon_route_is_never_redirected(self):
+        status, _, data = await self._request("GET", "/.omega-serv-icons/folder.svg")
+        self.assertEqual(status, 200)
+        self.assertIn(b"<svg", data)
+
 
 class TestCacheControl(_ServerTestBase):
     config_overrides: ClassVar[dict] = {
@@ -157,9 +196,6 @@ class TestTrustedProxy(_ServerTestBase):
     }
 
     async def test_forwarded_for_honored_from_trusted_peer(self):
-        # Le pair TCP reel (127.0.0.1, le client de test) est declare de
-        # confiance : l'IP client journalisee doit etre celle de
-        # X-Forwarded-For, pas 127.0.0.1.
         await self._request("GET", "/index.html", headers={"X-Forwarded-For": "203.0.113.77"})
         access_log = (self.root / "var" / "log" / "access.log").read_text()
         self.assertIn("203.0.113.77", access_log)

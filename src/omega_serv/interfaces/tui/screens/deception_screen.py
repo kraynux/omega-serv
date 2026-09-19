@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Deception - equivalent TUI de `omega-serv deception
 list/release`. `is_assignment_active` (domaine, pas d'I/O) determine la
 colonne "Etat" - meme regle que le CLI (`list_active()` retourne aussi

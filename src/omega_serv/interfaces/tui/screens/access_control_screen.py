@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Controle d'acces (plan interface §7, `option enable
 access_control` + liste) - CRUD complet sur
 `options["access_control"].settings["list"]` (domain/routing/
@@ -196,7 +195,4 @@ class AccessControlScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
-        # Retour utilisateur (guide d'aide, point 4) : une regle
-        # ecrite sur disque reste sans effet tant que le processus deja
-        # lance n'a pas rechu la config (reload SIGHUP suffit deja).
         notify_reload_required(self, self._container, "Regles de controle d'acces mises a jour.")

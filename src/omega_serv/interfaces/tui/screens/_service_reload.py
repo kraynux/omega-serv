@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Retour utilisateur 2026-09-14 : "il faut qu'il puisse pas taper de
 commande a chaque fois qu'il change le mode de blocage ou met une
 nouvelle regle" - le rechargement a chaud (SIGHUP) existait deja

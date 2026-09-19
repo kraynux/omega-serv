@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Exporter la liste des archives de logs (plan interface §3.4/§8) -
 meme patron JSON/HTML que `capabilities_screen.py`, applique aux metadonnees
 d'archives (`ArchiveStore.get_archive_info`) plutot qu'aux capacites.
@@ -24,9 +23,6 @@ if TYPE_CHECKING:
 
 
 def _export_timestamp() -> str:
-    # Meme format que domain/logs/rotation.py::generate_archive_name
-    # (retour utilisateur 2026-09-09 : ces exports ecrasaient
-    # silencieusement le precedent, faute d'horodatage dans le nom).
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
@@ -88,9 +84,6 @@ class ExportLogArchivesScreen(OmegaScreen):
             self._export_html()
 
     def _exports_dir(self) -> Path:
-        # Respecte la surcharge configuree dans l'ecran Reglages
-        # (parametre "exports_dir_override", touche 'o') - meme mecanisme
-        # que app.py::_deliver_screenshot_to_configured_dir pour les captures.
         override = self._container.settings_store.get("exports_dir_override", "")
         return Path(override) if override else self._container.default_exports_dir
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de lecture/ecriture de la blocklist WAF (doc WAF, tableau
 "Repartition Clean Architecture" : ports/blocklist_port.py)."""
 from __future__ import annotations

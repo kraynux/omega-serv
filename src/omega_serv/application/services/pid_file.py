@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fichier PID (angle mort §9.1 : "signal SIGHUP vers le PID de
 var/run/omega-serv.pid"). Ecriture/lecture/suppression uniquement -
 l'envoi effectif du signal est une commande shell externe

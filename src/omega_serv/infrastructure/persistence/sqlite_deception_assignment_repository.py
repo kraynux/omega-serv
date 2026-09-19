@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implemente ports.deception_assignment_repository_port.
 DeceptionAssignmentRepositoryPort. Meme convention que les autres
 repositories sqlite_*.py : connexion deja ouverte, `sqlite3` sous

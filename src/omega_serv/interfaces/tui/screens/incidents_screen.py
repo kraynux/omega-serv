@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Incidents - equivalent TUI de `omega-serv incidents
 list/show/close/export-ioc/generate-report`. `ioc_export_runner`/
 `incident_report_export_runner` sont injectes depuis `__main__.py`

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Format et logique de correspondance de la blocklist (doc WAF §5).
 Pur : parsing/validation/correspondance IP-dans-CIDR et verification
 d'expiration, sans aucune I/O - la lecture/ecriture du fichier JSON est

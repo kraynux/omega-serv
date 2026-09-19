@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : assembler le serveur HTTP a partir de la configuration
 et des ports du conteneur de dependances - point unique ou le resolveur
 de chemin, le serveur et (si l'option waf est active) les
@@ -223,12 +222,6 @@ def build_server(
     proxy_client_ssl_context_verified = None
     proxy_client_ssl_context_unverified = None
     if proxy_client is not None:
-        # Import local, pas en tete de module - meme raison que
-        # build_ssl_context ci-dessus : bootstrap/container.py atteint
-        # build_waf_collaborators (meme fichier) transitivement, et
-        # bootstrap/ est protege par le contrat import-linter "ssl
-        # seulement dans infrastructure.tls.ssl_context_builder" (voir
-        # OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md §5.3/§12).
         from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
         proxy_client_ssl_context_verified = build_client_ssl_context(verify_upstream_tls=True)
         proxy_client_ssl_context_unverified = build_client_ssl_context(verify_upstream_tls=False)

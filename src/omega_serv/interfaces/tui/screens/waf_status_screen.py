@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Etat WAF (retour utilisateur 2026-09-13 : restructuration
 du menu WAF - Etat/Modules/Tester/Custom, deplace du menu principal
 "Active Securite" plutot que la Configuration detaillee, meme raison que

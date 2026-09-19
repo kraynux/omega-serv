@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Validation metier d'un upload (pure, aucune I/O) - spec §27, plan
 corrige §4. Nom de fichier restreint a une liste blanche stricte plutot
 qu'une detection de '..'/'/' au cas par cas (meme principe que

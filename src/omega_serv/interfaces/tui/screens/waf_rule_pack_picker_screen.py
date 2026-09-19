@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modale de selection d'un pack de regles WAF (retour utilisateur
 2026-09-13 : "au lieu d'un champ et rentrer l'adresse a la main,
 proposer un menu deroulant... avec un descriptif en dessous"). Liste

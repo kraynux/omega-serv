@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Encodage/decodage purs du protocole FastCGI 1.0 (spec §21 : "socket
 Unix local... vers PHP-FPM"). Aucune I/O ici - la communication reseau
 reelle est infrastructure/fastcgi/asyncio_fastcgi_client.py, qui
@@ -16,7 +15,6 @@ from dataclasses import dataclass
 FCGI_VERSION_1 = 1
 MAX_RECORD_CONTENT_LENGTH = 65535  # champ 16 bits, borne dure du format
 
-# Types d'enregistrement
 FCGI_BEGIN_REQUEST = 1
 FCGI_ABORT_REQUEST = 2
 FCGI_END_REQUEST = 3
@@ -29,10 +27,8 @@ FCGI_GET_VALUES = 9
 FCGI_GET_VALUES_RESULT = 10
 FCGI_UNKNOWN_TYPE = 11
 
-# Roles
 FCGI_RESPONDER = 1
 
-# Statuts de protocole (FCGI_EndRequestBody.protocolStatus)
 FCGI_REQUEST_COMPLETE = 0
 FCGI_CANT_MPX_CONN = 1
 FCGI_OVERLOADED = 2

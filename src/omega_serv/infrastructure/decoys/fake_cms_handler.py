@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Leurre `fake_cms` (plan_active_defense_omega_serv.md, §"Honeypots
 V1"/Phase 5) - fixture STATIQUE et deterministe, Niveau 1 (in-process,
 isolation faible assumee, voir "Routage vers les leurres"). Simule un

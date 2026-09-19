@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Zones de controle d'acces par prefixe d'URL (retour utilisateur
 2026-09-09) - bloque des requetes (toutes methodes) sur un prefixe tout
 en pouvant re-autoriser un sous-chemin precis, ex: deny "/private/",

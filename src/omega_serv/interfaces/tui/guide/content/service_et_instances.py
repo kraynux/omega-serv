@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiches guide : Options (Phase 0 - ecran pilote), Service, Multi-
 instance, Etat & Ressources, Simuler une requete, Verifier la
 configuration (Phase 7)."""

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs generate-self-signed` (doc TLS §6,
 "Resume avant creation" - la confirmation elle-meme est une
 responsabilite CLI, ce cas d'usage effectue l'operation une fois

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Export HTML (Jinja2 + theme d'export choisi). Seul module autorise a
 importer jinja2 directement - voir contrat import-linter "jinja2
 seulement dans infrastructure.exporters.html_exporter" dans

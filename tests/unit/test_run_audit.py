@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -53,9 +52,6 @@ class TestRunAudit(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
     def test_hsts_without_tls_reported_as_core_env_critical(self):
-        # Porte deja bloquante (domain/config/validation.py) - reexecutee
-        # ici en CRITICAL plutot que redecrite comme une regle d'audit
-        # separee (evite la duplication signalee dans le plan corrige).
         config = OmegaServConfig.from_dict({"security": {"hsts_enabled": True}})
         result = self._run(config)
         core_findings = [f for f in result.findings if f.rule_id == "CORE-STRUCT"]
@@ -118,9 +114,6 @@ class TestRunAudit(unittest.TestCase):
         self.assertFalse(any(f.rule_id == "PROXY-001" for f in result.findings))
 
     def test_proxy_upstream_tls_rule_absent_for_http_only_zone(self):
-        # verify_upstream_tls=False n'est pertinent que si un upstream
-        # est reellement en HTTPS - une zone HTTP pure n'est jamais
-        # concernee par ce reglage.
         config = OmegaServConfig.from_dict({"options": {"reverse_proxy": {
             "enabled": True,
             "zones": [{

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 2 - double simple du
 repository pour tester l'ORCHESTRATION (vraie I/O deja couverte par
 test_sqlite_incident_repository.py)."""

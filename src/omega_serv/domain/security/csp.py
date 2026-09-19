@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """CSP de base (spec §12.3/§12.4).
 
 Politique stricte de depart pour un site statique minimal - la CSP par

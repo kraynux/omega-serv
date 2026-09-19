@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : charger et valider la configuration au demarrage.
 
 Orchestre le port de configuration (I/O reelle deleguee) et le

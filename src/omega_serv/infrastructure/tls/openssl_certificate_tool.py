@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de CertificateToolPort via l'executable
 `openssl` en subprocess (doc TLS §2 : "Appels OpenSSL, lecture X.509").
 Perimetre 6a+6b : certificat auto-signe (RSA 2048/4096, ECDSA P-256/
@@ -137,9 +136,6 @@ class OpensslCertificateTool:
         if not result.ok:
             raise CertificateToolError(f"echec de generation de la CA locale : {result.stderr.strip()}")
 
-        # Suivi de serie/index (doc TLS §7.3 etape 5) - initialise ici,
-        # jamais recree a chaque signature (voir sign_csr, qui lit puis
-        # incremente serial_path via l'option -CAserial d'openssl).
         serial_path.write_text("1000\n")
         index_path.write_text("")
 
@@ -172,10 +168,6 @@ class OpensslCertificateTool:
     ) -> None:
         out_cert_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Extensions du certificat signe (jamais celles, potentiellement
-        # abusives, d'une CSR non fiable) : basicConstraints/serverAuth
-        # fixes ici, SAN copie depuis la CSR via -copy_extensions (seul
-        # champ de la CSR qu'il est legitime de reprendre tel quel).
         ext_file = out_cert_path.with_suffix(".ext.cnf")
         ext_file.write_text("basicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n")
         try:
@@ -206,9 +198,6 @@ class OpensslCertificateTool:
     def revoke_certificate(
         self, cert_path: Path, ca_key_path: Path, ca_cert_path: Path, ca_key_password: str, index_path: Path
     ) -> None:
-        # Signature de la CA verifiee avant toute modification de
-        # l'index (doc TLS §5) - refuse de marquer comme revoque un
-        # certificat qui ne provient pas de cette CA.
         verify_result = self._runner.run(
             ["openssl", "verify", "-CAfile", str(ca_cert_path), str(cert_path)], timeout=15
         )
@@ -245,8 +234,6 @@ class OpensslCertificateTool:
         return result.stdout.strip().removeprefix("serial=")
 
     def _append_index_entry(self, index_path: Path, cert_path: Path) -> None:
-        # Format simplifie inspire de l'index.txt reel d'openssl :
-        # statut(V/R) TAB expiration TAB date_revocation TAB serie TAB sujet.
         info = self.inspect_certificate(cert_path)
         expiry = info.not_after.strftime("%y%m%d%H%M%SZ")
         serial = self._read_serial(cert_path)
@@ -256,8 +243,6 @@ class OpensslCertificateTool:
 
 
 def _parse_openssl_date(raw: str) -> datetime:
-    # Format fixe d'openssl : "Sep  5 21:21:29 2026 GMT" (toujours UTC,
-    # jamais interprete depuis %Z - on force timezone.utc directement).
     return datetime.strptime(raw.strip().removesuffix(" GMT"), "%b %d %H:%M:%S %Y").replace(tzinfo=timezone.utc)
 
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Restaurer une archive de log (plan interface §3.4/§8) -
 `ArchiveStore.extract_archive`, port direct."""
 from __future__ import annotations

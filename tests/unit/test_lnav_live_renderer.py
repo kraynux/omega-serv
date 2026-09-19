@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste les fonctions pures de infrastructure/lnav/live_renderer.py -
 jamais render_lnav_live() lui-meme (boucle bloquante exigeant un vrai
 terminal interactif, testee manuellement uniquement, comme chez fire)."""
@@ -165,9 +164,6 @@ class TestExtractCurrentLineText(unittest.TestCase):
         self.assertIn("/b.html", result)
 
     def test_duplicate_timestamps_without_any_highlight_fall_back_to_first(self):
-        # Preserve le comportement historique (jamais None ni une
-        # exception) si aucune ligne ne se distingue par surlignage -
-        # ne doit jamais regresser ce cas deja fonctionnel.
         screen = pyte.Screen(80, 5)
         self._feed(
             screen,
@@ -201,7 +197,6 @@ class TestKittyKeyboardProtocolFallback(unittest.TestCase):
         self.assertEqual(_KITTY_CTRL_C_RE.sub(b"\x03", b"\x03"), b"\x03")
 
     def test_unrelated_csi_u_sequence_is_not_matched(self):
-        # 'a' (97) avec Ctrl, jamais confondu avec 'c' (99) ou 'q' (113).
         self.assertEqual(_KITTY_CTRL_C_RE.sub(b"\x03", b"\x1b[97;5u"), b"\x1b[97;5u")
         self.assertEqual(_KITTY_CTRL_Q_RE.sub(b"\x11", b"\x1b[97;5u"), b"\x1b[97;5u")
 

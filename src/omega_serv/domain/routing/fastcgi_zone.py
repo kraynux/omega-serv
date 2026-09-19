@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Configuration FastCGI (spec §21). Modele de zone volontairement
 simplifie (OMEGA-SERV_PLAN_DEVELOPPEMENT.md §6) : UN SEUL couple
 prefixe URL / racine d'execution, pas une liste de zones PHP - decision

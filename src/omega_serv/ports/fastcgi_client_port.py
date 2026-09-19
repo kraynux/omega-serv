@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de communication avec un backend FastCGI (spec §21)."""
 from __future__ import annotations
 

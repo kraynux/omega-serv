@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Table MIME explicite et fermee.
 
 Decision issue de la revue des angles morts avant Phase 0

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de UsersRepositoryPort - fichier JSON
 (paths.auth_file), ecriture atomique (meme mecanisme que la
 configuration principale)."""
@@ -38,11 +37,6 @@ class JsonUsersRepository:
             {"version": 1, "users": [{"username": u.username, "password_hash": u.password_hash} for u in users]},
             indent=2, ensure_ascii=False,
         ) + "\n"
-        # secure/auth/ n'existe pas forcement encore sur un projet neuf
-        # (ni config init ni install.sh ne le creent) - meme fix que
-        # json_settings_store.py, sinon le tout premier `auth add-user`
-        # echoue avec FileNotFoundError (trouve en testant l'ecran TUI
-        # Menu 3 §7.1 sur un projet temporaire fraichement genere).
         self._fs.make_directory(self._path.parent)
         self._fs.atomic_write_text(self._path, content)
         self._fs.set_file_mode(self._path, 0o600)

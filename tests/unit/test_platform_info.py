@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import grp
 import os
 import unittest
@@ -19,8 +18,6 @@ class TestRunningAsRoot(unittest.TestCase):
 
 class TestIsProcessRunning(unittest.TestCase):
     def test_true_for_the_current_process(self):
-        # Vrai PID, reellement en cours d'execution - le plus fiable
-        # (pas de patch d'os.kill necessaire pour ce cas).
         self.assertTrue(is_process_running(os.getpid()))
 
     def test_false_when_process_lookup_error(self):
@@ -28,9 +25,6 @@ class TestIsProcessRunning(unittest.TestCase):
             self.assertFalse(is_process_running(999999))
 
     def test_true_when_permission_error(self):
-        # PID existant mais possede par un autre utilisateur - le
-        # processus existe reellement, seule la verification
-        # d'appartenance echoue.
         with patch("os.kill", side_effect=PermissionError):
             self.assertTrue(is_process_running(1))
 
@@ -41,12 +35,9 @@ class TestIsMissingLiveGroup(unittest.TestCase):
     effet pour une session deja lancee au moment de l'ajout."""
 
     def test_false_when_group_does_not_exist(self):
-        # Aucun service dedie n'a jamais ete installe - rien a signaler.
         self.assertFalse(is_missing_live_group("does-not-exist-omega-serv-test"))
 
     def test_false_when_group_exists_and_is_live(self):
-        # Groupe PRIMAIRE reel du processus courant (toujours "vivant"
-        # par construction, POSIX garanti) - jamais un cas de mismatch.
         own_group_name = grp.getgrgid(os.getgid()).gr_name
         self.assertFalse(is_missing_live_group(own_group_name))
 

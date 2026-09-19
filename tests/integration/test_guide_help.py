@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration du guide d'aide (OMEGA-SERV_PLAN-DETAILLE_GUIDE_
 AIDE.md, Phase 0) : aide contextuelle (`F1`), menu Guide navigable (`a`),
 FAQ - meme discipline unittest/Pilot que le reste de la suite TUI.
@@ -79,9 +78,6 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIn("CONFIGURATION DE BASE", str(pilot.app.screen.query_one(".omega-title").content))
 
     async def test_contextual_help_works_on_home_screen(self):
-        # HomeScreen n'herite pas de OmegaScreen (echap y a un role
-        # different) - verifie que l'aide contextuelle fonctionne quand
-        # meme, via show_contextual_help() partagee (_base.py).
         container = self._container()
         generate_default_config(container.configuration, container.filesystem, container.config_file)
         app = OmegaServApp(container)
@@ -106,12 +102,6 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIn("BIENVENUE", str(pilot.app.screen.query_one(".omega-title").content))
 
     async def test_contextual_help_falls_back_to_help_screen_when_undocumented(self):
-        # Les 64 ecrans reels sont maintenant tous documentes (Phase 9) -
-        # ce test verifie donc le mecanisme de repli lui-meme via un
-        # ecran synthetique, jamais reference dans SCREEN_GUIDES, plutot
-        # que de dependre d'un vrai ecran "pas encore documente" qui n'existe
-        # plus. Meme fonction reelle (_base.py::show_contextual_help) que
-        # pour tout ecran reel.
         class _NeverDocumentedTestScreen(OmegaScreen):
             def compose(self) -> ComposeResult:
                 yield Static("test")
@@ -138,7 +128,6 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, GuideMenuScreen)
             table = pilot.app.screen.query_one("#guide-menu-table", DataTable)
             self.assertGreater(table.row_count, 0)
-            # "Options" est documentee des la Phase 0 (ecran pilote).
             options_row = next(
                 i for i in range(table.row_count) if table.get_row_at(i)[1] == "Options"
             )
@@ -148,11 +137,6 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, GuideDetailScreen)
 
     async def test_guide_menu_notifies_instead_of_navigating_when_undocumented(self):
-        # Les 64 entrees du menu sont maintenant toutes documentees
-        # (Phase 9) - simule une entree non documentee en retirant
-        # temporairement une fiche du registre (patch.dict la restaure
-        # automatiquement), plutot que de dependre d'un vrai "A venir"
-        # qui n'existe plus.
         from unittest.mock import patch
 
         from omega_serv.interfaces.tui.guide.registry import SCREEN_GUIDES
@@ -176,7 +160,6 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             table.move_cursor(row=undocumented_row)
             table.action_select_cursor()
             await pilot.pause()
-            # Reste sur le menu Guide - jamais de navigation vers une fiche inexistante.
             self.assertIsInstance(pilot.app.screen, GuideMenuScreen)
             messages = [str(n.message) for n in pilot.app._notifications]
             self.assertTrue(any("pas encore documente" in m for m in messages))

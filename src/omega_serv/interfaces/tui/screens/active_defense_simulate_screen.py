@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Simuler - equivalent TUI de `omega-serv active-defense
 simulate` (plan_active_defense_omega_serv.md, Phase 4 : "ajouter
 simulation, dry-run et explication de la decision dans CLI/TUI").

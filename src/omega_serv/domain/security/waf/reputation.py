@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Escalade de reputation (doc WAF §8) : separe le score WAF d'une
 requete individuelle du comportement recidiviste d'une IP dans le
 temps. Fonction pure - le comptage effectif des hits par IP/fenetre est

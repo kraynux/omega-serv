@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de gestion de service (spec §24). Adapte depuis
 omega-fire's `ServiceManager` (ABC) vers un Protocol - convention
 OMEGA-SERV deja utilisee partout ailleurs (WafPort, CertificateToolPort,

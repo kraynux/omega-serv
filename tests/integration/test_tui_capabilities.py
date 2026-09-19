@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase IV de l'interface (plan interface §12,
 menu 1, §3.3/§5) : registre des capacites - scan reel (pas de mock, les
 sondes elles-memes n'ont pas d'effet de bord dangereux : socket.bind
@@ -72,7 +71,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(130, 50)) as pilot:
             await self._open_capabilities(pilot)
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 17)
+            self.assertEqual(table.row_count, 18)
             self.assertEqual(str(pilot.app.screen.query_one("#scan-error").content), "")
 
     async def test_scan_includes_fastcgi_socket_only_when_option_enabled(self):
@@ -88,7 +87,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(130, 50)) as pilot:
             await self._open_capabilities(pilot)
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 18)
+            self.assertEqual(table.row_count, 19)
 
     async def test_row_selection_opens_detail_with_matching_capability(self):
         container = self._container()
@@ -119,7 +118,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(export_paths), 1)
         payload = json.loads(export_paths[0].read_text())
         self.assertIn("capabilities", payload)
-        self.assertEqual(len(payload["capabilities"]), 17)
+        self.assertEqual(len(payload["capabilities"]), 18)
         self.assertIn("status", payload["capabilities"][0])
 
     async def test_export_html_writes_table(self):
@@ -146,7 +145,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#refresh", Button).press()
             await pilot.pause()
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 17)
+            self.assertEqual(table.row_count, 18)
 
     async def test_scan_without_config_shows_error(self):
         container = self._container()
@@ -167,10 +166,6 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, HomeScreen)
 
     async def test_python_version_probe_is_available(self):
-        # Verification directe (hors TUI) que la sonde reelle produit un
-        # resultat coherent sur CETTE machine (Python >= 3.10 requis, la
-        # machine de test l'est forcement puisqu'elle fait tourner le
-        # projet lui-meme).
         container = self._container()
         scanner = container.build_capability_scanner(8080, None)
         capabilities = scanner.scan()

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste l'implementation asyncio reelle contre un faux serveur FastCGI
 (vrai socket Unix, vrais octets sur le fil) - meme discipline que les
 autres tests d'infrastructure (I/O reelle, pas de mock du transport)."""
@@ -81,9 +80,6 @@ class TestAsyncioFastCgiClient(unittest.IsolatedAsyncioTestCase):
             try:
                 await server_task
             except (asyncio.CancelledError, Exception):  # noqa: BLE001, S110
-                # Meme discipline que test_fastcgi_server.py : nettoyage
-                # best-effort d'une tache qu'on vient d'annuler nous-memes,
-                # jamais un echec de test a cause de ca.
                 pass
 
     async def test_receives_parsed_response(self):

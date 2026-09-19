@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Statistiques de flux en direct (retour utilisateur 2026-09-09, ecran
 "Etat & Ressources") - transpose depuis omega-fire
 (interfaces/cli/renderers/logs_live.py::LogBuffer.get_stats(), meme

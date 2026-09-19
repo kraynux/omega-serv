@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fuzzing par proprietes du resolveur de chemin (porte de sortie
 Phase 2, decision OMEGA-SERV_PLAN_DEVELOPPEMENT.md §9.4 : hypothesis
 plutot qu'un fuzzer boite noire, disproportionne pour ce perimetre).
@@ -45,9 +44,6 @@ class TestFuzzNormalizeUriPath(unittest.TestCase):
     @given(st.lists(st.text(alphabet="abcdefghij.._%2f", min_size=0, max_size=8), max_size=15))
     @settings(max_examples=3000)
     def test_targeted_traversal_alphabet_never_crashes(self, segments):
-        # Alphabet restreint mais riche en pieges (points, encodages
-        # partiels de '/' et '..') pour concentrer les essais sur la
-        # zone a risque plutot que du texte Unicode generique.
         raw_path = "/" + "/".join(segments)
         decision = normalize_uri_path(raw_path)
         self.assertIsInstance(decision.ok, bool)

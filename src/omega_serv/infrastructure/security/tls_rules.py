@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regle d'audit TLS avec vraie I/O (plan corrige §6) - TLS-002,
 certificat proche de l'expiration. L'expiration REELLE (deja passee)
 est deja une porte bloquante au demarrage

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from pathlib import Path
@@ -142,17 +141,10 @@ class TestServeStaticFile(unittest.TestCase):
         self.assertIn(b"bienvenue", response.body)
         self.assertIn(b"lisez-moi", response.body)
         self.assertIn(b"data.txt", response.body)
-        # HEADER.txt/README.txt eux-memes restent masques de la liste
-        # (hide_header_file/hide_readme_file par defaut).
         self.assertNotIn(b'>HEADER.txt<', response.body)
         self.assertNotIn(b'>README.txt<', response.body)
 
     def test_directory_listing_marks_subdirectories_with_folder_icon(self):
-        # Retour utilisateur ("on ne fait pas la difference entre un
-        # fichier et un dossier") : render_directory_listing_html() reste
-        # pur (aucun FilesystemPort) - c'est bien ICI, via un vrai
-        # LocalFilesystem (jamais un fake), que la distinction
-        # fichier/dossier doit reellement se faire.
         (self.webroot / "empty-dir").mkdir()
         (self.webroot / "empty-dir" / "sub").mkdir()
         (self.webroot / "empty-dir" / "data.txt").write_text("x")
@@ -162,8 +154,17 @@ class TestServeStaticFile(unittest.TestCase):
             dirlisting_zones=(Zone("/empty-dir", True),),
         )
         self.assertEqual(response.status, HttpStatus.OK)
-        self.assertIn(b'<li class="omega-dir"><a href="/empty-dir/sub">sub/</a></li>', response.body)
-        self.assertIn(b'<li class="omega-file"><a href="/empty-dir/data.txt">data.txt</a></li>', response.body)
+        self.assertIn(
+            b'<li class="omega-dir"><a class="omega-listing-name" href="/empty-dir/sub">'
+            b'<img class="omega-listing-icon" src="/.omega-serv-icons/folder.svg" alt="">sub/</a>',
+            response.body,
+        )
+        self.assertIn(
+            b'<li class="omega-file"><a class="omega-listing-name" href="/empty-dir/data.txt">'
+            b'<img class="omega-listing-icon" src="/.omega-serv-icons/text-generic.svg" alt="">'
+            b"data.txt</a>",
+            response.body,
+        )
 
     def test_directory_listing_show_header_without_file_does_not_crash(self):
         (self.webroot / "empty-dir").mkdir()

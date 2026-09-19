@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs verify/show/check-expiry` (doc TLS
 §10). Combine l'inspection X.509, la correspondance cle/certificat et
 les permissions de la cle en un seul rapport - le CLI n'a plus qu'a

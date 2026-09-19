@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage AssignDeceptionCommand/ReleaseDeceptionCommand et
 resolution de RoutingDecision (plan_active_defense_omega_serv.md,
 Phase 3)."""

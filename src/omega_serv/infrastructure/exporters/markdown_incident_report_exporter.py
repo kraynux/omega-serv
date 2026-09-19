@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implemente ports.incident_report_exporter_port.IncidentReportExporterPort
 - rapport Markdown local (plan_active_defense_omega_serv.md, §"IoC et
 rapports"). Genere par simple assemblage de chaines - jamais jinja2

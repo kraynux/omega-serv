@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from pathlib import Path
@@ -179,8 +178,6 @@ class TestRouteRequest(unittest.IsolatedAsyncioTestCase):
         })
         request = _make_request("/upload/", method="POST", body=b"")
         response = await self._route_request(request, config)
-        # Pas de zone d'upload active : la requete continue dans le
-        # pipeline normal, qui rejette POST sur le handler statique.
         self.assertEqual(response.status, HttpStatus.METHOD_NOT_ALLOWED)
 
     async def test_disabled_options_are_ignored(self):

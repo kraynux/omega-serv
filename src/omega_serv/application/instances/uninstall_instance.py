@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : desinstallation complete d'une instance (OMEGA-SERV_
 PLAN-DETAILLE_MULTI_INSTANCE.md §8.5/§9 Phase E) - retire l'unite
 systemd si presente (arret+desactivation d'abord, jamais un fichier
@@ -56,21 +55,10 @@ def uninstall_instance(
         try:
             uninstall_result = uninstall_systemd_service(filesystem, unit_path, service_manager)
         except ServiceControlError as e:
-            # `remove_unit_file` (sudo) peut lever directement (meme
-            # convention non-attrapee que install_systemd_service pour
-            # write_unit_file/create_system_user/grant_directory_access,
-            # cf. service_screen.py) - attrapee ICI specifiquement, car
-            # cette fonction promet un UninstallInstanceResult structure,
-            # jamais une exception qui laisserait le registre/repertoire
-            # dans un etat ambigu.
             messages.append(str(e))
             return UninstallInstanceResult(False, "\n".join(messages))
         messages.append(uninstall_result.message)
         if not uninstall_result.success:
-            # Etape privilegiee echouee (unite introuvable) : jamais
-            # continuer vers le registre/repertoire, l'unite reste
-            # installee - un etat partiel coherent, pas un abandon
-            # silencieux au milieu d'une suppression de donnees.
             return UninstallInstanceResult(False, "\n".join(messages))
 
         still_used = check_account_still_in_use(
@@ -82,11 +70,6 @@ def uninstall_instance(
                 remove_system_user(DEFAULT_SYSTEM_USER, DEFAULT_SYSTEM_GROUP)
                 messages.append(f"Compte systeme {DEFAULT_SYSTEM_USER!r} retire (plus reference par aucune autre instance).")
             except ServiceControlError as e:
-                # Echec de nettoyage non bloquant : le compte reste, mais
-                # l'unite de CETTE instance est deja retiree - continuer
-                # vers le registre/repertoire plutot qu'abandonner une
-                # desinstallation par ailleurs reussie pour un detail de
-                # nettoyage secondaire.
                 messages.append(f"Echec du retrait du compte systeme {DEFAULT_SYSTEM_USER!r} : {e}")
         elif still_used is not None:
             messages.append(f"Compte systeme {DEFAULT_SYSTEM_USER!r} conserve (encore utilise par {still_used!r}).")

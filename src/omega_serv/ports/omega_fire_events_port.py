@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de lecture des evenements de ban omega-fire
 (plan_active_defense_omega_serv.md, section "Integration omega-fire") -
 volontairement en lecture seule, omega-fire demeure la source

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Metadonnees pures d'une sauvegarde de configuration (plan interface
 §3.5/§10, port adapte depuis omega-fire domain/persistence/snapshots.py::
 SnapshotMetadata - seule piece identifiee comme generique et reutilisable
@@ -47,10 +46,4 @@ class SnapshotMetadata:
 
 
 def create_snapshot_id(timestamp: datetime) -> str:
-    # Microsecondes incluses (pas seulement %Y%m%d_%H%M%S) : deux appels
-    # rapproches (ex. un script appelant "config backup" plusieurs fois
-    # de suite) tombant dans la meme seconde produiraient sinon le meme
-    # snapshot_id, et la seconde sauvegarde ecraserait silencieusement la
-    # premiere (meme nom de fichier .tar.gz/.json) - bug reel trouve en
-    # testant deux sauvegardes rapprochees manuellement.
     return f"snapshot_{timestamp.strftime('%Y%m%d_%H%M%S_%f')}"

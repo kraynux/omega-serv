@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Enregistrement (bookkeeping seul) des automatisations de rotation de
 logs demandees par l'utilisateur - meme comportement que
 omega-fire/interfaces/tui/screens/rotate_logs_screen.py::scheduled_

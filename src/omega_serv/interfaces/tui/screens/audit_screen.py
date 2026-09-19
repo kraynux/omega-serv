@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Audit de securite (plan interface §10, `audit security`) -
 meme jeu de regles que le CLI (application/security/run_audit.py),
 injecte via container.audit_runner (bootstrap/container.py) : le cas
@@ -65,13 +64,6 @@ class AuditScreen(OmegaScreen):
             self._run_audit(notify=True)
 
     def _run_audit(self, *, notify: bool) -> None:
-        # Retour utilisateur 2026-09-13 : "il ne se passe rien quand
-        # j'appuie sur Auditer" - le resultat existait deja bien (calcule
-        # des on_mount), mais re-cliquer sur une config INCHANGEE produit
-        # un texte IDENTIQUE, sans aucun signal que l'action a reellement
-        # eu lieu. `notify=False` a l'entree de l'ecran (silencieux,
-        # jamais une notification a chaque navigation), `notify=True`
-        # uniquement sur un clic explicite du bouton.
         result_widget = self.query_one("#audit-result", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
@@ -90,11 +82,6 @@ class AuditScreen(OmegaScreen):
                 self.app.notify("Audit indisponible dans cet environnement.", severity="error")
             return
 
-        # Retour utilisateur (audit "gel d'ecran") : le runner verifie
-        # des certificats via openssl en sous-processus et sonde le
-        # filesystem - execute directement sur la boucle asyncio, gele
-        # toute l'interface le temps de l'audit. Meme patron que
-        # generate_self_signed_screen.py : deporte dans un thread.
         result_widget.update("Audit en cours...")
         self.query_one("#audit", Button).disabled = True
         config = load_result.config

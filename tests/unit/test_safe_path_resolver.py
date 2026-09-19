@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,10 +37,6 @@ class TestSafePathResolver(unittest.TestCase):
         self.assertEqual(result.rejection_reason, PathRejectionReason.TRAVERSAL_ATTEMPT)
 
     def test_symlink_escaping_webroot_rejected(self):
-        # Lien symbolique DANS le webroot mais pointant hors de lui -
-        # le confinement porte sur le chemin REEL apres resolution
-        # (spec §11.2 etape 6/7 : "ne pas suivre les symlinks qui
-        # sortent du webroot"), pas sur le chemin demande.
         symlink_path = self.webroot / "escape"
         symlink_path.symlink_to(self.secure / "secret.txt")
 
@@ -57,9 +52,6 @@ class TestSafePathResolver(unittest.TestCase):
         self.assertTrue(result.ok)
 
     def test_nonexistent_file_still_resolves_safely(self):
-        # La resolution de chemin ne verifie PAS l'existence du fichier
-        # (403/404 est une decision du handler, Phase 1) - elle garantit
-        # seulement le confinement.
         result = self.resolver.resolve("/does-not-exist.html")
         self.assertTrue(result.ok)
         self.assertEqual(result.absolute_path, self.webroot / "does-not-exist.html")

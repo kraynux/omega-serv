@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv auth create-zone/remove-zone` (spec §15.3/§15.4)."""
 from __future__ import annotations
 

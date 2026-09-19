@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Generation d'unite systemd durcie (spec §24.3, OMEGA-SERV_PLAN_DEVELOPPEMENT.md
 §6 : durcissement "par defaut, pas a etudier"). Code neuf (contrairement
 au reste du module services/, qui porte omega-fire) - fonction pure de
@@ -28,10 +27,6 @@ class SystemdUnitParams:
     config_path: Path
     user: str
     group: str
-    # Legerement au-dessus du delai de grace interne d'arret propre
-    # (angle mort §9.2) - filet de securite externe si la logique
-    # interne restait bloquee, jamais la meme valeur exacte que le
-    # delai interne (sinon les deux courses seraient simultanees).
     stop_timeout_seconds: int = 15
 
 

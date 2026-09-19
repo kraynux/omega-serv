@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de persistance de la configuration.
 
 L'ecriture atomique (spec §5.3 : fichier temporaire, fsync, remplacement

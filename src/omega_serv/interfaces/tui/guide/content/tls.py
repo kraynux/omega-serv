@@ -1,5 +1,6 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
-"""Fiches guide : TLS - menu + 5 sous-ecrans (plan guide d'aide, Phase 5)."""
+"""Fiches guide : TLS - menu + 7 sous-ecrans (plan guide d'aide, Phase 5 ;
+LetsEncryptScreen/RenewalScheduleScreen ajoutes par
+OMEGA-SERV_PLAN-DETAILLE_TLS_AUTO.md, Phase 6)."""
 from __future__ import annotations
 
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
@@ -143,6 +144,115 @@ CA_WIZARD_SCREEN = ScreenGuide(
     ),
 )
 
+LETS_ENCRYPT_SCREEN = ScreenGuide(
+    screen_class_name="LetsEncryptScreen",
+    title="Assistant Let's Encrypt (Certbot)",
+    acces="Configuration detaillee -> TLS -> Assistant Let's Encrypt (Certbot)",
+    definition=(
+        "Obtient un certificat public reconnu par les navigateurs via Certbot (defi HTTP-01, "
+        "mode webroot) - jamais --standalone (le port 80 est deja occupe par OMEGA-SERV) et "
+        "jamais /etc/letsencrypt/ (tout est ecrit sous secure/certificates/letsencrypt/ du "
+        "projet, entierement non-privilegie). Importe automatiquement le certificat obtenu et "
+        "installe un script de renouvellement (voir Renouvellement automatique (Certbot))."
+    ),
+    fields=(
+        FieldGuide(
+            label="Domaine",
+            definition="Nom de domaine public deja pointe vers ce serveur (obligatoire).",
+            utilisation="Ex : monserveur.dynu.com - un DDNS (Dynu ou equivalent) reste a configurer par vous-meme, hors de cet assistant.",
+            action="Utilise pour la demande Certbot et le defi HTTP-01.",
+            reaction="Aucun effet avant confirmation - le resume prealable rappelle le domaine et le mode choisis.",
+        ),
+        FieldGuide(
+            label="Email",
+            definition="Adresse utilisee par Let's Encrypt pour les alertes d'expiration (optionnelle).",
+            utilisation="Chaine libre. Vide : Certbot s'enregistre sans email (--register-unsafely-without-email).",
+            action="Transmis a Certbot a la demande.",
+            reaction="Aucun effet avant confirmation.",
+        ),
+        FieldGuide(
+            label="Mode test (staging)",
+            definition="Utilise l'environnement de test de Let's Encrypt plutot que la production.",
+            utilisation="Case a cocher, COCHEE PAR DEFAUT - certificat non reconnu par les navigateurs mais jamais soumis aux limites de taux reelles.",
+            action="Transmis a Certbot (--staging) si coche.",
+            reaction="A decocher seulement une fois le domaine/webroot verifies fonctionnels en mode test.",
+        ),
+        FieldGuide(
+            label="Obtenir le certificat",
+            definition="Lance la demande apres un resume et une confirmation explicite.",
+            utilisation="Aucune saisie - declenche l'appel reseau reel a Let's Encrypt.",
+            action="Execute Certbot puis importe le certificat obtenu (deporte dans un thread de travail, l'interface reste reactive).",
+            reaction=(
+                "Ecrit reellement sur disque en cas de succes. Si TLS est DEJA actif, le serveur "
+                "en cours d'execution continue de servir l'ANCIEN certificat jusqu'a un "
+                "REDEMARRAGE COMPLET."
+            ),
+        ),
+    ),
+    consequences=(
+        "Le port 80 doit rester accessible depuis Internet le temps du defi HTTP-01 (webroot) - "
+        "echoue sinon (pare-feu, redirection de port non faite sur le routeur, DNS/DDNS pas "
+        "encore propage). Soumis aux limites de taux reelles de Let's Encrypt en mode production "
+        "(jamais en mode test)."
+    ),
+    points_de_vigilance=(
+        (
+            "Le DDNS (Dynu ou equivalent) et la redirection de port restent ENTIEREMENT a votre "
+            "charge - cet assistant ne configure jamais rien en dehors de ce serveur."
+        ),
+        (
+            "Si OMEGA-SERV tourne dans un conteneur : executez cet assistant HORS du conteneur "
+            "qui sert le trafic (sur l'hote, ou un conteneur/sidecar distinct partageant le meme "
+            "volume secure/ et le meme webroot) - jamais Certbot a l'interieur du conteneur "
+            "servant deja le trafic public, voir la FAQ."
+        ),
+    ),
+)
+
+RENEWAL_SCHEDULE_SCREEN = ScreenGuide(
+    screen_class_name="RenewalScheduleScreen",
+    title="Renouvellement automatique (Certbot)",
+    acces="Configuration detaillee -> TLS -> Renouvellement automatique (Certbot)",
+    definition=(
+        "Planifie le renouvellement automatique des certificats Certbot deja obtenus (Assistant "
+        "Let's Encrypt) - s'adapte au gestionnaire de service reellement detecte pour CETTE "
+        "instance : timer systemd installe depuis l'interface, sinon une ligne crontab si "
+        "possible, sinon des instructions manuelles affichees sans rien ecrire. Jamais un "
+        "mecanisme global partage entre plusieurs instances multi-instance."
+    ),
+    fields=(
+        FieldGuide(
+            label="Configurer maintenant",
+            definition="Installe (ou reinstalle) le mecanisme de renouvellement adapte a ce systeme.",
+            utilisation="Aucune saisie.",
+            action=(
+                "systemd : ecrit et active un timer (sudo ponctuel, meme mecanisme que l'ecran "
+                "SERVICE). OpenRC/runit/aucun gestionnaire reconnu : ajoute une ligne a votre "
+                "crontab utilisateur si `crontab` est disponible, sinon affiche la ligne a ajouter "
+                "vous-meme."
+            ),
+            reaction="Reconfigurer ne duplique jamais l'entree (idempotent) - remplace toujours l'entree precedente de CETTE instance.",
+        ),
+    ),
+    consequences=(
+        "Une fois installe, le renouvellement tourne deux fois par jour sans aucune intervention "
+        "- le script de hook (Assistant Let's Encrypt) reimporte automatiquement chaque "
+        "certificat renouvele puis redemarre le service."
+    ),
+    points_de_vigilance=(
+        (
+            "Sur certaines distributions (dont Arch/Manjaro), le paquet Certbot n'installe AUCUN "
+            "timer par defaut, contrairement a Debian/Ubuntu - verifiez toujours le statut affiche "
+            "ici plutot que de supposer qu'un mecanisme existe deja."
+        ),
+        (
+            "Ne concerne QUE les certificats geres par Certbot (secure/certificates/letsencrypt/) "
+            "- un certificat auto-signe ou signe par la CA locale n'a pas besoin (et ne beneficie "
+            "pas) de ce renouvellement."
+        ),
+    ),
+)
+
 REVOKE_CERTIFICATE_SCREEN = ScreenGuide(
     screen_class_name="RevokeCertificateScreen",
     title="Revoquer un certificat",
@@ -228,6 +338,8 @@ ALL_TLS_GUIDES: tuple[ScreenGuide, ...] = (
     TLS_STATUS_SCREEN,
     GENERATE_SELF_SIGNED_SCREEN,
     CA_WIZARD_SCREEN,
+    LETS_ENCRYPT_SCREEN,
+    RENEWAL_SCHEDULE_SCREEN,
     REVOKE_CERTIFICATE_SCREEN,
     TLS_TOGGLE_SCREEN,
 )

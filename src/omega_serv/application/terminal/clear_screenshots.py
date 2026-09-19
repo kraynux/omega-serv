@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : vider le dossier de captures d'ecran (ecran Reglages) -
 voir clear_exports.py pour le raisonnement."""
 from __future__ import annotations

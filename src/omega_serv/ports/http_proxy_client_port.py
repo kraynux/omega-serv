@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de communication avec un backend HTTP amont (reverse proxy
 sortant, OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md) - meme patron que
 FastCgiClientPort (ports/fastcgi_client_port.py).
@@ -17,11 +16,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    # Annotation de type uniquement (contrat import-linter "ssl seulement
-    # dans infrastructure.tls.ssl_context_builder" - exclude_type_checking_
-    # imports=true rend cet import invisible au verificateur de couches,
-    # meme convention deja etablie pour infrastructure/server/
-    # asyncio_server.py::ssl.SSLContext).
     import ssl
 
 

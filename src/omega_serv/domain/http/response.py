@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entite reponse HTTP.
 
 Mutable (contrairement a HttpRequest) : les differentes etapes du
@@ -13,10 +12,6 @@ from dataclasses import dataclass, field
 
 @dataclass
 class HttpResponse:
-    # int (pas seulement HttpStatus) : FastCGI (Phase 8) peut produire
-    # un code que HttpStatus ne couvre pas (201, 204, 422...) - voir
-    # domain/http/status_codes.py::reason_phrase_for. HttpStatus reste
-    # pleinement compatible ici (IntEnum est un int).
     status: int
     headers: dict[str, str] = field(default_factory=dict)
     body: bytes = b""

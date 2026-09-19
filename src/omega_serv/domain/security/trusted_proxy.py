@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Determination de l'adresse client reelle (spec §19).
 
 Applique la decision de la revue des angles morts avant Phase 0

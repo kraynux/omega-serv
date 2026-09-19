@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 3 : commandes CLI reelles contre un projet
 temporaire complet (config/profiles/, webroot/, var/) - aucun mock,
 memes fonctions que celles invoquees par argparse en production."""
@@ -27,6 +26,8 @@ from omega_serv.interfaces.cli.main import (
     cmd_audit_security,
     cmd_certs_generate_ca,
     cmd_certs_generate_csr,
+    cmd_certs_generate_self_signed,
+    cmd_certs_import,
     cmd_certs_revoke,
     cmd_certs_sign_csr,
     cmd_config_backup,
@@ -62,8 +63,6 @@ class TestCliCommands(unittest.TestCase):
         (self.root / "webroot").mkdir()
         (self.root / "webroot" / "index.html").write_text("ok")
         (self.root / "config" / "profiles").mkdir(parents=True)
-        # Reprend les vrais fichiers de profils du projet plutot que
-        # d'en re-ecrire des copies qui pourraient diverger silencieusement.
         for profile_file in (_REAL_PROJECT_ROOT / "config" / "profiles").glob("*.json"):
             shutil.copy(profile_file, self.root / "config" / "profiles" / profile_file.name)
 
@@ -100,10 +99,6 @@ class TestCliCommands(unittest.TestCase):
 
     @unittest.skipIf(running_as_root(), "requiert un utilisateur non-root pour reproduire le refus de liaison")
     def test_serve_privileged_port_prints_clean_message_not_traceback(self):
-        # Retour utilisateur 2026-09-09 : un port < 1024 sans privilege
-        # faisait remonter un traceback Python brut jusqu'au terminal -
-        # verifie ici que cmd_serve capture PermissionError et affiche
-        # un message propre a la place, code de retour 1.
         cmd_config_init(self._ns(force=False), self.container)
         load_result = load_config(self.container.configuration, self.config_path)
         assert load_result.config is not None
@@ -118,9 +113,6 @@ class TestCliCommands(unittest.TestCase):
         self.assertNotIn("Traceback", stderr.getvalue())
 
     def test_profile_list_finds_real_profiles(self):
-        # cmd_profile_list imprime plutot que de retourner - on verifie
-        # via le port directement, deja teste par ailleurs, pour rester
-        # simple ici : le vrai comportement est le code de retour.
         result = cmd_profile_list(self._ns(), self.container)
         self.assertEqual(result, 0)
         self.assertIn("standard", self.container.profiles.list_profile_names())
@@ -392,7 +384,6 @@ class TestCliActiveDefense(unittest.TestCase):
         output = stdout.getvalue()
         self.assertIn("0 -> 65", output)
         self.assertIn("normal -> hostile", output)
-        # Simulation = dry-run strict : aucune source reellement suivie.
         threats_stdout = io.StringIO()
         with contextlib.redirect_stdout(threats_stdout):
             cmd_threats_list(self._ns(), self.container)
@@ -484,6 +475,99 @@ class TestCliCertsCaLocale(unittest.TestCase):
         ), self.container)
         self.assertEqual(result, 1)
         self.assertFalse((self.ca_dir / "root-ca.pem").exists())
+
+
+class TestCliCertsImport(unittest.TestCase):
+    """`certs import` (doc TLS §9/§20, etude OMEGA-SERV_PLAN-DETAILLE_
+    TLS_AUTO.md Phase 2/3) - comble le seul point du perimetre TLS
+    documente depuis le debut mais jamais implemente. Bout en bout
+    jusqu'a un vrai appel openssl (meme discipline que
+    TestCliCertsCaLocale ci-dessus) : genere un vrai couple cle/
+    certificat "source" (hors de toute configuration omega-serv, comme
+    le ferait Certbot), puis l'importe vers les chemins REELLEMENT
+    configures."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.container = DependencyContainer(project_root=self.root)
+        self.config_path = self.root / "config" / "omega-serve.json"
+        cmd_config_init(self._ns(force=False), self.container)
+        self.dest_key = self.root / "secure" / "certificates" / "server" / "server.key"
+        self.dest_cert = self.root / "secure" / "certificates" / "server" / "server.pem"
+
+        self.source_dir = self.root / "external-source"
+        result = cmd_certs_generate_self_signed(self._ns(
+            cn="example.dynu.com", san_dns=["example.dynu.com"], san_ip=[],
+            org="Test", ou="", city="", region="", country="", days=90,
+            key_type="rsa2048", password=None,
+        ), self.container)
+        assert result == 0
+        self.source_dir.mkdir(parents=True)
+        shutil.move(str(self.dest_key), str(self.source_dir / "privkey.pem"))
+        shutil.move(str(self.dest_cert), str(self.source_dir / "fullchain.pem"))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _ns(self, **kwargs):
+        kwargs.setdefault("config", self.config_path)
+        return type("Namespace", (), kwargs)()
+
+    def test_import_copies_to_the_configured_destination(self):
+        self.assertFalse(self.dest_cert.exists())
+
+        result = cmd_certs_import(self._ns(
+            key=str(self.source_dir / "privkey.pem"), cert=str(self.source_dir / "fullchain.pem"), chain=None,
+        ), self.container)
+
+        self.assertEqual(result, 0)
+        self.assertTrue(self.dest_cert.exists())
+        self.assertEqual(oct(self.dest_key.stat().st_mode & 0o777), "0o600")
+        self.assertEqual(
+            self.dest_cert.read_text(), (self.source_dir / "fullchain.pem").read_text(),
+        )
+
+    def test_import_backs_up_existing_destination(self):
+        cmd_certs_import(self._ns(
+            key=str(self.source_dir / "privkey.pem"), cert=str(self.source_dir / "fullchain.pem"), chain=None,
+        ), self.container)
+        first_cert_content = self.dest_cert.read_text()
+
+        result = cmd_certs_import(self._ns(
+            key=str(self.source_dir / "privkey.pem"), cert=str(self.source_dir / "fullchain.pem"), chain=None,
+        ), self.container)
+
+        self.assertEqual(result, 0)
+        backups_dir = self.root / "var" / "backups" / "certificates"
+        backup_dirs = list(backups_dir.iterdir())
+        self.assertEqual(len(backup_dirs), 1)
+        self.assertEqual((backup_dirs[0] / "server.pem").read_text(), first_cert_content)
+
+    def test_import_rejects_missing_source_key(self):
+        result = cmd_certs_import(self._ns(
+            key=str(self.source_dir / "not-there.pem"), cert=str(self.source_dir / "fullchain.pem"), chain=None,
+        ), self.container)
+        self.assertEqual(result, 1)
+        self.assertFalse(self.dest_cert.exists())
+
+    def test_import_rejects_mismatched_key_and_certificate(self):
+        other_dir = self.root / "other-source"
+        cmd_certs_generate_self_signed(self._ns(
+            cn="other.example", san_dns=["other.example"], san_ip=[],
+            org="Test", ou="", city="", region="", country="", days=90,
+            key_type="rsa2048", password=None,
+        ), self.container)
+        other_dir.mkdir()
+        shutil.move(str(self.dest_key), str(other_dir / "privkey.pem"))
+        (self.root / "secure" / "certificates" / "server" / "server.pem").unlink()
+
+        result = cmd_certs_import(self._ns(
+            key=str(other_dir / "privkey.pem"), cert=str(self.source_dir / "fullchain.pem"), chain=None,
+        ), self.container)
+
+        self.assertEqual(result, 1)
+        self.assertFalse(self.dest_cert.exists())
 
 
 class TestCliConfigBackup(unittest.TestCase):

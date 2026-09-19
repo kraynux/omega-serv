@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 1 - vraie I/O reelle contre
 un fichier sqlite temporaire, jamais de FilesystemPort/sqlite3 simule
 (meme discipline que test_json_instance_registry.py)."""

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modele d'une option superposable (spec §6.3).
 
 Une option ajoute une capacite fonctionnelle par-dessus un profil de
@@ -15,9 +14,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-# Noms d'options reconnus par le moteur de fusion (spec §5.2 "options").
-# CGI volontairement absent : abandonne du perimetre V1, voir la
-# decision de la Phase 8.
 KNOWN_OPTION_NAMES: frozenset[str] = frozenset({
     "waf",
     "auth",

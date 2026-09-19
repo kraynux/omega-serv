@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiches guide : Alias, Redirections, Rewrites, Directory listing,
 Cache, Pages d'erreur, Proxies de confiance (plan guide d'aide, Phase 3)."""
 from __future__ import annotations

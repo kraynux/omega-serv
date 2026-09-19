@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de AuthZonesRepositoryPort - fichier JSON
 (paths.auth_zones), ecriture atomique. Permissions forcees a 0600 comme
 users.json : `allowed_users` y liste des noms d'utilisateurs valides en
@@ -48,8 +47,6 @@ class JsonAuthZonesRepository:
             },
             indent=2, ensure_ascii=False,
         ) + "\n"
-        # Meme fix que users_repository.py::save() - secure/auth/ n'est
-        # cree par aucun setup existant.
         self._fs.make_directory(self._path.parent)
         self._fs.atomic_write_text(self._path, content)
         self._fs.set_file_mode(self._path, 0o600)

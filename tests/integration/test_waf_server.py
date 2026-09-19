@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 5 (WAF) : serveur reel, connexions TCP
 reelles sur 127.0.0.1, aucun mock - meme discipline que
 test_static_server.py."""

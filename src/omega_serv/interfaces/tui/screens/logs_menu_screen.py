@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Gestion des logs (plan interface §8, menu 4) - sous-menu plat
 vers les sous-ecrans deja construits. Phase V (2026-09-08) : voir/suivre
 un fichier, lnav. Phase VI (2026-09-08) : rotation/archivage, restaurer/

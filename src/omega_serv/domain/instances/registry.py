@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles metier pures sur le registre multi-instance (OMEGA-SERV_PLAN-
 DETAILLE_MULTI_INSTANCE.md §2.3/§4) - aucune I/O, uniquement des
 verifications sur des `InstanceEntry` deja charges."""

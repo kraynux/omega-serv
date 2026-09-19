@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de LogsMaintenancePort (plan interface §3.4/§8).
 Reecriture du fichier en place (jamais un fichier d'exclusion separe) -
 lignes non reconnues par le parseur (format inattendu) sont conservees

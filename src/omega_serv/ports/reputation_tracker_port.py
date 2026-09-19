@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de comptage de recidive par IP (doc WAF §8, "reputation_escalation").
 Separe volontairement du blocklist_port : ce port ne fait que compter,
 la decision d'escalade est domain/security/waf/reputation.py (pur)."""

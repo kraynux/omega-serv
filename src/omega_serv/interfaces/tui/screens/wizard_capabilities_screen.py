@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 2/8 - registre des capacites en
 lecture seule (plan interface §11 etape 2) : avertit si le port souhaite
 est deja occupe ou si openssl est absent - deja couvert par les sondes
@@ -43,12 +42,6 @@ class WizardCapabilitiesScreen(OmegaScreen):
         yield Footer()
 
     def on_mount(self) -> None:
-        # Retour utilisateur (audit "gel d'ecran") : `scanner.scan()`
-        # sonde reellement le port configure (connexion reseau) - tourne
-        # en synchrone sur la boucle asyncio, gele l'interface le temps
-        # de chaque sonde. Meme patron que capabilities_screen.py
-        # (l'ecran non-assistant equivalent) : deporte dans un thread de
-        # travail.
         self.query_one("#next", Button).disabled = True
         port = self._state.config.server.port
         self.run_worker(lambda: self._scan_in_thread(port), thread=True, exclusive=True)

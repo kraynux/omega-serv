@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites pures TLS (OMEGA-SERV_TLS_CERTIFICATS.md §2 : "domain/ :
 Entites pures : CertificateInfo, TlsConfiguration, CertificateStatus,
 regles de coherence TLS/HSTS"). Perimetre verrouille (6a+6b, voir

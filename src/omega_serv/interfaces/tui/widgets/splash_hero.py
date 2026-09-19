@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Composition ASCII de l'ecran de demarrage. Logo fourni par
 l'utilisateur, voir ~/DEV/SERV/ascci.txt - caracteres non modifies.
 

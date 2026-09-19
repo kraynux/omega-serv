@@ -1,8 +1,8 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration de l'ecran Reglages (retour utilisateur round 2,
 2026-09-09) : theme, profil de rendu, chemins d'export/captures d'ecran,
-purge. Accessible via le raccourci clavier 'o' plutot qu'un bouton au
-menu principal (deja charge, plan interface §12)."""
+purge. Accessible via le raccourci clavier 'o' ET, depuis le passage du
+menu principal a 2 colonnes (retour utilisateur), le bouton "OPTIONS" -
+memes deux voies vers le meme ecran, jamais duplique."""
 from __future__ import annotations
 
 import shutil
@@ -57,6 +57,16 @@ class TestTuiSettings(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(120, 45)) as pilot:
             await self._start(pilot)
             await self._open_settings(pilot)
+
+    async def test_options_button_opens_settings_from_home(self):
+        container = self._container()
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            self.assertIsInstance(pilot.app.screen, HomeScreen)
+            await pilot.click("#options")
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, SettingsScreen)
 
     async def test_exports_and_screenshots_fields_prefilled_with_defaults(self):
         container = self._container()

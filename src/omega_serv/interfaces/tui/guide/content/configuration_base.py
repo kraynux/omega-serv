@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiches guide : Configuration de base et Limites (plan guide d'aide,
 Phase 0 - ecrans pilotes), Securite generique et Controle d'acces
 (Phase 2), menu Configuration detaillee (Phase 9 - dernier ecran du

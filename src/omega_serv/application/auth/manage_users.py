@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv auth add-user/remove-user/change-password`
 (spec §15.3/§15.4). Le mot de passe en clair ne transite jamais au-dela
 de ce module (immediatement hache, jamais journalise)."""

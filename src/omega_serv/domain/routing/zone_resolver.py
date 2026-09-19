@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Resolution de zone generique (decision transverse, voir
 OMEGA-SERV_PLAN_DEVELOPPEMENT.md §6) : alias, redirections, cache,
 directory listing et (plus tard) auth/CSP/politiques de service WAF

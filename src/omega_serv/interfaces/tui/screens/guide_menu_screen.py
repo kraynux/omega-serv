@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Menu Guide navigable (plan guide d'aide §3.6) - parcours lineaire de
 toute l'application, miroir de la navigation reelle
 (interfaces/tui/guide/menu_tree.py). Distinct de l'aide contextuelle
@@ -28,9 +27,6 @@ if TYPE_CHECKING:
 
 
 def _export_timestamp() -> str:
-    # Meme format que capabilities_screen.py/export_log_archives_screen.py
-    # (retour utilisateur 2026-09-09) - jamais d'ecrasement silencieux
-    # d'un export precedent.
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
@@ -89,16 +85,11 @@ class GuideMenuScreen(OmegaScreen):
             self._export_html()
 
     def _exports_dir(self) -> Path:
-        # Respecte la surcharge configuree dans l'ecran Reglages (touche
-        # 'o') - meme mecanisme que les autres exports de la suite.
         override = self._container.settings_store.get("exports_dir_override", "")
         return Path(override) if override else self._container.default_exports_dir
 
     def _export_html(self) -> None:
         theme_name = str(self.query_one("#export-theme-select", Select).value)
-        # Ordonne selon l'arborescence du menu (menu_tree.py), pas
-        # l'ordre d'insertion dans le registre - meme parcours que
-        # l'utilisateur voit dans ce menu.
         ordered_guides = [
             asdict(SCREEN_GUIDES[entry.screen_class_name])
             for entry in GUIDE_MENU_ENTRIES

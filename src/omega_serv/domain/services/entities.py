@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites pures de gestion de service (spec §24). Porte depuis
 omega-fire (infrastructure/backends/service_manager/adapter.py::ServiceStatus,
 audite reutilisable tel quel, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5)

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.upload.multipart import extract_boundary, parse_multipart
@@ -20,10 +19,6 @@ class TestExtractBoundary(unittest.TestCase):
 
 class TestParseMultipart(unittest.TestCase):
     def test_parses_single_file_part_without_type_error(self):
-        # Regression : la version initiale du plan appelait
-        # body.split(boundary) avec boundary: str contre un body bytes,
-        # ce qui levait TypeError. Ce test verifie l'absence du bug ET
-        # le contenu decode correctement.
         boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
         body = (
             f"--{boundary}\r\n"

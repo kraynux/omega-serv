@@ -32,14 +32,14 @@
 
 - 提供静态内容（文件、可选的目录列表、别名、重定向、重写、缓存），并采用安全的路径解析（路径穿越、双重编码、符号链接）。
 - 默认加固 HTTP 协议，且无法关闭：明确的允许方法列表、`Host` 头校验、拒绝 `Content-Length`/`Transfer-Encoding` 的歧义、不可绕过的安全响应头与基础 CSP。
-- 可选功能：WAF 过滤（签名、速率限制、封禁列表）、直接 TLS（自签名证书或由本地 CA 签发的证书）、按区域划分的 HTTP Basic 身份验证、通过 FastCGI/PHP-FPM 运行 PHP、受限的上传区域。
+- 可选功能：WAF 过滤（签名、速率限制、封禁列表）、直接 TLS（自签名证书、由本地 CA 签发的证书，或通过 Let's Encrypt/Certbot 签发并自动续期的公共证书——见 §9）、按区域划分的 HTTP Basic 身份验证、通过 FastCGI/PHP-FPM 运行 PHP、受限的上传区域。
 - 审计自身配置（`audit security`），并可作为系统服务安装（systemd/OpenRC/runit）。
 - 端到端可脚本化的非交互式 CLI，**以及一个交互式（Textual）界面**，二者封装完全相同的用例——见 §3。界面路线图（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`，§12）**已全部交付**：能力注册表、配置文件/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/身份验证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（查看/跟踪/lnav/轮转/备份/自动化/统计/热门 IP）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、内置帮助指南（每屏一份带具体示例的说明卡片、FAQ、HTML 导出，覆盖率已做到全覆盖并通过测试验证）、每次保存后系统性地提示热重载/重启、无需手动编辑文件即可完成的 Active Defense 完整配置。
 
 ### Omega-serv 不做什么
 
 - 原始 CGI（已从 V1 范围中移除——仅支持 FastCGI/PHP-FPM）。
-- TLS 双向认证（mTLS）、OCSP stapling、ACME——不在 V1 范围内，见 §15。
+- TLS 双向认证（mTLS）、OCSP stapling——不在 V1 范围内，见 §15。（通过 Certbot 提供的 ACME/Let's Encrypt 已支持，见 §9c/9d。）
 - 跨进程共享的 HTTP 缓存。
 - 扫描/审计远程目标（这方面请参见 `omega-check`/`omega-scan`/`omega-deep`——Omega-serv 只审计自身，绝不审计第三方）。
 
@@ -136,7 +136,7 @@ serv
 - **首次启动向导** —— 分 8 个步骤引导（欢迎 → 只读能力检测 → 选择配置文件 → 绑定地址/端口 → 可选 TLS → 检查 → 摘要与写入 → 提议安装服务）；无需接触 CLI 即可生成完整配置并启动服务器。
 - **能力注册表** —— 只读系统探测（初始化系统、所配置端口是否已被占用、`openssl`/`logrotate`/`tailscale`/`lnav` 是否存在、磁盘空间、文件描述符限制……），支持 JSON/HTML 导出。
 - **配置文件** —— 与 CLI 中的 `profile` 用例相同（§5），写入前始终显示差异对比。
-- **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/身份验证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、自签名生成、本地 CA 向导、吊销、启用/禁用——见 §9）；下方第二个区域「**选项与验证**」汇集了指向**选项**（`option` CLI，§7）与**检查配置**（`config check` CLI，§10）的快捷入口——与先调整选项再验证是同一流程，这两个屏幕已不再能从主菜单直接进入。WAF 已不再位于此处（见下文「主动安全」）：它主要展示持续变化的运行状态，而非一份单纯的静态配置表单。每次保存都会明确说明后续操作：若有服务正在运行，则自动且静默地热重载（目录列表、访问控制、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、身份验证用户/区域），或者当更改涉及监听套接字、TLS 或 Active Defense 时则明确弹出重启确认——不再有任何屏幕让人猜测是否需要重启服务器。
+- **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/身份验证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、自签名生成、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用——见 §9）；下方第二个区域「**选项与验证**」汇集了指向**选项**（`option` CLI，§7）与**检查配置**（`config check` CLI，§10）的快捷入口——与先调整选项再验证是同一流程，这两个屏幕已不再能从主菜单直接进入。WAF 已不再位于此处（见下文「主动安全」）：它主要展示持续变化的运行状态，而非一份单纯的静态配置表单。每次保存都会明确说明后续操作：若有服务正在运行，则自动且静默地热重载（目录列表、访问控制、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、身份验证用户/区域），或者当更改涉及监听套接字、TLS 或 Active Defense 时则明确弹出重启确认——不再有任何屏幕让人猜测是否需要重启服务器。
 - **主动安全** —— 一个统一的屏幕，汇集两大板块：**Active Defense**（状态、带评分/等级的已跟踪威胁、带完整时间线/IoC 导出/报告的事件、欺骗分配情况、以 dry-run 方式模拟一次判定，以及**设置**——无需手动编辑 `config/omega-serve.json` 即可完成完整配置，见 §11）与 **WAF**（状态、模块——模式/规则包/封禁列表、测试一次请求、自定义——编写自定义规则）——见 §11。
 - **日志管理** —— 实时查看/跟踪文件、合并的 `lnav`（界面内真实终端渲染）、按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划中的自动化任务（声明式——见下方说明）、恢复/清理归档、导出列表、统计（热门 IP、状态码分布、每小时直方图）并可从访问日志中移除某个 IP 的记录。
 - **服务** —— 与 CLI 中的 `service` 相同的操作（§12），按操作临时提升 `sudo` 权限，整个应用程序绝不会以 root 身份启动。
@@ -205,6 +205,9 @@ serv
 ./omega-serv.sh certs generate-csr --cn server.local --san-dns server.local --key-out server.key --csr-out server.csr
 ./omega-serv.sh certs sign-csr --csr server.csr --ca-key secure/certificates/ca/root-ca.key --ca-cert secure/certificates/ca/root-ca.pem --out server.pem --fullchain-out fullchain.pem
 ./omega-serv.sh certs revoke --cert server.pem --ca-key secure/certificates/ca/root-ca.key --ca-cert secure/certificates/ca/root-ca.pem
+
+# TLS 证书 - 导入（9c，例如来自 Certbot 钩子）
+./omega-serv.sh certs import --key privkey.pem --cert fullchain.pem
 
 # HTTP Basic 身份验证
 ./omega-serv.sh auth add-user --username alice
@@ -300,7 +303,7 @@ src/omega_serv/
 | 模块 | 作用 |
 |---|---|
 | `waf` | 签名检测（敏感路径、扫描器 UA、请求体中的 SQLi/XSS/CMDi）、速率限制（令牌桶）、封禁列表（CIDR + 过期时间）、信誉/升级机制——`log-only` 模式在结构上无法进行阻断 |
-| TLS | 最小化直接支持（自签名或本地 CA，见 §9），V1 中绝不支持 mTLS/OCSP/ACME |
+| TLS | 直接支持（自签名、本地 CA，或通过 Let's Encrypt/Certbot 签发并自动续期的公共证书——见 §9），V1 中绝不支持 mTLS/OCSP |
 | 身份验证 | 按区域（`url_prefix`）划分的 HTTP Basic，采用带防时序攻击的 `hashlib.scrypt`（即使对未知用户也保持恒定耗时） |
 | FastCGI/PHP-FPM | 仅支持单一的 `(url_prefix, script_root)`，`script_root` 在结构上被限制在 `webroot/` 之外（静态处理器绝不可能泄露 PHP 源码） |
 | 出站反向代理 | Omega-serv 本身充当面向后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）——每个区域支持一个或多个 HTTP/HTTPS 上游，采用 round-robin 负载均衡（默认严格校验 TLS，可关闭但存在风险），剥离 hop-by-hop 头，`X-Forwarded-*` 始终被覆盖（绝不与客户端提供的值合并），支持 WebSocket（隧道建立后单个上游在整个生命周期内保持固定，且不设应用层超时） |
@@ -335,6 +338,16 @@ secure/certificates/ca/
 ```
 
 流程：`certs generate-ca`（CA 密钥口令**为必填项**，若省略 `--password` 则交互式双重确认输入）→ `certs generate-csr`（服务器密钥 + CSR）→ `certs sign-csr`（使用 CA 签名，复制 CSR 中的 SAN，如有需要则构建 `fullchain.pem`）→ 将 `tls.certificate.certificate_path` 指向该 `fullchain.pem`。若证书被泄露，可通过 `certs revoke` 将其移除（在 `index.txt` 中标记，会先验证该证书确实来自此 CA——否则拒绝操作）。V1 中不提供 CRL 分发、不支持面向第三方机构的外部 CA/CSR、也不支持 mTLS（见 §15）。
+
+### 9c. Let's Encrypt / ACME（Certbot）—— 公共、自托管
+
+若需要为真正公开的站点获取受浏览器信任的证书，完整的自托管方案为：DDNS（Dynu 或同类服务，完全由运维者自行负责）→ Certbot → Omega-serv。仅在 TUI 中提供向导（`详细配置 → TLS → Let's Encrypt 向导`）——以子进程方式调用 `certbot certonly --webroot`（**绝不**使用 `--standalone`，因为端口 80 已被 Omega-serv 占用；**绝不**重新实现 ACME 客户端），并将 `--config-dir`/`--work-dir`/`--logs-dir` 指向项目内的 `secure/certificates/letsencrypt/`——**绝不**指向 `/etc/letsencrypt/`——这使得 Certbot 本身完全不需要特权。获取到的证书会自动导入（与 `certs import` 相同的机制，见上方 CLI 示例），并写入续期钩子脚本。测试模式（staging）默认勾选——只有在确认域名/webroot 确实可用之后再取消勾选，以避免触及 Let's Encrypt 的真实速率限制。
+
+完全超出 Omega-serv 范围的前提条件：一个已指向公网 IP 的域名（DDNS），以及已将 80/443 端口转发到此主机的路由器/防火墙设置。
+
+### 9d. 自动续期（Certbot）
+
+`详细配置 → TLS → 自动续期` 会根据**当前实例**实际检测到的服务管理器自适应（绝不在多个 multi-instance 实例之间共用同一机制）：systemd → 生成并安装一个定时器（`<service>-certbot-renew.timer`，每天两次外加随机延迟，`certbot renew` 限定于该实例的 `--config-dir`）；否则 → 若 `crontab` 可用，则添加一行 crontab（以当前用户身份，无需特权）；否则 → 仅显示手动操作说明，不做任何强制写入。在部分发行版（包括 Arch/Manjaro）中，Certbot 软件包默认**不会**安装任何定时器，这与 Debian/Ubuntu 不同——因此才需要这个屏幕，而不是简单地检查一个被假定已经存在的机制。配置完成后，每次续期都会自动重新导入已更新的证书并重启服务，此后无需再手动干预。
 
 ## 10. 安全审计
 
@@ -387,7 +400,7 @@ mypy src
 ## 15. 范围之外
 
 - 原始 CGI（仅支持 FastCGI/PHP-FPM）
-- mTLS（客户端证书身份验证）、OCSP stapling、ACME
+- mTLS（客户端证书身份验证）、OCSP stapling
 - 面向第三方机构的外部 CA/CSR、完整的 CRL 分发
 - 批处理/周期性监控模式——每条命令都是一次显式操作
 - 将 WAF 模块拆分为独立项目 `omega-waf`（已规划，但尚未启动——已提前以清晰分层的方式设计以便日后拆分，不进行并行开发）

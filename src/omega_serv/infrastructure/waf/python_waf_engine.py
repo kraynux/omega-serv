@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation native Python de WafPort (doc WAF, "Decision
 d'integration recommandee" : "Premiere version : WAF Python natif").
 Construit les textes de scope depuis la requete deja normalisee, puis

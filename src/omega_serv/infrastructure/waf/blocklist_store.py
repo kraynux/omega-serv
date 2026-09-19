@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de BlocklistPort : fichier JSON (doc WAF §5 -
 "prefer un format structure JSON... plutot qu'un simple fichier
 texte"). Ecriture atomique (meme mecanisme que la configuration

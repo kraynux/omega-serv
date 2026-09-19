@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 1/8 - bienvenue (plan interface
 §11 etape 1) : point d'entree de l'assistant, ecran d'orchestration pure
 qui enchaine les cas d'usage `application/` deja existants dans un ordre

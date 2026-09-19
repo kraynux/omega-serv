@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Catalogue des fixtures Niveau 1 connues (plan_active_defense_omega_
 serv.md, §"Honeypots V1") - un seul point d'ajout pour chaque nouveau
 leurre in-process, jamais une chaine de `if profile_name == ...` dans le

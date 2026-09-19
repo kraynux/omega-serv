@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """PurgeExpiredThreatStatesCommand + fermeture automatique des incidents
 redevenus silencieux (plan_active_defense_omega_serv.md, Phase 4 :
 `decide_incident_closure` policy definie mais jamais appelee ; Phase 6 :

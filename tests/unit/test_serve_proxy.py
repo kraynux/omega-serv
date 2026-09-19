@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from dataclasses import replace
 
@@ -75,9 +74,6 @@ class TestServeProxy(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(headers["Host"], "public.example.com")
 
     async def test_x_forwarded_headers_set_from_real_request_never_trusted_from_client(self):
-        # Retour utilisateur - injection d'en-tete classique : le client
-        # ne doit JAMAIS pouvoir usurper son X-Forwarded-For en l'envoyant
-        # lui-meme, la valeur reelle du serveur doit toujours l'ecraser.
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b""))
         await serve_proxy(
             _request(headers=[("X-Forwarded-For", "1.2.3.4")], remote_ip="203.0.113.9"), _zone(), client,
@@ -167,9 +163,6 @@ class TestServeProxy(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(client.calls[0][8], "unverified-marker")
 
     async def test_mixed_zone_only_https_upstream_gets_a_context(self):
-        # Retour utilisateur (§12) : use_tls est une propriete PAR
-        # upstream, pas par zone - un upstream HTTP dans une zone qui en
-        # melange ne doit jamais recevoir de contexte TLS.
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b""))
         zone = _zone(upstreams=(
             UpstreamTarget(host="10.0.0.1", port=3000, use_tls=False),

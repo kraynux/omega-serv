@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Etat partage entre les ecrans de l'assistant premier lancement (plan
 interface §11) - transmis d'ecran en ecran, jamais persiste : rien n'est
 ecrit sur disque avant l'etape Resume (etape 7), meme discipline "diff

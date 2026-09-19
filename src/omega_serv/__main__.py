@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Point d'entree `python -m omega_serv` / script console `omega-serv`
 (voir [project.scripts] dans pyproject.toml). Dispatche vers la TUI
 (aucun argument) ou la CLI non-interactive (au moins un argument) -
@@ -40,6 +39,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.filesystem_port import FilesystemPort
     from omega_serv.ports.instance_registry_port import InstanceRegistryPort
     from omega_serv.ports.ioc_exporter_port import IoCExporterPort
+    from omega_serv.ports.process_runner_port import ProcessRunnerPort
 
 
 def _run_config_check(
@@ -168,14 +168,13 @@ def _build_certificate_tool() -> CertificateToolPort:
     return OpensslCertificateTool(SubprocessRunner())
 
 
+def _build_acme_client() -> ProcessRunnerPort:
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+
+    return SubprocessRunner()
+
+
 async def _run_serve_foreground(config_path: Path, container: DependencyContainer) -> int:
-    # async, jamais un simple wrapper synchrone autour de cmd_serve :
-    # cette coroutine tourne sur la boucle asyncio DEJA active de
-    # Textual (bouton "Lancer maintenant", wizard_service_screen.py),
-    # jamais dans une boucle fraiche via asyncio.run() comme cmd_serve
-    # le fait pour la CLI - meme validation que cmd_serve rejoue ici
-    # (le wrapper argparse lui-meme n'est pas reutilisable, seule la
-    # coroutine partagee run_server_until_stopped() l'est).
     from omega_serv.application.config.load_config import load_config
     from omega_serv.application.config.validate_config import validate_config_environment
     from omega_serv.core.platform_info import running_as_root
@@ -272,20 +271,6 @@ def main(argv: list[str] | None = None) -> int:
     if not effective_argv:
         import os
 
-        # Retour utilisateur (bug "sudo authentification systematiquement
-        # refusee", journalctl -t sudo : "pam_unix(sudo:auth): conversation
-        # failed" / "Erreur de manipulation du jeton d'authentification",
-        # identique avant ET apres suppression de capture_output - donc
-        # jamais du a la capture stdout/stderr, voir systemd_service_manager.py
-        # ::_run_privileged) - `os.environ.setdefault` DOIT s'executer avant
-        # le premier `import textual` (transitif via OmegaServApp
-        # ci-dessous) : `textual.constants.DISABLE_KITTY_KEY` est fige une
-        # seule fois, a l'import du module, en lisant cette variable
-        # d'environnement - la definir plus tard (ou dans app.py) serait
-        # sans effet. `setdefault` (jamais un ecrasement) : un utilisateur
-        # sur un terminal reellement compatible peut re-activer le
-        # protocole en positionnant lui-meme TEXTUAL_DISABLE_KITTY_KEY=0
-        # avant de lancer omega-serv.
         os.environ.setdefault("TEXTUAL_DISABLE_KITTY_KEY", "1")
 
         from omega_serv.application.services.build_service_manager import build_service_manager
@@ -303,6 +288,7 @@ def main(argv: list[str] | None = None) -> int:
             ioc_export_runner=_run_ioc_export,
             incident_report_export_runner=_run_incident_report_export,
             certificate_tool_factory=_build_certificate_tool,
+            acme_client_factory=_build_acme_client,
             lnav_runner=_run_lnav,
             create_instance_runner=_run_create_instance,
             export_capabilities_html_fn=_export_capabilities_html,
@@ -312,10 +298,6 @@ def main(argv: list[str] | None = None) -> int:
         )
         app = OmegaServApp(container)
         app.run()
-        # Bascule complete d'instance (§9 Phase D) : App.run() est deja
-        # revenu ici - Textual entierement arrete, terminal restaure -
-        # avant tout appel a os.execv(), jamais depuis interfaces.tui/
-        # (voir app.py::PendingInstanceSwitch).
         if app.pending_switch is not None:
             import os
 

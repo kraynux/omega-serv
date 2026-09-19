@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Test d'integration : serveur reel, connexions TCP reelles (meme
 discipline que test_static_server.py) - retour utilisateur 2026-09-11
 (audit reload/restart) : `server.max_connections` etait configurable et
@@ -38,9 +37,6 @@ class TestMaxConnections(unittest.IsolatedAsyncioTestCase):
 
     async def test_connection_over_limit_receives_503(self):
         _reader1, writer1 = await asyncio.open_connection("127.0.0.1", self.port)
-        # Requete deliberement incomplete (meme technique que
-        # test_static_server.py::test_slow_client_times_out) - garde
-        # la premiere connexion comptee comme active sans la terminer.
         writer1.write(b"GET /index.html ")
         await writer1.drain()
         await asyncio.sleep(0.2)

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Options (plan interface §6, `option list/enable/disable`) -
 liste des 10 options superposables connues avec leur etat actuel,
 bascule directe (pas de formulaire de reglages detailles ici : ce sera
@@ -87,28 +86,10 @@ class OptionsScreen(OmegaScreen):
             return
         assert load_result.config is not None
 
-        # Retour utilisateur 2026-09-11 (audit reload/restart) : activer
-        # FastCGI (ou le reverse proxy sortant, meme caracteristique -
-        # OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md) pour la PREMIERE
-        # FOIS (transition desactive->active) n'a jamais d'effet via un
-        # simple rechargement - le client (FastCGI ou proxy) n'est
-        # construit qu'au demarrage (build_server), jamais reconstruit
-        # par reload_scoped. Modifier ses reglages une fois deja actif
-        # au demarrage reste bien a chaud (pas de warning dans ce cas,
-        # seulement a la transition elle-meme).
         was_enabled = self._selected_name in load_result.config.options and load_result.config.options[self._selected_name].enabled
         client_built_once_first_enable = (
             self._selected_name in ("fastcgi", "reverse_proxy") and enabled and not was_enabled
         )
-        # Active Defense (retour utilisateur 2026-09-12) : cas ENCORE PLUS
-        # strict que fastcgi/reverse_proxy - reload_scoped() ne touche
-        # jamais _active_defense_config/_threat_state_repository/
-        # _incident_repository/les collaborateurs deception (voir
-        # infrastructure/server/asyncio_server.py::reload_scoped, deja
-        # documente comme tel). Donc TOUTE bascule (activer OU
-        # desactiver), pas seulement la premiere activation, exige un
-        # redemarrage complet - jamais seulement a la transition
-        # desactive->active comme fastcgi/reverse_proxy ci-dessus.
         active_defense_always_needs_restart = self._selected_name == "active_defense"
 
         result = set_option_enabled(load_result.config, self._selected_name, enabled)
@@ -130,12 +111,5 @@ class OptionsScreen(OmegaScreen):
                 "(Active Defense n'est JAMAIS recharge a chaud, meme pour la desactiver).",
             )
         else:
-            # Retour utilisateur (guide d'aide, point 4) : angle mort
-            # reel - meme pour ces options "hot-reloadables", le
-            # processus DEJA LANCE ne relit jamais le fichier de
-            # configuration tout seul ; sans cet avertissement,
-            # l'utilisateur croit (a tort) que l'activation est
-            # immediate et ne comprend pas pourquoi rien ne change tant
-            # qu'il n'a pas recharge/redemarre.
             notify_reload_required(self, self._container, result.message)
         self._refresh_table()

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from pathlib import Path
 
@@ -32,32 +31,15 @@ class TestGenerateSystemdUnit(unittest.TestCase):
             self.assertIn(directive, unit)
 
     def test_exec_reload_sends_sighup_to_main_pid(self):
-        # Retour utilisateur 2026-09-11 : sans ExecReload=, `systemctl
-        # reload` echoue purement et simplement ("Job type reload is
-        # not applicable") - seul moyen de declencher le rechargement a
-        # chaud deja code cote applicatif (SIGHUP, interfaces/cli/
-        # main.py::run_server_until_stopped) etait un `kill -HUP` manuel
-        # en dehors de l'application.
         unit = generate_systemd_unit(_params())
         self.assertIn("ExecReload=/bin/kill -HUP $MAINPID", unit)
 
     def test_protect_home_is_read_only_not_true(self):
-        # Retour utilisateur 2026-09-10, vrai bug trouve : ProtectHome=true
-        # rend /home/ INACCESSIBLE ET VIDE pour le service (man
-        # systemd.exec) - or ce projet s'installe typiquement sous le
-        # HOME de l'utilisateur (~/DEV/SERV/omega-serv, meme install.sh),
-        # donc =true empechait le service de voir son propre interpreteur
-        # Python. "read-only" reste compatible tout en gardant
-        # l'essentiel du durcissement (rien d'ecrivable sous /home hors
-        # ReadWritePaths, deja limite a var/).
         unit = generate_systemd_unit(_params())
         self.assertNotIn("ProtectHome=true", unit)
         self.assertIn("ProtectHome=read-only", unit)
 
     def test_works_for_a_project_installed_under_a_user_home_directory(self):
-        # Repli exact du scenario reel qui a revele le bug ci-dessus -
-        # les fixtures par defaut de ce fichier utilisaient /opt/, jamais
-        # /home/, ce qui n'aurait jamais pu detecter cette incompatibilite.
         unit = generate_systemd_unit(_params(
             python_executable=Path("/home/kraynux/DEV/SERV/omega-serv/.venv/bin/python"),
             project_root=Path("/home/kraynux/DEV/SERV/omega-serv"),
@@ -68,12 +50,6 @@ class TestGenerateSystemdUnit(unittest.TestCase):
         self.assertNotIn("ProtectHome=true", unit)
 
     def test_umask_is_0007_not_0077(self):
-        # Retour utilisateur 2026-09-10, second vrai bug trouve juste
-        # apres le premier : meme avec var/ partage au groupe dedie
-        # (grant_directory_access), un fichier cree avec UMask=0077
-        # (rw proprietaire SEUL) reste illisible par l'utilisateur
-        # interactif ajoute a ce groupe - 0007 conserve les droits du
-        # groupe, seul "other" reste refuse.
         unit = generate_systemd_unit(_params())
         self.assertNotIn("UMask=0077", unit)
         self.assertIn("UMask=0007", unit)
@@ -92,8 +68,6 @@ class TestGenerateSystemdUnit(unittest.TestCase):
         self.assertIn("/opt/omega-serv/.venv/bin/python -m omega_serv --config /opt/omega-serv/config/omega-serve.json serve", unit)
 
     def test_no_hardcoded_personal_paths(self):
-        # Aucun chemin fige en dur - tout vient des parametres (doc TLS/plan
-        # §24.3 : "la definition ne doit pas dependre de chemins personnels").
         unit = generate_systemd_unit(_params(
             project_root=Path("/srv/other-location"),
             python_executable=Path("/srv/other-location/.venv/bin/python"),
@@ -135,9 +109,6 @@ class TestFindConflictingUnit(unittest.TestCase):
         self.assertIsNone(find_conflicting_unit({}, self._ROOT, "omega-serv"))
 
     def test_unrelated_unit_with_same_prefix_path_is_not_a_false_positive(self):
-        # /home/kraynux/DEV/SERV/omega-serv-backup ne doit jamais matcher
-        # /home/kraynux/DEV/SERV/omega-serv (comparaison de ligne exacte,
-        # jamais un prefixe de chaine).
         contents = {"other.service": f"[Service]\nWorkingDirectory={self._ROOT}-backup\n"}
         self.assertIsNone(find_conflicting_unit(contents, self._ROOT, "omega-serv"))
 

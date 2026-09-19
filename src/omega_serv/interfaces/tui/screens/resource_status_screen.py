@@ -1,5 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir
-# fichier LICENSE)
 """Ecran Etat & Ressources (retour utilisateur 2026-09-09) - remplace
 "Simuler une requete" comme raccourci direct du menu principal (la
 fonction elle-meme reste disponible, reintroduite ici en bouton -
@@ -142,9 +140,6 @@ class ResourceStatusScreen(OmegaScreen):
             return self._container.project_root / "var" / "log" / "access.log"
         return self._container.project_root / load_result.config.logs.access
 
-    # ------------------------------------------------------------------
-    # Rafraichissement
-    # ------------------------------------------------------------------
     def _refresh(self) -> None:
         assert self._traffic_buffer is not None
         if self._tail_reader is not None:
@@ -159,9 +154,6 @@ class ResourceStatusScreen(OmegaScreen):
         )
         self.query_one("#box-system", Static).update(self._panel_system(self._container.collect_system_stats()))
 
-    # ------------------------------------------------------------------
-    # Cadre 1 : Etat du serveur
-    # ------------------------------------------------------------------
     def _panel_server_state(self) -> Text:
         content = Text()
         content.append("── PROCESSUS ────────────────\n", style="bold")
@@ -173,17 +165,6 @@ class ResourceStatusScreen(OmegaScreen):
         elif pid is not None:
             content.append(f"  Statut  : ARRETE (PID {pid} obsolete)\n", style="yellow")
         elif unreadable:
-            # Retour utilisateur 2026-09-10 : fenetre exacte entre
-            # "Installer l'unite" (partage var/ avec le compte de
-            # service dedie) et la reconnexion de session necessaire a
-            # la prise en compte du nouveau groupe Unix - le serveur
-            # peut etre reellement actif via systemd malgre ce message,
-            # jamais affirmer "ARRETE" sans pouvoir le confirmer. Texte
-            # volontairement rassurant (pas "illisible"/"INCONNU" comme
-            # premiere version) - retour utilisateur : le message
-            # original inquietait a tort, sans indiquer que la situation
-            # est normale et temporaire (une seule reconnexion suffit,
-            # jamais a repeter).
             content.append(
                 "  Statut  : a confirmer (rien d'alarmant, normal juste apres "
                 "l'installation) - reconnectez votre session UNE SEULE FOIS pour que "
@@ -227,9 +208,6 @@ class ResourceStatusScreen(OmegaScreen):
             content.append("    (aucune)\n", style="dim")
         return content
 
-    # ------------------------------------------------------------------
-    # Cadre 2 : Flux (log d'acces)
-    # ------------------------------------------------------------------
     def _panel_traffic(self, stats: LiveTrafficStats) -> Text:
         content = Text()
         content.append("── RENDEMENT ────────────────\n", style="bold")
@@ -254,9 +232,6 @@ class ResourceStatusScreen(OmegaScreen):
         content.append(f"  Tampon        : {stats.buffer_size}\n")
         return content
 
-    # ------------------------------------------------------------------
-    # Cadre 3 : Ressources systeme
-    # ------------------------------------------------------------------
     def _panel_system(self, stats: dict[str, Any]) -> Text:
         content = Text()
         content.append(f"  CPU  : {_progress_bar(stats['cpu_percent'])}\n")

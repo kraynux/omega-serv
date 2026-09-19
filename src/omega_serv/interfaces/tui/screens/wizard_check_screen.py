@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 6/8 - verification automatique
 (structurelle puis environnement, meme deux couches que ConfigCheckScreen)
 avant de pouvoir continuer : les portes bloquantes eventuelles restent

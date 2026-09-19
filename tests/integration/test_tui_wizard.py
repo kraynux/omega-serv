@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase VIII de l'interface (plan interface §12,
 §11) : assistant premier lancement, bout en bout et etape par etape.
 `certificate_tool_factory` utilise le vrai `OpensslCertificateTool`
@@ -67,10 +66,6 @@ class TestTuiWizard(unittest.IsolatedAsyncioTestCase):
         return DependencyContainer(project_root=self.root, **kwargs)
 
     async def _wait_for_generate_to_finish(self, pilot) -> None:
-        # Retour utilisateur (audit "gel d'ecran") : la generation TLS
-        # de l'assistant tourne desormais dans un thread de travail
-        # (run_worker(thread=True)) pour ne plus geler l'interface -
-        # meme patron de sondage que test_tui_tls.py.
         for _ in range(40):
             await pilot.pause()
             if not pilot.app.screen.query_one("#generate", Button).disabled:
@@ -327,14 +322,6 @@ class TestTuiWizard(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, WizardServiceScreen)
 
     async def test_service_step_launch_now_runs_real_server_then_returns_home(self):
-        # Retour utilisateur 2026-09-09 : le bouton "Lancer maintenant"
-        # doit reellement attendre `container.serve_foreground_runner`
-        # (une coroutine) sur la boucle DEJA active de Textual, jamais
-        # l'envelopper dans un `asyncio.run()` imbrique (RuntimeError
-        # verifie empiriquement avant ce correctif) - ce double appele
-        # confirme a la fois que le callable recoit bien le chemin de
-        # config + le conteneur, et que l'ecran revient a l'accueil une
-        # fois la coroutine terminee (serveur "arrete").
         calls = []
 
         async def fake_serve_foreground(config_path, container) -> int:

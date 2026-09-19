@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Politiques Active Defense (plan_active_defense_omega_serv.md, Phase
 0) - fonctions pures et deterministes, aucune I/O. Consomment les
 decisions WAF DEJA calculees (WafDecision/ReputationDecision/
@@ -34,11 +33,6 @@ from omega_serv.domain.security.waf.reputation import ReputationDecision
 
 DEFAULT_REDACT_FIELDS: tuple[str, ...] = ("password", "token", "authorization", "cookie")
 
-# Association pack WAF -> classe d'attaque (plan §"Honeypots V1"/"IoC et
-# rapports" - heuristique simple par mot-cle, basee sur les noms de packs
-# REELS deja livres par le WAF, jamais inventee : "body-sqli", "body-xss",
-# "sensitive-paths", "scanner-ua" (voir domain/security/waf/, rounds
-# WAF anterieurs). Premiere entree qui matche l'emporte.
 _ATTACK_CLASS_BY_PACK_KEYWORD: tuple[tuple[str, AttackClass], ...] = (
     ("sqli", "sqli"),
     ("xss", "xss"),
@@ -51,9 +45,6 @@ _ATTACK_CLASS_BY_PACK_KEYWORD: tuple[tuple[str, AttackClass], ...] = (
 
 _LEVEL_RANK: dict[ThreatLevel, int] = {"normal": 0, "suspicious": 1, "hostile": 2, "contained": 3}
 
-# Poids de traduction observation -> delta de score (plan §"Domaine
-# metier" - seul calcul propre a Active Defense, jamais un recalcul du
-# score WAF lui-meme).
 WAF_FINDING_SCORE_DELTA = 10
 REPUTATION_ESCALATION_SCORE_DELTA = 25
 BLOCKLIST_ENTRY_SCORE_DELTA = 25
@@ -300,9 +291,6 @@ def extract_indicator_candidates(incident: Incident) -> list[IndicatorCandidate]
     source_ip, _, user_agent_hash = incident.subject_id.partition(":")
     first_seen = min(o.observed_at for o in incident.observations)
     last_seen = max(o.observed_at for o in incident.observations)
-    # Confiance proportionnelle au score cumule des observations - pas
-    # une moyenne (une seule observation tres grave doit deja qualifier
-    # l'IoC), plafonnee a 100 par clamp_confidence.
     confidence = clamp_confidence(sum(o.score_delta for o in incident.observations))
     candidates = [IndicatorCandidate(kind="ip", value=source_ip, confidence=confidence, first_seen=first_seen, last_seen=last_seen)]
     if user_agent_hash:

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.http.headers import HttpHeaders
@@ -31,9 +30,6 @@ class TestIsTrustedProxy(unittest.TestCase):
         self.assertFalse(is_trusted_proxy("203.0.113.10", ["127.0.0.1/32"]))
 
     def test_ipv4_mapped_ipv6_bypass_is_prevented(self):
-        # L'angle mort explicitement identifie avant la Phase 0 : sans
-        # normalisation, cette forme IPv6-mappee d'une IP NON fiable
-        # pourrait passer les filtres bases sur la forme IPv4 pure.
         self.assertFalse(is_trusted_proxy("::ffff:203.0.113.10", ["127.0.0.1/32"]))
         self.assertTrue(is_trusted_proxy("::ffff:127.0.0.1", ["127.0.0.1/32"]))
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste l'adaptateur openssl reel (pas de mock) - meme discipline que
 test_json_config_repository.py : I/O reelle (ici, un vrai processus
 openssl) contre un dossier temporaire."""
@@ -174,9 +173,6 @@ class TestOpensslCertificateToolCaLocale(unittest.TestCase):
     def test_signed_certificate_verifies_against_ca(self):
         self._generate_ca()
         _, server_cert = self._generate_and_sign()
-        # Verification independante via openssl directement (pas via le
-        # tool lui-meme) - preuve que la chaine de confiance fonctionne
-        # reellement, pas seulement que les fichiers existent.
         result = SubprocessRunner().run(["openssl", "verify", "-CAfile", str(self.ca_cert), str(server_cert)])
         self.assertTrue(result.ok, result.stderr)
 

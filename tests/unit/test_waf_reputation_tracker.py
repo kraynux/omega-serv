@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -42,10 +41,6 @@ class TestInMemoryReputationTracker(unittest.TestCase):
         self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300), 0)
 
     def test_key_is_removed_once_its_hits_all_expire(self):
-        # Retour utilisateur (audit memoire) : `count_hits_in_window`
-        # reecrivait toujours la cle meme quand la liste devenait vide -
-        # verifie ici que la cle disparait reellement du dict, pas
-        # seulement que le compte retourne 0.
         self.tracker.record_hit("203.0.113.1")
         self.clock._now = self.now + timedelta(seconds=400)
         self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300), 0)
@@ -70,11 +65,6 @@ class TestInMemoryReputationTrackerSweep(unittest.TestCase):
         self.tracker.record_hit("203.0.113.1")
         self.assertIn("203.0.113.1", self.tracker._hits)
 
-        # Depasse a la fois le TTL (100s) et l'intervalle de balayage
-        # (60s, constante du module) en un seul bond - reproduit
-        # exactement le sequencement reel (record_hit puis
-        # count_hits_in_window pour une AUTRE ip, qui declenche le
-        # balayage de la premiere).
         self.clock._now = self.now + timedelta(seconds=200)
         self.tracker.record_hit("203.0.113.2")
 

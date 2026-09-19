@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Normalisation des textes de scope avant inspection (doc WAF §2,
 module "normalization" : "limitation de profondeur de decodage...
 normalisation URL deterministe"). Distinct de

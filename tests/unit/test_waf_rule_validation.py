@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import re
 import unittest
 
@@ -95,8 +94,6 @@ class TestBuildPathSegmentPattern(unittest.TestCase):
         self.assertEqual(build_path_segment_pattern("/admin/"), build_path_segment_pattern("admin"))
 
     def test_special_characters_in_input_are_escaped_not_interpreted(self):
-        # Retour utilisateur : un "." tape par un non-connaisseur de
-        # regex ne doit jamais devenir "n'importe quel caractere".
         pattern = build_path_segment_pattern("prix.php")
         self.assertRegex("/prix.php", pattern)
         self.assertNotRegex("/prixXphp", pattern)

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Parsing/validation des zones protegees (spec §15.2). Meme patron que
 domain/routing/redirect.py::parse_redirect_rules - parsing pur, la
 resolution de zone reutilise domain/routing/zone_resolver.py (deja

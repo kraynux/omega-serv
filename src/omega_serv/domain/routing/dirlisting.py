@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Rendu HTML du directory listing (spec §16).
 
 Regles appliquees : dotfiles et extensions/motifs sensibles masques
@@ -23,11 +22,20 @@ from __future__ import annotations
 
 import html
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from omega_lib.theme.policies import DEFAULT_EXPORT_THEME, EXPORT_PALETTES
 
 from omega_serv.domain.config.entities import SecurityConfig
+from omega_serv.domain.routing.dirlisting_sort import (
+    DirEntryInfo,
+    DirlistingSort,
+    SortKey,
+    parse_dirlisting_sort,
+    sort_entry_names,
+)
+from omega_serv.domain.routing.icon_registry import DIRECTORY_ICON, ICON_URL_PREFIX, icon_for_file
 from omega_serv.domain.security.access_policy import is_denied_path
 
 DEFAULT_HEADER_FILE = "HEADER.txt"
@@ -66,52 +74,36 @@ class DirlistingSettings:
 
 def _base_css(theme: str) -> str:
     palette = EXPORT_PALETTES.get(theme, EXPORT_PALETTES[DEFAULT_EXPORT_THEME])
-    # Meme mise en page que les exports HTML (capabilities_report.html.j2/
-    # log_archives_report.html.j2) - container/box/table -, transposee en
-    # CSS statique plutot qu'un template jinja2 (interdit ici).
     return (
         "*{box-sizing:border-box}"
-        # Retour utilisateur : pied de page toujours colle au bas de la
-        # PAGE (pas seulement sous le contenu) - "body" en colonne flex
-        # pleine hauteur, le pied de page (margin-top:auto plus bas) se
-        # pousse alors tout seul vers le bas, meme quand le dossier liste
-        # peu d'entrees.
         f"body{{font-family:ui-monospace,'Cascadia Code','SFMono-Regular',Consolas,monospace;"
         f"line-height:1.6;color:{palette.foreground};background:{palette.background};"
         f"padding:20px;margin:0;display:flex;flex-direction:column;min-height:100vh}}"
         f".omega-listing{{max-width:900px;margin:0 auto;background:{palette.surface};"
         f"padding:30px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.3);width:100%}}"
-        f"h1{{font-size:1.4rem;color:{palette.foreground};border-bottom:3px solid {palette.accent};"
-        f"padding-bottom:10px;margin:0 0 20px}}"
+        f".omega-listing-title{{font-size:1.05rem;color:{palette.foreground};"
+        f"border-bottom:3px solid {palette.accent};padding-bottom:10px;margin:0 0 20px}}"
         f".omega-listing-box{{background:{palette.panel};border:1px solid {palette.accent};"
         f"border-radius:8px;padding:8px 20px 20px;margin-bottom:20px}}"
         "ul{list-style:none;margin:0;padding:0}"
-        # Retour utilisateur : le trait separateur entre CHAQUE
-        # fichier/dossier ("effet grille") est retire - seul reste celui
-        # sous "dossier parent" (classe dediee ".omega-parent", jamais la
-        # regle generale "li").
-        # Retour utilisateur : espacement vertical entre entrees trop
-        # genereux (page trop longue avec beaucoup de fichiers) - reduit.
-        "li{padding:.15rem .2rem}"
+        "li{padding:.15rem .2rem;display:flex;align-items:center;gap:.5rem}"
         f"li.omega-parent{{border-bottom:1px solid {palette.surface};margin-bottom:.2rem;padding-bottom:.6rem}}"
         f"a{{color:{palette.accent};text-decoration:none}}"
         "a:hover{text-decoration:underline}"
-        # Retour utilisateur : couleur des fichiers distincte de celle
-        # des dossiers (qui gardent la couleur de lien par defaut
-        # ci-dessus) - meme couleur que le texte du pied de page.
         f"li.omega-file>a{{color:{palette.secondary}}}"
+        ".omega-listing-name{flex:1 1 auto;min-width:0;overflow:hidden;"
+        "text-overflow:ellipsis;white-space:nowrap}"
+        f".omega-listing-mtime{{flex:0 0 190px;text-align:right;"
+        f"color:{palette.secondary};font-size:.8rem}}"
+        f".omega-listing-size{{flex:0 0 80px;text-align:right;"
+        f"color:{palette.secondary};font-size:.8rem}}"
+        f".omega-listing-header{{font-size:.75rem}}"
+        f".omega-listing-header a{{color:{palette.accent};opacity:.7}}"
         f".omega-listing-meta{{color:{palette.secondary};margin:0 0 20px;white-space:pre-wrap}}"
         f".omega-listing-footer-wrap{{max-width:900px;margin:0 auto;width:100%;margin-top:auto;padding-top:20px}}"
         f"hr.omega-listing-footer-rule{{border:none;border-top:1px solid {palette.surface};margin:0 0 10px}}"
         f".omega-listing-footer{{text-align:center;color:{palette.secondary};font-size:.8rem;margin:0}}"
-        # Retour utilisateur : les icones emoji (Unicode) ne s'affichent
-        # pas partout (police d'emoji absente du systeme - signale sous
-        # Chrome/Falkon) - repli en pur CSS (geometrie, jamais de glyphe
-        # de police) : universellement fiable, aucune dependance externe.
-        "li.omega-dir > a::before,li.omega-file > a::before{content:'';"
-        "display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:middle}"
-        f"li.omega-dir > a::before{{background:{palette.accent};border-radius:2px}}"
-        f"li.omega-file > a::before{{border:1px solid {palette.secondary};border-radius:2px}}"
+        ".omega-listing-icon{width:16px;height:16px;margin-right:8px;vertical-align:middle}"
     )
 
 
@@ -134,6 +126,53 @@ def _rendered_side_content(raw_content: str | None, encode: bool) -> str:
     return raw_content
 
 
+def _format_mtime(mtime: float | None) -> str:
+    """UTC, jamais l'heure locale du serveur (meme convention que le
+    reste du projet - ex. `infrastructure/storage/files/archive_store.py`
+    - un timestamp naif serait ambigu pour qui consulte ce listing HTML
+    public depuis un fuseau different)."""
+    if mtime is None:
+        return ""
+    return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+_SIZE_UNITS = ("o", "Ko", "Mo", "Go", "To", "Po")
+
+
+def _format_size(size: int | None) -> str:
+    """`None` (dossier, jamais de taille recursive calculee - voir
+    `DirEntryInfo`) rend "-", jamais une valeur numerique trompeuse."""
+    if size is None:
+        return "-"
+    value = float(size)
+    unit_index = 0
+    while value >= 1024 and unit_index < len(_SIZE_UNITS) - 1:
+        value /= 1024
+        unit_index += 1
+    if unit_index == 0:
+        return f"{int(value)} {_SIZE_UNITS[unit_index]}"
+    return f"{value:.1f} {_SIZE_UNITS[unit_index]}"
+
+
+def _header_link(label: str, key: SortKey, sort: DirlistingSort) -> str:
+    return f'<a class="omega-listing-{key}" href="?{sort.query_for(key)}">{label}</a>'
+
+
+def _render_entry_item(name: str, info: DirEntryInfo, url_path: str) -> str:
+    css_class = "omega-dir" if info.is_directory else "omega-file"
+    href = html.escape(url_path.rstrip("/") + "/" + name)
+    icon = icon_for_file(name, is_directory=info.is_directory)
+    label = html.escape(name) + ("/" if info.is_directory else "")
+    return (
+        f'<li class="{css_class}">'
+        f'<a class="omega-listing-name" href="{href}">'
+        f'<img class="omega-listing-icon" src="{ICON_URL_PREFIX}{icon}" alt="">{label}</a>'
+        f'<span class="omega-listing-mtime">{_format_mtime(info.mtime)}</span>'
+        f'<span class="omega-listing-size">{_format_size(info.size)}</span>'
+        "</li>"
+    )
+
+
 def render_directory_listing_html(
     url_path: str,
     entries: list[str],
@@ -141,9 +180,11 @@ def render_directory_listing_html(
     settings: DirlistingSettings | None = None,
     header_content: str | None = None,
     readme_content: str | None = None,
-    directory_names: frozenset[str] = frozenset(),
+    entry_info: dict[str, DirEntryInfo] | None = None,
+    query: str = "",
 ) -> str:
     settings = settings or DirlistingSettings()
+    entry_info = entry_info or {}
 
     hidden_names = set()
     if settings.hide_header_file:
@@ -151,21 +192,30 @@ def render_directory_listing_html(
     if settings.hide_readme_file:
         hidden_names.add(settings.readme_file)
 
-    visible = sorted(
+    visible_names = [
         name for name in entries
         if name not in hidden_names and not is_denied_path((name,), security)
-    )
+    ]
+    sort = parse_dirlisting_sort(query)
+    visible = sort_entry_names(visible_names, entry_info, sort)
 
+    criteria_item = (
+        f'<li class="omega-listing-header">'
+        f'{_header_link("NOM", "name", sort)}'
+        f'{_header_link("DERNIÈRE MODIFICATION", "mtime", sort)}'
+        f'{_header_link("TAILLE", "size", sort)}'
+        "</li>"
+    )
     parent_path = _parent_url_path(url_path)
     parent_item = (
-        f'<li class="omega-dir omega-parent"><a href="{html.escape(parent_path)}">.. (dossier parent)</a></li>'
+        f'<li class="omega-dir omega-parent"><a class="omega-listing-name" href="{html.escape(parent_path)}">'
+        f'<img class="omega-listing-icon" src="{ICON_URL_PREFIX}{DIRECTORY_ICON}" alt="">'
+        ".. (dossier parent)</a>"
+        '<span class="omega-listing-mtime"></span><span class="omega-listing-size"></span></li>'
         if parent_path is not None else ""
     )
-    items = parent_item + "".join(
-        f'<li class="{"omega-dir" if name in directory_names else "omega-file"}">'
-        f'<a href="{html.escape(url_path.rstrip("/") + "/" + name)}">'
-        f'{html.escape(name)}{"/" if name in directory_names else ""}</a></li>'
-        for name in visible
+    items = criteria_item + parent_item + "".join(
+        _render_entry_item(name, entry_info.get(name, DirEntryInfo()), url_path) for name in visible
     )
     title = html.escape(url_path)
 
@@ -177,11 +227,6 @@ def render_directory_listing_html(
         f'<link rel="stylesheet" href="{html.escape(settings.external_css)}">' if settings.external_css else ""
     )
 
-    # Retour utilisateur : pied de page discret "Propulse par OMEGA-SERV"
-    # par defaut - masque des que l'utilisateur habille deja lui-meme le
-    # dossier via son propre README.txt (show_readme actif ET fichier
-    # reellement present, pas seulement le reglage active a vide) : la
-    # mention generique devient alors redondante avec sa personnalisation.
     footer_html = (
         ""
         if show_readme
@@ -198,23 +243,10 @@ def render_directory_listing_html(
         f"<title>Index de {title}</title>"
         f"<style>{_base_css(settings.theme)}</style>{external_css_link}"
         "</head><body><div class=\"omega-listing\">"
-        # Retour utilisateur : le titre "Index de ..." (et son trait
-        # souligne) apparaissait AU-DESSUS d'un HEADER.txt personnalise -
-        # deplace en dessous, meme convention que lighttpd (dir-listing.header
-        # rendu tout en haut de page, avant le reste) - jamais masque pour
-        # autant : reste une information de navigation utile (savoir dans
-        # quel dossier on se trouve), contrairement au pied de page
-        # generique qui lui disparait completement face a un README.txt.
         f"{header_html}"
-        f"<h1>Index de {title}</h1>"
+        f'<h1 class="omega-listing-title">Index de {title}</h1>'
         f"<div class=\"omega-listing-box\"><ul>{items}</ul></div>"
         f"{readme_html}"
-        # Retour utilisateur : le pied de page doit coller au bas de la
-        # PAGE, pas seulement suivre un contenu court - sorti du conteneur
-        # centre ".omega-listing" (qui n'a que la hauteur de son propre
-        # contenu) pour vivre au niveau du "body" (flex column pleine
-        # hauteur, voir _base_css), seul endroit ou "margin-top:auto"
-        # peut reellement le pousser vers le bas.
         "</div>"
         f"{footer_html}"
         "</body></html>"

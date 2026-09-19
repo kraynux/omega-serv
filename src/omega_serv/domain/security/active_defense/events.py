@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Evenements metier Active Defense (plan_active_defense_omega_serv.md,
 Phase 0) - produits par les politiques/cas d'usage quand une action est
 justifiee, jamais des effets de bord eux-memes (l'ecriture au journal

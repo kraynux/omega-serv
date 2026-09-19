@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Endpoint /healthz minimal (voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §9.6).
 
 Pas seulement une liveness pour un reverse proxy : premiere instance

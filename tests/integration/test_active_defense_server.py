@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 1 - premier cablage reel
 dans le pipeline HTTP (infrastructure/server/asyncio_server.py::
 _observe_active_defense_threat) : serveur reel, connexions TCP reelles
@@ -132,8 +131,6 @@ class TestActiveDefenseObservationWiring(_ActiveDefenseServerTestCase):
         await self._start(active_defense_settings={"war_mode": {"enabled": True}}, waf_mode="log-only")
         status, _ = await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
         self.assertEqual(status, 200)
-        # log-only ne bloque jamais mais reste un signal reel pour
-        # Active Defense (plan §"Domaine metier") - observe quand meme.
         states = self._load_threat_states("var/lib/active-defense.sqlite3")
         self.assertEqual(len(states), 1)
 

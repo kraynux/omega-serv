@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Conteneur d'en-tetes HTTP et regles de validite pures.
 
 Aucune I/O, aucun parsing de flux reseau (delegue a

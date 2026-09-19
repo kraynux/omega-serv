@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 3/8 - choix du profil de base
 (plan interface §11 etape 3 : minimal/standard/hardened/development,
 description affichee pour chacun). Reutilise

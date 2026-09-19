@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implemente ports.decoy_dispatch_port.DecoyDispatchPort - Niveau 1
 (fixture in-process, plan_active_defense_omega_serv.md, Phase 3).
 Retourne None si le profil est inconnu (jamais une exception) - le

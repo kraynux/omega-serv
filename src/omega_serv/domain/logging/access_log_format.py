@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Formatage pur des lignes de log (spec §23.2/§23.4).
 
 Format "combined" (Apache, compatible avec les outils d'analyse

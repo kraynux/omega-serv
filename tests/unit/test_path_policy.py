@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.http.status_codes import HttpStatus
@@ -23,10 +22,6 @@ class TestNormalizeUriPath(unittest.TestCase):
         self.assertEqual(decision.suggested_status, HttpStatus.FORBIDDEN)
 
     def test_internal_traversal_that_stays_within_bounds_is_safe(self):
-        # /a/b/../c -> /a/c : remonte puis redescend SANS jamais depasser
-        # la racine - doit rester valide (spec §11.2 etape 4 : la
-        # protection "'../' in url" est insuffisante car elle rejetterait
-        # aussi ce cas parfaitement legitime).
         decision = normalize_uri_path("/a/b/../c")
         self.assertTrue(decision.ok)
         self.assertEqual(decision.segments, ("a", "c"))
@@ -42,15 +37,11 @@ class TestNormalizeUriPath(unittest.TestCase):
         self.assertEqual(decision.rejection_reason, PathRejectionReason.CONTROL_CHARACTER)
 
     def test_percent_encoded_traversal_rejected(self):
-        # %2e%2e%2f%2e%2e%2f etc.
         decision = normalize_uri_path("/%2e%2e/%2e%2e/etc/passwd")
         self.assertFalse(decision.ok)
         self.assertEqual(decision.rejection_reason, PathRejectionReason.TRAVERSAL_ATTEMPT)
 
     def test_double_encoded_nul_byte_rejected(self):
-        # %2500 decode une premiere fois en "%00", une seconde fois en NUL -
-        # exactement le contournement que la limitation de profondeur de
-        # decodage (2 passes) doit intercepter.
         decision = normalize_uri_path("/index.html%2500.php")
         self.assertFalse(decision.ok)
         self.assertEqual(decision.rejection_reason, PathRejectionReason.NUL_BYTE)

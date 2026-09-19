@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Point d'entree Textual de l'application, cable par le composition
 root (bootstrap/container.py). Adapte du patron app.py d'omega-check
 (plan interface §0/§3.1 : patron de coquille applicative de reference)."""
@@ -87,9 +86,6 @@ class OmegaServApp(App[None]):
         for theme in build_all_textual_themes():
             self.register_theme(theme)
         self.theme = self._startup_state.theme.theme_name
-        # Lu par omega_serv/__main__.py::main() APRES que run() soit
-        # revenu - jamais consomme depuis l'interieur de l'app elle-meme
-        # (§9 Phase D : os.execv() n'a lieu qu'une fois Textual arrete).
         self.pending_switch: PendingInstanceSwitch | None = None
 
     def on_mount(self) -> None:
@@ -135,9 +131,6 @@ class OmegaServApp(App[None]):
     def _build_sub_title(self) -> str:
         terminal = self._startup_state.terminal
         base = f"{self.theme} | {terminal.signals.columns}x{terminal.signals.rows}"
-        # Retour utilisateur (plan multi-instance §7) : rappel visuel
-        # invisible pour le cas tres majoritaire (0/1 instance connue) -
-        # zero changement percu, jamais de bruit pour rien.
         instance_count = len(self._container.instance_registry.load())
         if instance_count <= 1:
             return base
@@ -163,14 +156,6 @@ class OmegaServApp(App[None]):
             self.notify(str(exc), severity="error")
             return
         except OSError as exc:
-            # Retour utilisateur (GROS BUG omega-fire : "t" fermait
-            # l'application) - meme correctif applique ici par coherence
-            # (audit de la suite) : une simple erreur de persistance
-            # (permissions, disque plein, systeme de fichiers en lecture
-            # seule) faisait planter cette action sans aucun rattrapage.
-            # Le theme change quand meme visuellement (self.theme =
-            # next_name plus bas) : seule la PERSISTANCE du choix
-            # echoue, pas la fonctionnalite immediate.
             self.notify(f"Theme applique mais non enregistre : {exc}", severity="warning")
         self.theme = next_name
 
@@ -186,10 +171,6 @@ class OmegaServApp(App[None]):
         )
 
     def action_help(self) -> None:
-        # Guide d'aide (plan guide d'aide §3.6) : `a` ouvre desormais le
-        # menu navigable complet, plutot que la seule reference statique
-        # d'antan (HelpScreen reste le repli quand une fiche precise
-        # n'existe pas encore, voir _base.py::action_show_help).
         self.push_screen(GuideMenuScreen(container=self._container))
 
     def action_open_settings(self) -> None:

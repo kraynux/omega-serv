@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 8 (FastCGI/PHP-FPM) : serveur HTTP reel,
 connexions TCP reelles, et un faux backend FastCGI (vrai socket Unix,
 vrai protocole sur le fil) qui tient lieu de PHP-FPM - aucun mock, meme
@@ -110,11 +109,6 @@ class TestFastCgiServerIntegration(unittest.IsolatedAsyncioTestCase):
         try:
             await task
         except (asyncio.CancelledError, Exception):  # noqa: BLE001, S110
-            # Nettoyage de test best-effort : on vient d'annuler la tache,
-            # peu importe ce qu'elle a leve en reponse (CancelledError
-            # attendu, ou toute autre exception issue de la fermeture
-            # brutale du socket cote faux PHP-FPM) - ne doit jamais faire
-            # echouer le teardown du test.
             pass
 
     def _request_sync(self, method, path, body=None, headers=None):
@@ -160,7 +154,6 @@ class TestFastCgiServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(data, b"received: field=value")
 
     async def test_missing_php_fpm_socket_returns_503(self):
-        # Aucun faux backend demarre - le socket configure n'existe pas.
         status, _, _ = await self._request("GET", "/app/index.php")
         self.assertEqual(status, 503)
 

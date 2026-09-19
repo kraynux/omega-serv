@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste le cas d'usage rotate_log_if_needed (application/logs/rotate_log.py)
 contre un vrai LocalFilesystem et un vrai ArchiveStore."""
 from __future__ import annotations

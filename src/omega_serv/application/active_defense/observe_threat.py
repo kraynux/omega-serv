@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage ObserveThreatCommand (plan_active_defense_omega_serv.md,
 Phase 1) - traduit des decisions DEJA calculees (WafDecision/
 ReputationDecision/ban connu) en une mise a jour de ThreatState,

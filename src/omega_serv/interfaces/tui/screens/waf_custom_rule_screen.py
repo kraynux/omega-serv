@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran WAF - Custom (retour utilisateur 2026-09-13 : "j'ai cree
 une regle dans l'interface, elle ne se declenche jamais, les logs sont
 vides" - le pack `secure/waf/rules/custom.json` existait deja comme
@@ -119,11 +118,6 @@ class WafCustomRuleScreen(OmegaScreen):
             )
 
     def _next_rule_id(self, pack: dict[str, Any]) -> str:
-        # Genere automatiquement (retour utilisateur 2026-09-14 :
-        # l'assistant ne demande plus d'identifiant, un champ technique
-        # de moins pour un utilisateur qui ne sait pas coder) - jamais
-        # de collision avec un id existant, y compris un id non
-        # standard laisse par une edition manuelle du JSON.
         existing_ids = {rule.get("id", "") for rule in pack.get("rules", [])}
         index = 1
         while f"CUSTOM-{index:03d}" in existing_ids:
@@ -152,10 +146,6 @@ class WafCustomRuleScreen(OmegaScreen):
         }
         pack["rules"] = [*pack.get("rules", []), rule]
 
-        # Reutilise les MEMES fonctions de validation que le chargeur
-        # reel (infrastructure/waf/rule_pack_loader.py) - une regle
-        # refusee ici le serait de toute facon au chargement, jamais une
-        # seconde logique de validation a maintenir en parallele.
         try:
             parsed = parse_rule_pack(pack)
         except (KeyError, TypeError) as exc:
@@ -191,9 +181,6 @@ class WafCustomRuleScreen(OmegaScreen):
             self.app.notify(reload_message)
 
     def _ensure_pack_referenced(self) -> None:
-        # Retour utilisateur 2026-09-13 (cause directe de la confusion
-        # initiale) : creer une regle ici doit suffire, jamais exiger un
-        # aller-retour manuel par "Modules" pour reference le pack.
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
             return

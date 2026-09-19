@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Menaces - equivalent TUI de `omega-serv threats list/show`. Pas
 de filtre par niveau dans cette V1 (la table entiere reste lisible en
 un coup d'oeil pour le volume attendu, D-008 - le filtre CLI `--level`

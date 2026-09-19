@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sidecar de checksum SHA-256 pour les exports IoC/rapport
 (plan_active_defense_omega_serv.md, Phase 6 : "signatures ou hachage des
 exports"). Format `sha256sum` standard (`<hash>  <nom-de-fichier>\\n`),

@@ -1,10 +1,11 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from datetime import datetime, timedelta, timezone
 
 from omega_serv.domain.security.tls.entities import CertificateInfo, SelfSignedCertParams
 from omega_serv.domain.security.tls.validation import (
+    CertificateImportFacts,
     TlsStartupFacts,
+    validate_certificate_import,
     validate_self_signed_params,
     validate_tls_config_structure,
     validate_tls_startup,
@@ -134,10 +135,54 @@ class TestValidateTlsStartup(unittest.TestCase):
         self.assertTrue(any("correspond" in e for e in errors))
 
     def test_keys_match_none_is_not_an_error(self):
-        # None = "non verifie" (ex. impossible a determiner), distinct de False - ne doit jamais etre traite comme un echec.
         errors = validate_tls_startup(_facts(keys_match=None))
         self.assertEqual(errors, [])
 
+
+def _import_facts(**overrides):
+    defaults = {
+        "source_key_exists": True, "source_cert_exists": True,
+        "source_chain_path_given": False, "source_chain_exists": False,
+        "keys_match": True, "certificate_info": _cert(), "now": _NOW,
+    }
+    defaults.update(overrides)
+    return CertificateImportFacts(**defaults)
+
+
+class TestValidateCertificateImport(unittest.TestCase):
+    def test_healthy_import_passes(self):
+        self.assertEqual(validate_certificate_import(_import_facts()), [])
+
+    def test_missing_source_key_rejected(self):
+        errors = validate_certificate_import(_import_facts(source_key_exists=False, keys_match=None))
+        self.assertTrue(any("cle privee source" in e for e in errors))
+
+    def test_missing_source_cert_rejected(self):
+        errors = validate_certificate_import(
+            _import_facts(source_cert_exists=False, keys_match=None, certificate_info=None)
+        )
+        self.assertTrue(any("certificat source" in e for e in errors))
+
+    def test_declared_chain_missing_on_disk_rejected(self):
+        errors = validate_certificate_import(
+            _import_facts(source_chain_path_given=True, source_chain_exists=False)
+        )
+        self.assertTrue(any("chaine intermediaire" in e for e in errors))
+
+    def test_declared_chain_present_on_disk_passes(self):
+        errors = validate_certificate_import(
+            _import_facts(source_chain_path_given=True, source_chain_exists=True)
+        )
+        self.assertEqual(errors, [])
+
+    def test_mismatched_keys_rejected(self):
+        errors = validate_certificate_import(_import_facts(keys_match=False))
+        self.assertTrue(any("ne correspondent pas" in e for e in errors))
+
+    def test_expired_certificate_rejected(self):
+        expired = _cert(not_after=_NOW - timedelta(days=1))
+        errors = validate_certificate_import(_import_facts(certificate_info=expired))
+        self.assertTrue(any("expire" in e for e in errors))
 
 if __name__ == "__main__":
     unittest.main()

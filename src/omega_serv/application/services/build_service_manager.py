@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Usine construisant l'adaptateur ServiceManagerPort reel selon le
 gestionnaire de service detecte sur le systeme (systemd/OpenRC/runit) -
 meme patron "usine" que application/server/start_server.py::build_waf_collaborators

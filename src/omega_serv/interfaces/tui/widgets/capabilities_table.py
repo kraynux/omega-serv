@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tableau des capacites systeme (plan interface §5, menu 1) - une ligne
 par capacite, statut colore. Couleurs resolues via
 `App.get_css_variables()` (jetons de palette omega-lib deja enregistres

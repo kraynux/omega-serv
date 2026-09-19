@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Configuration de base (plan interface §7) - bind/port/
 server_name/index_files, edition directe puis validation structurelle
 (domain/config/validation.py, pure) avant ecriture, meme discipline que
@@ -105,14 +104,6 @@ class BaseConfigScreen(OmegaScreen):
 
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
-        # Retour utilisateur 2026-09-11 (audit reload/restart) :
-        # bind/port ne se rechargent jamais a chaud - le socket
-        # d'ecoute n'est jamais retouche par reload_scoped
-        # (application/server/start_server.py::reload_server), seul un
-        # restart complet (bouton "Redemarrer", pas "Recharger") prend
-        # en compte un changement ici. Avertissement seulement si l'un
-        # des deux a reellement change - jamais pour server_name/
-        # index_files, qui restent a chaud.
         if new_server.bind != load_result.config.server.bind or new_server.port != load_result.config.server.port:
             notify_restart_required(
                 self, self._container,
@@ -120,9 +111,4 @@ class BaseConfigScreen(OmegaScreen):
                 "effet (jamais un simple rechargement, le socket d'ecoute n'est jamais retouche).",
             )
         else:
-            # server_name/index_files restent a chaud (lus depuis
-            # self._config a chaque requete, remplaces en bloc par
-            # reload_scoped) - meme angle mort que les autres options
-            # detaillees (guide d'aide, point 4) : un simple reload
-            # reste necessaire, jamais applique tout seul.
             notify_reload_required(self, self._container, "Configuration de base enregistree.")

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Detection de conflits de configuration (spec §6.4).
 
 Distinct de validation.py (structurel : est-ce que CETTE config seule

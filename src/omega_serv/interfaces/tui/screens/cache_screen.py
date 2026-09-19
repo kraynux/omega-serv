@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Cache (plan interface §7, `option enable cache` + regles
 par zone/extension) - CRUD sur `settings["zones"]` (path_prefix/
 cache_control) et `settings["extensions"]` (extension/cache_control),

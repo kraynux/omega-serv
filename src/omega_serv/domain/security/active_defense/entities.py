@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites Active Defense (plan_active_defense_omega_serv.md, Phase 0).
 Domaine pur - aucune I/O, aucune dependance vers infrastructure/
 interfaces. Reutilise directement WafDecision/BlocklistEntry de

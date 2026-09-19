@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Revoquer un certificat (plan interface §7.3, `certs
 revoke`) - marque le numero de serie comme revoque dans index.txt
 (bascule minimale, doc TLS §7.3 etape derniere / OMEGA-SERV_PLAN
@@ -85,10 +84,6 @@ class RevokeCertificateScreen(OmegaScreen):
         ca_cert_path = self._container.project_root / self.query_one("#ca-cert-input", Input).value.strip()
         password = self.query_one("#password-input", Input).value
 
-        # Retour utilisateur (audit "gel d'ecran") : openssl en
-        # sous-processus, execute directement sur la boucle asyncio -
-        # gelait TOUTE l'interface. Meme patron que
-        # generate_self_signed_screen.py : deporte dans un thread.
         error_widget.update("Revocation en cours...")
         self.query_one("#revoke", Button).disabled = True
         self.run_worker(
@@ -122,11 +117,6 @@ class RevokeCertificateScreen(OmegaScreen):
             error_widget.update(f"Erreur : {result.message}")
             return
         error_widget.update("")
-        # Retour utilisateur 2026-09-13 : le contexte SSL du serveur en
-        # cours d'execution est construit UNE FOIS (jamais retouche par
-        # reload_scoped) - s'il sert precisement CE certificat, revoquer
-        # ne l'empeche jamais de continuer a le presenter aux clients
-        # tant qu'un redemarrage complet n'a pas eu lieu.
         load_result = load_config(self._container.configuration, self._container.config_file)
         active_cert_matches = (
             load_result.success and load_result.config is not None and load_result.config.tls.enabled

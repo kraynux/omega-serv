@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Registre des capacites (plan interface §5, menu 1) - scan
 systeme complet, tableau colore par statut, export JSON/HTML. Le port
 sonde et le socket FastCGI (si l'option est active) viennent de la
@@ -33,9 +32,6 @@ if TYPE_CHECKING:
 
 
 def _export_timestamp() -> str:
-    # Meme format que domain/logs/rotation.py::generate_archive_name
-    # (retour utilisateur 2026-09-09 : ces exports ecrasaient
-    # silencieusement le precedent, faute d'horodatage dans le nom).
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
 
 
@@ -83,12 +79,6 @@ class CapabilitiesScreen(OmegaScreen):
             socket_relative = fastcgi_option.settings.get("socket_path", "var/run/php-fpm.sock")
             fastcgi_socket = self._container.project_root / socket_relative
 
-        # Retour utilisateur (audit "gel d'ecran") : `scanner.scan()`
-        # sonde reellement le port/socket configures (connexion reseau)
-        # - tourne en synchrone sur la boucle asyncio, gele l'interface
-        # le temps de chaque sonde. Meme patron que
-        # backup_screen.py/audit_screen.py : deporte dans un thread de
-        # travail.
         error_widget.update("Analyse en cours...")
         self.query_one("#refresh", Button).disabled = True
         self.run_worker(lambda: self._scan_in_thread(config, fastcgi_socket), thread=True, exclusive=True)
@@ -123,9 +113,6 @@ class CapabilitiesScreen(OmegaScreen):
         self.app.push_screen(CapabilityDetailScreen(container=self._container, registry=self._registry, capability_id=capability_id))
 
     def _exports_dir(self) -> Path:
-        # Respecte la surcharge configuree dans l'ecran Reglages
-        # (parametre "exports_dir_override", touche 'o') - meme mecanisme
-        # que app.py::_deliver_screenshot_to_configured_dir pour les captures.
         override = self._container.settings_store.get("exports_dir_override", "")
         return Path(override) if override else self._container.default_exports_dir
 

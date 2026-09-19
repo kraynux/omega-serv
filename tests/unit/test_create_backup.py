@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste create_backup (application/persistence/create_backup.py) contre
 un vrai ArchiveStore/BackupMetadataStore et un vrai projet temporaire."""
 from __future__ import annotations

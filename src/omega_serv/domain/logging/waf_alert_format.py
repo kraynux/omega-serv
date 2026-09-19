@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Formatage pur des lignes d'alerte WAF (doc WAF §9, "waf_logging") -
 JSON Lines, un enregistrement par requete inspectee ayant produit au
 moins un finding. Aucune I/O ici (voir access_log_format.py, meme

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Requete de sauvegarde de configuration (plan interface §3.5) -
 specifique a SERV (le `BackupRequest` original d'omega-fire est lie a
 `BanEntry`/`FirewallRule`/`Jail`, aucun equivalent cote SERV, non porte).

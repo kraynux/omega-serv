@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran FastCGI/PHP-FPM (plan interface §7, `option enable
 fastcgi` + url_prefix/script_root) - un seul enregistrement (modele de
 zone volontairement simplifie, domain/routing/fastcgi_zone.py), jamais
@@ -144,11 +143,6 @@ class FastCgiScreen(OmegaScreen):
         new_config = replace(load_result.config, options=new_options)
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
-        # Retour utilisateur (guide d'aide, point 4) : seule la PREMIERE
-        # activation exige un restart complet (client construit une
-        # fois au demarrage, cf. options_screen.py) - une fois deja
-        # active, ces reglages sont relus depuis la config a chaque
-        # requete (route_request.py), donc un simple rechargement suffit.
         notify_reload_required(self, self._container, "Configuration FastCGI enregistree.")
 
 

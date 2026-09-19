@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Resolution du corps d'une page d'erreur : fichier personnalise si
 l'option "error_pages" est active et qu'un fichier `{status}.html`
 existe dans le repertoire configure (par defaut `webroot/.errors`,

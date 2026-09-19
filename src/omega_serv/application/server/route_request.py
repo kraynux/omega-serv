@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Pipeline de routage (spec §27) : redirections, reecritures, alias,
 FastCGI, puis fichier statique/listing de repertoire - dans cet ordre.
 WAF/Auth (Phases 5/7) restent des verifications faites en amont, dans
@@ -18,12 +17,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    # Annotation de type uniquement - meme convention/justification que
-    # ports/http_proxy_client_port.py.
     import ssl
 
 from omega_serv.application.server.healthz import HEALTHZ_PATH, handle_healthz
 from omega_serv.application.server.serve_fastcgi import serve_fastcgi
+from omega_serv.application.server.serve_icon import ICON_URL_PREFIX, handle_icon_request
 from omega_serv.application.server.serve_proxy import serve_proxy
 from omega_serv.application.server.serve_static_file import serve_static_file
 from omega_serv.application.upload.handle_upload import handle_upload
@@ -111,6 +109,9 @@ async def route_request(
 ) -> HttpResponse:
     if request.path == HEALTHZ_PATH:
         return handle_healthz(request)
+
+    if request.path.startswith(ICON_URL_PREFIX):
+        return handle_icon_request(request)
 
     redirect_settings = _option_settings(config, "redirects")
     if redirect_settings is not None:

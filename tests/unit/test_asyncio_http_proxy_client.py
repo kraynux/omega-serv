@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste l'implementation asyncio reelle contre un faux serveur HTTP
 (vrai socket TCP, vrais octets sur le fil) - meme discipline que
 test_asyncio_fastcgi_client.py (I/O reelle, pas de mock du transport).
@@ -83,7 +82,6 @@ class TestAsyncioHttpProxyClient(unittest.IsolatedAsyncioTestCase):
             await server.wait_closed()
 
     async def test_connection_refused_raises_connection_error(self):
-        # Port ferme (jamais ouvert) - simule un upstream indisponible.
         server = await asyncio.start_server(lambda r, w: None, "127.0.0.1", 0)
         port = server.sockets[0].getsockname()[1]
         server.close()
@@ -156,9 +154,6 @@ class TestAsyncioHttpProxyClientConnectionPooling(unittest.IsolatedAsyncioTestCa
             await server.wait_closed()
 
     async def test_never_reuses_a_connection_without_content_length(self):
-        # Une reponse sans Content-Length exige une lecture jusqu'a EOF
-        # (le pair DOIT fermer pour marquer la fin du corps) - jamais
-        # reutilisable par construction, quoi qu'il arrive.
         connections_accepted = 0
 
         async def handle(reader, writer):
@@ -201,11 +196,6 @@ class TestAsyncioHttpProxyClientConnectionPooling(unittest.IsolatedAsyncioTestCa
             await server.wait_closed()
 
     async def test_transparently_retries_once_when_the_pooled_connection_is_already_dead(self):
-        # Retour utilisateur (audit performance) : une connexion
-        # recuperee du pool peut avoir ete fermee silencieusement par
-        # l'upstream pendant son inactivite (tres courant en pratique) -
-        # doit se retablir toute seule avec une connexion fraiche,
-        # jamais remonter d'erreur pour ce seul motif.
         connections_accepted = 0
 
         async def handle(reader, writer):
@@ -220,10 +210,6 @@ class TestAsyncioHttpProxyClientConnectionPooling(unittest.IsolatedAsyncioTestCa
         try:
             client = AsyncioHttpProxyClient()
             first = await client.forward_request("127.0.0.1", port, "GET", "/", (), b"", 2.0, 2.0)
-            # La connexion est desormais dans le pool cote client (croit
-            # a tort qu'elle est reutilisable), mais deja morte cote
-            # serveur (fermee juste au-dessus) - la seconde requete doit
-            # neanmoins reussir via la reprise automatique.
             second = await client.forward_request("127.0.0.1", port, "GET", "/", (), b"", 2.0, 2.0)
             self.assertEqual(first.body, b"ok")
             self.assertEqual(second.body, b"ok")
@@ -245,9 +231,6 @@ class TestAsyncioHttpProxyClientConnectionPooling(unittest.IsolatedAsyncioTestCa
         try:
             client = AsyncioHttpProxyClient()
             await client.forward_request("127.0.0.1", port_a, "GET", "/", (), b"", 2.0, 2.0)
-            # Rien a asserter de plus qu'un succes sans exception : le
-            # pool est indexe par (host, port, tls), jamais partage entre
-            # deux upstreams distincts.
             await client.forward_request("127.0.0.1", port_b, "GET", "/", (), b"", 2.0, 2.0)
             self.assertEqual(len(client._idle), 2)
         finally:
@@ -296,11 +279,6 @@ class TestAsyncioHttpProxyClientWebsocket(unittest.IsolatedAsyncioTestCase):
             server.close()
 
     async def test_upgrade_preserves_exact_byte_boundary_after_headers(self):
-        # Les octets ecrits par l'upstream IMMEDIATEMENT apres les
-        # en-tetes (avant meme que le client n'ecrive quoi que ce
-        # soit) doivent arriver intacts - preuve que le parsing des
-        # en-tetes de la reponse 101 ne consomme jamais un octet du
-        # tube qui commence juste apres.
         holder: dict = {}
         tunnel_prefix = b"first-tunnel-bytes"
 
@@ -392,10 +370,6 @@ class TestAsyncioHttpProxyClientTls(unittest.IsolatedAsyncioTestCase):
             await server.wait_closed()
 
     async def test_verified_context_rejects_untrusted_self_signed_upstream(self):
-        # Le certificat auto-signe n'est jamais dans le magasin de
-        # confiance systeme utilise par build_client_ssl_context(True) -
-        # la verification stricte doit reellement echouer, preuve que
-        # la protection anti-MITM par defaut fonctionne (§5.3).
         server, port = await _serve_one_tls_response(b"HTTP/1.1 200 OK\r\n\r\n", self.server_context)
         try:
             client = AsyncioHttpProxyClient()
@@ -409,11 +383,6 @@ class TestAsyncioHttpProxyClientTls(unittest.IsolatedAsyncioTestCase):
             await server.wait_closed()
 
     async def test_no_ssl_context_means_plain_tcp_never_a_tls_handshake(self):
-        # Confirme qu'un upstream HTTP (ssl_context=None, comportement
-        # phase 1/2 inchangeE) ne tente jamais de handshake TLS contre
-        # ce meme serveur TLS - echoue comme une connexion HTTP normale
-        # parlant a un serveur qui attend du TLS (erreur de protocole,
-        # jamais un succes accidentel).
         server, port = await _serve_one_tls_response(b"HTTP/1.1 200 OK\r\n\r\n", self.server_context)
         try:
             client = AsyncioHttpProxyClient()

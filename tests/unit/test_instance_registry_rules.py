@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,9 +62,6 @@ class TestFindPortConflict(unittest.TestCase):
         self.assertIsNotNone(find_port_conflict(entries, "127.0.0.1", 8080))
 
     def test_different_bind_same_port_does_not_conflict(self):
-        # Retour utilisateur (§4) : bind+port ensemble, jamais le port
-        # seul - 127.0.0.1:8080 et 0.0.0.0:8080 ne sont pas le meme
-        # socket au niveau OS.
         entries = [_entry(bind="127.0.0.1", port=8080)]
         self.assertIsNone(find_port_conflict(entries, "0.0.0.0", 8080))
 

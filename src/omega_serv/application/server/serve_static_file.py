@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : servir un fichier statique, ou un listing de repertoire
 optionnel (spec §16, Phase 4) quand aucun fichier index n'existe.
 
@@ -17,6 +16,7 @@ from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus
 from omega_serv.domain.routing.cache_policy import CachePolicy, resolve_cache_control
 from omega_serv.domain.routing.dirlisting import DirlistingSettings, render_directory_listing_html
+from omega_serv.domain.routing.dirlisting_sort import DirEntryInfo
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 from omega_serv.domain.security.access_policy import is_denied_path
 from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
@@ -46,13 +46,6 @@ def serve_static_file(
         return HttpResponse.empty(resolved.suggested_status or HttpStatus.BAD_REQUEST)
 
     if not access_control_override and is_denied_path(resolved.segments, security):
-        # access_control_override (domain/routing/access_rule.py) : une
-        # regle "allow" explicite sur ce chemin exact (retour
-        # utilisateur 2026-09-09, ex: re-autoriser /private/.assets/
-        # sous un /private/ par ailleurs bloque) leve deliberement les
-        # regles globales dotfile/motif/extension - l'administrateur a
-        # explicitement declare ce chemin public, ce qui prime sur une
-        # heuristique generique.
         return HttpResponse.empty(HttpStatus.FORBIDDEN)
 
     target_path = resolved.absolute_path
@@ -96,12 +89,14 @@ def _render_listing(
 ) -> HttpResponse:
     settings = dirlisting_settings or DirlistingSettings()
     entries = filesystem.list_directory_entries(directory_path)
-    # Retour utilisateur ("on ne fait pas la difference entre un fichier
-    # et un dossier") : render_directory_listing_html() reste pur (aucun
-    # FilesystemPort) - la distinction fichier/dossier est donc calculee
-    # ICI, seul endroit avec un acces I/O reel, puis transmise en pur
-    # ensemble de noms.
-    directory_names = frozenset(name for name in entries if filesystem.is_dir(directory_path / name))
+    entry_info = {
+        name: DirEntryInfo(
+            is_directory=(is_dir := filesystem.is_dir(directory_path / name)),
+            size=None if is_dir else filesystem.file_size(directory_path / name),
+            mtime=filesystem.file_mtime(directory_path / name),
+        )
+        for name in entries
+    }
     header_content = (
         _read_side_file(filesystem, directory_path, settings.header_file) if settings.show_header else None
     )
@@ -109,7 +104,7 @@ def _render_listing(
         _read_side_file(filesystem, directory_path, settings.readme_file) if settings.show_readme else None
     )
     body = render_directory_listing_html(
-        request.path, entries, security, settings, header_content, readme_content, directory_names,
+        request.path, entries, security, settings, header_content, readme_content, entry_info, request.query,
     ).encode("utf-8")
 
     response = HttpResponse.empty(HttpStatus.OK)

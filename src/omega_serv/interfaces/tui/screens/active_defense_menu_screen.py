@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Active Securite (retour utilisateur 2026-09-12, renomme et
 restructure le 2026-09-13 : "ACTIVE DEFENSE" devient "ACTIVE SECURITE",
 regroupe DEUX containers - Active Defense (inchange) et, en dessous, WAF
@@ -65,16 +64,6 @@ class ActiveDefenseMenuScreen(OmegaScreen):
         with Vertical(classes="omega-panel"):
             with Center():
                 yield Static("ACTIVE SECURITE", classes="omega-title")
-            # Retour utilisateur 2026-09-13 : "gele le terminal" - la
-            # vraie cause rencontree etait un compte systeme dedie
-            # (service installe via Menu Service) dont l'appartenance de
-            # groupe, ajoutee automatiquement a l'installation, n'avait
-            # jamais pris effet pour la session courante (`usermod` ne
-            # rafraichit jamais un processus deja lance). Detecte de
-            # facon proactive ICI (avant meme d'ouvrir un sous-ecran qui
-            # tenterait reellement d'ouvrir la base sqlite) plutot que de
-            # ne compter que sur le message d'installation, facile a
-            # oublier des jours/semaines plus tard.
             if is_missing_live_group(DEFAULT_SYSTEM_GROUP):
                 with Center():
                     yield Static(

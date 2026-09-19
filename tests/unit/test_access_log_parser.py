@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste le parseur pur du format combine (domain/logging/access_log_parser.py)."""
 from __future__ import annotations
 

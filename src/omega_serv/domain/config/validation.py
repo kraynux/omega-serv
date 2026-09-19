@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Validation structurelle de la configuration (spec §25.1).
 
 Verifications minimales faisables sans acces au systeme de fichiers ni
@@ -165,14 +164,6 @@ def validate_config(config: OmegaServConfig) -> list[str]:
             for upstream in proxy_zone.upstreams:
                 production_upstreams.add((upstream.host, upstream.port))
                 if upstream.host in ("127.0.0.1", "localhost", config.server.bind) and upstream.port == config.server.port:
-                    # Retour utilisateur 2026-09-11 (OMEGA-SERV_PLAN-DETAILLE_
-                    # REVERSE_PROXY.md §5.4) : une zone pointant vers le
-                    # serveur lui-meme creerait une boucle infinie/
-                    # amplification - detectee ici, jamais decouverte
-                    # seulement au runtime. Verifie sur CHAQUE upstream
-                    # (phase 2, repartition de charge) - un seul upstream
-                    # en boucle suffit a etre bloquant, pas seulement le
-                    # premier de la liste.
                     errors.append(
                         f"options.reverse_proxy zone {proxy_zone.url_prefix!r} : l'upstream "
                         f"({upstream.host}:{upstream.port}) pointe vers ce serveur lui-meme - boucle de proxy"
@@ -182,17 +173,6 @@ def validate_config(config: OmegaServConfig) -> list[str]:
     if active_defense_option is not None and active_defense_option.enabled:
         active_defense_config = parse_active_defense_config(active_defense_option.settings)
         errors.extend(f"options.active_defense : {e}" for e in validate_active_defense_config(active_defense_config))
-        # plan_active_defense_omega_serv.md, Phase 5, "Routage vers les
-        # leurres" : "ajouter une verification empechant qu'une zone
-        # reverse_proxy de production soit accidentellement reutilisee
-        # comme cible de deception" - les zones leurres (Niveau 2) vivent
-        # deja dans un espace de configuration separe (jamais lues
-        # depuis options.reverse_proxy, voir DeceptionConfig.decoy_zones),
-        # donc aucune collision de NOM n'est possible par construction ;
-        # le risque reel qui reste est de pointer un leurre vers le MEME
-        # backend physique (host:port) qu'une zone de production deja
-        # declaree - verifie ici, le seul endroit qui voit les deux
-        # configurations a la fois.
         for zone_name, decoy_zone in active_defense_config.deception.decoy_zones.items():
             for upstream in decoy_zone.upstreams:
                 if (upstream.host, upstream.port) in production_upstreams:

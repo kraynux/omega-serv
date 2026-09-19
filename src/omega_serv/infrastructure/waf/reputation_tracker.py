@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Compteur de recidive par IP (doc WAF §8) - etat en memoire, remis a
 zero au redemarrage (meme decision que le rate limit, voir
 rate_limit_store.py). Ne decide PAS lui-meme de l'escalade : ce module

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles pures de rotation des logs (plan interface §3.4/§8, port
 adapte depuis omega-fire domain/logs/rotation.py). Trimme a la seule
 strategie que `domain/config/entities.py::RotationConfig` sait

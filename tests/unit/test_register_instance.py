@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -55,9 +54,6 @@ class TestRegisterInstance(unittest.TestCase):
         self.assertEqual(len(self.registry.load()), 1)
 
     def test_resolves_path_before_storing(self):
-        # Un lien symbolique ne doit jamais etre stocke tel quel - la
-        # verification de non-imbrication (§2.3) exige des chemins
-        # deja resolus a la lecture.
         real_dir = self.root / "real-instance"
         real_dir.mkdir()
         symlink_path = self.root / "symlinked-instance"

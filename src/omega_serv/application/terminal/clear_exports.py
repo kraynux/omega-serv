@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : vider le dossier d'export (ecran Reglages) - housekeeping
 filesystem simple, porte depuis omega-check (`shutil` directement, pas de
 port dedie, meme raisonnement que pathlib dans infrastructure/config/

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.config.entities import SecurityConfig
@@ -44,9 +43,6 @@ class TestValidateHostHeader(unittest.TestCase):
         self.assertIsNotNone(reason)
 
     def test_duplicate_identical_host_is_still_rejected(self):
-        # Meme valeur dupliquee = toujours ambigu (des intermediaires
-        # differents pourraient lire des occurrences differentes) -
-        # pas de traitement de faveur pour les valeurs identiques.
         reason = validate_host_header((("Host", "a.com"), ("Host", "a.com")))
         self.assertIsNotNone(reason)
 

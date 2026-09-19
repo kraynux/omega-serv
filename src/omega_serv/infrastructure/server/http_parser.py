@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Parseur HTTP/1.1 minimal, bornee en taille des la lecture (spec §28.1 :
 "un serveur HTTP maison" est la surface de securite la plus sensible du
 projet - commencer par un perimetre reduit et strictement verifie).
@@ -21,17 +20,8 @@ from dataclasses import dataclass
 from omega_serv.domain.http.headers import has_control_characters
 from omega_serv.domain.http.status_codes import HttpStatus
 
-# Tampon brut asyncio, toujours superieur aux limites configurees reelles
-# (server.max_request_line_size / max_header_size) - la verification
-# precise se fait nous-memes juste apres lecture, ce tampon n'est qu'un
-# filet de securite pour ne jamais accumuler une ligne sans fin en memoire.
 RAW_LINE_BUFFER_LIMIT = 1_048_576
 
-# Limite du NOMBRE d'en-tetes, distincte de max_header_size (leur taille
-# TOTALE) - spec §11.1 "Limiter le nombre total de headers ET leur
-# taille totale". Constante fixe plutot que configurable : aucune valeur
-# legitime de ce projet n'a besoin de plus de 100 en-tetes, une valeur
-# configurable ici n'apporterait rien face au risque qu'elle mitige.
 MAX_HEADER_COUNT = 100
 
 
@@ -81,9 +71,6 @@ async def _read_line_bounded(reader: asyncio.StreamReader, max_size: int, on_too
 
 
 def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
-    # HTTP/1.1 §3.1.1 : la ligne de requete est en US-ASCII / latin-1,
-    # jamais suppose UTF-8 - un decodage strict UTF-8 leverait sur une
-    # entree pourtant syntaxiquement valide au sens HTTP.
     line = raw_line.decode("latin-1")
     parts = line.split(" ")
     if len(parts) != 3:
@@ -97,9 +84,6 @@ def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
 def _parse_header_line(raw_line: bytes) -> tuple[str, str]:
     line = raw_line.decode("latin-1")
     if line and line[0] in (" ", "\t"):
-        # Repliage d'en-tete obsolete (RFC 7230 §3.2.4) - jamais
-        # supporte : source connue d'ambiguite de parsing, plus simple
-        # et plus sur de refuser que d'essayer de le reconstituer.
         raise HttpParseError(HttpStatus.BAD_REQUEST, "repliage d'en-tete non supporte")
     if ":" not in line:
         raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tete malforme (pas de ':')")

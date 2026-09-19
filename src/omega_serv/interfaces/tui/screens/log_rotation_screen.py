@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Rotation/archivage des logs (plan interface §3.4/§8) - patron a
 3 modes identique a omega-fire (interfaces/tui/screens/
 rotate_logs_screen.py) : creer une sauvegarde maintenant (inconditionnel,
@@ -109,10 +108,6 @@ class LogRotationScreen(OmegaScreen):
         self.query_one("#freq-select", Select).display = is_schedule
         self.query_one("#manage-label", Static).display = is_manage
         self.query_one("#automations-table", DataTable).display = is_manage
-        # Bascule sur le Container (.omega-btn-frame) englobant, pas sur
-        # le Button lui-meme : cacher seulement le bouton laissait son
-        # cadre "omega-btn-frame" (border: round) visible et vide - le
-        # "petit cercle" signale par l'utilisateur entre les boutons.
         self.query_one("#launch-frame", Container).display = not is_manage
         self.query_one("#delete-automation-frame", Container).display = is_manage
         if is_manage:
@@ -192,11 +187,6 @@ class LogRotationScreen(OmegaScreen):
         load_result = load_config(self._container.configuration, self._container.config_file)
         assert load_result.config is not None
         keep = load_result.config.logs.rotation.keep
-        # max_size_bytes=0 force une rotation inconditionnelle (meme
-        # plan_rotation, voir domain/logs/rotation.py : un fichier ne
-        # peut jamais avoir une taille < 0, la condition de seuil est
-        # donc toujours vraie) - reutilise le meme cas d'usage que la
-        # rotation automatique, aucune nouvelle logique metier.
         result = self._container.rotate_log_if_needed(log_path, 0, keep, self._archive_base_dir())
         result_widget.update(result.message)
 

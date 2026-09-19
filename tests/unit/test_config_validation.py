@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -48,9 +47,6 @@ class TestValidateConfig(unittest.TestCase):
         self.assertTrue(any("cgi" in e for e in errors))
 
     def test_active_defense_is_a_known_option(self):
-        # plan_active_defense_omega_serv.md, Phase 0 - flag maitre
-        # active_defense.enabled: false, jamais rejete comme option
-        # inconnue.
         config = OmegaServConfig.from_dict({"options": {"active_defense": {"enabled": False}}})
         errors = validate_config(config)
         self.assertFalse(any("active_defense" in e for e in errors))
@@ -60,10 +56,6 @@ class TestValidateConfig(unittest.TestCase):
         self.assertEqual(validate_config(config), [])
 
     def test_enabled_active_defense_structural_errors_surface_here(self):
-        # plan_active_defense_omega_serv.md, Phase 4/5 - validate_active_
-        # defense_config() existait depuis la Phase 0 mais n'etait jamais
-        # invoquee depuis le pipeline de validation reel (omega-serv
-        # config check/init) - corrige ici.
         config = OmegaServConfig.from_dict({"options": {"active_defense": {"enabled": True, "mode": "bogus"}}})
         errors = validate_config(config)
         self.assertTrue(any("options.active_defense" in e and "mode" in e for e in errors))

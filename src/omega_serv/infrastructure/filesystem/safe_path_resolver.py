@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Resolution de chemin sure complete (spec §11.2, les 8 etapes).
 
 Delegue les etapes 1-4 (decodage, normalisation, detection NUL/

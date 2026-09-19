@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.application.services.manage_service import (
@@ -69,9 +68,6 @@ class TestManageServiceControlOperations(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_reload_success(self):
-        # Retour utilisateur 2026-09-11 : distinct de restart_service -
-        # garde les connexions actives, relit seulement la config deja
-        # codee cote applicatif (SIGHUP).
         manager = _FakeManager()
         result = reload_service(manager, "omega-serv")
         self.assertTrue(result.success)

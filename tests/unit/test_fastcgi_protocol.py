@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.http.fastcgi_protocol import (
@@ -66,7 +65,6 @@ class TestEncodeNameValuePair(unittest.TestCase):
         long_value = b"x" * 200
         encoded = encode_name_value_pair(b"KEY", long_value)
         self.assertEqual(encoded[0], 3)  # nom court : 1 octet
-        # longueur de valeur (200) encodee sur 4 octets, bit de poids fort a 1
         self.assertTrue(encoded[1] & 0x80)
 
 

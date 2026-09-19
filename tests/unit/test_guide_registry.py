@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Coherence du guide d'aide (OMEGA-SERV_PLAN-DETAILLE_GUIDE_AIDE.md §6) :
 chaque fiche ecrite doit reference un ecran reellement present dans
 l'arborescence de navigation (menu_tree.py), et chaque fiche/FAQ doit

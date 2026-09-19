@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Purger les archives de logs (plan interface §3.4/§8) -
 `ArchiveStore.delete_archive`, meme table que `restore_log_archive_screen.py`
 mais action destructive donc confirmation obligatoire (meme patron que

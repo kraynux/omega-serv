@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant CA locale (plan interface §7.3, TLS 6b) - enchaine
 `certs generate-ca` -> `certs generate-csr` -> `certs sign-csr`, meme
 sequence que la doc TLS §7.3/§7.4. La passphrase de la CA est ressaisie
@@ -162,11 +161,6 @@ class CaWizardScreen(OmegaScreen):
         )
         ca_dir = self._ca_dir()
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
-        # Retour utilisateur (audit "gel d'ecran") : openssl en
-        # sous-processus (cle RSA-4096 possible), jusqu'a 120s, execute
-        # directement sur la boucle asyncio - gelait TOUTE l'interface.
-        # Meme patron que generate_self_signed_screen.py : deporte dans
-        # un thread de travail.
         self._append_log("Generation de la CA en cours...")
         self.query_one("#step-ca", Button).disabled = True
         self.run_worker(
@@ -310,11 +304,6 @@ class CaWizardScreen(OmegaScreen):
             self._append_log(
                 f"Importez {ca_dir / 'root-ca.pem'} dans le magasin de confiance des clients (doc TLS §7.4)."
             )
-            # Meme raison que generate_self_signed_screen.py (retour
-            # utilisateur 2026-09-13) : le contexte SSL n'est jamais
-            # retouche par reload_scoped, un certificat signe ici ne
-            # remplace celui reellement servi qu'apres un redemarrage
-            # complet si TLS est deja actif.
             if tls_enabled:
                 self._append_log(
                     "TLS est actif : REDEMARRAGE COMPLET necessaire pour que le serveur serve "

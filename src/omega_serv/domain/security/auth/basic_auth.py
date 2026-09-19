@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Parsing du header `Authorization: Basic ...` (spec §15.6 : Basic
 Auth encode, ne chiffre pas - ce module ne fait que decoder, jamais de
 jugement sur la confidentialite du transport, qui est une

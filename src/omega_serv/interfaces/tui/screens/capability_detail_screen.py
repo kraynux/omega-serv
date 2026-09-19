@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Detail d'une capacite (plan interface §5) - identifiant,
 statut, raison, details techniques, dernier scan. Recoit le registre
 deja scanne par CapabilitiesScreen (jamais un second scan - le detail

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Statut TLS (plan interface §7.3, `certs show`/`certs
 check-expiry` - meme fonction sous-jacente cote CLI, `_cmd_certs_inspect`,
 donc un seul ecran ici plutot que deux). Injecte via

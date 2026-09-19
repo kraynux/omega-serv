@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran d'application d'un profil (plan interface §6, `profile apply`) -
 le diff (spec §9.2) s'affiche TOUJOURS avant toute confirmation, jamais
 une case a cocher qui le masque (meme regle que la CLI). Reutilise
@@ -108,11 +107,6 @@ class ApplyProfileScreen(OmegaScreen):
             return
         self._container.configuration.save(self._container.config_file, self._plan.new_config)
         message = f"Profil '{self._profile_name}' applique dans {self._container.config_file}."
-        # Retour utilisateur (guide d'aide, point 4) : un profil peut
-        # changer N'IMPORTE QUEL reglage d'un coup, y compris bind/port/
-        # TLS - meme detection que base_config_screen.py/tls_toggle_screen.py
-        # plutot qu'un avertissement generique qui dirait toujours
-        # "redemarrage complet" meme quand un simple rechargement suffirait.
         new_server = self._plan.new_config.server
         new_tls = self._plan.new_config.tls
         needs_restart = self._previous_config is not None and (
@@ -122,12 +116,6 @@ class ApplyProfileScreen(OmegaScreen):
             or new_tls != self._previous_config.tls
         )
         if needs_restart:
-            # Ne PAS dismiss() ici : notify_restart_required() pousse un
-            # ConfirmScreen par-dessus cet ecran - dismiss() depile
-            # toujours le SOMMET de la pile (Screen.dismiss() ->
-            # App.pop_screen(), jamais "cet ecran precis"), ce qui
-            # fermerait la confirmation au lieu de cet ecran. L'utilisateur
-            # revient manuellement (Retour/Echap) une fois la confirmation traitee.
             notify_restart_required(
                 self, self._container,
                 f"{message} Necessite un REDEMARRAGE COMPLET pour prendre effet (bind/port/"

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Authentification (plan interface §7.1) - liste/ajout/
 suppression d'utilisateurs et de zones protegees, verification des
 permissions. Le mot de passe est toujours saisi en double masque
@@ -169,10 +168,6 @@ class AuthMenuScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         error_widget.update("" if result.success else f"Erreur : {result.message}")
         if result.success:
-            # Retour utilisateur (guide d'aide, point 4) : users.json/
-            # zones.json sont relus depuis le disque par un rechargement
-            # (build_auth_collaborators, application/server/start_server.py)
-            # - meme angle mort que la configuration principale.
             notify_reload_required(self, self._container, result.message)
         else:
             self.app.notify(result.message, severity="error")

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.http.headers import HttpHeaders, has_control_characters, total_size_bytes
@@ -25,7 +24,6 @@ class TestHttpHeaders(unittest.TestCase):
 
     def test_total_size_bytes(self):
         pairs = [("Host", "example.com")]
-        # "Host" (4) + "example.com" (11) + 4 (": " + CRLF) = 19
         self.assertEqual(total_size_bytes(pairs), 19)
 
 
@@ -62,8 +60,6 @@ class TestHttpResponse(unittest.TestCase):
         self.assertEqual(response.status, HttpStatus.NOT_FOUND)
 
     def test_accepts_arbitrary_int_status_not_in_httpstatus(self):
-        # Necessaire pour FastCGI (Phase 8) : un script PHP peut renvoyer
-        # un code (201, 204, 422...) hors de l'enumeration fermee HttpStatus.
         response = HttpResponse.empty(201)
         self.assertEqual(response.status, 201)
 

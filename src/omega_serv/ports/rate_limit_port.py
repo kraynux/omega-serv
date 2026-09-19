@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de stockage/compteur de rate limit (doc WAF, tableau
 "Repartition Clean Architecture" : ports/rate_limit_port.py)."""
 from __future__ import annotations

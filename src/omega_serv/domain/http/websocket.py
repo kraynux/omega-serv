@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Detection d'une requete de mise a niveau WebSocket (RFC 6455 §4.1) -
 utilisee EXCLUSIVEMENT pour le court-circuit du reverse proxy sortant
 vers un upstream WebSocket (OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md

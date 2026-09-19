@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Pages d'erreur (plan interface §7, retour utilisateur
 2026-09-09 : "on mettra des pages html d'erreur fournies de base") -
 les pages HTML par defaut sont toujours servies (aucun toggle ne les
@@ -91,16 +90,6 @@ class ErrorPagesScreen(OmegaScreen):
         return option is not None and option.enabled
 
     def _refresh(self) -> None:
-        # Retour utilisateur 2026-09-11, vrai bug trouve : cet ecran
-        # laisse configurer le repertoire de surcharge et affiche
-        # "Repertoire mis a jour" au clic sur Enregistrer SANS jamais
-        # indiquer que l'option elle-meme reste desactivee tant qu'elle
-        # n'a pas ete activee separement depuis le menu Options - un
-        # fichier <statut>.html place correctement (verifie en direct :
-        # 404.html present et bien nomme) n'a donc jamais aucun effet
-        # tant que ce detail invisible n'est pas connu. Meme patron sur
-        # cache_screen.py et les autres ecrans "reglages seuls" -
-        # corrige partout (guide d'aide, point 4).
         state = self.query_one("#enabled-state", Static)
         if self._is_enabled():
             state.update("Etat : ACTIVEE - la surcharge personnalisee est appliquee.")
@@ -144,9 +133,6 @@ class ErrorPagesScreen(OmegaScreen):
         if enabled:
             notify_reload_required(self, self._container, "Repertoire de surcharge mis a jour.")
         else:
-            # Un rechargement ne changerait rien tant que l'option
-            # elle-meme reste desactivee - le vrai correctif est
-            # d'activer 'error_pages' depuis Options, jamais un reload.
             self.app.notify(
                 "Repertoire de surcharge mis a jour - MAIS l'option est desactivee : "
                 "sans effet tant que vous ne l'activez pas depuis Options.",

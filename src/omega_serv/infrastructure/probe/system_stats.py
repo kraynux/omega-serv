@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Statistiques systeme (CPU/RAM/disque/reseau...) via psutil (retour
 utilisateur 2026-09-09, ecran "Etat & Ressources") - transpose depuis
 omega-fire (interfaces/cli/renderers/dashboard.py::collect_os_stats(),
@@ -73,10 +72,6 @@ def collect_system_stats() -> dict[str, Any]:
     disk = psutil.disk_usage("/")
     net_io = psutil.net_io_counters()
 
-    # sensors_temperatures/sensors_fans n'existent meme pas sur certaines
-    # plateformes (AttributeError sur le module psutil lui-meme, pas
-    # seulement "aucun capteur trouve") - jamais bloquant, cette machine
-    # n'a peut-etre simplement aucun capteur.
     temps: dict[str, float] = {}
     try:
         sensors = psutil.sensors_temperatures()
@@ -101,9 +96,6 @@ def collect_system_stats() -> dict[str, Any]:
         tcp_conns = psutil.net_connections(kind="tcp")
         tcp_established = len([c for c in tcp_conns if c.status == "ESTABLISHED"])
     except (psutil.Error, AttributeError):
-        # psutil.AccessDenied (sous-classe de psutil.Error) sur un
-        # systeme qui exige des privileges eleves pour lister les
-        # connexions - jamais bloquant, juste "indisponible ici".
         tcp_established = 0
 
     interfaces: list[dict[str, str]] = []

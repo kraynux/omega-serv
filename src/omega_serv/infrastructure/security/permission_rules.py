@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles d'audit avec vraie I/O de permissions/fichiers (plan corrige
 §5.4) - PERM-002 (fichier de comptes Auth), PERM-003 (fichiers sensibles
 sous webroot)."""

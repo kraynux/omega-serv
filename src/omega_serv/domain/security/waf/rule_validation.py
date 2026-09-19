@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Parsing et validation structurelle d'un pack de regles WAF (doc WAF,
 "Format de regles generique"). Pur : ne compile aucune regex ici (voir
 signature_engine.py, qui separe volontairement la structure de donnees

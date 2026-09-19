@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de persistance de l'etat de menace par source
 (plan_active_defense_omega_serv.md, Phase 0). `instance_id` absent des
 signatures - chaque process OMEGA-SERV a sa propre base locale, le

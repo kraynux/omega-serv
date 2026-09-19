@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Exceptions du module de gestion de service (spec §24). Porte depuis
 omega-fire (service_manager/exceptions.py, audite reutilisable), reduit
 au sous-ensemble reellement utilise ici - pas de NoServiceManagerDetectedError

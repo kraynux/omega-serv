@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Leurre `fake_api` (plan_active_defense_omega_serv.md, §"Honeypots
 V1"/Phase 5) - fixture STATIQUE et deterministe, Niveau 1 (in-process).
 Simule une API minimale (`/api/v1/*`, routes de diagnostic) - reponses

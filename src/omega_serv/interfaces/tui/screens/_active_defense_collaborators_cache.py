@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Mixin partage par les 4 ecrans Active Defense (status/threats/
 incidents/deception) - `build_active_defense_collaborators` ouvre une
 VRAIE connexion sqlite a chaque appel (correct pour le serveur HTTP, qui
@@ -46,17 +45,6 @@ class ActiveDefenseCollaboratorsCacheMixin:
         if factory is None:
             self._active_defense_error = "Active Defense indisponible dans cet environnement."
             return None
-        # Retour utilisateur 2026-09-13 : "gele le terminal, oblige de
-        # killer" - `open_active_defense_connection` fait de la VRAIE
-        # I/O disque (mkdir + sqlite3.connect) qui peut echouer pour de
-        # vraies raisons d'environnement (permissions sur var/lib/ -
-        # notamment si le repertoire appartient a l'utilisateur systeme
-        # dedie omega-serv et que la session courante n'a pas encore
-        # rafraichi son appartenance de groupe apres un ajout recent,
-        # cas reellement rencontre) - jamais laisser une exception non
-        # attrapee remonter dans un gestionnaire d'evenement Textual,
-        # ou l'ecran peut rester bloque sans jamais restaurer le
-        # terminal proprement plutot que de planter proprement.
         try:
             self._active_defense = factory(load_result.config, self._container.project_root)
         except OSError as exc:

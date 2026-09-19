@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de InstanceRegistryPort - fichier JSON unique,
 `~/.config/omega-serv/instances.json` par convention (voir
 bootstrap/paths.py::INSTANCE_REGISTRY_PATH, jamais code en dur ici -
@@ -38,9 +37,6 @@ class JsonInstanceRegistry:
         ]
 
     def save(self, entries: list[InstanceEntry]) -> None:
-        # Registre GLOBAL hors de tout project_root (angle mort §6 du
-        # document : "sa securite reste a trancher explicitement") -
-        # 0700 sur le dossier, jamais le mode par defaut du systeme.
         self._fs.make_directory(self._path.parent, mode=0o700)
         data = [
             {

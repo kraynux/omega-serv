@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de LoggerPort - ajout de ligne en mode append.
 
 Volontairement sans rotation ici (spec Phase 2/4 : reutilisation du
@@ -82,19 +81,12 @@ class FileLineLogger:
                     self._handles[path] = handle
                 handle.write(line + "\n")
         except (OSError, ValueError) as exc:
-            # ValueError : "I/O operation on closed file" si le descripteur
-            # mis en cache est devenu invalide entre-temps (jamais attendu
-            # en usage normal - personne d'autre n'a acces a ce handle -
-            # mais retire du cache pour retenter une ouverture fraiche au
-            # prochain appel plutot que de rester bloque en erreur).
             print(f"Avertissement : echec d'ecriture du journal {path} : {exc}", file=sys.stderr)
             self._handles.pop(path, None)
 
     def _open(self, path: Path) -> IO[str]:
         path.parent.mkdir(parents=True, exist_ok=True)
         is_new_file = not path.exists()
-        # buffering=1 : bufferisation ligne par ligne (jamais bloc entier),
-        # chaque "\n" atteint deja le tampon du noyau sans flush() manuel.
         handle = open(path, "a", encoding="utf-8", buffering=1)  # noqa: SIM115 - garde volontairement ouvert au-dela de cette fonction, voir docstring du module
         if is_new_file:
             path.chmod(_SHARED_LOG_FILE_MODE)

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """TestCreateInstanceOrchestration : double de ProcessRunnerPort (pas
 de vrai venv/pip) pour verifier l'ORCHESTRATION (ordre des 6 etapes,
 propagation d'erreur, appels a on_step) rapidement et de facon
@@ -109,12 +108,6 @@ class TestCreateInstanceOrchestration(unittest.TestCase):
         self.assertEqual(self.registry.load(), [])
 
     def test_failure_after_copy_removes_the_partially_created_directory(self):
-        # Retour utilisateur (bug reel) : un echec en cours de route
-        # laissait `target_root` a moitie cree sur le disque, invisible
-        # dans le registre (jamais atteint l'etape 6) mais bloquant
-        # toute reutilisation du nom (etape 1 refuse ensuite via
-        # `filesystem.exists`). Le nom doit redevenir immediatement
-        # reutilisable apres un echec.
         class _AlwaysFailRunner:
             def run(self, args, input_text=None, timeout=None):
                 return ProcessResult(returncode=1, stdout="", stderr="venv creation failed")
@@ -180,10 +173,6 @@ class TestCreateInstanceOrchestration(unittest.TestCase):
         self.assertIn([pip, "install", "-q", "-e", expected_lib_path], runner.calls)
 
     def test_installs_omega_lib_from_resolved_editable_source_when_not_vendored(self):
-        # Retour utilisateur (bug reel) : clone de developpement sans
-        # vendor/omega-lib/, omega-lib vient du monorepo local - avant
-        # ce correctif, la creation d'instance echouait toujours a
-        # l'etape 4/6 en tentant de resoudre omega-lib depuis PyPI.
         fake_lib_source = self.root / "external-omega-lib"
         fake_lib_source.mkdir()
         runner = _FakeProcessRunner()

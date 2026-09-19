@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Le choix d'upstream/la construction des en-tetes/le mode d'echec
 utilisent un double `HttpProxyClientPort` (meme patron que
 test_serve_proxy.py) - mais le relai bidirectionnel lui-meme (le coeur
@@ -84,8 +83,6 @@ class _ConnectedPair:
         return cls(server, connector_reader, connector_writer, holder["reader"], holder["writer"])
 
     async def close(self) -> None:
-        # Jamais `await self.server.wait_closed()` sans avoir ferme les
-        # deux writers d'abord - voir docstring de module.
         for writer in (self.connector_writer, self.accepted_writer):
             writer.close()
             with contextlib.suppress(Exception):
@@ -95,13 +92,7 @@ class _ConnectedPair:
 
 class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
     async def test_relays_bytes_bidirectionally_after_successful_upgrade(self):
-        # "Navigateur <-> OMEGA-SERV" : OMEGA-SERV EST un serveur pour
-        # le client, donc le cote accepte est celui passe a
-        # serve_websocket_proxy comme client_reader/writer.
         client_pair = await _ConnectedPair.open()
-        # "OMEGA-SERV <-> upstream" : OMEGA-SERV EST un client pour
-        # l'upstream, donc le cote connecteur est celui passe comme
-        # handshake.reader/writer ; le cote accepte simule le backend.
         upstream_pair = await _ConnectedPair.open()
 
         try:
@@ -180,9 +171,6 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
             await client_pair.close()
 
     async def test_connection_and_upgrade_headers_preserved_outgoing(self):
-        # A la difference du relai HTTP ordinaire (serve_proxy.py), ces
-        # deux en-tetes ne sont PAS hop-by-hop pour une mise a niveau -
-        # l'upstream doit les recevoir pour completer le handshake.
         client_pair = await _ConnectedPair.open()
         try:
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
@@ -190,11 +178,6 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
                 _request(), _zone(), proxy_client, ProxyRoundRobinState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             )
-            # HttpHeaders normalise les noms en minuscules a l'ingestion
-            # (RFC 7230 : insensible a la casse) - jamais re-capitalises
-            # en sortie, meme comportement deja etabli pour tous les
-            # en-tetes sources du client (contrairement a X-Forwarded-*,
-            # ajoutes ici avec leur casse canonique).
             headers = dict(proxy_client.calls[0][4])
             self.assertEqual(headers["connection"], "Upgrade")
             self.assertEqual(headers["upgrade"], "websocket")

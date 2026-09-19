@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modele d'un profil de base (spec §6.1/§6.2).
 
 Un profil definit une base coherente (minimal/standard/hardened/
@@ -13,10 +12,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-# Noms de profils reconnus (spec §6.2). Un profil hors de cette liste
-# est un profil personnalise (spec §8.2, "Creer un profil personnalise")
-# - pas une erreur en soi, mais KNOWN_PROFILE_NAMES sert a distinguer
-# les profils integres au programme des profils utilisateur.
 KNOWN_PROFILE_NAMES: frozenset[str] = frozenset({
     "minimal",
     "standard",

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de ServiceManagerPort pour OpenRC - portee
 depuis omega-fire (service_manager/openrc.py, audite reutilisable),
 commandes `rc-service`/`rc-update` inchangees, via ProcessRunnerPort."""
@@ -37,10 +36,6 @@ class OpenRCServiceManager:
         return self._control(service_name, "restart")
 
     def reload(self, service_name: str) -> bool:
-        # `rc-service <nom> reload` (retour utilisateur 2026-09-11) -
-        # meme verbe que start/stop/restart, echoue proprement (meme
-        # ServiceControlError que les autres) si le script rc ne
-        # l'implemente pas.
         return self._control(service_name, "reload")
 
     def enable(self, service_name: str) -> bool:

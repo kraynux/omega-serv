@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites du module WAF (OMEGA-SERV_WAF_LUA_DEPERSONNALISATION.md,
 "Repartition Clean Architecture" : domain/security/ porte WafDecision,
 WafFinding, severites, regles de decision et politiques de score -
@@ -17,8 +16,6 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-# Scopes de requete qu'une regle de signature peut cibler (doc WAF,
-# "signature_engine" : "scope : path, query, body, headers, user-agent").
 RuleScope = Literal["path", "query", "body", "headers", "user_agent"]
 
 _VALID_SCOPES: frozenset[str] = frozenset({"path", "query", "body", "headers", "user_agent"})

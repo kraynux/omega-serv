@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de LiveTailPort (plan interface §3.4, "tail
 simple") - `f.seek()` + lecture incrementale, pas besoin de PTY (SERV
 n'a qu'un flux texte a suivre, contrairement au besoin fire d'encapsuler
@@ -22,9 +21,6 @@ class LiveTailReader:
             return []
         size = self._path.stat().st_size
         if size < self._offset:
-            # Fichier tronque ou tourne (rotation) depuis le dernier
-            # appel : on repart du debut plutot que de lever ou de
-            # rester bloque sur un offset devenu invalide.
             self._offset = 0
         if size == self._offset:
             return []

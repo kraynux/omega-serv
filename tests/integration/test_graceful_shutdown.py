@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 9 : arret propre (angle mort §9.2) contre
 un serveur reel, vraies connexions TCP - meme discipline que les autres
 suites d'integration."""
@@ -53,9 +52,6 @@ class TestGracefulShutdown(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(forced, 0)
 
     async def test_shutdown_force_closes_connection_stuck_past_grace_period(self):
-        # Ouvre une connexion TCP brute qui n'envoie jamais de requete
-        # complete - reste bloquee en lecture cote serveur bien au-dela
-        # du delai de grace, doit etre coupee de force.
         _reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
         writer.write(b"GET /index.html HTTP/1.1\r\n")  # requete incomplete, jamais de ligne vide finale
         await writer.drain()

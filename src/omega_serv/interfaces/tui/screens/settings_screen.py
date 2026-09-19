@@ -1,12 +1,15 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Reglages de l'application (pas la configuration du serveur,
 menu 3 - preferences d'interface uniquement) : theme, profil de rendu,
 chemins d'export/captures d'ecran, purge. Adapte du patron
 omega-check/interfaces/tui/screens/settings_screen.py - pas de concept
 de cible epinglee ni d'historique de scan cote SERV (rien a porter la).
-Accessible via le raccourci clavier 'o' (footer) et la palette de
-commandes plutot qu'un bouton au menu principal (deja charge, plan
-interface §12)."""
+Accessible via le raccourci clavier 'o' (footer), la palette de
+commandes, ET desormais le bouton "OPTIONS" du menu principal (retour
+utilisateur, passage a 2 colonnes - initialement absent du menu "deja
+charge", plan interface §12, redevenu possible une fois la place liberee).
+Homonyme a ne pas confondre : `options_screen.py::OptionsScreen` (liste
+des options superposables du serveur), un ecran totalement different,
+accessible uniquement depuis Configuration detaillee."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

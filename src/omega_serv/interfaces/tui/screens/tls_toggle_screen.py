@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Activer/desactiver TLS (plan interface §7.3, `config
 enable-tls`/`config disable-tls`)."""
 from __future__ import annotations
@@ -92,11 +91,6 @@ class TlsToggleScreen(OmegaScreen):
         new_config = replace(load_result.config, tls=new_tls)
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
-        # Retour utilisateur 2026-09-11 (audit reload/restart) : TLS
-        # n'est jamais recharge a chaud, quel que soit le reglage
-        # (contexte SSL construit une seule fois dans build_server,
-        # jamais retouche par reload_scoped) - toujours un REDEMARRAGE
-        # COMPLET, contrairement a la plupart des autres options.
         notify_restart_required(
             self, self._container,
             f"TLS active (mode {mode}) - necessite un REDEMARRAGE COMPLET pour prendre effet "

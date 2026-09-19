@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation concrete de FilesystemPort - seul point du module
 filesystem/ qui touche reellement pathlib/os (charte : infrastructure/
 est la seule couche autorisee a faire de l'I/O disque)."""

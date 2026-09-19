@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Securite generique (plan interface §7) - SecurityConfig
 (methodes autorisees, CSP, en-tetes, HSTS). Champs booleens en "oui/non"
 texte (meme convention simple que le reste de ce menu, pas de nouveau

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 2 (durcissement HTTP) : liste blanche de
 methodes, validation du Host, en-tetes de securite/CSP - contre un
 serveur reel, connexions TCP reelles."""
@@ -22,13 +21,6 @@ class TestProtocolHardeningIntegration(unittest.IsolatedAsyncioTestCase):
         webroot.mkdir()
         (webroot / "index.html").write_text("hello world")
 
-        # port=0 (ephemere, assigne par l'OS) - retour utilisateur
-        # 2026-09-10 : seul fichier de ce dossier a utiliser le port par
-        # defaut (8080) au lieu d'un port ephemere comme partout
-        # ailleurs, ce qui entrait en collision avec un vrai serveur
-        # OMEGA-SERV lance en tant que service systemd sur la machine de
-        # developpement (le bug qu'on venait de corriger fonctionnait
-        # enfin, revelant cette fragilite latente du test).
         self.config = OmegaServConfig(server=ServerConfig(port=0))  # profil standard par defaut : GET/HEAD, headers de securite actifs, host requis
         self.filesystem = LocalFilesystem()
         self.logger = FileLineLogger()
@@ -72,9 +64,6 @@ class TestProtocolHardeningIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(headers["X-Content-Type-Options"], "nosniff")
 
     async def test_missing_host_rejected(self):
-        # http.client envoie toujours un Host par defaut ; on force son
-        # absence via une requete brute pour tester le vrai chemin de
-        # validation cote serveur.
         reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
         writer.write(b"GET /index.html HTTP/1.1\r\n\r\n")
         await writer.drain()

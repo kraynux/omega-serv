@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiches guide : FastCGI/PHP-FPM et Authentification (plan guide
 d'aide, Phase 4)."""
 from __future__ import annotations

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Structure la configuration WAF brute (options["waf"].settings, un
 dict ouvert - voir domain/config/option.py) en une forme typee.
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Gestion du pty et du sous-processus lnav.
 
 Porte quasi verbatim depuis omega-fire (infrastructure/lnav/pty_session.py,
@@ -52,11 +51,6 @@ def spawn_lnav(rows: int, cols: int, log_paths: list[Path]) -> tuple[int, int]:
         stdin=slave_fd,
         stdout=slave_fd,
         stderr=slave_fd,
-        # start_new_session=True fait le meme setsid() que
-        # preexec_fn=os.setsid chez fire, mais implemente cote C
-        # (safe vis-a-vis des threads) plutot que via un callback
-        # Python execute apres fork() - comportement identique,
-        # juste l'idiome moderne recommande pour cette meme intention.
         start_new_session=True,
         close_fds=True,
     )

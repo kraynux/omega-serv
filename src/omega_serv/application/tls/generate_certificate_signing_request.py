@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs generate-csr` (doc TLS §7.3 etape 6).
 Meme squelette que generate_self_signed.py - la CSR elle-meme n'est pas
 un secret (0644, doc TLS §4.1), seule la cle privee generee avec elle

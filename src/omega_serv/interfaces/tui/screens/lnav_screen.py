@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Suivre les logs fusionnes avec lnav (plan interface §3.4/§8) -
 simplifie par rapport a l'ecran equivalent d'omega-fire : SERV connait
 deja ses propres chemins de log fixes (access/error/waf-alerts, depuis

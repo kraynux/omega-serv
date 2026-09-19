@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : `omega-serv simulate-request` (spec §25.2).
 
 Reutilise directement route_request() (meme decision que produirait

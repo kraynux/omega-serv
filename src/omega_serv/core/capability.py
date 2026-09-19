@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modele d'une capacite systeme (plan interface §3.3/§5, menu 1) - port
 adapte depuis omega-fire (core/capability.py, generique, zero logique
 fire-specifique) : dataclass gelee plutot que mutable avec methodes

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Registre des capacites systeme (plan interface §3.3) - port adapte
 depuis omega-fire (core/capability_registry.py) : reduit au sous-ensemble
 reellement consomme par les ecrans (liste, detail, comptage par statut) -

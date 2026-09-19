@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.routing.access_rule import (
@@ -81,17 +80,11 @@ class TestResolveAccessVerdict(unittest.TestCase):
         self.assertEqual(resolve_access_verdict("/index.html", rules), "allow")
 
     def test_extension_scoped_deny_ignores_non_matching_extensions(self):
-        # Retour utilisateur (guide d'aide, point 2) : deny global sur
-        # une extension sensible, jamais sur les fichiers ordinaires du
-        # meme prefixe.
         rules = [AccessRule(path_prefix="/", verdict="deny", extensions=(".key",))]
         self.assertEqual(resolve_access_verdict("/anywhere/secret.key", rules), "deny")
         self.assertEqual(resolve_access_verdict("/anywhere/normal.txt", rules), "allow")
 
     def test_extension_scoped_deny_lifted_by_more_specific_allow_zone(self):
-        # Exemple lighttpd de l'utilisateur : bloquer .key/.pem/etc.
-        # PARTOUT SAUF sous /dossiers/ - l'allow plus specifique gagne
-        # meme si lui n'a pas de restriction d'extension.
         rules = [
             AccessRule(path_prefix="/", verdict="deny", extensions=(".key", ".pem")),
             AccessRule(path_prefix="/dossiers/", verdict="allow"),

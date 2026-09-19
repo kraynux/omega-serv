@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiches guide : Gestion des logs - menu + 8 sous-ecrans (plan guide
 d'aide, Phase 6)."""
 from __future__ import annotations

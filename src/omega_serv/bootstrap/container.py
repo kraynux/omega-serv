@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Racine de composition des dependances (charte §2.3).
 
 Seul point du projet ou les adaptateurs concrets d'infrastructure/ sont
@@ -38,11 +37,6 @@ from omega_serv.ports.settings_store import SettingsStore
 from omega_serv.ports.terminal_detector import TerminalDetector
 
 if TYPE_CHECKING:
-    # Types utilises UNIQUEMENT pour l'annotation des usines ci-dessous -
-    # sous TYPE_CHECKING (exclude_type_checking_imports=true, voir
-    # pyproject.toml [tool.importlinter]), ces imports n'entrent jamais
-    # dans le graphe analyse par les contrats import-linter, meme si les
-    # modules vises touchent infrastructure/ ou subprocess.
     from omega_serv.application.logs.rotate_log import RotateLogResult
     from omega_serv.application.persistence.create_backup import BackupResult
     from omega_serv.application.persistence.restore_backup import RestoreResult
@@ -62,6 +56,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
+    from omega_serv.ports.process_runner_port import ProcessRunnerPort
     from omega_serv.ports.users_repository_port import UsersRepositoryPort
 
 
@@ -104,6 +99,7 @@ class DependencyContainer:
         ioc_export_runner: Callable[[Incident, str, Path, FilesystemPort], ExportResult | None] | None = None,
         incident_report_export_runner: Callable[[Incident, Path, FilesystemPort], ExportResult] | None = None,
         certificate_tool_factory: Callable[[], CertificateToolPort] | None = None,
+        acme_client_factory: Callable[[], ProcessRunnerPort] | None = None,
         lnav_runner: Callable[[tuple[Path, ...], Palette, str, str], str | None] | None = None,
         export_capabilities_html_fn: Callable[[Sequence[Capability], str], str] | None = None,
         export_log_archives_html_fn: Callable[[Sequence[dict], str], str] | None = None,
@@ -127,6 +123,7 @@ class DependencyContainer:
         self._ioc_export_runner = ioc_export_runner
         self._incident_report_export_runner = incident_report_export_runner
         self._certificate_tool_factory = certificate_tool_factory
+        self._acme_client_factory = acme_client_factory
         self._lnav_runner = lnav_runner
         self._create_instance_runner = create_instance_runner
         self._export_capabilities_html_fn = export_capabilities_html_fn
@@ -134,13 +131,6 @@ class DependencyContainer:
         self._export_guide_html_fn = export_guide_html_fn
         self._serve_foreground_runner = serve_foreground_runner
         self._project_root = project_root
-        # Retour utilisateur 2026-09-10 (garde-fous multi-instance,
-        # service_screen.py) : chemin injectable plutot que code en dur
-        # dans l'ecran, pour que les tests ne touchent jamais le vrai
-        # /etc/systemd/system/ de la machine de developpement (deja
-        # observe : un vrai `omega-serv.service` y est installe sur
-        # cette machine, faussant silencieusement tout test qui
-        # utiliserait le chemin en dur).
         self._systemd_unit_dir = systemd_unit_dir
         self._filesystem: FilesystemPort = LocalFilesystem()
         self._configuration: ConfigurationPort = JsonConfigRepository(
@@ -153,18 +143,10 @@ class DependencyContainer:
             profiles_dir=project_root / "config" / "profiles",
         )
         self._clock: ClockPort = SystemClock()
-        # Interface interactive (plan interface §3.2, Phase I) - jamais
-        # confondu avec config/omega-serve.json (configuration serveur)
-        # ni avec var/backups/ (sauvegardes de configuration) : preferences
-        # d'interface uniquement (theme actif, profil de rendu force).
         self._settings_store: SettingsStore = JsonSettingsStore(project_root / "var" / "settings.json")
         self._terminal_detector: TerminalDetector = SystemTerminalDetector()
         self._default_screenshots_dir = project_root / "var" / "screenshots"
         self._default_exports_dir = project_root / "var" / "exports"
-        # Registre multi-instance GLOBAL (OMEGA-SERV_PLAN-DETAILLE_
-        # MULTI_INSTANCE.md §3) - chemin injectable (meme regime que
-        # systemd_unit_dir) pour que les tests ne touchent jamais le
-        # vrai ~/.config/omega-serv/instances.json de la machine.
         self._instance_registry_path = instance_registry_path
         self._instance_registry: InstanceRegistryPort = JsonInstanceRegistry(
             self._filesystem, instance_registry_path,
@@ -275,6 +257,16 @@ class DependencyContainer:
         return self._certificate_tool_factory
 
     @property
+    def acme_client_factory(self) -> Callable[[], ProcessRunnerPort] | None:
+        """`ProcessRunnerPort` brut (jamais un adaptateur specifique a
+        Certbot - `domain/security/tls/acme.py` construit deja l'argv
+        complet, aucun besoin d'un wrapper dedie) - meme regime que
+        `certificate_tool_factory` : None dans les tests (jamais de vrai
+        `certbot` invoque par une suite automatisee), une vraie
+        `SubprocessRunner()` en production (omega_serv.__main__)."""
+        return self._acme_client_factory
+
+    @property
     def lnav_runner(self) -> Callable[[tuple[Path, ...], Palette, str, str], str | None] | None:
         return self._lnav_runner
 
@@ -288,17 +280,8 @@ class DependencyContainer:
 
     @property
     def config_file(self) -> Path:
-        # Derive de project_root, jamais de la constante CONFIG_FILE de
-        # bootstrap/paths.py directement : cette derniere est epinglee a
-        # l'installation reelle (meme principe que profiles_dir/backups_dir
-        # ci-dessus), l'interface TUI doit rester testable avec un
-        # project_root isole comme le reste du conteneur.
         return self._project_root / "config" / "omega-serve.json"
 
-    # --- Usines Menu 3 (plan interface §7) : contrairement aux
-    # *_runner/*_factory ci-dessus, celles-ci ne touchent NI subprocess
-    # NI ssl (verifie) - bootstrap/ peut donc les construire directement
-    # ici, comme le reste du conteneur, sans passer par __main__.py.
 
     def build_users_repository(self, auth_file: Path) -> UsersRepositoryPort:
         return JsonUsersRepository(self._filesystem, auth_file)
@@ -307,35 +290,21 @@ class DependencyContainer:
         return JsonAuthZonesRepository(self._filesystem, auth_zones_file)
 
     def build_capability_scanner(self, configured_port: int, fastcgi_socket: Path | None) -> CapabilityScannerPort:
-        # infrastructure/probe/scanner.py ne touche ni subprocess ni ssl
-        # (verifie : socket/shutil.which/shutil.disk_usage/resource,
-        # rien d'autre) - meme regime que build_users_repository ci-dessus.
         from omega_serv.infrastructure.probe.scanner import SystemCapabilityScanner
 
         return SystemCapabilityScanner(self._project_root, self._filesystem, configured_port, fastcgi_socket)
 
     def build_live_tail_reader(self, path: Path) -> LiveTailPort:
-        # infrastructure/logging/live_tail_reader.py ne touche ni
-        # subprocess ni ssl (seek/read direct) - meme regime.
         from omega_serv.infrastructure.logging.live_tail_reader import LiveTailReader
 
         return LiveTailReader(path)
 
     def collect_system_stats(self) -> dict[str, Any]:
-        # infrastructure/probe/system_stats.py (ecran "Etat & Ressources",
-        # retour utilisateur 2026-09-09) ne touche ni subprocess ni ssl
-        # (psutil lit /proc directement sur Linux) - meme regime que
-        # build_capability_scanner ci-dessus.
         from omega_serv.infrastructure.probe.system_stats import collect_system_stats
 
         return collect_system_stats()
 
     def build_archive_store(self, base_dir: Path) -> ArchiveStore:
-        # infrastructure/storage/files/archive_store.py ne touche ni
-        # subprocess ni ssl (tarfile/pathlib) - meme regime. Une fois
-        # l'instance obtenue, les ecrans appellent directement ses
-        # methodes (list_archives/extract_archive/delete_archive/...)
-        # sans jamais importer le module infrastructure/ eux-memes.
         from omega_serv.infrastructure.storage.files.archive_store import ArchiveStore
 
         return ArchiveStore(base_dir)
@@ -359,9 +328,6 @@ class DependencyContainer:
         return LogsMaintenance().remove_ip(ip, log_path)
 
     def build_rotation_automation_store(self) -> RotationAutomationStore:
-        # infrastructure/logging/rotation_automation_store.py ne touche
-        # ni subprocess ni ssl (json/pathlib) - meme regime que le reste
-        # des methodes directes de ce conteneur.
         from omega_serv.infrastructure.logging.rotation_automation_store import (
             RotationAutomationStore,
         )
@@ -370,17 +336,6 @@ class DependencyContainer:
         return RotationAutomationStore(path)
 
     def export_capabilities_html(self, capabilities: Sequence[Capability], theme_name: str) -> str | None:
-        # Contrairement a build_archive_store/build_backup_metadata_store
-        # etc. (jinja2 EST pur, ne touche ni subprocess ni ssl), ce
-        # module ne peut PAS etre importe ici directement : le contrat
-        # import-linter "jinja2 seulement dans infrastructure.exporters.
-        # html_exporter" liste `bootstrap` dans ses sources interdites
-        # (delibere, plus strict que les contrats subprocess/ssl - aucune
-        # exception documentee n'est necessaire puisqu'aucun appelant
-        # legitime n'a de raison de construire l'environnement Jinja2
-        # ailleurs que dans ce seul module). Meme regime que
-        # certificate_tool_factory/lnav_runner : callable injecte
-        # uniquement depuis __main__.py.
         if self._export_capabilities_html_fn is None:
             return None
         return self._export_capabilities_html_fn(capabilities, theme_name)
@@ -416,10 +371,6 @@ class DependencyContainer:
         transitivement."""
         return self._serve_foreground_runner
 
-    # --- Sauvegarde/restauration de configuration (plan interface §3.5,
-    # Phase VII) - ArchiveStore/BackupMetadataStore ne touchent ni
-    # subprocess ni ssl (verifie), meme regime que build_archive_store
-    # ci-dessus : aucune injection __main__.py necessaire.
 
     def _backups_dir(self) -> Path:
         return self._project_root / "var" / "backups" / "config-snapshots"

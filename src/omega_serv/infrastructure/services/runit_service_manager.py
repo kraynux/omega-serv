@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de ServiceManagerPort pour runit - portee
 depuis omega-fire (service_manager/runit.py, audite reutilisable),
 commande `sv` inchangee, activation/desactivation par symlink dans
@@ -46,10 +45,6 @@ class RunitServiceManager:
         return self._control(service_name, "restart")
 
     def reload(self, service_name: str) -> bool:
-        # `sv reload <service>` envoie SIGHUP par defaut (convention
-        # runit, retour utilisateur 2026-09-11) - meme signal que celui
-        # deja attendu cote applicatif (interfaces/cli/main.py::
-        # run_server_until_stopped).
         return self._control(service_name, "reload")
 
     def enable(self, service_name: str) -> bool:

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites metier du sous-systeme d'upload (spec §27, plan corrige - voir
 OMEGA-SERV_PLAN-DETAILLE_SOUS_SYSTEME_UPLOAD.md §3).
 

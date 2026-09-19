@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Etat (plan_active_defense_omega_serv.md, retour utilisateur
 2026-09-12 : "un ecran TUI est bienvenu... piloter tout depuis une
 interface") - equivalent TUI de `omega-serv active-defense status`.

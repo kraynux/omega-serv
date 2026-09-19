@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Rewrites (plan interface §7, `option enable rewrites` +
 liste) - CRUD complet sur `options["rewrites"].settings["list"]`
 (domain/routing/rewrite.py::RewriteRule). Pas de `validate_rewrite_rule`

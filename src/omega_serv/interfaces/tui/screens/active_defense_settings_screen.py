@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Active Defense - Reglages (retour utilisateur 2026-09-14 :
 "but du projet aucune edition manuelle, donc on va sur une interface
 pour custom les modes, les activer etc.") - jusqu'ici, `mode`/`war_mode`/
@@ -168,9 +167,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                     yield Button("Retour", id="back")
         yield Footer()
 
-    # ------------------------------------------------------------------
-    # Chargement
-    # ------------------------------------------------------------------
     def on_mount(self) -> None:
         table = self.query_one("#profiles-table", DataTable)
         table.cursor_type = "row"
@@ -259,9 +255,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         self._selected_decoy_zone_name = str(event.row_key.value)
         self.query_one("#delete-decoy-zone", Button).disabled = False
 
-    # ------------------------------------------------------------------
-    # Boutons
-    # ------------------------------------------------------------------
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
         if button_id == "back":
@@ -463,9 +456,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         settings["deception"] = deception
         self._save_settings(settings)
 
-    # ------------------------------------------------------------------
-    # Enregistrement des reglages generaux
-    # ------------------------------------------------------------------
     def _save(self) -> None:
         error_widget = self.query_one("#form-error", Static)
         try:
@@ -474,9 +464,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             error_widget.update(str(exc))
             return
         settings = self._settings()
-        # Conserve profiles/decoy_zones (deja geres par leur propre CRUD,
-        # jamais retouches par ce formulaire general) - seule la partie
-        # "champs simples" du dict est remplacee.
         existing_deception = dict(settings.get("deception", {}))
         new_fields["deception"]["profiles"] = existing_deception.get("profiles", {})
         new_fields["deception"]["decoy_zones"] = existing_deception.get("decoy_zones", {})
@@ -546,9 +533,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             },
         }
 
-    # ------------------------------------------------------------------
-    # Ecriture reelle (partagee par le formulaire general et les CRUD)
-    # ------------------------------------------------------------------
     def _save_settings(self, new_settings: dict) -> None:
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
@@ -556,8 +540,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             error_widget.update("Erreur de configuration - impossible d'enregistrer.")
             return
 
-        # Reutilise la validation domain existante AVANT toute ecriture -
-        # jamais une seconde logique de validation divergente.
         candidate = parse_active_defense_config(new_settings)
         errors = validate_active_defense_config(candidate)
         if errors:
@@ -572,8 +554,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
         self._refresh()
-        # active_defense n'est JAMAIS recharge a chaud (voir docstring de
-        # module) - toujours un redemarrage complet, sans exception.
         notify_restart_required(
             self, self._container,
             "Reglages Active Defense enregistres. Necessite un REDEMARRAGE COMPLET pour "

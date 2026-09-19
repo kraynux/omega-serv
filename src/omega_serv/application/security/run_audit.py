@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv audit security` (spec §26, plan corrige -
 voir OMEGA-SERV_PLAN-DETAILLE_SYSTEME_AUDIT.md).
 

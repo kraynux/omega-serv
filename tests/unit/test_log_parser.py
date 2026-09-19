@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste compute_log_stats (infrastructure/logging/log_parser.py) contre
 un vrai fichier temporaire au format combine."""
 from __future__ import annotations

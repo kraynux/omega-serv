@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Proxies de confiance (plan interface §7, `option enable
 trusted_proxy` + reseaux/en-tete preferee) - CRUD sur
 `settings["trusted_networks"]` (domain/security/trusted_proxy.py,

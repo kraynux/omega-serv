@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Exclusions WAF par prefixe/extension (doc WAF, config generique
 "exclusions"). C'est le mecanisme utilise par /healthz (angle mort
 §9.6 du plan de developpement) pour echapper a l'inspection sans

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Nom du service systemd pilotant CETTE instance (repertoire projet
 courant) - meme regle exacte que `service_screen.py::_service_name`
 (instance enregistree en multi-instance en priorite, sinon le dernier

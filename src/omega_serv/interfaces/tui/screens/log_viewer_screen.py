@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Voir un fichier log + Suivre en direct (plan interface §3.4/§8) -
 un seul ecran couvre les deux lignes du tableau §8 (meme mecanisme sous-
 jacent : lecture, puis suivi incremental des lignes ajoutees). Affiche
@@ -94,15 +93,6 @@ class LogViewerScreen(OmegaScreen):
             self._tail_reader = None
             return
 
-        # Retour utilisateur 2026-09-14 : "j'ai clique sur waf-alerts.log,
-        # ca a bloque l'application" - un fichier peut appartenir au
-        # compte systeme dedie du service (var/log/ partage, voir
-        # grant_directory_access) alors que la session TUI courante n'a
-        # pas encore pris en compte l'appartenance de groupe qui donne
-        # normalement l'acces (meme cause deja rencontree et corrigee
-        # pour la connexion sqlite Active Defense, jamais protegee ici) -
-        # PermissionError non rattrapee plantait l'ecran plutot que
-        # d'afficher un message clair.
         try:
             content = self._current_path.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -192,10 +191,6 @@ class TestValidateReverseProxy(unittest.TestCase):
         self.assertTrue(any("options.reverse_proxy" in e for e in errors))
 
     def test_proxy_loop_to_self_rejected(self):
-        # Retour utilisateur (OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md
-        # §5.4) : une zone pointant vers ce serveur lui-meme creerait
-        # une boucle infinie/amplification - doit etre bloquee ici,
-        # jamais decouverte seulement au runtime.
         config = OmegaServConfig.from_dict({
             "server": {"bind": "127.0.0.1", "port": 8080},
             "options": {"reverse_proxy": {
@@ -207,9 +202,6 @@ class TestValidateReverseProxy(unittest.TestCase):
         self.assertTrue(any("boucle de proxy" in e for e in errors))
 
     def test_proxy_loop_to_self_rejected_even_when_not_the_only_upstream(self):
-        # Phase 2 (repartition de charge) : la detection de boucle doit
-        # verifier CHAQUE upstream de la zone, pas seulement le premier -
-        # un seul upstream en boucle parmi plusieurs reste bloquant.
         config = OmegaServConfig.from_dict({
             "server": {"bind": "127.0.0.1", "port": 8080},
             "options": {"reverse_proxy": {

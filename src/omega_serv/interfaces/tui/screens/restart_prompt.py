@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Avertissement "redemarrage complet requis" (`notify_restart_required`)
 ou "rechargement requis" (`notify_reload_required`), proposes depuis
 n'importe quel ecran de configuration (retour utilisateur, guide d'aide
@@ -55,9 +54,6 @@ def notify_restart_required(screen: OmegaScreen, container: DependencyContainer,
     factory = container.service_manager_factory
     manager = factory() if factory is not None else None
     if manager is None:
-        # Aucun gestionnaire reconnu (mode "Lancer maintenant" sans
-        # service, ou OS non supporte) - rien de plus a proposer que
-        # l'avertissement texte, deja affiche par l'appelant.
         screen.app.notify(reason, severity="warning", timeout=10)
         return
 

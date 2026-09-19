@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """FAQ du guide d'aide (plan guide d'aide §3.7) - liste groupee par
 categorie, alimentee par interfaces/tui/guide/content/faq.py."""
 from __future__ import annotations
@@ -20,10 +19,6 @@ class FaqScreen(OmegaScreen):
             yield Static("FAQ", classes="omega-title")
             if not ALL_FAQ_ENTRIES:
                 yield Static("Aucune question repertoriee pour l'instant.", classes="omega-hint")
-            # itertools.groupby ne regroupe que des cles consecutives -
-            # trier par categorie d'abord, jamais supposer que
-            # ALL_FAQ_ENTRIES est deja range dans cet ordre (agrege
-            # depuis plusieurs fichiers content/*.py au fil des phases).
             sorted_entries = sorted(ALL_FAQ_ENTRIES, key=lambda e: e.category)
             for category, entries in groupby(sorted_entries, key=lambda e: e.category):
                 yield Static("")

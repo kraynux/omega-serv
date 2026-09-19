@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from pathlib import Path
@@ -50,9 +49,6 @@ class TestRunitServiceManager(unittest.TestCase):
             manager.start("svc")
 
     def test_reload_success(self):
-        # Retour utilisateur 2026-09-11 : `sv reload` envoie SIGHUP par
-        # defaut (convention runit), meme signal deja attendu cote
-        # applicatif.
         runner = _FakeProcessRunner({("sv", "reload", self._svc_path("svc")): ProcessResult(0, "", "")})
         manager = RunitServiceManager(runner, str(self.service_dir), str(self.run_dir))
         self.assertTrue(manager.reload("svc"))

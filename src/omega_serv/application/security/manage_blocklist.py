@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage de gestion de la blocklist (doc WAF, menu CLI "Gestion
 blocklist"). Un bannissement permanent (`expires_at=None`) exige une
 confirmation explicite de l'appelant (doc WAF §5, "Politique

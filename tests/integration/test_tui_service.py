@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase II de l'interface (plan interface §12,
 menu 5) : ecran Service - statut, start/stop/restart/enable/disable,
 installation/desinstallation de l'unite systemd. `ServiceManagerPort`
@@ -129,11 +128,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         (self.root / "config" / "profiles").mkdir(parents=True)
         for profile_file in (_REAL_PROJECT_ROOT / "config" / "profiles").glob("*.json"):
             shutil.copy(profile_file, self.root / "config" / "profiles" / profile_file.name)
-        # Repertoire d'unites systemd FACTICE - retour utilisateur
-        # 2026-09-10 (garde-fous multi-instance) : jamais le vrai
-        # /etc/systemd/system/ de la machine de test, qui peut deja
-        # contenir une vraie unite omega-serv installee ailleurs dans
-        # cette session et fausserait silencieusement ces tests.
         self.systemd_unit_dir = self.root.parent / f"{self.root.name}-etc-systemd-system"
         self.systemd_unit_dir.mkdir()
         self.addCleanup(shutil.rmtree, self.systemd_unit_dir, ignore_errors=True)
@@ -174,10 +168,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(pilot.app.screen.query_one("#start", Button).disabled)
             self.assertTrue(pilot.app.screen.query_one("#install", Button).disabled)
             self.assertTrue(pilot.app.screen.query_one("#uninstall", Button).disabled)
-            # Retour utilisateur 2026-09-10 : le texte d'aide sur l'unite
-            # systemd (compte dedie, partage de var/...) n'a de sens que
-            # pour systemd - un gestionnaire different doit voir un texte
-            # court et distinct, jamais le meme paragraphe.
             hint = str(pilot.app.screen.query_one("#journey-hint", Static).content)
             self.assertIn("OPENRC", hint)
             self.assertIn("guide d'aide", hint)
@@ -209,9 +199,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Actif : False", str(pilot.app.screen.query_one("#service-status").content))
 
     async def test_reload_button_calls_manager_without_toggling_active_state(self):
-        # Retour utilisateur 2026-09-11 : distinct de "Redemarrer" -
-        # garde les connexions actives, relit seulement la config deja
-        # codee cote applicatif (SIGHUP via ExecReload=).
         manager = FakeServiceManager()
         manager.start("omega-serv")
         manager.calls.clear()
@@ -260,19 +247,11 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         self.assertIn(unit_path, manager.unit_files)
         self.assertIn("ExecStart=", manager.unit_files[unit_path])
         self.assertIn(("reload-daemon", ""), manager.calls)
-        # Retour utilisateur 2026-09-10, vrai bug trouve : le compte
-        # systeme dedie n'etait jamais cree, le service echouant a
-        # chaque demarrage - doit etre cree AVANT l'ecriture de l'unite.
         self.assertIn(("create-system-user", "omega-serv:omega-serv"), manager.calls)
         self.assertLess(
             manager.calls.index(("create-system-user", "omega-serv:omega-serv")),
             manager.calls.index(("reload-daemon", "")),
         )
-        # Second vrai bug trouve juste apres le premier, meme retour
-        # utilisateur : le compte cree n'avait toujours aucun droit
-        # d'ecriture sur var/ (journalctl a montre un PermissionError,
-        # service en boucle de redemarrage) - doit aussi survenir avant
-        # l'ecriture de l'unite, meme geste d'installation.
         grant_calls = [c for c in manager.calls if c[0] == "grant-directory-access"]
         self.assertEqual(len(grant_calls), 1)
         self.assertTrue(grant_calls[0][1].endswith(f"var:omega-serv:{getpass.getuser()}"))
@@ -290,10 +269,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(manager.unit_files, {})
 
     async def test_install_blocked_when_another_unit_shares_this_directory(self):
-        # Retour utilisateur 2026-09-10 : garde-fou multi-instance,
-        # sens 1 - une AUTRE unite (nom different) pointant deja vers ce
-        # meme repertoire projet doit bloquer AVANT le dialogue de
-        # confirmation, jamais silencieusement laisser creer un conflit.
         manager = FakeServiceManager()
         container = self._container(manager)
         (container.systemd_unit_dir / "omega-serv-old.service").write_text(
@@ -310,9 +285,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(manager.unit_files, {})
 
     async def test_install_blocked_when_name_already_used_by_another_directory(self):
-        # Sens 2, meme retour utilisateur : ce nom de service est deja
-        # utilise par une unite pointant vers un AUTRE repertoire -
-        # l'installer ici volerait le nom (ecraserait cette unite).
         manager = FakeServiceManager()
         container = self._container(manager)
         (container.systemd_unit_dir / "omega-serv.service").write_text(
@@ -329,15 +301,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(manager.unit_files, {})
 
     async def test_uninstall_confirmed_reaches_use_case_without_crashing(self):
-        # `uninstall_systemd_service` verifie l'existence du fichier
-        # d'unite via le VRAI FilesystemPort du conteneur (jamais via le
-        # double de ServiceManagerPort - meme sur un systeme reel, c'est
-        # `write_unit_file`/`sudo tee` qui ecrit sur disque, la
-        # verification d'existence reste un simple `Path.exists()`) :
-        # ici, aucune unite n'existe reellement sur la machine de test,
-        # la branche "introuvable" est donc la sortie attendue - le test
-        # verifie que le clic + confirmation traversent tout l'ecran
-        # sans exception et sans jamais appeler `remove_unit_file`.
         manager = FakeServiceManager()
         app = OmegaServApp(self._container(manager))
         async with app.run_test(size=(120, 45)) as pilot:
@@ -368,11 +331,6 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pilot.app.screen.query_one("#service-name", Input).value, "omega-serv")
 
     async def test_renamed_service_name_persists_across_screen_visits(self):
-        # Bug latent corrige (resource_status_screen.py affichait
-        # toujours le statut de "omega-serv", jamais du nom reellement
-        # configure ici) - verifie que le renommage est bien ecrit dans
-        # settings_store (var/settings.json), pas seulement garde en
-        # memoire dans le champ de saisie de cet ecran.
         manager = FakeServiceManager(known_service="mon-service-renomme")
         container = self._container(manager)
         app = OmegaServApp(container)

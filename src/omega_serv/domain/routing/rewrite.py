@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Reecriture interne de chemin (spec §17.3) : compteur maximal de
 reecritures, detection de boucle - en cas de boucle ou de depassement,
 echec explicite (traite comme une erreur serveur par l'appelant, jamais

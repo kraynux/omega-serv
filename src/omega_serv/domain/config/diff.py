@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Diff entre deux configurations (spec §9.1 etape 5, §9.2 exemple de
 resume avant confirmation) - toujours affiche avant application, jamais
 un remplacement silencieux de la configuration active."""

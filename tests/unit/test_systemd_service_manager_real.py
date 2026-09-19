@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Verifie SystemdServiceManager contre le vrai `systemctl` de cette
 machine (elle tourne sous systemd, confirme) - operations LECTURE SEULE
 uniquement (status/is-active/is-enabled/--version) contre

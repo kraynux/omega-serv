@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase II de l'interface (plan interface §12,
 menu 6, hors sauvegarde/restauration - Phase VII) : Verifier la
 configuration, Simuler une requete, Audit de securite. Doubles simples
@@ -53,10 +52,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, HomeScreen)
 
     async def _open_config_check(self, pilot) -> None:
-        # "Verifier la configuration" ne vit plus au menu principal
-        # (retour utilisateur 2026-09-09) - accessible uniquement via
-        # Configuration detaillee -> OPTIONS ET VERIFICATION, meme
-        # ecran reel qu'avant.
         pilot.app.screen.query_one("#server-config", Button).press()
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, ServerConfigMenuScreen)
@@ -65,10 +60,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, ConfigCheckScreen)
 
     async def _open_simulate_request(self, pilot) -> None:
-        # "Simuler une requete" ne vit plus au menu principal (retour
-        # utilisateur 2026-09-09, remplace par "Etat & Ressources") -
-        # accessible uniquement via ce nouvel ecran, meme ecran reel
-        # qu'avant.
         pilot.app.screen.query_one("#resource-status", Button).press()
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, ResourceStatusScreen)
@@ -76,7 +67,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, SimulateRequestScreen)
 
-    # --- Verifier la configuration ---
 
     async def test_config_check_no_config_shows_error(self):
         container = DependencyContainer(project_root=self.root, config_check_runner=lambda *a: [])
@@ -106,7 +96,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             await self._open_config_check(pilot)
             self.assertIn("paths.webroot invalide", str(pilot.app.screen.query_one("#check-result").content))
 
-    # --- Simuler une requete ---
 
     async def test_simulate_request_calls_runner_with_form_values(self):
         calls = []
@@ -156,7 +145,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIn("Erreur", str(pilot.app.screen.query_one("#simulate-result").content))
 
-    # --- Audit de securite ---
 
     async def test_audit_reports_findings_and_summary(self):
         finding = AuditFinding(
@@ -215,10 +203,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, HomeScreen)
 
     async def test_simulate_request_back_button_returns_to_resource_status_screen(self):
-        # "Simuler une requete" est reachable uniquement via "Etat &
-        # Ressources" desormais (retour utilisateur 2026-09-09) -
-        # "Retour" doit donc redescendre vers ce nouvel ecran, pas vers
-        # l'accueil.
         container = DependencyContainer(project_root=self.root)
         generate_default_config(container.configuration, container.filesystem, container.config_file)
         app = OmegaServApp(container)
@@ -230,10 +214,6 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, ResourceStatusScreen)
 
     async def test_config_check_back_button_returns_to_server_config_menu(self):
-        # "Verifier la configuration" est reachable uniquement via
-        # Configuration detaillee desormais (retour utilisateur
-        # 2026-09-09) - "Retour" doit donc redescendre vers ce menu 3,
-        # pas vers l'accueil.
         container = DependencyContainer(project_root=self.root, config_check_runner=lambda *a: [])
         generate_default_config(container.configuration, container.filesystem, container.config_file)
         app = OmegaServApp(container)

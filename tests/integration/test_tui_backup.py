@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase VII de l'interface (plan interface §12,
 menu 6, §3.5/§10) : sauvegarde/restauration de configuration - creation
 (avec/sans secrets), restauration, suppression, toutes destructives donc

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : relayer une requete vers un backend HTTP amont
 (reverse proxy sortant, OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md §2).
 
@@ -25,8 +24,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    # Annotation de type uniquement - meme convention/justification que
-    # ports/http_proxy_client_port.py.
     import ssl
 
 from omega_serv.domain.http.request import HttpRequest
@@ -66,12 +63,6 @@ async def serve_proxy(
     client_ssl_context_verified: ssl.SSLContext | None = None,
     client_ssl_context_unverified: ssl.SSLContext | None = None,
 ) -> HttpResponse:
-    # Repartition de charge (retour utilisateur, scope confirme des le
-    # depart de l'etude) : un upstream choisi PAR REQUETE (jamais fige
-    # pour toute la duree de la connexion keep-alive - chaque requete
-    # HTTP individuelle tourne independamment, contrairement au
-    # WebSocket ou un seul upstream sera choisi pour toute la duree du
-    # tube une fois ce chantier construit, §4 du document).
     index = round_robin.pick(zone.url_prefix, len(zone.upstreams))
     upstream = zone.upstreams[index]
 

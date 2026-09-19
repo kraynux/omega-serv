@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Informations plateforme minimales necessaires au demarrage.
 
 Le registre de capacites complet (detection systemd/OpenRC/runit,

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -42,8 +41,6 @@ class TestRuleCspUnsafeInline(unittest.TestCase):
         self.assertEqual(findings, [])
 
     def test_default_real_policy_is_not_flagged(self):
-        # La CSP reelle du projet (domain/security/csp.py) ne contient
-        # deja pas unsafe-inline - regression si elle en acquiert un un jour.
         self.assertEqual(rule_csp_unsafe_inline(OmegaServConfig()), [])
 
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Helpers partages par waf_modules_screen.py et waf_custom_rule_screen.py
 (retour utilisateur 2026-09-13) - lire/ecrire `options.waf.settings.
 rules.paths` est la MEME operation dans les deux ecrans (le second doit

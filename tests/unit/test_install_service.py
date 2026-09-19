@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from pathlib import Path
@@ -94,9 +93,6 @@ class TestInstallSystemdService(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_install_creates_system_user_when_available(self):
-        # Retour utilisateur 2026-09-10, vrai bug trouve : l'unite
-        # referencait toujours User=/Group= dedies sans que rien ne les
-        # cree - le service echouait systematiquement au demarrage.
         manager = _FakeServiceManagerWithUserCreation()
         result = install_systemd_service(self.filesystem, self._params(), self.unit_path, manager)
         self.assertTrue(result.success)
@@ -109,10 +105,6 @@ class TestInstallSystemdService(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_install_grants_directory_access_when_available_and_user_given(self):
-        # Retour utilisateur 2026-09-10, second vrai bug trouve juste
-        # apres le premier : le compte systeme cree n'avait toujours
-        # aucun droit d'ecriture sur var/ (le service crash-loopait,
-        # PermissionError sur le fichier PID selon journalctl).
         manager = _FakeServiceManagerWithDirectoryAccess()
         result = install_systemd_service(
             self.filesystem, self._params(), self.unit_path, manager, installing_user="kraynux",
@@ -157,9 +149,6 @@ class TestInstallSystemdService(unittest.TestCase):
         self.assertEqual(len(manager.write_calls), 1)
         self.assertEqual(manager.write_calls[0][0], self.unit_path)
         self.assertIn("NoNewPrivileges=true", manager.write_calls[0][1])
-        # Jamais ecrit via FilesystemPort quand write_unit_file existe -
-        # /etc/systemd/system/ echappe au perimetre projet, ecrire quand
-        # meme via FilesystemPort echouerait reellement sans elevation.
         self.assertFalse(self.unit_path.exists())
 
     def test_uninstall_delegates_to_remove_unit_file_when_available(self):
@@ -168,10 +157,6 @@ class TestInstallSystemdService(unittest.TestCase):
         result = uninstall_systemd_service(self.filesystem, self.unit_path, manager)
         self.assertTrue(result.success)
         self.assertEqual(manager.remove_calls, [self.unit_path])
-        # remove_unit_file (fake) ne supprime rien reellement ici - la
-        # verification est que install_service delegue bien l'appel,
-        # pas que le fichier disparait (verifie separement cote
-        # systemd_service_manager.py::remove_unit_file lui-meme).
 
 
 class TestCheckForConflictingUnit(unittest.TestCase):

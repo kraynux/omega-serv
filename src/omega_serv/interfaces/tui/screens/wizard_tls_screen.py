@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 5/8 - TLS optionnel (plan interface
 §11 etape 5) : propose un certificat auto-signe sauf si le profil choisi
 est "development" (jamais force). Meme cas d'usage que
@@ -97,10 +96,6 @@ class WizardTlsScreen(OmegaScreen):
         cert_path = self._container.project_root / self._state.config.tls.certificate_path
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
 
-        # Retour utilisateur (audit "gel d'ecran") : openssl en
-        # sous-processus, execute directement sur la boucle asyncio -
-        # gelait TOUTE l'interface. Meme patron que
-        # generate_self_signed_screen.py : deporte dans un thread.
         error_widget.update("Generation en cours...")
         self.query_one("#generate", Button).disabled = True
         self.run_worker(

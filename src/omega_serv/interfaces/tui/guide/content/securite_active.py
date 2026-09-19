@@ -1,5 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir
-# fichier LICENSE)
 """Fiches guide : Active Securite - menu + 5 Active Defense + 4 WAF + 2
 modaux (plan guide d'aide, Phase 8)."""
 from __future__ import annotations

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Redaction champ par champ d'un corps `application/x-www-form-urlencoded`
 avant journalisation (audit securite, 2026-09-14).
 
@@ -49,14 +48,6 @@ def redact_form_urlencoded_body(text: str, fields_to_redact: tuple[str, ...] = D
     attendu)."""
     if not text or "=" not in text:
         return text
-    # keep_blank_values=False (le defaut) est deliberement CONSERVE ici :
-    # avec True, parse_qsl accepte un segment SANS "=" comme une cle a
-    # valeur vide plutot que de le rejeter - un texte quelconque
-    # (JSON, texte libre) sans aucune structure cle=valeur se
-    # retrouvait alors traite a tort comme UNE SEULE paire valide (sa
-    # totalite comme cle), contournant silencieusement le filtre
-    # "if not pairs: return text" cense justement l'ecarter (bug trouve
-    # en testant, jamais suppose).
     pairs = parse_qsl(text, keep_blank_values=False, strict_parsing=False)
     if not pairs:
         return text

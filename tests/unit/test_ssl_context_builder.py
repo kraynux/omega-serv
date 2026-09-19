@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Couvre build_client_ssl_context (contexte CLIENT pour le reverse
 proxy sortant vers un upstream HTTPS, OMEGA-SERV_PLAN-DETAILLE_
 REVERSE_PROXY.md §5.3) - build_ssl_context (contexte SERVEUR) n'avait
@@ -43,8 +42,6 @@ class TestBuildClientSslContext(unittest.TestCase):
         self.assertEqual(context.verify_mode, ssl.CERT_NONE)
 
     def test_returns_a_client_purpose_context(self):
-        # PROTOCOL_TLS_CLIENT (via create_default_context), jamais un
-        # contexte serveur - distinction non negociable du §5.3.
         context = build_client_ssl_context()
         self.assertEqual(context.protocol, ssl.PROTOCOL_TLS_CLIENT)
 
@@ -75,9 +72,6 @@ class TestBuildServerSslContextCiphers(unittest.TestCase):
         cipher_names = {c["name"] for c in context.get_ciphers()}
         self.assertTrue(cipher_names, "aucune suite de chiffrement activee")
         for name in cipher_names:
-            # TLS 1.3 (TLS_*) est deja exclusivement AEAD par construction
-            # du protocole, jamais concerne par set_ciphers() - seules les
-            # suites TLS 1.2 nommees explicitement sont verifiees ici.
             if name.startswith("TLS_"):
                 continue
             self.assertTrue(name.startswith("ECDHE-"), f"suite non-ECDHE inattendue : {name}")

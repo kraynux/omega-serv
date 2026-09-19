@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : surcharger (ou remettre en automatique) le profil de
 rendu - porte depuis omega-check (ecran Reglages)."""
 from __future__ import annotations

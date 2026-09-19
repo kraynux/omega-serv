@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modale de formulaire generique (plan interface §7, menu 3) : un champ
 texte par entree de `fields`, retourne un dict id->valeur saisie au clic
 sur "Valider", None sur "Annuler"/echap. Reutilisee par les ecrans CRUD

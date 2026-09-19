@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'execution de processus externe (doc TLS §2 : "ports/ :
 ProcessRunnerPort"). Le CLI ne doit jamais appeler subprocess
 directement - un adaptateur d'infrastructure/ execute le processus reel

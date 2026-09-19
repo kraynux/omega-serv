@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Module feuille (aucun import de app.py/screens/*) - deliberement
 separe pour eviter un cycle d'import : app.py (lit `pending_switch`)
 et instances_screen.py (le depose) ont tous deux besoin de cette

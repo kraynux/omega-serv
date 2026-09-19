@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase I de l'interface (plan interface §12) :
 demarrage complet (splash -> avertissement terminal eventuel -> accueil),
 cycle de theme, aide, sortie avec confirmation. Assertions structurelles
@@ -13,7 +12,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from textual.widgets import Static
+from textual.widgets import Button, Static
 
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.interfaces.tui.app import OmegaServApp
@@ -56,10 +55,6 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, SplashScreen)
 
     async def test_switch_splash_shown_when_switched_from_env_var_present(self):
-        # OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §9 Phase D : le
-        # splash decoratif normal ne doit JAMAIS reapparaitre juste
-        # apres une bascule complete d'instance (os.execv) - retour
-        # utilisateur explicite.
         os.environ["OMEGA_SERV_SWITCHED_FROM"] = "prod"
         try:
             app = OmegaServApp(self.container)
@@ -84,10 +79,6 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("OMEGA_SERV_SWITCHED_FROM", os.environ)
 
     async def test_help_screen_opens_and_closes(self):
-        # Guide d'aide (plan guide d'aide §3.6, 2026-09-14) : `a` ouvre
-        # desormais le menu Guide navigable, plus la seule reference
-        # statique HelpScreen (devenue un repli contextuel, voir
-        # test_guide_help.py).
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 40)) as pilot:
             await self._reach_home(pilot)
@@ -97,6 +88,30 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
             await pilot.press("escape")
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, HomeScreen)
+
+    async def test_home_menu_uses_two_columns_with_all_expected_buttons(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            menu = pilot.app.screen.query_one(".omega-home-menu")
+            self.assertIn("omega-home-menu-2col", menu.classes)
+            button_ids = {b.id for b in pilot.app.screen.query(Button)}
+            self.assertEqual(
+                button_ids,
+                {
+                    "capabilities", "service", "wizard", "instances", "profiles", "audit",
+                    "server-config", "backup", "active-defense", "help", "resource-status",
+                    "options", "logs", "quit",
+                },
+            )
+
+    async def test_help_button_on_home_menu_opens_the_same_guide(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await self._reach_home(pilot)
+            await pilot.click("#help")
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, GuideMenuScreen)
 
     async def test_theme_cycle_key_changes_theme(self):
         app = OmegaServApp(self.container)
@@ -112,6 +127,16 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(120, 40)) as pilot:
             await self._reach_home(pilot)
             await pilot.press("q")
+            await pilot.pause()
+            self.assertTrue(app.is_running)
+            await pilot.click("#confirm")
+        self.assertFalse(app.is_running)
+
+    async def test_quit_button_on_home_menu_requires_confirmation(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await self._reach_home(pilot)
+            await pilot.click("#quit")
             await pilot.pause()
             self.assertTrue(app.is_running)
             await pilot.click("#confirm")

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Reverse proxy sortant (OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md,
 phases 2-4 : plusieurs upstreams par zone avec repartition de charge
 round-robin, chacun HTTP ou HTTPS, saisis comme un champ unique
@@ -207,10 +206,6 @@ class ReverseProxyScreen(OmegaScreen):
             connect_timeout_seconds=connect_timeout,
             read_timeout_seconds=read_timeout,
             preserve_host_header=values["preserve_host_header"].strip().lower() in ("oui", "yes", "true"),
-            # Absent/vide reste "verifie" (defaut sur, jamais desactive
-            # silencieusement) - seul un "non" explicite desactive la
-            # verification, meme philosophie surete-par-defaut que le
-            # reste du projet (§5.3 : jamais un raccourci silencieux).
             verify_upstream_tls=values["verify_upstream_tls"].strip().lower() not in ("non", "no", "false"),
             websocket_enabled=values["websocket_enabled"].strip().lower() in ("oui", "yes", "true"),
         )
@@ -275,10 +270,4 @@ class ReverseProxyScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
-        # Retour utilisateur (guide d'aide, point 4) : seule la PREMIERE
-        # activation de l'option exige un restart complet (client
-        # construit une fois au demarrage, cf. options_screen.py) - une
-        # fois deja active, les zones sont relues depuis la config a
-        # chaque requete (route_request.py), donc un simple rechargement
-        # suffit pour tout changement fait ici.
         notify_reload_required(self, self._container, "Zones de reverse proxy mises a jour.")

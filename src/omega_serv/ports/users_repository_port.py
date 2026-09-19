@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat de lecture/ecriture du fichier de comptes (spec §15.2,
 paths.auth_file)."""
 from __future__ import annotations

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Codes de statut HTTP utilises par OMEGA-SERV.
 
 Limite volontairement aux codes reellement produits par le serveur

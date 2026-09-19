@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """WAF-001 (plan corrige §5.2, puis suite 2026-09-06) : signale un WAF
 maintenu en mode 'log-only' depuis trop longtemps.
 

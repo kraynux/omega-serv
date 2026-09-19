@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Structure options["active_defense"].settings en une forme typee -
 meme patron exact que domain/security/waf/config.py (fonctions
 parse_*/validate_* module-level, pas de from_dict/validate sur la
@@ -299,13 +298,6 @@ def validate_active_defense_config(config: ActiveDefenseConfig) -> list[str]:
                     "options.active_defense.deception.decoy_zones (Niveau 2, Phase 5)"
                 )
         elif name not in KNOWN_FIXTURE_PROFILE_NAMES:
-            # Retour utilisateur (guide d'aide, Active Defense - Reglages) :
-            # piege reel - un profil isolation_level == "fixture" dont le
-            # NOM ne correspond a aucune fixture reellement implementee
-            # ne se declenchait auparavant NULLE PART (InProcessFixtureDispatcher
-            # retombe silencieusement sur le fallback pass_through/reject,
-            # jamais une erreur visible) - bloque ici, jamais decouvert
-            # trop tard en production.
             errors.append(
                 f"options.active_defense.deception.profiles.{name} : nom de profil inconnu pour "
                 f"isolation_level == 'fixture' (attendu : {', '.join(sorted(KNOWN_FIXTURE_PROFILE_NAMES))}) "

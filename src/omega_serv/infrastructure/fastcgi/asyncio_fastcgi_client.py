@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de FastCgiClientPort - socket Unix asyncio
 (spec §21.2 : "utiliser de preference un socket Unix local"). Une
 connexion neuve par requete, fermee a la fin (`keep_conn=False`) -
@@ -79,9 +78,6 @@ class AsyncioFastCgiClient:
                     stderr += content
                 elif header.type == FCGI_END_REQUEST:
                     end_body = decode_end_request_body(content)
-                # tout autre type de trame est ignore (defensif - aucune
-                # trame FCGI_GET_VALUES envoyee, donc aucune reponse de
-                # gestion n'est attendue en retour).
 
         except (asyncio.IncompleteReadError, asyncio.TimeoutError, FastCgiProtocolError, OSError) as e:
             raise FastCgiConnectionError(f"erreur de communication FastCGI ({socket_path}) : {e}") from e

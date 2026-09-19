@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : restaurer une sauvegarde de configuration (plan
 interface §3.5/§10). Extrait directement sur `project_root` (les
 arcnames de l'archive sont relatifs a la racine du projet, voir

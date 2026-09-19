@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Redirections (plan interface §7, `option enable redirects`
 + liste) - CRUD complet sur `options["redirects"].settings["list"]`
 (domain/routing/redirect.py::RedirectRule). Meme separation que

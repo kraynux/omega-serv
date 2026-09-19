@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran de rendu generique d'une fiche du guide d'aide (plan guide
 d'aide §3.4) - UN SEUL ecran pour les 64 fiches possibles, alimente par
 un `ScreenGuide` (interfaces/tui/guide/model.py) plutot que 64 ecrans

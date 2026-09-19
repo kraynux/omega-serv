@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration du reverse proxy sortant (OMEGA-SERV_PLAN-DETAILLE_
 REVERSE_PROXY.md, phases 2-3 : un ou plusieurs upstreams HTTP/HTTPS
 avec repartition de charge round-robin, sans WebSocket) : serveur
@@ -137,8 +136,6 @@ class TestReverseProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Content-Security-Policy", headers)
 
     async def test_unreachable_upstream_returns_bad_gateway(self):
-        # Port jamais ouvert (serveur ferme immediatement) - upstream
-        # indisponible reel, pas simule.
         dead_server = await asyncio.start_server(lambda r, w: None, "127.0.0.1", 0)
         dead_port = dead_server.sockets[0].getsockname()[1]
         dead_server.close()
@@ -156,11 +153,6 @@ class TestReverseProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(sent.endswith("field=value"))
 
     async def test_round_robin_alternates_between_real_upstreams(self):
-        # Phase 2 (repartition de charge) : verification avec DEUX
-        # vrais faux backends TCP distincts - jamais un simple double
-        # d'objet Python, la rotation doit etre observable sur le fil
-        # reel (l'un des deux ports recevant chaque requete tour a
-        # tour).
         port_a, _capture_a = await self._start_upstream(b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\nA")
         port_b, _capture_b = await self._start_upstream(b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\nB")
         await self._start_omega_serv(port_a, extra_upstream_ports=(port_b,))
@@ -240,20 +232,12 @@ class TestReverseProxyTlsUpstreamIntegration(unittest.IsolatedAsyncioTestCase):
             conn.close()
 
     async def test_https_upstream_reached_when_verification_disabled(self):
-        # Certificat auto-signe, jamais dans le magasin de confiance
-        # systeme - la seule maniere reelle de completer ce handshake
-        # est verify_upstream_tls=False, exactement comme documente
-        # (§5.3, dangereux mais explicite).
         await self._start_omega_serv(verify_upstream_tls=False)
         status, data = await asyncio.to_thread(self._request_sync)
         self.assertEqual(status, 200)
         self.assertEqual(data, b"https-ok")
 
     async def test_https_upstream_rejected_when_verification_enabled(self):
-        # Comportement par defaut (verify_upstream_tls=True) : la
-        # verification stricte echoue reellement contre ce certificat
-        # auto-signe non reconnu - releve en 502, jamais une reussite
-        # accidentelle.
         await self._start_omega_serv(verify_upstream_tls=True)
         status, _data = await asyncio.to_thread(self._request_sync)
         self.assertEqual(status, 502)

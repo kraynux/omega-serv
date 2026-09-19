@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Decodage multipart/form-data (RFC 7578), pure, aucune I/O - spec §27.
 
 Corrige par rapport a la version initiale du plan detaille (voir

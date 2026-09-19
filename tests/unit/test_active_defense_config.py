@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 0 - meme discipline que
 test_config_validation.py (WAF) : parse_active_defense_config() ne
 touche jamais le filesystem, validate_active_defense_config() est une
@@ -133,10 +132,6 @@ class TestValidateActiveDefenseConfig(unittest.TestCase):
         self.assertEqual(validate_active_defense_config(config), [])
 
     def test_fixture_profile_with_unknown_name_is_rejected(self):
-        # Retour utilisateur (guide d'aide, Active Defense - Reglages) :
-        # piege reel - un nom de profil "fixture" qui ne correspond a
-        # aucun leurre reellement implemente ne se declenchait NULLE
-        # PART auparavant (fallback silencieux) - bloque desormais ici.
         settings = {"deception": {"profiles": {"mon-leurre-perso": {"isolation_level": "fixture"}}}}
         config = parse_active_defense_config(settings)
         errors = validate_active_defense_config(config)

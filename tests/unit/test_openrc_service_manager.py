@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError
@@ -34,8 +33,6 @@ class TestOpenRCServiceManager(unittest.TestCase):
             manager.start("svc")
 
     def test_reload_success(self):
-        # Retour utilisateur 2026-09-11 : meme verbe que start/stop/
-        # restart, echoue proprement si le script rc ne l'implemente pas.
         runner = _FakeProcessRunner({("rc-service", "svc", "reload"): ProcessResult(0, "", "")})
         manager = OpenRCServiceManager(runner)
         self.assertTrue(manager.reload("svc"))

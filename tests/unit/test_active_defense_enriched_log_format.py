@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 4, action "enrich_log" -
 format_enriched_log_line() est une fonction pure (aucune I/O), meme
 discipline que test_waf_alert_format.py (mais pas encore de tel fichier
@@ -72,11 +71,6 @@ class TestFormatEnrichedLogLine(unittest.TestCase):
         self.assertNotIn("body_sha256", record)
 
     def test_password_field_in_captured_body_is_redacted(self):
-        # Retour utilisateur (audit securite) : le corps capture etait
-        # journalise verbatim - un POST /login intercepte par Active
-        # Defense exposait alors le mot de passe soumis en clair, alors
-        # meme que cette fonctionnalite sert a detecter le credential
-        # stuffing.
         config = ActiveDefenseLoggingConfig(capture_request_body=True)
         line = format_enriched_log_line(_entry(body=b"username=admin&password=Secret123"), config)
         record = json.loads(line)
@@ -85,9 +79,6 @@ class TestFormatEnrichedLogLine(unittest.TestCase):
         self.assertIn("REDACTED", record["body_excerpt"])
 
     def test_non_form_body_is_left_unredacted(self):
-        # Un corps qui n'a pas la forme cle=valeur&cle2=valeur2 (JSON,
-        # texte libre...) n'est jamais altere - jamais de faux positif
-        # sur un contenu qui n'est structurellement pas exploitable.
         config = ActiveDefenseLoggingConfig(capture_request_body=True)
         line = format_enriched_log_line(_entry(body=b'{"hello":"world"}'), config)
         record = json.loads(line)

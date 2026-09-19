@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste RotationAutomationStore contre de vrais fichiers JSON temporaires."""
 from __future__ import annotations
 

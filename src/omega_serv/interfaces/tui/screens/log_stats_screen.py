@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Statistiques du log d'acces (plan interface §3.4/§8) - periode
 24h/7d/30d, `container.compute_log_stats` (format combine uniquement,
 donc access log seul - error/waf_alerts/breakage/uploads ne portent pas

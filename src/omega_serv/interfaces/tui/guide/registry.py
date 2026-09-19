@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Agrege toutes les fiches de content/*.py en un seul registre, cle par
 le nom exact de la classe d'ecran reelle (plan guide d'aide §3.3) -
 jamais un identifiant invente separement, pour qu'un ecran reel et sa

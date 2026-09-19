@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran affiche a la place du splash decoratif normal (splash.py)
 lorsque ce processus vient d'etre relance par une bascule complete
 d'instance (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §6 Niveau 2,

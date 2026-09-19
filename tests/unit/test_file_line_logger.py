@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Retour utilisateur reel (2026-09-14) : un fichier de log jamais ecrit
 avant, cree avec l'umask usuel d'un humain (022 -> 644), devient
 inscriptible par son PROPRIETAIRE seul - le compte systeme dedie du

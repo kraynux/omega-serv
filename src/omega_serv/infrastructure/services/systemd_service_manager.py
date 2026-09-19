@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de ServiceManagerPort pour systemd - portee
 depuis omega-fire (infrastructure/backends/service_manager/systemd.py,
 audite reutilisable, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5), commandes
@@ -41,24 +40,6 @@ class SystemdServiceManager:
         return "systemd"
 
     def _run_privileged(self, args: list[str], input_text: str | None = None) -> ProcessResult:
-        # Retour utilisateur (bug reel, "le mot de passe est
-        # systematiquement refuse, texte qui s'incruste de facon
-        # aleatoire") : la commande reelle ci-dessous DOIT rester
-        # capturee (`self._runner.run`, jamais interactive) - nos
-        # propres verifications d'idempotence (groupadd/useradd deja
-        # existant, etc.) lisent son stdout/stderr. Mais capturer la
-        # sortie d'une commande qui a AUSSI besoin de demander un mot
-        # de passe interactif casse l'affichage de cette invite sur le
-        # vrai terminal (aucun descripteur reellement libre pour que
-        # sudo gere lui-meme l'invite). Solution : authentifier/
-        # rafraichir le cache sudo a part, via un appel PLEINEMENT
-        # interactif (`sudo -v`, `run_interactive` - jamais de capture)
-        # AVANT la commande reelle - une fois le cache recent, sudo n'a
-        # plus besoin de reprompter pour la commande capturee qui suit,
-        # sa capture redevient alors sans consequence sur l'affichage.
-        # Sans timeout explicite sur `sudo -v` : une invite doit pouvoir
-        # prendre le temps necessaire a l'utilisateur, jamais coupee
-        # arbitrairement.
         if running_as_root():
             return self._runner.run(args, input_text=input_text)
 
@@ -85,10 +66,6 @@ class SystemdServiceManager:
         return self._control(service_name, "restart")
 
     def reload(self, service_name: str) -> bool:
-        # Requiert `ExecReload=` dans l'unite (systemd_unit.py) - sans
-        # elle, systemd refuse cette operation ("Job type reload is not
-        # applicable"), remontee ici comme un ServiceControlError comme
-        # n'importe quel autre echec de `_control` (pas de cas special).
         return self._control(service_name, "reload")
 
     def enable(self, service_name: str) -> bool:
@@ -259,12 +236,6 @@ class SystemdServiceManager:
 
     @staticmethod
     def _parse_description(output: str) -> str:
-        # Separateur reel de `systemctl status` : " - " entoure
-        # d'espaces (RFC-like convention de systemd), jamais un '-' nu -
-        # un nom de service contenant lui-meme un tiret (ex.
-        # "omega-serv.service", precisement le nom de CE projet) casserait
-        # un split("-") naif, bug trouve en ecrivant ce test avec le vrai
-        # nom de service plutot qu'un nom d'exemple sans tiret.
         for line in output.split("\n"):
             stripped = line.strip()
             if stripped.startswith(("●", "○")):

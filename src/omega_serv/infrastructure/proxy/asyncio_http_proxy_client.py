@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation reelle de HttpProxyClientPort - client HTTP/1.1 ecrit
 a la main (meme parti que le client FastCGI, infrastructure/fastcgi/
 asyncio_fastcgi_client.py : aucune bibliotheque HTTP tierce).
@@ -43,9 +42,6 @@ import contextlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    # Annotation de type uniquement - voir ports/http_proxy_client_port.py
-    # pour la meme convention et sa justification (contrat import-linter
-    # "ssl seulement dans infrastructure.tls.ssl_context_builder").
     import ssl
 
 from omega_serv.ports.http_proxy_client_port import (
@@ -147,11 +143,6 @@ class AsyncioHttpProxyClient:
             try:
                 return await self._send_and_read(key, reused, method, path, headers, body, read_timeout, host, port)
             except HttpProxyConnectionError:
-                # La connexion recuperee du pool s'est averee deja morte
-                # (fermee silencieusement par l'upstream pendant son
-                # inactivite - tres courant) : une seule reprise avec une
-                # connexion fraiche, jamais une erreur immediate remontee
-                # pour un simple probleme de peremption du pool.
                 pass
 
         connection = await _open_connection(host, port, connect_timeout, ssl_context)
@@ -186,10 +177,6 @@ class AsyncioHttpProxyClient:
 
             if content_length is not None:
                 response_body = await asyncio.wait_for(reader.readexactly(content_length), timeout=read_timeout)
-                # Reutilisable seulement avec une frontiere de corps
-                # DETERMINISTE (Content-Length) - une lecture "jusqu'a
-                # EOF" (branche ci-dessous) exige structurellement que le
-                # pair ferme la connexion, jamais reutilisable ensuite.
                 reusable = not upstream_wants_close
             else:
                 response_body = await asyncio.wait_for(reader.read(), timeout=read_timeout)
@@ -229,9 +216,6 @@ class AsyncioHttpProxyClient:
             raise HttpProxyConnectionError(f"erreur de communication avec l'upstream ({host}:{port}) : {e}") from e
 
         if status_code != 101:
-            # Rejet de la mise a niveau - rien a relayer, le corps
-            # eventuel de cette reponse est abandonne a la fermeture
-            # (limitation deliberee, voir docstring de module).
             await _close_quietly(writer)
             return WebSocketUpstreamHandshake(status_code=status_code, headers=tuple(response_headers), reader=None, writer=None)
 

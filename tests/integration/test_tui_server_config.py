@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase II de l'interface (plan interface §12,
 menu 3, hors sous-ecran TLS §7.3 - Phase III) : configuration de base,
 limites, securite generique, alias/redirections/rewrites/dirlisting/
@@ -78,9 +77,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
-            # Retour utilisateur 2026-09-11 (audit reload/restart) :
-            # bind/port ne se rechargent jamais a chaud - avertissement
-            # explicite obligatoire quand l'un des deux change reellement.
             messages = [str(n.message) for n in pilot.app._notifications]
             self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
 
@@ -96,7 +92,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await self._open_menu3(pilot)
             pilot.app.screen.query_one("#base", Button).press()
             await pilot.pause()
-            # Seul server_name change, jamais bind/port - reste a chaud.
             pilot.app.screen.query_one("#server-name-input", Input).value = "mon-serveur"
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
@@ -148,10 +143,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
 
     async def test_limits_screen_warns_on_restart_when_backlog_changed(self):
-        # Bug d'omission trouve (guide d'aide, point 4) : listen_backlog
-        # est bind au socket d'ecoute au meme titre que bind/port
-        # (jamais retouche par reload_scoped) - cet ecran ne le
-        # signalait jamais avant correction.
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -277,8 +268,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pilot.app.screen.query_one("#access-rules-table", DataTable).row_count, 0)
 
     async def test_access_control_rule_with_extensions(self):
-        # Retour utilisateur (guide d'aide, point 2) : deny une
-        # extension sensible globalement, sauf sous un prefixe precis.
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -485,9 +474,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(pilot.app.screen.query_one("#zones-table", DataTable).row_count, 0)
 
     async def test_dirlisting_settings_form_saves_values(self):
-        # Retour utilisateur (guide d'aide, point 1) : CSS de base +
-        # header/readme configurables, sur le meme ecran que les zones
-        # (jamais un sous-menu separe, cf docstring dirlisting_screen.py).
         from textual.widgets import Select
 
         container = self._container()
@@ -652,12 +638,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"custom_dir": "webroot/.errors"', data)
 
     async def test_error_pages_screen_warns_when_option_disabled(self):
-        # Retour utilisateur 2026-09-11, vrai bug trouve : cet ecran
-        # laissait configurer le repertoire de surcharge et afficher
-        # "mis a jour" sans jamais indiquer que l'option restait
-        # desactivee (activation geree separement via le menu Options)
-        # - un fichier <statut>.html place correctement n'avait donc
-        # jamais aucun effet, sans aucun indice visible dans cet ecran.
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -736,11 +716,6 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertIn("(aucun)", str(pilot.app.screen.query_one("#auth-list").content))
 
     async def test_back_buttons_return_to_menu3(self):
-        # Ouvre le menu 3 UNE seule fois puis empile/depile chaque
-        # sous-ecran a la suite (jamais un aller-retour complet par
-        # l'accueil a chaque iteration) - mesure empirique : la version
-        # "un _open_menu3() par sous-ecran" prenait plus de 80s pour ce
-        # seul test (12 x reouverture complete depuis l'accueil).
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)

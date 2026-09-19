@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Alias (plan interface §7, `option enable aliases` + liste) -
 CRUD complet sur `options["aliases"].settings["list"]` (domain/routing/
 alias.py::AliasRule). L'activation/desactivation de l'option elle-meme

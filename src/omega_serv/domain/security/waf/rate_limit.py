@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Algorithme token bucket (doc WAF §7 : "token bucket : recommande a
 terme pour absorber les rafales controlees"). Fonction pure sur un
 etat immuable - la persistance/le stockage par cle (IP, IP+zone) est

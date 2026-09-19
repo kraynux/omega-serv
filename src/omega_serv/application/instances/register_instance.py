@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : enregistrer une instance dans le registre global
 (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §3/§5 etape 6) - point
 d'entree unique qui valide (nom/imbrication/port, domain/instances/

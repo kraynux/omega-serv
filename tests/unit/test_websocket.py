@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.http.headers import HttpHeaders
@@ -24,7 +23,6 @@ class TestIsWebsocketUpgradeRequest(unittest.TestCase):
         self.assertTrue(is_websocket_upgrade_request(request))
 
     def test_connection_with_multiple_tokens(self):
-        # Certains clients envoient "Connection: keep-alive, Upgrade".
         request = _request(headers=[("Connection", "keep-alive, Upgrade"), ("Upgrade", "websocket")])
         self.assertTrue(is_websocket_upgrade_request(request))
 

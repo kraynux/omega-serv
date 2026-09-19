@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.application.config.apply_profile import plan_profile_application
@@ -40,8 +39,6 @@ class TestPlanProfileApplication(unittest.TestCase):
         current = OmegaServConfig()
         profile = Profile(name="standard", description="", values={})
         plan = plan_profile_application(current, profile)
-        # Le profil "standard" vide ne change rien par rapport aux
-        # valeurs sures par defaut deja actives.
         self.assertEqual([c for c in plan.changes if c.path != "profile"], [])
 
 

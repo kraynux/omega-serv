@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'export des IoC d'un incident (plan_active_defense_omega_
 serv.md, Phase 0/2) - JSON/CSV/Markdown, jamais un envoi distant
 automatique (voir "Configuration et activation" du plan)."""

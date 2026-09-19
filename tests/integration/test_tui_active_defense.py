@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration de l'ecran combine "Active Securite" (retour
 utilisateur 2026-09-12 : "un ecran TUI est bienvenu... piloter tout
 depuis une interface" ; renomme et etendu le 2026-09-13 pour regrouper
@@ -198,20 +197,11 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, ActiveDefenseMenuScreen)
 
     async def _dismiss_restart_prompt(self, pilot) -> None:
-        # notify_restart_required() pousse un ConfirmScreen des qu'un
-        # gestionnaire de service est disponible (self.fake_service_manager
-        # ici) - jamais tenter un redemarrage reel dans un test, on
-        # annule systematiquement pour revenir a l'ecran sous-jacent.
         self.assertIsInstance(pilot.app.screen, ConfirmScreen)
         pilot.app.screen.query_one("#cancel", Button).press()
         await pilot.pause()
 
     async def test_menu_shows_group_mismatch_hint_when_detected(self):
-        # Retour utilisateur 2026-09-13 : detection proactive, avant
-        # meme d'ouvrir un sous-ecran - `is_missing_live_group` mockee
-        # ici (l'etat reel du groupe systeme depend de la machine, pas
-        # portable dans un test automatise), la vraie fonction est
-        # testee independamment dans test_platform_info.py.
         with patch(
             "omega_serv.interfaces.tui.screens.active_defense_menu_screen.is_missing_live_group",
             return_value=True,
@@ -379,7 +369,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             result = str(pilot.app.screen.query_one("#simulate-result", Static).content)
             self.assertIn("0 -> 65", result)
             self.assertIn("normal -> hostile", result)
-            # Dry-run strict : aucun etat reellement persiste.
             self.assertEqual(active_defense.threat_state_repository.list_all(), [])
 
     async def test_incidents_screen_auto_exports_ioc_on_close_when_configured(self):
@@ -430,13 +419,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
 
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions - test non pertinent")
     async def test_status_screen_shows_a_clean_error_instead_of_crashing_on_permission_denied(self):
-        # Retour utilisateur 2026-09-13 : "gele le terminal, oblige de
-        # killer" - cas reel reproduit ici avec un VRAI repertoire aux
-        # permissions restreintes (var/lib/ appartenant a un compte
-        # systeme dedie dans le cas reel rencontre) plutot qu'un mock -
-        # verifie que l'ecran affiche un message clair ET que l'app
-        # reste pilotable ensuite (retour au menu), jamais un plantage
-        # silencieux ni un blocage.
         self._enable_active_defense()
         restricted_dir = self.root / "var" / "lib"
         restricted_dir.mkdir(parents=True, exist_ok=True)
@@ -457,11 +439,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
                 await pilot.pause()
                 self.assertIsInstance(pilot.app.screen, ActiveDefenseMenuScreen)
         finally:
-            # Restaurer AVANT le nettoyage du repertoire temporaire en
-            # tearDown() - sinon TemporaryDirectory.cleanup() n'a jamais
-            # besoin de toucher var/lib/ lui-meme (suppression via le
-            # parent), donc pas d'echec la, mais un chmod ulterieur sur
-            # un chemin deja supprime leverait FileNotFoundError.
             restricted_dir.chmod(0o755)
 
     def _enable_waf(self, **settings) -> None:
@@ -544,7 +521,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(self.fake_service_manager.reload_calls, ["omega-serv"])
 
     async def test_waf_modules_save_mode_never_reloads_when_service_inactive(self):
-        # self.fake_service_manager.active reste False par defaut.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_home(pilot)
@@ -605,10 +581,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             self.assertIn("BLOCK", str(pilot.app.screen.query_one("#test-result").content))
 
     async def test_waf_custom_rule_add_and_delete_auto_references_pack(self):
-        # Retour utilisateur 2026-09-13 : "j'ai cree une regle dans
-        # l'interface, elle ne se declenche jamais" - verifie que
-        # creer une regle ICI ajoute AUTOMATIQUEMENT custom.json a
-        # rule_paths, jamais une etape manuelle separee a retenir.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_home(pilot)
@@ -620,8 +592,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#add-rule", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, WafCustomRuleWizardScreen)
-            # Mode simple (par defaut : "Un chemin precis visite"),
-            # aucune regex a taper - retour utilisateur 2026-09-14.
             pilot.app.screen.query_one("#value-input", Input).value = "admin"
             pilot.app.screen.query_one("#description-input", Input).value = "bloque /admin"
             pilot.app.screen.query_one("#confirm", Button).press()
@@ -674,9 +644,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#add-rule", Button).press()
             await pilot.pause()
-            # Mode Avance : seul mode qui permet de taper une regex
-            # invalide (les modes simples generent toujours une regex
-            # valide via re.escape).
             pilot.app.screen.query_one("#detection-type-select", Select).value = "advanced"
             await pilot.pause()
             pilot.app.screen.query_one("#scope-input", Input).value = "path"
@@ -717,10 +684,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, ActiveDefenseSettingsScreen)
 
     async def test_settings_screen_enabling_war_mode_warns_restart_and_writes_config(self):
-        # Retour utilisateur (guide d'aide, Active Defense) : "aucune
-        # edition manuelle... une interface pour custom les modes, les
-        # activer" - war_mode.enabled n'etait auparavant modifiable que
-        # dans le JSON, jamais depuis l'interface.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 50)) as pilot:
             await self._reach_home(pilot)
@@ -731,10 +694,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#war-enabled-input", Input).value = "oui"
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
-            # Un gestionnaire de service etant disponible (fake_service_manager),
-            # notify_restart_required() propose une confirmation modale
-            # (le texte "REDEMARRAGE COMPLET" y figure) plutot qu'un
-            # simple toast - jamais tenter un redemarrage reel ici.
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)
             static_texts = [str(s.content) for s in pilot.app.screen.query(Static)]
             self.assertTrue(any("REDEMARRAGE COMPLET" in t for t in static_texts))
@@ -751,8 +710,6 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await self._open_menu(pilot)
             pilot.app.screen.query_one("#settings", Button).press()
             await pilot.pause()
-            # hostile_score < suspicious_score viole l'invariant verifie
-            # par validate_active_defense_config (0 <= suspicious <= hostile <= incident).
             pilot.app.screen.query_one("#war-suspicious-input", Input).value = "90"
             pilot.app.screen.query_one("#war-hostile-input", Input).value = "10"
             pilot.app.screen.query_one("#save", Button).press()

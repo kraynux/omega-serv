@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Couche 1 de l'ordre de fusion de configuration (spec §6.4) :
 "valeurs sures integrees au programme", avant tout profil, option ou
 personnalisation utilisateur. Le moteur de fusion complet (profil +

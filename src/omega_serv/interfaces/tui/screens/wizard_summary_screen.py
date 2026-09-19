@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant premier lancement, etape 7/8 - resume final (meme diff que
 spec §9.2, entre les valeurs par defaut et la configuration composee par
 l'assistant) + confirmation d'ecriture (plan interface §11). L'ecriture

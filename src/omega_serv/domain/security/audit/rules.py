@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles d'audit pures (spec §26, plan corrige §5) : n'inspectent que
 la configuration deja chargee (`OmegaServConfig`), aucun I/O. Les
 regles qui touchent reellement le disque (permissions, certificat,

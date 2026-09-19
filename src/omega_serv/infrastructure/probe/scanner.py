@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sondes systeme reelles (plan interface §3.3, tableau §7.2 de la
 spec repris tel quel). Le jeu de sondes est 100% propre a SERV (fire ne
 sonde que nftables/iptables/fail2ban/conntrack, rien de reutilisable
@@ -24,7 +23,12 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 
 _MIN_FD_SOFT_LIMIT = 1024
 _MIN_DISK_FREE_BYTES = 100 * 1024 * 1024
-_OPTIONAL_BINARIES = ("logrotate", "openssl", "tailscale", "lnav")
+_OPTIONAL_BINARIES = ("logrotate", "openssl", "tailscale", "lnav", "certbot")
+"""`certbot` (etude OMEGA-SERV_PLAN-DETAILLE_TLS_AUTO.md, Phase 1) : simple
+detection en lecture seule (comme les autres binaires ci-dessus) - aucune
+ecriture, aucun appel a certbot lui-meme. Le pont Certbot -> secure/
+certificates/ (import de certificat, hook de renouvellement) reste a
+construire en phases suivantes, hors de ce fichier."""
 _REVERSE_PROXY_BINARIES = ("nginx", "caddy")
 
 

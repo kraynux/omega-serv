@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Exceptions du sous-systeme interface interactive (plan interface
 §3.1, Phase I) - meme racine que le reste du projet
 (core/exceptions.py::OmegaServError), meme patron que

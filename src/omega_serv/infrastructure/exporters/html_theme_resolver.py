@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Resolution d'un nom de theme d'export vers sa palette. Aucun import
 Jinja2 ici. Porte depuis omega-check (D-007/D-008) : catalogue partage
 dans omega_lib.theme.policies."""

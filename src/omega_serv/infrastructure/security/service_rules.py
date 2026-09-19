@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles d'audit service avec vraie I/O (plan corrige §5.5).
 
 SVC-001 (reformulee) : le refus de demarrage en root est deja une porte

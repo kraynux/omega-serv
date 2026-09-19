@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste le vrai binaire lnav (pas de mock) - meme discipline que
 tests/unit/test_openssl_certificate_tool.py, `skipIf` si lnav absent du
 systeme. Ne teste PAS render_lnav_live() lui-meme (exige un vrai

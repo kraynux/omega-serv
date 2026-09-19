@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import os
 import tempfile
 import unittest
@@ -48,13 +47,6 @@ class TestPidFile(unittest.TestCase):
 
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
     def test_read_unreadable_file_returns_none_instead_of_raising(self):
-        # Retour utilisateur 2026-09-10 : au demarrage via systemd, le
-        # fichier PID appartient au compte de service dedie - si
-        # l'utilisateur interactif vient tout juste d'etre ajoute a son
-        # groupe (infrastructure/services/systemd_service_manager.py::
-        # grant_directory_access), l'appartenance ne s'applique qu'a une
-        # nouvelle session : sans cette exception, l'ecran Etat &
-        # Ressources plantait au lieu d'afficher un etat degrade.
         write_pid_file(self.filesystem, self.path, 12345)
         self.path.chmod(0o000)
         try:
@@ -76,13 +68,6 @@ class TestPidFile(unittest.TestCase):
 
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
     def test_pid_file_status_present_but_unreadable(self):
-        # Retour utilisateur 2026-09-10, second retour immediat sur le
-        # meme bug : le libelle generique "Arrete (aucun fichier PID)"
-        # de l'ecran Etat & Ressources s'est revele trompeur dans
-        # exactement ce cas reel (serveur actif via systemd, fichier
-        # PID present et correct, juste pas encore lisible par la
-        # session interactive) - distinguer ce cas est necessaire pour
-        # que l'ecran puisse afficher "INCONNU" plutot que "ARRETE".
         write_pid_file(self.filesystem, self.path, 12345)
         self.path.chmod(0o000)
         try:

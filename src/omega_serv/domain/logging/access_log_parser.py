@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Parseur pur du format combine ecrit par
 domain/logging/access_log_format.py::format_combined_log_line (spec
 §23.2/§23.4). Jamais de logique de lecture fichier ici (delegue a

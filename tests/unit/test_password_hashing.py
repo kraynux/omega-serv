@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import hashlib
 import unittest
 
@@ -24,11 +23,6 @@ class TestHashPassword(unittest.TestCase):
         self.assertEqual(h1, h2)
 
     def test_uses_owasp_recommended_parameters_for_the_configured_memory_budget(self):
-        # Retour utilisateur (audit securite) : p=1 avec N=2**14 est
-        # sous le minimum OWASP - p=5 est la valeur que l'OWASP associe
-        # precisement a N=2**14 pour rester dans un budget memoire
-        # contraint (~16 Mio, materiel modeste) tout en compensant par
-        # le cout CPU.
         encoded = hash_password("hunter2")
         _algo, n_str, _r_str, p_str, _salt_hex, _hash_hex = encoded.split("$")
         self.assertEqual(int(n_str), 16384)
@@ -59,11 +53,6 @@ class TestVerifyPassword(unittest.TestCase):
         self.assertFalse(verify_password("hunter2", "scrypt$16384$8$1$zz$zz"))
 
     def test_older_hash_with_previous_p_parameter_still_verifies(self):
-        # Retour utilisateur (audit securite) : le format auto-descriptif
-        # relit p/n/r depuis le hash lui-meme - un hash genere AVANT ce
-        # correctif (p=1) doit continuer a verifier correctement,
-        # jamais casse par le relevement du parametre par defaut pour
-        # les NOUVEAUX hashs.
         salt = b"\x02" * 16
         legacy_hash = hashlib.scrypt(b"hunter2", salt=salt, n=16384, r=8, p=1, dklen=32)
         legacy_encoded = f"scrypt$16384$8$1${salt.hex()}${legacy_hash.hex()}"

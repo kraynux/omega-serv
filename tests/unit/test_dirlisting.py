@@ -1,8 +1,8 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 
 from omega_serv.domain.config.entities import SecurityConfig
 from omega_serv.domain.routing.dirlisting import DirlistingSettings, render_directory_listing_html
+from omega_serv.domain.routing.dirlisting_sort import DirEntryInfo
 
 
 class TestRenderDirectoryListingHtml(unittest.TestCase):
@@ -32,9 +32,6 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
     def test_default_settings_include_base_css(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
         self.assertIn("<style>", html_out)
-        # Theme par defaut "omega-base" (retour utilisateur : CSS de
-        # base aux couleurs d'omega-base) - une de ses couleurs reelles
-        # doit apparaitre dans le CSS genere.
         self.assertIn("#00d4ff", html_out)
 
     def test_external_css_adds_link(self):
@@ -63,14 +60,11 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         self.assertIn("&lt;b&gt;bienvenue&lt;/b&gt;", html_out)
 
     def test_header_appears_above_the_index_title(self):
-        # Retour utilisateur : "Index de ..." (et son trait souligne)
-        # apparaissait AU-DESSUS d'un HEADER.txt personnalise - deplace
-        # en dessous (meme convention que lighttpd), jamais masque.
         html_out = render_directory_listing_html(
             "/downloads/", [], SecurityConfig(), DirlistingSettings(show_header=True),
             header_content="<p>bienvenue</p>",
         )
-        self.assertLess(html_out.index("bienvenue"), html_out.index("<h1>Index de"))
+        self.assertLess(html_out.index("bienvenue"), html_out.index('<h1 class="omega-listing-title">Index de'))
 
     def test_header_not_shown_when_show_header_disabled(self):
         html_out = render_directory_listing_html(
@@ -104,7 +98,13 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
 
     def test_parent_directory_link_shown_when_not_at_root(self):
         html_out = render_directory_listing_html("/downloads/sub/", [], SecurityConfig())
-        self.assertIn('<li class="omega-dir omega-parent"><a href="/downloads/">.. (dossier parent)</a></li>', html_out)
+        self.assertIn(
+            '<li class="omega-dir omega-parent"><a class="omega-listing-name" href="/downloads/">'
+            '<img class="omega-listing-icon" src="/.omega-serv-icons/folder.svg" alt="">'
+            ".. (dossier parent)</a>"
+            '<span class="omega-listing-mtime"></span><span class="omega-listing-size"></span></li>',
+            html_out,
+        )
 
     def test_parent_directory_link_absent_at_root(self):
         html_out = render_directory_listing_html("/", [], SecurityConfig())
@@ -112,22 +112,38 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
 
     def test_parent_directory_link_from_single_level_points_to_root(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertIn('<li class="omega-dir omega-parent"><a href="/">.. (dossier parent)</a></li>', html_out)
+        self.assertIn(
+            '<li class="omega-dir omega-parent"><a class="omega-listing-name" href="/">'
+            '<img class="omega-listing-icon" src="/.omega-serv-icons/folder.svg" alt="">'
+            ".. (dossier parent)</a>"
+            '<span class="omega-listing-mtime"></span><span class="omega-listing-size"></span></li>',
+            html_out,
+        )
 
     def test_folder_icon_shown_for_directory_entries(self):
-        # Retour utilisateur : les icones emoji ne s'affichaient pas
-        # partout (police d'emoji absente - Chrome/Falkon) - repli en
-        # classe CSS (icone en pur CSS, jamais de glyphe de police) plus
-        # un "/" final sur le nom, universellement fiable.
         html_out = render_directory_listing_html(
-            "/downloads/", ["sub", "a.txt"], SecurityConfig(), directory_names=frozenset({"sub"}),
+            "/downloads/", ["sub", "a.txt"], SecurityConfig(),
+            entry_info={"sub": DirEntryInfo(is_directory=True)},
         )
-        self.assertIn('<li class="omega-dir"><a href="/downloads/sub">sub/</a></li>', html_out)
-        self.assertIn('<li class="omega-file"><a href="/downloads/a.txt">a.txt</a></li>', html_out)
+        self.assertIn(
+            '<li class="omega-dir"><a class="omega-listing-name" href="/downloads/sub">'
+            '<img class="omega-listing-icon" src="/.omega-serv-icons/folder.svg" alt="">sub/</a>'
+            '<span class="omega-listing-mtime"></span><span class="omega-listing-size">-</span></li>',
+            html_out,
+        )
+        self.assertIn(
+            '<li class="omega-file"><a class="omega-listing-name" href="/downloads/a.txt">'
+            '<img class="omega-listing-icon" src="/.omega-serv-icons/text-generic.svg" alt="">a.txt</a>',
+            html_out,
+        )
 
-    def test_all_entries_default_to_file_class_without_directory_names(self):
+    def test_all_entries_default_to_file_class_without_entry_info(self):
         html_out = render_directory_listing_html("/downloads/", ["sub"], SecurityConfig())
-        self.assertIn('<li class="omega-file"><a href="/downloads/sub">sub</a></li>', html_out)
+        self.assertIn(
+            '<li class="omega-file"><a class="omega-listing-name" href="/downloads/sub">'
+            '<img class="omega-listing-icon" src="/.omega-serv-icons/unknow.svg" alt="">sub</a>',
+            html_out,
+        )
 
     def test_footer_shown_by_default(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
@@ -142,30 +158,75 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         self.assertNotIn("Propuls&eacute; par OMEGA-SERV", html_out)
 
     def test_footer_lives_outside_the_listing_container(self):
-        # Retour utilisateur : le pied de page doit coller au bas de la
-        # PAGE, pas seulement suivre un contenu court - verifie que le
-        # conteneur ".omega-listing" est bien REFERME avant que le pied
-        # de page n'apparaisse (sinon "margin-top:auto" au niveau du
-        # "body" n'a aucun effet).
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
         self.assertIn('</div><div class="omega-listing-footer-wrap">', html_out)
 
     def test_no_separator_between_regular_entries(self):
-        # Retour utilisateur ("effet grille trop lourd") : plus de trait
-        # entre CHAQUE fichier/dossier - seul ".omega-parent" en garde un.
         html_out = render_directory_listing_html("/downloads/", ["a.txt", "b.txt"], SecurityConfig())
         self.assertNotIn("li{padding:.4rem .2rem;border-bottom", html_out)
         self.assertIn("li.omega-parent{border-bottom", html_out)
+
+    def test_criteria_row_appears_above_parent_directory_link(self):
+        html_out = render_directory_listing_html("/downloads/sub/", [], SecurityConfig())
+        self.assertLess(
+            html_out.index('<li class="omega-listing-header">'),
+            html_out.index('<li class="omega-dir omega-parent">'),
+        )
+
+    def test_criteria_row_has_no_border_like_regular_entries(self):
+        html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
+        self.assertNotIn("li.omega-listing-header{border-bottom", html_out)
+
+    def test_criteria_row_labels_are_present_and_sortable(self):
+        html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
+        self.assertIn('<a class="omega-listing-name" href="?sort=name&order=desc">NOM</a>', html_out)
+        self.assertIn(
+            '<a class="omega-listing-mtime" href="?sort=mtime&order=asc">DERNIÈRE MODIFICATION</a>', html_out,
+        )
+        self.assertIn('<a class="omega-listing-size" href="?sort=size&order=asc">TAILLE</a>', html_out)
+
+    def test_criteria_row_is_smaller_and_muted_compared_to_entries(self):
+        html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
+        self.assertIn(".omega-listing-header{font-size:.75rem}", html_out)
+        self.assertIn(".omega-listing-header a{color:#00d4ff;opacity:.7}", html_out)
+
+    def test_entry_shows_formatted_size_and_modification_date(self):
+        html_out = render_directory_listing_html(
+            "/downloads/", ["a.txt"], SecurityConfig(),
+            entry_info={"a.txt": DirEntryInfo(size=2048, mtime=0.0)},
+        )
+        self.assertIn('<span class="omega-listing-size">2.0 Ko</span>', html_out)
+        self.assertIn('<span class="omega-listing-mtime">1970-01-01 00:00 UTC</span>', html_out)
+
+    def test_directory_shows_dash_instead_of_a_size(self):
+        html_out = render_directory_listing_html(
+            "/downloads/", ["sub"], SecurityConfig(),
+            entry_info={"sub": DirEntryInfo(is_directory=True, mtime=0.0)},
+        )
+        self.assertIn('<span class="omega-listing-size">-</span>', html_out)
+
+    def test_sort_query_reorders_entries_by_size_descending(self):
+        html_out = render_directory_listing_html(
+            "/downloads/", ["small.txt", "big.txt"], SecurityConfig(),
+            entry_info={
+                "small.txt": DirEntryInfo(size=10, mtime=0.0),
+                "big.txt": DirEntryInfo(size=10_000, mtime=0.0),
+            },
+            query="sort=size&order=desc",
+        )
+        self.assertLess(html_out.index("big.txt"), html_out.index("small.txt"))
+
+    def test_invalid_sort_query_falls_back_to_name_order(self):
+        html_out = render_directory_listing_html(
+            "/downloads/", ["b.txt", "a.txt"], SecurityConfig(), query="sort=nonsense",
+        )
+        self.assertLess(html_out.index("a.txt"), html_out.index("b.txt"))
 
     def test_file_links_use_a_distinct_color_from_directories(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
         self.assertIn("li.omega-file>a{color:#b4c2e0}", html_out)
 
     def test_footer_still_shown_when_show_readme_enabled_but_file_absent(self):
-        # show_readme active mais aucun README.txt reellement present
-        # (readme_content=None, meme signal que serve_static_file.py
-        # quand le fichier n'existe pas) - le reglage seul, sans fichier
-        # reel, ne doit pas masquer la mention par defaut.
         html_out = render_directory_listing_html(
             "/downloads/", [], SecurityConfig(), DirlistingSettings(show_readme=True),
             readme_content=None,

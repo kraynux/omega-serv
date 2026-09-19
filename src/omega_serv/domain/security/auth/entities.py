@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Entites pures Auth (spec §15). Zones protegees et comptes
 utilisateurs - jamais de mot de passe en clair transporte au-dela de
 domain/security/auth/password_hashing.py, seulement des hashes deja

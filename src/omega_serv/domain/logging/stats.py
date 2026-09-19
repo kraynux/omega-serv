@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modeles purs des statistiques de logs (plan interface §3.4/§8) -
 memes formes de donnees generiques que omega-fire (core/stats/models.py::
 IpStat/LogStatsSummary), contenu adapte : SERV n'a ni jails ni bans

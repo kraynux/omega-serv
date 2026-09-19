@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -30,12 +29,6 @@ class _FakeProcessRunner:
         return ProcessResult(returncode=1, stdout="", stderr="unmapped call")
 
     def run_interactive(self, args):
-        # Simule une authentification sudo reussie par defaut (retour
-        # utilisateur, bug reel corrige : `sudo -v` interactif AVANT
-        # toute commande privilegiee capturee, voir _run_privileged) -
-        # jamais comptee dans `self.calls`, qui ne suit que les appels
-        # a `run()` (les commandes reelles, deja verifiees par les
-        # assertions existantes de ce fichier).
         self.interactive_calls.append(args)
         return self._interactive_auth_returncode
 
@@ -77,19 +70,12 @@ class TestSystemdServiceManager(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_reload_success(self, _mock_root):
-        # Retour utilisateur 2026-09-11 : distinct de restart - garde
-        # les connexions actives, relit seulement la config deja codee
-        # cote applicatif (SIGHUP via ExecReload=, systemd_unit.py).
         runner = _FakeProcessRunner({("systemctl", "reload", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.reload("svc"))
 
     @patch(_ROOT, return_value=True)
     def test_reload_fails_cleanly_without_exec_reload(self, _mock_root):
-        # Si l'unite installee n'a pas ExecReload= (ancienne unite
-        # jamais reinstallee depuis ce correctif), systemd refuse
-        # l'operation - remonte comme un ServiceControlError normal,
-        # pas un cas special.
         runner = _FakeProcessRunner({
             ("systemctl", "reload", "svc"): ProcessResult(1, "", "Job type reload is not applicable.")
         })
@@ -245,10 +231,6 @@ class TestSystemdServiceManagerSudoAuthentication(unittest.TestCase):
 
     @patch(_ROOT, return_value=False)
     def test_authentication_reused_across_multiple_privileged_calls_in_the_same_workflow(self, _mock_root):
-        # Un seul flux (ex. installation du service) enchaine plusieurs
-        # appels prives (groupadd, useradd, tee...) - chacun authentifie
-        # separement ici (sudo lui-meme evite de re-demander le mot de
-        # passe si son cache est encore recent, invisible a ce niveau).
         runner = _FakeProcessRunner({
             ("sudo", "groupadd", "--system", "omega-serv"): ProcessResult(0, "", ""),
             (
@@ -290,9 +272,6 @@ class TestSystemdServiceManagerCreateSystemUser(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_idempotent_when_group_and_user_already_exist(self, _mock_root):
-        # groupadd/useradd renvoient le code 9 si l'entite existe deja -
-        # doit etre traite comme un succes, pas une erreur, sinon
-        # reinstaller l'unite echouerait a chaque fois apres la premiere.
         runner = _FakeProcessRunner({
             ("groupadd", "--system", "omega-serv"): ProcessResult(9, "", "group 'omega-serv' already exists"),
             (
@@ -342,8 +321,6 @@ class TestSystemdServiceManagerRemoveSystemUser(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_idempotent_when_user_and_group_already_absent(self, _mock_root):
-        # userdel/groupdel renvoient le code 6 si l'entite n'existe pas
-        # (deja absente) - traite comme un succes, jamais une erreur.
         runner = _FakeProcessRunner({
             ("userdel", "omega-serv"): ProcessResult(6, "", "user 'omega-serv' does not exist"),
             ("groupdel", "omega-serv"): ProcessResult(6, "", "group 'omega-serv' does not exist"),
@@ -423,8 +400,6 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
         manager = SystemdServiceManager(runner)
         with self.assertRaises(ServiceControlError):
             manager.grant_directory_access(path, "omega-serv", "kraynux")
-        # S'arrete au premier echec - jamais de chmod/find/usermod apres
-        # un chgrp rate.
         self.assertEqual(len(runner.calls), 1)
 
 

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Sauvegarde/restauration de configuration (plan interface §3.5/§10,
 menu 6) - un seul ecran couvre creation/liste/restauration/suppression,
 meme regroupement que le tableau du plan ("Sauvegarder/restaurer/gerer la
@@ -164,12 +163,6 @@ class BackupScreen(OmegaScreen):
             include_active_defense=self.query_one("#include-active-defense", Checkbox).value,
             description=self.query_one("#description-input", Input).value,
         )
-        # Retour utilisateur (audit "gel d'ecran") : `tarfile` (creation/
-        # extraction) tourne en synchrone sur la boucle asyncio - gele
-        # l'interface le temps de l'operation, significatif des que la
-        # base Active Defense ou les certificats sont inclus. Meme
-        # patron que generate_self_signed_screen.py : deporte dans un
-        # thread de travail.
         error_widget.update("Creation de la sauvegarde en cours...")
         self.query_one("#create", Button).disabled = True
         config = load_result.config
@@ -192,9 +185,6 @@ class BackupScreen(OmegaScreen):
     def _restore_if_confirmed(self, confirmed: bool | None) -> None:
         if not confirmed or self._selected_snapshot_id is None:
             return
-        # Retour utilisateur (audit "gel d'ecran") : extraction tarfile
-        # synchrone sur la boucle asyncio - meme correctif que
-        # _do_create ci-dessus.
         snapshot_id = self._selected_snapshot_id
         self.query_one("#restore", Button).disabled = True
         self.query_one("#delete", Button).disabled = True
@@ -211,11 +201,6 @@ class BackupScreen(OmegaScreen):
             self._refresh()
             return
         error_widget.update("")
-        # Retour utilisateur (guide d'aide, point 4) : une restauration
-        # peut ecraser N'IMPORTE QUEL fichier (configuration, certificats,
-        # zones d'auth...) - toujours un REDEMARRAGE COMPLET par prudence
-        # (un simple rechargement ne suffit jamais pour des certificats
-        # TLS deja en memoire, meme sujet que generate_self_signed_screen.py).
         notify_restart_required(self, self._container, result.message)
         self._refresh()
 

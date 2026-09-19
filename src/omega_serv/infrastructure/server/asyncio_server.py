@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Serveur HTTP/1.1 asyncio (spec §10.2 : modele de concurrence retenu
 en Phase 0). Boucle de connexion minimale Phase 1 : lit une requete,
 la route, ecrit la reponse, repete en keep-alive dans les limites
@@ -149,9 +148,6 @@ class AsyncioHttpServer:
         self._access_log_path = access_log_path
         self._error_log_path = error_log_path
         self._project_root = project_root
-        # Tous None quand l'option "waf" est desactivee (defaut) - voir
-        # application/server/start_server.py::build_server, seul point
-        # ou ces collaborateurs sont construits.
         self._waf_config = waf_config
         self._waf_port = waf_port
         self._blocklist_port = blocklist_port
@@ -166,13 +162,6 @@ class AsyncioHttpServer:
         self._proxy_round_robin = proxy_round_robin or ProxyRoundRobinState()
         self._proxy_client_ssl_context_verified = proxy_client_ssl_context_verified
         self._proxy_client_ssl_context_unverified = proxy_client_ssl_context_unverified
-        # None quand l'option "active_defense" est desactivee (defaut) ou
-        # que war_mode ne l'est pas - voir application/server/
-        # start_server.py::build_active_defense_collaborators, seul point
-        # ou ces collaborateurs sont construits. Pas de rechargement a
-        # chaud (SIGHUP) pour cette option en V1 - reload_scoped() ne la
-        # touche pas encore, un changement necessite un restart complet,
-        # documente comme tel plutot que fait a moitie.
         self._active_defense_config = active_defense_config
         self._threat_state_repository = threat_state_repository
         self._incident_repository = incident_repository
@@ -180,31 +169,14 @@ class AsyncioHttpServer:
         self._decoy_dispatch_port = decoy_dispatch_port
         self._delay_scheduler = delay_scheduler
         self._active_defense_enriched_log_path = active_defense_enriched_log_path
-        # Niveau 2 (plan Phase 5) : client + etat de repartition DEDIES
-        # aux leurres, jamais partages avec self._proxy_client/
-        # self._proxy_round_robin (production) - une zone leurre ne vit
-        # jamais dans le meme espace de configuration qu'une zone
-        # reverse_proxy de production (voir DeceptionConfig.decoy_zones).
         self._decoy_proxy_client = decoy_proxy_client
         self._decoy_round_robin = ProxyRoundRobinState()
-        # Construit une seule fois (jamais a chaque requete) - coherent
-        # avec le fait qu'Active Defense n'est pas rechargeable a chaud
-        # (SIGHUP) en V1, voir le commentaire ci-dessus sur
-        # `_active_defense_config`.
         self._active_defense_playbook: DefensePlaybook | None = (
             build_playbook(active_defense_config.war_mode) if active_defense_config is not None else None
         )
         self._clock = clock or SystemClock()
         self._server: asyncio.Server | None = None
         self._active_connections: set[asyncio.Task] = set()
-        # Retour utilisateur (audit performance, 2026-09-14) : les regles
-        # de controle d'acces (et les zones de proxy websocket) etaient
-        # reconstruites (parse_access_rules/parse_proxy_zones) a CHAQUE
-        # requete, alors que la config ne change qu'au rechargement
-        # (SIGHUP) - travail 100% redondant repete a chaque requete a
-        # charge elevee. Meme principe deja applique ci-dessus a
-        # `_active_defense_playbook` : calcule une seule fois ici et
-        # invalide/recalcule uniquement dans reload_scoped().
         self._access_control_rules_cache: list[AccessRule] = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache: list[ProxyZone] = self._parse_websocket_proxy_zones()
 
@@ -262,11 +234,6 @@ class AsyncioHttpServer:
         self._waf_alert_log_path = waf_alert_log_path
         self._auth_zones = auth_zones
         self._users_by_name = users_by_name or {}
-        # Recalcule les caches derives de la config (voir __init__) -
-        # sans ceci, un changement de access_control/reverse_proxy via
-        # SIGHUP resterait invisible jusqu'au prochain redemarrage
-        # complet, silencieusement, alors que ces options sont deja
-        # documentees comme rechargeables a chaud.
         self._access_control_rules_cache = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache = self._parse_websocket_proxy_zones()
 
@@ -305,14 +272,6 @@ class AsyncioHttpServer:
         return len(pending)
 
     async def _handle_connection_tracked(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        # Retour utilisateur 2026-09-11 (audit reload/restart) : vrai
-        # bug trouve, `server.max_connections` etait configurable et
-        # valide mais applique NULLE PART dans le serveur - premiere
-        # verification ici, avant meme le comptage dans
-        # `_active_connections` (une connexion refusee ne doit jamais
-        # etre comptee comme active, ni consommer de ressources de
-        # parsing de requete). 503 explicite plutot qu'une fermeture
-        # silencieuse - le client sait au moins pourquoi.
         if len(self._active_connections) >= self._config.server.max_connections:
             await self._write_error_response(writer, HttpStatus.SERVICE_UNAVAILABLE)
             writer.close()
@@ -391,10 +350,6 @@ class AsyncioHttpServer:
                     break
 
                 if resolve_access_verdict(request.path, self._access_control_rules()) == "deny":
-                    # Blocage inconditionnel par prefixe (retour utilisateur
-                    # 2026-09-09), verifie avant WAF/auth/routage - toutes
-                    # methodes, jamais une simple passerelle d'authentification
-                    # comme les zones d'auth (domain/routing/access_rule.py).
                     response = HttpResponse.empty(HttpStatus.FORBIDDEN)
                     apply_security_headers(response, self._config.security, self._config.tls.enabled)
                     await self._write_response(writer, response, keep_alive=False)
@@ -409,25 +364,9 @@ class AsyncioHttpServer:
                     or self._config.option_enabled("upload")
                     or self._proxy_client is not None
                 ):
-                    # FastCGI (POST PHP), upload (POST multipart) et le
-                    # reverse proxy sortant (retour utilisateur
-                    # 2026-09-11 : un POST/PUT vers une zone proxy doit
-                    # relayer le corps entier a l'upstream, jamais un
-                    # corps tronque) ont tous besoin du corps complet -
-                    # jamais plus que la limite serveur deja en vigueur
-                    # (plan corrige upload §9 : pas de streaming en V1).
                     capture_max_bytes = max(capture_max_bytes, server_config.max_request_size)
 
                 try:
-                    # Retour utilisateur (audit securite, 2026-09-14) :
-                    # contrairement a la lecture des en-tetes juste au-dessus,
-                    # cette lecture n'etait bornee par AUCUN timeout - un
-                    # attaquant envoyant un Content-Length eleve puis trickle
-                    # le corps a 1 octet/30s (variante "slow-POST" du type
-                    # R-U-Dead-Yet) gardait la connexion ouverte indefiniment,
-                    # jusqu'a saturer `server.max_connections` a moindre cout.
-                    # Meme timeout que la lecture des en-tetes de cette meme
-                    # iteration (deja calcule plus haut).
                     _, captured_body = await asyncio.wait_for(
                         read_and_discard_body(reader, head, server_config.max_request_size, capture_max_bytes),
                         timeout=timeout,
@@ -460,14 +399,6 @@ class AsyncioHttpServer:
                     continue
 
                 if self._waf_config is not None:
-                    # Les 4 collaborateurs suivants sont toujours construits
-                    # ensemble avec waf_config, jamais independamment (seul
-                    # point de construction : application/server/
-                    # start_server.py::build_server, "waf.xxx if waf else
-                    # None" pour les 5 en une seule fois) - assertions qui
-                    # documentent cet invariant reel plutot que des None
-                    # verifies un a un sans jamais pouvoir differer en
-                    # pratique.
                     assert self._waf_port is not None
                     assert self._blocklist_port is not None
                     assert self._rate_limit_port is not None
@@ -518,13 +449,6 @@ class AsyncioHttpServer:
                         break
 
                 if self._proxy_client is not None and is_websocket_upgrade_request(request):
-                    # Chemin de code separe (retour utilisateur, §4 du
-                    # document) : court-circuite route_request()
-                    # ENTIEREMENT plutot que d'y ajouter un cas special -
-                    # match sur request.path BRUT, jamais apres
-                    # rewrites/redirections/alias (ceux-la ne
-                    # s'appliquent qu'au relai HTTP ordinaire, simplification
-                    # deliberee du perimetre WebSocket).
                     proxy_zone = self._match_websocket_proxy_zone(request.path)
                     if proxy_zone is not None:
                         ws_status = await serve_websocket_proxy(
@@ -584,10 +508,6 @@ class AsyncioHttpServer:
 
     async def _write_response(self, writer: asyncio.StreamWriter, response: HttpResponse, keep_alive: bool) -> None:
         if not response.body and int(response.status) >= 400:
-            # Page d'erreur HTML par defaut, toujours servie pour un
-            # corps vide (retour utilisateur 2026-09-09) - jamais un
-            # corps vide silencieux face a un visiteur reel, meme sans
-            # option activee. Voir resolve_error_page.py.
             response.body = resolve_error_page_body(
                 int(response.status), self._error_page_custom_dir(), self._filesystem
             )
@@ -701,13 +621,6 @@ class AsyncioHttpServer:
             self._threat_state_repository, self._clock, self._active_defense_config,
             subject_id=subject_id, waf_decision=decision,
         )
-        # Phase 2 : une observation detaillee n'est persistee dans un
-        # incident que si le score cumule franchit incident_score - en
-        # dessous, seul l'etat agrege (deja sauvegarde par observe_threat
-        # ci-dessus) compte, jamais un historique complet pour un simple
-        # "suspicious" jamais escalade (voir "Domaine metier" du plan).
-        # Phase 4 : gate aussi par le DefensePlaybook - "create_incident"
-        # doit figurer dans war_mode.actions, jamais suppose implicite.
         if (
             observation is not None
             and self._incident_repository is not None
@@ -717,12 +630,6 @@ class AsyncioHttpServer:
                 self._incident_repository, self._clock, subject_id=subject_id, observation=observation,
                 score=state.score, incident_score_threshold=self._active_defense_config.war_mode.thresholds.incident_score,
             )
-        # Phase 3 : l'affectation d'un leurre ne se declenche qu'a partir
-        # du niveau "hostile" (jamais des la premiere observation
-        # "suspicious", qui reste trop bruitee pour justifier un
-        # deroutement reel) - assign_deception() est deja idempotent (une
-        # affectation existante n'est jamais remplacee en V1). Phase 4 :
-        # gate aussi par "redirect_to_decoy" dans war_mode.actions.
         if (
             observation is not None
             and state.level in ("hostile", "contained")
@@ -734,10 +641,6 @@ class AsyncioHttpServer:
                 self._deception_assignment_repository, self._clock, self._active_defense_config.deception,
                 subject_id=subject_id, attack_class=observation.attack_class,
             )
-        # Phase 4 : journalisation enrichie ("enrich_log") - uniquement
-        # pour une source deja marquee (jamais "normal", voir
-        # is_source_marked), separee du log WAF/production (plan
-        # §"Journalisation et protection des donnees").
         if (
             observation is not None
             and is_source_marked(state.level)

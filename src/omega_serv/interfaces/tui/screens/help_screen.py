@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Aide : reference statique des raccourcis et fonctions de
 l'application. Adapte du patron screens/help_screen.py d'omega-check
 (plan interface §0/§3.1) - pas de tableau de profils de ports (concept

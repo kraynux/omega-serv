@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 7 (Auth) : serveur reel, connexions TCP
 reelles, vrai en-tete Basic Auth - meme discipline que
 test_waf_server.py/test_tls_server.py."""

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : court-circuiter la boucle de requete/reponse HTTP
 habituelle pour relayer un tube WebSocket bidirectionnel vers un
 backend amont (reverse proxy sortant, OMEGA-SERV_PLAN-DETAILLE_
@@ -27,8 +26,6 @@ import contextlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    # Annotation de type uniquement - meme convention/justification que
-    # ports/http_proxy_client_port.py.
     import ssl
 
 from omega_serv.application.server.serve_proxy import HOP_BY_HOP_HEADERS, build_outgoing_headers
@@ -123,9 +120,6 @@ async def serve_websocket_proxy(
     await _write_status_line_and_headers(client_writer, handshake.status_code, handshake.headers)
 
     if handshake.status_code != 101 or handshake.reader is None or handshake.writer is None:
-        # Mise a niveau refusee par l'upstream - rien de plus a
-        # relayer, la connexion se termine ici (jamais de keep-alive
-        # apres une tentative d'Upgrade, reussie ou non).
         return handshake.status_code
 
     await _relay_bidirectional(client_reader, client_writer, handshake.reader, handshake.writer)

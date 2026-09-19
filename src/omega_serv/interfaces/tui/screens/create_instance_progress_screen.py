@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran de progression de la creation d'instance (OMEGA-SERV_PLAN-
 DETAILLE_MULTI_INSTANCE.md §5/§9 Phase C) - retour utilisateur : jamais
 un simple spinner generique pendant que `create_instance()` tourne
@@ -97,6 +96,3 @@ class CreateInstanceProgressScreen(OmegaScreen):
     def action_back(self) -> None:
         if self._finished:
             self.dismiss()
-        # Sinon ignore - jamais d'annulation en cours d'operation (V1),
-        # le worker continuerait de tourner en arriere-plan meme si
-        # l'ecran etait ferme, laissant l'utilisateur sans retour.

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Moteur de signatures (doc WAF, module "signature_engine") : compile
 les regles une fois, puis les evalue contre les textes de scope d'une
 requete. Compilation et evaluation sont toutes deux du calcul pur (pas
@@ -17,10 +16,6 @@ from dataclasses import dataclass
 
 from omega_serv.domain.security.waf.entities import RuleDefinition, RulePack, Severity, WafFinding
 
-# Poids -> severite indicative pour les logs/alertes (doc WAF §9 :
-# "regle declenchee, score, decision" - la severite n'entre pas dans le
-# calcul du score, seul le poids compte, mais elle aide un humain a lire
-# une alerte sans consulter le pack de regles).
 _SEVERITY_BY_WEIGHT_THRESHOLD: tuple[tuple[int, Severity], ...] = (
     (8, Severity.CRITICAL),
     (5, Severity.HIGH),

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Seul module autorise a importer `sqlite3` (plan_active_defense_omega_
 serv.md, section "Persistance" - nouveau contrat import-linter,
 pyproject.toml). Premier usage de stockage relationnel dans ce projet -

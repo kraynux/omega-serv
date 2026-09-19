@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste LiveTailReader contre un vrai fichier temporaire (pas de mock) -
 seek/lecture incrementale, rotation/troncature."""
 from __future__ import annotations

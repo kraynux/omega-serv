@@ -32,14 +32,14 @@ The stated priority is **HTTP core solidity/security first** — WAF and TLS are
 
 - Serves static content (files, optional directory listing, aliases, redirects, rewrites, cache) with safe path resolution (traversal, double-encoding, symlinks).
 - Hardens the HTTP protocol by default, with no option to disable it: explicit allowed methods, `Host` header validation, rejection of `Content-Length`/`Transfer-Encoding` ambiguity, non-bypassable security headers and baseline CSP.
-- Optionally: WAF filtering (signatures, rate limiting, blocklist), direct TLS (self-signed or locally-CA-signed certificate), per-zone HTTP Basic authentication, PHP via FastCGI/PHP-FPM, confined upload zones.
+- Optionally: WAF filtering (signatures, rate limiting, blocklist), direct TLS (self-signed, locally-CA-signed, or public via Let's Encrypt/Certbot with automatic renewal — see §9), per-zone HTTP Basic authentication, PHP via FastCGI/PHP-FPM, confined upload zones.
 - Audits its own configuration (`audit security`) and installs itself as a system service (systemd/OpenRC/runit).
 - End-to-end scriptable non-interactive CLI, **and an interactive (Textual) interface** that wraps exactly the same use cases — see §3. The interface roadmap (`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`, §12) is **fully delivered**: capability registry, profiles/options, detailed configuration (aliases/redirects/rewrites/FastCGI/directory listing/authentication/cache/WAF/trusted proxies/outgoing reverse proxy/TLS), log management (view/tail/lnav/rotation/backup/automation/statistics/top IPs), system service, multi-instance (registry, creation), check/simulate/audit, configuration backup/restore, first-launch wizard, application settings (theme, render profile, export/screenshot paths), contextual help guide (per-screen sheet with concrete examples, FAQ, HTML export, exhaustive coverage verified by test), systematic reload/restart indication after every save, full Active Defense configuration with no manual file editing required.
 
 ### What Omega-serv does not do
 
 - Raw CGI (dropped from V1 scope — only FastCGI/PHP-FPM is supported).
-- Mutual TLS authentication (mTLS), OCSP stapling, ACME — out of scope for V1, see §15.
+- Mutual TLS authentication (mTLS), OCSP stapling — out of scope for V1, see §15. (ACME/Let's Encrypt via Certbot is available, see §9c/9d.)
 - HTTP cache shared across processes.
 - Scanning/auditing a remote target (see `omega-check`/`omega-scan`/`omega-deep` for that — Omega-serv audits only itself, never a third party).
 
@@ -136,7 +136,7 @@ A built-in help system, never a plain static text block: every documented screen
 - **First-launch wizard** — an 8-step guided journey (welcome → read-only capabilities → profile choice → bind/port → optional TLS → check → summary + write → service-install proposal); lets you generate a full configuration and get the server running without ever touching the CLI.
 - **Capability registry** — read-only system probe (init system, whether the configured port is already taken, whether `openssl`/`logrotate`/`tailscale`/`lnav` are present, disk space, file-descriptor limit...), JSON/HTML export.
 - **Profiles** — same use cases as `profile` on the CLI (§5), a diff is always shown before writing.
-- **Detailed server configuration** — full CRUD on aliases/redirects/rewrites/directory listing/trusted proxies/outgoing reverse proxy/FastCGI/cache/authentication/access control/error pages, plus the **TLS** sub-menu (status, self-signed generation, local CA wizard, revocation, enable/disable — see §9) ; a second frame, **OPTIONS AND VERIFICATION**, groups shortcuts to **Options** (`option` CLI, §7) and **Check configuration** (`config check` CLI, §10) — same journey as adjusting settings then verifying them, these two screens are no longer directly accessible from the main menu. WAF no longer lives here (see "Active Security" below): it mostly exposes continuously-changing operational state, not a plain static configuration form. Every save now spells out what comes next: an automatic, silent hot reload if a service is active (directory listing, access control, aliases/redirects/rewrites, cache, error pages, trusted proxies, reverse-proxy/FastCGI zones, authentication users/zones), or an explicit restart confirmation when the change touches the listening socket, TLS, or Active Defense — no screen leaves you guessing whether the server needs relaunching.
+- **Detailed server configuration** — full CRUD on aliases/redirects/rewrites/directory listing/trusted proxies/outgoing reverse proxy/FastCGI/cache/authentication/access control/error pages, plus the **TLS** sub-menu (status, self-signed generation, local CA wizard, Let's Encrypt/Certbot wizard, automatic renewal, revocation, enable/disable — see §9) ; a second frame, **OPTIONS AND VERIFICATION**, groups shortcuts to **Options** (`option` CLI, §7) and **Check configuration** (`config check` CLI, §10) — same journey as adjusting settings then verifying them, these two screens are no longer directly accessible from the main menu. WAF no longer lives here (see "Active Security" below): it mostly exposes continuously-changing operational state, not a plain static configuration form. Every save now spells out what comes next: an automatic, silent hot reload if a service is active (directory listing, access control, aliases/redirects/rewrites, cache, error pages, trusted proxies, reverse-proxy/FastCGI zones, authentication users/zones), or an explicit restart confirmation when the change touches the listening socket, TLS, or Active Defense — no screen leaves you guessing whether the server needs relaunching.
 - **Active Security** — a single screen grouping two blocks: **Active Defense** (Status, tracked Threats with score/level, Incidents with timeline/IoC export/report, Deception assignments, Simulate a decision in dry-run, **Settings** — full configuration without ever hand-editing `config/omega-serve.json`, see §11) and **WAF** (Status, Modules — mode/rule packs/blocklist, Test a request, Custom — custom rule authoring) — see §11.
 - **Log management** — view/tail a file live, merged `lnav` (real terminal rendering inside the interface), manual or size-threshold-automatic rotation/archiving, immediate backup creation, scheduled-automation configuration/management (declarative — see note below), restore/purge an archive, export the list, statistics (top IPs, status-code breakdown, hourly histogram) with per-IP removal from the access log.
 - **Service** — same actions as `service` on the CLI (§12), one-off `sudo` elevation per action, the whole application is never launched as root.
@@ -205,6 +205,9 @@ Interface preferences only — never confused with `config/omega-serve.json` (th
 ./omega-serv.sh certs generate-csr --cn server.local --san-dns server.local --key-out server.key --csr-out server.csr
 ./omega-serv.sh certs sign-csr --csr server.csr --ca-key secure/certificates/ca/root-ca.key --ca-cert secure/certificates/ca/root-ca.pem --out server.pem --fullchain-out fullchain.pem
 ./omega-serv.sh certs revoke --cert server.pem --ca-key secure/certificates/ca/root-ca.key --ca-cert secure/certificates/ca/root-ca.pem
+
+# TLS certificates - import (9c, e.g. from a Certbot hook)
+./omega-serv.sh certs import --key privkey.pem --cert fullchain.pem
 
 # HTTP Basic authentication
 ./omega-serv.sh auth add-user --username alice
@@ -300,7 +303,7 @@ All disabled by default in every shipped profile — enabling one is always expl
 | Module | Role |
 |---|---|
 | `waf` | Signatures (sensitive paths, scanner UA, SQLi/XSS/CMDi in the body), rate limiting (token bucket), blocklist (CIDR + expiration), reputation/escalation — `log-only` mode is structurally unable to block |
-| TLS | Direct minimal (self-signed or local CA, see §9), never mTLS/OCSP/ACME in V1 |
+| TLS | Direct (self-signed, local CA, or public via Let's Encrypt/Certbot with automatic renewal — see §9), never mTLS/OCSP in V1 |
 | Authentication | Per-zone HTTP Basic (`url_prefix`), `hashlib.scrypt` with anti-timing defense (constant time even for an unknown user) |
 | FastCGI/PHP-FPM | A single `(url_prefix, script_root)`, `script_root` confined outside `webroot/` by construction (the static handler can never leak PHP source) |
 | Outgoing reverse proxy | Omega-serv acts itself as a proxy toward a backend (the opposite direction of `server.tls.mode = "behind_proxy"`) — one or more HTTP/HTTPS upstreams per zone with round-robin load balancing (strict TLS verification by default, disable-able but dangerous), hop-by-hop headers stripped, `X-Forwarded-*` always overwritten (never merged with client-supplied values), WebSocket (a single upstream pinned for the tunnel's lifetime, no application timeout once established) |
@@ -335,6 +338,16 @@ secure/certificates/ca/
 ```
 
 Flow: `certs generate-ca` (CA key passphrase **mandatory**, interactive double-confirmation prompt if `--password` is omitted) → `certs generate-csr` (server key + CSR) → `certs sign-csr` (signs with the CA, copies the CSR's SAN, builds `fullchain.pem` if requested) → point `tls.certificate.certificate_path` at that `fullchain.pem`. A compromised certificate is removed via `certs revoke` (marks `index.txt`, first verifies the certificate really comes from this CA — refuses otherwise). No CRL distribution in V1, no external CA/CSR for a third-party authority, no mTLS (see §15).
+
+### 9c. Let's Encrypt / ACME (Certbot) — public, self-hosted
+
+For a genuinely public site with a browser-trusted certificate, full self-hosted scheme: DDNS (Dynu or equivalent, entirely the operator's responsibility) → Certbot → Omega-serv. TUI wizard only (`Detailed configuration → TLS → Let's Encrypt wizard`) — invokes `certbot certonly --webroot` as a subprocess (**never** `--standalone`, port 80 is already taken by Omega-serv; **never** a reimplemented ACME client) with `--config-dir`/`--work-dir`/`--logs-dir` pointed under the project's `secure/certificates/letsencrypt/` — **never** `/etc/letsencrypt/` — which makes Certbot itself entirely unprivileged. The obtained certificate is imported automatically and a renewal hook script is written. Staging (test) mode is checked by default — uncheck it only once the domain/webroot are verified working, to avoid Let's Encrypt's real rate limits.
+
+Prerequisites entirely outside Omega-serv's scope: a domain pointed at the public IP (DDNS), and ports 80/443 forwarded to this machine.
+
+### 9d. Automatic renewal (Certbot)
+
+`Detailed configuration → TLS → Automatic renewal` adapts to the service manager actually detected **for this instance** (never a mechanism shared across multi-instance deployments): systemd → generates and installs a timer (`<service>-certbot-renew.timer`, twice daily plus a randomized delay, `certbot renew` scoped to the instance's `--config-dir`); otherwise → a crontab line (current user, no privilege required) if `crontab` is available; otherwise → manual instructions are shown, no forced write. On some distributions (Arch/Manjaro among them), the Certbot package installs **no** timer by default, unlike Debian/Ubuntu — hence this screen rather than a plain check for an assumed-already-present mechanism. Once configured, renewal automatically re-imports each renewed certificate and restarts the service, with no further manual intervention.
 
 ## 10. Security audit
 
@@ -387,7 +400,7 @@ Structure: `tests/unit/` (domain/application, test doubles), `tests/integration/
 ## 15. Out of scope
 
 - Raw CGI (FastCGI/PHP-FPM only)
-- mTLS (client certificate authentication), OCSP stapling, ACME
+- mTLS (client certificate authentication), OCSP stapling
 - External CA / CSR for a third-party authority, full CRL distribution
 - Batch/recurring-monitoring mode — every command is an explicit action
 - Extracting the WAF module into a standalone `omega-waf` project (planned, never started — already designed with clean separation in view of this extraction, no parallel development)

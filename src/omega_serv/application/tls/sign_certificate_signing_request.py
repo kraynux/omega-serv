@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs sign-csr` (doc TLS §7.3 etapes 7-8).
 Ne valide pas de parametres domaine (la CSR est deja construite) -
 seule verification faite ici : les 4 fichiers d'entree (CSR, cle/

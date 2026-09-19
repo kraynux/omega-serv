@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv waf test` (doc WAF, "Tests WAF" - simulateur
 CLI hors serveur). Reutilise evaluate_waf_request() avec les VRAIS
 collaborateurs construits depuis la configuration reelle (meme objets

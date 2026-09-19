@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage CreateOrUpdateIncidentCommand/CloseIncidentCommand
 (plan_active_defense_omega_serv.md, Phase 2)."""
 from __future__ import annotations

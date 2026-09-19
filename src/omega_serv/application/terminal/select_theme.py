@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : choisir et persister le theme TUI actif (plan
 interface §3.1, Phase I) - porte depuis omega-check."""
 from __future__ import annotations

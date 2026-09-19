@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """FAQ du guide d'aide (plan guide d'aide §3.7, Phase 0 - amorcee avec
 l'incident fondateur de ce chantier ; completee Phase 10 avec les
 pieges reels deja documentes au fil de OMEGA-SERV_PLAN-DETAILLE_
@@ -192,6 +191,56 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "de passe) ou les certificats (cles privees TLS), la sauvegarde contient des secrets "
             "reels en clair - une confirmation explicite supplementaire est demandee avant de "
             "creer ce type de sauvegarde. Protegez ces fichiers comme n'importe quel secret."
+        ),
+    ),
+    FaqEntry(
+        category="TLS et certificats",
+        question="Comment m'auto-heberger avec un vrai certificat public, de bout en bout (schema DDNS -> Certbot -> OMEGA-SERV) ?",
+        answer=(
+            "Le schema complet : un service DDNS (Dynu ou equivalent) fait pointer un nom de "
+            "domaine public (ex. monserveur.dynu.com) vers votre IP, mise a jour automatiquement "
+            "par leur client a chaque changement - ENTIEREMENT hors du perimetre d'OMEGA-SERV, "
+            "a installer et configurer vous-meme. Vous devez aussi rediriger les ports 80 et 443 "
+            "de votre routeur/pare-feu vers cette machine. Une fois cela fait : Assistant Let's "
+            "Encrypt (Configuration detaillee -> TLS) obtient le premier certificat (defi HTTP-01, "
+            "webroot - port 80 doit etre joignable depuis Internet le temps de la demande), "
+            "l'importe et vous rappelle d'activer TLS (ecran Activer/desactiver TLS) puis de "
+            "redemarrer. Ensuite, Renouvellement automatique (meme sous-menu) installe la "
+            "planification (timer systemd ou crontab) qui renouvelle et redemarre tout seul, "
+            "sans plus jamais intervenir manuellement pour cette partie."
+        ),
+    ),
+    FaqEntry(
+        category="TLS et certificats",
+        question="OMEGA-SERV tourne dans un conteneur - comment obtenir un certificat Let's Encrypt ?",
+        answer=(
+            "N'executez PAS l'Assistant Let's Encrypt/le renouvellement automatique a l'interieur "
+            "du conteneur qui sert deja le trafic public. Executez-les sur l'hote (ou dans un "
+            "conteneur/sidecar distinct dedie a l'administration) en partageant avec le conteneur "
+            "serveur : le meme volume de webroot (Certbot y depose son defi, ce que le conteneur "
+            "sert deja via le port 80 qu'il expose), et le meme volume secure/certificates/ - le "
+            "conteneur serveur peut monter ce dernier en LECTURE SEULE, puisque l'import du "
+            "certificat (ecriture) se fait toujours cote hote/sidecar, jamais depuis le conteneur "
+            "servant le trafic. Un redemarrage du conteneur serveur reste necessaire apres chaque "
+            "renouvellement (meme regle que partout ailleurs : le contexte SSL n'est jamais "
+            "recharge a chaud) - le hook de renouvellement redemarre le SERVICE qu'il connait "
+            "(hote/sidecar), pensez a l'adapter si le conteneur serveur est pilote separement "
+            "(ex. `docker restart`) plutot que par un service systemd/OpenRC/runit classique."
+        ),
+    ),
+    FaqEntry(
+        category="TLS et certificats",
+        question="L'Assistant Let's Encrypt echoue (defi HTTP-01) - pourquoi ?",
+        answer=(
+            "Les causes les plus frequentes, dans l'ordre a verifier : (1) le port 80 n'est pas "
+            "reellement joignable depuis Internet (redirection de port manquante ou incorrecte "
+            "sur le routeur/pare-feu, ou un autre service occupe deja ce port sur la machine), "
+            "(2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propage - "
+            "verifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test "
+            "(staging, coche par defaut) tout fonctionne mais le certificat obtenu n'est jamais "
+            "reconnu par les navigateurs - c'est normal, decochez la case une fois le domaine et "
+            "le webroot verifies. Le message d'erreur affiche est directement celui renvoye par "
+            "Certbot - il precise generalement laquelle de ces causes s'applique."
         ),
     ),
 )

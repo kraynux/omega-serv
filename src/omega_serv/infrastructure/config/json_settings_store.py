@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implementation JSON du port SettingsStore (omega_lib.ports.settings_store,
 plan interface §3.2) - meme convention que json_config_repository.py,
 mais un fichier separe (var/settings.json, jamais melange a

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implemente ports.threat_state_repository_port.ThreatStateRepositoryPort.
 Recoit une connexion DEJA ouverte (sqlite_active_defense_connection.py,
 seul module autorise a importer `sqlite3` reellement) - n'a besoin de

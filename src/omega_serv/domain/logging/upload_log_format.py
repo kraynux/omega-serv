@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Formatage pur des lignes de journalisation d'upload (plan corrige,
 voir OMEGA-SERV_PLAN-DETAILLE_SOUS_SYSTEME_UPLOAD.md §10) - JSON Lines,
 un enregistrement par tentative d'upload (acceptee ou refusee). Aucune

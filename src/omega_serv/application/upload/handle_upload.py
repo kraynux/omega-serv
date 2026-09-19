@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : traiter une requete d'upload vers une zone deja
 resolue (spec §27, plan corrige - voir
 OMEGA-SERV_PLAN-DETAILLE_SOUS_SYSTEME_UPLOAD.md).

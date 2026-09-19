@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modale de confirmation generique (actions destructives : purge,
 revocation, service install/uninstall...). Porte verbatim depuis
 omega-check (plan interface §0/§3.1)."""

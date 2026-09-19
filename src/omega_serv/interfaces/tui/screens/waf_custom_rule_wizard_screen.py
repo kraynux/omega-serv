@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Assistant de creation de regle WAF Custom (retour utilisateur
 2026-09-14 : "il faut rajouter une indication pour l'utilisateur car
 c'est flou... le but c'est qu'un utilisateur qui ne sait pas coder

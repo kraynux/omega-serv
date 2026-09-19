@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Construction des variables d'environnement CGI/1.1 (spec §21) pour
 une requete FastCGI. Fonction pure : ne sait rien du transport
 (socket Unix) ni de la resolution de chemin - recoit deja les chemins
@@ -32,9 +31,6 @@ def build_cgi_env(
         "QUERY_STRING": request.query,
         "REMOTE_ADDR": request.remote_ip,
         "DOCUMENT_ROOT": document_root,
-        # Exige par la plupart des configurations PHP-FPM durcies
-        # (verification anti path-info-exploit) - sans cette variable,
-        # certains pools refusent silencieusement d'executer le script.
         "REDIRECT_STATUS": "200",
     }
 

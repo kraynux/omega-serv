@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase III de l'interface (plan interface §12,
 menu 3, sous-ecran TLS §7.3) : statut, certificat auto-signe (6a),
 assistant CA locale (6b), revocation, activer/desactiver TLS. Vraie
@@ -74,9 +73,6 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, TlsMenuScreen)
 
     async def _wait_for_button_reenabled(self, pilot, button_id: str) -> None:
-        # Meme raison que _wait_for_generate_to_finish, generalisee aux
-        # boutons d'etape de l'assistant CA locale et de revocation
-        # (tous deportes dans un thread de travail desormais).
         for _ in range(40):
             await pilot.pause()
             if not pilot.app.screen.query_one(f"#{button_id}", Button).disabled:
@@ -85,11 +81,6 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
         self.fail(f"l'operation ({button_id}) ne s'est jamais terminee")
 
     async def _wait_for_generate_to_finish(self, pilot) -> None:
-        # Retour utilisateur (audit "gel d'ecran") : la generation tourne
-        # desormais dans un thread de travail (run_worker(thread=True))
-        # pour ne plus geler l'interface - ne se termine donc plus
-        # forcement au sein d'un seul pilot.pause(), meme patron de
-        # sondage que create_instance_progress_screen (test_tui_instances.py).
         for _ in range(40):
             await pilot.pause()
             if not pilot.app.screen.query_one("#generate", Button).disabled:
@@ -162,10 +153,6 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(pilot.app.screen, TlsMenuScreen)
 
     async def test_generate_self_signed_warns_restart_when_tls_already_enabled(self):
-        # Retour utilisateur 2026-09-13 : le contexte SSL est construit
-        # une seule fois au demarrage - regenerer le certificat ACTIF
-        # (TLS deja active) laisse le serveur deja lance servir l'ancien
-        # certificat jusqu'a un redemarrage complet.
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -329,9 +316,6 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             await self._start(pilot)
             await self._open_tls_menu(pilot)
 
-            # Certificat reellement signe par une CA locale (le seul
-            # chemin ou revoke_certificate() reussit vraiment) - meme
-            # sequence que test_ca_wizard_full_flow_and_revoke.
             pilot.app.screen.query_one("#ca-wizard", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#step-ca", Button).press()
@@ -390,8 +374,6 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
             self.assertIn("active", str(pilot.app.screen.query_one("#status-text").content))
-            # Retour utilisateur 2026-09-11 (audit reload/restart) : TLS
-            # n'est jamais recharge a chaud, toujours un avertissement.
             messages = [str(n.message) for n in pilot.app._notifications]
             self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
 

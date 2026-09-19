@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 9 : rechargement a chaud borne (angle mort
 §9.1) contre un serveur reel - verifie qu'un changement WAF est bien
 pris en compte apres reload_server(), sans redemarrer le socket
@@ -34,7 +33,6 @@ class TestReloadScoped(unittest.IsolatedAsyncioTestCase):
 
         self.filesystem = LocalFilesystem()
         self.logger = FileLineLogger()
-        # Demarre SANS waf actif.
         self.config = OmegaServConfig.from_dict({"server": {"bind": "127.0.0.1", "port": 0}})
         self.server = build_server(self.config, self.root, self.filesystem, self.logger)
         await self.server.start()
@@ -73,17 +71,9 @@ class TestReloadScoped(unittest.IsolatedAsyncioTestCase):
         status_after = await self._request("/index.html?q=union%20select%201")
         self.assertEqual(status_after, 403)
 
-        # Le socket d'ecoute n'a pas change (meme port toujours joignable).
         self.assertEqual(self.server.sockets[0].getsockname()[1], self.port)
 
     async def test_dirlisting_enabled_via_reload_takes_effect_without_restart(self):
-        # Retour utilisateur (guide d'aide, point 4) : "j'ai active le
-        # dir listing, ca marchait pas, j'ai redemarre et ca marche" -
-        # verifie ici qu'un simple reload_server() (SIGHUP) suffit deja
-        # (route_request lit `self._config` a chaque requete, remplace
-        # en bloc par reload_scoped) - un restart complet n'a jamais
-        # ete necessaire pour cette option, contrairement a ce que
-        # l'absence d'avertissement dans l'interface laissait croire.
         public_dir = self.root / "webroot" / "public"
         public_dir.mkdir()
         (public_dir / "report.txt").write_text("x")
@@ -102,12 +92,6 @@ class TestReloadScoped(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.server.sockets[0].getsockname()[1], self.port)
 
     async def test_access_control_deny_via_reload_takes_effect_without_restart(self):
-        # Retour utilisateur (audit performance) : les regles de
-        # controle d'acces sont desormais mises en cache a la
-        # construction (parsees une seule fois, plus a chaque requete) -
-        # verifie ici que reload_scoped() invalide bien ce cache, pour
-        # qu'un changement via SIGHUP reste effectif immediatement,
-        # jamais fige sur l'etat du premier demarrage.
         status_before = await self._request("/index.html")
         self.assertEqual(status_before, 200)
 

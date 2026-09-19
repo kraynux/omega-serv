@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : creer une sauvegarde de configuration (plan interface
 §3.5/§10). Rassemble les fichiers reels selon les flags de
 `BackupRequest`, les archive via `ArchiveStore` (deja porte en Phase VI)

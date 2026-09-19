@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Top IPs du log d'acces (plan interface §3.4/§8) - table complete
 de `LogStatsSummary.top_ips`, avec retrait d'une IP du log via
 `container.remove_ip_from_log` (action destructive donc confirmation

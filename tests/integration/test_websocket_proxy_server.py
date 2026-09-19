@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Test d'integration bout-en-bout du reverse proxy sortant WebSocket
 (OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md §4/§14) : serveur OMEGA-SERV
 reel, connexion TCP reelle depuis un "navigateur" simule (socket brut,
@@ -122,14 +121,6 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         echoed = await reader.readexactly(len(b"echo:hello-through-omega-serv"))
         self.assertEqual(echoed, b"echo:hello-through-omega-serv")
 
-        # Requete d'upgrade elle-meme bien recue par l'upstream, avec
-        # les en-tetes essentiels au handshake preserves (jamais
-        # retires comme des hop-by-hop ordinaires, §4/§5.1).
-        # Les en-tetes sources du client sortent avec leur nom
-        # normalise en minuscules (HttpHeaders, RFC 7230 - insensible a
-        # la casse, jamais re-capitalise) ; seuls les en-tetes AJOUTES
-        # explicitement (Host/X-Forwarded-For) gardent leur casse
-        # canonique.
         sent = received_upgrade_request["bytes"].decode("latin-1")
         self.assertIn("GET /ws/chat HTTP/1.1\r\n", sent)
         self.assertIn("connection: Upgrade\r\n", sent)
@@ -138,7 +129,6 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIn("X-Forwarded-For: 127.0.0.1\r\n", sent)
 
     async def test_upstream_unreachable_relayed_as_bad_gateway(self):
-        # Port jamais ouvert - upstream reellement indisponible.
         dead_server = await asyncio.start_server(lambda r, w: None, "127.0.0.1", 0)
         dead_port = dead_server.sockets[0].getsockname()[1]
         dead_server.close()
@@ -154,18 +144,6 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIn(b"502", status_line)
 
     async def test_non_websocket_zone_ignores_upgrade_header(self):
-        # websocket_enabled=False - le court-circuit ne doit JAMAIS se
-        # declencher, meme si le client envoie un Upgrade (§4 : chemin
-        # de code separe, jamais suppose par defaut). Consequence reelle
-        # et deliberement non defendue contre : le relai HTTP ordinaire
-        # (serve_proxy.py) ne sait pas qu'une reponse 101 n'a pas de
-        # corps - il attend un corps jusqu'a EOF ou expiration de
-        # read_timeout_seconds (ici raccourci pour un test rapide), et
-        # echoue en 502 puisque l'upstream ne ferme jamais la connexion
-        # de lui-meme. Configurer une zone websocket sans
-        # websocket_enabled=true est donc une erreur de configuration
-        # qui se manifeste par un 502, jamais par une reussite
-        # accidentelle.
         upstream_port, _received = await self._start_websocket_upstream()
         await self._start_omega_serv(upstream_port, websocket_enabled=False, read_timeout_seconds=0.3)
 

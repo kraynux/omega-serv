@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran de demarrage : composition ASCII, se ferme sur une touche ou un clic.
 Porte verbatim depuis omega-check (plan interface §0/§3.1)."""
 from __future__ import annotations

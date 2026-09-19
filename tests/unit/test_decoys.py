@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 3 - fixture `fake_admin`,
 registre et dispatcher Niveau 1 (in-process)."""
 import json
@@ -110,10 +109,6 @@ class TestFixtureRegistry(unittest.TestCase):
         self.assertIs(FIXTURE_HANDLERS["fake_secrets"], handle_fake_secrets)
 
     def test_stays_synchronized_with_the_domain_validation_constant(self):
-        # domain/security/active_defense/value_objects.py::KNOWN_FIXTURE_PROFILE_NAMES
-        # duplique volontairement ces cles (domain ne peut jamais
-        # importer infrastructure) - ce test est le seul garde-fou
-        # anti-derive entre les deux (guide d'aide, Active Defense - Reglages).
         self.assertEqual(set(FIXTURE_HANDLERS), KNOWN_FIXTURE_PROFILE_NAMES)
 
 

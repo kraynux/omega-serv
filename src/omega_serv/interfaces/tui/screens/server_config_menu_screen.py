@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Configuration detaillee du serveur (plan interface §7, menu 3) -
 sous-menu plat (meme convention que home.py) vers un sous-ecran par
 ligne du tableau §7, y compris TLS (§7.3, Phase III, ajoute le

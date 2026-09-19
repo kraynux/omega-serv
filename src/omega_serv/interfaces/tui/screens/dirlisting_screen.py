@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Directory listing (plan interface §7, `option enable
 dirlisting`) - deux sections sur le meme ecran (CRUD sur `zone_prefixes`
 deja existant + reglages d'affichage, retour utilisateur guide d'aide
@@ -220,9 +219,4 @@ class DirlistingScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
-        # Retour utilisateur (guide d'aide, point 4) : un changement de
-        # zone/reglage ecrit sur disque reste sans effet tant que le
-        # processus deja lance n'a pas rechu la config (reload SIGHUP
-        # suffit deja, verifie reellement - jamais besoin d'un restart
-        # complet pour cette option).
         notify_reload_required(self, self._container, success_message)

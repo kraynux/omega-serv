@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Queries en lecture seule Active Defense (plan_active_defense_omega_
 serv.md, Phase 1/2) - meme regroupement qu'application/security/ (peu de
 fichiers, pas un fichier par query)."""

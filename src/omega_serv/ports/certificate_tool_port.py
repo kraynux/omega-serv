@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Contrat d'outillage certificat (doc TLS §2 : "ports/ :
 CertificateToolPort"). Perimetre 6a+6b : generation auto-signee,
 inspection, et CA locale (creation de CA, CSR, signature, revocation) -

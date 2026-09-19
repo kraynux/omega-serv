@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Racine du projet et chemins internes fixes.
 
 Deduite de l'emplacement reel de ce fichier source, jamais du
@@ -14,8 +13,6 @@ from pathlib import Path
 
 
 def _resolve_project_root() -> Path:
-    # Ce fichier vit sous src/omega_serv/bootstrap/paths.py : remonter
-    # 3 niveaux (bootstrap -> omega_serv -> src) atteint la racine.
     return Path(__file__).resolve().parents[3]
 
 
@@ -29,10 +26,4 @@ RUN_DIR: Path = VAR_DIR / "run"
 WEBROOT_DIR: Path = PROJECT_ROOT / "webroot"
 SECURE_DIR: Path = PROJECT_ROOT / "secure"
 
-# Registre multi-instance (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §3) -
-# SEUL chemin de tout le projet qui vit deliberement HORS de
-# PROJECT_ROOT : c'est justement sa raison d'etre, connaitre TOUTES les
-# installations a la fois, jamais une seule. Convention XDG standard
-# (~/.config/), jamais derive de PROJECT_ROOT (le seul fichier qui ne
-# doit surtout pas etre par-instance).
 INSTANCE_REGISTRY_PATH: Path = Path.home() / ".config" / "omega-serv" / "instances.json"

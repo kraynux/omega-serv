@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Redirections HTTP (spec §17.2).
 
 Anti-open-redirect par construction : la destination vient toujours

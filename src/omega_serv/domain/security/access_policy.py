@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Regles d'acces generiques (spec §13.1) : dotfiles, extensions
 sensibles, motifs de fichiers refuses par defaut - independant de la
 resolution de chemin (path_policy.py, deja garante du confinement au

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : creer une nouvelle instance OMEGA-SERV secondaire
 depuis l'interface (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §5,
 Architecture A - repertoires separes complets, §2.1). Decoupe en 6
@@ -46,9 +45,6 @@ from omega_serv.ports.process_runner_port import ProcessRunnerPort
 
 TOTAL_STEPS = 6
 
-# Copie tel quel (jamais .venv/, jamais var/ ni secure/ - donnees/secrets
-# propres a CHAQUE instance, §5 etape 3 : "jamais copier la config
-# existante telle quelle").
 _FILES_TO_COPY = ("pyproject.toml", "omega-serv.sh", "install.sh", "LICENSE")
 _DIRECTORIES_TO_COPY = ("src", "config/profiles", "vendor")
 _EMPTY_DIRECTORIES = ("webroot", "secure", "var")

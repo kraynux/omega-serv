@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Politique de score -> decision (doc WAF §10, "WafDecision"). Fonction
 pure : ne connait ni le reseau ni les logs, prend une liste de findings
 deja calcules et une configuration de scoring, rend une decision.

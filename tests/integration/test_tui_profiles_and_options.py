@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase II de l'interface (plan interface §12,
 menu 2) : profils (liste, detail, application avec diff) et options
 (liste, bascule) - conteneur reel, aucun mock."""
@@ -95,9 +94,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"profile": "development"', data)
 
     async def _open_options(self, pilot) -> None:
-        # "Options" ne vit plus au menu principal (retour utilisateur
-        # 2026-09-09) - accessible uniquement via Configuration detaillee
-        # -> OPTIONS ET VERIFICATION, meme ecran reel qu'avant.
         pilot.app.screen.query_one("#server-config", Button).press()
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, ServerConfigMenuScreen)
@@ -111,8 +107,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             await self._reach_home(pilot)
             await self._open_options(pilot)
             table = pilot.app.screen.query_one("#options-table", DataTable)
-            # 14 depuis l'ajout de "active_defense" a KNOWN_OPTION_NAMES
-            # (plan_active_defense_omega_serv.md, Phase 0, 2026-09-12).
             self.assertEqual(table.row_count, 14)
 
     async def test_enabling_option_persists_and_refreshes_table(self):
@@ -132,10 +126,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"access_control"', data)
 
     async def test_enabling_fastcgi_first_time_warns_restart_required(self):
-        # Retour utilisateur 2026-09-11 (audit reload/restart) : activer
-        # FastCGI pour la PREMIERE FOIS n'a jamais d'effet via un simple
-        # rechargement - le client FastCGI n'est construit qu'au
-        # demarrage, jamais reconstruit par reload_scoped.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_home(pilot)
@@ -151,9 +141,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any("REDEMARRAGE COMPLET" in m and "PREMIERE activation" in m for m in messages))
 
     async def test_enabling_reverse_proxy_first_time_warns_restart_required(self):
-        # Meme caracteristique que FastCGI (OMEGA-SERV_PLAN-DETAILLE_
-        # REVERSE_PROXY.md) : le client proxy n'est construit qu'au
-        # demarrage, jamais reconstruit par reload_scoped.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_home(pilot)
@@ -181,9 +168,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
             self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
-            # Retour utilisateur (guide d'aide, point 4) : meme sans
-            # restart complet, rien ne s'applique tant que le processus
-            # deja lance n'a pas rechu la config - doit etre dit.
             self.assertTrue(any("Rechargez" in m for m in messages))
 
     async def test_disabling_fastcgi_never_triggers_first_enable_warning(self):
@@ -208,11 +192,6 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
 
     async def test_enabling_active_defense_warns_restart_required(self):
-        # Retour utilisateur 2026-09-12 : Active Defense n'est JAMAIS
-        # recharge a chaud (reload_scoped() ne touche jamais ses
-        # collaborateurs) - contrairement a fastcgi/reverse_proxy,
-        # l'avertissement doit apparaitre a CHAQUE bascule, pas
-        # seulement a la premiere activation.
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_home(pilot)

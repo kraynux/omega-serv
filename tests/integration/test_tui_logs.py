@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase V/VI de l'interface (plan interface §12,
 menu 4) : voir/suivre un fichier log, ecran lnav (double simple pour
 container.lnav_runner - jamais le vrai rendu PTY+pyte, qui exige un
@@ -148,7 +147,6 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
                 await pilot.pause()
                 pilot.app.screen.query_one("#open-access", Button).press()
                 await pilot.pause()
-                # L'application n'a pas plante : l'ecran repond toujours.
                 self.assertIsInstance(pilot.app.screen, LogViewerScreen)
                 log_widget = pilot.app.screen.query_one("#log-content", RichLog)
                 content = "\n".join(str(line) for line in log_widget.lines)
@@ -174,16 +172,11 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
                 await pilot.pause()
                 self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Arreter le suivi")
 
-                # De nouvelles donnees doivent exister au-dela de
-                # l'offset deja lu, sinon read_new_lines() retourne tot
-                # sans jamais rouvrir le fichier (le chmod suivant ne
-                # serait alors jamais exerce).
                 with self.access_log.open("a", encoding="utf-8") as f:
                     f.write("line2\n")
                 self.access_log.chmod(0o000)
                 await asyncio.sleep(1.3)
                 await pilot.pause()
-                # L'application n'a pas plante et a arrete le suivi proprement.
                 self.assertIsInstance(pilot.app.screen, LogViewerScreen)
                 self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Suivre en direct")
                 log_widget = pilot.app.screen.query_one("#log-content", RichLog)
@@ -226,13 +219,6 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(str(pilot.app.screen.query_one("#lnav-error").content), "")
 
     async def test_lnav_refuses_when_all_selected_files_are_missing(self):
-        # error.log n'existe pas dans ce projet temporaire (seul
-        # access.log est cree dans setUp) : la selection est donc
-        # entierement invalide, message final "aucun fichier valide"
-        # (le message intermediaire "introuvable" est bien affiche
-        # d'abord mais volontairement remplace par ce message final,
-        # voir LnavScreen._launch - le dernier etat visible doit rester
-        # actionnable, pas un avertissement partiel perime).
         container = self._container(lnav_runner=self._fake_lnav_runner)
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -306,15 +292,8 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, HomeScreen)
 
-    # --- Phase VI : rotation/archivage, restaurer/purger, export, stats,
-    # top IPs (plan interface §12, menu 4, "moitie 2") ---
 
     def _archive_line(self, ip: str, hours_ago: int, status: int) -> str:
-        # Horodatage relatif a "maintenant" (pas une date codee en dur)
-        # - corrige un vrai flake trouve en session (2026-09-09) : une
-        # date fixe "08/Sep/2026" tombait hors de la fenetre "24
-        # dernieres heures" par defaut de TopIpsScreen des que la date
-        # reelle avancait, sans aucun lien avec le code teste lui-meme.
         timestamp = datetime.now(timezone.utc) - timedelta(hours=hours_ago)
         return f'{ip} - - [{timestamp.strftime("%d/%b/%Y:%H:%M:%S")} +0000] "GET / HTTP/1.1" {status} 10 "-" "curl"\n'
 

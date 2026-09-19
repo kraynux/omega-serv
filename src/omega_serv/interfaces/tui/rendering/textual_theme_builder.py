@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Construction des objets textual.theme.Theme a partir de
 omega_lib.theme.policies. Seul fichier, avec le reste de
 interfaces/tui/, autorise a combiner donnees de theme et API Textual.

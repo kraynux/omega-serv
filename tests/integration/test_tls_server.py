@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 6 (TLS direct minimal, 6a) : vrai handshake
 TLS contre un serveur reel, vrai certificat auto-signe genere via
 openssl reel - aucun mock, meme discipline que test_waf_server.py."""

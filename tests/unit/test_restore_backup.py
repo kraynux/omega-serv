@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste restore_backup (application/persistence/restore_backup.py)
 contre un vrai ArchiveStore/BackupMetadataStore."""
 from __future__ import annotations

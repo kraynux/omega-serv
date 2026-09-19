@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §8.5/§9 Phase E : double
 minimal de ServiceManagerPort (seuls `stop`/`disable`/`remove_system_user`
 sont reellement appeles par `uninstall_instance`, jamais un double

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Fiche guide : Accueil (plan guide d'aide, Phase 1)."""
 from __future__ import annotations
 

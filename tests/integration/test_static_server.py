@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration Phase 1 (spec §30.2) : serveur reel, connexions
 TCP reelles sur 127.0.0.1, aucun mock. http.client (bloquant) est
 execute via asyncio.to_thread pour ne jamais geler la boucle evenements
@@ -189,15 +188,6 @@ class TestStaticServerIntegration(unittest.IsolatedAsyncioTestCase):
         writer.close()
 
     async def test_slow_body_times_out(self):
-        # Retour utilisateur (audit securite) : variante "slow-POST" (type
-        # R-U-Dead-Yet) - en-tetes complets et valides envoyes tout de
-        # suite (Content-Length: 10), mais AUCUN octet de corps n'est
-        # jamais envoye. Avant correctif, la lecture du corps n'etait
-        # bornee par aucun timeout et la connexion restait ouverte
-        # indefiniment - doit desormais expirer comme la lecture des
-        # en-tetes, avec une reponse 408 explicite (le corps a ete promis
-        # via Content-Length, contrairement au cas ci-dessus ou meme la
-        # ligne de requete est incomplete).
         reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
         writer.write(b"POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 10\r\n\r\n")
         await writer.drain()

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Detection du gestionnaire de service disponible (spec §24.1). Portee
 depuis omega-fire (service_manager/detector.py, audite reutilisable) -
 3 strategies dans le meme ordre (proc/1/comm, binaires, repertoires).

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Decision d'authentification/autorisation (spec §15.7 : distinguer
 authentification - "qui est l'utilisateur ?" - et autorisation - "a-t-il
 le droit d'acceder a cette zone et cette methode ?"). Reutilise
@@ -21,9 +20,6 @@ from omega_serv.domain.security.auth.basic_auth import parse_basic_auth_header
 from omega_serv.domain.security.auth.entities import AuthDecision, AuthZone, UserAccount
 from omega_serv.domain.security.auth.password_hashing import hash_password, verify_password
 
-# Hash factice fixe (sel constant : uniquement utilise comme temoin de
-# temps de calcul, jamais compare a un vrai mot de passe utilisateur -
-# aucun risque a ce qu'il soit previsible).
 _DUMMY_HASH = hash_password("dummy-password-constant-time-witness", salt=b"\x00" * 16)
 
 

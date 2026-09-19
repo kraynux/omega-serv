@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Stockage d'archives tar.gz (plan interface §3.4/§3.5, port direct
 depuis omega-fire infrastructure/storage/files/archive_store.py) -
 creation/extraction generiques, utilisees pour la rotation des logs
@@ -58,11 +57,6 @@ class ArchiveStore:
         try:
             return str(source.relative_to(base_path))
         except ValueError:
-            # Source hors de base_path (ex. `--config` pointant vers un
-            # fichier externe au projet, voir application/persistence/
-            # create_backup.py) - repli sur le nom seul plutot qu'un
-            # crash, meme comportement que base_path=None pour cette
-            # source precise.
             return source.name
 
     def create_archive(self, archive_name: str, source_paths: list[Path], base_path: Path | None = None) -> Path:
@@ -83,23 +77,8 @@ class ArchiveStore:
             dest_dir.mkdir(parents=True, exist_ok=True)
             with tarfile.open(archive_path, "r:gz") as tar:
                 try:
-                    # filtre "data" (PEP 706) : refuse liens/chemins hors
-                    # de dest_dir - disponible seulement Python >= 3.12,
-                    # ce projet cible >= 3.10 (pyproject.toml).
                     tar.extractall(dest_dir, filter="data")
                 except TypeError:
-                    # Retour audit (bandit B202, tarfile_unsafe_members) :
-                    # sur Python < 3.12, `filter` n'existe pas du tout -
-                    # repli manuel qui reimplemente le coeur du filtre
-                    # "data" (chemins/liens ne pouvant jamais sortir de
-                    # dest_dir, aucun fichier special) plutot qu'un
-                    # `extractall()` totalement nu. Les archives viennent
-                    # normalement toujours de `create_archive()`
-                    # ci-dessus, jamais d'un tar externe non fiable, mais
-                    # une sauvegarde peut transiter par le disque
-                    # (copie, partage) avant d'etre restauree - le
-                    # risque residuel merite ce filtre, pas seulement un
-                    # commentaire.
                     tar.extractall(dest_dir, members=_safe_members(tar, dest_dir))
         except (OSError, tarfile.TarError) as exc:
             raise ArchiveStoreError(f"Echec d'extraction de l'archive {archive_path} : {exc}") from exc

@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Implemente ports.incident_repository_port.IncidentRepositoryPort.
 Meme convention que SqliteThreatStateRepository : recoit une connexion
 deja ouverte, n'importe `sqlite3` que sous TYPE_CHECKING. Historique

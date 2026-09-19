@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - [kraynux@proton.me](mailto:kraynux@proton.me) - Licence MIT (voir fichier LICENSE)
 """Ecran d'accueil : menu principal vers les autres ecrans. Adapte du
 patron screens/home.py d'omega-check (plan interface §0/3.1) - menu
 plat (un bouton par ecran reel), pas un menu numerote imbrique comme le
@@ -29,14 +28,30 @@ ecran (resource_status_screen.py::ResourceStatusScreen), qui offre un
 apercu complet en un coup d'oeil (etat serveur/service, flux du log
 d'acces, ressources systeme) - un point d'entree plus utile au
 quotidien que l'ancien raccourci direct vers un outil de diagnostic
-ponctuel."""
+ponctuel.
+
+**Menu scinde en 2 colonnes + Aide/Options/Quitter rajoutes (retour
+utilisateur)** : 11 boutons en une seule colonne devenaient trop long -
+`.omega-home-menu-2col` (deja eprouve pour Configuration detaillee,
+15 sous-ecrans) reutilise ici tel quel. Les 3 boutons ajoutes rendent
+VISIBLES trois actions deja globales (footer + palette de commandes,
+interfaces/tui/app.py), jamais de nouvel ecran : "Aide" (guide complet,
+touche "a", action_help), "Options" (theme/profil de rendu/chemins d'
+export-captures, touche "o", action_open_settings -> SettingsScreen -
+**PAS** `options_screen.py::OptionsScreen`, homonyme different - la liste
+des options superposables du serveur, elle, reste accessible uniquement
+via Configuration detaillee, inchangee) et "Quitter" (touche "q",
+action_quit). `settings_screen.py` documentait explicitement "raccourci
+clavier... plutot qu'un bouton au menu principal (deja charge)" - plus
+vrai depuis le passage a 2 colonnes, meme motif de decouvrabilite que
+omega-suite/omega-track."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingType
-from textual.containers import Center, Container, Vertical
+from textual.containers import Center, Container, Grid, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header
 
@@ -45,6 +60,7 @@ from omega_serv.interfaces.tui.screens.active_defense_menu_screen import ActiveD
 from omega_serv.interfaces.tui.screens.audit_screen import AuditScreen
 from omega_serv.interfaces.tui.screens.backup_screen import BackupScreen
 from omega_serv.interfaces.tui.screens.capabilities_screen import CapabilitiesScreen
+from omega_serv.interfaces.tui.screens.guide_menu_screen import GuideMenuScreen
 from omega_serv.interfaces.tui.screens.instances_screen import InstancesScreen
 from omega_serv.interfaces.tui.screens.logs_menu_screen import LogsMenuScreen
 from omega_serv.interfaces.tui.screens.profiles_screen import ProfilesScreen
@@ -52,6 +68,7 @@ from omega_serv.interfaces.tui.screens.quit_confirm import QuitConfirmScreen
 from omega_serv.interfaces.tui.screens.resource_status_screen import ResourceStatusScreen
 from omega_serv.interfaces.tui.screens.server_config_menu_screen import ServerConfigMenuScreen
 from omega_serv.interfaces.tui.screens.service_screen import ServiceScreen
+from omega_serv.interfaces.tui.screens.settings_screen import SettingsScreen
 from omega_serv.interfaces.tui.screens.wizard_welcome_screen import WizardWelcomeScreen
 from omega_serv.interfaces.tui.widgets.home_wordmark import HomeWordmark
 
@@ -59,17 +76,20 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("wizard", "Assistant premier lancement"),
     ("capabilities", "Registre des capacites"),
-    ("profiles", "Profils"),
-    ("server-config", "Configuration detaillee"),
-    ("logs", "Gestion des logs"),
     ("service", "Service"),
+    ("wizard", "Assistant premier lancement"),
     ("instances", "Multi-instance"),
-    ("resource-status", "Etat & Ressources"),
-    ("active-defense", "Active Securite"),
+    ("profiles", "Profils"),
     ("audit", "Audit de securite"),
+    ("server-config", "Configuration detaillee"),
     ("backup", "Sauvegarde de configuration"),
+    ("active-defense", "Active Securite"),
+    ("help", "Aide"),
+    ("resource-status", "Etat & Ressources"),
+    ("options", "Options"),
+    ("logs", "Gestion des logs"),
+    ("quit", "Quitter"),
 )
 
 
@@ -89,15 +109,11 @@ class HomeScreen(Screen[None]):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        # Le cadre "application" (bordure/fond) vient de
-        # styles/terminal_frame.tcss, applique directement a
-        # `.omega-home-root` - jamais un Container supplementaire ici
-        # (retour utilisateur 2026-09-13, voir ce fichier).
         with Vertical(classes="omega-home-root"):
             with Center():
                 yield HomeWordmark()
             with Center():
-                with Vertical(classes="omega-home-menu") as menu:
+                with Grid(classes="omega-home-menu omega-home-menu-2col") as menu:
                     for item_id, label in _MENU_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(self._label_for(item_id, label).upper(), id=item_id)
@@ -105,17 +121,15 @@ class HomeScreen(Screen[None]):
         yield Footer()
 
     def _label_for(self, item_id: str, default_label: str) -> str:
-        # Retour utilisateur (plan multi-instance §10) : le libelle
-        # reflete automatiquement le nombre d'instances connues, jamais
-        # un toggle explicite separe a retenir - "Multi-instance" reste
-        # invisible-en-substance (zero changement percu) pour le cas
-        # tres majoritaire (0/1 instance).
         if item_id != "instances":
             return default_label
         count = len(self._container.instance_registry.load())
         return f"Instances ({count})" if count >= 2 else default_label
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "quit":
+            self.action_back()
+            return
         screen = self._screen_for(event.button.id)
         if screen is not None:
             self.app.push_screen(screen)
@@ -153,4 +167,8 @@ class HomeScreen(Screen[None]):
             return AuditScreen(container=self._container)
         if item_id == "backup":
             return BackupScreen(container=self._container)
+        if item_id == "help":
+            return GuideMenuScreen(container=self._container)
+        if item_id == "options":
+            return SettingsScreen(container=self._container)
         return None

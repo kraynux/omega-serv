@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Tester une regle WAF - extrait de l'ancien WafMenuScreen
 unique (retour utilisateur 2026-09-13, restructuration Etat/Modules/
 Tester/Custom). `container.waf_test_runner` injecte depuis __main__.py

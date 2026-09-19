@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Persistance JSON des `SnapshotMetadata` (plan interface §3.5) - un
 fichier `<snapshot_id>.json` a cote de chaque `<snapshot_id>.tar.gz`
 ecrit par `ArchiveStore` dans le meme repertoire (les motifs de recherche

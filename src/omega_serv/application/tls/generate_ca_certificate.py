@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs generate-ca` (doc TLS §7.3 etapes 1-5).
 Meme squelette que generate_self_signed.py (valider -> sauvegarder
 l'existant -> appeler l'outil -> permissions), avec deux differences :

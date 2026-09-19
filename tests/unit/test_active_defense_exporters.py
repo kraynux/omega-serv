@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """plan_active_defense_omega_serv.md, Phase 2 - vraie I/O reelle
 (LocalFilesystem contre un repertoire temporaire), meme discipline que
 le reste du projet - jamais de FilesystemPort simule pour un test

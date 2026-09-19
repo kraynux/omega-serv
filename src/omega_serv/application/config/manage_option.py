@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage : `omega-serv option enable/disable` (spec §8.2)."""
 from __future__ import annotations
 

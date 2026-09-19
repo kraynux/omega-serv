@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -75,9 +74,6 @@ class TestCheckCertificateExpiry(unittest.TestCase):
         self.assertEqual(check_certificate_expiry(config, self.project_root, self.filesystem, tool, _FakeClock()), [])
 
     def test_already_expired_certificate_not_double_reported_here(self):
-        # Deja rapporte en CRITICAL par la porte bloquante reexecutee
-        # (CORE-ENV) - cette regle ne doit pas produire un second
-        # finding pour la meme situation.
         config = self._config()
         tool = _FakeCertificateTool(_cert(_NOW - timedelta(days=1)))
         self.assertEqual(check_certificate_expiry(config, self.project_root, self.filesystem, tool, _FakeClock()), [])

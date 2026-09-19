@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration de l'ecran Etat & Ressources (retour utilisateur
 2026-09-09, remplace "Simuler une requete" comme raccourci direct du
 menu principal - reintroduit ici en bouton). `ServiceManagerPort` double
@@ -106,13 +105,6 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
 
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
     async def test_unreadable_pid_file_shows_unknown_not_stopped(self):
-        # Retour utilisateur 2026-09-10, second retour immediat sur le
-        # meme bug (var/ partagee avec le compte de service dedie) :
-        # "Installer l'unite" puis "Demarrer" fonctionnaient reellement
-        # (connexion possible), mais cet ecran affichait quand meme
-        # "ARRETE" - trompeur pendant la fenetre exacte ou le fichier
-        # PID appartient au compte dedie et la session interactive n'a
-        # pas encore ete reconnectee pour beneficier du nouveau groupe.
         container = self._container()
         self._generate_config(container)
         pid_path = self.root / "var" / "run" / "omega-serv.pid"
@@ -123,9 +115,6 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             async with app.run_test(size=(160, 50)) as pilot:
                 await self._open_resource_status(pilot)
                 state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-                # Retour utilisateur 2026-09-10 (suite) : le libelle
-                # "INCONNU (fichier PID illisible)" inquietait a tort -
-                # reformule en ton rassurant, "rien d'alarmant"/"normal".
                 self.assertIn("a confirmer", state_text)
                 self.assertIn("rien d'alarmant", state_text)
                 self.assertNotIn("ARRETE", state_text)
@@ -144,9 +133,6 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Actif   : True", state_text)
 
     async def test_service_manager_status_reflects_renamed_service(self):
-        # Bug latent corrige : ce panneau interrogeait toujours
-        # "omega-serv" en dur, jamais le nom reellement configure dans
-        # l'ecran SERVICE (settings_store, var/settings.json).
         manager = FakeServiceManager(known_service="mon-service-renomme")
         manager.start("mon-service-renomme")
         container = self._container(service_manager_factory=lambda: manager)
@@ -159,10 +145,6 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Actif   : True", state_text)
 
     async def test_renaming_in_service_screen_is_reflected_here_end_to_end(self):
-        # Meme correction, verifiee cette fois de bout en bout a travers
-        # les DEUX ecrans reels dans la MEME session (jamais en ecrivant
-        # directement dans settings_store) - la preuve la plus honnete
-        # que la synchronisation fonctionne reellement via l'interface.
         manager = FakeServiceManager(known_service="mon-service-renomme")
         manager.start("mon-service-renomme")
         container = self._container(service_manager_factory=lambda: manager)

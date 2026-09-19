@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Construction du ssl.SSLContext reel (doc TLS §2 : "infrastructure/ :
 ... gestion contexte ssl.SSLContext Python", §12.1). La validation
 metier de coherence (fichiers presents, cle/certificat correspondants,
@@ -17,18 +16,6 @@ _VERSION_MAP: dict[str, ssl.TLSVersion] = {
     "TLS1.3": ssl.TLSVersion.TLSv1_3,
 }
 
-# Retour utilisateur (audit securite, 2026-09-14) : les bornes de
-# version TLS etaient deja correctement configurables (defaut TLS1.2-
-# TLS1.3), mais aucune suite de chiffrement n'etait fixee explicitement -
-# la selection retombait entierement sur les defauts d'OpenSSL du
-# systeme, qui peuvent encore autoriser des suites CBC/sans confidentialite
-# persistante (PFS) en TLS1.2 selon la version installee. Liste
-# "intermediate" Mozilla (2023) : uniquement ECDHE (PFS obligatoire) +
-# AEAD (GCM/ChaCha20-Poly1305), jamais CBC/RC4/3DES/echange de cle RSA
-# statique. Ne concerne QUE TLS 1.2 et en-dessous - TLS 1.3 n'expose
-# aucune suite non-AEAD par construction du protocole, `set_ciphers()`
-# n'a d'ailleurs aucun effet sur son choix de suite (limitation connue
-# de l'API OpenSSL/Python, pas un oubli ici).
 _MODERN_CIPHER_SUITES = (
     "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
     "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
@@ -44,9 +31,6 @@ def build_ssl_context(tls_config: TlsConfig, project_root: Path) -> ssl.SSLConte
 
     passphrase = None
     if tls_config.private_key_passphrase_env:
-        # Jamais la passphrase elle-meme dans la configuration (doc TLS
-        # §19/§22 decision 14) - seulement le NOM de la variable
-        # d'environnement qui la contient.
         passphrase = os.environ.get(tls_config.private_key_passphrase_env) or None
 
     cert_path = project_root / tls_config.certificate_path

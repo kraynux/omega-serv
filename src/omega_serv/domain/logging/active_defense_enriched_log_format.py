@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Formatage pur des lignes de journalisation enrichie Active Defense
 (plan_active_defense_omega_serv.md, Phase 4, action "enrich_log") -
 JSON Lines, un enregistrement par requete d'une source deja marquee

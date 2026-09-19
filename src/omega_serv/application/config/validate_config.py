@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Validations d'environnement (spec §25.1) qui exigent un acces
 filesystem reel - distinctes de domain/config/validation.py (purement
 structurel, sans I/O). Ces deux validateurs sont complementaires et

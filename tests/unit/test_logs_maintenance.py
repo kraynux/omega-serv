@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Teste LogsMaintenance.remove_ip contre un vrai fichier temporaire."""
 from __future__ import annotations
 

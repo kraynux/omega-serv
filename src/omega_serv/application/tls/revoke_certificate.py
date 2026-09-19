@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage `omega-serv certs revoke` (doc TLS §5, menu "Revoquer un
 certificat (CA locale)"). Bascule minimale : marque l'entree
 correspondante comme revoquee dans index.txt (infrastructure/tls/

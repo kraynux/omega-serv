@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """I/O reelle sur un dossier temporaire - jamais un double du
 filesystem (meme discipline que test_json_config_repository.py)."""
 import tempfile

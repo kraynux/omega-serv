@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Modele de contenu du guide d'aide (OMEGA-SERV_PLAN-DETAILLE_GUIDE_AIDE.md
 §3.2) - donnees pures, aucune dependance Textual ici (seul l'ecran de
 rendu, guide_detail_screen.py, en a besoin) : verifiable par mypy/tests

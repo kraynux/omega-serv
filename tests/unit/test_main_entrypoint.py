@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Couvre uniquement `_build_execv_invocation` (OMEGA-SERV_PLAN-
 DETAILLE_MULTI_INSTANCE.md §9 Phase D) - la fonction pure isolee pour
 rester testable. L'appel reel a `os.execv()` dans `main()` ne peut
@@ -20,8 +19,6 @@ class TestBuildExecvInvocation(unittest.TestCase):
         self.assertEqual(argv, [str(python_executable), "-m", "omega_serv"])
 
     def test_argv_first_element_matches_path(self):
-        # Convention POSIX execv : argv[0] doit correspondre au binaire
-        # execute (meme s'il n'est techniquement jamais que conventionnel).
         python_executable = Path("/tmp/instance/.venv/bin/python")
         path, argv = _build_execv_invocation(python_executable)
         self.assertEqual(argv[0], path)

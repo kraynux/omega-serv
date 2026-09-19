@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran WAF - Modules (retour utilisateur 2026-09-13,
 restructuration Etat/Modules/Tester/Custom - renomme depuis l'ancien
 WafMenuScreen unique, "Tester" et "Custom" en sont extraits en ecrans
@@ -194,10 +193,6 @@ class WafModulesScreen(OmegaScreen):
             )
 
     def _add_rule_path(self, path: str | None) -> None:
-        # Le chemin vient du selecteur (WafRulePackPickerScreen), qui ne
-        # propose jamais que des fichiers reellement presents sur disque
-        # et jamais deja references - existence et doublon deja garantis
-        # par construction, aucune revalidation necessaire ici.
         if path is None:
             return
         config = self._config()

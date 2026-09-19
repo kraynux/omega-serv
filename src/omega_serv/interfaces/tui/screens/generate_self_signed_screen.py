@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Sous-ecran Generer un certificat auto-signe (plan interface §7.3,
 `certs generate-self-signed`, TLS 6a). Le mot de passe de cle reste
 optionnel ici (SelfSignedCertParams.key_password, contrairement a la CA
@@ -115,13 +114,6 @@ class GenerateSelfSignedScreen(OmegaScreen):
         cert_path = self._container.project_root / load_result.config.tls.certificate_path
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
 
-        # Retour utilisateur (audit "gel d'ecran") : generer un certificat
-        # invoque openssl en sous-processus (jusqu'a 120s, cle RSA-4096) -
-        # execute directement sur la boucle asyncio, ca gelait TOUTE
-        # l'interface (pas seulement cet ecran), sans le moindre retour
-        # visuel. Meme patron que create_instance_progress_screen.py :
-        # deporte dans un thread de travail, la mise a jour de l'UI est
-        # relayee via App.call_from_thread.
         error_widget.update("Generation en cours...")
         self.query_one("#generate", Button).disabled = True
         self.run_worker(
@@ -159,12 +151,6 @@ class GenerateSelfSignedScreen(OmegaScreen):
             error_widget.update(f"Erreur : {result.message}")
             return
         error_widget.update("")
-        # Retour utilisateur 2026-09-13 : le contexte SSL est construit
-        # UNE FOIS dans build_server (jamais retouche par reload_scoped,
-        # meme regle que tls_toggle_screen.py) - regenerer le certificat
-        # ACTIF (TLS deja active) laisse le serveur en cours d'execution
-        # servir l'ancien certificat en memoire jusqu'a un redemarrage
-        # complet, meme si le fichier sur disque a bien change.
         if tls_enabled:
             notify_restart_required(
                 self, self._container,

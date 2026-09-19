@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Ecran Profils (plan interface §6, menu 2.1-2.3) : liste + detail +
 lancement de l'application (le diff/la confirmation eux-memes vivent
 dans apply_profile_screen.py, jamais melanges ici - meme separation que

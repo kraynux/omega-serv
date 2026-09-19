@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Tests d'integration multi-instance (OMEGA-SERV_PLAN-DETAILLE_
 MULTI_INSTANCE.md, Phases A/B/C) : bannière d'instance (`sub_title`),
 label conditionnel du menu principal, ecran Instances (liste + statut),
@@ -55,10 +54,6 @@ class _UninstallCapableServiceManager:
         return "systemd"
 
     def status(self, service_name: str) -> ServiceStatus:
-        # `_refresh_table()` interroge le statut de CHAQUE entree du
-        # registre inconditionnellement - meme un fake volontairement
-        # minimal doit repondre, sinon le simple affichage de l'ecran
-        # plante avant meme d'atteindre le flux de desinstallation.
         return ServiceStatus(service_name=service_name, active=False, enabled=False)
 
     def stop(self, service_name: str) -> bool:
@@ -92,8 +87,6 @@ class TestTuiInstances(unittest.IsolatedAsyncioTestCase):
             shutil.copy(profile_file, self.root / "config" / "profiles" / profile_file.name)
         self.registry_path = self.root.parent / f"{self.root.name}-instances.json"
         self.addCleanup(self.registry_path.unlink, missing_ok=True)
-        # Repertoire d'unites systemd FACTICE (Phase E) - meme discipline
-        # que test_tui_service.py, jamais le vrai /etc/systemd/system/.
         self.unit_dir = self.root.parent / f"{self.root.name}-etc-systemd-system"
         self.unit_dir.mkdir()
         self.addCleanup(shutil.rmtree, self.unit_dir, ignore_errors=True)

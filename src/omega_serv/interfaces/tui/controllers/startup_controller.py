@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Controller : resout theme et profil de rendu au demarrage du TUI.
 Porte verbatim depuis omega-check (plan interface §0/§3.1 : patron de
 coquille applicative de reference)."""

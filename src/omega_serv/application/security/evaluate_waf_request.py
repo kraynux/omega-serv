@@ -1,4 +1,3 @@
-# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
 """Cas d'usage EvaluateRequest (doc WAF, "Repartition Clean
 Architecture" : application/security/ orchestre inspection WAF,
 configuration, mode log-only/block et escalade).
