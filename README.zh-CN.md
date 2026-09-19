@@ -78,18 +78,20 @@ chmod +x install.sh
 
 如果缺少这些工具，界面会以降级模式运行：
 
+- `openssl` —— 处理 TLS 证书相关的一切操作（自签名、本地 CA、导入）所必需；缺少它时 `certs *` 命令会失败，但服务器其余部分仍正常工作（见 §9）。
+- `certbot` —— 仅 **Let's Encrypt** 向导及其自动续期（§9c/9d）需要它；自签名/本地 CA TLS 从不需要它。
 - `lnav` —— 融合在**日志管理**屏幕（§3）中的高级日志分析；如果找不到可执行文件，会显示清晰明确的错误信息，不会崩溃，屏幕的其余部分（查看/跟踪/轮转/统计）在没有它的情况下仍正常工作。
 - `python-psutil`（与 PyPI 上的 `psutil` 等价的系统软件包）—— 在所有情况下都会由 `pip install -e .` 自动安装（软件包的强制依赖，**状态与资源**屏幕始终需要它），但通过系统包管理器预先安装可以让 `pip` 免于在本地编译其 wheel。
 
 ```bash
 # Arch Linux 及其衍生版（Manjaro……）
-sudo pacman -S lnav python-psutil
+sudo pacman -S openssl certbot lnav python-psutil
 
 # Debian/Ubuntu 及其衍生版
-sudo apt install lnav python3-psutil
+sudo apt install openssl certbot lnav python3-psutil
 
 # Fedora
-sudo dnf install lnav python3-psutil
+sudo dnf install openssl certbot lnav python3-psutil
 ```
 
 ## 3. 使用方法

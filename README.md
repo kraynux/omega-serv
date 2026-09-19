@@ -77,18 +77,20 @@ Le cœur du serveur (parseur HTTP/1.1, client FastCGI, hachage de mot de passe v
 
 L'interface fonctionne en mode dégradé si ces outils sont absents :
 
+- `openssl` — nécessaire pour tout ce qui touche aux certificats TLS (auto-signé, CA locale, import) ; sans lui, les commandes `certs *` échouent mais le reste du serveur fonctionne normalement (voir §9).
+- `certbot` — nécessaire uniquement pour l'assistant **Let's Encrypt** et son renouvellement automatique (§9c/9d) ; TLS auto-signé/CA locale ne l'exigent pas.
 - `lnav` — analyse avancée des logs fusionnée dans l'écran **Gestion des logs** (§3) ; message d'erreur clair et explicite si l'exécutable est introuvable, aucun crash, le reste de l'écran (voir/suivre/rotation/statistiques) fonctionne normalement sans.
 - `python-psutil` (paquet système équivalent au `psutil` de PyPI) — installé automatiquement par `pip install -e .` dans tous les cas (dépendance obligatoire du paquet, l'écran **État & Ressources** en a toujours besoin), mais le préinstaller via le gestionnaire système évite à `pip` de devoir compiler son wheel localement.
 
 ```bash
 # Arch Linux et dérivés
-sudo pacman -S lnav python-psutil
+sudo pacman -S openssl certbot lnav python-psutil
 
 # Debian/Ubuntu et dérivées
-sudo apt install lnav python3-psutil
+sudo apt install openssl certbot lnav python3-psutil
 
 # Fedora
-sudo dnf install lnav python3-psutil
+sudo dnf install openssl certbot lnav python3-psutil
 ```
 
 ## 3. Utilisation

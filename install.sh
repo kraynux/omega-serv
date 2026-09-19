@@ -90,7 +90,21 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# 5. Alias (optionnel) — bash et zsh, quel que soit celui réellement utilisé.
+# 5. Verification de la presence de certbot (necessaire uniquement pour
+#    l'assistant Let's Encrypt/ACME et son renouvellement automatique -
+#    le reste du serveur, TLS auto-signe/CA locale inclus, fonctionne
+#    sans). Jamais installe ici : binaire systeme (paquet de la
+#    distribution ou pipx), pas une dependance Python du projet.
+# -------------------------------------------------------------------------
+if command -v certbot >/dev/null 2>&1; then
+    ok "certbot détecté ($(certbot --version 2>&1 | head -n1))."
+else
+    warn "certbot introuvable : l'assistant Let's Encrypt (TLS -> Assistant Let's Encrypt) ne fonctionnera pas."
+    tip "Installez-le via le gestionnaire de paquets de votre distribution (ex: pacman -S certbot, apt install certbot) si vous prevoyez un certificat public auto-hebergé."
+fi
+
+# -------------------------------------------------------------------------
+# 6. Alias (optionnel) — bash et zsh, quel que soit celui réellement utilisé.
 #    Pas de sudo ici : l'installation elle-meme ne requiert aucun privilege
 #    root (voir l'installation d'un service systeme, une etape separee).
 # -------------------------------------------------------------------------

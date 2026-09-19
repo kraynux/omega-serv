@@ -78,18 +78,20 @@ The server core (HTTP/1.1 parser, FastCGI client, password hashing via `hashlib.
 
 The interface runs in a degraded mode if these tools are missing:
 
+- `openssl` — required for anything touching TLS certificates (self-signed, local CA, import); without it `certs *` commands fail but the rest of the server works normally (see §9).
+- `certbot` — required only for the **Let's Encrypt** wizard and its automatic renewal (§9c/9d); self-signed/local-CA TLS never needs it.
 - `lnav` — advanced log analysis merged into the **Log management** screen (§3); a clear, explicit error message if the executable can't be found, no crash, the rest of the screen (view/tail/rotation/statistics) works normally without it.
 - `python-psutil` (system package equivalent to PyPI's `psutil`) — always installed automatically by `pip install -e .` (a mandatory package dependency, the **State & Resources** screen always needs it), but pre-installing it via the system package manager saves `pip` from having to compile its wheel locally.
 
 ```bash
 # Arch Linux and derivatives (Manjaro...)
-sudo pacman -S lnav python-psutil
+sudo pacman -S openssl certbot lnav python-psutil
 
 # Debian/Ubuntu and derivatives
-sudo apt install lnav python3-psutil
+sudo apt install openssl certbot lnav python3-psutil
 
 # Fedora
-sudo dnf install lnav python3-psutil
+sudo dnf install openssl certbot lnav python3-psutil
 ```
 
 ## 3. Usage
