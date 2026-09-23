@@ -162,7 +162,7 @@ class WafCustomRuleScreen(OmegaScreen):
         error_widget.update("")
         self._refresh()
         self.app.notify(f"Regle {rule['id']!r} ajoutee et pack custom reference dans rule_paths.")
-        reload_message = reload_service_after_waf_change(self._container)
+        reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
 
@@ -176,7 +176,7 @@ class WafCustomRuleScreen(OmegaScreen):
         self._container.filesystem.write_text(self._pack_path(), json.dumps(pack, indent=2, ensure_ascii=False))
         self._refresh()
         self.app.notify("Regle custom supprimee.")
-        reload_message = reload_service_after_waf_change(self._container)
+        reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
 

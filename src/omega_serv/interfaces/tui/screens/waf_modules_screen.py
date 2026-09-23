@@ -222,7 +222,7 @@ class WafModulesScreen(OmegaScreen):
         self.query_one("#form-error", Static).update("")
         self._refresh()
         self.app.notify("Packs de regles WAF mis a jour.")
-        reload_message = reload_service_after_waf_change(self._container)
+        reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
 
@@ -252,7 +252,7 @@ class WafModulesScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
         self.app.notify("Reglages WAF enregistres.")
-        reload_message = reload_service_after_waf_change(self._container)
+        reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
 

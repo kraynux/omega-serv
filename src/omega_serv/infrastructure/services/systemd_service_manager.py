@@ -26,9 +26,19 @@ from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.exceptions import (
     ServiceControlError,
     ServiceNotFoundError,
+    ServiceStatusError,
 )
 from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
+
+_TIMEOUT_SECONDS = 10.0
+"""`systemctl` interroge le bus systemd/D-Bus - s'il ne repond pas
+(bus indisponible, machine chargee), l'appel peut bloquer indefiniment.
+Retour utilisateur 2026-09-21 (Archcraft) : sans timeout, cet appel
+synchrone geait l'ecran Etat & Ressources (boucle asyncio Textual unique,
+aucun Ctrl+C possible - kill obligatoire)."""
+_TIMEOUT_RETURNCODE = 124
+_NOT_FOUND_RETURNCODE = 127
 
 
 class SystemdServiceManager:
@@ -41,12 +51,12 @@ class SystemdServiceManager:
 
     def _run_privileged(self, args: list[str], input_text: str | None = None) -> ProcessResult:
         if running_as_root():
-            return self._runner.run(args, input_text=input_text)
+            return self._runner.run(args, input_text=input_text, timeout=_TIMEOUT_SECONDS)
 
         auth_code = self._runner.run_interactive(["sudo", "-v"])
         if auth_code != 0:
             return ProcessResult(returncode=auth_code, stdout="", stderr="Authentification sudo echouee ou annulee.")
-        return self._runner.run(["sudo", *args], input_text=input_text)
+        return self._runner.run(["sudo", *args], input_text=input_text, timeout=_TIMEOUT_SECONDS)
 
     def _control(self, service_name: str, operation: str) -> bool:
         result = self._run_privileged([self._systemctl, operation, service_name])
@@ -75,7 +85,14 @@ class SystemdServiceManager:
         return self._control(service_name, "disable")
 
     def status(self, service_name: str) -> ServiceStatus:
-        result = self._runner.run([self._systemctl, "status", service_name])
+        result = self._runner.run([self._systemctl, "status", service_name], timeout=_TIMEOUT_SECONDS)
+        if result.returncode in (_TIMEOUT_RETURNCODE, _NOT_FOUND_RETURNCODE):
+            raise ServiceStatusError(
+                service_name,
+                f"{result.stderr.strip()} - verifiez `systemctl status {service_name}` manuellement, "
+                "ou (re)installez le service depuis l'ecran SERVICE",
+                "systemd",
+            )
         if result.returncode == 4:
             raise ServiceNotFoundError(service_name, "systemd")
         active = result.returncode in (0, 3)
@@ -89,15 +106,15 @@ class SystemdServiceManager:
         )
 
     def is_active(self, service_name: str) -> bool:
-        result = self._runner.run([self._systemctl, "is-active", service_name])
+        result = self._runner.run([self._systemctl, "is-active", service_name], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
 
     def is_enabled(self, service_name: str) -> bool:
-        result = self._runner.run([self._systemctl, "is-enabled", service_name])
+        result = self._runner.run([self._systemctl, "is-enabled", service_name], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
 
     def is_available(self) -> bool:
-        result = self._runner.run([self._systemctl, "--version"])
+        result = self._runner.run([self._systemctl, "--version"], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
 
     def reload_daemon(self) -> bool:

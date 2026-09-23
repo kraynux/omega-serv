@@ -8,9 +8,17 @@ from __future__ import annotations
 from pathlib import Path
 
 from omega_serv.domain.services.entities import ServiceStatus
-from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError
+from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError, ServiceStatusError
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
+
+_TIMEOUT_SECONDS = 10.0
+"""Meme garde-fou que systemd_service_manager.py::_TIMEOUT_SECONDS - `sv
+status` peut bloquer si le repertoire supervise existe mais que le
+processus supervise n'est plus la (installation runit cassee), gelant
+de la meme facon l'ecran Etat & Ressources."""
+_TIMEOUT_RETURNCODE = 124
+_NOT_FOUND_RETURNCODE = 127
 
 
 class RunitServiceManager:
@@ -27,7 +35,7 @@ class RunitServiceManager:
         return str(Path(self._service_dir) / service_name)
 
     def _control(self, service_name: str, operation: str) -> bool:
-        result = self._runner.run([self._sv, operation, self._service_path(service_name)])
+        result = self._runner.run([self._sv, operation, self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
         if result.returncode == 0:
             return True
         stderr_lower = result.stderr.lower()
@@ -69,7 +77,14 @@ class RunitServiceManager:
             raise ServiceControlError(service_name, "disable", str(e), "runit") from e
 
     def status(self, service_name: str) -> ServiceStatus:
-        result = self._runner.run([self._sv, "status", self._service_path(service_name)])
+        result = self._runner.run([self._sv, "status", self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
+        if result.returncode in (_TIMEOUT_RETURNCODE, _NOT_FOUND_RETURNCODE):
+            raise ServiceStatusError(
+                service_name,
+                f"{result.stderr.strip()} - verifiez `sv status {self._service_path(service_name)}` "
+                "manuellement, ou (re)installez le service depuis l'ecran SERVICE",
+                "runit",
+            )
         stderr_lower = result.stderr.lower()
         if "fail" in stderr_lower or "not found" in stderr_lower:
             raise ServiceNotFoundError(service_name, "runit")
@@ -80,7 +95,7 @@ class RunitServiceManager:
         )
 
     def is_active(self, service_name: str) -> bool:
-        result = self._runner.run([self._sv, "status", self._service_path(service_name)])
+        result = self._runner.run([self._sv, "status", self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0 and "run:" in result.stdout
 
     def is_enabled(self, service_name: str) -> bool:
@@ -88,7 +103,7 @@ class RunitServiceManager:
         return run_path.exists() or run_path.is_symlink()
 
     def is_available(self) -> bool:
-        result = self._runner.run([self._sv])
+        result = self._runner.run([self._sv], timeout=_TIMEOUT_SECONDS)
         return result.returncode in (0, 1)
 
     @staticmethod

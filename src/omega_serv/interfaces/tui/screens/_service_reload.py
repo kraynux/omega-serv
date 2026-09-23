@@ -20,7 +20,20 @@ d'aide, point 4) : le meme angle mort ("rien ne previent qu'un
 changement ecrit sur disque reste sans effet tant que le processus deja
 lance n'a pas rechu la config") touchait en realite TOUTE option
 hot-reloadable, pas seulement WAF - meme mecanisme reutilise maintenant
-par `restart_prompt.py::notify_reload_required`."""
+par `restart_prompt.py::notify_reload_required`.
+
+`screen` (retour utilisateur 2026-09-21, gel reproduit sur Ditana/Archcraft) :
+`reload_service()` peut demander une elevation sudo (`_run_privileged` ->
+`run_interactive(["sudo", "-v"])`, un VRAI prompt interactif sur le
+terminal reel) des que le cache sudo est froid - situation qui ne se
+produit quasiment jamais sur une machine de dev (cache deja chaud) mais
+systematique sur une premiere installation. Sans `screen._maybe_suspend()`
+autour de cet appel, ce prompt tente de lire le mot de passe sur un
+terminal toujours en mode application Textual : gel total, kill
+obligatoire (meme mecanisme documente dans `_base.py`,
+`_ensure_terminal_truly_released`). Meme patron que
+`restart_prompt.py::_restart_if_confirmed`/`service_screen.py::_run_control` -
+jamais une commande privilegiee lancee hors `_maybe_suspend`."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -31,9 +44,10 @@ from omega_serv.application.services.resolve_current_service_name import (
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 
-def reload_service_if_active(container: DependencyContainer) -> str | None:
+def reload_service_if_active(screen: OmegaScreen, container: DependencyContainer) -> str | None:
     """Retourne un message a notifier (succes ou echec du rechargement),
     ou None s'il n'y a rien a signaler (aucun gestionnaire de service
     disponible, ou aucun service actif sous ce nom pour ce repertoire) -
@@ -56,13 +70,14 @@ def reload_service_if_active(container: DependencyContainer) -> str | None:
 
         from omega_serv.application.services.manage_service import reload_service
 
-        return reload_service(manager, service_name).message
+        with screen._maybe_suspend():
+            return reload_service(manager, service_name).message
     except Exception:  # noqa: BLE001 - effet de bord auxiliaire, jamais une raison d'echouer la sauvegarde appelante
         return None
 
 
-def reload_service_after_waf_change(container: DependencyContainer) -> str | None:
+def reload_service_after_waf_change(screen: OmegaScreen, container: DependencyContainer) -> str | None:
     """Alias historique (retour utilisateur 2026-09-14, WAF) - voir
     `reload_service_if_active`, strictement la meme fonction, conserve
     pour ne pas renommer un nom deja repris par tests/imports existants."""
-    return reload_service_if_active(container)
+    return reload_service_if_active(screen, container)

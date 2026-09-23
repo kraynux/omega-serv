@@ -27,6 +27,15 @@ class SubprocessRunner:
             )
         except FileNotFoundError:
             return ProcessResult(returncode=127, stdout="", stderr=f"{args[0]} : commande introuvable")
+        except subprocess.TimeoutExpired:
+            # 124 : convention deja utilisee par la commande coreutils `timeout(1)`
+            # (jamais une exception qui remonterait brute jusqu'a l'appelant - le
+            # contrat du port est "retourne toujours un ProcessResult, ne leve jamais").
+            return ProcessResult(
+                returncode=124,
+                stdout="",
+                stderr=f"{args[0]} : delai depasse ({timeout:.0f}s) - processus bloque, interrompu",
+            )
         return ProcessResult(returncode=result.returncode, stdout=result.stdout, stderr=result.stderr)
 
     def run_interactive(self, args: list[str]) -> int:

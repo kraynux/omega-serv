@@ -31,6 +31,14 @@ if TYPE_CHECKING:
     from omega_serv.ports.service_manager_port import ServiceManagerPort
 
 _CRONTAB_MISSING_RETURNCODE = 127
+_CRONTAB_TIMEOUT_RETURNCODE = 124
+_TIMEOUT_SECONDS = 10.0
+"""Retour utilisateur 2026-09-21 : meme classe de bug que
+infrastructure/services/*_service_manager.py - c'etaient les seuls
+appels `process_runner.run()` restants du projet sans timeout (spool/
+verrou cron bloque = appel synchrone indefiniment bloque sur le thread
+UI, meme si `crontab` ne demande normalement pas de terminal
+interactif, donc pas de `_maybe_suspend` necessaire ici)."""
 
 
 @dataclass(frozen=True)
@@ -69,9 +77,11 @@ def check_renewal_schedule_status(
             )
         return RenewalScheduleStatus("systemd", False, f"Timer systemd {timer_name} non installe (ou inactif).")
 
-    result = process_runner.run(["crontab", "-l"])
+    result = process_runner.run(["crontab", "-l"], timeout=_TIMEOUT_SECONDS)
     if result.returncode == _CRONTAB_MISSING_RETURNCODE:
         return RenewalScheduleStatus("none", False, "Aucun mecanisme detecte (ni systemd, ni crontab disponible).")
+    if result.returncode == _CRONTAB_TIMEOUT_RETURNCODE:
+        return RenewalScheduleStatus("none", False, f"Impossible de verifier crontab : {result.stderr.strip()}")
     marker = renewal_cron_marker(service_name)
     if any(line.rstrip().endswith(marker) for line in result.stdout.splitlines()):
         return RenewalScheduleStatus("cron", True, "Ligne crontab deja installee pour cette instance.")
@@ -136,13 +146,15 @@ def _schedule_via_cron_or_manual(
     new_line = build_renewal_cron_line(
         service_name=service_name, certbot_config_dir=config_dir, certbot_work_dir=work_dir, certbot_logs_dir=logs_dir,
     )
-    list_result = process_runner.run(["crontab", "-l"])
+    list_result = process_runner.run(["crontab", "-l"], timeout=_TIMEOUT_SECONDS)
     if list_result.returncode == _CRONTAB_MISSING_RETURNCODE:
         return ScheduleRenewalResult("manual", False, render_manual_renewal_instructions(cron_line=new_line))
+    if list_result.returncode == _CRONTAB_TIMEOUT_RETURNCODE:
+        return ScheduleRenewalResult("error", False, f"Impossible de lire la crontab : {list_result.stderr.strip()}")
 
     existing = list_result.stdout if list_result.returncode == 0 else ""
     updated_crontab = replace_marked_cron_line(existing, service_name, new_line)
-    write_result = process_runner.run(["crontab", "-"], input_text=updated_crontab)
+    write_result = process_runner.run(["crontab", "-"], input_text=updated_crontab, timeout=_TIMEOUT_SECONDS)
     if write_result.returncode != 0:
         return ScheduleRenewalResult(
             "error", False, f"Echec de l'ecriture de la crontab : {(write_result.stderr or write_result.stdout).strip()}",

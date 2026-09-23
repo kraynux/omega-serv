@@ -9,7 +9,14 @@ la main) :
    + `core/platform_info.py::is_process_running`) + statut du
    gestionnaire de service (systemd/OpenRC/runit, meme cas d'usage que
    service_screen.py) + configuration active (profil, options activees,
-   TLS, bind:port).
+   TLS, bind:port). Seule cette partie appelle un subprocess
+   (`get_service_status`, jusqu'a 10s si le gestionnaire de service est
+   degrade, retour utilisateur 2026-09-21) - calculee dans un thread de
+   travail (`run_worker(thread=True)`, PAS le "thread+Live bricole" que
+   la phrase precedente ecarte : ici le rafraichissement periodique
+   reste `set_interval`, seule la RECUPERATION d'UNE donnee lente en
+   sort) pour ne jamais bloquer les deux autres cadres ni la saisie
+   clavier pendant l'attente.
 2. FLUX (LOG D'ACCES) : transpose depuis omega-fire (interfaces/cli/
    renderers/logs_live.py::LogBuffer/`_render_stats_panel` - meme
    metriques, meme calcul de debit cumule depuis le debut du suivi)
@@ -87,6 +94,17 @@ class ResourceStatusScreen(OmegaScreen):
         self._manager: ServiceManagerPort | None = None
         self._tail_reader: LiveTailPort | None = None
         self._traffic_buffer: LiveTrafficBuffer | None = None
+        self._server_state_worker_running = False
+        """Retour utilisateur 2026-09-21 : meme apres l'ajout d'un timeout
+        cote systemd/openrc/runit (10s), ce panneau interroge le
+        gestionnaire de service (subprocess) toutes les 2s - laisser cet
+        appel synchrone sur le thread UI bloquerait Textual jusqu'a 10s a
+        CHAQUE tick des que la machine est degradee (gel percu par
+        intermittence, meme sans gel definitif). Calcule desormais dans
+        un thread de travail (`run_worker(thread=True)`, meme patron que
+        capabilities_screen.py::_scan_in_thread) - ce booleen evite
+        d'empiler un nouveau thread bloquant par-dessus un precedent
+        encore en cours."""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -111,6 +129,7 @@ class ResourceStatusScreen(OmegaScreen):
 
     def on_mount(self) -> None:
         self.query_one("#box-server-state", Static).border_title = "ETAT DU SERVEUR"
+        self.query_one("#box-server-state", Static).update("  Chargement...")
         self.query_one("#box-traffic", Static).border_title = "FLUX (LOG D'ACCES)"
         self.query_one("#box-system", Static).border_title = "RESSOURCES SYSTEME"
 
@@ -148,11 +167,27 @@ class ResourceStatusScreen(OmegaScreen):
                 if entry is not None:
                     self._traffic_buffer.add(entry)
 
-        self.query_one("#box-server-state", Static).update(self._panel_server_state())
         self.query_one("#box-traffic", Static).update(
             self._panel_traffic(self._traffic_buffer.get_stats(self._container.clock.now()))
         )
         self.query_one("#box-system", Static).update(self._panel_system(self._container.collect_system_stats()))
+
+        if not self._server_state_worker_running:
+            self._server_state_worker_running = True
+            self.run_worker(self._compute_server_state, thread=True, exclusive=True, group="resource-server-state")
+
+    def _compute_server_state(self) -> None:
+        """Tourne dans un thread reel (`run_worker(thread=True)`) - `_panel_server_state()`
+        peut invoquer un subprocess (`get_service_status`) qui bloque jusqu'a
+        10s si le gestionnaire de service est degrade ; ne JAMAIS appeler
+        depuis ici de widget Textual directement (pas thread-safe), seul
+        `call_from_thread` peut repasser la main au thread UI."""
+        content = self._panel_server_state()
+        self.app.call_from_thread(self._apply_server_state, content)
+
+    def _apply_server_state(self, content: Text) -> None:
+        self._server_state_worker_running = False
+        self.query_one("#box-server-state", Static).update(content)
 
     def _panel_server_state(self) -> Text:
         content = Text()
@@ -186,7 +221,11 @@ class ResourceStatusScreen(OmegaScreen):
                 content.append(f"  Demarrage auto : {result.enabled}\n")
                 content.append(f"  Etat    : {result.state} ({result.sub_state})\n")
             else:
-                content.append(f"  {result.message}\n", style="dim")
+                # Erreur remontee par status() (ex. timeout systemctl/rc-service/sv -
+                # retour utilisateur 2026-09-21 : jamais laisser cet ecran se figer en
+                # silence, afficher clairement de quoi corriger a la place) - visible,
+                # jamais "dim" comme le message informatif "aucun gestionnaire reconnu".
+                content.append(f"  ERREUR STATUT : {result.message}\n", style="bold red")
 
         content.append("\n── CONFIGURATION ACTIVE ─────\n", style="bold")
         load_result = load_config(self._container.configuration, self._container.config_file)

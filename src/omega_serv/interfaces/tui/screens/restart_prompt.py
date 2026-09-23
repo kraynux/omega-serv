@@ -95,7 +95,7 @@ def notify_reload_required(screen: OmegaScreen, container: DependencyContainer, 
     voir docstring de module) - `reason` est toujours notifie, le
     resultat du reload s'y ajoute s'il a reellement eu lieu."""
     screen.app.notify(reason)
-    reload_message = reload_service_if_active(container)
+    reload_message = reload_service_if_active(screen, container)
     if reload_message is not None:
         screen.app.notify(reload_message)
         return
