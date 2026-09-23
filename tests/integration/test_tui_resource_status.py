@@ -57,6 +57,13 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
         pilot.app.screen.query_one("#resource-status", Button).press()
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, ResourceStatusScreen)
+        # ETAT DU SERVEUR et RESSOURCES SYSTEME sont calcules dans des
+        # threads de travail (retour utilisateur 2026-09-21/26, gel total
+        # reproduit sinon) - attendre explicitement leur fin plutot que de
+        # compter sur la vitesse d'un seul pilot.pause(), sinon flaky des
+        # que l'un des deux threads met plus de quelques microsecondes.
+        await pilot.app.workers.wait_for_complete()
+        await pilot.pause()
 
     async def test_all_three_boxes_are_populated_on_mount(self):
         container = self._container()

@@ -32,7 +32,14 @@ la main) :
 3. RESSOURCES SYSTEME : transpose depuis omega-fire (interfaces/cli/
    renderers/dashboard.py::collect_os_stats(), integralement generique -
    CPU/RAM/disque/reseau/temperatures/uptime, aucune partie specifique
-   au pare-feu) via `container.collect_system_stats()` (psutil).
+   au pare-feu) via `container.collect_system_stats()` (psutil). Gel
+   TOTAL reproduit sur Archcraft (retour utilisateur 2026-09-26) MALGRE
+   le worker deja en place pour le point 1 - preuve que `collect_system_stats()`
+   (une dizaine d'appels psutil lisant /proc et /sys - temperatures,
+   ventilateurs, connexions TCP...) restait le seul appel bloquant
+   synchrone du thread UI. Meme traitement desormais : deporte dans son
+   propre thread de travail (`_compute_system_stats`), aucun des deux
+   n'attend l'autre.
 
 Le tampon de flux et le lecteur de tail sont crees UNE SEULE FOIS a
 `on_mount` (jamais recrees a chaque tick) - le calcul de debit cumule
@@ -105,6 +112,10 @@ class ResourceStatusScreen(OmegaScreen):
         capabilities_screen.py::_scan_in_thread) - ce booleen evite
         d'empiler un nouveau thread bloquant par-dessus un precedent
         encore en cours."""
+        self._system_stats_worker_running = False
+        """Meme garde-fou que `_server_state_worker_running` (retour
+        utilisateur 2026-09-26) - `collect_system_stats()` egalement
+        deporte dans un thread, voir `_compute_system_stats`."""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -132,6 +143,7 @@ class ResourceStatusScreen(OmegaScreen):
         self.query_one("#box-server-state", Static).update("  Chargement...")
         self.query_one("#box-traffic", Static).border_title = "FLUX (LOG D'ACCES)"
         self.query_one("#box-system", Static).border_title = "RESSOURCES SYSTEME"
+        self.query_one("#box-system", Static).update("  Chargement...")
 
         factory = self._container.service_manager_factory
         self._manager = factory() if factory is not None else None
@@ -170,11 +182,14 @@ class ResourceStatusScreen(OmegaScreen):
         self.query_one("#box-traffic", Static).update(
             self._panel_traffic(self._traffic_buffer.get_stats(self._container.clock.now()))
         )
-        self.query_one("#box-system", Static).update(self._panel_system(self._container.collect_system_stats()))
 
         if not self._server_state_worker_running:
             self._server_state_worker_running = True
             self.run_worker(self._compute_server_state, thread=True, exclusive=True, group="resource-server-state")
+
+        if not self._system_stats_worker_running:
+            self._system_stats_worker_running = True
+            self.run_worker(self._compute_system_stats, thread=True, exclusive=True, group="resource-system-stats")
 
     def _compute_server_state(self) -> None:
         """Tourne dans un thread reel (`run_worker(thread=True)`) - `_panel_server_state()`
@@ -188,6 +203,25 @@ class ResourceStatusScreen(OmegaScreen):
     def _apply_server_state(self, content: Text) -> None:
         self._server_state_worker_running = False
         self.query_one("#box-server-state", Static).update(content)
+
+    def _compute_system_stats(self) -> None:
+        """Tourne dans un thread reel (retour utilisateur 2026-09-26, gel
+        total reproduit sur Archcraft MALGRE le passage en worker de
+        `_panel_server_state()` - preuve que ce n'etait pas systemctl le
+        seul appel bloquant synchrone restant sur le thread UI).
+        `collect_system_stats()` (infrastructure/probe/system_stats.py)
+        enchaine une dizaine d'appels psutil (temperatures/fans/
+        connexions TCP/utilisateurs...) qui lisent /proc et /sys - aucun
+        timeout Python ne protege un read() bloque sur un pilote/sysfs
+        degrade (un try/except ne peut rien contre un appel qui ne revient
+        jamais). Meme patron que _compute_server_state : jamais de widget
+        touche ici directement, seul `call_from_thread` repasse la main."""
+        stats = self._container.collect_system_stats()
+        self.app.call_from_thread(self._apply_system_stats, stats)
+
+    def _apply_system_stats(self, stats: dict[str, Any]) -> None:
+        self._system_stats_worker_running = False
+        self.query_one("#box-system", Static).update(self._panel_system(stats))
 
     def _panel_server_state(self) -> Text:
         content = Text()

@@ -70,6 +70,19 @@ chmod +x install.sh
 3. 使 `omega-serv.sh` 和 `install.sh` 可执行。
 4. 将 `serv` 别名添加到 `~/.bashrc` 和 `~/.zshrc`（如已存在则不重复添加）。
 
+### 更新
+
+如果 `omega-serv/` 已经存在（之前安装过），**切勿在该文件夹内部运行 `tar`**：这会尝试创建嵌套的 `omega-serv/omega-serv/` 并导致失败。与 omega-fire 不同，这里的 `install.sh` 从不修改文件夹权限（没有任何步骤使用 `sudo`）——因此不存在文件夹被 `root` 占有的风险，直接在现有安装上解压是安全的。
+
+```bash
+# 在 omega-serv/ 的上级目录中执行（切勿在其内部执行）
+tar -xzf omega-serv.tar.gz
+cd omega-serv/
+./install.sh
+```
+
+归档文件有意排除了所有运行时数据（`var/db/`、`var/log/`、`var/backups/`、`secure/secrets/`、`secure/certificates/*.key`、`config/omega-serve.json`、**`webroot/`（实际提供服务的站点内容）**等）——在现有安装上解压绝不会影响你的数据、证书、配置或已发布的站点内容，只会替换应用代码。`install.sh` 会复用已有的 `.venv` 并在其中重新安装依赖。
+
 ### 依赖
 
 服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行的密码哈希）保持纯 Python/标准库实现，而一切涉及 TLS 证书的操作都通过子进程调用 `openssl` 二进制程序，而非使用 Python 加密库——**这方面没有外部依赖**。只有交互式界面（§3）引入了一些依赖：`omega-lib`（主题、终端检测——套件共享库，未发布到 PyPI，随发行档案一并打包）、`textual` 以及 `pyte`（用于界面内嵌合并 `lnav` 渲染的终端模拟）、`jinja2`（主题化 HTML 导出）以及 `psutil`（状态与资源屏幕——CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（针对 HTTP 解析器和路径解析器的基于属性的测试，从不在生产环境中使用）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。

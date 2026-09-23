@@ -70,6 +70,19 @@ chmod +x install.sh
 3. Makes `omega-serv.sh` and `install.sh` executable.
 4. Adds the `serv` alias to `~/.bashrc` and `~/.zshrc` (no duplicate if already present).
 
+### Upgrading
+
+If `omega-serv/` already exists (previous install), **never run `tar` from inside that folder**: it would try to create a nested `omega-serv/omega-serv/` and fail. Unlike omega-fire, `install.sh` never touches folder permissions here (no step ever calls `sudo`) — so there's no risk of a `root`-owned folder, extracting directly over the existing install is safe.
+
+```bash
+# From the PARENT folder of omega-serv/ (never from inside it)
+tar -xzf omega-serv.tar.gz
+cd omega-serv/
+./install.sh
+```
+
+The archive deliberately excludes all live state (`var/db/`, `var/log/`, `var/backups/`, `secure/secrets/`, `secure/certificates/*.key`, `config/omega-serve.json`, **`webroot/` — the actually served site**...) — extracting over an existing install never touches your data, certificates, settings, or served content, only the application code is replaced. `install.sh` reuses the existing `.venv` and simply reinstalls dependencies into it.
+
 ### Dependencies
 
 The server core (HTTP/1.1 parser, FastCGI client, password hashing via `hashlib.scrypt`) stays in pure Python/stdlib, and anything touching TLS certificates goes through the `openssl` binary as a subprocess rather than a Python crypto library — **no external dependency for that**. Only the interactive interface (§3) introduces some: `omega-lib` (themes, terminal detection — shared suite library, not published on PyPI, vendored in the distributable archive), `textual` and `pyte` (terminal emulation for the merged `lnav` rendering inside the interface), `jinja2` (themed HTML exports) and `psutil` (State & Resources screen — CPU/RAM/disk/network). Optional dev/test dependency (`pip install -e ".[test]"`): `hypothesis` (property-based tests for the HTTP parser and the path resolver, never in production). Quality tooling (`pip install -e ".[dev]"`): `pytest`, `ruff`, `mypy`, `import-linter`.

@@ -37,6 +37,15 @@ DEST="$STAGING_DIR/omega-serv"
 mkdir -p "$DEST"
 
 info "Copie du projet omega-serv..."
+# webroot/* exclu ci-dessous : racine servie par defaut
+# (domain/config/entities.py::webroot="webroot", aucun profil ne la
+# surcharge) - contenu reel d'un deploiement en place (retour
+# utilisateur 2026-09-27), jamais du contenu du depot a expedier. Absent
+# des excludes jusqu'ici par oubli (aucun risque constate jusqu'a present
+# car ce webroot/ de dev est reste vide) - meme principe que var/*,
+# secure/* et config/omega-serve.json ci-dessous : une mise a jour par
+# extraction par-dessus une installation existante ne doit JAMAIS ecraser
+# le site reellement servi.
 rsync -a \
     --exclude='.venv/' --exclude='venv/' \
     --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' \
@@ -46,6 +55,7 @@ rsync -a \
     --exclude='docs/assets/' \
     --exclude='var/log/*' --exclude='var/cache/*' --exclude='var/run/*' \
     --exclude='var/uploads/*' --exclude='var/backups/*' \
+    --exclude='webroot/*' \
     --exclude='secure/auth/users.json' --exclude='secure/auth/zones.json' \
     --exclude='secure/certificates/**/*.key' --exclude='secure/certificates/**/*.pem' \
     --exclude='secure/certificates/**/*.crt' --exclude='secure/certificates/**/*.csr' \

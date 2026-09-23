@@ -69,6 +69,19 @@ chmod +x install.sh
 3. Rend `omega-serv.sh` et `install.sh` exécutables.
 4. Ajoute l'alias `serv` à `~/.bashrc` et `~/.zshrc` (sans doublon si déjà présent).
 
+### Mise à jour
+
+Si `omega-serv/` existe déjà (installation précédente), **ne lancez jamais `tar` depuis l'intérieur de ce dossier** : il tenterait de créer un `omega-serv/omega-serv/` imbriqué et échouerait. Contrairement à omega-fire, `install.sh` ne touche jamais aux permissions du dossier (aucune étape n'y demande `sudo`) — donc pas de risque de dossier appartenant à `root` ici, une extraction directement par-dessus l'installation existante est sûre.
+
+```bash
+# Depuis le dossier PARENT de omega-serv/ (jamais depuis l'intérieur)
+tar -xzf omega-serv.tar.gz
+cd omega-serv/
+./install.sh
+```
+
+L'archive exclut délibérément tout l'état vivant (`var/db/`, `var/log/`, `var/backups/`, `secure/secrets/`, `secure/certificates/*.key`, `config/omega-serve.json`, **`webroot/` — le site réellement servi**...) — une extraction par-dessus ne touche jamais à tes données, certificats, réglages ou contenu servi en place, seul le code applicatif est remplacé. `install.sh` réutilise le `.venv` existant et réinstalle simplement les dépendances par-dessus.
+
 ### Dépendances
 
 Le cœur du serveur (parseur HTTP/1.1, client FastCGI, hachage de mot de passe via `hashlib.scrypt`) reste en Python pur/stdlib, et tout ce qui touche aux certificats TLS passe par le binaire `openssl` en sous-processus plutôt que par une bibliothèque crypto Python — **aucune dépendance externe pour ça**. Seule l'interface interactive (§3) en introduit : `omega-lib` (thèmes, détection de terminal — bibliothèque partagée de la suite, non publiée sur PyPI, vendorée dans l'archive distribuable), `textual` et `pyte` (émulation de terminal pour le rendu `lnav` fusionné dans l'interface), `jinja2` (exports HTML thématisés) et `psutil` (écran État & Ressources — CPU/RAM/disque/réseau). Dépendance de développement/test optionnelle (`pip install -e ".[test]"`) : `hypothesis` (tests de propriétés du parseur HTTP et du résolveur de chemin, jamais en production). Outillage qualité (`pip install -e ".[dev]"`) : `pytest`, `ruff`, `mypy`, `import-linter`.

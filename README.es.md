@@ -70,6 +70,19 @@ chmod +x install.sh
 3. Hace ejecutables `omega-serv.sh` e `install.sh`.
 4. Añade el alias `serv` a `~/.bashrc` y `~/.zshrc` (sin duplicado si ya esta presente).
 
+### Actualización
+
+Si `omega-serv/` ya existe (instalación anterior), **nunca ejecutes `tar` desde el interior de esa carpeta**: intentaría crear un `omega-serv/omega-serv/` anidado y fallaría. A diferencia de omega-fire, `install.sh` nunca toca los permisos de la carpeta aquí (ningún paso usa `sudo`) — así que no hay riesgo de una carpeta propiedad de `root`, extraer directamente sobre la instalación existente es seguro.
+
+```bash
+# Desde la carpeta PADRE de omega-serv/ (nunca desde su interior)
+tar -xzf omega-serv.tar.gz
+cd omega-serv/
+./install.sh
+```
+
+El archivo excluye deliberadamente todo el estado vivo (`var/db/`, `var/log/`, `var/backups/`, `secure/secrets/`, `secure/certificates/*.key`, `config/omega-serve.json`, **`webroot/` — el sitio realmente servido**...) — extraer sobre una instalación existente nunca toca tus datos, certificados, ajustes o contenido servido, solo se reemplaza el código de la aplicación. `install.sh` reutiliza el `.venv` existente y simplemente reinstala las dependencias en él.
+
 ### Dependencias
 
 El nucleo del servidor (parser HTTP/1.1, cliente FastCGI, hash de contraseñas via `hashlib.scrypt`) permanece en Python puro/stdlib, y todo lo que toca certificados TLS pasa por el binario `openssl` como subproceso en lugar de una biblioteca criptografica de Python — **ninguna dependencia externa para eso**. Solo la interfaz interactiva (§3) introduce alguna: `omega-lib` (temas, deteccion de terminal — biblioteca compartida de la suite, no publicada en PyPI, empaquetada en el archivo distribuible), `textual` y `pyte` (emulacion de terminal para el renderizado de `lnav` fusionado en la interfaz), `jinja2` (exportaciones HTML tematizadas) y `psutil` (pantalla Estado y Recursos — CPU/RAM/disco/red). Dependencia opcional de desarrollo/pruebas (`pip install -e ".[test]"`): `hypothesis` (pruebas basadas en propiedades del parser HTTP y del resolvedor de rutas, nunca en produccion). Herramientas de calidad (`pip install -e ".[dev]"`): `pytest`, `ruff`, `mypy`, `import-linter`.
