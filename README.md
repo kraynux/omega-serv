@@ -10,7 +10,8 @@
 > Élaboré par **kraynux** pour **Omega-server** 
 [kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
 
-Page officielle : [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Référence, utilisation, Aide & FAQ : [Guide complet](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html) 
+Page officielle : [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Référence, utilisation, Aide & FAQ : [Guide complet](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html)
+
 Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Démonstration [Serveur Demo ](https://craftdark.snake-mackarel.ts.net)  
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
