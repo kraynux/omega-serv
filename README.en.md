@@ -7,10 +7,11 @@
 
 **Self-contained, portable HTTP server, hardened by default**
 
-> Developed by **kraynux** for **Omega-server**
-[https://kraynux.snake-mackarel.ts.net](https://kraynux.snake-mackarel.ts.net)
+> Developed by **kraynux** for **Omega-server** 
+[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
 
-Official page: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Wiki & FAQ: [User guide](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html) &nbsp; Preview : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/)  
+Official page: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Wiki & FAQ: [User guide](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html)  
+Preview: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demo [Live server](https://craftdark.snake-mackarel.ts.net)  
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)

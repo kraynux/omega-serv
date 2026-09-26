@@ -7,10 +7,11 @@
 
 **独立、可移植、默认加固的 Python HTTP 服务器**
 
-> 由 **kraynux** 为 **Omega-server** 开发
-[https://kraynux.snake-mackarel.ts.net](https://kraynux.snake-mackarel.ts.net)
+> 由 **kraynux** 为 **Omega-server** 开发 
+[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
 
-官方页面：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Wiki 和常见问题：[使用指南](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html) &nbsp; 预览：[Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/)  
+官方页面：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Wiki 和常见问题：[使用指南](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html)  
+预览：[Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; 演示 [演示服务器](https://craftdark.snake-mackarel.ts.net)  
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
