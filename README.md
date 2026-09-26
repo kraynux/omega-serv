@@ -55,6 +55,8 @@ Omega-serv **refuse de démarrer en tant que root**. Aucun module de sécurité 
 
 ### Installation
 
+> ⚠️ **Vous mettez à jour une installation existante ?** La commande ci-dessous **saute silencieusement l'extraction** si `omega-serv/` existe déjà (elle suppose que c'est une première installation interrompue, pas une mise à jour) — vous réinstalleriez alors les dépendances sur l'**ancien code inchangé**, sans le moindre message d'erreur. Utilisez la section [Mise à jour](#mise-à-jour) ci-dessous à la place.
+
 ```bash
 [ -d omega-serv ] && echo "ℹ️ Déjà extrait ici, étape ignorée." || tar -xzf omega-serv.tar.gz
 cd omega-serv/

@@ -273,6 +273,25 @@ def main(argv: list[str] | None = None) -> int:
 
         os.environ.setdefault("TEXTUAL_DISABLE_KITTY_KEY", "1")
 
+        # Diagnostic de gel (retour utilisateur 2026-09-27, gel reproduit a
+        # 3 reprises sur Archcraft malgre plusieurs correctifs deja
+        # appliques, py-spy indisponible sur cette machine) : faulthandler
+        # est stdlib, ne demande rien a installer. `kill -USR1 <pid>`
+        # ecrit la pile d'appels de TOUS les threads dans
+        # /tmp/omega-serv-freeze-<pid>.txt, y compris pendant un vrai gel
+        # (le handler de signal s'execute meme si la boucle asyncio est
+        # bloquee dans un appel synchrone - c'est exactement le scenario a
+        # diagnostiquer). Fichier ouvert ici et jamais ferme explicitement
+        # (garde une reference via _freeze_dump_file pour eviter le GC) -
+        # nettoye par l'OS a la fin du processus, cout negligeable.
+        import faulthandler
+        import signal
+        from pathlib import Path
+
+        _freeze_dump_path = Path(f"/tmp/omega-serv-freeze-{os.getpid()}.txt")
+        _freeze_dump_file = _freeze_dump_path.open("w", encoding="utf-8")
+        faulthandler.register(signal.SIGUSR1, file=_freeze_dump_file, all_threads=True)
+
         from omega_serv.application.services.build_service_manager import build_service_manager
         from omega_serv.bootstrap.container import DependencyContainer
         from omega_serv.interfaces.tui.app import OmegaServApp

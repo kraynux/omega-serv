@@ -56,6 +56,8 @@ Omega-serv **se niega a arrancar como root**. Ningun modulo de seguridad (WAF, T
 
 ### Instalacion
 
+> ⚠️ **¿Actualizando una instalación existente?** El comando de abajo **omite silenciosamente la extracción** si `omega-serv/` ya existe (asume una primera instalación interrumpida, no una actualización) — reinstalarías entonces las dependencias sobre el **código antiguo sin cambios**, sin ningún mensaje de error. Usa la sección [Actualización](#actualización) más abajo en su lugar.
+
 ```bash
 [ -d omega-serv ] && echo "ℹ️ Ya extraido aqui, paso omitido." || tar -xzf omega-serv.tar.gz
 cd omega-serv/

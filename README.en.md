@@ -56,6 +56,8 @@ Omega-serv **refuses to start as root**. No security module (WAF, TLS, authentic
 
 ### Install
 
+> ⚠️ **Updating an existing install?** The command below **silently skips extraction** if `omega-serv/` already exists (it assumes an interrupted first install, not an update) — you'd then reinstall dependencies over the **old, unchanged code**, with no error message at all. Use the [Upgrading](#upgrading) section below instead.
+
 ```bash
 [ -d omega-serv ] && echo "ℹ️ Already extracted here, skipping." || tar -xzf omega-serv.tar.gz
 cd omega-serv/

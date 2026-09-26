@@ -112,7 +112,16 @@ def collect_system_stats() -> dict[str, Any]:
         with _RESOLV_CONF.open(encoding="utf-8") as f:
             for line in f:
                 if line.startswith("nameserver"):
-                    dns.append(line.split()[1])
+                    # Retour utilisateur 2026-09-26 : IndexError reel en
+                    # usage (Archcraft) - une ligne "nameserver" sans
+                    # adresse a la suite (resolv.conf malforme/genere
+                    # partiellement par systemd-resolved ou NetworkManager)
+                    # faisait planter l'indexation, remontant jusqu'au
+                    # worker Textual (gel avant le passage en worker,
+                    # toast d'erreur generique depuis).
+                    parts = line.split()
+                    if len(parts) > 1:
+                        dns.append(parts[1])
     except OSError:
         pass
 

@@ -235,11 +235,20 @@ class SystemdServiceManager:
 
     @staticmethod
     def _parse_state(output: str) -> str:
+        # Retour utilisateur 2026-09-26 : IndexError reel en usage
+        # (Archcraft) - `parts[1].strip().split()` peut etre une liste
+        # VIDE (ligne "Active:" presente mais rien d'exploitable apres,
+        # ex. sortie tronquee/formatee differemment selon la version de
+        # systemd) - `[0]` sur une liste vide levait alors une exception
+        # brute jusqu'au worker Textual (gel autrement, desormais un
+        # simple toast d'erreur generique - corrige ici a la source).
         for line in output.split("\n"):
             if "Active:" in line:
                 parts = line.split(":")
                 if len(parts) > 1:
-                    return parts[1].strip().split()[0]
+                    words = parts[1].strip().split()
+                    if words:
+                        return words[0]
         return "unknown"
 
     @staticmethod

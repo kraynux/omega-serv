@@ -196,8 +196,20 @@ class ResourceStatusScreen(OmegaScreen):
         peut invoquer un subprocess (`get_service_status`) qui bloque jusqu'a
         10s si le gestionnaire de service est degrade ; ne JAMAIS appeler
         depuis ici de widget Textual directement (pas thread-safe), seul
-        `call_from_thread` peut repasser la main au thread UI."""
-        content = self._panel_server_state()
+        `call_from_thread` peut repasser la main au thread UI.
+
+        Retour utilisateur 2026-09-26 (Archcraft, IndexError reel dans
+        _parse_state - corrige a la source) : try/except large ici en
+        complement, jamais a sa place - un widget Textual peut recevoir
+        n'importe quelle donnee systeme imprevue (format de sortie
+        systemctl/OpenRC/runit different selon la machine) ; sans ce
+        filet, une exception non prevue remonte comme un toast Textual
+        generique ("Worker raised exception") plutot que le message clair
+        et localise habituel de ce panneau."""
+        try:
+            content = self._panel_server_state()
+        except Exception as e:  # noqa: BLE001 - filet de secours large, volontaire
+            content = Text(f"  ERREUR INATTENDUE : {e}\n", style="bold red")
         self.app.call_from_thread(self._apply_server_state, content)
 
     def _apply_server_state(self, content: Text) -> None:
@@ -215,13 +227,24 @@ class ResourceStatusScreen(OmegaScreen):
         timeout Python ne protege un read() bloque sur un pilote/sysfs
         degrade (un try/except ne peut rien contre un appel qui ne revient
         jamais). Meme patron que _compute_server_state : jamais de widget
-        touche ici directement, seul `call_from_thread` repasse la main."""
-        stats = self._container.collect_system_stats()
-        self.app.call_from_thread(self._apply_system_stats, stats)
+        touche ici directement, seul `call_from_thread` repasse la main.
 
-    def _apply_system_stats(self, stats: dict[str, Any]) -> None:
+        Try/except large egalement ici (meme raison que
+        _compute_server_state - retour utilisateur 2026-09-26) : psutil
+        peut renvoyer des structures partielles/inattendues selon le
+        systeme (capteurs, interfaces reseau...) - jamais un toast
+        generique a la place, toujours un message localise dans CE
+        panneau precis."""
+        try:
+            stats = self._container.collect_system_stats()
+            content = self._panel_system(stats)
+        except Exception as e:  # noqa: BLE001 - filet de secours large, volontaire
+            content = Text(f"  ERREUR INATTENDUE : {e}\n", style="bold red")
+        self.app.call_from_thread(self._apply_system_stats, content)
+
+    def _apply_system_stats(self, content: Text) -> None:
         self._system_stats_worker_running = False
-        self.query_one("#box-system", Static).update(self._panel_system(stats))
+        self.query_one("#box-system", Static).update(content)
 
     def _panel_server_state(self) -> Text:
         content = Text()
