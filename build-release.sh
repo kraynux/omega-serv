@@ -46,6 +46,25 @@ info "Copie du projet omega-serv..."
 # secure/* et config/omega-serve.json ci-dessous : une mise a jour par
 # extraction par-dessus une installation existante ne doit JAMAIS ecraser
 # le site reellement servi.
+# var/lib/*, var/exports/*, var/screenshots/*, var/settings.json exclus
+# (2026-09-28, retour utilisateur : "verifie que la configuration totale
+# reste... service, sauvegarde, regles, options activees... seul le code
+# doit etre modifie") : meme oubli, meme risque que webroot/* ci-dessus,
+# et plus grave pour var/lib/active-defense.sqlite3 - base Active Defense
+# (incidents/menaces/deception) - qui aurait ete EXPEDIEE DANS L'ARCHIVE
+# (jamais exclue jusqu'ici) : une reinstallation par extraction par-dessus
+# une instance existante aurait alors ECRASE l'historique Active Defense
+# reel par un instantane fige au moment du build. var/settings.json
+# (theme/repertoires d'export-capture/nom de service) aurait eu le meme
+# sort, avec un degat supplementaire : les chemins qu'il contient
+# (exports_dir_override/screenshots_dir_override) sont des chemins
+# ABSOLUS propres a LA MACHINE OU build-release.sh a ete execute -
+# livrer ce fichier tel quel a une autre installation y aurait pointe
+# vers un repertoire inexistant chez elle. Sans risque de perte au
+# demarrage suivant : chaque emplacement se recree lui-meme au besoin
+# (infrastructure/config/json_settings_store.py, infrastructure/
+# persistence/sqlite_active_defense_connection.py) - jamais suppose deja
+# present par le reste du code.
 rsync -a \
     --exclude='.venv/' --exclude='venv/' \
     --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' \
@@ -55,6 +74,8 @@ rsync -a \
     --exclude='docs/assets/' \
     --exclude='var/log/*' --exclude='var/cache/*' --exclude='var/run/*' \
     --exclude='var/uploads/*' --exclude='var/backups/*' \
+    --exclude='var/lib/*' --exclude='var/exports/*' --exclude='var/screenshots/*' \
+    --exclude='var/settings.json' \
     --exclude='webroot/*' \
     --exclude='secure/auth/users.json' --exclude='secure/auth/zones.json' \
     --exclude='secure/certificates/**/*.key' --exclude='secure/certificates/**/*.pem' \
@@ -63,6 +84,7 @@ rsync -a \
     --exclude='secure/certificates/**/*.der' --exclude='secure/certificates/**/serial.txt' \
     --exclude='secure/certificates/**/index.txt' --exclude='secure/certificates/letsencrypt/**' \
     --exclude='secure/secrets/*' --exclude='secure/waf/blocklist.json' --exclude='secure/waf/allowlist.json' \
+    --exclude='secure/waf/rules/custom.json' \
     --exclude='config/omega-serve.json' \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \
     --exclude='.coverage' --exclude='htmlcov/' \

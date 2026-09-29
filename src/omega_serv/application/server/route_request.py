@@ -42,7 +42,7 @@ from omega_serv.domain.routing.proxy_zone import (
 from omega_serv.domain.routing.redirect import parse_redirect_rules
 from omega_serv.domain.routing.rewrite import apply_rewrites, parse_rewrite_rules
 from omega_serv.domain.routing.upload_zone import UploadZoneRule, parse_upload_zone_rules
-from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
+from omega_serv.domain.routing.zone_resolver import Zone, path_matches_prefix, resolve_zone
 from omega_serv.infrastructure.clock.system_clock import SystemClock
 from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
 from omega_serv.infrastructure.upload.filesystem_upload_storage import FilesystemUploadStorage
@@ -153,6 +153,7 @@ async def route_request(
                 dirlisting_zones=dirlisting_zones, dirlisting_settings=dirlisting_settings,
                 cache_policy=cache_policy,
                 access_control_override=_access_control_override(config, effective_path),
+                display_path=effective_path,
             )
 
     if request.method == "POST":
@@ -168,7 +169,7 @@ async def route_request(
     fastcgi_settings = _option_settings(config, "fastcgi")
     if fastcgi_settings is not None and fastcgi_client is not None:
         fastcgi_config = parse_fastcgi_config(fastcgi_settings)
-        if effective_path.startswith(fastcgi_config.url_prefix):
+        if path_matches_prefix(effective_path, fastcgi_config.url_prefix):
             fastcgi_resolver = SafePathResolver(filesystem, project_root / fastcgi_config.script_root)
             return await serve_fastcgi(
                 effective_request, fastcgi_config, fastcgi_resolver, filesystem, fastcgi_client, project_root,

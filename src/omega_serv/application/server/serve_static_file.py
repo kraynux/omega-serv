@@ -35,11 +35,14 @@ def serve_static_file(
     dirlisting_settings: DirlistingSettings | None = None,
     cache_policy: CachePolicy | None = None,
     access_control_override: bool = False,
+    display_path: str | None = None,
 ) -> HttpResponse:
     if request.method not in _STATIC_ALLOWED_METHODS:
         response = HttpResponse.empty(HttpStatus.METHOD_NOT_ALLOWED)
         response.set_header("Allow", ", ".join(_STATIC_ALLOWED_METHODS))
         return response
+
+    effective_display_path = display_path if display_path is not None else request.path
 
     resolved = path_resolver.resolve(request.path)
     if not resolved.ok:
@@ -58,8 +61,10 @@ def serve_static_file(
                 target_path = candidate
                 break
         else:
-            if resolve_zone(request.path, list(dirlisting_zones)) is not None:
-                return _render_listing(request, target_path, filesystem, security, dirlisting_settings)
+            if resolve_zone(effective_display_path, list(dirlisting_zones)) is not None:
+                return _render_listing(
+                    request, target_path, filesystem, security, dirlisting_settings, effective_display_path
+                )
             return HttpResponse.empty(HttpStatus.NOT_FOUND)
 
     if not filesystem.is_file(target_path):
@@ -68,7 +73,9 @@ def serve_static_file(
     response = HttpResponse.empty(HttpStatus.OK)
     response.set_header("Content-Type", guess_mime_type(target_path.name))
     if cache_policy is not None:
-        response.set_header("Cache-Control", resolve_cache_control(request.path, target_path.name, cache_policy))
+        response.set_header(
+            "Cache-Control", resolve_cache_control(effective_display_path, target_path.name, cache_policy)
+        )
 
     if request.method == "HEAD":
         response.set_header("Content-Length", str(filesystem.file_size(target_path)))
@@ -86,6 +93,7 @@ def _render_listing(
     filesystem: FilesystemPort,
     security: SecurityConfig,
     dirlisting_settings: DirlistingSettings | None,
+    display_path: str,
 ) -> HttpResponse:
     settings = dirlisting_settings or DirlistingSettings()
     entries = filesystem.list_directory_entries(directory_path)
@@ -104,7 +112,7 @@ def _render_listing(
         _read_side_file(filesystem, directory_path, settings.readme_file) if settings.show_readme else None
     )
     body = render_directory_listing_html(
-        request.path, entries, security, settings, header_content, readme_content, entry_info, request.query,
+        display_path, entries, security, settings, header_content, readme_content, entry_info, request.query,
     ).encode("utf-8")
 
     response = HttpResponse.empty(HttpStatus.OK)

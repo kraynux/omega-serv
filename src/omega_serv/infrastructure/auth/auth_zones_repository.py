@@ -1,9 +1,15 @@
 """Implementation reelle de AuthZonesRepositoryPort - fichier JSON
-(paths.auth_zones), ecriture atomique. Permissions forcees a 0600 comme
-users.json : `allowed_users` y liste des noms d'utilisateurs valides en
-clair - un fichier lisible par tous saperait la protection anti-
-enumeration de domain/security/auth/authorize.py (temps de calcul
-constant) en revelant les usernames valides directement sur disque."""
+(paths.auth_zones), ecriture atomique. Permissions forcees a 0640 comme
+users.json (2026-09-29, ex-0600 - voir son propre docstring pour
+l'incident et le raisonnement complet) : `allowed_users` y liste des
+noms d'utilisateurs valides en clair - un fichier lisible par TOUS
+saperait la protection anti-enumeration de domain/security/auth/
+authorize.py (temps de calcul constant) en revelant les usernames
+valides directement sur disque, mais le compte GROUPE dedie (voir
+infrastructure/services/systemd_service_manager.py::
+grant_directory_access, applique desormais aussi a secure/auth/) doit
+pouvoir le RELIRE au demarrage du service - 0640 refuse "other",
+autorise le groupe, jamais l'un sans l'autre."""
 from __future__ import annotations
 
 import json
@@ -49,4 +55,4 @@ class JsonAuthZonesRepository:
         ) + "\n"
         self._fs.make_directory(self._path.parent)
         self._fs.atomic_write_text(self._path, content)
-        self._fs.set_file_mode(self._path, 0o600)
+        self._fs.set_file_mode(self._path, 0o640)

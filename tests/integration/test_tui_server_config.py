@@ -656,6 +656,10 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertIn("DESACTIVEE", state_after_save)
 
     async def test_auth_add_user_create_zone_check_permissions_and_remove(self):
+        """Regression 2026-09-29 (retour utilisateur : suppression/
+        changement de mot de passe exigeaient de retaper de memoire un
+        champ vide - deux DataTable avec selection desormais, meme
+        patron que les autres ecrans CRUD, voir INFO DEV)."""
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -672,11 +676,12 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-password_confirm", Input).value = "secretpass"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("alice", str(pilot.app.screen.query_one("#auth-list").content))
+            users_table = pilot.app.screen.query_one("#users-table", DataTable)
+            self.assertEqual(users_table.row_count, 1)
 
             pilot.app.screen.query_one("#check-permissions", Button).press()
             await pilot.pause()
-            self.assertIn("0o600", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("0o640", str(pilot.app.screen.query_one("#form-error").content))
 
             pilot.app.screen.query_one("#create-zone", Button).press()
             await pilot.pause()
@@ -685,16 +690,33 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-allowed_users", Input).value = "alice"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("/admin/", str(pilot.app.screen.query_one("#auth-list").content))
+            zones_table = pilot.app.screen.query_one("#zones-table", DataTable)
+            self.assertEqual(zones_table.row_count, 1)
 
+            # Changer le mot de passe : selection dans la table, aucun champ
+            # nom d'utilisateur a remplir (deja connu de la selection).
+            users_table.move_cursor(row=0)
+            users_table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#change-password", Button).press()
+            await pilot.pause()
+            self.assertEqual(len(pilot.app.screen.query("#df-username")), 0)
+            pilot.app.screen.query_one("#df-password", Input).value = "newsecretpass"
+            pilot.app.screen.query_one("#df-password_confirm", Input).value = "newsecretpass"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#users-table", DataTable).row_count, 1)
+
+            # Suppression : selection dans la table, confirmation directe,
+            # aucun formulaire intermediaire.
+            users_table.move_cursor(row=0)
+            users_table.action_select_cursor()
+            await pilot.pause()
             pilot.app.screen.query_one("#remove-user", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#df-username", Input).value = "alice"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#confirm", Button).press()
-            await pilot.pause()
-            self.assertIn("(aucun)", str(pilot.app.screen.query_one("#auth-list").content))
+            self.assertEqual(pilot.app.screen.query_one("#users-table", DataTable).row_count, 0)
 
     async def test_auth_rejects_mismatched_password_confirmation(self):
         container = self._container()
@@ -713,7 +735,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
             self.assertIn("correspondent", str(pilot.app.screen.query_one("#form-error").content))
-            self.assertIn("(aucun)", str(pilot.app.screen.query_one("#auth-list").content))
+            self.assertEqual(pilot.app.screen.query_one("#users-table", DataTable).row_count, 0)
 
     async def test_back_buttons_return_to_menu3(self):
         container = self._container()

@@ -252,10 +252,16 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             manager.calls.index(("create-system-user", "omega-serv:omega-serv")),
             manager.calls.index(("reload-daemon", "")),
         )
+        # Deux appels desormais (2026-09-29, incident reel : boucle de
+        # crash systemd, PermissionError sur secure/auth/zones.json) -
+        # var/ et secure/auth/ (voir application/services/
+        # install_service.py::install_systemd_service()).
         grant_calls = [c for c in manager.calls if c[0] == "grant-directory-access"]
-        self.assertEqual(len(grant_calls), 1)
+        self.assertEqual(len(grant_calls), 2)
         self.assertTrue(grant_calls[0][1].endswith(f"var:omega-serv:{getpass.getuser()}"))
-        self.assertLess(manager.calls.index(grant_calls[0]), manager.calls.index(("reload-daemon", "")))
+        self.assertTrue(grant_calls[1][1].endswith(f"secure/auth:omega-serv:{getpass.getuser()}"))
+        for grant_call in grant_calls:
+            self.assertLess(manager.calls.index(grant_call), manager.calls.index(("reload-daemon", "")))
 
     async def test_install_cancelled_does_not_write_unit_file(self):
         manager = FakeServiceManager()

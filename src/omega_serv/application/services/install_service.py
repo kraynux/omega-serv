@@ -103,6 +103,29 @@ def install_systemd_service(
     grant_directory_access = getattr(service_manager, "grant_directory_access", None)
     if grant_directory_access is not None and installing_user is not None:
         grant_directory_access(params.project_root / "var", params.group, installing_user)
+        # secure/auth/ (2026-09-29, crash reel en boucle : PermissionError
+        # sur secure/auth/zones.json) : users.json/zones.json sont ecrits
+        # par l'ecran Authentification (interfaces/tui/screens/
+        # auth_menu_screen.py), donc par l'UTILISATEUR interactif, mais
+        # relus par le SERVICE (compte dedie) a chaque demarrage
+        # (application/config/validate_config.py::
+        # _validate_auth_environment) - exactement le meme besoin de
+        # partage que var/ ci-dessus, jamais couvert jusqu'ici puisque
+        # secure/ n'etait pas dans le perimetre original de cette
+        # methode (pensee pour var/ seulement). Volontairement PAS tout
+        # secure/ (certificats/secrets) : leurs cles privees restent
+        # 0600 proprietaire seul, une protection different qu'il ne faut
+        # jamais affaiblir en la rendant lisible au groupe - seul
+        # secure/auth/ (voir infrastructure/auth/users_repository.py et
+        # auth_zones_repository.py, desormais 0640 plutot que 0600) a
+        # besoin de ce partage precis. make_directory() d'abord : une
+        # installation neuve n'a pas encore ce dossier (cree
+        # paresseusement au premier utilisateur/zone ajoute, voir
+        # users_repository.py/auth_zones_repository.py) - chgrp/chmod
+        # sur un chemin absent echouerait (ServiceControlError), aucun
+        # risque a le creer vide par avance.
+        filesystem.make_directory(params.project_root / "secure" / "auth")
+        grant_directory_access(params.project_root / "secure" / "auth", params.group, installing_user)
 
     content = generate_systemd_unit(params)
 

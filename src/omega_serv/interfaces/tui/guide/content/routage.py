@@ -36,6 +36,15 @@ ALIASES_SCREEN = ScreenGuide(
         "L'option aliases doit etre activee (ecran Options) pour que ces alias soient "
         "reellement appliques. Toutes les modifications se rechargent a chaud."
     ),
+    points_de_vigilance=(
+        (
+            "Directory listing et Cache se configurent par ZONE (prefixe d'URL), jamais par "
+            "dossier cible : un alias '/media/' pointant sur 'webroot/photos/' a besoin de sa "
+            "PROPRE zone '/media/' sur ces ecrans - une zone deja creee pour '/photos/' (le nom "
+            "du dossier reel) ne s'applique jamais a l'alias, meme si les deux menent au meme "
+            "contenu sur le disque."
+        ),
+    ),
 )
 
 REDIRECTS_SCREEN = ScreenGuide(
@@ -161,7 +170,11 @@ DIRLISTING_SCREEN = ScreenGuide(
         ),
         FieldGuide(
             label="Zones (table)",
-            definition="Prefixes d'URL ou le listing de repertoire est propose quand aucun index n'existe.",
+            definition=(
+                "Prefixes d'URL ou le listing de repertoire est propose quand aucun index n'existe. "
+                "Un prefixe est une URL TELLE QUE LE NAVIGATEUR LA VOIT, jamais un chemin ou un nom "
+                "de dossier reel sur le disque."
+            ),
             utilisation="Un prefixe par ligne, doit commencer par '/'.",
             action="Ajouter/Supprimer une zone.",
             reaction="Aucun effet sans rechargement du service.",
@@ -176,6 +189,14 @@ DIRLISTING_SCREEN = ScreenGuide(
             "Les fichiers/dossiers commencant par un point restent masques du listing par la "
             "regle generique 'deny_hidden_files' (ecran Securite generique), independamment des "
             "reglages de cet ecran."
+        ),
+        (
+            "Servir un MEME dossier par deux URLs differentes (ex: directement en '/mondossier/' "
+            "ET via un alias '/autre-nom/' pointant sur ce meme dossier, ecran Alias) exige DEUX "
+            "zones ici, une par URL - le listing ne 'suit' jamais le dossier reel, seulement le "
+            "prefixe d'URL exact tape par le visiteur. Ajouter uniquement '/mondossier/' n'active "
+            "jamais le listing sur '/autre-nom/', meme si les deux menent au meme contenu sur le "
+            "disque."
         ),
     ),
 )

@@ -28,7 +28,7 @@ class TestJsonAuthZonesRepository(unittest.TestCase):
 
     def test_save_sets_strict_permissions(self):
         self.repo.save((AuthZone(path_prefix="/private/", realm="Zone", allowed_users=("admin",)),))
-        self.assertEqual(LocalFilesystem().file_mode(self.path), 0o600)
+        self.assertEqual(LocalFilesystem().file_mode(self.path), 0o640)
 
     def test_invalid_json_raises(self):
         self.path.write_text("{ not json")

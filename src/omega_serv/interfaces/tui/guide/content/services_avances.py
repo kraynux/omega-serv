@@ -93,21 +93,48 @@ AUTH_MENU_SCREEN = ScreenGuide(
     ),
     fields=(
         FieldGuide(
-            label="Ajouter un utilisateur / Changer un mot de passe",
-            definition="Cree un compte utilisateur ou change son mot de passe.",
+            label="Table Utilisateurs",
+            definition=(
+                "Liste les comptes existants - cliquer une ligne la SELECTIONNE (active "
+                "Changer le mot de passe/Supprimer) sans jamais retaper le nom d'utilisateur."
+            ),
+            utilisation="Selection par clic, une seule ligne a la fois.",
+            action="Aucune ecriture - lecture seule.",
+            reaction="Active/desactive les boutons Changer le mot de passe et Supprimer.",
+        ),
+        FieldGuide(
+            label="Ajouter",
+            definition="Cree un compte utilisateur.",
             utilisation="Nom d'utilisateur + mot de passe saisi deux fois (jamais affiche en clair).",
             action="Ecrit directement dans users.json.",
             reaction="Aucun effet sans rechargement du service (automatique si actif).",
         ),
         FieldGuide(
-            label="Supprimer un utilisateur",
-            definition="Retire definitivement un compte utilisateur.",
-            utilisation="Nom d'utilisateur exact, avec confirmation.",
+            label="Changer le mot de passe",
+            definition="Change le mot de passe de l'utilisateur SELECTIONNE dans la table.",
+            utilisation=(
+                "Selectionner une ligne d'abord (le nom d'utilisateur n'est jamais retape) - "
+                "puis le nouveau mot de passe, saisi deux fois."
+            ),
             action="Ecrit directement dans users.json.",
             reaction="Aucun effet sans rechargement du service.",
         ),
         FieldGuide(
-            label="Creer une zone protegee",
+            label="Supprimer (utilisateur)",
+            definition="Retire definitivement le compte utilisateur SELECTIONNE dans la table.",
+            utilisation="Selectionner une ligne d'abord, puis confirmer - aucune saisie.",
+            action="Ecrit directement dans users.json.",
+            reaction="Aucun effet sans rechargement du service.",
+        ),
+        FieldGuide(
+            label="Table Zones protegees",
+            definition="Liste les zones existantes - cliquer une ligne la SELECTIONNE (active Supprimer).",
+            utilisation="Selection par clic, une seule ligne a la fois.",
+            action="Aucune ecriture - lecture seule.",
+            reaction="Active/desactive le bouton Supprimer.",
+        ),
+        FieldGuide(
+            label="Creer une zone",
             definition="Protege un prefixe d'URL par authentification HTTP.",
             utilisation=(
                 "Prefixe URL (ex: /admin/), realm (texte affiche par le navigateur), "
@@ -118,9 +145,9 @@ AUTH_MENU_SCREEN = ScreenGuide(
             reaction="Aucun effet sans rechargement du service.",
         ),
         FieldGuide(
-            label="Supprimer une zone",
-            definition="Retire la protection d'un prefixe d'URL.",
-            utilisation="Prefixe URL exact, avec confirmation.",
+            label="Supprimer (zone)",
+            definition="Retire la protection de la zone SELECTIONNEE dans la table.",
+            utilisation="Selectionner une ligne d'abord, puis confirmer - aucune saisie.",
             action="Ecrit directement dans zones.json.",
             reaction="Aucun effet sans rechargement du service.",
         ),

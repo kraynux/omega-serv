@@ -7,14 +7,13 @@ listing qui serait refuse en acces direct) ; tous les noms de fichiers
 sont echappes HTML (spec : "Ne jamais generer de HTML avec des noms de
 fichiers non echappes").
 
-Personnalisation (retour utilisateur - guide d'aide, point 1 : CSS de
+Personnalisation (guide d'aide, point 1 : CSS de
 base + header/readme façon lighttpd `dir-listing.*`) portee par
 `DirlistingSettings` : CSS toujours genere en ligne (jamais de jinja2
 ici - confine a infrastructure/exporters/html_exporter.py par contrat
 import-linter dedie), reutilisant le meme catalogue de themes que le
 reste de la suite (`omega_lib.theme.policies.EXPORT_PALETTES`, D-007/
-D-008) plutot qu'une palette isolee - defaut "omega-base", exactement
-le theme demande. `header_content`/`readme_content` arrivent deja lus
+D-008) plutot qu'une palette isolee - defaut "omega-base". `header_content`/`readme_content` arrivent deja lus
 depuis le disque (ce module reste pur, sans I/O - la lecture reelle est
 la responsabilite de application/server/serve_static_file.py, seul
 detenteur d'un FilesystemPort)."""
@@ -109,8 +108,7 @@ def _base_css(theme: str) -> str:
 
 def _parent_url_path(url_path: str) -> str | None:
     """Chemin URL du dossier parent, ou None si `url_path` est deja la
-    racine servie (retour utilisateur : "il manque le lien dossier
-    parent") - jamais de lien vers un parent inexistant a la racine."""
+    racine servie - jamais de lien vers un parent inexistant a la racine."""
     trimmed = url_path.rstrip("/")
     if not trimmed:
         return None

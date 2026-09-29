@@ -45,6 +45,19 @@ class TestPidFile(unittest.TestCase):
     def test_remove_missing_file_does_not_raise(self):
         remove_pid_file(self.filesystem, self.path)
 
+    def test_write_self_heals_a_group_read_only_run_directory(self):
+        """Retour utilisateur 2026-09-27 (boucle de crash systemd reelle,
+        PermissionError sur var/run/omega-serv.pid.tmp) : un dossier
+        var/run/ deja cree avec le mode par defaut de make_directory()
+        (0o750, groupe en lecture seule) doit redevenir inscriptible par
+        le groupe des le prochain write_pid_file() - jamais besoin d'une
+        intervention manuelle (chmod a la main) apres coup."""
+        self.path.parent.mkdir(parents=True)
+        self.path.parent.chmod(0o750)  # explicite : mkdir(mode=...) reste soumis a l'umask ambiant
+        write_pid_file(self.filesystem, self.path, 12345)
+        self.assertEqual(self.path.parent.stat().st_mode & 0o777, 0o770)
+        self.assertEqual(read_pid_file(self.filesystem, self.path), 12345)
+
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
     def test_read_unreadable_file_returns_none_instead_of_raising(self):
         write_pid_file(self.filesystem, self.path, 12345)

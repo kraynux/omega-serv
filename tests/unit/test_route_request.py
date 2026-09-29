@@ -130,6 +130,61 @@ class TestRouteRequest(unittest.IsolatedAsyncioTestCase):
         response = await self._route("/downloads/../../secure/secret.txt", config)
         self.assertEqual(response.status, HttpStatus.FORBIDDEN)
 
+    async def test_alias_dirlisting_zone_matches_external_url_prefix(self):
+        """Regression 2026-09-28 (bug reel rapporte : alias vers un
+        sous-dossier de webroot renvoyant 404 malgre listing active) :
+        route_request() reecrit request.path en chemin RELATIF a la
+        cible de l'alias (ex. "/" pour "/path/") avant d'appeler
+        serve_static_file(), mais dirlisting_zones/cache_policy.zones
+        restent configures par l'utilisateur en URL EXTERNE ("/path/").
+        Sans display_path=effective_path (voir serve_static_file.py),
+        resolve_zone(request.path, dirlisting_zones) comparait un chemin
+        interne a des prefixes externes et ne matchait jamais - listing
+        toujours refuse (404) meme correctement configure."""
+        target_dir = self.webroot / "sub"
+        target_dir.mkdir()
+        (target_dir / "file.txt").write_text("content")
+
+        config = OmegaServConfig.from_dict({
+            "options": {
+                "aliases": {
+                    "enabled": True,
+                    "list": [{"url_prefix": "/path/", "target_path": "webroot/sub", "allow_outside_webroot": False}],
+                },
+                "dirlisting": {"enabled": True, "zone_prefixes": ["/path/"]},
+            },
+        })
+        response = await self._route("/path/", config)
+        self.assertEqual(response.status, HttpStatus.OK)
+        body = response.body.decode()
+        self.assertIn('href="/path/file.txt"', body)
+        self.assertIn('href="/"', body)  # lien "dossier parent" vers la racine externe du site
+
+    async def test_alias_cache_zone_matches_external_url_prefix(self):
+        """Meme famille de bug que le test dirlisting ci-dessus, pour
+        options.cache.zones (domain/routing/cache_policy.py) : un run
+        Cache-Control configure sur le prefixe externe de l'alias doit
+        s'appliquer aux fichiers servis a travers cet alias."""
+        target_dir = self.webroot / "sub"
+        target_dir.mkdir()
+        (target_dir / "file.txt").write_text("content")
+
+        config = OmegaServConfig.from_dict({
+            "options": {
+                "aliases": {
+                    "enabled": True,
+                    "list": [{"url_prefix": "/path/", "target_path": "webroot/sub", "allow_outside_webroot": False}],
+                },
+                "cache": {
+                    "enabled": True,
+                    "zones": [{"path_prefix": "/path/", "cache_control": "public, max-age=3600"}],
+                },
+            },
+        })
+        response = await self._route("/path/file.txt", config)
+        self.assertEqual(response.status, HttpStatus.OK)
+        self.assertEqual(response.headers["Cache-Control"], "public, max-age=3600")
+
     async def test_post_to_upload_zone_stores_file(self):
         config = OmegaServConfig.from_dict({
             "options": {"upload": {

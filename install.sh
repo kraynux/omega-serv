@@ -121,7 +121,46 @@ for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
     fi
 done
 
+# -------------------------------------------------------------------------
+# 7. Recuperation automatique d'une ancienne installation, SANS AUCUNE
+#    QUESTION (2026-09-28, retour utilisateur : "il faut penser
+#    multi-machines et multi-utilisateur, une mise a jour a pour principe
+#    d'upgrader donc il doit recuperer ce qui est deja existant" +
+#    "jamais vu une mise a jour ou l'installateur demande une
+#    restauration de dossier apres avoir execute" - donc jamais de
+#    prompt interactif, une detection et une action automatiques ou
+#    rien). Ne se declenche QUE si config/omega-serve.json est absent
+#    ICI (extraction dans un dossier neuf plutot que par-dessus
+#    l'existant - une extraction par-dessus laisse deja ce fichier en
+#    place, cette etape entiere est alors silencieusement sautee, voir
+#    section "Mise a jour" du README) ET qu'un seul dossier voisin
+#    ressemble sans ambiguite a une ancienne installation (config/
+#    omega-serve.json y est present) - jamais d'action sur un signal
+#    ambigu (plusieurs candidats, ou aucun) : dans ces cas, rien n'est
+#    fait, aucun message d'erreur, l'installation reste une simple
+#    premiere installation normale.
+# -------------------------------------------------------------------------
+if [ ! -f "$SCRIPT_DIR/config/omega-serve.json" ]; then
+    CANDIDATES=()
+    for dir in "$SCRIPT_DIR"/../*omega-serv*/; do
+        dir="${dir%/}"
+        if [ "$dir" != "$SCRIPT_DIR" ] && [ -f "$dir/config/omega-serve.json" ]; then
+            CANDIDATES+=("$dir")
+        fi
+    done
+    if [ "${#CANDIDATES[@]}" -eq 1 ]; then
+        info "Ancienne installation detectee : ${CANDIDATES[0]}"
+        "$SCRIPT_DIR/migrate-state.sh" "${CANDIDATES[0]}" --yes
+    elif [ "${#CANDIDATES[@]}" -gt 1 ]; then
+        warn "Plusieurs anciennes installations voisines detectees, aucune recuperee automatiquement (ambigu) :"
+        for c in "${CANDIDATES[@]}"; do echo "    $c"; done
+        tip "Recuperez manuellement : ${SCRIPT_DIR}/migrate-state.sh <dossier>"
+    fi
+fi
+
 echo ""
 ok "Installation terminée."
 tip "Lancez Omega-Serv avec : ${SCRIPT_DIR}/omega-serv.sh serve (ou 'serv serve' dans un nouveau terminal si l'alias vient d'être ajouté)."
-tip "Commencez par : ${SCRIPT_DIR}/omega-serv.sh config init"
+if [ ! -f "$SCRIPT_DIR/config/omega-serve.json" ]; then
+    tip "Commencez par : ${SCRIPT_DIR}/omega-serv.sh config init"
+fi

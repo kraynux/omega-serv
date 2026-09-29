@@ -29,7 +29,7 @@ class TestJsonUsersRepository(unittest.TestCase):
     def test_save_sets_strict_permissions(self):
         self.repo.save((UserAccount(username="admin", password_hash="x"),))
         mode = LocalFilesystem().file_mode(self.path)
-        self.assertEqual(mode, 0o600)
+        self.assertEqual(mode, 0o640)
 
     def test_invalid_json_raises(self):
         self.path.write_text("{ not json")

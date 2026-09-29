@@ -105,6 +105,10 @@ class TestInstallSystemdService(unittest.TestCase):
         self.assertTrue(result.success)
 
     def test_install_grants_directory_access_when_available_and_user_given(self):
+        """Deux appels desormais (2026-09-29, incident reel : boucle de
+        crash systemd, PermissionError sur secure/auth/zones.json) -
+        var/ (deja existant) ET secure/auth/ (cree par install_systemd_
+        service() lui-meme s'il est absent, voir son propre commentaire)."""
         manager = _FakeServiceManagerWithDirectoryAccess()
         result = install_systemd_service(
             self.filesystem, self._params(), self.unit_path, manager, installing_user="kraynux",
@@ -112,8 +116,12 @@ class TestInstallSystemdService(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEqual(
             manager.grant_directory_access_calls,
-            [(self.root / "var", "omega-serv", "kraynux")],
+            [
+                (self.root / "var", "omega-serv", "kraynux"),
+                (self.root / "secure" / "auth", "omega-serv", "kraynux"),
+            ],
         )
+        self.assertTrue((self.root / "secure" / "auth").is_dir())
         self.assertIn("kraynux", result.message)
         self.assertIn("omega-serv", result.message)
 

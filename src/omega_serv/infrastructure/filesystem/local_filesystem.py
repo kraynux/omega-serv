@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import threading
 from pathlib import Path
 
 
@@ -39,7 +40,27 @@ class LocalFilesystem:
         path.write_text(content, encoding="utf-8")
 
     def atomic_write_text(self, path: Path, content: str) -> None:
-        tmp_path = path.with_name(path.name + ".tmp")
+        # Nom temporaire UNIQUE par appel (2026-09-29, incident reel :
+        # boucle de crash systemd, PermissionError persistante sur
+        # var/run/omega-serv.pid.tmp malgre var/ deja partage avec le
+        # groupe dedie) : l'ancien nom fixe (`<nom>.tmp`) est PARTAGE par
+        # tous les appelants, quel que soit le compte qui ecrit - si ce
+        # fichier temporaire a deja ete cree UNE SEULE FOIS par un autre
+        # compte (ex. l'utilisateur interactif lancant `serve` a la main
+        # pendant un depannage), `open(tmp_path, "w")` (troncature d'un
+        # fichier EXISTANT) exige une permission d'ECRITURE SUR CE
+        # FICHIER precis pour tout compte suivant - contrairement a
+        # `os.replace()` juste apres, qui ne regarde LUI que les droits
+        # du DOSSIER (rename POSIX, jamais les permissions du fichier
+        # cible). Un suffixe pid+thread rend chaque ecriture atomique
+        # totalement independante des tentatives precedentes, d'ou
+        # qu'elles viennent - la creation du fichier temporaire
+        # redevient alors une simple creation dans le dossier (deja
+        # partage en ecriture avec le groupe, voir infrastructure/
+        # services/systemd_service_manager.py::grant_directory_access),
+        # jamais une troncature d'un fichier existant potentiellement
+        # possede par un autre compte.
+        tmp_path = path.with_name(f"{path.name}.{os.getpid()}-{threading.get_ident()}.tmp")
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(content)
             f.flush()

@@ -34,6 +34,18 @@ class TestApplyRewrites(unittest.TestCase):
         rules = parse_rewrite_rules([{"match_prefix": "/x", "replacement_prefix": "/y"}])
         self.assertEqual(rules[0].match_prefix, "/x")
 
+    def test_match_prefix_without_trailing_slash_matches_exact_path(self):
+        """Regression 2026-09-28 : "/old" (sans slash final) doit matcher
+        le chemin exact "/old", pas seulement ses sous-chemins - voir
+        zone_resolver.py::path_matches_prefix()."""
+        result = apply_rewrites("/old", [RewriteRule("/old", "/new")])
+        self.assertEqual(result.final_path, "/new")
+
+    def test_match_prefix_does_not_overmatch_sibling_name(self):
+        result = apply_rewrites("/oldish-page", [RewriteRule("/old", "/new")])
+        self.assertEqual(result.final_path, "/oldish-page")
+        self.assertFalse(result.loop_detected)
+
 
 if __name__ == "__main__":
     unittest.main()
