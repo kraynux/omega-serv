@@ -83,7 +83,7 @@ cd omega-serv/
 ./install.sh
 ```
 
-L'archive exclut délibérément tout l'état vivant (`var/db/`, `var/log/`, `var/backups/`, `secure/secrets/`, `secure/certificates/*.key`, `config/omega-serve.json`, **`webroot/` — le site réellement servi**...) — une extraction par-dessus ne touche jamais à tes données, certificats, réglages ou contenu servi en place, seul le code applicatif est remplacé. `install.sh` réutilise le `.venv` existant et réinstalle simplement les dépendances par-dessus.
+L'archive exclut délibérément tout l'état vivant (`var/db/`, `var/log/`, `var/backups/`, `secure/secrets/`, `secure/certificates/*.key`, `config/omega-serve.json`, **`webroot/` — le site réellement servi**...) — une extraction par-dessus ne touche jamais à aux données, certificats, réglages ou contenu servi en place, seul le code applicatif est remplacé. `install.sh` réutilise le `.venv` existant et réinstalle simplement les dépendances par-dessus.
 
 ### Dépendances
 
