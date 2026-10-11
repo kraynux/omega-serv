@@ -38,6 +38,10 @@ class PythonWafEngine:
         if user_agent:
             texts["user_agent"] = user_agent
 
+        referer = request.header("referer")
+        if referer:
+            texts["referer"] = referer
+
         if request.body and request.method in inspect.body_methods:
             body_text = request.body.decode("utf-8", errors="replace")
             texts["body"] = decode_bounded_for_inspection(body_text, inspect.decode_depth)

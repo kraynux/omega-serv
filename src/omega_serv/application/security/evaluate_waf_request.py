@@ -11,13 +11,33 @@ dependent jamais du WAF. Les politiques de service/zone
 (waf_service_policies) ne sont PAS construites en V1 (voir
 OMEGA-SERV_PLAN_DEVELOPPEMENT.md §3 Phase 5) - seule l'exclusion par
 prefixe/extension existe, suffisante pour l'exemption /healthz (angle
-mort §9.6)."""
+mort §9.6).
+
+DEVENU ASYNC (OMEGA-SERV_PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.md, lot E,
+decision D2) : seul changement necessaire pour integrer le script WAF
+complementaire "magnet" sans jamais bloquer la boucle asyncio du
+serveur - `magnet_port.inspect()` est synchrone (contrat `WafPort`
+inchange) mais dispatche ici via `loop.run_in_executor()` sur un thread
+dedie, jamais appele directement sur le thread de la boucle d'evenements.
+`magnet_port`/`magnet_executor` a `None` (defaut) : comportement
+IDENTIQUE a avant ce lot, aucun cout, aucun branchement mort - le seul
+`await` ajoute au chemin "magnet desactive" est `evaluate_escalation`
+qui, lui, ne fait aucune I/O (cout non mesurable). Les exclusions
+restent evaluees une seule fois, EN AMONT des deux moteurs (natif ET
+magnet) - etude §5.5 point 1, aucun des deux n'est meme invoque sur un
+chemin exclu."""
 from __future__ import annotations
 
+import asyncio
+from concurrent.futures import Executor
 from datetime import datetime, timedelta, timezone
 
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.security.waf.blocklist import validate_blocklist_entry
+from omega_serv.domain.security.waf.combine_decisions import (
+    combine_decisions,
+    magnet_fallback_decision,
+)
 from omega_serv.domain.security.waf.config import WafConfig
 from omega_serv.domain.security.waf.entities import BlocklistEntry, WafDecision
 from omega_serv.domain.security.waf.exclusions import is_extension_excluded, matches_any_prefix
@@ -28,13 +48,15 @@ from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
 from omega_serv.ports.waf_port import WafPort
 
 
-def evaluate_waf_request(
+async def evaluate_waf_request(
     request: HttpRequest,
     waf_config: WafConfig,
     waf_port: WafPort,
     blocklist_port: BlocklistPort,
     rate_limit_port: RateLimitPort,
     reputation_tracker: ReputationTrackerPort,
+    magnet_port: WafPort | None = None,
+    magnet_executor: Executor | None = None,
 ) -> WafDecision:
     blocked_entry = blocklist_port.is_blocked(request.remote_ip)
     if blocked_entry is not None:
@@ -67,6 +89,10 @@ def evaluate_waf_request(
 
     decision = waf_port.inspect(request)
 
+    if magnet_port is not None and waf_config.magnet.enabled:
+        magnet_decision = await _inspect_with_magnet(request, waf_config, magnet_port, magnet_executor)
+        decision = combine_decisions(decision, magnet_decision)
+
     if decision.findings and waf_config.reputation.enabled:
         reputation_tracker.record_hit(request.remote_ip)
         hit_count = reputation_tracker.count_hits_in_window(request.remote_ip, waf_config.reputation.window_seconds)
@@ -79,6 +105,28 @@ def evaluate_waf_request(
             _auto_block(request.remote_ip, escalation.reason, waf_config, blocklist_port)
 
     return decision
+
+
+async def _inspect_with_magnet(
+    request: HttpRequest, waf_config: WafConfig, magnet_port: WafPort, magnet_executor: Executor | None,
+) -> WafDecision:
+    """Dispatche l'appel magnet (synchrone, potentiellement lent) sur
+    `magnet_executor` - jamais sur le thread de la boucle asyncio (D2).
+    `asyncio.wait_for` bornE LA REQUETE a `timeout_ms`, mais ne peut pas
+    interrompre le thread sous-jacent une fois lance (lupa n'expose
+    aucun mecanisme d'interruption, voir infrastructure/waf/
+    lua_waf_adapter.py) : un script vraiment bloque laisse son thread
+    occupe au-dela du timeout - limite operationnelle connue et
+    documentee, pas un risque pour la latence de LA REQUETE elle-meme,
+    qui recoit sa decision de repli dans tous les cas."""
+    loop = asyncio.get_running_loop()
+    try:
+        return await asyncio.wait_for(
+            loop.run_in_executor(magnet_executor, magnet_port.inspect, request),
+            timeout=waf_config.magnet.timeout_ms / 1000,
+        )
+    except TimeoutError:
+        return magnet_fallback_decision(waf_config.magnet.on_error, waf_config.mode)
 
 
 def _auto_block(ip: str, reason: str, waf_config: WafConfig, blocklist_port: BlocklistPort) -> None:

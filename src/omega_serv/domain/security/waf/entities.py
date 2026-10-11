@@ -16,9 +16,9 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-RuleScope = Literal["path", "query", "body", "headers", "user_agent"]
+RuleScope = Literal["path", "query", "body", "headers", "user_agent", "referer"]
 
-_VALID_SCOPES: frozenset[str] = frozenset({"path", "query", "body", "headers", "user_agent"})
+_VALID_SCOPES: frozenset[str] = frozenset({"path", "query", "body", "headers", "user_agent", "referer"})
 
 
 @dataclass(frozen=True)
@@ -44,6 +44,23 @@ class RulePack:
     pack: str
     enabled: bool
     rules: tuple[RuleDefinition, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class KeywordListDefinition:
+    """Reference a un fichier texte "un mot-cle par ligne" (OMEGA-SERV_
+    PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.md, lot B) - alternative plus
+    legere qu'un `RulePack` JSON complet pour une liste qui s'allonge
+    dans le temps (ex. mots-clefs de spam Referer). `file` est un chemin
+    relatif au projet, jamais absolu (meme regle que les autres chemins
+    de configuration). Converti en une regle unique a l'alternance par
+    domain/security/waf/keyword_list.py - ne transporte ici que la
+    reference, jamais le contenu du fichier (aucune I/O dans ce module)."""
+    id: str
+    scope: tuple[str, ...]
+    file: str
+    weight: int = 1
+    enabled: bool = True
 
 
 @dataclass(frozen=True)

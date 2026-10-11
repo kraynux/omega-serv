@@ -41,6 +41,43 @@ class TestValidateConfig(unittest.TestCase):
         errors = validate_config(config)
         self.assertTrue(any("csp_mode" in e for e in errors))
 
+    def test_invalid_coep_mode_is_rejected(self):
+        config = OmegaServConfig.from_dict({"security": {"coep_mode": "strict"}})
+        errors = validate_config(config)
+        self.assertTrue(any("coep_mode" in e for e in errors))
+
+    def test_valid_coep_modes_are_accepted(self):
+        for mode in ("unsafe-none", "require-corp", "credentialless"):
+            config = OmegaServConfig.from_dict({"security": {"coep_mode": mode}})
+            errors = validate_config(config)
+            self.assertFalse(any("coep_mode" in e for e in errors), mode)
+
+    def test_csp_zone_without_leading_slash_is_rejected(self):
+        config = OmegaServConfig.from_dict({
+            "security": {"csp_zones": [{"path_prefix": "public", "policy": "default-src 'self'"}]},
+        })
+        errors = validate_config(config)
+        self.assertTrue(any("csp_zones" in e and "path_prefix" in e for e in errors))
+
+    def test_csp_zone_with_empty_policy_is_rejected(self):
+        config = OmegaServConfig.from_dict({
+            "security": {"csp_zones": [{"path_prefix": "/public/", "policy": ""}]},
+        })
+        errors = validate_config(config)
+        self.assertTrue(any("csp_zones" in e and "policy" in e for e in errors))
+
+    def test_csp_zone_with_unsafe_inline_is_not_rejected_by_structural_validation(self):
+        """'unsafe-inline' dans une zone est une exception DELIBEREE
+        (retour utilisateur 2026-10-10) - jamais bloquante ici, signalee
+        a la place par `audit security` (CSP-001), toujours visible."""
+        config = OmegaServConfig.from_dict({
+            "security": {"csp_zones": [
+                {"path_prefix": "/public/", "policy": "default-src 'self' 'unsafe-inline'"},
+            ]},
+        })
+        errors = validate_config(config)
+        self.assertEqual(errors, [])
+
     def test_unknown_option_is_rejected(self):
         config = OmegaServConfig.from_dict({"options": {"cgi": {"enabled": True}}})
         errors = validate_config(config)

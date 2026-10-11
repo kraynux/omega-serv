@@ -40,11 +40,13 @@ if TYPE_CHECKING:
     from omega_serv.application.logs.rotate_log import RotateLogResult
     from omega_serv.application.persistence.create_backup import BackupResult
     from omega_serv.application.persistence.restore_backup import RestoreResult
+    from omega_serv.application.security.check_magnet_compatibility import MagnetCompatibilityCheck
     from omega_serv.application.security.simulate_waf_request import WafSimulationReport
     from omega_serv.application.server.simulate_request import SimulationReport
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
     from omega_serv.core.capability import Capability
     from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.domain.logging.stats import LogStatsSummary
     from omega_serv.domain.persistence.backup import BackupRequest
     from omega_serv.domain.persistence.snapshots import SnapshotMetadata
@@ -90,9 +92,13 @@ class DependencyContainer:
             [str, str, OmegaServConfig, FilesystemPort, Path], Awaitable[SimulationReport]
         ] | None = None,
         waf_test_runner: Callable[
-            [str, str, str, str, str, OmegaServConfig, FilesystemPort, Path, ClockPort], WafSimulationReport | None
+            [str, str, str, str, str, OmegaServConfig, FilesystemPort, Path, ClockPort],
+            Awaitable[WafSimulationReport | None],
         ] | None = None,
         blocklist_port_factory: Callable[[OmegaServConfig, FilesystemPort, Path, ClockPort], BlocklistPort] | None = None,
+        magnet_compat_check_runner: Callable[
+            [MagnetConfig, Path, FilesystemPort], Awaitable[MagnetCompatibilityCheck]
+        ] | None = None,
         active_defense_collaborators_factory: Callable[
             [OmegaServConfig, Path], ActiveDefenseCollaborators | None
         ] | None = None,
@@ -119,6 +125,7 @@ class DependencyContainer:
         self._simulate_request_runner = simulate_request_runner
         self._waf_test_runner = waf_test_runner
         self._blocklist_port_factory = blocklist_port_factory
+        self._magnet_compat_check_runner = magnet_compat_check_runner
         self._active_defense_collaborators_factory = active_defense_collaborators_factory
         self._ioc_export_runner = ioc_export_runner
         self._incident_report_export_runner = incident_report_export_runner
@@ -230,13 +237,20 @@ class DependencyContainer:
     def waf_test_runner(
         self,
     ) -> Callable[
-        [str, str, str, str, str, OmegaServConfig, FilesystemPort, Path, ClockPort], WafSimulationReport | None
+        [str, str, str, str, str, OmegaServConfig, FilesystemPort, Path, ClockPort],
+        Awaitable[WafSimulationReport | None],
     ] | None:
         return self._waf_test_runner
 
     @property
     def blocklist_port_factory(self) -> Callable[[OmegaServConfig, FilesystemPort, Path, ClockPort], BlocklistPort] | None:
         return self._blocklist_port_factory
+
+    @property
+    def magnet_compat_check_runner(
+        self,
+    ) -> Callable[[MagnetConfig, Path, FilesystemPort], Awaitable[MagnetCompatibilityCheck]] | None:
+        return self._magnet_compat_check_runner
 
     @property
     def active_defense_collaborators_factory(

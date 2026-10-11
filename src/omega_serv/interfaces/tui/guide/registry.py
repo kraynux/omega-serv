@@ -9,6 +9,7 @@ from omega_serv.interfaces.tui.guide.content.accueil import HOME_SCREEN
 from omega_serv.interfaces.tui.guide.content.configuration_base import (
     ACCESS_CONTROL_SCREEN,
     BASE_CONFIG_SCREEN,
+    CSP_ZONE_WIZARD_SCREEN,
     LIMITS_SCREEN,
     SECURITY_SCREEN,
     SERVER_CONFIG_MENU_SCREEN,
@@ -50,6 +51,7 @@ _ALL_GUIDES: tuple[ScreenGuide, ...] = (
     BASE_CONFIG_SCREEN,
     LIMITS_SCREEN,
     SECURITY_SCREEN,
+    CSP_ZONE_WIZARD_SCREEN,
     ACCESS_CONTROL_SCREEN,
     ALIASES_SCREEN,
     REDIRECTS_SCREEN,

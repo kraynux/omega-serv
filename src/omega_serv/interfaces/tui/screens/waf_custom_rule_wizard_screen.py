@@ -50,7 +50,7 @@ _TYPE_HINTS: dict[str, str] = {
     ),
     "advanced": (
         "Ecrivez vous-meme le motif (expression reguliere Python) et la portee "
-        "(path, query, body, headers, user_agent - separes par des virgules)."
+        "(path, query, body, headers, user_agent, referer - separes par des virgules)."
     ),
 }
 
@@ -86,7 +86,7 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, str] | None]):
             yield Input(placeholder="ex: admin", id="value-input")
 
             with Container(id="advanced-fields"):
-                yield Static("Portee (path, query, body, headers, user_agent - separes par des virgules)", classes="omega-subtitle")
+                yield Static("Portee (path, query, body, headers, user_agent, referer - separes par des virgules)", classes="omega-subtitle")
                 yield Input(value="path", id="scope-input")
                 yield Static("Motif (expression reguliere Python)", classes="omega-subtitle")
                 yield Input(id="pattern-input")

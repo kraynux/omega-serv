@@ -8,9 +8,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from omega_serv.domain.security.waf.entities import RuleDefinition, RulePack
+from omega_serv.domain.security.waf.entities import _VALID_SCOPES, RuleDefinition, RulePack
 
-_VALID_SCOPES: frozenset[str] = frozenset({"path", "query", "body", "headers", "user_agent"})
 SUPPORTED_RULE_PACK_VERSIONS = frozenset({1})
 
 

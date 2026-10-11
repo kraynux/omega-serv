@@ -16,6 +16,37 @@ from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesyste
 from omega_serv.infrastructure.probe.scanner import SystemCapabilityScanner
 
 
+class TestMagnetDependencyDetection(unittest.TestCase):
+    """Remplace l'ancienne sonde binaire `lua`/`lua5.4` (sans rapport
+    avec le besoin reel - `lupa` embarque son propre runtime Lua, ne
+    requiert aucun interpreteur systeme) par une sonde du paquet Python
+    'lupa' lui-meme."""
+
+    def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
+        return SystemCapabilityScanner(
+            project_root=tmp_path, filesystem=LocalFilesystem(),
+            configured_port=8080, fastcgi_socket=None,
+        )
+
+    def test_magnet_available_when_lupa_installed(self):
+        """Environnement reel de developpement de ce projet - 'lupa'
+        y est effectivement installe (extra 'magnet', voir pyproject.toml)."""
+        capabilities = self._scanner(Path("/tmp")).scan()
+        magnet = next(c for c in capabilities if c.id == "waf-magnet")
+        self.assertEqual(magnet.status, CapabilityStatus.AVAILABLE)
+        self.assertIn("lupa", magnet.reason)
+        self.assertEqual(magnet.category, "waf")
+
+    def test_magnet_missing_when_lupa_absent(self):
+        with patch(
+            "omega_serv.infrastructure.probe.scanner.importlib.util.find_spec", return_value=None,
+        ):
+            capabilities = self._scanner(Path("/tmp")).scan()
+        magnet = next(c for c in capabilities if c.id == "waf-magnet")
+        self.assertEqual(magnet.status, CapabilityStatus.MISSING)
+        self.assertIn("pip install -e \".[magnet]\"", magnet.reason)
+
+
 class TestCertbotDetection(unittest.TestCase):
     def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
         return SystemCapabilityScanner(

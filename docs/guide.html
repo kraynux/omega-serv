@@ -677,7 +677,7 @@
     <div class="branding-container">
         <div class="branding">
             <div class="omega-logo">
-                <img src="omega-serv.png" alt="Omega-Serv Logo" />
+                <img src="/omega-serv/omega-serv.png" alt="Omega-Serv Logo" />
             </div>
             <div class="title-tag">
                 <h1>Guide complet d'Omega-Serv</h1>
@@ -712,9 +712,9 @@
                 ouvre le guide intégré complet.
             </p>
             <div class="guide-meta">
-                <span>📅 Mise à jour : septembre 2026</span>
-                <span>📋 67 écrans documentés</span>
-                <span>🎯 Administrateurs et développeurs</span>
+                <span>📅 Mise à jour : Octobre 2026</span>
+                <span>📋 tout écrans documentés</span>
+                <span>🎯 Utilisateurs, Administrateurs et développeurs</span>
                 <span>🎨 Thème : Omega-Serv</span>
             </div>
         </div>
@@ -2011,10 +2011,25 @@
                             <div class="field-line"><span class="label">Réaction :</span> <span class="reaction reaction-hot">rechargement</span></div>
                         </div>
 
+                        <div class="field-card">
+                            <div class="field-name">Cross-Origin-Embedder-Policy</div>
+                            <div class="field-line"><span class="label">En clair :</span> <code>unsafe-none</code> (permissif, par défaut partout y compris <code>hardened</code>), <code>require-corp</code> ou <code>credentialless</code>.</div>
+                            <div class="field-line"><span class="label">À noter :</span> Toujours émis explicitement, même en <code>unsafe-none</code> — jamais un en-tête absent (un scanner externe distingue ainsi "non considéré" de "permissif par choix"). Contrairement à <code>Cross-Origin-Opener-Policy</code>/<code>Cross-Origin-Resource-Policy</code> (toujours <code>same-origin</code>, sans risque réel), une valeur stricte peut bloquer des ressources cross-origin (polices, images, iframes tiers) propres au site réellement servi.</div>
+                            <div class="field-line"><span class="label">Réaction :</span> <span class="reaction reaction-hot">rechargement</span></div>
+                        </div>
+
+                        <div class="field-card">
+                            <div class="field-name">Zones CSP (Ajouter une zone / Retirer)</div>
+                            <div class="field-line"><span class="label">En clair :</span> Exceptions EXPLICITES à la CSP globale, par préfixe de chemin — ex. <code>unsafe-inline</code> uniquement sous <code>/un-dossier/</code> qui en a réellement besoin, sans jamais relâcher la CSP du reste du site.</div>
+                            <div class="field-line"><span class="label">À noter :</span> Une zone REMPLACE ENTIÈREMENT la politique par défaut pour son préfixe, jamais une fusion de directives — l'assistant d'ajout (par directive, pré-rempli avec la politique globale actuelle) existe précisément pour éviter de sacrifier des directives par inadvertance.</div>
+                            <div class="field-line"><span class="label">Réaction :</span> enregistré immédiatement, rechargement automatique si un service actif existe.</div>
+                        </div>
+
                         <div class="warn-box">
                             <span class="box-title">⚠️ À savoir</span>
                             <ul>
                                 <li>Activer HSTS sans que TLS soit réellement actif n'a aucun effet utile : le navigateur ignore cet en-tête reçu en HTTP simple.</li>
+                                <li>Une zone CSP qui relâche <code>unsafe-inline</code>/<code>unsafe-eval</code>/une source générique <code>*</code> exige une confirmation explicite à l'ajout, et reste ensuite TOUJOURS visible dans <code>omega-serv audit security</code> (règles CSP-001/CSP-002, qui scannent aussi les zones) — même délibérée, jamais silencieuse.</li>
                             </ul>
                         </div>
                     </div>
@@ -2453,6 +2468,12 @@
                         </div>
 
                         <div class="field-card">
+                            <div class="field-name">waf magnet (alertes) / waf magnet (blocklist)</div>
+                            <div class="field-line"><span class="label">En clair :</span> Logs du script WAF complémentaire importé en mode magnet (<code>options.waf.magnet.paths</code>) — toujours proposés, même si le magnet n'est jamais configuré.</div>
+                            <div class="field-line"><span class="label">À noter :</span> Grisés (désactivés) tant que <code>options.waf.magnet.enabled</code> n'est pas actif. Une fois actif, un clic fonctionne même si le fichier n'existe pas encore (log vide, jamais une erreur).</div>
+                        </div>
+
+                        <div class="field-card">
                             <div class="field-name">Suivre en direct</div>
                             <div class="field-line"><span class="label">En clair :</span> Rafraîchit automatiquement toutes les secondes.</div>
                         </div>
@@ -2466,6 +2487,17 @@
                     </summary>
                     <div class="screen-body">
                         <p>Lance l'outil externe lnav sur un ou plusieurs logs fusionnés chronologiquement, dans un vrai terminal.</p>
+
+                        <div class="field-card">
+                            <div class="field-name">Cases à cocher (Access/Error/WAF alerts/WAF magnet)</div>
+                            <div class="field-line"><span class="label">En clair :</span> Les 2 logs du script magnet sont inclus d'office, comme les logs natifs. Un log coché mais absent est simplement ignoré au lancement, jamais bloquant pour les autres.</div>
+                        </div>
+
+                        <div class="field-card">
+                            <div class="field-name">Chemins épinglés</div>
+                            <div class="field-line"><span class="label">En clair :</span> Un chemin manuel saisi puis "Épinglé" est conservé PERSISTANT entre sessions (contrairement au champ manuel seul, utilisable une seule fois) — affiché ensuite comme une case à cocher supplémentaire, au même titre que les logs connus.</div>
+                            <div class="field-line"><span class="label">À noter :</span> "Retirer l'épingle" ne supprime jamais le fichier de log lui-même, seulement le raccourci.</div>
+                        </div>
 
                         <div class="info-box">
                             <span class="box-title">💡 À savoir</span>
@@ -2693,7 +2725,7 @@
             <summary>
                 <span class="wiki-icon">🛡️</span>
                 <span class="wiki-title">Active Sécurité (WAF + Active Defense)</span>
-                <span class="wiki-count">11 fiches</span>
+                <span class="wiki-count">12 fiches</span>
             </summary>
             <div class="wiki-body">
                 <p>Le centre de sécurité d'Omega-Serv. Tout est optionnel et désactivé par défaut.</p>
@@ -2921,6 +2953,47 @@
                         </div>
                     </div>
                 </details>
+
+                <details class="screen-card">
+                    <summary>
+                        <span class="screen-name">🧲 WAF — Magnet (import d'un WAF externe)</span>
+                        <span class="screen-path">Active Sécurité →</span>
+                    </summary>
+                    <div class="screen-body">
+                        <p>Importe un script WAF <code>mod_magnet</code> Lighttpd EXISTANT (écrit pour un autre site) sans le réécrire, comme renfort additif au WAF natif — il ne peut jamais lever un blocage déjà décidé par le natif.</p>
+
+                        <div class="info-box">
+                            <span class="box-title">💡 Pont <code>lighty.*</code>, pas un contrat inventé</span>
+                            Le script reçoit <code>lighty.env</code>/<code>lighty.header</code>/<code>lighty.content</code>/<code>lighty.stat</code> exactement comme sous un vrai Lighttpd (runtime Lua persistant : les compteurs internes du script — rate limiting, blocklist progressive — survivent entre requêtes). Convention de retour mod_magnet : <code>0</code> = continuer, un code ≥ 100 = blocage avec ce code HTTP.
+                        </div>
+
+                        <div class="field-card">
+                            <div class="field-name">Script (chemin relatif au projet)</div>
+                            <div class="field-line"><span class="label">En clair :</span> Le fichier Lua à importer — une liste des scripts trouvés sous <code>secure/waf/scripts/</code> est affichée en indice.</div>
+                        </div>
+
+                        <div class="field-card">
+                            <div class="field-name">Chemins personnels dissociés</div>
+                            <div class="field-line"><span class="label">En clair :</span> 5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine — propre à chaque script importé, jamais un contrat générique.</div>
+                            <div class="field-line"><span class="label">À noter :</span> Les dossiers parents sont créés automatiquement à l'usage réel, jamais lors d'un simple <code>config check</code>.</div>
+                        </div>
+
+                        <div class="field-card">
+                            <div class="field-name">Vérifier la compatibilité</div>
+                            <div class="field-line"><span class="label">En clair :</span> Exécute RÉELLEMENT le script avec les valeurs du formulaire en cours de saisie — scan statique (membres <code>lighty.X</code> non supportés) + exécution réelle sur une requête de test bénigne.</div>
+                            <div class="field-line"><span class="label">À utiliser :</span> Avant d'activer un script importé en production — répond à "ce script est-il compatible ?" sans rien écrire sur disque.</div>
+                        </div>
+
+                        <div class="warn-box">
+                            <span class="box-title">⚠️ Piège vérifié</span>
+                            <ul>
+                                <li>Un script importé peut référencer une fonctionnalité <code>lighty.*</code> non supportée par ce pont (reste toujours <code>nil</code> côté Lua) — toujours lancer "Vérifier la compatibilité" avant d'activer un nouveau script, surtout avec <code>on_error=fail-closed</code> (sinon, une seule incompatibilité peut bloquer du trafic légitime).</li>
+                                <li>Dépendance optionnelle <code>lupa</code> (<code>pip install -e ".[magnet]"</code>), jamais installée par défaut — son absence est signalée par le registre des capacités (<code>waf-magnet</code>) avec la commande exacte.</li>
+                                <li>Le script peut écrire <code>lighty.header</code>/<code>lighty.content</code> sans planter, mais ce n'est JAMAIS relu ni renvoyé au visiteur : Omega-Serv rend toujours sa propre page d'erreur générique.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </details>
             </div>
         </details>
 
@@ -3083,7 +3156,7 @@
             <summary>
                 <span class="wiki-icon">❓</span>
                 <span class="wiki-title">FAQ — questions fréquentes</span>
-                <span class="wiki-count">15 fiches</span>
+                <span class="wiki-count">26 fiches</span>
             </summary>
             <div class="wiki-body">
                 <p>Les questions qui reviennent le plus souvent, avec des réponses concrètes — la plupart du temps, ce sont des pièges déjà rencontrés par d'autres utilisateurs.</p>
@@ -3265,6 +3338,116 @@
                     </summary>
                     <div class="faq-answer">
                         Non, jamais par défaut. Si vous incluez les zones d'authentification (hash de mots de passe) ou les certificats (clés privées TLS), la sauvegarde contient des secrets réels en clair — une confirmation explicite supplémentaire est demandée avant de créer ce type de sauvegarde. Protégez ces fichiers comme n'importe quel secret.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">J'ai mis à jour le code d'Omega-Serv (nouvelle archive, correctif appliqué) mais rien ne change jamais, même après un rechargement (SIGHUP) — pourquoi ?</span>
+                        <span class="faq-cat">Redémarrage</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Piège réel rencontré (2026-10-10) : le rechargement à chaud (SIGHUP, écran SERVICE → Recharger) ne relit QUE certains éléments de configuration (règles WAF, zones d'authentification) — il ne recharge JAMAIS le code Python lui-même, qui reste celui chargé en mémoire depuis le DERNIER démarrage du processus. Après une mise à jour du code, un <strong>redémarrage complet</strong> est toujours nécessaire (<code>systemctl restart &lt;service&gt;</code>), jamais un simple rechargement. Vérifiez <code>systemctl status &lt;service&gt;</code> : une date de démarrage plus ancienne que votre mise à jour confirme immédiatement ce diagnostic.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">J'ai activé le script magnet mais le serveur refuse de démarrer / l'écran signale "lupa" absent — pourquoi ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Le magnet est un extra OPTIONNEL, jamais installé par défaut : <code>pip install -e ".[magnet]"</code> (dépendance <code>lupa</code>, liaison Lua embarquée — aucun interpréteur Lua système requis). Son absence est signalée par le registre des capacités (capacité <code>waf-magnet</code>, écran Capacités) avec la commande exacte, et bloque le démarrage si <code>options.waf.magnet.enabled</code> est actif sans cette dépendance — jamais un échec silencieux.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Le but du magnet, c'est d'écrire un nouveau WAF en Lua ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Non — c'est l'inverse : importer un script WAF <code>mod_magnet</code> Lighttpd EXISTANT, écrit à l'origine pour un autre site, SANS le réécrire. Le pont <code>lighty.*</code> reproduit le modèle d'exécution réel de Lighttpd plutôt qu'un contrat inventé par Omega-Serv. Le natif reste TOUJOURS actif en parallèle : le magnet est un renfort additif, il ne peut jamais lever un blocage déjà décidé par le natif.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Comment savoir si un script magnet importé est compatible AVANT de l'activer en production ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Écran Active Sécurité → WAF → Magnet, bouton "Vérifier la compatibilité" (ou <code>omega-serv waf test</code> en CLI) — exécute RÉELLEMENT le script avec les valeurs du formulaire en cours de saisie. Deux contrôles combinés : un scan statique signale toute référence <code>lighty.X</code> non supportée ; un smoke test exécute le script pour de vrai sur une requête de test bénigne. Les deux s'affichent comme avertissements explicites.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">J'ai activé un script magnet avec on_error="fail-closed" et maintenant du trafic légitime se fait bloquer — pourquoi ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        <code>fail-closed</code> bloque TOUTE requête qui déclenche une erreur du script (incompatibilité, exception Lua, timeout) — dangereux combiné à un script jamais vérifié au préalable. Lancez "Vérifier la compatibilité" avant d'activer fail-closed en production. En cas de doute, repassez <code>on_error</code> à <code>ignore</code> (le défaut) : le trafic continue d'être traité par le natif seul si le magnet échoue.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Les logs/la blocklist de mon script magnet importé n'apparaissent jamais sur le disque — pourquoi ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Un script <code>mod_magnet</code> écrit typiquement ses logs/sa blocklist à des chemins ABSOLUS en dur, propres à son site d'origine. La dissociation se fait via <code>options.waf.magnet.paths</code>, injectés dans le script comme table Lua globale <code>omega_magnet_paths</code> — seule une COPIE adaptée du script (les 5 lignes de configuration modifiées pour lire cette table, avec repli sur le chemin en dur d'origine si absente) en bénéficie. <code>secure/waf/scripts/waf.lua</code> est livré comme exemple minimal de cette technique.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Mon script magnet écrit une page HTML personnalisée (lighty.content) en cas de blocage — pourquoi je ne la vois jamais ?</span>
+                        <span class="faq-cat">WAF — Magnet</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Choix délibéré : le moteur WAF (natif ou magnet) rend TOUJOURS une décision, jamais une page HTML — c'est le serveur qui rend systématiquement sa propre page d'erreur générique. Les écritures <code>lighty.header</code>/<code>lighty.content</code> sont acceptées (le script ne plante jamais pour les avoir faites) mais jamais relues ni renvoyées au visiteur.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">J'ai ajouté une zone CSP pour un dossier, et maintenant ce dossier semble avoir perdu d'autres protections — pourquoi ?</span>
+                        <span class="faq-cat">Sécurité — CSP</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Une zone CSP REMPLACE ENTIÈREMENT la politique par défaut pour son préfixe — jamais une fusion. Une zone qui ne contient que <code>style-src 'self' 'unsafe-inline'</code> fait disparaître toutes les AUTRES directives sous ce préfixe. L'assistant d'ajout de zone existe exactement pour éviter ce piège : chaque directive y est pré-remplie avec sa valeur ACTUELLE (la politique globale), à modifier uniquement là où c'est nécessaire.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Comment autoriser "unsafe-inline" uniquement pour un dossier précis, sans affaiblir le reste du site ?</span>
+                        <span class="faq-cat">Sécurité — CSP</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Zones CSP (<code>security.csp_zones</code>, écran Sécurité générique) : une exception EXPLICITE par préfixe de chemin, jamais une relâche globale. L'assistant d'ajout détecte toute directive relâchée et exige une confirmation explicite supplémentaire. Cette zone reste ensuite TOUJOURS visible dans <code>omega-serv audit security</code> (règles CSP-001/CSP-002, qui scannent aussi les zones) — même délibérée, jamais silencieuse.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Pourquoi Cross-Origin-Embedder-Policy reste à "unsafe-none" même en profil hardened ?</span>
+                        <span class="faq-cat">Sécurité — CSP</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Choix délibéré, différent de <code>Cross-Origin-Opener-Policy</code>/<code>Cross-Origin-Resource-Policy</code> (toujours <code>same-origin</code>, sans risque réel) : une valeur stricte peut bloquer des ressources cross-origin (polices, images, iframes tiers) propres au contenu réellement servi, qu'un serveur générique ne connaît jamais à l'avance. Le header reste néanmoins toujours émis explicitement, même à cette valeur permissive. Réglable via <code>security.coep_mode</code> si vous connaissez le contenu servi.
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary>
+                        <span class="faq-question">Le listing de répertoire perd tout son style visuel depuis que j'ai une CSP stricte — pourquoi ?</span>
+                        <span class="faq-cat">Sécurité — CSP</span>
+                    </summary>
+                    <div class="faq-answer">
+                        Corrigé (2026-10-10) : le CSS du listing est désormais servi en fichier EXTERNE réservé plutôt qu'inline dans le HTML — <code>style-src 'self'</code> (politique par défaut) autorise déjà une feuille de style de même origine, sans besoin d'aucune exception. Si ce problème persiste après mise à jour, voyez la question sur le redémarrage après mise à jour du code ci-dessus : un simple rechargement (SIGHUP) ne suffit jamais à appliquer un changement de code.
                     </div>
                 </details>
             </div>

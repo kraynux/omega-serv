@@ -1,0 +1,31 @@
+# Exemple de liste de mots-clefs pour le scope "referer" (OMEGA-SERV_
+# PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.md, lot B) - JAMAIS charge par
+# defaut : renommez ce fichier en "referer-spam.txt" (sans ".example")
+# et declarez-le dans options.waf.rules.keyword_lists pour l'activer.
+#
+# Un mot-clef ou motif simple par ligne - pas de regex, pas de
+# guillemets, pas de virgule : chaque ligne est echappee automatiquement
+# avant d'etre compilee en une seule regle a l'alternance. Les lignes
+# vides et celles commencant par '#' sont ignorees. Insensible a la
+# casse. Ajoutez vos propres mots-clefs au fil du temps, une ligne a la
+# fois - aucune connaissance de JSON ou de regex necessaire.
+
+sex
+porn
+xxx
+casino
+bet
+viagra
+cialis
+levitra
+pharma
+pharmacy
+drugs
+pill
+tablets
+medicament
+rx
+online-pharmacy
+buy-pills
+order-pills
+loan

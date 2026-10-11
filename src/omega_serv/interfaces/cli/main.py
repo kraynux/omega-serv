@@ -458,13 +458,33 @@ def cmd_waf_test(args: argparse.Namespace, container: DependencyContainer) -> in
         print("Erreur : options.waf absent de la configuration (executer 'omega-serv config init' ou ajouter la section waf).", file=sys.stderr)
         return 1
 
-    report = simulate_waf_request(args.method, args.path, args.query or "", args.body or "", args.remote_ip, waf)
+    report = asyncio.run(
+        simulate_waf_request(args.method, args.path, args.query or "", args.body or "", args.remote_ip, waf)
+    )
     decision = report.decision
 
-    print(f"Decision : {decision.action.upper()}")
+    if report.native_decision is not None:
+        print(f"Decision native : {report.native_decision.action.upper()} (score {report.native_decision.score})")
+    if report.magnet_decision is not None:
+        print(f"Decision magnet : {report.magnet_decision.action.upper()} (score {report.magnet_decision.score})")
+    if report.magnet_error:
+        print(f"ATTENTION - le script magnet a leve une erreur sur cette requete : {report.magnet_error}")
+    if report.magnet_unsupported_members:
+        print(
+            "ATTENTION - le script magnet reference lighty."
+            f"{{{', '.join(sorted(report.magnet_unsupported_members))}}}, non supporte par ce pont "
+            "(toujours nil - le script peut se comporter differemment qu'en Lighttpd reel)"
+        )
+    if waf.config.magnet.on_error == "fail-closed" and (report.magnet_error or report.magnet_unsupported_members):
+        print(
+            "ATTENTION - options.waf.magnet.on_error='fail-closed' combine a une incompatibilite detectee : "
+            "toute requete future qui declenche la meme erreur sera BLOQUEE (y compris du trafic legitime). "
+            "Passer a 'ignore', ou corriger le script, avant d'activer ce script en production."
+        )
+    print(f"Decision finale : {decision.action.upper()}")
     print(f"Statut : {decision.status_code if decision.status_code is not None else '-'}")
     print(f"Score : {decision.score}")
-    print(f"Regles : {', '.join(f.rule_id for f in decision.findings) or '-'}")
+    print(f"Regles : {', '.join(f'{f.rule_id} ({f.pack})' for f in decision.findings) or '-'}")
     print(f"Politique de zone : {report.zone_id}")
     print(f"Mode : {report.mode}")
     if decision.blocked_reason:

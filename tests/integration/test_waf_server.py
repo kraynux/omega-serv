@@ -5,6 +5,7 @@ import asyncio
 import http.client
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -13,12 +14,27 @@ from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
 from omega_serv.infrastructure.logging.file_line_logger import FileLineLogger
 
+try:
+    import lupa  # noqa: F401 - detection seulement, voir _MAGNET_AVAILABLE
+    _MAGNET_AVAILABLE = True
+except ImportError:
+    _MAGNET_AVAILABLE = False
+
 _SQLI_PACK = {
     "version": 1,
     "pack": "body-sqli",
     "enabled": True,
     "rules": [
         {"id": "SQLI-001", "description": "Union select", "scope": ["query"], "pattern": r"union\s+select", "weight": 5},
+    ],
+}
+
+_REFERER_SPAM_PACK = {
+    "version": 1,
+    "pack": "referer-spam",
+    "enabled": True,
+    "rules": [
+        {"id": "REFERER-001", "description": "Referer spammeur", "scope": ["referer"], "pattern": "casino", "weight": 5},
     ],
 }
 
@@ -34,6 +50,28 @@ class _WafServerTestCase(unittest.IsolatedAsyncioTestCase):
         rules_dir = self.root / "secure" / "waf" / "rules"
         rules_dir.mkdir(parents=True)
         (rules_dir / "body-sqli.json").write_text(json.dumps(_SQLI_PACK))
+        (rules_dir / "referer-spam.json").write_text(json.dumps(_REFERER_SPAM_PACK))
+
+        keywords_dir = rules_dir / "keywords"
+        keywords_dir.mkdir()
+        (keywords_dir / "referer-spam.txt").write_text("# liste de test\ncasino\nviagra\n")
+
+        scripts_dir = self.root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "block-magic.lua").write_text(
+            "local env = lighty.env or {}\n"
+            "local path = env['uri.path'] or ''\n"
+            "local query = env['uri.query'] or ''\n"
+            "if string.find(path .. ' ' .. query, 'magic%-word') then\n"
+            "    return 403\n"
+            "end\n"
+            "return 0\n"
+        )
+        (scripts_dir / "slow.lua").write_text(
+            "local t0 = os.clock()\n"
+            "while os.clock() - t0 < 0.3 do end\n"
+            "return 0\n"
+        )
 
         self.filesystem = LocalFilesystem()
         self.logger = FileLineLogger()
@@ -102,6 +140,171 @@ class TestWafSignatureBlocking(_WafServerTestCase):
         })
         status, _, _ = await self._request("GET", "/healthz?q=union%20select%201")
         self.assertEqual(status, 200)
+
+
+class TestWafRefererScope(_WafServerTestCase):
+    async def test_clean_referer_passes(self):
+        await self._start({"mode": "block", "rules": {"paths": ["secure/waf/rules/referer-spam.json"]}})
+        status, _, _ = await self._request("GET", "/index.html", headers={"Referer": "https://example.org/"})
+        self.assertEqual(status, 200)
+
+    async def test_spam_referer_blocked(self):
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"paths": ["secure/waf/rules/referer-spam.json"]},
+        })
+        status, _, _ = await self._request(
+            "GET", "/index.html", headers={"Referer": "https://evil-casino-spam.example/"},
+        )
+        self.assertEqual(status, 403)
+
+    async def test_word_in_another_header_does_not_trigger_referer_rule(self):
+        """Preuve que le scope referer n'inspecte QUE Referer - un autre
+        en-tete contenant le meme mot ne doit jamais declencher la regle
+        (contrairement a scope=headers, qui aurait matche)."""
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"paths": ["secure/waf/rules/referer-spam.json"]},
+        })
+        status, _, _ = await self._request(
+            "GET", "/index.html",
+            headers={"Referer": "https://example.org/", "X-Custom": "casino"},
+        )
+        self.assertEqual(status, 200)
+
+
+class TestWafKeywordLists(_WafServerTestCase):
+    async def test_clean_referer_passes(self):
+        await self._start({
+            "mode": "block",
+            "rules": {"keyword_lists": [
+                {"id": "REFERER-SPAM", "scope": ["referer"], "file": "secure/waf/rules/keywords/referer-spam.txt"},
+            ]},
+        })
+        status, _, _ = await self._request("GET", "/index.html", headers={"Referer": "https://example.org/"})
+        self.assertEqual(status, 200)
+
+    async def test_keyword_from_file_is_blocked(self):
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"keyword_lists": [
+                {"id": "REFERER-SPAM", "scope": ["referer"], "file": "secure/waf/rules/keywords/referer-spam.txt", "weight": 5},
+            ]},
+        })
+        status, _, _ = await self._request(
+            "GET", "/index.html", headers={"Referer": "https://evil-casino-spam.example/"},
+        )
+        self.assertEqual(status, 403)
+
+    async def test_keyword_lists_and_json_rule_packs_both_apply(self):
+        """Les deux mecanismes (RulePack JSON classique + keyword_lists)
+        cohabitent et sont tous les deux evalues pour la meme requete."""
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {
+                "paths": ["secure/waf/rules/body-sqli.json"],
+                "keyword_lists": [
+                    {"id": "REFERER-SPAM", "scope": ["referer"], "file": "secure/waf/rules/keywords/referer-spam.txt", "weight": 5},
+                ],
+            },
+        })
+        sqli_status, _, _ = await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        self.assertEqual(sqli_status, 403)
+        referer_status, _, _ = await self._request(
+            "GET", "/index.html", headers={"Referer": "https://evil-viagra-spam.example/"},
+        )
+        self.assertEqual(referer_status, 403)
+        clean_status, _, _ = await self._request("GET", "/index.html")
+        self.assertEqual(clean_status, 200)
+
+
+@unittest.skipUnless(_MAGNET_AVAILABLE, "extra optionnel 'magnet' (lupa) non installe")
+class TestWafMagnet(_WafServerTestCase):
+    async def test_clean_request_passes(self):
+        await self._start({
+            "mode": "block",
+            "rules": {"paths": ["secure/waf/rules/body-sqli.json"]},
+            "magnet": {"enabled": True, "script": "secure/waf/scripts/block-magic.lua"},
+        })
+        status, _, _ = await self._request("GET", "/index.html")
+        self.assertEqual(status, 200)
+
+    async def test_magnet_blocks_what_native_alone_would_miss(self):
+        """Le mot 'magic-word' n'est connu d'AUCUN pack JSON natif - seul
+        le script magnet le detecte, preuve qu'il s'agit bien d'un
+        renfort complementaire, pas d'une simple redite du natif."""
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"paths": ["secure/waf/rules/body-sqli.json"]},
+            "magnet": {"enabled": True, "script": "secure/waf/scripts/block-magic.lua"},
+        })
+        status, _, _ = await self._request("GET", "/index.html?q=magic-word")
+        self.assertEqual(status, 403)
+
+    async def test_native_and_magnet_both_applied(self):
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"paths": ["secure/waf/rules/body-sqli.json"]},
+            "magnet": {"enabled": True, "script": "secure/waf/scripts/block-magic.lua"},
+        })
+        sqli_status, _, _ = await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        self.assertEqual(sqli_status, 403)
+        magnet_status, _, _ = await self._request("GET", "/index.html?q=magic-word")
+        self.assertEqual(magnet_status, 403)
+        clean_status, _, _ = await self._request("GET", "/index.html")
+        self.assertEqual(clean_status, 200)
+
+    async def test_magnet_never_lifts_a_native_block(self):
+        """Etude §5.5 point 2 : le magnet est strictement additif,
+        jamais soustractif - meme si son propre script dirait 'allow'
+        sur cette requete (ce que fait block-magic.lua pour tout ce qui
+        ne contient pas 'magic-word'), un blocage natif reste un
+        blocage."""
+        await self._start({
+            "mode": "block",
+            "scoring": {"block_threshold": 5},
+            "rules": {"paths": ["secure/waf/rules/body-sqli.json"]},
+            "magnet": {"enabled": True, "script": "secure/waf/scripts/block-magic.lua"},
+        })
+        status, _, _ = await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        self.assertEqual(status, 403)
+
+    async def test_slow_magnet_script_never_blocks_unrelated_requests(self):
+        """Lot E, decision D2 - preuve directe de non-blocage de la
+        boucle asyncio, SANS confondre avec la parallelisme CPU du
+        script Lua lui-meme (lupa ne libere pas necessairement le GIL
+        pendant l'execution - deux scripts magnet concurrents peuvent
+        donc se disputer le GIL entre eux, ce que D2 n'a jamais promis).
+        Ce que D2 garantit reellement : UNE requete qui ne touche PAS le
+        magnet (/healthz, exclu du WAF par defaut) reste rapide MEME SI
+        une autre requete occupe un thread du pool magnet pendant ~300ms
+        (slow.lua) - la boucle d'evenements elle-meme n'est jamais
+        bloquee en attendant ce thread."""
+        await self._start({
+            "mode": "block",
+            "rules": {"paths": ["secure/waf/rules/body-sqli.json"]},
+            "magnet": {"enabled": True, "script": "secure/waf/scripts/slow.lua", "timeout_ms": 5000},
+        })
+
+        async def _timed_request(path: str) -> tuple[int, float]:
+            start = time.monotonic()
+            status, _, _ = await self._request("GET", path)
+            return status, time.monotonic() - start
+
+        (slow_status, slow_duration), (fast_status, fast_duration) = await asyncio.gather(
+            _timed_request("/index.html"),
+            _timed_request("/healthz"),
+        )
+        self.assertEqual(slow_status, 200)
+        self.assertEqual(fast_status, 200)
+        self.assertGreaterEqual(slow_duration, 0.25)  # confirme que slow.lua a bien tourne pour de vrai
+        self.assertLess(fast_duration, 0.15)  # jamais mise en attente derriere le thread magnet
 
 
 class TestWafBlocklist(_WafServerTestCase):

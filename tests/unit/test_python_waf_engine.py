@@ -59,6 +59,31 @@ class TestPythonWafEngine(unittest.TestCase):
         decision = engine.inspect(_request(headers=[("User-Agent", "sqlmap/1.6")]))
         self.assertEqual(decision.action, "block")
 
+    def test_referer_scope_available_when_present(self):
+        pack = compile_rule_pack(RulePack(
+            version=1, pack="referer-spam", enabled=True,
+            rules=(RuleDefinition(id="REFERER-001", description="", scope=("referer",), pattern="casino", weight=5),),
+        ))
+        engine = PythonWafEngine((pack,), parse_waf_config({"mode": "block"}))
+        decision = engine.inspect(_request(headers=[("Referer", "https://evil-casino-spam.example/")]))
+        self.assertEqual(decision.action, "block")
+
+    def test_referer_scope_is_not_polluted_by_other_headers(self):
+        """Une regle scope=referer ne doit matcher QUE l'en-tete Referer -
+        jamais un autre en-tete qui contiendrait par hasard le meme mot
+        (contrairement a scope=headers, qui inspecte tous les en-tetes
+        concatenes et serait, lui, sensible a ce faux positif)."""
+        pack = compile_rule_pack(RulePack(
+            version=1, pack="referer-spam", enabled=True,
+            rules=(RuleDefinition(id="REFERER-001", description="", scope=("referer",), pattern="casino", weight=3),),
+        ))
+        engine = PythonWafEngine((pack,), parse_waf_config({"mode": "block"}))
+        decision = engine.inspect(_request(headers=[
+            ("Referer", "https://example.org/"),
+            ("X-Custom", "casino"),
+        ]))
+        self.assertEqual(decision.action, "allow")
+
     def test_headers_scope_only_used_when_configured(self):
         pack = compile_rule_pack(RulePack(
             version=1, pack="p", enabled=True,

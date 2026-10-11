@@ -12,13 +12,16 @@ import os
 import shutil
 import tempfile
 import unittest
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from textual.widgets import Button, Checkbox, DataTable, RichLog, Select
+from textual.widgets import Button, Checkbox, DataTable, Input, RichLog, Select
 
 from omega_serv.application.config.generate_config import generate_default_config
+from omega_serv.application.config.load_config import load_config
 from omega_serv.bootstrap.container import DependencyContainer
+from omega_serv.domain.config.option import Option
 from omega_serv.interfaces.tui.app import OmegaServApp
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.export_log_archives_screen import ExportLogArchivesScreen
@@ -78,6 +81,14 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
         pilot.app.screen.query_one("#logs", Button).press()
         await pilot.pause()
         self.assertIsInstance(pilot.app.screen, LogsMenuScreen)
+
+    def _enable_waf_magnet(self, container: DependencyContainer) -> None:
+        load_result = load_config(container.configuration, container.config_file)
+        assert load_result.config is not None
+        new_options = dict(load_result.config.options)
+        new_options["waf"] = Option(name="waf", enabled=True, settings={"magnet": {"enabled": True}})
+        new_config = replace(load_result.config, options=new_options)
+        container.configuration.save(container.config_file, new_config)
 
     async def test_viewer_shows_missing_file_message(self):
         container = self._container()
@@ -185,6 +196,53 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
         finally:
             self.access_log.chmod(0o644)
 
+    async def test_viewer_magnet_buttons_disabled_when_magnet_inactive(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_logs_menu(pilot)
+            pilot.app.screen.query_one("#viewer", Button).press()
+            await pilot.pause()
+            self.assertTrue(pilot.app.screen.query_one("#open-magnet_alerts", Button).disabled)
+            self.assertTrue(pilot.app.screen.query_one("#open-magnet_blocklist", Button).disabled)
+
+    async def test_viewer_magnet_log_shows_empty_hint_when_active_but_no_alert_yet(self):
+        container = self._container()
+        self._generate_config(container)
+        self._enable_waf_magnet(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_logs_menu(pilot)
+            pilot.app.screen.query_one("#viewer", Button).press()
+            await pilot.pause()
+            button = pilot.app.screen.query_one("#open-magnet_alerts", Button)
+            self.assertFalse(button.disabled)
+            button.press()
+            await pilot.pause()
+            content = "\n".join(str(line) for line in pilot.app.screen.query_one("#log-content", RichLog).lines)
+            self.assertIn("log vide", content)
+
+    async def test_viewer_magnet_log_shows_content_when_active_and_file_exists(self):
+        container = self._container()
+        self._generate_config(container)
+        self._enable_waf_magnet(container)
+        magnet_log = self.root / "var" / "log" / "waf-magnet-alerts.log"
+        magnet_log.parent.mkdir(parents=True, exist_ok=True)
+        magnet_log.write_text("alerte magnet 1\n")
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_logs_menu(pilot)
+            pilot.app.screen.query_one("#viewer", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#open-magnet_alerts", Button).press()
+            await pilot.pause()
+            content = "\n".join(str(line) for line in pilot.app.screen.query_one("#log-content", RichLog).lines)
+            self.assertIn("alerte magnet 1", content)
+
     async def test_viewer_back_button_returns_to_logs_menu(self):
         container = self._container()
         self._generate_config(container)
@@ -252,6 +310,57 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(self.lnav_calls), 1)
             paths, _title, _menu_label = self.lnav_calls[0]
             self.assertEqual(paths, (self.access_log,))
+
+    async def test_lnav_launches_with_magnet_log_selected(self):
+        magnet_log = self.root / "var" / "log" / "waf-magnet-alerts.log"
+        magnet_log.parent.mkdir(parents=True, exist_ok=True)
+        magnet_log.write_text("alerte magnet 1\n")
+        container = self._container(lnav_runner=self._fake_lnav_runner)
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_logs_menu(pilot)
+            pilot.app.screen.query_one("#lnav", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#check-magnet_alerts", Checkbox).value = True
+            await pilot.pause()
+            pilot.app.screen.query_one("#launch", Button).press()
+            await pilot.pause()
+            self.assertEqual(len(self.lnav_calls), 1)
+            paths, _title, _menu_label = self.lnav_calls[0]
+            self.assertEqual(paths, (magnet_log,))
+
+    async def test_lnav_pin_check_launch_then_unpin(self):
+        extra_log = self.root / "extra.log"
+        extra_log.write_text("ligne externe\n")
+        container = self._container(lnav_runner=self._fake_lnav_runner)
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_logs_menu(pilot)
+            pilot.app.screen.query_one("#lnav", Button).press()
+            await pilot.pause()
+
+            pilot.app.screen.query_one("#manual-path-input", Input).value = str(extra_log)
+            pilot.app.screen.query_one("#pin-manual", Button).press()
+            await pilot.pause()
+            pinned_checkbox = pilot.app.screen.query_one("#check-pinned-0", Checkbox)
+            pinned_checkbox.value = True
+            await pilot.pause()
+            pilot.app.screen.query_one("#launch", Button).press()
+            await pilot.pause()
+            self.assertEqual(len(self.lnav_calls), 1)
+            paths, _title, _menu_label = self.lnav_calls[0]
+            self.assertEqual(paths, (extra_log,))
+
+            pilot.app.screen.query_one("#unpin-select", Select).value = str(extra_log)
+            await pilot.pause()
+            pilot.app.screen.query_one("#unpin", Button).press()
+            await pilot.pause()
+            with self.assertRaises(Exception):
+                pilot.app.screen.query_one("#check-pinned-0", Checkbox)
 
     async def test_lnav_unavailable_without_injected_runner(self):
         container = self._container()

@@ -44,6 +44,14 @@ omega-serv = "omega_serv.__main__:main"
 # jamais une dependance d'execution, seulement de developpement/test.
 test = ["hypothesis>=6.100"]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11", "import-linter>=2.0", "types-psutil>=5.9"]
+# Script WAF complementaire type "magnet" (OMEGA-SERV_PLAN-DETAILLE_
+# REFERER_ET_MAGNET_WAF.md, lot E, decision D4) - extra OPTIONNEL,
+# jamais dans `dependencies` de base : le WAF natif Python fonctionne
+# integralement sans lui, c'est une fonctionnalite avancee reservee aux
+# utilisateurs qui activent explicitement options.waf.magnet. Roue
+# precompilee manylinux verifiee disponible (Linux x86_64/Python 3.14,
+# aucune compilation locale requise) avant d'ajouter cette dependance.
+magnet = ["lupa>=2.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -67,6 +75,13 @@ no_implicit_optional = true
 [[tool.mypy.overrides]]
 # pyte ne publie aucun stub de types (plan interface §3.4/§8, ecran lnav).
 module = "pyte"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# lupa ne publie aucun stub de types (lot E magnet, extra optionnel
+# [project.optional-dependencies].magnet - voir infrastructure/waf/
+# lua_waf_adapter.py, seul module qui l'importe).
+module = "lupa"
 ignore_missing_imports = true
 
 # Controle d'imports entre couches. PAS un copie-colle verbatim du gabarit
@@ -294,3 +309,53 @@ source_modules = [
     "omega_serv.infrastructure.waf",
 ]
 forbidden_modules = ["sqlite3"]
+
+[[tool.importlinter.contracts]]
+# lupa seulement dans infrastructure/waf/lua_waf_adapter.py - OMEGA-SERV_
+# PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.md, lot E : seule implementation
+# WafPort pour le script WAF complementaire "magnet" (extra optionnel
+# pyproject.toml [project.optional-dependencies].magnet, jamais dans les
+# dependances de base). application/ ET interfaces.cli absents de cette
+# liste pour la meme raison que le contrat sqlite3 ci-dessus
+# (transitivite d'import-linter : application/server/start_server.py doit
+# pouvoir construire LuaWafAdapter par configuration, "usine par
+# configuration" deja etablie pour WAF/auth). interfaces.tui reste
+# protegee : un ecran doit toujours appeler un cas d'usage application/
+# plutot que construire un adaptateur infrastructure/ lui-meme. Les
+# fichiers de infrastructure.waf AUTRES que lua_waf_adapter.py sont
+# listes individuellement (le moteur natif, les chargeurs de regles/
+# mots-clefs et les stores blocklist/rate-limit/reputation n'ont aucune
+# raison d'importer lupa).
+name = "lupa seulement dans infrastructure.waf.lua_waf_adapter"
+type = "forbidden"
+source_modules = [
+    "omega_serv.core",
+    "omega_serv.domain",
+    "omega_serv.ports",
+    "omega_serv.interfaces.tui",
+    "omega_serv.bootstrap",
+    "omega_serv.infrastructure.auth",
+    "omega_serv.infrastructure.clock",
+    "omega_serv.infrastructure.config",
+    "omega_serv.infrastructure.exporters",
+    "omega_serv.infrastructure.fastcgi",
+    "omega_serv.infrastructure.filesystem",
+    "omega_serv.infrastructure.lnav",
+    "omega_serv.infrastructure.logging",
+    "omega_serv.infrastructure.persistence",
+    "omega_serv.infrastructure.probe",
+    "omega_serv.infrastructure.process",
+    "omega_serv.infrastructure.proxy",
+    "omega_serv.infrastructure.security",
+    "omega_serv.infrastructure.server",
+    "omega_serv.infrastructure.services",
+    "omega_serv.infrastructure.tls",
+    "omega_serv.infrastructure.upload",
+    "omega_serv.infrastructure.waf.blocklist_store",
+    "omega_serv.infrastructure.waf.keyword_list_loader",
+    "omega_serv.infrastructure.waf.python_waf_engine",
+    "omega_serv.infrastructure.waf.rate_limit_store",
+    "omega_serv.infrastructure.waf.reputation_tracker",
+    "omega_serv.infrastructure.waf.rule_pack_loader",
+]
+forbidden_modules = ["lupa"]

@@ -21,6 +21,10 @@ if TYPE_CHECKING:
 
 from omega_serv.application.server.healthz import HEALTHZ_PATH, handle_healthz
 from omega_serv.application.server.serve_fastcgi import serve_fastcgi
+from omega_serv.application.server.serve_dirlisting_css import (
+    CSS_URL_PREFIX,
+    handle_dirlisting_css_request,
+)
 from omega_serv.application.server.serve_icon import ICON_URL_PREFIX, handle_icon_request
 from omega_serv.application.server.serve_proxy import serve_proxy
 from omega_serv.application.server.serve_static_file import serve_static_file
@@ -112,6 +116,9 @@ async def route_request(
 
     if request.path.startswith(ICON_URL_PREFIX):
         return handle_icon_request(request)
+
+    if request.path.startswith(CSS_URL_PREFIX):
+        return handle_dirlisting_css_request(request)
 
     redirect_settings = _option_settings(config, "redirects")
     if redirect_settings is not None:

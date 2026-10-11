@@ -21,6 +21,9 @@ from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.domain.security.tls.validation import TlsStartupFacts, validate_tls_startup
 from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
 from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
+from omega_serv.application.server.start_server import resolve_magnet_paths
+from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_list
+from omega_serv.infrastructure.waf.lua_waf_adapter import WafMagnetScriptError, load_lua_waf_adapter
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_pack
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -65,7 +68,9 @@ def validate_config_environment(
 
     waf_option = config.options.get("waf")
     if waf_option is not None and waf_option.enabled:
-        errors.extend(_validate_waf_environment(waf_option.settings, filesystem, project_root))
+        errors.extend(
+            _validate_waf_environment(waf_option.settings, filesystem, project_root, config.paths.waf_script)
+        )
 
     if config.tls.enabled and config.tls.mode == "direct":
         errors.extend(_validate_tls_environment(config, filesystem, project_root, certificate_tool, self_signed_public_bind_confirmed))
@@ -245,7 +250,9 @@ def _validate_tls_environment(
     return validate_tls_startup(facts)
 
 
-def _validate_waf_environment(settings: dict, filesystem: FilesystemPort, project_root: Path) -> list[str]:
+def _validate_waf_environment(
+    settings: dict, filesystem: FilesystemPort, project_root: Path, default_waf_script: str,
+) -> list[str]:
     """Verifie que les packs de regles configures existent reellement
     et sont chargeables - la validation structurelle pure
     (domain/security/waf/config.py::validate_waf_config) ne peut pas le
@@ -260,5 +267,25 @@ def _validate_waf_environment(settings: dict, filesystem: FilesystemPort, projec
             load_rule_pack(filesystem, path)
         except (WafRuleLoadError, WafRuleValidationError) as e:
             errors.append(f"options.waf.rules.paths : {e}")
+
+    for definition in waf_config.keyword_lists:
+        path = project_root / definition.file
+        try:
+            load_keyword_list(filesystem, definition, path)
+        except WafRuleLoadError as e:
+            errors.append(f"options.waf.rules.keyword_lists[{definition.id!r}] : {e}")
+
+    if waf_config.magnet.enabled:
+        script_path = project_root / (waf_config.magnet.script or default_waf_script)
+        resolved_paths = resolve_magnet_paths(project_root, waf_config.magnet.paths)
+        try:
+            load_lua_waf_adapter(filesystem, script_path, waf_config, resolved_paths)
+        except WafMagnetScriptError as e:
+            errors.append(f"options.waf.magnet : {e}")
+        except ImportError:
+            errors.append(
+                "options.waf.magnet : dependance 'lupa' absente - installer l'extra optionnel "
+                "avec `pip install -e \".[magnet]\"` (jamais installe par defaut, voir pyproject.toml)"
+            )
 
     return errors

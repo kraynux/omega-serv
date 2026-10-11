@@ -9,14 +9,26 @@ fichiers non echappes").
 
 Personnalisation (guide d'aide, point 1 : CSS de
 base + header/readme façon lighttpd `dir-listing.*`) portee par
-`DirlistingSettings` : CSS toujours genere en ligne (jamais de jinja2
-ici - confine a infrastructure/exporters/html_exporter.py par contrat
-import-linter dedie), reutilisant le meme catalogue de themes que le
+`DirlistingSettings`, reutilisant le meme catalogue de themes que le
 reste de la suite (`omega_lib.theme.policies.EXPORT_PALETTES`, D-007/
-D-008) plutot qu'une palette isolee - defaut "omega-base". `header_content`/`readme_content` arrivent deja lus
-depuis le disque (ce module reste pur, sans I/O - la lecture reelle est
-la responsabilite de application/server/serve_static_file.py, seul
-detenteur d'un FilesystemPort)."""
+D-008) plutot qu'une palette isolee - defaut "omega-base".
+
+CSS servi en fichier EXTERNE reserve (retour utilisateur 2026-10-10 :
+"la thematique CSS casse sur les profils autres que minimal"), jamais
+plus inline - correction du vrai probleme plutot qu'une exception CSP :
+`style-src 'self'` (domain/security/csp.py, AUCUN changement necessaire
+ici) autorise deja une feuille de style de meme origine, mais pas un
+`<style>` inline sans `'unsafe-inline'` ni nonce/hash. En minimal
+(`security_headers_enabled: false`) ou development (`csp_mode: report-
+only`), rien n'etait bloque, d'ou le contraste observe uniquement sur
+standard/hardened (`enforce`). Meme patron que `ICON_URL_PREFIX` ci-
+dessous (`CSS_URL_PREFIX`, servi par application/server/
+serve_dirlisting_css.py, chemin reserve verifie tout en haut de
+route_request() - jamais soumis aux regles du site). `header_content`/
+`readme_content` arrivent deja lus depuis le disque (ce module reste
+pur, sans I/O - la lecture reelle est la responsabilite de
+application/server/serve_static_file.py, seul detenteur d'un
+FilesystemPort)."""
 from __future__ import annotations
 
 import html
@@ -39,6 +51,12 @@ from omega_serv.domain.security.access_policy import is_denied_path
 
 DEFAULT_HEADER_FILE = "HEADER.txt"
 DEFAULT_README_FILE = "README.txt"
+
+CSS_URL_PREFIX = "/.omega-serv-dirlisting-css/"
+"""Chemin URL reserve, meme statut que `icon_registry.ICON_URL_PREFIX` -
+vit ici (domain/) pour que ce module et `application/server/
+serve_dirlisting_css.py` (qui genere la reponse reelle) partagent
+exactement la meme valeur sans jamais diverger."""
 
 
 @dataclass(frozen=True)
@@ -71,7 +89,15 @@ class DirlistingSettings:
         )
 
 
-def _base_css(theme: str) -> str:
+def base_css(theme: str) -> str:
+    """Public (pas de prefixe `_`) : appelee aussi par
+    `application/server/serve_dirlisting_css.py` pour servir ce CSS en
+    fichier externe. Un `theme` inconnu degrade silencieusement vers
+    `DEFAULT_EXPORT_THEME` - meme comportement qu'avant l'externalisation
+    (jamais un 404 pour une simple faute de frappe de theme dans la
+    configuration ; aucun risque de parcours de fichier, cette fonction
+    ne touche jamais le disque, uniquement une recherche dans un dict
+    ferme)."""
     palette = EXPORT_PALETTES.get(theme, EXPORT_PALETTES[DEFAULT_EXPORT_THEME])
     return (
         "*{box-sizing:border-box}"
@@ -221,6 +247,7 @@ def render_directory_listing_html(
     header_html = _rendered_side_content(header_content if settings.show_header else None, settings.encode_header)
     readme_html = _rendered_side_content(readme_content if show_readme else None, settings.encode_readme)
 
+    base_css_href = f"{CSS_URL_PREFIX}{html.escape(settings.theme)}.css"
     external_css_link = (
         f'<link rel="stylesheet" href="{html.escape(settings.external_css)}">' if settings.external_css else ""
     )
@@ -239,7 +266,7 @@ def render_directory_listing_html(
     return (
         "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"utf-8\">"
         f"<title>Index de {title}</title>"
-        f"<style>{_base_css(settings.theme)}</style>{external_css_link}"
+        f'<link rel="stylesheet" href="{base_css_href}">{external_css_link}'
         "</head><body><div class=\"omega-listing\">"
         f"{header_html}"
         f'<h1 class="omega-listing-title">Index de {title}</h1>'

@@ -10,6 +10,8 @@ apporte de reel). CGI volontairement absent (retire du perimetre V1,
 §13 README) - aucune Capability generee pour cette ligne."""
 from __future__ import annotations
 
+import importlib.metadata
+import importlib.util
 import resource
 import shutil
 import socket
@@ -56,7 +58,7 @@ class SystemCapabilityScanner:
             self._probe_python_version(),
             self._probe_port(self._configured_port, "port-configure", "Port configure"),
             *self._probe_fastcgi_socket(),
-            self._probe_binary("lua", ("lua5.4", "lua5.3", "lua"), "waf"),
+            self._probe_magnet_dependency(),
             *(self._probe_binary(name, (name,), "outil") for name in _OPTIONAL_BINARIES),
             self._probe_directory("var"),
             self._probe_directory("secure"),
@@ -132,6 +134,45 @@ class SystemCapabilityScanner:
             id="fastcgi-socket", status=CapabilityStatus.AVAILABLE,
             reason=f"Socket PHP-FPM operationnel ({self._fastcgi_socket})", category="fastcgi",
         ),)
+
+    def _probe_magnet_dependency(self) -> Capability:
+        """Script WAF complementaire "magnet" (options.waf.magnet,
+        infrastructure/waf/lua_waf_adapter.py) - correction d'une sonde
+        anterieure qui testait un binaire systeme `lua`/`lua5.4` sur le
+        PATH, SANS RAPPORT avec le besoin reel : `lupa` embarque son
+        propre runtime Lua statiquement compile (confirme empiriquement,
+        voir D4 du plan d'integration magnet) et ne requiert AUCUN
+        interpreteur `lua` systeme. L'ancienne sonde pouvait donc
+        afficher AVAILABLE alors que magnet etait inutilisable (lupa
+        absent) et inversement signaler MISSING sur une machine sans lua
+        systeme alors que magnet fonctionnait parfaitement (lupa installe).
+        La vraie dependance a sonder est le paquet Python 'lupa' lui-meme,
+        extra optionnel (pyproject.toml, jamais installe par defaut).
+        Detection par METADONNEES (`importlib.util.find_spec`/
+        `importlib.metadata.version`), jamais un `import lupa` reel ici -
+        ce fichier n'est PAS dans la liste d'exclusion du contrat
+        import-linter "lupa seulement dans infrastructure.waf.
+        lua_waf_adapter" (pyproject.toml), deliberement strict : seul ce
+        module a le droit d'importer `lupa` pour de vrai."""
+        if importlib.util.find_spec("lupa") is None:
+            return Capability(
+                id="waf-magnet", status=CapabilityStatus.MISSING,
+                reason=(
+                    "Dependance Python 'lupa' absente - requise pour le script WAF complementaire "
+                    "'magnet' (options.waf.magnet, import d'un script mod_magnet externe sans le "
+                    "reecrire). Installer l'extra optionnel : pip install -e \".[magnet]\"."
+                ),
+                category="waf",
+            )
+        try:
+            version = importlib.metadata.version("lupa")
+        except importlib.metadata.PackageNotFoundError:
+            version = "?"
+        return Capability(
+            id="waf-magnet", status=CapabilityStatus.AVAILABLE,
+            reason=f"lupa {version} disponible - le script WAF complementaire 'magnet' est utilisable",
+            category="waf",
+        )
 
     def _probe_binary(self, capability_id: str, candidates: tuple[str, ...], category: str) -> Capability:
         for name in candidates:

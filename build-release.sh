@@ -65,6 +65,14 @@ info "Copie du projet omega-serv..."
 # (infrastructure/config/json_settings_store.py, infrastructure/
 # persistence/sqlite_active_defense_connection.py) - jamais suppose deja
 # present par le reste du code.
+# secure/waf/scripts/waf-personal.lua exclu (retour utilisateur
+# 2026-10-11, "le script Lua est-il bien depersonnalise, peut-il etre
+# distribue pour tous ?") : seuls les 5 chemins avaient ete dissocies
+# (consigne d'origine), pas la logique propre au site de l'auteur
+# (routes SearXNG, exceptions whitelist, texte de la page d'erreur) -
+# jamais distribuable tel quel. secure/waf/scripts/waf.lua (SANS ce
+# suffixe, jamais exclu) est desormais un exemple minimal et
+# generique, sans aucune logique propre a un site particulier.
 rsync -a \
     --exclude='.venv/' --exclude='venv/' \
     --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' \
@@ -84,7 +92,7 @@ rsync -a \
     --exclude='secure/certificates/**/*.der' --exclude='secure/certificates/**/serial.txt' \
     --exclude='secure/certificates/**/index.txt' --exclude='secure/certificates/letsencrypt/**' \
     --exclude='secure/secrets/*' --exclude='secure/waf/blocklist.json' --exclude='secure/waf/allowlist.json' \
-    --exclude='secure/waf/rules/custom.json' \
+    --exclude='secure/waf/rules/custom.json' --exclude='secure/waf/scripts/waf-personal.lua' \
     --exclude='config/omega-serve.json' \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \
     --exclude='.coverage' --exclude='htmlcov/' \

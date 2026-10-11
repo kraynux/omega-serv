@@ -1,7 +1,12 @@
 import unittest
 
 from omega_serv.domain.config.entities import SecurityConfig
-from omega_serv.domain.routing.dirlisting import DirlistingSettings, render_directory_listing_html
+from omega_serv.domain.routing.dirlisting import (
+    CSS_URL_PREFIX,
+    DirlistingSettings,
+    base_css,
+    render_directory_listing_html,
+)
 from omega_serv.domain.routing.dirlisting_sort import DirEntryInfo
 
 
@@ -29,20 +34,43 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         html_out = render_directory_listing_html('/"><script>x</script>/', [], SecurityConfig())
         self.assertNotIn("<script>x</script>", html_out)
 
-    def test_default_settings_include_base_css(self):
+    def test_default_settings_reference_the_reserved_css_route(self):
+        """Le CSS de base est servi en fichier EXTERNE reserve (retour
+        utilisateur 2026-10-10 : "la thematique CSS casse sur les
+        profils autres que minimal"), jamais inline - `style-src 'self'`
+        (domain/security/csp.py) autorise deja une feuille de style de
+        meme origine, contrairement a un `<style>` inline sans
+        'unsafe-inline' ni nonce/hash."""
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertIn("<style>", html_out)
-        self.assertIn("#00d4ff", html_out)
+        self.assertNotIn("<style>", html_out)
+        self.assertIn(f'<link rel="stylesheet" href="{CSS_URL_PREFIX}omega-base.css">', html_out)
 
-    def test_external_css_adds_link(self):
+    def test_css_route_uses_the_configured_theme(self):
+        html_out = render_directory_listing_html(
+            "/downloads/", [], SecurityConfig(), DirlistingSettings(theme="omega-neon"),
+        )
+        self.assertIn(f'href="{CSS_URL_PREFIX}omega-neon.css"', html_out)
+
+    def test_css_route_covers_all_5_known_themes(self):
+        from omega_lib.theme.policies import EXPORT_PALETTES
+
+        self.assertEqual(len(EXPORT_PALETTES), 5)
+        for theme in EXPORT_PALETTES:
+            html_out = render_directory_listing_html(
+                "/downloads/", [], SecurityConfig(), DirlistingSettings(theme=theme),
+            )
+            self.assertIn(f'href="{CSS_URL_PREFIX}{theme}.css"', html_out, theme)
+
+    def test_external_css_adds_a_second_link_alongside_the_base_one(self):
         html_out = render_directory_listing_html(
             "/downloads/", [], SecurityConfig(), DirlistingSettings(external_css="/.assets/css/folder.css"),
         )
+        self.assertIn(f'<link rel="stylesheet" href="{CSS_URL_PREFIX}omega-base.css">', html_out)
         self.assertIn('<link rel="stylesheet" href="/.assets/css/folder.css">', html_out)
 
-    def test_no_external_css_by_default(self):
+    def test_no_external_css_link_by_default(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertNotIn("<link rel=\"stylesheet\"", html_out)
+        self.assertEqual(html_out.count('<link rel="stylesheet"'), 1)
 
     def test_header_shown_verbatim_when_encode_disabled(self):
         html_out = render_directory_listing_html(
@@ -161,11 +189,6 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
         self.assertIn('</div><div class="omega-listing-footer-wrap">', html_out)
 
-    def test_no_separator_between_regular_entries(self):
-        html_out = render_directory_listing_html("/downloads/", ["a.txt", "b.txt"], SecurityConfig())
-        self.assertNotIn("li{padding:.4rem .2rem;border-bottom", html_out)
-        self.assertIn("li.omega-parent{border-bottom", html_out)
-
     def test_criteria_row_appears_above_parent_directory_link(self):
         html_out = render_directory_listing_html("/downloads/sub/", [], SecurityConfig())
         self.assertLess(
@@ -184,11 +207,6 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
             '<a class="omega-listing-mtime" href="?sort=mtime&order=asc">DERNIÈRE MODIFICATION</a>', html_out,
         )
         self.assertIn('<a class="omega-listing-size" href="?sort=size&order=asc">TAILLE</a>', html_out)
-
-    def test_criteria_row_is_smaller_and_muted_compared_to_entries(self):
-        html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertIn(".omega-listing-header{font-size:.75rem}", html_out)
-        self.assertIn(".omega-listing-header a{color:#00d4ff;opacity:.7}", html_out)
 
     def test_entry_shows_formatted_size_and_modification_date(self):
         html_out = render_directory_listing_html(
@@ -222,10 +240,6 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         )
         self.assertLess(html_out.index("a.txt"), html_out.index("b.txt"))
 
-    def test_file_links_use_a_distinct_color_from_directories(self):
-        html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertIn("li.omega-file>a{color:#b4c2e0}", html_out)
-
     def test_footer_still_shown_when_show_readme_enabled_but_file_absent(self):
         html_out = render_directory_listing_html(
             "/downloads/", [], SecurityConfig(), DirlistingSettings(show_readme=True),
@@ -247,6 +261,40 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
         self.assertEqual(settings.header_file, "H.txt")
         self.assertTrue(settings.show_header)
         self.assertFalse(settings.hide_header_file)
+
+
+class TestBaseCss(unittest.TestCase):
+    """Contenu du CSS lui-meme - deplace hors de TestRenderDirectoryListingHtml
+    depuis que ce CSS est servi en fichier externe (voir CSS_URL_PREFIX)
+    plutot qu'inline dans le HTML du listing."""
+
+    def test_no_separator_between_regular_entries(self):
+        css = base_css("omega-base")
+        self.assertNotIn("li{padding:.4rem .2rem;border-bottom", css)
+        self.assertIn("li.omega-parent{border-bottom", css)
+
+    def test_criteria_row_is_smaller_and_muted_compared_to_entries(self):
+        css = base_css("omega-base")
+        self.assertIn(".omega-listing-header{font-size:.75rem}", css)
+        self.assertIn(".omega-listing-header a{color:#00d4ff;opacity:.7}", css)
+
+    def test_file_links_use_a_distinct_color_from_directories(self):
+        css = base_css("omega-base")
+        self.assertIn("li.omega-file>a{color:#b4c2e0}", css)
+
+    def test_unknown_theme_falls_back_to_default(self):
+        self.assertEqual(base_css("ce-theme-n-existe-pas"), base_css("omega-base"))
+
+    def test_all_5_known_themes_produce_distinct_valid_css(self):
+        from omega_lib.theme.policies import EXPORT_PALETTES
+
+        self.assertEqual(len(EXPORT_PALETTES), 5)
+        rendered = {theme: base_css(theme) for theme in EXPORT_PALETTES}
+        for theme, css in rendered.items():
+            self.assertIn(".omega-listing{", css, theme)
+            self.assertIn("background:", css, theme)
+        # Pas tous le MEME CSS (sinon le theme choisi n'aurait aucun effet reel).
+        self.assertEqual(len(set(rendered.values())), 5)
 
 
 if __name__ == "__main__":

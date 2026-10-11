@@ -35,6 +35,7 @@ GUIDE_MENU_ENTRIES: tuple[GuideMenuEntry, ...] = (
     GuideMenuEntry("Configuration detaillee", "BaseConfigScreen", "Configuration de base"),
     GuideMenuEntry("Configuration detaillee", "LimitsScreen", "Resistance et limites"),
     GuideMenuEntry("Configuration detaillee", "SecurityScreen", "Securite generique"),
+    GuideMenuEntry("Configuration detaillee", "CspZoneWizardScreen", "Securite generique - Assistant zone CSP"),
     GuideMenuEntry("Configuration detaillee", "AccessControlScreen", "Controle d'acces"),
     GuideMenuEntry("Configuration detaillee", "AliasesScreen", "Alias"),
     GuideMenuEntry("Configuration detaillee", "RedirectsScreen", "Redirections"),
@@ -84,5 +85,6 @@ GUIDE_MENU_ENTRIES: tuple[GuideMenuEntry, ...] = (
     GuideMenuEntry("Active Securite", "WafCustomRuleScreen", "WAF - Regles personnalisees"),
     GuideMenuEntry("Active Securite", "WafCustomRuleWizardScreen", "WAF - Assistant regle personnalisee"),
     GuideMenuEntry("Active Securite", "WafRulePackPickerScreen", "WAF - Choix d'un pack de regles"),
+    GuideMenuEntry("Active Securite", "WafMagnetScreen", "WAF - Magnet (import d'un WAF externe)"),
     GuideMenuEntry("Reglages de l'application", "SettingsScreen", "Reglages de l'application"),
 )

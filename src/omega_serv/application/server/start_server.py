@@ -10,6 +10,7 @@ memes objets reels, jamais une reconstruction paralelle."""
 from __future__ import annotations
 
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,7 +22,7 @@ from omega_serv.domain.security.active_defense.config import (
     parse_active_defense_config,
 )
 from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
-from omega_serv.domain.security.waf.config import WafConfig, parse_waf_config
+from omega_serv.domain.security.waf.config import MagnetPathsConfig, WafConfig, parse_waf_config
 from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import AsyncioDelayScheduler
 from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
 from omega_serv.infrastructure.auth.users_repository import JsonUsersRepository
@@ -46,6 +47,8 @@ from omega_serv.infrastructure.persistence.sqlite_threat_state_repository import
 from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
 from omega_serv.infrastructure.server.asyncio_server import AsyncioHttpServer
 from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
+from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
+from omega_serv.infrastructure.waf.lua_waf_adapter import load_lua_waf_adapter
 from omega_serv.infrastructure.waf.python_waf_engine import PythonWafEngine
 from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStore
 from omega_serv.infrastructure.waf.reputation_tracker import InMemoryReputationTracker
@@ -75,6 +78,46 @@ class WafCollaborators:
     rate_limit_port: RateLimitPort
     reputation_tracker: ReputationTrackerPort
     alert_log_path: Path
+    magnet_port: WafPort | None = None
+    magnet_executor: ThreadPoolExecutor | None = None
+
+
+_MAGNET_THREAD_POOL_SIZE = 4
+"""Nombre de threads dedies a l'appel magnet (OMEGA-SERV_PLAN-DETAILLE_
+REFERER_ET_MAGNET_WAF.md, lot E, decision D2 : "dimensionnement initial
+reduit (2-4 threads), a ajuster seulement si une mesure reelle en
+conditions de charge le justifie") - jamais partage avec un autre usage,
+pour qu'un script magnet lent ne puisse epuiser que ses propres threads,
+jamais ceux d'un autre sous-systeme."""
+
+
+def resolve_magnet_paths(project_root: Path, paths: MagnetPathsConfig) -> dict[str, str]:
+    """Resout les 5 chemins injectes dans le script magnet comme table
+    Lua `omega_magnet_paths` (voir infrastructure/waf/lua_waf_adapter.py)
+    en chemins ABSOLUS. Pure (pas d'I/O) - reutilisee par
+    application/config/validate_config.py, qui ne doit jamais creer de
+    dossier lors d'un simple `config check`."""
+    return {
+        "blocklist_file": str(project_root / paths.blocklist_file),
+        "rules_dir": str(project_root / paths.rules_dir),
+        "alerts_log": str(project_root / paths.alerts_log),
+        "blocklist_log": str(project_root / paths.blocklist_log),
+        "rate_store_file": str(project_root / paths.rate_store_file),
+    }
+
+
+def _ensure_magnet_directories(filesystem: FilesystemPort, resolved_paths: dict[str, str]) -> None:
+    """Cree les dossiers parents manquants pour les chemins magnet - un
+    `io.open(path, "a")` Lua echoue silencieusement, capture par le
+    `pcall` du script, si son dossier parent n'existe pas - sans ce
+    mkdir, le script "fonctionnerait" en apparence tout en perdant
+    silencieusement logging/blocklist, exactement le risque
+    d'"inoperationnel" que le controle de compatibilite vise a eviter.
+    Appelee uniquement au demarrage reel (serveur/`waf test`), jamais
+    depuis `config check` (lecture seule)."""
+    for key, raw_value in resolved_paths.items():
+        target = Path(raw_value)
+        filesystem.make_directory(target if key == "rules_dir" else target.parent)
 
 
 def build_waf_collaborators(
@@ -94,7 +137,19 @@ def build_waf_collaborators(
         return None
     waf_config = parse_waf_config(config.options["waf"].settings)
     rule_paths = tuple(project_root / p for p in waf_config.rule_paths)
-    compiled_packs = load_rule_packs(filesystem, rule_paths)
+    compiled_packs = load_rule_packs(filesystem, rule_paths) + load_keyword_lists(
+        filesystem, project_root, waf_config.keyword_lists,
+    )
+
+    magnet_port: WafPort | None = None
+    magnet_executor: ThreadPoolExecutor | None = None
+    if waf_config.magnet.enabled:
+        script_path = project_root / (waf_config.magnet.script or config.paths.waf_script)
+        resolved_paths = resolve_magnet_paths(project_root, waf_config.magnet.paths)
+        _ensure_magnet_directories(filesystem, resolved_paths)
+        magnet_port = load_lua_waf_adapter(filesystem, script_path, waf_config, resolved_paths)
+        magnet_executor = ThreadPoolExecutor(max_workers=_MAGNET_THREAD_POOL_SIZE, thread_name_prefix="waf-magnet")
+
     return WafCollaborators(
         config=waf_config,
         waf_port=PythonWafEngine(compiled_packs, waf_config),
@@ -102,6 +157,8 @@ def build_waf_collaborators(
         rate_limit_port=InMemoryRateLimitStore(clock),
         reputation_tracker=InMemoryReputationTracker(clock),
         alert_log_path=project_root / waf_config.logging.path,
+        magnet_port=magnet_port,
+        magnet_executor=magnet_executor,
     )
 
 
@@ -240,6 +297,8 @@ def build_server(
         rate_limit_port=waf.rate_limit_port if waf else None,
         reputation_tracker=waf.reputation_tracker if waf else None,
         waf_alert_log_path=waf.alert_log_path if waf else None,
+        magnet_port=waf.magnet_port if waf else None,
+        magnet_executor=waf.magnet_executor if waf else None,
         ssl_context=ssl_context,
         auth_zones=auth.zones if auth else (),
         users_by_name=auth.users_by_name if auth else None,
@@ -292,6 +351,8 @@ def reload_server(
         rate_limit_port=waf.rate_limit_port if waf else None,
         reputation_tracker=waf.reputation_tracker if waf else None,
         waf_alert_log_path=waf.alert_log_path if waf else None,
+        magnet_port=waf.magnet_port if waf else None,
+        magnet_executor=waf.magnet_executor if waf else None,
         auth_zones=auth.zones if auth else (),
         users_by_name=auth.users_by_name if auth else None,
     )

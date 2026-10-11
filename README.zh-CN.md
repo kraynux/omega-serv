@@ -88,7 +88,7 @@ cd omega-serv/
 
 ### 依赖
 
-服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行的密码哈希）保持纯 Python/标准库实现，而一切涉及 TLS 证书的操作都通过子进程调用 `openssl` 二进制程序，而非使用 Python 加密库——**这方面没有外部依赖**。只有交互式界面（§3）引入了一些依赖：`omega-lib`（主题、终端检测——套件共享库，未发布到 PyPI，随发行档案一并打包）、`textual` 以及 `pyte`（用于界面内嵌合并 `lnav` 渲染的终端模拟）、`jinja2`（主题化 HTML 导出）以及 `psutil`（状态与资源屏幕——CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（针对 HTTP 解析器和路径解析器的基于属性的测试，从不在生产环境中使用）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。
+服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行的密码哈希）保持纯 Python/标准库实现，而一切涉及 TLS 证书的操作都通过子进程调用 `openssl` 二进制程序，而非使用 Python 加密库——**这方面没有外部依赖**。只有交互式界面（§3）引入了一些依赖：`omega-lib`（主题、终端检测——套件共享库，未发布到 PyPI，随发行档案一并打包）、`textual` 以及 `pyte`（用于界面内嵌合并 `lnav` 渲染的终端模拟）、`jinja2`（主题化 HTML 导出）以及 `psutil`（状态与资源屏幕——CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（针对 HTTP 解析器和路径解析器的基于属性的测试，从不在生产环境中使用）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。额外的可选附加组件（`pip install -e ".[magnet]"`）：`lupa`（内嵌 Lua 绑定，预编译 wheel，无需系统 `lua` 解释器），仅供补充性 WAF "magnet" 脚本（§7）使用——从不默认安装；其缺失会被报告（能力 `waf-magnet`，**能力**屏幕）并给出确切的安装命令，不会阻塞服务器其余部分的运行。
 
 ### 推荐的可选工具
 
@@ -155,8 +155,8 @@ serv
 - **能力注册表** —— 只读系统探测（初始化系统、所配置端口是否已被占用、`openssl`/`logrotate`/`tailscale`/`lnav` 是否存在、磁盘空间、文件描述符限制……），支持 JSON/HTML 导出。
 - **配置文件** —— 与 CLI 中的 `profile` 用例相同（§5），写入前始终显示差异对比。
 - **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/身份验证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、自签名生成、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用——见 §9）；下方第二个区域「**选项与验证**」汇集了指向**选项**（`option` CLI，§7）与**检查配置**（`config check` CLI，§10）的快捷入口——与先调整选项再验证是同一流程，这两个屏幕已不再能从主菜单直接进入。WAF 已不再位于此处（见下文「主动安全」）：它主要展示持续变化的运行状态，而非一份单纯的静态配置表单。每次保存都会明确说明后续操作：若有服务正在运行，则自动且静默地热重载（目录列表、访问控制、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、身份验证用户/区域），或者当更改涉及监听套接字、TLS 或 Active Defense 时则明确弹出重启确认——不再有任何屏幕让人猜测是否需要重启服务器。
-- **主动安全** —— 一个统一的屏幕，汇集两大板块：**Active Defense**（状态、带评分/等级的已跟踪威胁、带完整时间线/IoC 导出/报告的事件、欺骗分配情况、以 dry-run 方式模拟一次判定，以及**设置**——无需手动编辑 `config/omega-serve.json` 即可完成完整配置，见 §11）与 **WAF**（状态、模块——模式/规则包/封禁列表、测试一次请求、自定义——编写自定义规则）——见 §11。
-- **日志管理** —— 实时查看/跟踪文件、合并的 `lnav`（界面内真实终端渲染）、按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划中的自动化任务（声明式——见下方说明）、恢复/清理归档、导出列表、统计（热门 IP、状态码分布、每小时直方图）并可从访问日志中移除某个 IP 的记录。
+- **主动安全** —— 一个统一的屏幕，并排汇集两大板块：**Active Defense**（状态、带评分/等级的已跟踪威胁、带完整时间线/IoC 导出/报告的事件、欺骗分配情况、以 dry-run 方式模拟一次判定，以及**设置**——无需手动编辑 `config/omega-serve.json` 即可完成完整配置，见 §11）与 **WAF**（状态、模块——模式/规则包/封禁列表、测试一次请求、自定义——编写自定义规则、Magnet——导入外部 `mod_magnet` 脚本并在启用前进行兼容性检查）——见 §11。
+- **日志管理** —— 实时查看/跟踪文件（访问日志/错误日志/原生 WAF **以及** magnet 脚本 §7，magnet 日志默认即提供，但在其未启用前显示为灰色不可点击）、合并的 `lnav`（界面内真实终端渲染，默认包含 magnet 日志 + 可**固定**的手动路径以便跨会话保留）、按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划中的自动化任务（声明式——见下方说明）、恢复/清理归档、导出列表、统计（热门 IP、状态码分布、每小时直方图）并可从访问日志中移除某个 IP 的记录。
 - **服务** —— 与 CLI 中的 `service` 相同的操作（§12），按操作临时提升 `sudo` 权限，整个应用程序绝不会以 root 身份启动。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），显示各实例的 systemd 状态；可直接从界面创建新实例（复制代码树、独立全新的虚拟环境与依赖、生成使用不同端口的全新配置、检查嵌套冲突与端口冲突）。仅有单个安装时按钮在视觉上保持隐形（一旦已知实例达到 2 个，标签会自动变为“实例 (N)”）；也提供完整切换到另一实例的功能（`os.execv`，需明确确认，重启后显示专门的切换提示屏幕）；以及完整卸载某个实例（移除该服务单元、在没有其他实例仍使用时移除专用系统账户，并可选择性删除目录，默认从不删除）。
 - **状态与资源** —— 一目了然的总览，每 2 秒刷新一次：服务器状态（进程/PID、系统服务状态、当前配置文件/已启用选项/TLS/端口）、访问日志实时流量（吞吐量、状态码分布、唯一 IP、错误率）、系统资源（CPU/内存/磁盘/交换分区/负载/网络，基于 `psutil`）；同时汇集了**模拟请求**快捷入口（与相应 CLI 命令相同的用例，§10）。
@@ -312,7 +312,7 @@ src/omega_serv/
 └── bootstrap/         DependencyContainer，项目根目录解析
 ```
 
-由 `import-linter` 验证的规则（7 项契约）：`domain`/`core` 从不依赖外层；`interfaces.tui` 从不直接依赖 `infrastructure`；`textual` 被限制在 `interfaces.tui` 内；`subprocess` 被限制在 `infrastructure/process/subprocess_runner.py`（以及 `infrastructure/lnav/`，用于交互式 PTY 流）；`ssl` 被限制在 `infrastructure/tls/ssl_context_builder.py`；`jinja2` 被限制在 `infrastructure/exporters/html_exporter.py`；`sqlite3` 被限制在 `infrastructure/persistence/sqlite_active_defense_connection.py`（项目中唯一的关系型存储，专用于 Active Defense——见 §11）。
+由 `import-linter` 验证的规则（8 项契约）：`domain`/`core` 从不依赖外层；`interfaces.tui` 从不直接依赖 `infrastructure`；`textual` 被限制在 `interfaces.tui` 内；`subprocess` 被限制在 `infrastructure/process/subprocess_runner.py`（以及 `infrastructure/lnav/`，用于交互式 PTY 流）；`ssl` 被限制在 `infrastructure/tls/ssl_context_builder.py`；`jinja2` 被限制在 `infrastructure/exporters/html_exporter.py`；`sqlite3` 被限制在 `infrastructure/persistence/sqlite_active_defense_connection.py`（项目中唯一的关系型存储，专用于 Active Defense——见 §11）；`lupa` 被限制在 `infrastructure/waf/lua_waf_adapter.py`（补充性 WAF "magnet" 脚本，§7）。
 
 ## 7. 可选模块
 
@@ -320,7 +320,7 @@ src/omega_serv/
 
 | 模块 | 作用 |
 |---|---|
-| `waf` | 签名检测（敏感路径、扫描器 UA、请求体中的 SQLi/XSS/CMDi）、速率限制（令牌桶）、封禁列表（CIDR + 过期时间）、信誉/升级机制——`log-only` 模式在结构上无法进行阻断 |
+| `waf` | 签名检测（敏感路径、UA/Referer 扫描器、请求体中的 SQLi/XSS/CMDi）、自定义关键词列表（纯文本文件，每行一个词——无需修改 JSON 即可轻松维护）、速率限制（令牌桶）、封禁列表（CIDR + 过期时间）、信誉/升级机制、以"magnet"方式导入一个现有的 Lighttpd `mod_magnet` WAF 脚本作为可选补充（无需重写该脚本，附加组件 `pip install -e ".[magnet]"`——叠加式，永远不能解除原生封禁；导入时进行兼容性检查，配有专用 TUI 屏幕）——`log-only` 模式在结构上无法进行阻断 |
 | TLS | 直接支持（自签名、本地 CA，或通过 Let's Encrypt/Certbot 签发并自动续期的公共证书——见 §9），V1 中绝不支持 mTLS/OCSP |
 | 身份验证 | 按区域（`url_prefix`）划分的 HTTP Basic，采用带防时序攻击的 `hashlib.scrypt`（即使对未知用户也保持恒定耗时） |
 | FastCGI/PHP-FPM | 仅支持单一的 `(url_prefix, script_root)`，`script_root` 在结构上被限制在 `webroot/` 之外（静态处理器绝不可能泄露 PHP 源码） |
@@ -333,7 +333,7 @@ src/omega_serv/
 - 请求行/请求头在读取**过程中**即被限制长度（绝非事后处理），拒绝过时的头部折叠写法，`Transfer-Encoding` 始终被拒绝（绝不猜测）。
 - 拒绝重复的 `Content-Length`；`Expect: 100-continue` 被干净地拒绝（417）。
 - 显式的方法白名单（否则返回 405 + `Allow`），校验 `Host` 请求头（缺失/为空/重复即使内容相同/含控制字符 → 400）。
-- 安全响应头与基础 CSP（`enforce`/`report-only`）应用于**每一个**响应，包括错误响应——无法通过任何选项绕过。
+- 安全响应头与基础 CSP（`enforce`/`report-only`）应用于**每一个**响应，包括错误响应——无法通过任何选项绕过。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` 始终为 `same-origin`，不存在破坏站点的实际风险。`Cross-Origin-Embedder-Policy` 始终被显式发送（从不缺失——外部扫描工具据此区分"未予考虑"与"刻意选择的宽松策略"），在**所有**配置档（包括 `hardened`）中默认值均为 `unsafe-none`：与前两者不同，`require-corp`/`credentialless` 可能会阻断该服务器事先并不了解的、属于实际所服务站点内容的跨域资源（字体、图片、第三方 iframe）——可通过 `security.coep_mode` 配置。CSP 区域（`security.csp_zones`）：按路径前缀设定的**显式**例外（例如仅在确实需要的 `/某个目录/` 下允许 `unsafe-inline`），每个区域都会为其前缀完全替换默认策略——绝非合并，也绝非全局放宽；任何例外都会始终在 `audit security` 中保持可见（CSP-001/CSP-002 同样会扫描这些区域），即便该例外是刻意设置的。新增区域时由一个逐条指令的向导引导完成（**通用安全**屏幕），每个字段都预填为全局策略的**当前**值——这样只需修改真正需要更改的部分，而不是从空白字段开始、从而无意中牺牲其他指令；如果组装出的区域放宽了 `unsafe-inline`/`unsafe-eval`/通用源 `*`，则会要求额外的明确确认。
 - 在任何比较之前（封禁列表、可信代理、速率限制），IPv4 映射的 IPv6 地址（`::ffff:x.x.x.x`）均会被规范化——否则会构成一个已知的绕过手段。
 - 通过基于属性的测试（`hypothesis`，生成数千个示例）针对 HTTP 解析器与路径解析器进行了验证，此外还有经典的单元/集成测试。
 
@@ -401,14 +401,14 @@ secure/certificates/ca/
 
 ## 13. 日志
 
-`var/log/access.log`（Apache combined 格式 + `request_id`，防日志注入转义）、`var/log/error.log`。按大小/保留文件数量进行轮转（`logs.rotation`）。
+`var/log/access.log`（Apache combined 格式 + `request_id`，防日志注入转义）、`var/log/error.log`。按大小/保留文件数量进行轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。Magnet 脚本（§7）：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认值为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log`——在**日志管理**屏幕中默认即提供（查看/跟踪、`lnav`），在 magnet 未启用前**查看/跟踪**功能会显示为灰色不可用（`lnav` 一侧没有此限制，缺失的文件在启动时会被直接忽略）。
 
 ## 14. 测试
 
 ```bash
 source .venv/bin/activate
-lint-imports        # 校验 7 项分层契约
-pytest -q           # 1763 项测试
+lint-imports        # 校验 8 项分层契约
+pytest -q           # 2085 项测试
 ruff check .
 mypy src
 ```

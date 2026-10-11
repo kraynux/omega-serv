@@ -37,44 +37,59 @@ def rule_public_bind(config: OmegaServConfig) -> list[AuditFinding]:
     return []
 
 
+def _csp_candidates(config: OmegaServConfig, csp_policy: str) -> list[tuple[str, str]]:
+    """(libelle, politique) a inspecter - la politique globale, PUIS
+    chaque zone CSP configuree (security.csp_zones, retour utilisateur
+    2026-10-10 : "regles conditionnelles pour des dossiers choisis").
+    Une exception de zone reste toujours visible ici, jamais silencieuse
+    - meme deliberee, elle doit apparaitre dans `audit security`."""
+    candidates = [("globale", csp_policy)]
+    candidates.extend((f"zone {zone.path_prefix!r}", zone.data) for zone in config.security.csp_zones)
+    return candidates
+
+
 def rule_csp_unsafe_inline(config: OmegaServConfig, csp_policy: str = DEFAULT_CSP_POLICY) -> list[AuditFinding]:
-    """CSP-001. La CSP de ce projet est globale uniquement
-    (domain/security/csp.py::DEFAULT_CSP_POLICY, pas de CSP par zone) -
-    cette regle inspecte donc la seule politique existante. `csp_policy`
-    reste parametrable (defaut : la constante reelle) pour rester
-    testable sans monkeypatcher un module."""
-    if "'unsafe-inline'" in csp_policy:
-        return [AuditFinding(
-            rule_id="CSP-001", rule_name="CSP contient unsafe-inline",
-            severity=Severity.MEDIUM, category="csp",
-            message="La CSP par defaut contient 'unsafe-inline'.",
-            recommendation="Supprimer unsafe-inline, utiliser des hashes/nonces si necessaire.",
-            details={"csp": csp_policy},
-        )]
-    return []
+    """CSP-001. `csp_policy` reste parametrable (defaut : la constante
+    reelle) pour rester testable sans monkeypatcher un module - les
+    zones, elles, viennent toujours de `config` (jamais parametrables
+    separement, une zone n'existe que dans la configuration)."""
+    findings = []
+    for label, policy in _csp_candidates(config, csp_policy):
+        if "'unsafe-inline'" in policy:
+            findings.append(AuditFinding(
+                rule_id="CSP-001", rule_name="CSP contient unsafe-inline",
+                severity=Severity.MEDIUM, category="csp",
+                message=f"La CSP {label} contient 'unsafe-inline'.",
+                recommendation="Supprimer unsafe-inline, utiliser des hashes/nonces si necessaire.",
+                details={"csp": policy, "scope": label},
+            ))
+    return findings
 
 
 def rule_csp_too_permissive(config: OmegaServConfig, csp_policy: str = DEFAULT_CSP_POLICY) -> list[AuditFinding]:
     """CSP-002 : directive avec une source generique (`*`), qui autorise
     n'importe quelle origine - annule l'interet meme de la CSP pour
-    cette directive."""
-    permissive_directives = []
-    for directive in csp_policy.split(";"):
-        directive = directive.strip()
-        if not directive:
-            continue
-        name, _, values = directive.partition(" ")
-        if "*" in values.split():
-            permissive_directives.append(name)
-    if permissive_directives:
-        return [AuditFinding(
-            rule_id="CSP-002", rule_name="CSP contient une directive trop permissive",
-            severity=Severity.MEDIUM, category="csp",
-            message=f"Directive(s) avec source generique '*' : {', '.join(permissive_directives)}",
-            recommendation="Remplacer '*' par une liste explicite d'origines de confiance.",
-            details={"directives": permissive_directives},
-        )]
-    return []
+    cette directive. Inspecte la politique globale et chaque zone CSP
+    (meme raison que CSP-001 ci-dessus)."""
+    findings = []
+    for label, policy in _csp_candidates(config, csp_policy):
+        permissive_directives = []
+        for directive in policy.split(";"):
+            directive = directive.strip()
+            if not directive:
+                continue
+            name, _, values = directive.partition(" ")
+            if "*" in values.split():
+                permissive_directives.append(name)
+        if permissive_directives:
+            findings.append(AuditFinding(
+                rule_id="CSP-002", rule_name="CSP contient une directive trop permissive",
+                severity=Severity.MEDIUM, category="csp",
+                message=f"CSP {label} - directive(s) avec source generique '*' : {', '.join(permissive_directives)}",
+                recommendation="Remplacer '*' par une liste explicite d'origines de confiance.",
+                details={"directives": permissive_directives, "scope": label},
+            ))
+    return findings
 
 
 def rule_dangerous_methods(config: OmegaServConfig) -> list[AuditFinding]:

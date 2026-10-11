@@ -141,6 +141,55 @@ class TestDirectoryListing(_ServerTestBase):
         self.assertEqual(headers["Content-Type"], "image/svg+xml")
         self.assertIn(b"<svg", data)
 
+    async def test_listing_response_never_inlines_style_under_the_default_strict_csp(self):
+        """Retour utilisateur 2026-10-10 : "la thematique CSS casse sur
+        les profils autres que minimal" - `_ServerTestBase` tourne deja
+        avec la CSP par defaut (security_headers_enabled=true,
+        csp_mode=enforce, aucune option a activer explicitement). La CSP
+        elle-meme (style-src 'self', aucun 'unsafe-inline') n'a pas
+        change - la preuve du correctif est l'ABSENCE totale de <style>
+        inline, jamais un relachement de l'en-tete."""
+        status, headers, data = await self._request("GET", "/public/")
+        self.assertEqual(status, 200)
+        self.assertIn("style-src 'self'", headers["Content-Security-Policy"])
+        self.assertNotIn("unsafe-inline", headers["Content-Security-Policy"])
+        self.assertNotIn(b"<style>", data)
+        self.assertIn(b'<link rel="stylesheet" href="/.omega-serv-dirlisting-css/omega-base.css">', data)
+
+    async def test_css_referenced_by_the_listing_is_actually_servable(self):
+        status, headers, data = await self._request("GET", "/.omega-serv-dirlisting-css/omega-base.css")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Content-Type"], "text/css; charset=utf-8")
+        self.assertIn(b"#00d4ff", data)
+
+
+class TestDirlistingCssRoute(_ServerTestBase):
+    """Chemin reserve (meme statut que /healthz et /.omega-serv-icons/) -
+    toujours actif, sans aucune option a activer (le directory listing
+    lui-meme en depend)."""
+
+    async def test_unknown_theme_falls_back_to_default_css_rather_than_404(self):
+        status, _, data = await self._request("GET", "/.omega-serv-dirlisting-css/ce-theme-n-existe-pas.css")
+        self.assertEqual(status, 200)
+        self.assertIn(b"#00d4ff", data)
+
+    async def test_each_of_the_5_known_themes_is_servable_and_distinct(self):
+        from omega_lib.theme.policies import EXPORT_PALETTES
+
+        self.assertEqual(len(EXPORT_PALETTES), 5)
+        bodies = set()
+        for theme in EXPORT_PALETTES:
+            status, headers, data = await self._request("GET", f"/.omega-serv-dirlisting-css/{theme}.css")
+            self.assertEqual(status, 200, theme)
+            self.assertEqual(headers["Content-Type"], "text/css; charset=utf-8", theme)
+            bodies.add(data)
+        self.assertEqual(len(bodies), 5)
+
+    async def test_post_method_is_rejected(self):
+        status, headers, _ = await self._request("POST", "/.omega-serv-dirlisting-css/omega-base.css")
+        self.assertEqual(status, 405)
+        self.assertIn("GET", headers["Allow"])
+
 
 class TestIconRoute(_ServerTestBase):
     """Chemin reserve (meme statut que /healthz) - toujours actif, sans
@@ -169,6 +218,39 @@ class TestIconRouteBypassesUserRules(_ServerTestBase):
         status, _, data = await self._request("GET", "/.omega-serv-icons/folder.svg")
         self.assertEqual(status, 200)
         self.assertIn(b"<svg", data)
+
+    async def test_dirlisting_css_route_is_never_redirected(self):
+        status, _, data = await self._request("GET", "/.omega-serv-dirlisting-css/omega-base.css")
+        self.assertEqual(status, 200)
+        self.assertIn(b"#00d4ff", data)
+
+
+class TestCspZones(_ServerTestBase):
+    """Retour utilisateur 2026-10-10 : "autoriser des regles
+    conditionnelles pour des dossiers choisis" - une zone CSP remplace
+    ENTIEREMENT la politique par defaut pour son prefixe, jamais une
+    fusion, et jamais hors de son prefixe."""
+    config_overrides: ClassVar[dict] = {
+        "security": {"csp_zones": [
+            {"path_prefix": "/public-widgets/", "policy": "default-src 'self' 'unsafe-inline'"},
+        ]},
+    }
+
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        widgets_dir = self.root / "webroot" / "public-widgets"
+        widgets_dir.mkdir()
+        (widgets_dir / "widget.html").write_text("widget")
+
+    async def test_zone_policy_applies_inside_its_prefix(self):
+        status, headers, _ = await self._request("GET", "/public-widgets/widget.html")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Content-Security-Policy"], "default-src 'self' 'unsafe-inline'")
+
+    async def test_default_policy_applies_outside_the_zone(self):
+        status, headers, _ = await self._request("GET", "/index.html")
+        self.assertEqual(status, 200)
+        self.assertNotIn("unsafe-inline", headers["Content-Security-Policy"])
 
 
 class TestCacheControl(_ServerTestBase):

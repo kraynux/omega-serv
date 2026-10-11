@@ -31,6 +31,21 @@ class TestFormatWafAlertLine(unittest.TestCase):
         self.assertEqual(record["rules"], ["SQLI-001"])
         self.assertEqual(record["score"], 5)
 
+    def test_findings_field_exposes_pack_alongside_rules(self):
+        """Lot C (OMEGA-SERV_PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.md) :
+        nouveau champ, "rules" reste strictement inchange (contrat
+        teste juste au-dessus, test_produces_valid_json)."""
+        line = format_waf_alert_line(_entry(), WafLoggingConfig())
+        record = json.loads(line)
+        self.assertEqual(record["findings"], [{"id": "SQLI-001", "pack": "body-sqli"}])
+
+    def test_findings_field_empty_when_no_findings(self):
+        decision = WafDecision(action="allow", status_code=None, score=0, findings=(), log_level="debug")
+        line = format_waf_alert_line(_entry(decision=decision), WafLoggingConfig())
+        record = json.loads(line)
+        self.assertEqual(record["findings"], [])
+        self.assertEqual(record["rules"], [])
+
     def test_never_includes_body_by_default(self):
         line = format_waf_alert_line(_entry(body_excerpt="secret=1234"), WafLoggingConfig())
         self.assertNotIn("secret", line)

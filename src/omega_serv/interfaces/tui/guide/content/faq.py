@@ -37,6 +37,26 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
     ),
     FaqEntry(
         category="Redemarrage et rechargement",
+        question=(
+            "J'ai mis a jour le code d'OMEGA-SERV (nouvelle archive, correctif applique) mais le "
+            "comportement ne change jamais, meme apres un rechargement (SIGHUP) - pourquoi ?"
+        ),
+        answer=(
+            "Piege reel rencontre (2026-10-10, correctif du rendu du directory listing sous une "
+            "CSP stricte) : le rechargement a chaud (SIGHUP, ecran SERVICE -> Recharger) ne relit "
+            "QUE certains elements de CONFIGURATION (regles WAF, zones d'authentification) - il "
+            "ne recharge JAMAIS le CODE Python lui-meme, qui reste celui charge en memoire depuis "
+            "le DERNIER DEMARRAGE du processus, aussi anciens soient les fichiers sur disque. "
+            "Apres une mise a jour du code (nouvelle archive installee, correctif applique), un "
+            "REDEMARRAGE COMPLET est TOUJOURS necessaire (`systemctl restart <service>`, ou ecran "
+            "SERVICE -> Arreter puis Demarrer) - jamais un simple rechargement, meme pour un "
+            "changement qui semble leger. Verifiez `systemctl status <service>` : une date de "
+            "demarrage ('Active: active (running) since ...') plus ancienne que votre mise a jour "
+            "confirme immediatement ce diagnostic."
+        ),
+    ),
+    FaqEntry(
+        category="Redemarrage et rechargement",
         question="Le rechargement/redemarrage automatique ne s'est pas declenche - pourquoi ?",
         answer=(
             "Le declenchement automatique ne fonctionne que si un gestionnaire de service "
@@ -171,6 +191,160 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "simplement une erreur HTTP 502 Bad Gateway (la meme mecanique que le reverse "
             "proxy de production) - jamais de crash du serveur, jamais de creation silencieuse "
             "de quoi que ce soit."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question="J'ai active le script magnet mais le serveur refuse de demarrer / l'ecran signale 'lupa' absent - pourquoi ?",
+        answer=(
+            "Le magnet est un extra OPTIONNEL, jamais installe par defaut : `pip install -e "
+            "\".[magnet]\"` (dependance `lupa`, liaison Lua embarquee - aucun interpreteur Lua "
+            "systeme requis, une roue precompilee existe pour les plateformes courantes). Son "
+            "absence est signalee par le registre des capacites (capacite `waf-magnet`, ecran "
+            "Capacites) avec la commande exacte, et bloque `config check`/le demarrage si "
+            "`options.waf.magnet.enabled` est actif sans cette dependance - jamais un echec silencieux."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question=(
+            "Le but du magnet, c'est d'ecrire un nouveau WAF en Lua ?"
+        ),
+        answer=(
+            "Non - c'est l'inverse : importer un script WAF `mod_magnet` Lighttpd EXISTANT, "
+            "ecrit a l'origine pour un autre site, SANS le reecrire. Le pont `lighty.*` "
+            "(infrastructure/waf/lua_waf_adapter.py) reproduit le modele d'execution reel de "
+            "Lighttpd (`lighty.env`, `lighty.header`/`lighty.content`, convention de retour "
+            "0=continuer / code HTTP=bloquer, runtime Lua persistant pour que les compteurs internes "
+            "du script - rate limiting, blocklist progressive - survivent entre requetes) plutot "
+            "qu'un contrat invente par OMEGA-SERV. Le natif reste TOUJOURS actif en parallele : le "
+            "magnet est un renfort additif, il ne peut jamais lever un blocage deja decide par le natif."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question="Comment savoir si un script magnet que j'importe est compatible AVANT de l'activer en production ?",
+        answer=(
+            "Ecran Active Securite -> WAF -> Magnet, bouton 'Verifier la compatibilite' (ou "
+            "`omega-serv waf test` en CLI) - execute REELLEMENT le script avec les valeurs du "
+            "formulaire en cours de saisie, pas seulement celles deja enregistrees. Deux controles "
+            "combines : un scan statique signale toute reference `lighty.X` non supportee par ce "
+            "pont (reste toujours `nil` cote Lua - un script bien ecrit degrade via son propre "
+            "repli `or`, un script qui ne degrade pas remonte une erreur reelle, capturee par le "
+            "second controle) ; un smoke test execute le script pour de vrai sur une requete de "
+            "test benigne. Les deux s'affichent comme avertissements explicites, jamais une "
+            "verification cachee."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question="J'ai active un script magnet avec on_error='fail-closed' et maintenant du trafic legitime se fait bloquer - pourquoi ?",
+        answer=(
+            "`fail-closed` bloque TOUTE requete qui declenche une erreur du script (incompatibilite, "
+            "exception Lua, timeout) - une politique volontairement stricte, mais dangereuse "
+            "combinee a un script jamais verifie au prealable : une seule incompatibilite non "
+            "detectee peut alors bloquer tout le trafic qui l'atteint. Lancez 'Verifier la "
+            "compatibilite' (voir question precedente) avant d'activer fail-closed en production - "
+            "un avertissement explicite s'affiche precisement quand ces deux conditions se "
+            "combinent. En cas de doute, repassez `on_error` a 'ignore' (le defaut) : le trafic "
+            "continue d'etre traite par le natif seul si le magnet echoue."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question="Les logs/la blocklist de mon script magnet importe n'apparaissent jamais sur le disque - pourquoi ?",
+        answer=(
+            "Un script `mod_magnet` ecrit typiquement ses logs/sa blocklist a des chemins ABSOLUS "
+            "en dur (ex. `/etc/blocklist.txt`, `/var/log/...`) propres a son site d'origine - ces "
+            "chemins n'ont aucune raison d'exister sur cette machine. La dissociation se fait via "
+            "`options.waf.magnet.paths` (ecran Magnet), injectes dans le script comme table Lua "
+            "globale `omega_magnet_paths` : seule une COPIE adaptee du script (les 5 lignes de "
+            "configuration modifiees pour lire cette table, avec repli sur le chemin en dur "
+            "d'origine si absente) en beneficie - le script importe lui-meme doit etre adapte une "
+            "fois, manuellement (methode generique, mais noms de chemins propres a chaque script). "
+            "`secure/waf/scripts/waf.lua` (chemin par defaut de `options.waf.magnet.script`) est "
+            "livre comme exemple minimal montrant cette technique - un vrai script importe (qui "
+            "porte forcement la logique propre a SON site d'origine, jamais generalisable a "
+            "l'avance) n'a jamais vocation a etre redistribue tel quel a d'autres installations."
+        ),
+    ),
+    FaqEntry(
+        category="WAF - Magnet (import d'un WAF externe)",
+        question="Mon script magnet ecrit une page HTML personnalisee (lighty.content) en cas de blocage - pourquoi je ne la vois jamais ?",
+        answer=(
+            "Choix delibere, coherent avec le reste du projet : le moteur WAF (natif ou magnet) "
+            "rend TOUJOURS une decision, jamais une page HTML - c'est le serveur qui rend "
+            "systematiquement sa propre page d'erreur generique. Les ecritures `lighty.header`/"
+            "`lighty.content` d'un script importe sont acceptees (le script ne plante jamais pour "
+            "les avoir faites) mais jamais relues ni renvoyees au visiteur."
+        ),
+    ),
+    FaqEntry(
+        category="Gestion des logs",
+        question="Les boutons de log 'waf magnet (alertes/blocklist)' restent grises dans l'ecran Voir/Suivre - pourquoi ?",
+        answer=(
+            "Ces deux logs sont proposes d'office (meme si le magnet n'est jamais configure), mais "
+            "restent desactives tant que `options.waf.magnet.enabled` n'est pas reellement actif - "
+            "evite un clic qui ne menerait qu'a un message d'erreur. Une fois actif, un clic "
+            "fonctionne meme si le fichier n'existe pas encore (log vide, jamais une erreur - "
+            "aucune alerte declenchee pour l'instant). Cote `lnav` (logs fusionnes), ces memes logs "
+            "sont deja cochables sans cette restriction : un log absent y est simplement ignore au "
+            "lancement, sans bloquer les autres."
+        ),
+    ),
+    FaqEntry(
+        category="Securite - CSP et en-tetes",
+        question="J'ai ajoute une zone CSP pour un dossier, et maintenant ce dossier semble avoir perdu d'autres protections - pourquoi ?",
+        answer=(
+            "Une zone CSP REMPLACE ENTIEREMENT la politique par defaut pour son prefixe - jamais "
+            "une fusion/un simple ajout. Une zone qui ne contient que `style-src 'self' "
+            "'unsafe-inline'` par exemple fait disparaitre toutes les AUTRES directives "
+            "(`object-src`, `frame-ancestors`...) sous ce prefixe, qui retombent alors sur le "
+            "comportement par defaut du navigateur plutot que sur la politique globale stricte. "
+            "L'assistant d'ajout de zone (ecran Securite generique -> Ajouter une zone) existe "
+            "exactement pour eviter ce piege : chaque directive y est pre-remplie avec sa valeur "
+            "ACTUELLE (la politique globale), a modifier uniquement la ou c'est necessaire."
+        ),
+    ),
+    FaqEntry(
+        category="Securite - CSP et en-tetes",
+        question="Comment autoriser 'unsafe-inline' (ou une source moins stricte) uniquement pour un dossier precis, sans affaiblir le reste du site ?",
+        answer=(
+            "Zones CSP (`security.csp_zones`, ecran Securite generique) : une exception EXPLICITE "
+            "par prefixe de chemin, jamais une relache globale. L'assistant d'ajout detecte toute "
+            "directive relachee ('unsafe-inline'/'unsafe-eval'/source generique '*') et exige une "
+            "confirmation explicite supplementaire avant d'enregistrer. Cette zone reste ensuite "
+            "TOUJOURS visible dans `omega-serv audit security` (regles CSP-001/CSP-002, qui "
+            "scannent aussi les zones, pas seulement la politique globale) - meme deliberee, "
+            "jamais silencieuse."
+        ),
+    ),
+    FaqEntry(
+        category="Securite - CSP et en-tetes",
+        question="Pourquoi Cross-Origin-Embedder-Policy reste a 'unsafe-none' meme en profil hardened ?",
+        answer=(
+            "Choix delibere, different de `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-"
+            "Policy` (toujours `same-origin`, sans risque reel de casser un site) : une valeur "
+            "stricte (`require-corp`/`credentialless`) peut bloquer des ressources cross-origin "
+            "(polices, images, iframes tiers) propres au contenu REELLEMENT servi, qu'un serveur "
+            "generique ne connait jamais a l'avance - jamais un defaut impose sans connaissance de "
+            "ce contenu. Le header reste neanmoins toujours EMIS explicitement, meme a cette valeur "
+            "permissive (jamais absent de la reponse - un scanner externe distingue ainsi 'non "
+            "considere' de 'permissif par choix'). Reglable via `security.coep_mode` (ecran "
+            "Securite generique) si vous connaissez le contenu servi et voulez l'isolation complete."
+        ),
+    ),
+    FaqEntry(
+        category="Securite - CSP et en-tetes",
+        question="Le listing de repertoire (directory listing) perd tout son style visuel depuis que j'ai une CSP stricte - pourquoi ?",
+        answer=(
+            "Corrige (2026-10-10) : le CSS du listing est desormais servi en fichier EXTERNE "
+            "reserve plutot qu'inline dans le HTML - `style-src 'self'` (politique par defaut) "
+            "autorise deja une feuille de style de meme origine, sans besoin d'aucune exception. "
+            "Si ce probleme persiste apres mise a jour, voir la question sur le redemarrage apres "
+            "mise a jour du code (categorie Redemarrage et rechargement) : un simple rechargement "
+            "(SIGHUP) ne suffit jamais a appliquer un changement de CODE, seul un redemarrage "
+            "complet du service le fait."
         ),
     ),
     FaqEntry(

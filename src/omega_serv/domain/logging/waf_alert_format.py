@@ -20,7 +20,16 @@ desormais les valeurs sensibles AVANT troncature - avec sa liste de
 CHAMPS DE FORMULAIRE par defaut (`DEFAULT_SENSITIVE_BODY_FIELDS`),
 jamais `mask_headers` (qui liste des NOMS D'EN-TETE comme "cookie",
 "password" n'y figure d'ailleurs pas - le reutiliser ici aurait laisse
-passer exactement le cas signale)."""
+passer exactement le cas signale).
+
+Champ `findings` AJOUTE (OMEGA-SERV_PLAN-DETAILLE_REFERER_ET_MAGNET_WAF.
+md, lot C) : `rules` (liste de `rule_id`) reste INCHANGE - contrat deja
+teste (`tests/unit/test_waf_alert_format.py`), potentiellement deja lu
+par un consommateur externe. `findings` expose en plus `pack` par regle
+(ex. distinguer un pack natif d'un futur pack "magnet", lot E) sans
+jamais toucher au champ existant - les deux sont construits depuis la
+MEME liste source (`entry.decision.findings`), aucun risque de
+desynchronisation entre eux."""
 from __future__ import annotations
 
 import json
@@ -64,6 +73,7 @@ def format_waf_alert_line(entry: WafAlertEntry, logging_config: WafLoggingConfig
         "status_code": entry.decision.status_code,
         "score": entry.decision.score,
         "rules": [f.rule_id for f in entry.decision.findings],
+        "findings": [{"id": f.rule_id, "pack": f.pack} for f in entry.decision.findings],
         "log_level": entry.decision.log_level,
         "zone": entry.zone_id or "default",
         "duration_ms": round(entry.duration_ms, 3),

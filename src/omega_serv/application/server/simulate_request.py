@@ -66,7 +66,7 @@ async def simulate_request(
     rejection_reason = resolved.rejection_reason.name if not resolved.ok and resolved.rejection_reason else None
 
     response = await route_request(request, path_resolver, filesystem, config, project_root, fastcgi_client)
-    apply_security_headers(response, config.security, config.tls.enabled)
+    apply_security_headers(response, config.security, config.tls.enabled, request.path)
 
     return SimulationReport(
         method=method,

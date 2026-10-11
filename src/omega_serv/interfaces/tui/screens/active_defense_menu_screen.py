@@ -1,12 +1,22 @@
 """Ecran Active Securite (retour utilisateur 2026-09-12, renomme et
 restructure le 2026-09-13 : "ACTIVE DEFENSE" devient "ACTIVE SECURITE",
-regroupe DEUX containers - Active Defense (inchange) et, en dessous, WAF
-(deplace hors de "Configuration detaillee du serveur", menu 3). Meme
-raison pour les deux : ils exposent surtout de l'etat OPERATIONNEL qui
-change en continu (menaces/incidents/affectations de leurre pour l'un,
-mode/packs charges/blocklist pour l'autre), plus proche d'Audit de
-securite ou Etat & Ressources qu'un simple formulaire de configuration
-statique - WAF n'a plus sa place a cote d'alias/redirections/TLS."""
+regroupe DEUX containers - Active Defense et WAF (deplace hors de
+"Configuration detaillee du serveur", menu 3), cote a cote (retour
+utilisateur 2026-10-10 : "que cela puisse etre lisible" - deux panneaux
+`.omega-home-menu` de largeur `auto` dans un `Horizontal`, chacun garde
+sa propre hauteur selon son nombre de boutons). Meme raison pour les
+deux : ils exposent surtout de l'etat OPERATIONNEL qui change en continu
+(menaces/incidents/affectations de leurre pour l'un, mode/packs charges/
+blocklist/magnet pour l'autre), plus proche d'Audit de securite ou Etat
+& Ressources qu'un simple formulaire de configuration statique - WAF n'a
+plus sa place a cote d'alias/redirections/TLS.
+
+"Magnet" (retour utilisateur 2026-10-10) ajoute en 5e item WAF, apres
+"Custom" : importer un script WAF `mod_magnet` Lighttpd externe sans le
+reecrire (voir waf_magnet_screen.py) - assez different des 3 autres
+(etat/reglages passifs/test) et du formulaire "Custom" (ecrit une regle
+DANS le moteur natif) pour justifier son propre ecran plutot que d'etre
+ajoute a Modules."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -30,6 +40,7 @@ from omega_serv.interfaces.tui.screens.deception_screen import DeceptionScreen
 from omega_serv.interfaces.tui.screens.incidents_screen import IncidentsScreen
 from omega_serv.interfaces.tui.screens.threats_screen import ThreatsScreen
 from omega_serv.interfaces.tui.screens.waf_custom_rule_screen import WafCustomRuleScreen
+from omega_serv.interfaces.tui.screens.waf_magnet_screen import WafMagnetScreen
 from omega_serv.interfaces.tui.screens.waf_modules_screen import WafModulesScreen
 from omega_serv.interfaces.tui.screens.waf_status_screen import WafStatusScreen
 from omega_serv.interfaces.tui.screens.waf_test_screen import WafTestScreen
@@ -51,6 +62,7 @@ _WAF_ITEMS: tuple[tuple[str, str], ...] = (
     ("waf-modules", "Modules"),
     ("waf-test", "Tester"),
     ("waf-custom", "Custom"),
+    ("waf-magnet", "Magnet"),
 )
 
 
@@ -75,16 +87,17 @@ class ActiveDefenseMenuScreen(OmegaScreen):
                         id="group-mismatch-hint",
                         classes="omega-hint",
                     )
-            with Center(), Vertical(classes="omega-home-menu") as active_defense_menu:
-                for item_id, label in _ACTIVE_DEFENSE_ITEMS:
-                    with Container(classes="omega-btn-frame"):
-                        yield Button(label, id=item_id)
-                active_defense_menu.border_title = "ACTIVE DEFENSE"
-            with Center(), Vertical(classes="omega-home-menu") as waf_menu:
-                for item_id, label in _WAF_ITEMS:
-                    with Container(classes="omega-btn-frame"):
-                        yield Button(label, id=item_id)
-                waf_menu.border_title = "WAF"
+            with Center(), Horizontal(classes="omega-panel-row"):
+                with Vertical(classes="omega-home-menu") as active_defense_menu:
+                    for item_id, label in _ACTIVE_DEFENSE_ITEMS:
+                        with Container(classes="omega-btn-frame"):
+                            yield Button(label, id=item_id)
+                    active_defense_menu.border_title = "ACTIVE DEFENSE"
+                with Vertical(classes="omega-home-menu") as waf_menu:
+                    for item_id, label in _WAF_ITEMS:
+                        with Container(classes="omega-btn-frame"):
+                            yield Button(label, id=item_id)
+                    waf_menu.border_title = "WAF"
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button("Retour", id="back")
         yield Footer()
@@ -118,4 +131,6 @@ class ActiveDefenseMenuScreen(OmegaScreen):
             return WafTestScreen(container=self._container)
         if item_id == "waf-custom":
             return WafCustomRuleScreen(container=self._container)
+        if item_id == "waf-magnet":
+            return WafMagnetScreen(container=self._container)
         return None

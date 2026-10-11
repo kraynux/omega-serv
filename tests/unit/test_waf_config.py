@@ -11,6 +11,20 @@ class TestParseWafConfig(unittest.TestCase):
         self.assertEqual(config.on_internal_error, "fail-open")
         self.assertIn("/healthz", config.exclusions.path_prefixes)
 
+    def test_keyword_lists_parsed(self):
+        settings = {
+            "rules": {
+                "paths": ["secure/waf/rules/core.json"],
+                "keyword_lists": [
+                    {"id": "REFERER-SPAM", "scope": ["referer"], "file": "secure/waf/rules/keywords/referer-spam.txt", "weight": 3},
+                ],
+            },
+        }
+        config = parse_waf_config(settings)
+        self.assertEqual(len(config.keyword_lists), 1)
+        self.assertEqual(config.keyword_lists[0].id, "REFERER-SPAM")
+        self.assertEqual(config.keyword_lists[0].scope, ("referer",))
+
     def test_full_example_parses(self):
         settings = {
             "engine": "python",
@@ -32,6 +46,20 @@ class TestParseWafConfig(unittest.TestCase):
         self.assertEqual(config.rule_paths, ("secure/waf/rules/core.json",))
         self.assertIn("authorization", config.logging.mask_headers)
 
+    def test_magnet_paths_default_to_project_local_locations(self):
+        config = parse_waf_config({})
+        self.assertEqual(config.magnet.paths.blocklist_file, "secure/waf/magnet-blocklist.txt")
+        self.assertEqual(config.magnet.paths.rules_dir, "secure/waf/magnet-rules.d/")
+
+    def test_magnet_paths_overridable(self):
+        settings = {"magnet": {"enabled": True, "script": "secure/waf/scripts/waf.lua", "paths": {
+            "blocklist_file": "custom/blocklist.txt",
+        }}}
+        config = parse_waf_config(settings)
+        self.assertEqual(config.magnet.paths.blocklist_file, "custom/blocklist.txt")
+        # Les 4 autres gardent leur defaut, non ecrases par un override partiel.
+        self.assertEqual(config.magnet.paths.alerts_log, "var/log/waf-magnet-alerts.log")
+
 
 class TestValidateWafConfig(unittest.TestCase):
     def test_valid_config_with_rule_paths_passes(self):
@@ -42,6 +70,23 @@ class TestValidateWafConfig(unittest.TestCase):
         config = parse_waf_config({})
         errors = validate_waf_config(config)
         self.assertTrue(any("rules.paths" in e for e in errors))
+
+    def test_keyword_lists_alone_satisfies_non_empty_rules_requirement(self):
+        config = parse_waf_config({
+            "rules": {"keyword_lists": [{"id": "X", "scope": ["referer"], "file": "secure/waf/rules/keywords/x.txt"}]},
+        })
+        errors = validate_waf_config(config)
+        self.assertEqual(errors, [])
+
+    def test_invalid_keyword_list_definition_rejected(self):
+        config = parse_waf_config({
+            "rules": {
+                "paths": ["secure/waf/rules/core.json"],
+                "keyword_lists": [{"id": "X", "scope": ["cookies"], "file": "x.txt"}],
+            },
+        })
+        errors = validate_waf_config(config)
+        self.assertTrue(any("scope inconnu" in e for e in errors))
 
     def test_invalid_mode_rejected(self):
         config = WafConfig(mode="allow-all")  # type: ignore[arg-type]

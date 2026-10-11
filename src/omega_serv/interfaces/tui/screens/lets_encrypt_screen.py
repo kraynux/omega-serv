@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, VerticalScroll
+from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
@@ -48,7 +48,7 @@ class LetsEncryptScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll(classes="omega-form-panel"):
+        with Vertical(classes="omega-form-panel"):
             yield Static("ASSISTANT LET'S ENCRYPT (CERTBOT)", classes="omega-title")
             yield Static(
                 "Necessite un domaine public deja pointe vers ce serveur et le port 80 "

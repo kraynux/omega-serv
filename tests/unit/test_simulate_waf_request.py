@@ -14,7 +14,7 @@ _SQLI_PACK = {
 }
 
 
-class TestSimulateWafRequest(unittest.TestCase):
+class TestSimulateWafRequest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
@@ -42,18 +42,20 @@ class TestSimulateWafRequest(unittest.TestCase):
         })
         return build_waf_collaborators(config, self.root, self.filesystem, _Clock())
 
-    def test_clean_request_allowed(self):
-        report = simulate_waf_request("GET", "/x", "", "", "203.0.113.1", self._waf())
+    async def test_clean_request_allowed(self):
+        report = await simulate_waf_request("GET", "/x", "", "", "203.0.113.1", self._waf())
         self.assertEqual(report.decision.action, "allow")
 
-    def test_malicious_query_blocked(self):
-        report = simulate_waf_request("GET", "/x", "id=1 union select pwd", "", "203.0.113.1", self._waf())
+    async def test_malicious_query_blocked(self):
+        report = await simulate_waf_request("GET", "/x", "id=1 union select pwd", "", "203.0.113.1", self._waf())
         self.assertEqual(report.decision.action, "block")
         self.assertEqual(report.decision.status_code, 403)
         self.assertIn("SQLI-001", [f.rule_id for f in report.decision.findings])
 
-    def test_log_only_mode_never_blocks(self):
-        report = simulate_waf_request("GET", "/x", "id=1 union select pwd", "", "203.0.113.1", self._waf(mode="log-only"))
+    async def test_log_only_mode_never_blocks(self):
+        report = await simulate_waf_request(
+            "GET", "/x", "id=1 union select pwd", "", "203.0.113.1", self._waf(mode="log-only"),
+        )
         self.assertEqual(report.decision.action, "log")
 
 

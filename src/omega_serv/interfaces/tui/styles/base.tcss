@@ -79,6 +79,17 @@ Screen {
     height: auto;
 }
 
+.omega-form-panel > DataTable {
+    /* Retour utilisateur 2026-10-10 : premiere DataTable dans un panel
+       centre (zones CSP, security_screen.py) - meme largeur que le
+       reste du formulaire (Input/Select/titre/sous-titre), sinon elle
+       deborderait la colonne de 70 caracteres du reste du panneau. */
+    width: 70;
+    height: auto;
+    max-height: 10;
+    margin-bottom: 1;
+}
+
 .omega-home-root {
     align: center middle;
     height: 1fr;
@@ -118,6 +129,23 @@ Screen {
     padding: 1 4;
     width: auto;
     height: auto;
+}
+
+.omega-panel-row {
+    /* Deux panneaux `.omega-home-menu` cote a cote (retour utilisateur
+       2026-10-10, ecran Active Securite : "que cela puisse etre
+       lisible") - chacun garde sa largeur/hauteur "auto" propre,
+       seul un espacement entre eux est ajoute ici. */
+    width: auto;
+    height: auto;
+}
+
+.omega-panel-row > .omega-home-menu {
+    margin-right: 2;
+}
+
+.omega-panel-row > .omega-home-menu:last-child {
+    margin-right: 0;
 }
 
 .omega-actions {

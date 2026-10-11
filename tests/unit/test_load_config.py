@@ -96,6 +96,88 @@ class TestValidateConfigEnvironment(unittest.TestCase):
         errors = validate_config_environment(config, self.filesystem, self.project_root)
         self.assertEqual(errors, [])
 
+    def test_waf_enabled_with_missing_keyword_list_file_fails(self):
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {
+                "keyword_lists": [{"id": "X", "scope": ["referer"], "file": "secure/waf/rules/keywords/missing.txt"}],
+            }}},
+        })
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertTrue(any("keyword_lists" in e for e in errors))
+
+    def test_waf_enabled_with_valid_keyword_list_file_passes(self):
+        keywords_dir = self.project_root / "secure" / "waf" / "rules" / "keywords"
+        keywords_dir.mkdir(parents=True)
+        (keywords_dir / "referer-spam.txt").write_text("casino\nviagra\n")
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {
+                "keyword_lists": [
+                    {"id": "REFERER-SPAM", "scope": ["referer"], "file": "secure/waf/rules/keywords/referer-spam.txt"},
+                ],
+            }}},
+        })
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertEqual(errors, [])
+
+    def test_waf_magnet_enabled_with_missing_script_fails(self):
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {"paths": ["secure/waf/rules/core.json"]}, "magnet": {
+                "enabled": True, "script": "secure/waf/scripts/missing.lua",
+            }}},
+        })
+        (self.project_root / "secure" / "waf" / "rules").mkdir(parents=True)
+        (self.project_root / "secure" / "waf" / "rules" / "core.json").write_text(
+            '{"version": 1, "pack": "core", "enabled": true, "rules": []}'
+        )
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertTrue(any("magnet" in e for e in errors))
+
+    def test_waf_magnet_enabled_with_invalid_script_fails(self):
+        rules_dir = self.project_root / "secure" / "waf" / "rules"
+        rules_dir.mkdir(parents=True)
+        (rules_dir / "core.json").write_text('{"version": 1, "pack": "core", "enabled": true, "rules": []}')
+        scripts_dir = self.project_root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "custom.lua").write_text("function ( ???")  # syntaxe Lua invalide
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {"paths": ["secure/waf/rules/core.json"]}, "magnet": {
+                "enabled": True, "script": "secure/waf/scripts/custom.lua",
+            }}},
+        })
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertTrue(any("magnet" in e for e in errors))
+
+    def test_waf_magnet_enabled_with_valid_script_passes(self):
+        rules_dir = self.project_root / "secure" / "waf" / "rules"
+        rules_dir.mkdir(parents=True)
+        (rules_dir / "core.json").write_text('{"version": 1, "pack": "core", "enabled": true, "rules": []}')
+        scripts_dir = self.project_root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "custom.lua").write_text("return 0")
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {"paths": ["secure/waf/rules/core.json"]}, "magnet": {
+                "enabled": True, "script": "secure/waf/scripts/custom.lua",
+            }}},
+        })
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertEqual(errors, [])
+
+    def test_waf_magnet_enabled_without_explicit_script_uses_paths_waf_script_default(self):
+        """E5 du plan : `magnet.script` vide reutilise `paths.waf_script`."""
+        rules_dir = self.project_root / "secure" / "waf" / "rules"
+        rules_dir.mkdir(parents=True)
+        (rules_dir / "core.json").write_text('{"version": 1, "pack": "core", "enabled": true, "rules": []}')
+        scripts_dir = self.project_root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "waf.lua").write_text("return 0")
+        config = OmegaServConfig.from_dict({
+            "options": {"waf": {"enabled": True, "rules": {"paths": ["secure/waf/rules/core.json"]}, "magnet": {
+                "enabled": True,
+            }}},
+        })
+        errors = validate_config_environment(config, self.filesystem, self.project_root)
+        self.assertEqual(errors, [])
+
 
 class _FakeCertificateTool:
     def __init__(self, info, keys_match=True):

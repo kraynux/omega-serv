@@ -223,11 +223,44 @@ SECURITY_SCREEN = ScreenGuide(
             reaction="Se recharge a chaud.",
         ),
         FieldGuide(
+            label="Cross-Origin-Embedder-Policy",
+            definition=(
+                "Isolation cross-origin - 'require-corp'/'credentialless' peuvent bloquer des "
+                "ressources cross-origin (polices, images, iframes tiers) que ce serveur "
+                "generique ne connait pas a l'avance, contrairement a COOP/CORP (toujours actifs, "
+                "sans ce risque)."
+            ),
+            utilisation=(
+                "unsafe-none (permissif, par defaut partout y compris hardened), require-corp ou "
+                "credentialless - a activer uniquement en connaissance du contenu reellement servi."
+            ),
+            action="Enregistre dans security.coep_mode.",
+            reaction="Se recharge a chaud - toujours emis explicitement, meme en unsafe-none (jamais un en-tete absent).",
+        ),
+        FieldGuide(
             label="En-tetes de securite actifs (oui/non)",
             definition="Active l'envoi des en-tetes de securite standard (CSP, X-Content-Type-Options...).",
             utilisation="oui ou non. Valeur par defaut : oui.",
             action="Enregistre dans security.security_headers_enabled.",
             reaction="Se recharge a chaud.",
+        ),
+        FieldGuide(
+            label="Zones CSP (Ajouter une zone / Retirer)",
+            definition=(
+                "Exceptions EXPLICITES a la CSP globale, par prefixe de chemin - ex. 'unsafe-inline' "
+                "uniquement sous /un-dossier/ qui en a reellement besoin, sans jamais relacher la "
+                "CSP du reste du site."
+            ),
+            utilisation=(
+                "Prefixe (ex: /public-widgets/) + politique CSP COMPLETE pour ce prefixe (remplace "
+                "entierement le defaut pour ces chemins, jamais une fusion de directives)."
+            ),
+            action="Enregistre immediatement dans security.csp_zones, sans passer par Enregistrer.",
+            reaction=(
+                "Rechargement automatique immediat si un service actif existe. Une exception comme "
+                "'unsafe-inline' reste TOUJOURS visible dans 'omega-serv audit security' (CSP-001/"
+                "CSP-002), meme deliberee - jamais silencieuse."
+            ),
         ),
         FieldGuide(
             label="HSTS actif (oui/non)",
@@ -264,6 +297,38 @@ SECURITY_SCREEN = ScreenGuide(
             "Activer HSTS sans que TLS soit reellement actif n'a aucun effet utile - le navigateur "
             "ignore cet en-tete recu en HTTP simple."
         ),
+    ),
+)
+
+CSP_ZONE_WIZARD_SCREEN = ScreenGuide(
+    screen_class_name="CspZoneWizardScreen",
+    title="Securite generique - Assistant zone CSP",
+    acces="Securite generique -> Ajouter une zone",
+    definition=(
+        "Construit la politique CSP d'une zone directive par directive, chacune pre-remplie avec "
+        "sa valeur ACTUELLE (la politique globale) - une zone remplace ENTIEREMENT la politique "
+        "par defaut pour son prefixe, jamais un simple ajout, d'ou le pre-remplissage pour eviter "
+        "de perdre des directives sans le vouloir."
+    ),
+    fields=(
+        FieldGuide(
+            label="Prefixe",
+            definition="Chemin URL auquel s'applique cette politique de remplacement.",
+            utilisation="Doit commencer par '/', ex: /public-widgets/.",
+            action="Utilise au clic sur Valider.",
+            reaction="Aucun effet avant Valider.",
+        ),
+        FieldGuide(
+            label="Directives (une par ligne, ex. style-src, script-src...)",
+            definition="Chaque champ controle une famille de ressources - l'indice sous chaque champ explique precisement laquelle.",
+            utilisation="Pre-rempli avec la valeur actuelle - modifier uniquement ce qui doit changer, vider pour omettre la directive dans la zone.",
+            action="Reassemblees en une seule politique au clic sur Valider.",
+            reaction="Une valeur contenant unsafe-inline/unsafe-eval/'*' declenche une confirmation explicite supplementaire avant d'enregistrer.",
+        ),
+    ),
+    consequences=(
+        "La zone creee reste visible dans 'omega-serv audit security' (CSP-001/CSP-002 scannent "
+        "aussi les zones) si elle contient une relache - jamais silencieuse, meme deliberee."
     ),
 )
 

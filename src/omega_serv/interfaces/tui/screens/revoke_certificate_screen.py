@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, VerticalScroll
+from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
@@ -33,7 +33,7 @@ class RevokeCertificateScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll(classes="omega-form-panel"):
+        with Vertical(classes="omega-form-panel"):
             yield Static("REVOQUER UN CERTIFICAT", classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
             yield Static("Certificat a revoquer", classes="omega-subtitle")

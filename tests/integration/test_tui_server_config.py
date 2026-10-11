@@ -20,6 +20,8 @@ from omega_serv.application.config.generate_config import generate_default_confi
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.interfaces.tui.app import OmegaServApp
 from omega_serv.interfaces.tui.screens.config_check_screen import ConfigCheckScreen
+from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
+from omega_serv.interfaces.tui.screens.csp_zone_wizard_screen import CspZoneWizardScreen
 from omega_serv.interfaces.tui.screens.home import HomeScreen
 from omega_serv.interfaces.tui.screens.options_screen import OptionsScreen
 from omega_serv.interfaces.tui.screens.server_config_menu_screen import ServerConfigMenuScreen
@@ -168,10 +170,114 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#security", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#csp-mode-input", Input).value = "report-only"
+            pilot.app.screen.query_one("#coep-mode-input", Input).value = "require-corp"
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
-        self.assertIn('"csp_mode": "report-only"', container.config_file.read_text())
+        config_text = container.config_file.read_text()
+        self.assertIn('"csp_mode": "report-only"', config_text)
+        self.assertIn('"coep_mode": "require-corp"', config_text)
+
+    async def test_security_screen_csp_zone_add_and_delete(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#security", Button).press()
+            await pilot.pause()
+
+            pilot.app.screen.query_one("#add-zone", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, CspZoneWizardScreen)
+            pilot.app.screen.query_one("#wiz-path-prefix", Input).value = "/public-widgets/"
+            # Pre-rempli avec "'self'" (politique globale) - on y ajoute unsafe-inline.
+            self.assertEqual(pilot.app.screen.query_one("#wiz-style-src", Input).value, "'self'")
+            pilot.app.screen.query_one("#wiz-style-src", Input).value = "'self' 'unsafe-inline'"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#csp-zones-table", DataTable).row_count, 1)
+            config_text = container.config_file.read_text()
+            self.assertIn('"path_prefix": "/public-widgets/"', config_text)
+            self.assertIn("unsafe-inline", config_text)
+
+            table = pilot.app.screen.query_one("#csp-zones-table", DataTable)
+            table.move_cursor(row=0)
+            await pilot.pause()
+            table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#delete-zone", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#csp-zones-table", DataTable).row_count, 0)
+
+    async def test_csp_zone_wizard_prefills_every_directive_with_the_current_global_policy(self):
+        """Retour utilisateur 2026-10-10 : jamais un champ vide qui
+        inviterait a sacrifier des directives sans le vouloir."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#security", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add-zone", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#wiz-default-src", Input).value, "'none'")
+            self.assertEqual(pilot.app.screen.query_one("#wiz-object-src", Input).value, "'none'")
+            self.assertEqual(pilot.app.screen.query_one("#wiz-script-src", Input).value, "'self'")
+
+    async def test_csp_zone_wizard_cancel_adds_nothing(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#security", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add-zone", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#csp-zones-table", DataTable).row_count, 0)
+
+    async def test_csp_zone_without_risky_directive_skips_the_extra_confirmation(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#security", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add-zone", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#wiz-path-prefix", Input).value = "/strict-zone/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#csp-zones-table", DataTable).row_count, 1)
+
+    async def test_security_screen_rejects_invalid_coep_mode(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#security", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#coep-mode-input", Input).value = "strict"
+            pilot.app.screen.query_one("#save", Button).press()
+            await pilot.pause()
+            self.assertIn("coep_mode", str(pilot.app.screen.query_one("#form-error").content))
 
     async def test_aliases_full_crud_cycle(self):
         container = self._container()

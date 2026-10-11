@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from omega_lib.theme.policies import Palette
 
+    from omega_serv.application.security.check_magnet_compatibility import MagnetCompatibilityCheck
     from omega_serv.application.security.simulate_waf_request import WafSimulationReport
     from omega_serv.application.server.simulate_request import SimulationReport
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
     from omega_serv.core.capability import Capability
     from omega_serv.domain.config.entities import OmegaServConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
+    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.domain.security.audit.entities import AuditResult
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
@@ -101,7 +103,7 @@ async def _run_simulate_request(
     return await simulate_request(method, path, config, path_resolver, filesystem, project_root, fastcgi_client)
 
 
-def _run_waf_test(
+async def _run_waf_test(
     method: str,
     path: str,
     query: str,
@@ -118,7 +120,17 @@ def _run_waf_test(
     waf = build_waf_collaborators(config, project_root, filesystem, clock, force=True)
     if waf is None:
         return None
-    return simulate_waf_request(method, path, query, body, remote_ip, waf)
+    return await simulate_waf_request(method, path, query, body, remote_ip, waf)
+
+
+async def _check_magnet_compatibility(
+    magnet: MagnetConfig, project_root: Path, filesystem: FilesystemPort,
+) -> MagnetCompatibilityCheck:
+    from omega_serv.application.security.check_magnet_compatibility import (
+        check_magnet_compatibility,
+    )
+
+    return await check_magnet_compatibility(magnet, project_root, filesystem)
 
 
 def _build_blocklist_port(
@@ -302,6 +314,7 @@ def main(argv: list[str] | None = None) -> int:
             audit_runner=_run_audit,
             simulate_request_runner=_run_simulate_request,
             waf_test_runner=_run_waf_test,
+            magnet_compat_check_runner=_check_magnet_compatibility,
             blocklist_port_factory=_build_blocklist_port,
             active_defense_collaborators_factory=_build_active_defense_collaborators,
             ioc_export_runner=_run_ioc_export,

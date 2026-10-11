@@ -45,14 +45,14 @@ class WafTestScreen(OmegaScreen):
         result = load_config(self._container.configuration, self._container.config_file)
         return result.config if result.success else None
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back":
             self.dismiss()
             return
         if event.button.id == "test":
-            self._run_test()
+            await self._run_test()
 
-    def _run_test(self) -> None:
+    async def _run_test(self) -> None:
         result_widget = self.query_one("#test-result", Static)
         runner = self._container.waf_test_runner
         if runner is None:
@@ -62,7 +62,7 @@ class WafTestScreen(OmegaScreen):
         if config is None:
             result_widget.update("Erreur de configuration.")
             return
-        report = runner(
+        report = await runner(
             self.query_one("#test-method-input", Input).value.strip() or "GET",
             self.query_one("#test-path-input", Input).value.strip() or "/",
             self.query_one("#test-query-input", Input).value.strip(),
@@ -87,4 +87,11 @@ class WafTestScreen(OmegaScreen):
         ]
         if decision.blocked_reason:
             lines.append(f"Motif : {decision.blocked_reason}")
+        if report.magnet_error:
+            lines.append(f"ATTENTION script magnet en erreur : {report.magnet_error}")
+        if report.magnet_unsupported_members:
+            lines.append(
+                "ATTENTION lighty." + f"{{{', '.join(sorted(report.magnet_unsupported_members))}}}"
+                " non supporte par ce pont"
+            )
         result_widget.update("\n".join(lines))

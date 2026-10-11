@@ -34,6 +34,7 @@ _KNOWN_HTTP_METHOD_TOKENS = frozenset({
 })
 
 _VALID_CSP_MODES = frozenset({"enforce", "report-only"})
+_VALID_COEP_MODES = frozenset({"unsafe-none", "require-corp", "credentialless"})
 
 
 def is_safe_relative_path(value: str) -> bool:
@@ -108,6 +109,18 @@ def validate_config(config: OmegaServConfig) -> list[str]:
             f"security.csp_mode invalide : {config.security.csp_mode!r} "
             f"(attendu : {sorted(_VALID_CSP_MODES)})"
         )
+
+    if config.security.coep_mode not in _VALID_COEP_MODES:
+        errors.append(
+            f"security.coep_mode invalide : {config.security.coep_mode!r} "
+            f"(attendu : {sorted(_VALID_COEP_MODES)})"
+        )
+
+    for zone in config.security.csp_zones:
+        if not zone.path_prefix.startswith("/"):
+            errors.append(f"security.csp_zones : path_prefix doit commencer par '/' : {zone.path_prefix!r}")
+        if not zone.data.strip():
+            errors.append(f"security.csp_zones : policy ne peut pas etre vide (zone {zone.path_prefix!r})")
 
     unknown_options = set(config.options.keys()) - KNOWN_OPTION_NAMES
     if unknown_options:

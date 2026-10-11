@@ -54,6 +54,12 @@ class TestValidateRulePack(unittest.TestCase):
         errors = validate_rule_pack(pack)
         self.assertTrue(any("scope inconnu" in e for e in errors))
 
+    def test_referer_scope_accepted(self):
+        data = _valid_pack_data()
+        data["rules"][0]["scope"] = ["referer"]
+        pack = parse_rule_pack(data)
+        self.assertEqual(validate_rule_pack(pack), [])
+
     def test_invalid_regex_rejected(self):
         data = _valid_pack_data()
         data["rules"][0]["pattern"] = "("

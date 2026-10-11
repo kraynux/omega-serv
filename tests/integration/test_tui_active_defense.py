@@ -28,6 +28,7 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 
 from omega_serv.application.config.generate_config import generate_default_config
 from omega_serv.application.config.load_config import load_config
+from omega_serv.application.security.check_magnet_compatibility import check_magnet_compatibility
 from omega_serv.application.server.start_server import build_active_defense_collaborators
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.domain.config.option import Option
@@ -56,6 +57,7 @@ from omega_serv.interfaces.tui.screens.waf_custom_rule_screen import WafCustomRu
 from omega_serv.interfaces.tui.screens.waf_custom_rule_wizard_screen import (
     WafCustomRuleWizardScreen,
 )
+from omega_serv.interfaces.tui.screens.waf_magnet_screen import WafMagnetScreen
 from omega_serv.interfaces.tui.screens.waf_modules_screen import WafModulesScreen
 from omega_serv.interfaces.tui.screens.waf_status_screen import WafStatusScreen
 from omega_serv.interfaces.tui.screens.waf_test_screen import WafTestScreen
@@ -87,7 +89,11 @@ class _FakeBlocklistPort:
         return 0
 
 
-def _fake_waf_test_runner(method, path, query, body, remote_ip, config, filesystem, project_root, clock):
+async def _fake_waf_test_runner(method, path, query, body, remote_ip, config, filesystem, project_root, clock):
+    """Async depuis le lot E (magnet) - `waf_test_screen.py::_run_test`
+    fait desormais `await runner(...)` (le vrai `waf_test_runner`
+    appelle `simulate_waf_request`, devenu async pour dispatcher le
+    magnet via `run_in_executor` sans bloquer la boucle asyncio)."""
     class _FakeDecision:
         action = "block"
         status_code = 403
@@ -100,6 +106,8 @@ def _fake_waf_test_runner(method, path, query, body, remote_ip, config, filesyst
         decision = _FakeDecision()
         zone_id = "default"
         mode = "block"
+        magnet_error = None
+        magnet_unsupported_members = None
 
     return _FakeReport()
 
@@ -159,6 +167,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             ioc_export_runner=_run_ioc_export,
             incident_report_export_runner=_run_incident_report_export,
             waf_test_runner=_fake_waf_test_runner,
+            magnet_compat_check_runner=check_magnet_compatibility,
             blocklist_port_factory=lambda config, filesystem, project_root, clock: self.fake_blocklist_port,
             service_manager_factory=lambda: self.fake_service_manager,
             instance_registry_path=self.root.parent / f"{self.root.name}-instances.json",
@@ -409,6 +418,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
                 ("simulate", ActiveDefenseSimulateScreen),
                 ("waf-status", WafStatusScreen), ("waf-modules", WafModulesScreen),
                 ("waf-test", WafTestScreen), ("waf-custom", WafCustomRuleScreen),
+                ("waf-magnet", WafMagnetScreen),
             ):
                 pilot.app.screen.query_one(f"#{item_id}", Button).press()
                 await pilot.pause()
@@ -579,6 +589,54 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#test", Button).press()
             await pilot.pause()
             self.assertIn("BLOCK", str(pilot.app.screen.query_one("#test-result").content))
+
+    async def test_waf_magnet_screen_check_compatibility_and_save(self):
+        scripts_dir = self.root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "check-test.lua").write_text("return 0")
+
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-magnet", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, WafMagnetScreen)
+
+            pilot.app.screen.query_one("#script-input", Input).value = "secure/waf/scripts/check-test.lua"
+            pilot.app.screen.query_one("#check-compat", Button).press()
+            await pilot.pause()
+            self.assertIn("Compatibilite OK", str(pilot.app.screen.query_one("#compat-result").content))
+
+            pilot.app.screen.query_one("#enabled-input", Input).value = "oui"
+            pilot.app.screen.query_one("#save", Button).press()
+            await pilot.pause()
+            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
+
+            load_result = load_config(self.container.configuration, self.container.config_file)
+            assert load_result.config is not None
+            waf_settings = load_result.config.options["waf"].settings
+            self.assertTrue(waf_settings["magnet"]["enabled"])
+            self.assertEqual(waf_settings["magnet"]["script"], "secure/waf/scripts/check-test.lua")
+
+    async def test_waf_magnet_screen_reports_unsupported_member_and_script_error(self):
+        scripts_dir = self.root / "secure" / "waf" / "scripts"
+        scripts_dir.mkdir(parents=True)
+        (scripts_dir / "broken.lua").write_text("lighty.unknown_field()\nerror('boom')\n")
+
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-magnet", Button).press()
+            await pilot.pause()
+
+            pilot.app.screen.query_one("#script-input", Input).value = "secure/waf/scripts/broken.lua"
+            pilot.app.screen.query_one("#check-compat", Button).press()
+            await pilot.pause()
+            result = str(pilot.app.screen.query_one("#compat-result").content)
+            self.assertIn("unknown_field", result)
+            self.assertIn("attempt to call a nil value", result)
 
     async def test_waf_custom_rule_add_and_delete_auto_references_pack(self):
         app = OmegaServApp(self.container)

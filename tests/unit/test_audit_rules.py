@@ -43,6 +43,28 @@ class TestRuleCspUnsafeInline(unittest.TestCase):
     def test_default_real_policy_is_not_flagged(self):
         self.assertEqual(rule_csp_unsafe_inline(OmegaServConfig()), [])
 
+    def test_unsafe_inline_in_a_zone_is_flagged_even_if_the_global_policy_is_strict(self):
+        """Retour utilisateur 2026-10-10 : une exception de zone CSP
+        (ex. unsafe-inline uniquement sous /un-dossier/) doit rester
+        TOUJOURS VISIBLE dans l'audit, meme deliberee - jamais silencieuse."""
+        config = OmegaServConfig.from_dict({
+            "security": {"csp_zones": [
+                {"path_prefix": "/legacy-widget/", "policy": "default-src 'self'; style-src 'self' 'unsafe-inline'"},
+            ]},
+        })
+        findings = rule_csp_unsafe_inline(config, csp_policy="default-src 'self'")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].rule_id, "CSP-001")
+        self.assertIn("/legacy-widget/", findings[0].message)
+
+    def test_strict_zone_alongside_strict_global_is_not_flagged(self):
+        config = OmegaServConfig.from_dict({
+            "security": {"csp_zones": [
+                {"path_prefix": "/public/", "policy": "default-src 'self'"},
+            ]},
+        })
+        self.assertEqual(rule_csp_unsafe_inline(config, csp_policy="default-src 'self'"), [])
+
 
 class TestRuleCspTooPermissive(unittest.TestCase):
     def test_wildcard_source_flagged(self):

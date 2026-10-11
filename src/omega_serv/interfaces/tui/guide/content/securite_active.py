@@ -445,7 +445,7 @@ WAF_CUSTOM_RULE_WIZARD_SCREEN = ScreenGuide(
         FieldGuide(
             label="Portee / Motif (mode Avance)",
             definition="Portee et expression reguliere ecrites directement.",
-            utilisation="Portee : path, query, body, headers, user_agent (separes par des virgules).",
+            utilisation="Portee : path, query, body, headers, user_agent, referer (separes par des virgules).",
             action="Utilise tel quel si Avance est choisi.",
             reaction="Aucun effet avant validation sur l'ecran precedent.",
         ),
@@ -458,6 +458,67 @@ WAF_CUSTOM_RULE_WIZARD_SCREEN = ScreenGuide(
         ),
     ),
     consequences="Ne fait qu'assembler les valeurs - l'ecriture reelle a lieu sur l'ecran WAF - Regles personnalisees.",
+)
+
+WAF_MAGNET_SCREEN = ScreenGuide(
+    screen_class_name="WafMagnetScreen",
+    title="WAF - Magnet (import d'un WAF externe)",
+    acces="Accueil -> Active Securite -> Magnet (bloc WAF)",
+    definition=(
+        "Importe un script WAF mod_magnet Lighttpd EXISTANT (ecrit pour un autre site) sans le "
+        "reecrire, comme renfort additif au WAF natif - il ne peut jamais lever un blocage deja "
+        "decide par le natif. Seuls les chemins personnels du script (fichiers de log/blocage) se "
+        "dissocient ici, jamais la logique du script lui-meme."
+    ),
+    fields=(
+        FieldGuide(
+            label="Actif (oui/non)",
+            definition="Active ou desactive le script magnet.",
+            utilisation="oui ou non.",
+            action="Enregistre au clic sur Enregistrer.",
+            reaction="Rechargement automatique declenche si un service actif existe.",
+        ),
+        FieldGuide(
+            label="Script (chemin relatif au projet)",
+            definition="Le fichier Lua a importer - une liste des scripts trouves sous secure/waf/scripts/ est affichee en indice.",
+            utilisation="Chemin relatif au projet, ex. secure/waf/scripts/waf.lua.",
+            action="Enregistre avec Actif.",
+            reaction="Aucun effet avant Enregistrer - utiliser Verifier la compatibilite pour tester sans rien ecrire.",
+        ),
+        FieldGuide(
+            label="Delai maximum par appel (ms) / Comportement en cas d'erreur",
+            definition="Borne le temps d'execution du script par requete, et la decision prise si le script plante ou depasse ce delai.",
+            utilisation="Delai en millisecondes ; ignore (laisse passer) ou fail-closed (bloque par prudence).",
+            action="Enregistre avec Actif.",
+            reaction="fail-closed combine a une incompatibilite detectee peut bloquer du trafic legitime - avertissement explicite affiche par Verifier la compatibilite dans ce cas.",
+        ),
+        FieldGuide(
+            label="Chemins personnels dissocies",
+            definition=(
+                "5 chemins (blocklist, dossier de regles, 2 journaux, fichier de persistance du "
+                "rate limiting) injectes dans le script a la place de ses chemins en dur d'origine - "
+                "propre a chaque script importe, jamais un contrat generique."
+            ),
+            utilisation="Vide = le script garde son propre chemin en dur (aucune injection pour ce champ).",
+            action="Enregistre avec Actif.",
+            reaction="Les dossiers parents sont crees automatiquement a l'usage reel (jamais lors d'un simple 'config check').",
+        ),
+        FieldGuide(
+            label="Verifier la compatibilite",
+            definition="Execute REELLEMENT le script avec les valeurs du formulaire EN COURS DE SAISIE, pas seulement celles deja enregistrees.",
+            utilisation="A utiliser avant d'activer un script importe en production - repond a 'ce script est-il compatible ?'.",
+            action="Scan statique (membres lighty.* non supportes) + execution reelle sur une requete de test benigne.",
+            reaction="Aucun effet sur le serveur ni sur la configuration enregistree - purement diagnostique.",
+        ),
+    ),
+    consequences="Le natif reste toujours actif en parallele - le magnet ne peut qu'ajouter un blocage, jamais en lever un.",
+    points_de_vigilance=(
+        (
+            "Un script importe peut referencer une fonctionnalite lighty.* non supportee par ce "
+            "pont (toujours nil cote Lua) - toujours lancer Verifier la compatibilite avant "
+            "d'activer un nouveau script en production, surtout avec on_error=fail-closed."
+        ),
+    ),
 )
 
 WAF_RULE_PACK_PICKER_SCREEN = ScreenGuide(
@@ -491,4 +552,5 @@ ALL_ACTIVE_SECURITY_GUIDES: tuple[ScreenGuide, ...] = (
     WAF_CUSTOM_RULE_SCREEN,
     WAF_CUSTOM_RULE_WIZARD_SCREEN,
     WAF_RULE_PACK_PICKER_SCREEN,
+    WAF_MAGNET_SCREEN,
 )

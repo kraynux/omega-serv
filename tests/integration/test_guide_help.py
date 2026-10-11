@@ -77,6 +77,21 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, GuideDetailScreen)
             self.assertIn("CONFIGURATION DE BASE", str(pilot.app.screen.query_one(".omega-title").content))
 
+    async def test_contextual_help_opens_the_waf_magnet_fiche(self):
+        container = self._container()
+        generate_default_config(container.configuration, container.filesystem, container.config_file)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            pilot.app.screen.query_one("#active-defense", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#waf-magnet", Button).press()
+            await pilot.pause()
+            await pilot.press("f1")
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, GuideDetailScreen)
+            self.assertIn("MAGNET", str(pilot.app.screen.query_one(".omega-title").content))
+
     async def test_contextual_help_works_on_home_screen(self):
         container = self._container()
         generate_default_config(container.configuration, container.filesystem, container.config_file)

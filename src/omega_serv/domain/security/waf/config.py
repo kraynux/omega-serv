@@ -11,6 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from omega_serv.domain.security.waf.entities import KeywordListDefinition
+from omega_serv.domain.security.waf.keyword_list import (
+    parse_keyword_list_definition,
+    validate_keyword_list_definitions,
+)
+
 
 @dataclass(frozen=True)
 class InspectConfig:
@@ -143,6 +149,74 @@ class ExclusionsConfig:
 
 
 @dataclass(frozen=True)
+class MagnetPathsConfig:
+    """Chemins personnalises injectes dans le script magnet comme table
+    globale Lua `omega_magnet_paths` (voir infrastructure/waf/
+    lua_waf_adapter.py) - permet de DISSOCIER les chemins personnels
+    d'un script importe (ex. `/etc/blocklist.txt` en dur) sans jamais
+    modifier le fichier original de l'operateur : seule une COPIE
+    adaptee (secure/waf/scripts/) lit `omega_magnet_paths`, avec un
+    repli sur son propre chemin en dur si la table est absente.
+
+    Les 5 defauts ci-dessous sont ceux attendus par la copie adaptee du
+    script de reference livree avec omega-serv - un AUTRE script importe
+    n'a aucune raison d'utiliser ces memes 5 noms de champs ni la table
+    `omega_magnet_paths` elle-meme (ca reste un choix d'adaptation
+    propre a CE script, pas un contrat generique - voir
+    OMEGA-SERV_WAF_LUA_DEPERSONNALISATION.md, "limite assumee : la
+    dissociation des chemins reste manuelle, script par script")."""
+    blocklist_file: str = "secure/waf/magnet-blocklist.txt"
+    rules_dir: str = "secure/waf/magnet-rules.d/"
+    alerts_log: str = "var/log/waf-magnet-alerts.log"
+    blocklist_log: str = "var/log/waf-magnet-blocklist.log"
+    rate_store_file: str = "var/cache/waf-magnet-rate-store.lua"
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MagnetPathsConfig:
+        defaults = cls()
+        return cls(
+            blocklist_file=data.get("blocklist_file", defaults.blocklist_file),
+            rules_dir=data.get("rules_dir", defaults.rules_dir),
+            alerts_log=data.get("alerts_log", defaults.alerts_log),
+            blocklist_log=data.get("blocklist_log", defaults.blocklist_log),
+            rate_store_file=data.get("rate_store_file", defaults.rate_store_file),
+        )
+
+
+@dataclass(frozen=True)
+class MagnetConfig:
+    """Script WAF complementaire type "magnet" (OMEGA-SERV_ETUDE_INCLUDE_
+    ET_MAGNET_LUA.md §5) : jamais un remplacement du moteur natif, un
+    renfort optionnel evalue EN PLUS (domain/security/waf/
+    combine_decisions.py decide de la priorite). `script` vide = utilise
+    `paths.waf_script` comme defaut (resolu par
+    application/server/start_server.py, qui a acces aux deux sections de
+    la configuration - ce module ne connait que `options.waf`, jamais
+    `paths`).
+
+    Revision "import d'un WAF externe" (pas une implementation de plus -
+    voir infrastructure/waf/lua_waf_adapter.py) : le script importe est
+    execute via un pont `lighty.*` compatible mod_magnet, jamais un
+    contrat `inspect(req)` propre a omega-serv."""
+    enabled: bool = False
+    script: str = ""
+    timeout_ms: int = 50
+    on_error: Literal["ignore", "fail-closed"] = "ignore"
+    paths: MagnetPathsConfig = field(default_factory=MagnetPathsConfig)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> MagnetConfig:
+        defaults = cls()
+        return cls(
+            enabled=bool(data.get("enabled", defaults.enabled)),
+            script=data.get("script", defaults.script),
+            timeout_ms=int(data.get("timeout_ms", defaults.timeout_ms)),
+            on_error=data.get("on_error", defaults.on_error),
+            paths=MagnetPathsConfig.from_dict(data.get("paths", {})),
+        )
+
+
+@dataclass(frozen=True)
 class WafLoggingConfig:
     path: str = "var/log/waf-alerts.log"
     format: Literal["jsonl"] = "jsonl"
@@ -179,6 +253,8 @@ class WafConfig:
     reputation: ReputationConfig = field(default_factory=ReputationConfig)
     blocklist: BlocklistConfig = field(default_factory=BlocklistConfig)
     rule_paths: tuple[str, ...] = ()
+    keyword_lists: tuple[KeywordListDefinition, ...] = ()
+    magnet: MagnetConfig = field(default_factory=MagnetConfig)
     exclusions: ExclusionsConfig = field(default_factory=ExclusionsConfig)
     logging: WafLoggingConfig = field(default_factory=WafLoggingConfig)
 
@@ -198,6 +274,10 @@ def parse_waf_config(settings: dict[str, Any]) -> WafConfig:
         reputation=ReputationConfig.from_dict(settings.get("reputation", {})),
         blocklist=BlocklistConfig.from_dict(settings.get("blocklist", {})),
         rule_paths=tuple(rules.get("paths", defaults.rule_paths)),
+        keyword_lists=tuple(
+            parse_keyword_list_definition(d) for d in rules.get("keyword_lists", [])
+        ),
+        magnet=MagnetConfig.from_dict(settings.get("magnet", {})),
         exclusions=ExclusionsConfig.from_dict(settings.get("exclusions", {})),
         logging=WafLoggingConfig.from_dict(settings.get("logging", {})),
     )
@@ -214,6 +294,10 @@ def validate_waf_config(config: WafConfig) -> list[str]:
         errors.append(f"options.waf.mode invalide : {config.mode!r}")
     if config.on_internal_error not in ("fail-open", "fail-closed"):
         errors.append(f"options.waf.on_internal_error invalide : {config.on_internal_error!r}")
+    if config.magnet.on_error not in ("ignore", "fail-closed"):
+        errors.append(f"options.waf.magnet.on_error invalide : {config.magnet.on_error!r}")
+    if config.magnet.timeout_ms <= 0:
+        errors.append("options.waf.magnet.timeout_ms doit etre strictement positif")
     if config.inspect.decode_depth < 1:
         errors.append("options.waf.inspect.decode_depth doit etre >= 1")
     if config.inspect.body_max_inspect_bytes < 0:
@@ -228,6 +312,10 @@ def validate_waf_config(config: WafConfig) -> list[str]:
         errors.append("options.waf.rate_limit.global.window_seconds doit etre strictement positif")
     if config.reputation.auto_block_max_entries < 0:
         errors.append("options.waf.reputation.auto_block_max_entries doit etre >= 0")
-    if not config.rule_paths:
-        errors.append("options.waf.rules.paths ne doit pas etre vide si le WAF est active")
+    if not config.rule_paths and not config.keyword_lists:
+        errors.append(
+            "options.waf.rules.paths et options.waf.rules.keyword_lists ne peuvent pas etre "
+            "tous les deux vides si le WAF est active"
+        )
+    errors.extend(validate_keyword_list_definitions(config.keyword_lists))
     return errors

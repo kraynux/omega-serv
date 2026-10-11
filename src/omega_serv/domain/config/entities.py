@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from omega_serv.domain.config.option import Option
+from omega_serv.domain.routing.zone_resolver import Zone
 
 
 @dataclass(frozen=True)
@@ -164,6 +165,28 @@ class ServerConfig:
 
 @dataclass(frozen=True)
 class SecurityConfig:
+    """`coep_mode` par defaut a "unsafe-none" (header emis explicitement,
+    jamais absent - un scanner externe distingue "non considere" de
+    "permissif par choix") sur TOUS les profils, y compris hardened :
+    contrairement a COOP/CORP (deja `same-origin` partout, sans risque
+    reel de casser un site), `require-corp`/`credentialless` peuvent
+    bloquer des ressources cross-origin (polices, images, iframes tiers)
+    que ce serveur generique ne connait pas a l'avance - jamais un
+    defaut impose sans que l'operateur l'ait choisi en connaissance de
+    cause pour SON site.
+
+    `csp_zones` (spec §12.4, "CSP par zone") : exceptions EXPLICITES a
+    la CSP globale (`domain/security/csp.py::DEFAULT_CSP_POLICY`), par
+    prefixe de chemin - reutilise `Zone[str]` (domain/routing/
+    zone_resolver.py, meme mecanisme que cache/alias/redirections,
+    plus-long-prefixe-gagne). Chaque zone porte une politique de
+    REMPLACEMENT COMPLETE (jamais une fusion de directives avec le
+    defaut - plus simple a auditer qu'un merge). `csp_mode` (enforce/
+    report-only) reste GLOBAL, jamais par zone : une zone ne change que
+    le CONTENU de la politique pour son prefixe, jamais la posture
+    d'application (voir domain/security/audit/rules.py, CSP-001/CSP-002
+    qui scannent aussi ces zones - une exception comme 'unsafe-inline'
+    reste toujours visible, jamais silencieuse)."""
     allowed_methods: tuple[str, ...] = ("GET", "HEAD")
     deny_hidden_files: bool = True
     deny_sensitive_extensions: tuple[str, ...] = (
@@ -175,6 +198,8 @@ class SecurityConfig:
     require_valid_host: bool = True
     security_headers_enabled: bool = True
     csp_mode: str = "enforce"
+    csp_zones: tuple[Zone[str], ...] = ()
+    coep_mode: str = "unsafe-none"
     hsts_enabled: bool = False
     hsts_max_age: int = 31536000
     hsts_include_subdomains: bool = True
@@ -193,6 +218,11 @@ class SecurityConfig:
             require_valid_host=bool(data.get("require_valid_host", defaults.require_valid_host)),
             security_headers_enabled=bool(data.get("security_headers_enabled", defaults.security_headers_enabled)),
             csp_mode=data.get("csp_mode", defaults.csp_mode),
+            csp_zones=tuple(
+                Zone(str(z.get("path_prefix", "")), str(z.get("policy", "")))
+                for z in data.get("csp_zones", [])
+            ),
+            coep_mode=data.get("coep_mode", defaults.coep_mode),
             hsts_enabled=bool(data.get("hsts_enabled", defaults.hsts_enabled)),
             hsts_max_age=int(data.get("hsts_max_age", defaults.hsts_max_age)),
             hsts_include_subdomains=bool(data.get("hsts_include_subdomains", defaults.hsts_include_subdomains)),
@@ -210,6 +240,8 @@ class SecurityConfig:
             "require_valid_host": self.require_valid_host,
             "security_headers_enabled": self.security_headers_enabled,
             "csp_mode": self.csp_mode,
+            "csp_zones": [{"path_prefix": z.path_prefix, "policy": z.data} for z in self.csp_zones],
+            "coep_mode": self.coep_mode,
             "hsts_enabled": self.hsts_enabled,
             "hsts_max_age": self.hsts_max_age,
             "hsts_include_subdomains": self.hsts_include_subdomains,

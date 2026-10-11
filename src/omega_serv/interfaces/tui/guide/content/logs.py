@@ -17,7 +17,11 @@ LOG_VIEWER_SCREEN = ScreenGuide(
     screen_class_name="LogViewerScreen",
     title="Voir / suivre un fichier log",
     acces="Accueil -> Gestion des logs -> Voir / suivre un fichier log",
-    definition="Affiche les 200 dernieres lignes d'un log connu (access/error/waf-alerts) et peut suivre son evolution en direct.",
+    definition=(
+        "Affiche les 200 dernieres lignes d'un log connu (access/error/waf-alerts, "
+        "plus les 2 logs du script WAF complementaire magnet - options.waf.magnet, §7) "
+        "et peut suivre son evolution en direct."
+    ),
     fields=(
         FieldGuide(
             label="access / error / waf-alerts (boutons)",
@@ -25,6 +29,22 @@ LOG_VIEWER_SCREEN = ScreenGuide(
             utilisation="Un clic ouvre le fichier correspondant, s'il existe.",
             action="Charge et affiche les 200 dernieres lignes.",
             reaction="Aucun effet sur le serveur (lecture seule) - un fichier absent affiche un message, jamais une erreur.",
+        ),
+        FieldGuide(
+            label="waf magnet (alertes) / waf magnet (blocklist) (boutons)",
+            definition=(
+                "Chemins de log du script WAF complementaire importe en mode magnet "
+                "(options.waf.magnet.paths.alerts_log/blocklist_log) - toujours proposes, "
+                "meme si le magnet n'est jamais configure."
+            ),
+            utilisation=(
+                "Grises (desactives) tant que options.waf.magnet.enabled n'est pas actif - "
+                "evite un clic qui ne menerait qu'a un message d'erreur. Une fois actif, un "
+                "clic ouvre le fichier meme s'il n'existe pas encore (log vide, jamais une "
+                "erreur - aucune alerte declenchee pour l'instant)."
+            ),
+            action="Charge et affiche les 200 dernieres lignes, ou un message explicite si le fichier est vide/absent.",
+            reaction="Aucun effet sur le serveur (lecture seule).",
         ),
         FieldGuide(
             label="Suivre en direct",
@@ -51,18 +71,48 @@ LNAV_SCREEN = ScreenGuide(
     definition="Lance l'outil externe lnav sur un ou plusieurs logs fusionnes chronologiquement, dans un vrai terminal.",
     fields=(
         FieldGuide(
-            label="Cases a cocher (Access/Error/WAF alerts log)",
-            definition="Choisit quels logs connus fusionner dans la meme vue lnav.",
-            utilisation="Une ou plusieurs cases, au moins un fichier existant requis.",
+            label="Cases a cocher (Access/Error/WAF alerts log/WAF magnet)",
+            definition=(
+                "Choisit quels logs connus fusionner dans la meme vue lnav - inclut d'office "
+                "les 2 logs du script WAF complementaire magnet (options.waf.magnet.paths, §7), "
+                "meme si le magnet n'est pas actif."
+            ),
+            utilisation=(
+                "Une ou plusieurs cases, au moins un fichier existant requis. Un log coche mais "
+                "absent (ex. magnet jamais active) est simplement ignore au lancement, jamais "
+                "bloquant pour les autres."
+            ),
             action="Pris en compte au clic sur Lancer lnav.",
             reaction="Aucun effet sur le serveur (lecture seule).",
         ),
         FieldGuide(
-            label="Chemin manuel supplementaire",
-            definition="Ajoute un fichier de log en dehors des trois logs connus.",
-            utilisation="Chemin relatif au projet ou absolu, optionnel.",
+            label="Chemins epingles (cases a cocher dynamiques)",
+            definition=(
+                "Chemins manuels ajoutes par 'Epingler ce chemin' - persistent entre sessions "
+                "(contrairement au champ manuel ci-dessous), affiches comme des logs connus "
+                "supplementaires."
+            ),
+            utilisation="Une case par chemin epingle - coche ou non, comme les logs connus.",
             action="Pris en compte au clic sur Lancer lnav.",
+            reaction="Aucun effet sur le serveur (lecture seule).",
+        ),
+        FieldGuide(
+            label="Chemin manuel + Epingler ce chemin",
+            definition="Saisit un chemin de log hors des logs connus, et le conserve pour les prochains lancements.",
+            utilisation=(
+                "Chemin relatif au projet ou absolu. 'Epingler ce chemin' l'ajoute a la liste "
+                "des epingles (ci-dessus) ET vide ce champ - sans epinglage, le chemin ne sert "
+                "qu'une seule fois, pour ce lancement."
+            ),
+            action="Chemin non epingle : pris en compte au clic sur Lancer lnav, pour cette fois seulement. Epingle : persiste (voir settings.json) jusqu'a retrait explicite.",
             reaction="Aucun effet sur le serveur.",
+        ),
+        FieldGuide(
+            label="Retirer une epingle choisie",
+            definition="Retire definitivement un chemin de la liste des epingles.",
+            utilisation="Choisir le chemin dans la liste deroulante, puis cliquer sur le bouton.",
+            action="Supprime l'epingle et sa case a cocher correspondante.",
+            reaction="Aucun effet sur le serveur - n'affecte jamais le fichier de log lui-meme, seulement la liste des raccourcis.",
         ),
         FieldGuide(
             label="Lancer lnav",

@@ -13,6 +13,7 @@ import random
 import time
 import uuid
 from collections.abc import Mapping
+from concurrent.futures import Executor
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,6 +120,8 @@ class AsyncioHttpServer:
         project_root: Path,
         waf_config: WafConfig | None = None,
         waf_port: WafPort | None = None,
+        magnet_port: WafPort | None = None,
+        magnet_executor: Executor | None = None,
         blocklist_port: BlocklistPort | None = None,
         rate_limit_port: RateLimitPort | None = None,
         reputation_tracker: ReputationTrackerPort | None = None,
@@ -150,6 +153,8 @@ class AsyncioHttpServer:
         self._project_root = project_root
         self._waf_config = waf_config
         self._waf_port = waf_port
+        self._magnet_port = magnet_port
+        self._magnet_executor = magnet_executor
         self._blocklist_port = blocklist_port
         self._rate_limit_port = rate_limit_port
         self._reputation_tracker = reputation_tracker
@@ -205,6 +210,11 @@ class AsyncioHttpServer:
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()
+        if self._magnet_executor is not None:
+            # wait=False : un script magnet bloque (lot E, limite connue
+            # - voir evaluate_waf_request.py::_inspect_with_magnet) ne
+            # doit jamais empecher l'arret du serveur.
+            self._magnet_executor.shutdown(wait=False, cancel_futures=True)
 
     def reload_scoped(
         self,
@@ -217,6 +227,8 @@ class AsyncioHttpServer:
         waf_alert_log_path: Path | None,
         auth_zones: tuple[Zone[AuthZone], ...],
         users_by_name: Mapping[str, UserAccount] | None,
+        magnet_port: WafPort | None = None,
+        magnet_executor: Executor | None = None,
     ) -> None:
         """Rechargement a chaud borne (decision transverse "Reload
         scope", plan de developpement §6) : remplace la configuration
@@ -224,10 +236,20 @@ class AsyncioHttpServer:
         sans jamais toucher au socket d'ecoute, au contexte TLS ni au
         bind/port - un changement la-dessus exige un restart complet,
         documente comme tel (jamais fait ici). Declenche par SIGHUP
-        (angle mort §9.1), voir interfaces/cli/main.py::cmd_serve."""
+        (angle mort §9.1), voir interfaces/cli/main.py::cmd_serve.
+
+        `magnet_executor` REMPLACE (jamais accumule) : l'ancien pool de
+        threads dedie au magnet, s'il existe, est ferme explicitement
+        avant d'etre abandonne - sinon chaque SIGHUP laisserait fuiter
+        un `ThreadPoolExecutor` entier (lot E, meme vigilance que pour
+        tout executor cree par configuration)."""
+        if self._magnet_executor is not None and self._magnet_executor is not magnet_executor:
+            self._magnet_executor.shutdown(wait=False, cancel_futures=True)
         self._config = config
         self._waf_config = waf_config
         self._waf_port = waf_port
+        self._magnet_port = magnet_port
+        self._magnet_executor = magnet_executor
         self._blocklist_port = blocklist_port
         self._rate_limit_port = rate_limit_port
         self._reputation_tracker = reputation_tracker
@@ -351,7 +373,7 @@ class AsyncioHttpServer:
 
                 if resolve_access_verdict(request.path, self._access_control_rules()) == "deny":
                     response = HttpResponse.empty(HttpStatus.FORBIDDEN)
-                    apply_security_headers(response, self._config.security, self._config.tls.enabled)
+                    apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
                     await self._write_response(writer, response, keep_alive=False)
                     self._log_access(request, response, start_time)
                     break
@@ -385,7 +407,7 @@ class AsyncioHttpServer:
 
                 decoy_response = await self._maybe_serve_decoy(request)
                 if decoy_response is not None:
-                    apply_security_headers(decoy_response, self._config.security, self._config.tls.enabled)
+                    apply_security_headers(decoy_response, self._config.security, self._config.tls.enabled, request.path)
                     requests_served += 1
                     keep_alive = (
                         requests_served < server_config.max_keepalive_requests
@@ -404,13 +426,15 @@ class AsyncioHttpServer:
                     assert self._rate_limit_port is not None
                     assert self._reputation_tracker is not None
                     waf_start = time.monotonic()
-                    decision = evaluate_waf_request(
+                    decision = await evaluate_waf_request(
                         request,
                         self._waf_config,
                         self._waf_port,
                         self._blocklist_port,
                         self._rate_limit_port,
                         self._reputation_tracker,
+                        self._magnet_port,
+                        self._magnet_executor,
                     )
                     if decision.action != "allow":
                         self._log_waf_alert(request, decision, (time.monotonic() - waf_start) * 1000)
@@ -419,7 +443,7 @@ class AsyncioHttpServer:
                             war_mode_response = await self._apply_active_defense_war_mode_actions(request, state)
                             if war_mode_response is not None:
                                 apply_security_headers(
-                                    war_mode_response, self._config.security, self._config.tls.enabled,
+                                    war_mode_response, self._config.security, self._config.tls.enabled, request.path,
                                 )
                                 await self._write_response(writer, war_mode_response, keep_alive=False)
                                 self._log_access(request, war_mode_response, start_time)
@@ -428,7 +452,7 @@ class AsyncioHttpServer:
                         response = HttpResponse.empty(HttpStatus(decision.status_code or 403))
                         if decision.retry_after_seconds is not None:
                             response.set_header("Retry-After", str(int(decision.retry_after_seconds)))
-                        apply_security_headers(response, self._config.security, self._config.tls.enabled)
+                        apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
                         await self._write_response(writer, response, keep_alive=False)
                         self._log_access(request, response, start_time)
                         break
@@ -443,7 +467,7 @@ class AsyncioHttpServer:
                         response = HttpResponse.empty(status)
                         if auth_decision.outcome == "unauthenticated":
                             response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protegee"))
-                        apply_security_headers(response, self._config.security, self._config.tls.enabled)
+                        apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
                         await self._write_response(writer, response, keep_alive=False)
                         self._log_access(request, response, start_time)
                         break
@@ -472,7 +496,7 @@ class AsyncioHttpServer:
                     self._proxy_client_ssl_context_verified,
                     self._proxy_client_ssl_context_unverified,
                 )
-                apply_security_headers(response, self._config.security, self._config.tls.enabled)
+                apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
 
                 requests_served += 1
                 keep_alive = (
