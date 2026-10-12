@@ -4,494 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Omega-Serv – README</title>
-    <style>
-        /* ============================================
-           THEME OMEGA-SERV - BLEU NUIT / CYAN
-           ============================================ */
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #0a0e1a;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', 'Ubuntu', 'Roboto', 'Noto Color Emoji',
-                         'Apple Color Emoji', 'Segoe UI Emoji', monospace;
-            font-size: 15px;
-            line-height: 1.6;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #0f1320;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        /* ============================================
-           HEADER
-           ============================================ */
-        .custom-header {
-            background: linear-gradient(135deg, #0a0f1a 0%, #0c1120 100%);
-            padding: 0.6rem 2rem;
-            text-align: center;
-            border-bottom: 1px solid #2a2e3a;
-        }
-
-        .custom-header a {
-            color: #00d4ff;
-            text-decoration: none;
-            font-family: monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-
-        .custom-header a:hover {
-            text-decoration: underline;
-            opacity: 0.8;
-        }
-
-        /* ============================================
-           BRANDING
-           ============================================ */
-        .branding-container {
-            padding: 2rem 2rem 1.2rem;
-            border-bottom: 1px solid #2a2e3a;
-            background: linear-gradient(180deg, #0f1320 0%, #0a0e1a 100%);
-        }
-
-        .branding {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-
-        .omega-logo {
-            width: 210px;
-            height: auto;
-            filter: drop-shadow(0 0 20px rgba(0,212,255,0.2));
-        }
-
-        .omega-logo img {
-            width: 100%;
-            height: auto;
-        }
-
-        .title-tag {
-            text-align: left;
-        }
-
-        .title-tag h1 {
-            color: #00d4ff;
-            font-size: 2rem;
-            margin-bottom: 0.2rem;
-            letter-spacing: -0.5px;
-        }
-
-        .title-tag .subtitle {
-            color: #a0b0c0;
-            font-size: 1rem;
-            font-weight: 300;
-        }
-
-        .title-tag .tagline {
-            color: #666;
-            font-size: 0.85rem;
-            margin-top: 0.2rem;
-            font-style: italic;
-        }
-
-        .badge-group {
-            margin-top: 0.6rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
-
-        .badge {
-            display: inline-block;
-            background: #1a1f2e;
-            color: #00d4ff;
-            padding: 0.15rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            border: 1px solid #2a2e3a;
-        }
-
-        .badge-serv {
-            background: #0a1a2a;
-            color: #00d4ff;
-            border-color: #00d4ff44;
-        }
-
-        .badge-security {
-            background: #0a1a0a;
-            color: #00d4a0;
-            border-color: #00d4a044;
-        }
-
-        /* ============================================
-           CONTENU PRINCIPAL
-           ============================================ */
-        .content {
-            padding: 1.5rem 2rem 1rem;
-        }
-
-        h1 {
-            color: #00d4ff;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            margin-top: 0;
-            padding-bottom: 0.4rem;
-            border-bottom: 2px solid #2a2e3a;
-        }
-
-        h2 {
-            color: #00d4ff;
-            font-size: 1.3rem;
-            margin-top: 1.8rem;
-            margin-bottom: 0.8rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 2px solid #2a2e3a;
-        }
-
-        h3 {
-            color: #a0b0c0;
-            font-size: 1rem;
-            margin-top: 1rem;
-            margin-bottom: 0.6rem;
-        }
-
-        p {
-            margin-bottom: 0.8rem;
-            color: #e0e0e0;
-            font-size: 0.95rem;
-        }
-
-        ul, ol {
-            margin: 0.5rem 0 0.8rem 1.5rem;
-        }
-
-        li {
-            margin: 0.3rem 0;
-            color: #e0e0e0;
-            font-size: 0.9rem;
-        }
-
-        li code {
-            background: #1a1f2e;
-            padding: 0.1rem 0.4rem;
-            border-radius: 5px;
-            color: #00d4ff;
-            font-size: 0.8rem;
-        }
-
-        /* ============================================
-           BLOCS DE CODE
-           ============================================ */
-        pre {
-            background: #1a1f2e;
-            border: 1px solid #2a2e3a;
-            border-radius: 12px;
-            padding: 0.8rem 3rem 0.8rem 1rem;
-            overflow-x: auto;
-            margin: 0.8rem 0;
-            position: relative;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 12px;
-        }
-
-        code {
-            font-family: 'Courier New', 'Consolas', monospace;
-            font-size: 12px;
-            color: #e0e0e0;
-        }
-
-        .code-block-wrapper {
-            position: relative;
-            margin: 0.8rem 0;
-        }
-
-        .code-block-wrapper pre {
-            margin: 0;
-            padding-right: 70px;
-        }
-
-        .copy-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #2a2e3a;
-            border: none;
-            color: #00d4ff;
-            padding: 3px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 10px;
-            font-family: monospace;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-
-        .copy-btn:hover {
-            background: #00d4ff;
-            color: #0a0e1a;
-        }
-
-        /* ============================================
-           NOTES
-           ============================================ */
-        .note, .warning, blockquote {
-            background: #1a1f2e;
-            padding: 0.8rem 1.2rem;
-            margin: 0.8rem 0;
-            border-radius: 10px;
-        }
-
-        .note {
-            border-left: 4px solid #00d4ff;
-        }
-
-        .warning {
-            border-left: 4px solid #ff6b35;
-        }
-
-        .success {
-            border-left: 4px solid #00d4a0;
-        }
-
-        blockquote {
-            border-left: 4px solid #00d4ff;
-            font-style: italic;
-            color: #a0b0c0;
-        }
-
-        /* ============================================
-           TABLEAUX
-           ============================================ */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0.8rem 0;
-            background: #0f1320;
-            border: 1px solid #2a2e3a;
-            border-radius: 12px;
-            overflow: hidden;
-            font-size: 0.85rem;
-        }
-
-        th {
-            text-align: left;
-            padding: 8px 12px;
-            background: #1a1f2e;
-            color: #00d4ff;
-            font-weight: 600;
-            border-bottom: 1px solid #2a2e3a;
-        }
-
-        td {
-            padding: 7px 12px;
-            border-bottom: 1px solid #1e2332;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover {
-            background: #151b2a;
-        }
-
-        /* ============================================
-           LIENS
-           ============================================ */
-        a {
-            color: #00d4ff;
-            text-decoration: none;
-            transition: opacity 0.2s;
-        }
-
-        a:hover {
-            text-decoration: underline;
-            opacity: 0.8;
-        }
-
-        /* ============================================
-           BOUTONS
-           ============================================ */
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            padding: 1rem 2rem;
-            background: #0f1320;
-            border-top: 1px solid #2a2e3a;
-            border-bottom: 1px solid #2a2e3a;
-            margin: 0;
-            flex-wrap: nowrap;
-        }
-
-        .nav-buttons button {
-            background: #1a1f2e;
-            border: 1px solid #2a2e3a;
-            color: #00d4ff;
-            padding: 6px 16px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-
-        .nav-buttons button:hover:not(:disabled) {
-            background: #00d4ff;
-            border-color: #00d4ff;
-            color: #0a0e1a;
-            transform: translateY(-1px);
-        }
-
-        .nav-buttons button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .nav-buttons button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* ============================================
-           FOOTER
-           ============================================ */
-        .custom-footer {
-            background: #0a0f1a;
-            padding: 0.8rem;
-            text-align: center;
-            color: #9098a8;
-            font-size: 0.7rem;
-            border-top: 1px solid #2a2e3a;
-        }
-
-        /* ============================================
-           SEPARATEURS
-           ============================================ */
-        hr {
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #00d4ff, #2a2e3a, #00d4ff, transparent);
-            margin: 1.2rem 0;
-        }
-
-        /* ============================================
-           SCROLLBAR
-           ============================================ */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0a0e1a;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2a2e3a;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00d4ff80;
-        }
-
-        /* ============================================
-           RESPONSIVE
-           ============================================ */
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .branding {
-                flex-direction: column;
-                text-align: center;
-                gap: 12px;
-            }
-            
-            .title-tag {
-                text-align: center;
-            }
-            
-            .title-tag h1 {
-                font-size: 1.5rem;
-            }
-            
-            .content {
-                padding: 1rem;
-            }
-
-            .nav-buttons {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .nav-buttons button {
-                font-size: 0.7rem;
-                padding: 5px 12px;
-            }
-
-            table {
-                font-size: 0.7rem;
-            }
-            th, td {
-                padding: 4px 6px;
-            }
-        }
-
-        .text-center {
-            text-align: center;
-        }
-        .mt-1 { margin-top: 0.8rem; }
-        .mb-1 { margin-bottom: 0.8rem; }
-
-        .tag {
-            display: inline-block;
-            padding: 0.1rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.6rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .tag-green { background: #00d4a033; color: #00d4a0; border: 1px solid #00d4a066; }
-        .tag-cyan { background: #00d4ff33; color: #00d4ff; border: 1px solid #00d4ff66; }
-        .tag-orange { background: #ff6b3533; color: #ff6b35; border: 1px solid #ff6b3566; }
-        .tag-red { background: #ff444433; color: #ff4444; border: 1px solid #ff444466; }
-
-        /* ============================================
-           LANGUES
-           ============================================ */
-        .langs {
-            text-align: center;
-            padding: 0.6rem 2rem;
-            color: #9098a8;
-            font-size: 0.8rem;
-            border-bottom: 1px solid #2a2e3a;
-        }
-        .langs strong {
-            color: #a0b0c0;
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/css/theme.css">
+    <link rel="stylesheet" href="/assets/css/readme.css">
 </head>
 <body>
 <div class="container">
@@ -654,7 +168,7 @@
 cd omega-serv/
 chmod +x install.sh
 ./install.sh</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p><code>install.sh</code> :</p>
@@ -679,7 +193,7 @@ chmod +x install.sh
 tar -xzf omega-serv.tar.gz
 cd omega-serv/
 ./install.sh</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p>
@@ -733,7 +247,7 @@ sudo apt install openssl certbot lnav python3-psutil
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <hr />
@@ -752,14 +266,14 @@ sudo dnf install openssl certbot lnav python3-psutil</code></pre>
 
         <div class="code-block-wrapper">
             <pre><code>./omega-serv.sh</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p>si vous avez créé l'alias, tapez juste <code>serv</code> dans le terminal :</p>
 
         <div class="code-block-wrapper">
             <pre><code>serv</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <h3>Parcours général</h3>
@@ -957,7 +471,7 @@ sudo dnf install openssl certbot lnav python3-psutil</code></pre>
 ./omega-serv.sh service install --user omega-serv --group omega-serv
 ./omega-serv.sh service start
 ./omega-serv.sh service status</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <h3>Codes de sortie notables</h3>
@@ -1084,7 +598,7 @@ sudo dnf install openssl certbot lnav python3-psutil</code></pre>
 ├── interfaces/cli/  CLI argparse non-interactive
 ├── interfaces/tui/  Interface interactive Textual (mêmes cas d'usage, jamais de logique dupliquée)
 └── bootstrap/       DependencyContainer, résolution de la racine du projet</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p>
@@ -1164,7 +678,7 @@ sudo dnf install openssl certbot lnav python3-psutil</code></pre>
 ├── root-ca.pem    # 0644 - à importer dans le magasin de confiance des clients
 ├── serial.txt     # 0600 - suivi du prochain numéro de série
 └── index.txt      # 0600 - suivi statut V(alide)/R(évoqué) par certificat signé</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p>
@@ -1353,7 +867,7 @@ lint-imports        # vérifie les 8 contrats de couches
 pytest -q           # 2085 tests
 ruff check .
 mypy src</code></pre>
-            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+            <button class="copy-btn">Copier</button>
         </div>
 
         <p>
@@ -1392,11 +906,11 @@ mypy src</code></pre>
 
         <!-- ==================== NAVIGATION ==================== -->
         <div class="nav-buttons">
-            <button onclick="window.history.back()">← Précédent</button>
-            <button onclick="window.location.href='#top'">↑ Haut</button>
-            <button onclick="window.location.href='/omega-serv/';">🏠 Omega-Serv</button>
-            <button onclick="window.location.href='/omega-serv/screenshots/';">🖼️ Captures</button>
-            <button onclick="window.location.href='/';">🌐 Accueil</button>
+            <button data-nav="back">← Précédent</button>
+            <button data-nav="#top">↑ Haut</button>
+            <button data-nav="/omega-serv/">🏠 Omega-Serv</button>
+            <button data-nav="/omega-serv/screenshots/">🖼️ Captures</button>
+            <button data-nav="/">🌐 Accueil</button>
         </div>
 
         <br />
@@ -1410,30 +924,8 @@ mypy src</code></pre>
 
 </div>
 
-<script>
-    // ============================================
-    // COPY BUTTON
-    // ============================================
-    function copyCode(btn) {
-        const pre = btn.closest('.code-block-wrapper').querySelector('pre');
-        const code = pre ? pre.innerText : '';
-        navigator.clipboard.writeText(code).then(() => {
-            const original = btn.textContent;
-            btn.textContent = '✓ Copié !';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        }).catch(() => {
-            const range = document.createRange();
-            range.selectNode(pre);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            document.execCommand('copy');
-            window.getSelection().removeAllRanges();
-            const original = btn.textContent;
-            btn.textContent = '✓ Copié !';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        });
-    }
-</script>
+<script src="/assets/js/nav.js"></script>
+<script src="/assets/js/copy-code.js"></script>
 
 </body>
 </html>

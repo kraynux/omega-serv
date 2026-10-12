@@ -258,7 +258,8 @@ def render_directory_listing_html(
         else (
             '<div class="omega-listing-footer-wrap">'
             '<hr class="omega-listing-footer-rule">'
-            '<p class="omega-listing-footer">Propuls&eacute; par OMEGA-SERV</p>'
+            '<p class="omega-listing-footer">Propuls&eacute; par '
+            '<a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></p>'
             "</div>"
         )
     )

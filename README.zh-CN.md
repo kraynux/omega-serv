@@ -86,6 +86,14 @@ cd omega-serv/
 
 归档文件有意排除了所有运行时数据（`var/db/`、`var/log/`、`var/backups/`、`secure/secrets/`、`secure/certificates/*.key`、`config/omega-serve.json`、**`webroot/`（实际提供服务的站点内容）**等）——在现有安装上解压绝不会影响你的数据、证书、配置或已发布的站点内容，只会替换应用代码。`install.sh` 会复用已有的 `.venv` 并在其中重新安装依赖。
 
+> ⚠️ **如果服务已经在运行，上面这一步还不够。** 它只替换了磁盘上的代码，但已经在运行的进程仍然使用内存中加载的旧代码——之后必须始终执行**完整重启**：
+> ```bash
+> sudo systemctl restart <服务名>
+> ```
+> **绝不能只是重新加载**（`systemctl reload`，或 SERVICE 界面 → *重新加载*）：那只会重新读取部分配置项（WAF 规则、认证区域等），**绝不会重新加载 Python 代码本身**。如果 `systemctl status <服务名>` 显示的启动时间早于你的更新时间，就说明它仍在运行旧代码。如果你每次更新都是覆盖同一个文件夹（上面的标准做法），这次重启就是唯一缺失的步骤——无需重新安装服务。
+
+> ⚠️ **如果之后服务陷入重启循环**（`systemctl status` 在 active/inactive 之间反复切换，`journalctl -u <服务名>` 显示在 `var/` 下写入文件时出现 `PermissionError`）：`tar` 会按归档中记录的方式还原目录权限，这可能清除初始安装时为专用系统账户设置的权限共享——即便 `install.sh` 本身从不触碰这些权限。不需要重新安装该 unit：进入 SERVICE 界面 → **修复权限**（重新对 `var/` 和 `secure/auth/` 应用权限共享，不触碰 systemd unit 本身）。
+
 ### 依赖
 
 服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行的密码哈希）保持纯 Python/标准库实现，而一切涉及 TLS 证书的操作都通过子进程调用 `openssl` 二进制程序，而非使用 Python 加密库——**这方面没有外部依赖**。只有交互式界面（§3）引入了一些依赖：`omega-lib`（主题、终端检测——套件共享库，未发布到 PyPI，随发行档案一并打包）、`textual` 以及 `pyte`（用于界面内嵌合并 `lnav` 渲染的终端模拟）、`jinja2`（主题化 HTML 导出）以及 `psutil`（状态与资源屏幕——CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（针对 HTTP 解析器和路径解析器的基于属性的测试，从不在生产环境中使用）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。额外的可选附加组件（`pip install -e ".[magnet]"`）：`lupa`（内嵌 Lua 绑定，预编译 wheel，无需系统 `lua` 解释器），仅供补充性 WAF "magnet" 脚本（§7）使用——从不默认安装；其缺失会被报告（能力 `waf-magnet`，**能力**屏幕）并给出确切的安装命令，不会阻塞服务器其余部分的运行。

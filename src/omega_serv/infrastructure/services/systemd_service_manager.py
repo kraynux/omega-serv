@@ -36,7 +36,30 @@ _TIMEOUT_SECONDS = 10.0
 (bus indisponible, machine chargee), l'appel peut bloquer indefiniment.
 Retour utilisateur 2026-09-21 (Archcraft) : sans timeout, cet appel
 synchrone geait l'ecran Etat & Ressources (boucle asyncio Textual unique,
-aucun Ctrl+C possible - kill obligatoire)."""
+aucun Ctrl+C possible - kill obligatoire). Reserve aux operations
+rapides/lecture seule (status/is-active/is-enabled/--version, et les
+operations d'installation : daemon-reload, ecriture/suppression
+d'unite, gestion du compte systeme) - jamais a start/stop/restart/
+reload, voir `_CONTROL_TIMEOUT_SECONDS` ci-dessous."""
+_CONTROL_TIMEOUT_SECONDS = 20.0
+"""Timeout dedie a `_control()` (start/stop/restart/reload) - retour
+utilisateur 2026-10-13 (Archcraft) : "PID obsolete" malgre un arret/
+redemarrage reel via l'ecran SERVICE. Cause trouvee : `systemctl stop`
+(sans `--no-block`, donc synchrone) attend que le job systemd se
+termine reellement, lequel peut legitimement prendre jusqu'a
+`TimeoutStopSec` (domain/services/systemd_unit.py::
+SystemdUnitParams.stop_timeout_seconds, defaut 15s - drainage des
+requetes en vol, voir test_sigterm_drains_in_flight_request) avant
+que systemd ne force un SIGKILL. Avec l'ancien `_TIMEOUT_SECONDS=10.0`
+partage par tout `_run_privileged`, ce sous-processus `systemctl` etait
+tue par ce wrapper AVANT que le job systemd ne se termine - l'arret
+continuait seul en arriere-plan (tuer le client systemctl n'annule
+jamais le job deja soumis au demon) pendant que le TUI affichait un
+echec, menant a des tentatives suivantes (Demarrer) dans un etat
+systemd encore en transition (`deactivating`), que seule une
+reinstallation complete de l'unite (daemon-reload forcement propre)
+parvenait a debloquer. Doit toujours rester strictement superieur a
+`stop_timeout_seconds` (avec marge pour le bus D-Bus lui-meme)."""
 _TIMEOUT_RETURNCODE = 124
 _NOT_FOUND_RETURNCODE = 127
 
@@ -49,17 +72,21 @@ class SystemdServiceManager:
     def manager_type(self) -> ServiceManagerType:
         return "systemd"
 
-    def _run_privileged(self, args: list[str], input_text: str | None = None) -> ProcessResult:
+    def _run_privileged(
+        self, args: list[str], input_text: str | None = None, timeout: float = _TIMEOUT_SECONDS
+    ) -> ProcessResult:
         if running_as_root():
-            return self._runner.run(args, input_text=input_text, timeout=_TIMEOUT_SECONDS)
+            return self._runner.run(args, input_text=input_text, timeout=timeout)
 
         auth_code = self._runner.run_interactive(["sudo", "-v"])
         if auth_code != 0:
             return ProcessResult(returncode=auth_code, stdout="", stderr="Authentification sudo echouee ou annulee.")
-        return self._runner.run(["sudo", *args], input_text=input_text, timeout=_TIMEOUT_SECONDS)
+        return self._runner.run(["sudo", *args], input_text=input_text, timeout=timeout)
 
     def _control(self, service_name: str, operation: str) -> bool:
-        result = self._run_privileged([self._systemctl, operation, service_name])
+        result = self._run_privileged(
+            [self._systemctl, operation, service_name], timeout=_CONTROL_TIMEOUT_SECONDS
+        )
         if result.returncode == 0:
             return True
         if result.returncode == 5:

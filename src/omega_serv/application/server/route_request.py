@@ -25,6 +25,10 @@ from omega_serv.application.server.serve_dirlisting_css import (
     CSS_URL_PREFIX,
     handle_dirlisting_css_request,
 )
+from omega_serv.application.server.serve_error_css import (
+    ERROR_CSS_URL_PREFIX,
+    handle_error_css_request,
+)
 from omega_serv.application.server.serve_icon import ICON_URL_PREFIX, handle_icon_request
 from omega_serv.application.server.serve_proxy import serve_proxy
 from omega_serv.application.server.serve_static_file import serve_static_file
@@ -119,6 +123,9 @@ async def route_request(
 
     if request.path.startswith(CSS_URL_PREFIX):
         return handle_dirlisting_css_request(request)
+
+    if request.path.startswith(ERROR_CSS_URL_PREFIX):
+        return handle_error_css_request(request)
 
     redirect_settings = _option_settings(config, "redirects")
     if redirect_settings is not None:

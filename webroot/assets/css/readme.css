@@ -1,0 +1,170 @@
+        /* ============================================
+           STYLES SPECIFIQUES A CETTE PAGE
+           (base commune cyan/nuit : assets/css/theme.css)
+           ============================================ */
+
+        .omega-logo {
+            width: 210px;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(0,212,255,0.2));
+        }
+
+        .badge-serv {
+            background: #0a1a2a;
+            color: #00d4ff;
+            border-color: #00d4ff44;
+        }
+
+        .badge-security {
+            background: #0a1a0a;
+            color: #00d4a0;
+            border-color: #00d4a044;
+        }
+
+        h1 {
+            color: #00d4ff;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            margin-top: 0;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid #2a2e3a;
+        }
+
+        /* ============================================
+           NOTES
+           ============================================ */
+        .note, .warning {
+            background: #1a1f2e;
+            padding: 0.8rem 1.2rem;
+            margin: 0.8rem 0;
+            border-radius: 10px;
+        }
+
+        .note {
+            border-left: 4px solid #00d4ff;
+        }
+
+        .warning {
+            border-left: 4px solid #ff6b35;
+        }
+
+        .success {
+            border-left: 4px solid #00d4a0;
+        }
+
+        /* ============================================
+           BOUTONS
+           ============================================ */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            padding: 1rem 2rem;
+            background: #0f1320;
+            border-top: 1px solid #2a2e3a;
+            border-bottom: 1px solid #2a2e3a;
+            margin: 0;
+            flex-wrap: nowrap;
+        }
+
+        .nav-buttons button {
+            background: #1a1f2e;
+            border: 1px solid #2a2e3a;
+            color: #00d4ff;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .nav-buttons button:hover:not(:disabled) {
+            background: #00d4ff;
+            border-color: #00d4ff;
+            color: #0a0e1a;
+            transform: translateY(-1px);
+        }
+
+        .nav-buttons button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .nav-buttons button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .branding {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+            
+            .title-tag {
+                text-align: center;
+            }
+            
+            .title-tag h1 {
+                font-size: 1.5rem;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .nav-buttons button {
+                font-size: 0.7rem;
+                padding: 5px 12px;
+            }
+
+            table {
+                font-size: 0.7rem;
+            }
+            th, td {
+                padding: 4px 6px;
+            }
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tag-green { background: #00d4a033; color: #00d4a0; border: 1px solid #00d4a066; }
+        .tag-cyan { background: #00d4ff33; color: #00d4ff; border: 1px solid #00d4ff66; }
+        .tag-orange { background: #ff6b3533; color: #ff6b35; border: 1px solid #ff6b3566; }
+        .tag-red { background: #ff444433; color: #ff4444; border: 1px solid #ff444466; }
+
+        /* ============================================
+           LANGUES
+           ============================================ */
+        .langs {
+            text-align: center;
+            padding: 0.6rem 2rem;
+            color: #9098a8;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #2a2e3a;
+        }
+        .langs strong {
+            color: #a0b0c0;
+        }

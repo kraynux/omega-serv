@@ -23,6 +23,7 @@ from omega_serv.application.services.install_service import (
     check_for_conflicting_unit,
     check_for_name_hijack,
     install_systemd_service,
+    repair_directory_permissions,
     uninstall_systemd_service,
 )
 from omega_serv.application.services.manage_service import (
@@ -107,6 +108,9 @@ class ServiceScreen(OmegaScreen):
                     yield Button("Installer l'unite", id="install")
                 with Container(classes="omega-btn-frame"):
                     yield Button("Desinstaller l'unite", id="uninstall", variant="error")
+            with Horizontal(classes="omega-actions"):
+                with Container(classes="omega-btn-frame"):
+                    yield Button("Reparer les permissions", id="repair-permissions")
                 with Container(classes="omega-btn-frame"):
                     yield Button("Retour", id="back")
             yield Static("", id="journey-hint", classes="omega-hint")
@@ -124,6 +128,7 @@ class ServiceScreen(OmegaScreen):
         if self._manager.manager_type() != "systemd":
             self.query_one("#install", Button).disabled = True
             self.query_one("#uninstall", Button).disabled = True
+            self.query_one("#repair-permissions", Button).disabled = True
         self.query_one("#journey-hint", Static).update(self._journey_hint())
         self._refresh_status()
 
@@ -152,7 +157,10 @@ class ServiceScreen(OmegaScreen):
         return f"Repertoire pilote : {self._container.project_root}"
 
     def _set_mutating_buttons_disabled(self, disabled: bool) -> None:
-        for item_id in ("start", "stop", "restart", "reload", "enable", "disable", "install", "uninstall"):
+        for item_id in (
+            "start", "stop", "restart", "reload", "enable", "disable",
+            "install", "uninstall", "repair-permissions",
+        ):
             self.query_one(f"#{item_id}", Button).disabled = disabled
 
     def _service_name(self) -> str:
@@ -252,6 +260,22 @@ class ServiceScreen(OmegaScreen):
                 ),
                 self._uninstall_if_confirmed,
             )
+            return
+        if button_id == "repair-permissions":
+            self.app.push_screen(
+                ConfirmScreen(
+                    title="REPARER LES PERMISSIONS",
+                    message=(
+                        "Reapplique le partage de permissions sur var/ et secure/auth/ pour "
+                        f"le compte systeme dedie ({DEFAULT_SYSTEM_GROUP}) - utile apres une mise "
+                        "a jour par extraction d'archive (tar restaure les permissions d'origine, "
+                        "annulant ce partage) si le service boucle en redemarrage avec une "
+                        "'PermissionError' dans les journaux. Ne touche jamais a l'unite systemd "
+                        "elle-meme. Une authentification (sudo) sera demandee. Continuer ?"
+                    ),
+                ),
+                self._repair_permissions_if_confirmed,
+            )
 
     def _run_control(self, action: str) -> None:
         assert self._manager is not None
@@ -292,5 +316,16 @@ class ServiceScreen(OmegaScreen):
         unit_path = self._container.systemd_unit_dir / f"{self._service_name()}.service"
         with self._maybe_suspend():
             result = uninstall_systemd_service(self._container.filesystem, unit_path, self._manager)
+        self.app.notify(result.message, severity="information" if result.success else "error")
+        self._refresh_status()
+
+    def _repair_permissions_if_confirmed(self, confirmed: bool | None) -> None:
+        if not confirmed or self._manager is None:
+            return
+        with self._maybe_suspend():
+            result = repair_directory_permissions(
+                self._container.filesystem, self._container.project_root,
+                DEFAULT_SYSTEM_GROUP, getpass.getuser(), self._manager,
+            )
         self.app.notify(result.message, severity="information" if result.success else "error")
         self._refresh_status()

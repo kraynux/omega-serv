@@ -4,666 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Omega-Serv – Guide complet (référence + aide)</title>
-    <style>
-        /* ============================================
-           THEME OMEGA-SERV - BLEU NUIT / CYAN
-           ============================================ */
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: #0a0e1a;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', 'Ubuntu', 'Roboto', 'Noto Color Emoji',
-                         'Apple Color Emoji', 'Segoe UI Emoji', monospace;
-            font-size: 15px;
-            line-height: 1.6;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #0f1320;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .custom-header {
-            background: linear-gradient(135deg, #0a0f1a 0%, #0c1120 100%);
-            padding: 0.6rem 2rem;
-            text-align: center;
-            border-bottom: 1px solid #2a2e3a;
-        }
-        .custom-header a {
-            color: #00d4ff;
-            text-decoration: none;
-            font-family: monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-        }
-        .custom-header a:hover { text-decoration: underline; opacity: 0.8; }
-
-        .branding-container {
-            padding: 2rem 2rem 1.2rem;
-            border-bottom: 1px solid #2a2e3a;
-            background: linear-gradient(180deg, #0f1320 0%, #0a0e1a 100%);
-        }
-        .branding {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        .omega-logo {
-            width: 210px;
-            height: auto;
-            filter: drop-shadow(0 0 20px rgba(0,212,255,0.2));
-        }
-        .omega-logo img { width: 100%; height: auto; }
-        .title-tag { text-align: left; }
-        .title-tag h1 {
-            color: #00d4ff;
-            font-size: 2rem;
-            margin-bottom: 0.2rem;
-            letter-spacing: -0.5px;
-        }
-        .title-tag .subtitle { color: #a0b0c0; font-size: 1rem; font-weight: 300; }
-        .title-tag .tagline {
-            color: #666;
-            font-size: 0.85rem;
-            margin-top: 0.2rem;
-            font-style: italic;
-        }
-        .badge-group {
-            margin-top: 0.6rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
-        .badge {
-            display: inline-block;
-            background: #1a1f2e;
-            color: #00d4ff;
-            padding: 0.15rem 0.7rem;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            border: 1px solid #2a2e3a;
-        }
-
-        .content { padding: 1.5rem 2rem 1rem; }
-
-        .guide-intro {
-            background: linear-gradient(135deg, #0f1a2a, #0a0f1a);
-            border: 1px solid #00d4ff22;
-            border-radius: 16px;
-            padding: 1.5rem 1.8rem;
-            margin-bottom: 1.5rem;
-        }
-        .guide-intro h2 {
-            color: #00d4ff;
-            font-size: 1.3rem;
-            margin-top: 0;
-            border-bottom: none;
-            padding-bottom: 0;
-            margin-bottom: 0.6rem;
-        }
-        .guide-intro p { color: #a0b0c0; font-size: 0.95rem; margin-bottom: 0.6rem; }
-        .guide-intro p:last-child { margin-bottom: 0; }
-        .guide-meta {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-            padding-top: 0.8rem;
-            border-top: 1px solid #1e2332;
-            font-size: 0.8rem;
-            color: #666;
-        }
-        .guide-meta span { display: flex; align-items: center; gap: 6px; }
-
-        h1 {
-            color: #00d4ff;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            margin-top: 0;
-            padding-bottom: 0.4rem;
-            border-bottom: 2px solid #2a2e3a;
-        }
-        h2 {
-            color: #00d4ff;
-            font-size: 1.3rem;
-            margin-top: 1.8rem;
-            margin-bottom: 0.8rem;
-            padding-bottom: 0.4rem;
-            border-bottom: 2px solid #2a2e3a;
-        }
-        h3 {
-            color: #a0b0c0;
-            font-size: 1rem;
-            margin-top: 1rem;
-            margin-bottom: 0.6rem;
-        }
-        p { margin-bottom: 0.8rem; color: #e0e0e0; font-size: 0.95rem; }
-        ul, ol { margin: 0.5rem 0 0.8rem 1.5rem; }
-        li { margin: 0.3rem 0; color: #e0e0e0; font-size: 0.9rem; }
-        li code {
-            background: #1a1f2e;
-            padding: 0.1rem 0.4rem;
-            border-radius: 5px;
-            color: #00d4ff;
-            font-size: 0.8rem;
-        }
-
-        .wiki-section {
-            background: #0f1320;
-            border: 1px solid #1e2332;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
-        .wiki-section:hover { border-color: #2a3e4a; }
-        .wiki-section[open] { border-color: #00d4ff44; }
-        .wiki-section summary {
-            padding: 1rem 1.4rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            background: linear-gradient(135deg, #121a28, #0f1320);
-            border-bottom: 1px solid transparent;
-            transition: all 0.2s;
-            list-style: none;
-            user-select: none;
-        }
-        .wiki-section summary::-webkit-details-marker { display: none; }
-        .wiki-section summary::before {
-            content: "▶";
-            color: #00d4ff;
-            font-size: 0.7rem;
-            transition: transform 0.25s ease;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        .wiki-section[open] summary::before { transform: rotate(90deg); }
-        .wiki-section summary:hover { background: linear-gradient(135deg, #141e2e, #121a28); }
-        .wiki-section[open] summary { border-bottom: 1px solid #1e2332; }
-        .wiki-section summary .wiki-icon { font-size: 1.3rem; flex-shrink: 0; }
-        .wiki-section summary .wiki-title {
-            color: #00d4ff;
-            font-weight: 600;
-            font-size: 1rem;
-            flex: 1;
-        }
-        .wiki-section summary .wiki-count {
-            color: #666;
-            font-size: 0.75rem;
-            font-family: monospace;
-            background: #1a1f2e;
-            padding: 0.15rem 0.6rem;
-            border-radius: 12px;
-            border: 1px solid #2a2e3a;
-        }
-        .wiki-section .wiki-body { padding: 1.2rem 1.4rem 1.4rem; }
-        .wiki-section .wiki-body > p:first-child {
-            color: #a0b0c0;
-            font-style: italic;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            padding-left: 0.8rem;
-            border-left: 3px solid #2a2e3a;
-        }
-
-        .sub-section {
-            background: #0a0e1a;
-            border: 1px solid #1e2332;
-            border-radius: 10px;
-            margin-bottom: 0.8rem;
-            overflow: hidden;
-        }
-        .sub-section summary {
-            padding: 0.7rem 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            background: #0f1320;
-            transition: background 0.2s;
-            list-style: none;
-            user-select: none;
-        }
-        .sub-section summary::-webkit-details-marker { display: none; }
-        .sub-section summary::before {
-            content: "▸";
-            color: #00d4a0;
-            font-size: 0.85rem;
-            transition: transform 0.2s;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        .sub-section[open] summary::before { transform: rotate(90deg); }
-        .sub-section summary:hover { background: #121a28; }
-        .sub-section summary .sub-name {
-            color: #e0e0e0;
-            font-size: 0.9rem;
-            font-weight: 600;
-            flex: 1;
-        }
-        .sub-section .sub-body {
-            padding: 0.8rem 1.1rem 1rem;
-            border-top: 1px solid #1e2332;
-        }
-
-        .screen-card {
-            background: #0a0e1a;
-            border: 1px solid #1e2332;
-            border-radius: 10px;
-            margin-bottom: 0.8rem;
-            overflow: hidden;
-        }
-        .screen-card summary {
-            padding: 0.7rem 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            background: #0f1320;
-            transition: background 0.2s;
-            list-style: none;
-            user-select: none;
-        }
-        .screen-card summary::-webkit-details-marker { display: none; }
-        .screen-card summary::before {
-            content: "▸";
-            color: #00d4a0;
-            font-size: 0.85rem;
-            transition: transform 0.2s;
-            display: inline-block;
-            flex-shrink: 0;
-        }
-        .screen-card[open] summary::before { transform: rotate(90deg); }
-        .screen-card summary:hover { background: #121a28; }
-        .screen-card summary .screen-name {
-            color: #e0e0e0;
-            font-size: 0.9rem;
-            font-weight: 600;
-            flex: 1;
-        }
-        .screen-card summary .screen-path {
-            color: #666;
-            font-size: 0.7rem;
-            font-family: monospace;
-            flex-shrink: 0;
-        }
-        .screen-card .screen-body {
-            padding: 0.8rem 1.1rem 1rem;
-            border-top: 1px solid #1e2332;
-        }
-        .screen-card .screen-body > p:first-child {
-            color: #9098a8;
-            font-size: 0.85rem;
-            margin-bottom: 0.8rem;
-            padding: 0.5rem 0.8rem;
-            background: #0f1320;
-            border-radius: 6px;
-            border-left: 2px solid #00d4ff44;
-        }
-
-        .field-card {
-            background: #0f1320;
-            border-left: 3px solid #2a2e3a;
-            padding: 0.7rem 1rem;
-            margin-bottom: 0.6rem;
-            border-radius: 0 8px 8px 0;
-            transition: border-color 0.2s;
-        }
-        .field-card:hover { border-left-color: #00d4ff; }
-        .field-card .field-name {
-            color: #00d4ff;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.4rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .field-card .field-name::before { content: "⚙"; color: #666; font-size: 0.85rem; }
-        .field-card .field-line {
-            font-size: 0.85rem;
-            color: #c0c8d8;
-            margin-bottom: 0.3rem;
-            line-height: 1.5;
-        }
-        .field-card .field-line:last-child { margin-bottom: 0; }
-        .field-card .field-line .label { color: #9098a8; font-weight: 500; display: inline; }
-        .field-card .field-line code {
-            background: #1a1f2e;
-            padding: 0.05rem 0.4rem;
-            border-radius: 4px;
-            color: #00d4ff;
-            font-size: 0.78rem;
-        }
-
-        pre {
-            background: #1a1f2e;
-            border: 1px solid #2a2e3a;
-            border-radius: 12px;
-            padding: 0.8rem 3rem 0.8rem 1rem;
-            overflow-x: auto;
-            margin: 0.8rem 0;
-            position: relative;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 12px;
-        }
-        code { font-family: 'Courier New', 'Consolas', monospace; font-size: 12px; color: #e0e0e0; }
-        .code-block-wrapper { position: relative; margin: 0.8rem 0; }
-        .code-block-wrapper pre { margin: 0; padding-right: 70px; }
-        .copy-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #2a2e3a;
-            border: none;
-            color: #00d4ff;
-            padding: 3px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 10px;
-            font-family: monospace;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-        .copy-btn:hover { background: #00d4ff; color: #0a0e1a; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0.8rem 0;
-            background: #0f1320;
-            border: 1px solid #2a2e3a;
-            border-radius: 12px;
-            overflow: hidden;
-            font-size: 0.85rem;
-        }
-        th {
-            text-align: left;
-            padding: 8px 12px;
-            background: #1a1f2e;
-            color: #00d4ff;
-            font-weight: 600;
-            border-bottom: 1px solid #2a2e3a;
-        }
-        td { padding: 7px 12px; border-bottom: 1px solid #1e2332; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: #151b2a; }
-        td code {
-            background: #1a1f2e;
-            padding: 0.1rem 0.4rem;
-            border-radius: 5px;
-            color: #00d4ff;
-            font-size: 0.78rem;
-        }
-
-        .info-box {
-            background: #1a1f2e;
-            padding: 0.8rem 1.1rem;
-            margin: 0.8rem 0;
-            border-radius: 10px;
-            border-left: 4px solid #00d4ff;
-            font-size: 0.88rem;
-        }
-        .info-box .box-title {
-            color: #00d4ff;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            display: block;
-        }
-        .warn-box {
-            background: #1a1f2e;
-            padding: 0.8rem 1.1rem;
-            margin: 0.8rem 0;
-            border-radius: 10px;
-            border-left: 4px solid #ffbc6e;
-            font-size: 0.88rem;
-        }
-        .warn-box .box-title {
-            color: #ffbc6e;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            display: block;
-        }
-        .warn-box ul { margin-top: 0.4rem; margin-bottom: 0; }
-        .warn-box ul li { color: #ffbc6e; font-size: 0.85rem; }
-        .success-box {
-            background: #1a1f2e;
-            padding: 0.8rem 1.1rem;
-            margin: 0.8rem 0;
-            border-radius: 10px;
-            border-left: 4px solid #00d4a0;
-            font-size: 0.88rem;
-        }
-        .success-box .box-title {
-            color: #00d4a0;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            display: block;
-        }
-        blockquote {
-            background: #1a1f2e;
-            padding: 0.8rem 1.2rem;
-            margin: 0.8rem 0;
-            border-radius: 10px;
-            border-left: 4px solid #00d4ff;
-            font-style: italic;
-            color: #a0b0c0;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem;
-            margin: 1rem 0;
-        }
-        .features-grid .feature-block {
-            background: #0f1320;
-            border: 1px solid #1e2332;
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
-        }
-        .features-grid .feature-block h3 {
-            margin-top: 0;
-            color: #00d4ff;
-            font-size: 0.95rem;
-        }
-        .features-grid .feature-block ul { margin: 0.3rem 0 0 1.2rem; }
-        .features-grid .feature-block ul li { font-size: 0.85rem; margin: 0.2rem 0; }
-
-        a { color: #00d4ff; text-decoration: none; transition: opacity 0.2s; }
-        a:hover { text-decoration: underline; opacity: 0.8; }
-
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            padding: 1rem 2rem;
-            background: #0f1320;
-            border-top: 1px solid #2a2e3a;
-            border-bottom: 1px solid #2a2e3a;
-            margin: 0;
-            flex-wrap: wrap;
-        }
-        .nav-buttons button, .nav-buttons a.btn-link {
-            background: #1a1f2e;
-            border: 1px solid #2a2e3a;
-            color: #00d4ff;
-            padding: 6px 16px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-            white-space: nowrap;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .nav-buttons button:hover, .nav-buttons a.btn-link:hover {
-            background: #00d4ff;
-            border-color: #00d4ff;
-            color: #0a0e1a;
-            transform: translateY(-1px);
-            text-decoration: none;
-        }
-        .toggle-all-bar {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-        .toggle-all-bar button {
-            background: #1a1f2e;
-            border: 1px solid #2a2e3a;
-            color: #00d4ff;
-            padding: 5px 14px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .toggle-all-bar button:hover {
-            background: #00d4ff;
-            border-color: #00d4ff;
-            color: #0a0e1a;
-        }
-
-        .custom-footer {
-            background: #0a0f1a;
-            padding: 0.8rem;
-            text-align: center;
-            color: #9098a8;
-            font-size: 0.7rem;
-            border-top: 1px solid #2a2e3a;
-        }
-
-        hr {
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #00d4ff, #2a2e3a, #00d4ff, transparent);
-            margin: 1.2rem 0;
-        }
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0e1a; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #2a2e3a; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #00d4ff80; }
-
-        /* FAQ */
-        .faq-item {
-            background: #0f1320;
-            border: 1px solid #1e2332;
-            border-radius: 10px;
-            margin-bottom: 0.7rem;
-            overflow: hidden;
-        }
-        .faq-item summary {
-            padding: 0.8rem 1.1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6rem;
-            background: #0f1320;
-            transition: background 0.2s;
-            list-style: none;
-            user-select: none;
-        }
-        .faq-item summary::-webkit-details-marker { display: none; }
-        .faq-item summary::before {
-            content: "❓";
-            color: #00d4ff;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            margin-top: 0.15rem;
-        }
-        .faq-item[open] summary::before { content: "💡"; color: #00d4a0; }
-        .faq-item summary:hover { background: #121a28; }
-        .faq-item summary .faq-question {
-            color: #e0e0e0;
-            font-size: 0.88rem;
-            font-weight: 600;
-            flex: 1;
-            line-height: 1.5;
-        }
-        .faq-item .faq-answer {
-            padding: 0.4rem 1.1rem 1rem 2.5rem;
-            color: #b0b8c8;
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-        .faq-item .faq-answer code {
-            background: #1a1f2e;
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            color: #00d4ff;
-            font-size: 0.78rem;
-        }
-        .faq-item .faq-cat {
-            color: #666;
-            font-size: 0.7rem;
-            font-family: monospace;
-            margin-left: 0.4rem;
-            background: #0f1320;
-            padding: 0.1rem 0.5rem;
-            border-radius: 10px;
-            border: 1px solid #1e2332;
-        }
-
-        .reaction {
-            display: inline-block;
-            padding: 0.1rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-right: 0.3rem;
-        }
-        .reaction-hot { background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff55; }
-        .reaction-restart { background: #ff6b3522; color: #ff6b35; border: 1px solid #ff6b3555; }
-        .reaction-none { background: #66666622; color: #9098a8; border: 1px solid #66666655; }
-        .reaction-danger { background: #ff444422; color: #ff4444; border: 1px solid #ff444455; }
-
-        @media (max-width: 768px) {
-            body { padding: 1rem; }
-            .branding { flex-direction: column; text-align: center; gap: 12px; }
-            .title-tag { text-align: center; }
-            .title-tag h1 { font-size: 1.5rem; }
-            .content { padding: 1rem; }
-            .wiki-section summary { padding: 0.8rem 1rem; gap: 0.5rem; }
-            .wiki-section summary .wiki-count { display: none; }
-            .screen-card summary .screen-path { display: none; }
-            .features-grid { grid-template-columns: 1fr; }
-            .nav-buttons { flex-wrap: wrap; gap: 8px; }
-            .nav-buttons button, .nav-buttons a.btn-link { font-size: 0.7rem; padding: 5px 12px; }
-            .guide-meta { flex-direction: column; gap: 0.4rem; }
-            table { font-size: 0.75rem; }
-            th, td { padding: 5px 7px; }
-        }
-        @media (max-width: 500px) {
-            .wiki-section summary .wiki-icon { font-size: 1.1rem; }
-            .wiki-section summary .wiki-title { font-size: 0.9rem; }
-        }
-
-        .text-center { text-align: center; }
-        .mt-1 { margin-top: 0.8rem; }
-        .mb-1 { margin-bottom: 0.8rem; }
-    </style>
+    <link rel="stylesheet" href="/assets/css/theme.css">
+    <link rel="stylesheet" href="/assets/css/guide.css">
 </head>
 <body>
 <div class="container">
@@ -721,8 +63,8 @@
 
         <!-- ==================== BARRE D'OUTILS ==================== -->
         <div class="toggle-all-bar">
-            <button onclick="toggleAll(true)">▼ Tout déplier</button>
-            <button onclick="toggleAll(false)">▲ Tout replier</button>
+            <button data-toggle-all="open">▼ Tout déplier</button>
+            <button data-toggle-all="close">▲ Tout replier</button>
         </div>
 
         <hr />
@@ -1185,7 +527,7 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh config init</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="2">
                             <li>Choisissez le profil <code>standard</code> pour un petit site, ou <code>hardened</code> si le service doit être placé derrière un reverse proxy. Examinez le diff avant application :</li>
@@ -1193,7 +535,7 @@
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh profile show hardened
 ./omega-serv.sh profile apply hardened --dry-run</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="3">
                             <li>Configurez le bind, le port et le webroot depuis la TUI ou les commandes correspondantes. Vérifiez que le compte de service peut lire le contenu sans droits d'écriture inutiles.</li>
@@ -1202,14 +544,14 @@
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh option enable waf
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="5">
                             <li>Vérifiez la configuration avant le démarrage :</li>
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh config check</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="6">
                             <li>Installez ensuite le service sous un utilisateur dédié, démarrez-le et consultez son statut :</li>
@@ -1218,7 +560,7 @@
                             <pre><code>./omega-serv.sh service install --user omega-serv --group omega-serv
 ./omega-serv.sh service start
 ./omega-serv.sh service status</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="7">
                             <li>Depuis Gestion des logs ou État &amp; Ressources, observez les premières requêtes, les erreurs et les codes HTTP. Ajustez les règles avant d'envisager un mode WAF bloquant.</li>
@@ -1239,7 +581,7 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh certs generate-ca --cn "Mon CA locale" --days 3650</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="3">
                             <li>Générez la clé et la CSR du serveur, en définissant les noms DNS ou IP réellement utilisés par les clients :</li>
@@ -1250,7 +592,7 @@
   --san-dns serveur.local \
   --key-out server.key \
   --csr-out server.csr</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="4">
                             <li>Signez la CSR avec la CA locale et produisez la chaîne complète :</li>
@@ -1262,7 +604,7 @@
   --ca-cert secure/certificates/ca/root-ca.pem \
   --out server.pem \
   --fullchain-out fullchain.pem</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="5">
                             <li>Activez TLS avec le certificat et la clé correspondants depuis la TUI ou via la commande de configuration. Lancez ensuite <code>config check</code>, puis redémarrez complètement le service : un changement TLS ne relève pas du rechargement à chaud.</li>
@@ -1300,7 +642,7 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh option enable waf</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="2">
                             <li>Utilisez le mode <code>log-only</code> lors de la phase de calibration. Ce mode est structurellement incapable de bloquer et permet d'observer les décisions sans perturber le service.</li>
@@ -1323,7 +665,7 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh option enable active_defense</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="2">
                             <li>Définissez le mode, les seuils, les actions et les profils de leurre. Commencez par <code>monitor</code> afin d'observer les qualifications sans déployer une réponse active.</li>
@@ -1335,7 +677,7 @@
   --path /wp-login.php \
   --attack-class scan \
   --score 40</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="4">
                             <li>Si vous utilisez un leurre <code>fixture</code>, limitez-le à des réponses statiques plausibles et considérez explicitement son isolation comme faible. Pour une zone <code>proxy</code>, déployez d'abord un backend de leurre isolé, distinct de la production, puis vérifiez sa disponibilité.</li>
@@ -1384,14 +726,14 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh config check</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="6">
                             <li>Redémarrez complètement le service. Testez depuis un client :</li>
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>curl -i http://localhost/api-interne/health</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="7">
                             <li>Observez les logs d'accès et d'erreurs pour vérifier le routage, les codes HTTP et les en-têtes. Ajustez les upstreams ou les options en cas de 502/504.</li>
@@ -1423,14 +765,14 @@
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh config check</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="6">
                             <li>Redémarrez le service si nécessaire, puis testez l'upload :</li>
                         </ol>
                         <div class="code-block-wrapper">
                             <pre><code>curl -X POST -F "file=@monfichier.pdf" http://localhost/uploads/</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <ol start="7">
                             <li>Consultez les logs pour vérifier les réponses (200/201/413/4xx) et ajustez quotas et tailles si nécessaire.</li>
@@ -1485,7 +827,7 @@
                         </p>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh audit security --format text --min-severity medium</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <table>
                             <thead>
@@ -1513,7 +855,7 @@
                         </p>
                         <div class="code-block-wrapper">
                             <pre><code>./omega-serv.sh config backup --description "avant migration"</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                         <p>
                             L'inclusion de certificats ou de données d'authentification demande une confirmation
@@ -1706,7 +1048,7 @@
 # Service
 ./omega-serv.sh service status
 ./omega-serv.sh service restart</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                     </div>
                 </details>
@@ -3541,7 +2883,7 @@
 
 # Diagnostics
 ./omega-serv.sh diagnostics</code></pre>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                            <button class="copy-btn">Copier</button>
                         </div>
                     </div>
                 </details>
@@ -3601,12 +2943,12 @@
 
         <!-- ==================== NAVIGATION ==================== -->
         <div class="nav-buttons">
-            <button onclick="window.history.back()">← Précédent</button>
-            <button onclick="window.location.href='#top'">↑ Haut</button>
-            <button onclick="window.location.href='/omega-serv/';">🏠 Omega-Serv</button>
-            <button onclick="window.location.href='/omega-serv/readme.html';">📖 README</button>
-            <button onclick="window.location.href='/omega-serv/screenshots/';">🖼️ Captures</button>
-            <button onclick="window.location.href='/';">🌐 Accueil</button>
+            <button data-nav="back">← Précédent</button>
+            <button data-nav="#top">↑ Haut</button>
+            <button data-nav="/omega-serv/">🏠 Omega-Serv</button>
+            <button data-nav="/omega-serv/readme.html">📖 README</button>
+            <button data-nav="/omega-serv/screenshots/">🖼️ Captures</button>
+            <button data-nav="/">🌐 Accueil</button>
         </div>
 
         <br />
@@ -3620,51 +2962,9 @@
 
 </div>
 
-<script>
-    function toggleAll(open) {
-        document.querySelectorAll('.wiki-section').forEach(el => el.open = open);
-        document.querySelectorAll('.sub-section').forEach(el => el.open = open);
-        document.querySelectorAll('.screen-card').forEach(el => el.open = open);
-        document.querySelectorAll('.faq-item').forEach(el => el.open = open);
-    }
-
-    function copyCode(btn) {
-        const pre = btn.closest('.code-block-wrapper').querySelector('pre');
-        const code = pre ? pre.innerText : '';
-        navigator.clipboard.writeText(code).then(() => {
-            const original = btn.textContent;
-            btn.textContent = '✓ Copié !';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        }).catch(() => {
-            const range = document.createRange();
-            range.selectNode(pre);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            document.execCommand('copy');
-            window.getSelection().removeAllRanges();
-            const original = btn.textContent;
-            btn.textContent = '✓ Copié !';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        function openAllAncestors() {
-            const hash = window.location.hash;
-            if (!hash) return;
-            const target = document.querySelector(hash);
-            if (!target) return;
-            let el = target;
-            while (el) {
-                if (el.tagName === 'DETAILS') el.open = true;
-                el = el.parentElement;
-            }
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        openAllAncestors();
-        window.addEventListener('hashchange', openAllAncestors);
-    });
-</script>
+<script src="/assets/js/nav.js"></script>
+<script src="/assets/js/copy-code.js"></script>
+<script src="/assets/js/guide.js"></script>
 
 </body>
 </html>

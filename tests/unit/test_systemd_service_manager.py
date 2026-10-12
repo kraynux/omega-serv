@@ -3,7 +3,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError
-from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
+from omega_serv.domain.services.systemd_unit import SystemdUnitParams
+from omega_serv.infrastructure.services.systemd_service_manager import (
+    _CONTROL_TIMEOUT_SECONDS,
+    _TIMEOUT_SECONDS,
+    SystemdServiceManager,
+)
 from omega_serv.ports.process_runner_port import ProcessResult
 
 _ROOT = "omega_serv.infrastructure.services.systemd_service_manager.running_as_root"
@@ -18,11 +23,13 @@ class _FakeProcessRunner:
     def __init__(self, responses: dict, *, interactive_auth_returncode: int = 0):
         self._responses = responses
         self.calls = []
+        self.call_timeouts = []
         self.interactive_calls = []
         self._interactive_auth_returncode = interactive_auth_returncode
 
     def run(self, args, input_text=None, timeout=None):
         self.calls.append(args)
+        self.call_timeouts.append(timeout)
         key = tuple(args)
         if key in self._responses:
             return self._responses[key]
@@ -39,6 +46,33 @@ class TestSystemdServiceManager(unittest.TestCase):
         runner = _FakeProcessRunner({("systemctl", "start", "omega-serv"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("omega-serv"))
+
+    def test_control_timeout_always_exceeds_unit_stop_timeout(self):
+        """Regression (retour utilisateur 2026-10-13, Archcraft) : 'PID
+        obsolete' apres un arret/redemarrage reel via le TUI, cause par
+        `_TIMEOUT_SECONDS` (10s) plus court que `TimeoutStopSec` (15s)
+        dans l'unite systemd generee - le wrapper tuait son propre
+        sous-processus `systemctl stop` avant que le job systemd ne se
+        termine reellement. Les deux valeurs vivent dans des modules
+        differents (domain/ vs infrastructure/) - ce test les relie
+        explicitement pour qu'un changement futur de l'une ne puisse
+        pas recreer silencieusement l'ecart."""
+        self.assertGreater(_CONTROL_TIMEOUT_SECONDS, SystemdUnitParams.stop_timeout_seconds)
+
+    @patch(_ROOT, return_value=True)
+    def test_start_uses_the_longer_control_timeout(self, _mock_root):
+        runner = _FakeProcessRunner({("systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        manager = SystemdServiceManager(runner)
+        manager.start("svc")
+        self.assertEqual(runner.call_timeouts, [_CONTROL_TIMEOUT_SECONDS])
+
+    @patch(_ROOT, return_value=True)
+    def test_status_uses_the_shorter_readonly_timeout(self, _mock_root):
+        # status() appelle aussi is_enabled() en interne - 2 appels, meme timeout court pour les deux.
+        runner = _FakeProcessRunner({("systemctl", "status", "svc"): ProcessResult(0, _STATUS_OUTPUT, "")})
+        manager = SystemdServiceManager(runner)
+        manager.status("svc")
+        self.assertEqual(runner.call_timeouts, [_TIMEOUT_SECONDS, _TIMEOUT_SECONDS])
 
     @patch(_ROOT, return_value=True)
     def test_start_not_found(self, _mock_root):
