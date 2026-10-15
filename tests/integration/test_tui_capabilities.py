@@ -71,7 +71,8 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(130, 50)) as pilot:
             await self._open_capabilities(pilot)
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 18)
+            # 19 depuis l'ajout de la sonde "scp" (OMEGA-SERV_ETUDE-FAISABILITE_LOGS_DISTANTS.md, 2026-10-15).
+            self.assertEqual(table.row_count, 19)
             self.assertEqual(str(pilot.app.screen.query_one("#scan-error").content), "")
 
     async def test_scan_includes_fastcgi_socket_only_when_option_enabled(self):
@@ -87,7 +88,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(130, 50)) as pilot:
             await self._open_capabilities(pilot)
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 19)
+            self.assertEqual(table.row_count, 20)
 
     async def test_row_selection_opens_detail_with_matching_capability(self):
         container = self._container()
@@ -118,7 +119,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(export_paths), 1)
         payload = json.loads(export_paths[0].read_text())
         self.assertIn("capabilities", payload)
-        self.assertEqual(len(payload["capabilities"]), 18)
+        self.assertEqual(len(payload["capabilities"]), 19)
         self.assertIn("status", payload["capabilities"][0])
 
     async def test_export_html_writes_table(self):
@@ -145,7 +146,7 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#refresh", Button).press()
             await pilot.pause()
             table = pilot.app.screen.query_one("#capabilities-table", CapabilitiesTable)
-            self.assertEqual(table.row_count, 18)
+            self.assertEqual(table.row_count, 19)
 
     async def test_scan_without_config_shows_error(self):
         container = self._container()

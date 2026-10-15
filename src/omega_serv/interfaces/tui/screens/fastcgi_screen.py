@@ -23,6 +23,7 @@ from omega_serv.domain.routing.fastcgi_zone import (
     validate_fastcgi_config_structure,
 )
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._zone_overlap_notice import notify_zone_prefix_overlaps
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
 
 if TYPE_CHECKING:
@@ -143,6 +144,7 @@ class FastCgiScreen(OmegaScreen):
         new_config = replace(load_result.config, options=new_options)
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
+        notify_zone_prefix_overlaps(self, self._container, "fastcgi")
         notify_reload_required(self, self._container, "Configuration FastCGI enregistree.")
 
 

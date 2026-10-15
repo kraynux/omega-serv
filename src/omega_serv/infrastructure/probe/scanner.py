@@ -25,12 +25,20 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 
 _MIN_FD_SOFT_LIMIT = 1024
 _MIN_DISK_FREE_BYTES = 100 * 1024 * 1024
-_OPTIONAL_BINARIES = ("logrotate", "openssl", "tailscale", "lnav", "certbot")
+_OPTIONAL_BINARIES = ("logrotate", "openssl", "tailscale", "lnav", "certbot", "scp")
 """`certbot` (etude OMEGA-SERV_PLAN-DETAILLE_TLS_AUTO.md, Phase 1) : simple
 detection en lecture seule (comme les autres binaires ci-dessus) - aucune
 ecriture, aucun appel a certbot lui-meme. Le pont Certbot -> secure/
 certificates/ (import de certificat, hook de renouvellement) reste a
-construire en phases suivantes, hors de ce fichier."""
+construire en phases suivantes, hors de ce fichier.
+
+`scp` (OMEGA-SERV_ETUDE-FAISABILITE_LOGS_DISTANTS.md, 2026-10-15) :
+meme regime - detection LOCALE de la presence du binaire uniquement,
+jamais un test de joignabilite d'un hote distant (qui exigerait deja
+une tentative de connexion, hors perimetre de ce scanner). Purement
+informatif : aucun autre ecran ne bloque un bouton sur cette capacite,
+`SubprocessRunner` produit deja un message "commande introuvable" clair
+si `scp` est absent au moment d'une recuperation reelle."""
 _REVERSE_PROXY_BINARIES = ("nginx", "caddy")
 
 

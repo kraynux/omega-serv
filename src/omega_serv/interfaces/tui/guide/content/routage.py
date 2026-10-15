@@ -366,12 +366,121 @@ REVERSE_PROXY_SCREEN = ScreenGuide(
     consequences=(
         "La PREMIERE activation de l'option reverse_proxy exige un REDEMARRAGE COMPLET (le "
         "client HTTP n'est construit qu'au demarrage). Une fois deja active, modifier les zones "
-        "ici ne demande plus qu'un simple rechargement."
+        "ici ne demande plus qu'un simple rechargement. Le bouton 'Etat en direct' (zone "
+        "selectionnee) ouvre un ecran separe pour consulter/forcer l'etat de sante de chaque "
+        "backend du serveur REELLEMENT en cours d'execution - voir sa fiche dediee."
     ),
     points_de_vigilance=(
         (
             "A ne jamais confondre avec le reglage TLS 'mode = behind_proxy' (OMEGA-SERV "
             "DERRIERE un proxy) - ici, c'est OMEGA-SERV qui EST le proxy vers d'autres backends."
+        ),
+    ),
+)
+
+REVERSE_PROXY_CACHE_SCREEN = ScreenGuide(
+    screen_class_name="ReverseProxyCacheScreen",
+    title="Cache du reverse proxy",
+    acces="Accueil -> Configuration detaillee -> Cache du reverse proxy",
+    definition=(
+        "Supervision et purge du cache des reponses proxiees (DISTINCT du cache fichiers "
+        "statiques, ecran 'Cache') : nombre d'entrees et taille occupee sur disque, lus "
+        "directement dans var/cache/reverse_proxy/, que le serveur soit demarre ou non, plus un "
+        "ratio hits/miss EN DIRECT (interroge le serveur reellement en cours d'execution via "
+        "/.omega-serv-admin/cache-stats - affiche 'indisponible' si le serveur est eteint ou "
+        "injoignable, sans jamais bloquer le reste de l'ecran)."
+    ),
+    fields=(
+        FieldGuide(
+            label="Plafond (Mo)",
+            definition="Taille maximale occupee sur disque par le cache avant eviction des entrees les plus anciennes.",
+            utilisation="Nombre entier >= 1, en megaoctets.",
+            action="Modifier le plafond.",
+            reaction="Enregistre dans la configuration ; s'applique a la prochaine ecriture en cache (eviction immediate non declenchee par ce seul changement).",
+        ),
+        FieldGuide(
+            label="Purger une zone",
+            definition="Supprime toutes les entrees de cache pour un prefixe de zone donne.",
+            utilisation="Saisir le prefixe exact de la zone, ex: /api/.",
+            action="Confirme puis purge.",
+            reaction="Entrees supprimees du disque immediatement, y compris si le serveur tourne (il relira a froid).",
+        ),
+        FieldGuide(
+            label="Purger tout",
+            definition="Supprime toutes les entrees de cache, toutes zones confondues.",
+            utilisation="Action destructive, confirmation demandee.",
+            action="Confirme puis purge.",
+            reaction="Cache entierement vide immediatement.",
+        ),
+    ),
+    consequences=(
+        "Activation/parametres du cache (active, TTL, respect des en-tetes Cache-Control de "
+        "l'upstream, autorisation Set-Cookie) se configurent sur l'ecran Reverse Proxy, zone par "
+        "zone - cet ecran-ci ne fait que superviser et purger ce qui existe deja sur disque."
+    ),
+    points_de_vigilance=(
+        (
+            "Le ratio hits/miss est cumule EN MEMOIRE depuis le dernier demarrage COMPLET du "
+            "serveur (jamais persiste) - un simple rechargement (SIGHUP) ne le remet jamais a "
+            "zero. Necessite trusted_proxy actif avec 127.0.0.1 dans ses reseaux de confiance, "
+            "sinon affiche 'indisponible'. Le diagnostic PAR REQUETE reste l'en-tete de reponse "
+            "X-Omega-Cache (HIT/MISS/BYPASS), visible via les outils du navigateur ou 'curl -I'."
+        ),
+    ),
+)
+
+REVERSE_PROXY_UPSTREAM_STATUS_SCREEN = ScreenGuide(
+    screen_class_name="ReverseProxyUpstreamStatusScreen",
+    title="Etat en direct des backends",
+    acces="Accueil -> Configuration detaillee -> Reverse Proxy -> selectionner une zone -> Etat en direct",
+    definition=(
+        "Interroge le serveur REELLEMENT en cours d'execution (jamais la configuration sur "
+        "disque) pour afficher l'etat actuel de chaque backend d'une zone (up/down/draining/"
+        "maintenance) et permettre de forcer DRAINING ou MAINTENANCE a chaud, via la route "
+        "/.omega-serv-admin/health - un vrai appel HTTP local, jamais une modification en "
+        "memoire de cet ecran (qui ne tourne pas dans le processus serveur)."
+    ),
+    fields=(
+        FieldGuide(
+            label="Mettre en DRAINING",
+            definition="Exclut le backend selectionne des NOUVEAUX choix sans le marquer en panne.",
+            utilisation="Selectionner une ligne puis cliquer.",
+            action="Appel HTTP immediat vers le serveur en cours.",
+            reaction="Statut visible immediatement apres actualisation ; jamais ecrit dans la configuration.",
+        ),
+        FieldGuide(
+            label="Mettre en MAINTENANCE",
+            definition="Meme exclusion que DRAINING, intention operateur distincte (intervention planifiee).",
+            utilisation="Selectionner une ligne puis cliquer.",
+            action="Appel HTTP immediat vers le serveur en cours.",
+            reaction="Statut visible immediatement apres actualisation ; jamais ecrit dans la configuration.",
+        ),
+        FieldGuide(
+            label="Revenir a l'automatique",
+            definition="Annule DRAINING/MAINTENANCE - l'etat redevient derive de la sante reelle observee (up/down).",
+            utilisation="Selectionner une ligne puis cliquer.",
+            action="Appel HTTP immediat vers le serveur en cours.",
+            reaction=(
+                "Ne force jamais 'up' aveuglement : un backend reellement en panne pendant la "
+                "maintenance reste 'down' une fois celle-ci levee."
+            ),
+        ),
+    ),
+    consequences=(
+        "DRAINING/MAINTENANCE restent EPHEMERES : jamais ecrits dans la configuration, jamais "
+        "persistes - seul un REDEMARRAGE COMPLET du serveur les efface (un simple rechargement "
+        "SIGHUP les conserve). 'DOWN' reste toujours derive automatiquement de la sante "
+        "observee, jamais affecte par cet ecran."
+    ),
+    points_de_vigilance=(
+        (
+            "Necessite trusted_proxy actif avec 127.0.0.1 dans ses reseaux de confiance - sinon "
+            "l'ecran affiche 'serveur injoignable', jamais une erreur bloquante."
+        ),
+        (
+            "Un serveur eteint rend cet ecran entierement indisponible (contrairement aux "
+            "statistiques disque du cache, lisibles a froid) : il interroge exclusivement le "
+            "PROCESSUS en cours, jamais la configuration sur disque."
         ),
     ),
 )

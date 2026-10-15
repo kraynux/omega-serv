@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 from omega_lib.theme.policies import TUI_THEMES
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Select, Static
 
 from omega_serv.application.config.load_config import load_config
@@ -65,9 +65,29 @@ _PINNED_PATHS_SETTINGS_KEY = "lnav_pinned_paths"
 
 
 class LnavScreen(OmegaScreen):
-    def __init__(self, *, container: DependencyContainer) -> None:
+    def __init__(
+        self, *, container: DependencyContainer, preset_paths: tuple[str, ...] = (), auto_launch: bool = False,
+    ) -> None:
         super().__init__()
         self._container = container
+        self._preset_paths = preset_paths
+        """Chemins deja selectionnes en amont (ecran "Voir les logs",
+        refonte menu 2026-10-15) - rendus PRE-COCHES ici, jamais ajoutes
+        aux epingles persistees (une selection ponctuelle depuis la
+        Bibliotheque n'est pas forcement destinee a survivre entre
+        sessions, contrairement a une vraie epingle)."""
+        self._auto_launch = auto_launch
+        """Lance automatiquement (sans clic supplementaire) des l'arrivee
+        sur cet ecran - retour utilisateur 2026-10-15 ("souci de
+        coherence depuis les favoris, on tombe sur l'ecran lnav au lieu
+        de lancer directement le favori") : un favori Simple/Classique
+        ouvre deja directement le viewer final (zero clic) ; un favori
+        lnav, lui, ne faisait qu'arriver sur CET ecran de configuration
+        (cases a cocher deja pre-remplies par `preset_paths`) et exigeait
+        encore un clic sur 'Lancer lnav' - cassait la promesse meme d'un
+        favori. Reserve au lancement depuis un favori (jamais depuis
+        "Voir les logs", ou arriver sur cet ecran pour ajuster la
+        selection avant de lancer reste le comportement voulu)."""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -83,6 +103,11 @@ class LnavScreen(OmegaScreen):
                 yield Checkbox(label, id=f"check-{log_id}")
             for log_id, label in _MAGNET_LOGS:
                 yield Checkbox(label, id=f"check-{log_id}")
+
+            if self._preset_paths:
+                yield Static("Logs selectionnes depuis la Bibliotheque", classes="omega-subtitle")
+                for index, preset_path in enumerate(self._preset_paths):
+                    yield Checkbox(preset_path, value=True, id=f"check-preset-{index}")
 
             yield Static("Chemins epingles", classes="omega-subtitle")
             yield Container(id="pinned-checkboxes")
@@ -108,6 +133,11 @@ class LnavScreen(OmegaScreen):
 
     def on_mount(self) -> None:
         self._refresh_pins()
+        if self._auto_launch:
+            # Apres le premier affichage reellement stabilise, jamais
+            # pendant la transition de push_screen elle-meme (ou suspendre
+            # le terminal serait premature).
+            self.call_after_refresh(self._launch)
 
     def _load_pinned_paths(self) -> list[str]:
         raw = self._container.settings_store.get(_PINNED_PATHS_SETTINGS_KEY, "[]") or "[]"
@@ -198,6 +228,9 @@ class LnavScreen(OmegaScreen):
         for log_id, _label in (*_KNOWN_LOGS, *_MAGNET_LOGS):
             if self.query_one(f"#check-{log_id}", Checkbox).value:
                 paths.append(self._resolve_known_log_path(load_result.config, log_id))
+        for index, preset_path in enumerate(self._preset_paths):
+            if self.query_one(f"#check-preset-{index}", Checkbox).value:
+                paths.append(Path(preset_path))
         for index, pinned_path in enumerate(self._load_pinned_paths()):
             if self.query_one(f"#check-pinned-{index}", Checkbox).value:
                 candidate = Path(pinned_path)

@@ -2,7 +2,15 @@
 structurel (domain/config/validation.py, deja verifie au chargement par
 load_config) puis environnement (application/config/validate_config.py,
 injecte via container.config_check_runner - voir bootstrap/container.py
-pour le pourquoi de cette indirection)."""
+pour le pourquoi de cette indirection) puis conflits entre options
+(domain/config/rules.py::detect_conflicts - mecanisme existant mais
+jusqu'ici jamais cable dans ce sous-ecran, cf. OMEGA-SERV_PLAN-DETAILLE_
+REVERSE_PROXY.md §29.4/§30.1 : l'integration ici est l'occasion de le
+cabler completement plutot qu'a moitie). Deux severites distinctes :
+`"error"` bloque (meme traitement que les erreurs d'environnement),
+`"warning"` (ex. chevauchement de prefixe entre deux types de zones)
+n'empeche jamais de considerer la configuration valide - seulement
+signale."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -12,6 +20,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.domain.config.rules import detect_conflicts
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
@@ -70,6 +79,28 @@ class ConfigCheckScreen(OmegaScreen):
             if notify:
                 self.app.notify(f"Verification terminee : {len(env_errors)} erreur(s) d'environnement.", severity="error")
             return
+
+        conflicts = detect_conflicts(load_result.config)
+        conflict_errors = [c.message for c in conflicts if c.severity == "error"]
+        conflict_warnings = [c.message for c in conflicts if c.severity == "warning"]
+        if conflict_errors:
+            result_widget.update("Erreur de conflit de configuration :\n" + "\n".join(f"  - {e}" for e in conflict_errors))
+            if notify:
+                self.app.notify(f"Verification terminee : {len(conflict_errors)} conflit(s) bloquant(s).", severity="error")
+            return
+
+        if conflict_warnings:
+            result_widget.update(
+                f"{self._container.config_file} : configuration valide, avec avertissement(s) :\n"
+                + "\n".join(f"  - {w}" for w in conflict_warnings)
+            )
+            if notify:
+                self.app.notify(
+                    f"Verification terminee : configuration valide, {len(conflict_warnings)} avertissement(s).",
+                    severity="warning",
+                )
+            return
+
         result_widget.update(f"{self._container.config_file} : configuration valide.")
         if notify:
             self.app.notify("Verification terminee : configuration valide.")

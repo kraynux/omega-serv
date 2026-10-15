@@ -18,7 +18,8 @@ from dataclasses import replace
 from omega_serv.application.server.serve_websocket_proxy import serve_websocket_proxy
 from omega_serv.domain.http.headers import HttpHeaders
 from omega_serv.domain.http.request import HttpRequest
-from omega_serv.domain.routing.proxy_zone import ProxyRoundRobinState, ProxyZone, UpstreamTarget
+from omega_serv.domain.routing.proxy_health import ProxyHealthState
+from omega_serv.domain.routing.proxy_zone import ProxyLoadBalancerState, ProxyZone, UpstreamTarget
 from omega_serv.ports.http_proxy_client_port import (
     HttpProxyConnectionError,
     WebSocketUpstreamHandshake,
@@ -103,7 +104,8 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
             proxy_client = _FakeProxyClient(handshake=handshake)
 
             task = asyncio.create_task(serve_websocket_proxy(
-                _request(), _zone(), proxy_client, ProxyRoundRobinState(),
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             ))
 
@@ -132,10 +134,30 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
         try:
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("connexion refusee"))
             status = await serve_websocket_proxy(
-                _request(), _zone(), proxy_client, ProxyRoundRobinState(),
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             )
             self.assertEqual(status, 502)
+            status_line = await client_pair.connector_reader.readline()
+            self.assertIn(b"502", status_line)
+        finally:
+            await client_pair.close()
+
+    async def test_refuses_at_hop_threshold_without_contacting_upstream(self):
+        """Garde-fou anti-boucle indirecte entre instances (§23 angle
+        mort #16) - meme seuil que serve_proxy.py, verifie AVANT tout
+        appel a `open_websocket_tunnel`."""
+        client_pair = await _ConnectedPair.open()
+        try:
+            proxy_client = _FakeProxyClient()
+            status = await serve_websocket_proxy(
+                _request(headers=[("Connection", "Upgrade"), ("Upgrade", "websocket"), ("X-Omega-Proxy-Hops", "5")]),
+                _zone(), proxy_client, ProxyLoadBalancerState(), ProxyHealthState(),
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            )
+            self.assertEqual(status, 502)
+            self.assertEqual(proxy_client.calls, [])
             status_line = await client_pair.connector_reader.readline()
             self.assertIn(b"502", status_line)
         finally:
@@ -147,7 +169,8 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
             handshake = WebSocketUpstreamHandshake(status_code=400, headers=(("Content-Type", "text/plain"),), reader=None, writer=None)
             proxy_client = _FakeProxyClient(handshake=handshake)
             status = await asyncio.wait_for(serve_websocket_proxy(
-                _request(), _zone(), proxy_client, ProxyRoundRobinState(),
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             ), timeout=3)
             self.assertEqual(status, 400)
@@ -162,7 +185,8 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
             request = replace(_request(path="/ws/chat"), query="room=1")
             await serve_websocket_proxy(
-                request, _zone(), proxy_client, ProxyRoundRobinState(),
+                request, _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             )
             host, port, method, path, *_ = proxy_client.calls[0]
@@ -175,12 +199,27 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
         try:
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
             await serve_websocket_proxy(
-                _request(), _zone(), proxy_client, ProxyRoundRobinState(),
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
             )
             headers = dict(proxy_client.calls[0][4])
             self.assertEqual(headers["connection"], "Upgrade")
             self.assertEqual(headers["upgrade"], "websocket")
+        finally:
+            await client_pair.close()
+
+    async def test_hop_header_set_to_one_on_first_hop(self):
+        client_pair = await _ConnectedPair.open()
+        try:
+            proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
+            await serve_websocket_proxy(
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            )
+            headers = dict(proxy_client.calls[0][4])
+            self.assertEqual(headers["X-Omega-Proxy-Hops"], "1")
         finally:
             await client_pair.close()
 
@@ -190,7 +229,8 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
             zone = _zone(upstreams=(UpstreamTarget(host="10.0.0.5", port=8443, use_tls=True),))
             await serve_websocket_proxy(
-                _request(), zone, proxy_client, ProxyRoundRobinState(),
+                _request(), zone, proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
                 client_ssl_context_verified="verified-marker", client_ssl_context_unverified="unverified-marker",
             )
@@ -203,13 +243,106 @@ class TestServeWebsocketProxy(unittest.IsolatedAsyncioTestCase):
         try:
             proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
             await serve_websocket_proxy(
-                _request(), _zone(), proxy_client, ProxyRoundRobinState(),
+                _request(), _zone(), proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
                 client_pair.accepted_reader, client_pair.accepted_writer,
                 client_ssl_context_verified="verified-marker", client_ssl_context_unverified="unverified-marker",
             )
             self.assertIsNone(proxy_client.calls[0][7])
         finally:
             await client_pair.close()
+
+    async def test_sticky_cookie_set_on_successful_upgrade(self):
+        """§17/§27.3 : une mise a niveau WebSocket reussie (101) pose le
+        cookie sticky exactement comme une reponse HTTP ordinaire."""
+        client_pair = await _ConnectedPair.open()
+        upstream_pair = await _ConnectedPair.open()
+        try:
+            handshake = WebSocketUpstreamHandshake(
+                status_code=101, headers=(("Upgrade", "websocket"), ("Connection", "Upgrade")),
+                reader=upstream_pair.connector_reader, writer=upstream_pair.connector_writer,
+            )
+            proxy_client = _FakeProxyClient(handshake=handshake)
+            zone = _zone(sticky_session_enabled=True)
+
+            task = asyncio.create_task(serve_websocket_proxy(
+                _request(), zone, proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            ))
+
+            status_line = await client_pair.connector_reader.readline()
+            self.assertIn(b"101", status_line)
+            header_lines = []
+            while (line := await client_pair.connector_reader.readline()) not in (b"\r\n", b""):
+                header_lines.append(line)
+            self.assertTrue(any(b"Set-Cookie" in line and b"omega_proxy_sticky=" in line for line in header_lines))
+
+            upstream_pair.accepted_writer.close()
+            await asyncio.wait_for(task, timeout=3)
+        finally:
+            await client_pair.close()
+            await upstream_pair.close()
+
+    async def test_sticky_cookie_not_set_on_upgrade_rejection(self):
+        client_pair = await _ConnectedPair.open()
+        try:
+            handshake = WebSocketUpstreamHandshake(status_code=400, headers=(), reader=None, writer=None)
+            proxy_client = _FakeProxyClient(handshake=handshake)
+            zone = _zone(sticky_session_enabled=True)
+            await asyncio.wait_for(serve_websocket_proxy(
+                _request(), zone, proxy_client, ProxyLoadBalancerState(),
+                ProxyHealthState(),
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            ), timeout=3)
+            status_line = await client_pair.connector_reader.readline()
+            self.assertIn(b"400", status_line)
+            header_lines = []
+            while (line := await client_pair.connector_reader.readline()) not in (b"\r\n", b""):
+                header_lines.append(line)
+            self.assertFalse(any(b"Set-Cookie" in line for line in header_lines))
+        finally:
+            await client_pair.close()
+
+
+class TestServeWebsocketProxyHealthState(unittest.IsolatedAsyncioTestCase):
+    async def test_connection_failure_marks_upstream_down_after_threshold(self):
+        client_pair = await _ConnectedPair.open()
+        try:
+            proxy_client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
+            zone = _zone(unhealthy_after=1)
+            health_state = ProxyHealthState()
+            await serve_websocket_proxy(
+                _request(), zone, proxy_client, ProxyLoadBalancerState(), health_state,
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            )
+            self.assertEqual(health_state.status_for(zone.url_prefix, zone.upstreams[0]), "down")
+        finally:
+            await client_pair.close()
+
+    async def test_successful_upgrade_keeps_upstream_up(self):
+        client_pair = await _ConnectedPair.open()
+        upstream_pair = await _ConnectedPair.open()
+        try:
+            handshake = WebSocketUpstreamHandshake(
+                status_code=101, headers=(), reader=upstream_pair.connector_reader, writer=upstream_pair.connector_writer,
+            )
+            proxy_client = _FakeProxyClient(handshake=handshake)
+            zone = _zone()
+            health_state = ProxyHealthState()
+            task = asyncio.create_task(serve_websocket_proxy(
+                _request(), zone, proxy_client, ProxyLoadBalancerState(), health_state,
+                client_pair.accepted_reader, client_pair.accepted_writer,
+            ))
+            await client_pair.connector_reader.readline()
+            while (await client_pair.connector_reader.readline()) not in (b"\r\n", b""):
+                pass
+            self.assertEqual(health_state.status_for(zone.url_prefix, zone.upstreams[0]), "up")
+            upstream_pair.accepted_writer.close()
+            await asyncio.wait_for(task, timeout=3)
+        finally:
+            await client_pair.close()
+            await upstream_pair.close()
 
 
 if __name__ == "__main__":

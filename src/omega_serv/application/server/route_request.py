@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     import ssl
 
 from omega_serv.application.server.healthz import HEALTHZ_PATH, handle_healthz
-from omega_serv.application.server.serve_fastcgi import serve_fastcgi
+from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.application.server.serve_dirlisting_css import (
     CSS_URL_PREFIX,
     handle_dirlisting_css_request,
@@ -29,8 +29,11 @@ from omega_serv.application.server.serve_error_css import (
     ERROR_CSS_URL_PREFIX,
     handle_error_css_request,
 )
+from omega_serv.application.server.serve_fastcgi import serve_fastcgi
 from omega_serv.application.server.serve_icon import ICON_URL_PREFIX, handle_icon_request
 from omega_serv.application.server.serve_proxy import serve_proxy
+from omega_serv.application.server.serve_proxy_admin import ADMIN_URL_PREFIX, handle_admin_request
+from omega_serv.application.server.serve_proxy_load import LOAD_URL_PREFIX, handle_load_request
 from omega_serv.application.server.serve_static_file import serve_static_file
 from omega_serv.application.upload.handle_upload import handle_upload
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -42,8 +45,10 @@ from omega_serv.domain.routing.alias import parse_alias_rules
 from omega_serv.domain.routing.cache_policy import CachePolicy, parse_cache_policy
 from omega_serv.domain.routing.dirlisting import DirlistingSettings
 from omega_serv.domain.routing.fastcgi_zone import parse_fastcgi_config
+from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
+from omega_serv.domain.routing.proxy_health import ProxyHealthState
 from omega_serv.domain.routing.proxy_zone import (
-    ProxyRoundRobinState,
+    ProxyLoadBalancerState,
     parse_proxy_zones,
     resolve_proxy_zone,
 )
@@ -58,6 +63,7 @@ from omega_serv.ports.fastcgi_client_port import FastCgiClientPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
 from omega_serv.ports.logger_port import LoggerPort
+from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
 
 
 def _option_settings(config: OmegaServConfig, name: str) -> dict | None:
@@ -111,9 +117,13 @@ async def route_request(
     fastcgi_client: FastCgiClientPort | None = None,
     logger: LoggerPort | None = None,
     proxy_client: HttpProxyClientPort | None = None,
-    proxy_round_robin: ProxyRoundRobinState | None = None,
+    proxy_load_balancer: ProxyLoadBalancerState | None = None,
+    proxy_health_state: ProxyHealthState | None = None,
     proxy_client_ssl_context_verified: ssl.SSLContext | None = None,
     proxy_client_ssl_context_unverified: ssl.SSLContext | None = None,
+    proxy_cache_store: ProxyCacheStorePort | None = None,
+    proxy_cache_locks: ProxyCacheLocks | None = None,
+    proxy_cache_metrics: ProxyCacheMetrics | None = None,
 ) -> HttpResponse:
     if request.path == HEALTHZ_PATH:
         return handle_healthz(request)
@@ -126,6 +136,18 @@ async def route_request(
 
     if request.path.startswith(ERROR_CSS_URL_PREFIX):
         return handle_error_css_request(request)
+
+    if request.path.startswith(LOAD_URL_PREFIX):
+        trusted_proxy_settings = _option_settings(config, "trusted_proxy")
+        trusted_networks = trusted_proxy_settings.get("trusted_networks", []) if trusted_proxy_settings else []
+        return handle_load_request(request, trusted_networks)
+
+    if request.path.startswith(ADMIN_URL_PREFIX):
+        trusted_proxy_settings = _option_settings(config, "trusted_proxy")
+        trusted_networks = trusted_proxy_settings.get("trusted_networks", []) if trusted_proxy_settings else []
+        if proxy_health_state is None or proxy_cache_metrics is None:
+            return HttpResponse.empty(HttpStatus.NOT_FOUND)
+        return handle_admin_request(request, trusted_networks, config, proxy_health_state, proxy_cache_metrics)
 
     redirect_settings = _option_settings(config, "redirects")
     if redirect_settings is not None:
@@ -191,13 +213,17 @@ async def route_request(
             )
 
     proxy_settings = _option_settings(config, "reverse_proxy")
-    if proxy_settings is not None and proxy_client is not None and proxy_round_robin is not None:
+    if (
+        proxy_settings is not None and proxy_client is not None and proxy_load_balancer is not None
+        and proxy_health_state is not None
+    ):
         proxy_zones = parse_proxy_zones(proxy_settings.get("zones", []))
         matched_proxy_zone = resolve_proxy_zone(effective_path, proxy_zones)
         if matched_proxy_zone is not None:
             return await serve_proxy(
-                effective_request, matched_proxy_zone, proxy_client, proxy_round_robin,
+                effective_request, matched_proxy_zone, proxy_client, proxy_load_balancer, proxy_health_state,
                 proxy_client_ssl_context_verified, proxy_client_ssl_context_unverified,
+                proxy_cache_store, proxy_cache_locks, proxy_cache_metrics,
             )
 
     return serve_static_file(

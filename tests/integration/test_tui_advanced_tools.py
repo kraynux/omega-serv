@@ -96,6 +96,39 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             await self._open_config_check(pilot)
             self.assertIn("paths.webroot invalide", str(pilot.app.screen.query_one("#check-result").content))
 
+    async def test_config_check_zone_prefix_overlap_is_a_non_blocking_warning(self):
+        """§29.4/§30.1 du plan reverse proxy : un chevauchement de
+        prefixe entre deux types de zones differents (alias vs reverse
+        proxy ici) reste signale, jamais bloquant - la configuration
+        reste "valide"."""
+        container = DependencyContainer(project_root=self.root, config_check_runner=lambda *a: [])
+        generate_default_config(container.configuration, container.filesystem, container.config_file)
+        from dataclasses import replace
+
+        from omega_serv.application.config.load_config import load_config
+        from omega_serv.domain.config.option import Option
+
+        load_result = load_config(container.configuration, container.config_file)
+        assert load_result.config is not None
+        new_options = dict(load_result.config.options)
+        new_options["aliases"] = Option(
+            name="aliases", enabled=True, settings={"list": [{"url_prefix": "/api/", "target_path": "webroot"}]},
+        )
+        new_options["reverse_proxy"] = Option(
+            name="reverse_proxy", enabled=True,
+            settings={"zones": [{"url_prefix": "/api/v2/", "upstreams": [{"host": "10.0.0.5", "port": 3000}]}]},
+        )
+        container.configuration.save(container.config_file, replace(load_result.config, options=new_options))
+
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_config_check(pilot)
+            content = str(pilot.app.screen.query_one("#check-result").content)
+            self.assertIn("valide", content)
+            self.assertIn("avertissement", content)
+            self.assertIn("chevauchement de prefixe", content)
+
 
     async def test_simulate_request_calls_runner_with_form_values(self):
         calls = []

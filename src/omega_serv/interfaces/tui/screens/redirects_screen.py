@@ -20,6 +20,7 @@ from omega_serv.domain.routing.redirect import (
     validate_redirect_rule,
 )
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._zone_overlap_notice import notify_zone_prefix_overlaps
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -182,4 +183,5 @@ class RedirectsScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
+        notify_zone_prefix_overlaps(self, self._container, "redirects")
         notify_reload_required(self, self._container, "Liste des redirections mise a jour.")

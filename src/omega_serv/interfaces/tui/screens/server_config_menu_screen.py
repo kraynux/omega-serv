@@ -31,6 +31,7 @@ from omega_serv.interfaces.tui.screens.fastcgi_screen import FastCgiScreen
 from omega_serv.interfaces.tui.screens.limits_screen import LimitsScreen
 from omega_serv.interfaces.tui.screens.options_screen import OptionsScreen
 from omega_serv.interfaces.tui.screens.redirects_screen import RedirectsScreen
+from omega_serv.interfaces.tui.screens.reverse_proxy_cache_screen import ReverseProxyCacheScreen
 from omega_serv.interfaces.tui.screens.reverse_proxy_screen import ReverseProxyScreen
 from omega_serv.interfaces.tui.screens.rewrites_screen import RewritesScreen
 from omega_serv.interfaces.tui.screens.security_screen import SecurityScreen
@@ -55,6 +56,7 @@ _MENU_ITEMS: tuple[tuple[str, str], ...] = (
     ("error-pages", "Pages d'erreur"),
     ("trusted-proxy", "Proxies de confiance"),
     ("reverse-proxy", "Reverse Proxy"),
+    ("reverse-proxy-cache", "Cache du reverse proxy"),
     ("tls", "TLS"),
 )
 
@@ -103,6 +105,7 @@ class ServerConfigMenuScreen(OmegaScreen):
             "aliases": AliasesScreen, "redirects": RedirectsScreen, "rewrites": RewritesScreen,
             "fastcgi": FastCgiScreen, "dirlisting": DirlistingScreen, "cache": CacheScreen,
             "trusted-proxy": TrustedProxyScreen, "reverse-proxy": ReverseProxyScreen,
+            "reverse-proxy-cache": ReverseProxyCacheScreen,
             "auth": AuthMenuScreen,
             "tls": TlsMenuScreen, "error-pages": ErrorPagesScreen,
             "options": OptionsScreen, "config-check": ConfigCheckScreen,

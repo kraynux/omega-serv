@@ -1,5 +1,5 @@
-"""Fiches guide : Gestion des logs - menu + 8 sous-ecrans (plan guide
-d'aide, Phase 6)."""
+"""Fiches guide : Gestion des logs - menu en 2 colonnes (refonte
+2026-10-15, au meme niveau qu'omega-log, OMEGA-LOG_PLAN) + sous-ecrans."""
 from __future__ import annotations
 
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
@@ -8,48 +8,214 @@ LOGS_MENU_SCREEN = ScreenGuide(
     screen_class_name="LogsMenuScreen",
     title="Gestion des logs (menu)",
     acces="Accueil -> Gestion des logs",
-    definition="Sous-menu regroupant les 8 ecrans de consultation, suivi, rotation/archivage et statistiques des logs.",
+    definition=(
+        "Sous-menu en 2 colonnes : BIBLIOTHEQUE (consultation - Bibliotheque/Favoris/"
+        "Voir les logs/Voir et traiter IP) et MAINTENANCE (rotation/archivage - "
+        "inchangee depuis la Phase 6)."
+    ),
     fields=(),
     consequences="Aucune - purement navigation.",
 )
 
-LOG_VIEWER_SCREEN = ScreenGuide(
-    screen_class_name="LogViewerScreen",
-    title="Voir / suivre un fichier log",
-    acces="Accueil -> Gestion des logs -> Voir / suivre un fichier log",
+LOG_LIBRARY_SCREEN = ScreenGuide(
+    screen_class_name="LogLibraryScreen",
+    title="Bibliotheque",
+    acces="Accueil -> Gestion des logs -> Bibliotheque",
     definition=(
-        "Affiche les 200 dernieres lignes d'un log connu (access/error/waf-alerts, "
-        "plus les 2 logs du script WAF complementaire magnet - options.waf.magnet, §7) "
-        "et peut suivre son evolution en direct."
+        "Hub central referencant tous les logs a traiter (ceux d'Omega-Serv ou tout "
+        "autre fichier de log de la machine) - alimentation MANUELLE (aucun scan "
+        "automatique du systeme pour cette passe). Source commune de 'Voir les logs', "
+        "'Favoris' et 'Voir et traiter IP'."
     ),
     fields=(
         FieldGuide(
-            label="access / error / waf-alerts (boutons)",
-            definition="Choisit le fichier de log a afficher.",
-            utilisation="Un clic ouvre le fichier correspondant, s'il existe.",
-            action="Charge et affiche les 200 dernieres lignes.",
-            reaction="Aucun effet sur le serveur (lecture seule) - un fichier absent affiche un message, jamais une erreur.",
+            label="Chemin a ajouter manuellement",
+            definition="Reference un fichier de log quelconque dans la Bibliotheque.",
+            utilisation="Chemin absolu ou relatif au projet - le fichier n'a pas besoin d'exister deja.",
+            action="Ajoute (ou remplace si deja present) une entree.",
+            reaction="Aucun effet sur le serveur - l'etat (existe/taille) est toujours recalcule a l'affichage.",
         ),
         FieldGuide(
-            label="waf magnet (alertes) / waf magnet (blocklist) (boutons)",
-            definition=(
-                "Chemins de log du script WAF complementaire importe en mode magnet "
-                "(options.waf.magnet.paths.alerts_log/blocklist_log) - toujours proposes, "
-                "meme si le magnet n'est jamais configure."
-            ),
-            utilisation=(
-                "Grises (desactives) tant que options.waf.magnet.enabled n'est pas actif - "
-                "evite un clic qui ne menerait qu'a un message d'erreur. Une fois actif, un "
-                "clic ouvre le fichier meme s'il n'existe pas encore (log vide, jamais une "
-                "erreur - aucune alerte declenchee pour l'instant)."
-            ),
-            action="Charge et affiche les 200 dernieres lignes, ou un message explicite si le fichier est vide/absent.",
+            label="Ajouter les logs connus d'Omega-Serv",
+            definition="Ajoute en un clic les logs propres a ce projet (access/error/waf-alerts, + magnet si actif).",
+            utilisation="Aucune saisie requise.",
+            action="Ajoute (ou remplace) ces entrees dans la Bibliotheque.",
+            reaction="Jamais un scan du reste du systeme - uniquement les quelques logs deja connus de ce projet.",
+        ),
+        FieldGuide(
+            label="Retirer la selection",
+            definition="Retire une entree de la Bibliotheque (ne supprime jamais le fichier lui-meme).",
+            utilisation="Selectionner une ligne, confirmation obligatoire.",
+            action="Retire l'entree du fichier var/library.json.",
+            reaction="Le fichier de log sur disque n'est jamais touche - seule la reference est retiree.",
+        ),
+    ),
+    consequences="Purement une liste de references - aucun effet sur les fichiers de log eux-memes.",
+    points_de_vigilance=(
+        (
+            "L'etat affiche (OK/SUSPECT/ABSENT) est toujours recalcule en lisant le disque "
+            "reellement a chaque ouverture de cet ecran, jamais une donnee figee au moment "
+            "de l'ajout."
+        ),
+    ),
+)
+
+LOG_FAVORITES_SCREEN = ScreenGuide(
+    screen_class_name="LogFavoritesScreen",
+    title="Favoris",
+    acces="Accueil -> Gestion des logs -> Favoris",
+    definition="Combinaisons nommees (un ou plusieurs logs de la Bibliotheque + un viewer) pour un lancement direct.",
+    fields=(
+        FieldGuide(
+            label="Lancer",
+            definition="Ouvre directement le favori selectionne avec son viewer d'origine.",
+            utilisation="Selectionner une ligne dans la table des favoris.",
+            action="Ouvre l'ecran du viewer correspondant (Simple/Classique/lnav).",
             reaction="Aucun effet sur le serveur (lecture seule).",
         ),
         FieldGuide(
+            label="Numeros + Nom du favori + Viewer + Enregistrer",
+            definition="Cree un nouveau favori a partir de logs choisis dans la Bibliotheque.",
+            utilisation=(
+                "Numeros separes par des virgules (ex: 1,3) - un seul log autorise avec "
+                "Simple/Classique, lnav uniquement au-dela d'un log."
+            ),
+            action="Enregistre le favori (remplace un favori existant du meme nom).",
+            reaction="Refuse a la creation si le viewer choisi est incompatible avec le nombre de logs - jamais tronque silencieusement.",
+        ),
+        FieldGuide(
+            label="Supprimer",
+            definition="Retire definitivement un favori.",
+            utilisation="Selectionner une ligne, confirmation obligatoire.",
+            action="Retire l'entree du fichier var/favorites.json.",
+            reaction="Ne touche jamais aux fichiers de log eux-memes ni a la Bibliotheque.",
+        ),
+    ),
+    consequences="Purement des raccourcis - aucun effet sur les fichiers de log eux-memes.",
+)
+
+REMOTE_LOG_SOURCES_SCREEN = ScreenGuide(
+    screen_class_name="RemoteLogSourcesScreen",
+    title="Sources distantes (SSH)",
+    acces="Accueil -> Gestion des logs -> Bibliotheque -> Sources distantes (SSH)",
+    definition=(
+        "Permet de recuperer, a la demande, UNE COPIE du log d'un serveur backend situe sur le "
+        "meme reseau local (derriere le reverse proxy) via scp, puis de l'ajouter automatiquement "
+        "a la Bibliotheque - ce n'est jamais une consultation en direct du serveur distant, mais "
+        "un instantane fige au moment du clic sur 'Recuperer maintenant' ; une nouvelle "
+        "recuperation remplace la copie precedente par une plus recente. Aucun scan reseau "
+        "automatique, aucune connexion sans configuration explicite de votre part."
+    ),
+    fields=(
+        FieldGuide(
+            label="Label / Hote / Chemin distant",
+            definition="Identifie la source : un nom de votre choix, l'adresse du serveur, et le chemin du fichier de log sur ce serveur.",
+            utilisation="Tous les trois sont obligatoires. L'hote peut etre une adresse IP, un nom d'hote, ou un alias deja defini dans votre ~/.ssh/config.",
+            action="Pris en compte au clic sur Enregistrer.",
+            reaction="Aucun effet reseau - purement une definition locale, tant que 'Recuperer maintenant' n'est pas utilise.",
+        ),
+        FieldGuide(
+            label="Utilisateur / Port / Chemin de la cle privee",
+            definition="Optionnels - laissez vide pour utiliser les reglages par defaut de votre propre ssh (agent, ~/.ssh/config).",
+            utilisation="Ne renseignez que ce qui differe des reglages par defaut de votre configuration SSH habituelle.",
+            action="Pris en compte au clic sur Enregistrer.",
+            reaction="Omega-Serv ne lit ni ne stocke JAMAIS le contenu d'une cle - uniquement son chemin, si vous en indiquez un.",
+        ),
+        FieldGuide(
+            label="Recuperer maintenant",
+            definition="Lance scp vers l'hote de la source selectionnee et ajoute le resultat a la Bibliotheque.",
+            utilisation="Selectionner une ligne dans la table active le bouton.",
+            action="Tourne en arriere-plan (l'interface reste utilisable) ; un message indique le resultat.",
+            reaction=(
+                "Ecrit un fichier dans var/log/remote/ (en ecrasant une eventuelle copie "
+                "precedente de la meme source) et l'ajoute a la Bibliotheque (acces affiche comme "
+                "'ssh', colonne 'Modifie' = date de CETTE recuperation, jamais celle du fichier "
+                "distant) - en cas d'echec (hote injoignable, scp absent, droits refuses), le "
+                "message d'erreur du systeme est affiche tel quel, aucun fichier n'est ajoute."
+            ),
+        ),
+        FieldGuide(
+            label="Supprimer",
+            definition="Retire definitivement une source distante (ne supprime jamais un fichier deja recupere).",
+            utilisation="Selectionner une ligne, confirmation obligatoire.",
+            action="Retire l'entree du fichier var/remote-log-sources.json.",
+            reaction="Un fichier deja recupere dans la Bibliotheque n'est pas retire par cette action.",
+        ),
+    ),
+    consequences=(
+        "Aucune action reseau n'est jamais entreprise automatiquement - uniquement au clic explicite "
+        "sur 'Recuperer maintenant'. Aucun mot de passe n'est jamais demande ni stocke."
+    ),
+    points_de_vigilance=(
+        (
+            "Aucune verification de taille n'est faite avant ou pendant le transfert - un fichier "
+            "distant tres volumineux sera recupere en integralite."
+        ),
+        (
+            "Une adresse IPv6 ecrite directement (sans alias ~/.ssh/config) n'est pas supportee par "
+            "la syntaxe hote:chemin de scp."
+        ),
+    ),
+)
+
+LOG_VIEW_SCREEN = ScreenGuide(
+    screen_class_name="LogViewScreen",
+    title="Voir les logs",
+    acces="Accueil -> Gestion des logs -> Voir les logs",
+    definition=(
+        "Choisit un ou plusieurs logs EXCLUSIVEMENT depuis la Bibliotheque (aucun import "
+        "manuel ici), puis un viewer : Simple (tail en direct + stats generiques), "
+        "Classique (lecture + suivi), lnav (fusion multi-logs)."
+    ),
+    fields=(
+        FieldGuide(
+            label="Numeros (ex: 1,3)",
+            definition="Selectionne un ou plusieurs logs de la Bibliotheque par leur numero de ligne.",
+            utilisation="Separes par des virgules pour en selectionner plusieurs.",
+            action="Determine les logs ouverts par les 3 boutons de viewer.",
+            reaction="Aucun effet (lecture seule).",
+        ),
+        FieldGuide(
+            label="Voir (simple) / Voir (classique) / Voir (lnav)",
+            definition="Ouvre les logs selectionnes avec le viewer choisi.",
+            utilisation="Simple et Classique exigent exactement UN log selectionne ; lnav fonctionne avec un ou plusieurs.",
+            action="Ouvre l'ecran du viewer correspondant.",
+            reaction="Refus explicite si le viewer est incompatible avec le nombre de logs selectionnes.",
+        ),
+    ),
+    consequences="Purement consultatif - la selection de logs ici n'est jamais memorisee (voir Favoris pour cela).",
+)
+
+LOG_SIMPLE_VIEWER_SCREEN = ScreenGuide(
+    screen_class_name="LogSimpleViewerScreen",
+    title="Voir les logs - Simple",
+    acces="Accueil -> Gestion des logs -> Voir les logs -> Voir (simple)",
+    definition=(
+        "Suit un log en direct avec un parseur GENERIQUE (fonctionne sur n'importe quel "
+        "format - access log, auth.log, syslog...) et un petit tableau de statistiques "
+        "(IPs uniques, taux d'erreur, repartition des codes HTTP si le format s'y prete)."
+    ),
+    fields=(),
+    consequences="Purement consultatif, aucun effet sur le serveur.",
+    points_de_vigilance=(
+        (
+            "La section 'STATUTS HTTP' n'apparait que si au moins une ligne du tampon "
+            "ressemble a un access log Combined/Common - jamais affichee pour un auth.log/"
+            "syslog."
+        ),
+    ),
+)
+
+LOG_VIEWER_SCREEN = ScreenGuide(
+    screen_class_name="LogViewerScreen",
+    title="Voir les logs - Classique",
+    acces="Accueil -> Gestion des logs -> Voir les logs -> Voir (classique)",
+    definition="Affiche les 200 dernieres lignes d'un log choisi dans la Bibliotheque et peut suivre son evolution en direct.",
+    fields=(
+        FieldGuide(
             label="Suivre en direct",
             definition="Rafraichit l'affichage automatiquement toutes les secondes avec les nouvelles lignes.",
-            utilisation="Bascule marche/arret - necessite d'avoir d'abord ouvert un fichier.",
+            utilisation="Bascule marche/arret.",
             action="Demarre/arrete le suivi periodique.",
             reaction="Aucun effet sur le serveur (lecture seule).",
         ),
@@ -67,7 +233,7 @@ LOG_VIEWER_SCREEN = ScreenGuide(
 LNAV_SCREEN = ScreenGuide(
     screen_class_name="LnavScreen",
     title="Suivre les logs fusionnes (lnav)",
-    acces="Accueil -> Gestion des logs -> Suivre les logs fusionnes (lnav)",
+    acces="Accueil -> Gestion des logs -> Voir les logs -> Voir (lnav), ou directement en cas de selection multiple",
     definition="Lance l'outil externe lnav sur un ou plusieurs logs fusionnes chronologiquement, dans un vrai terminal.",
     fields=(
         FieldGuide(
@@ -84,6 +250,13 @@ LNAV_SCREEN = ScreenGuide(
             ),
             action="Pris en compte au clic sur Lancer lnav.",
             reaction="Aucun effet sur le serveur (lecture seule).",
+        ),
+        FieldGuide(
+            label="Logs selectionnes depuis la Bibliotheque (si ouvert via 'Voir les logs')",
+            definition="Pre-coche les logs choisis dans l'ecran 'Voir les logs' - jamais ajoute aux epingles persistees.",
+            utilisation="Decocher pour exclure un log de cette fusion ponctuelle.",
+            action="Pris en compte au clic sur Lancer lnav.",
+            reaction="Une selection ponctuelle depuis la Bibliotheque, contrairement a une epingle, ne survit pas a cet ecran.",
         ),
         FieldGuide(
             label="Chemins epingles (cases a cocher dynamiques)",
@@ -125,6 +298,44 @@ LNAV_SCREEN = ScreenGuide(
     consequences="Purement consultatif.",
     points_de_vigilance=(
         "Necessite que l'outil lnav soit installe sur le systeme - indisponible sinon, message explicite.",
+    ),
+)
+
+PROCESS_IP_SCREEN = ScreenGuide(
+    screen_class_name="ProcessIpScreen",
+    title="Voir et traiter IP",
+    acces="Accueil -> Gestion des logs -> Voir et traiter IP",
+    definition=(
+        "Liste les IP les plus actives parmi un ou plusieurs logs de la Bibliotheque "
+        "(n'importe quel format, pas seulement l'access log), avec possibilite de "
+        "retirer une IP des logs analyses."
+    ),
+    fields=(
+        FieldGuide(
+            label="Numeros (ex: 1,2)",
+            definition="Selectionne un ou plusieurs logs de la Bibliotheque a analyser.",
+            utilisation="Separes par des virgules pour en analyser plusieurs ensemble.",
+            action="Determine les logs lus par les boutons de periode.",
+            reaction="Aucun effet (lecture seule).",
+        ),
+        FieldGuide(
+            label="24 heures / 7 jours / 30 jours / Tout",
+            definition="Choisit la periode analysee.",
+            utilisation="Un clic recalcule immediatement la liste.",
+            action="Relit et reanalyse les logs selectionnes.",
+            reaction="Aucun effet (lecture seule).",
+        ),
+        FieldGuide(
+            label="Retirer cette IP des logs analyses",
+            definition="Supprime toutes les lignes contenant l'IP selectionnee, dans TOUS les logs analyses.",
+            utilisation="Selectionner une ligne active le bouton, avec confirmation obligatoire.",
+            action="Reecrit chaque fichier de log concerne sans les lignes de cette IP.",
+            reaction="Modification DEFINITIVE et immediate des fichiers de log - action destructive.",
+        ),
+    ),
+    consequences="Le retrait d'IP modifie directement et irreversiblement les fichiers de log concernes.",
+    points_de_vigilance=(
+        "La reconnaissance d'une IP dans une ligne ne depend d'aucun format particulier - fonctionne identiquement quel que soit le type de log.",
     ),
 )
 
@@ -241,61 +452,18 @@ EXPORT_LOG_ARCHIVES_SCREEN = ScreenGuide(
     ),
 )
 
-LOG_STATS_SCREEN = ScreenGuide(
-    screen_class_name="LogStatsScreen",
-    title="Statistiques du log d'acces",
-    acces="Accueil -> Gestion des logs -> Statistiques du log d'acces",
-    definition="Resume et repartition horaire du log d'acces sur une periode donnee - log combine uniquement (access log).",
-    fields=(
-        FieldGuide(
-            label="24 heures / 7 jours / 30 jours",
-            definition="Choisit la periode analysee.",
-            utilisation="Un clic recalcule immediatement les statistiques.",
-            action="Relit et reanalyse le log d'acces.",
-            reaction="Aucun effet (lecture seule).",
-        ),
-    ),
-    consequences="Purement consultatif.",
-    points_de_vigilance=(
-        (
-            "Ne fonctionne qu'avec le format de log 'combined' (access_format) - les autres "
-            "logs (error, waf-alerts...) ne portent pas les memes informations (IP, code de statut)."
-        ),
-    ),
-)
-
-TOP_IPS_SCREEN = ScreenGuide(
-    screen_class_name="TopIpsScreen",
-    title="Top IPs du log d'acces",
-    acces="Accueil -> Gestion des logs -> Top IPs du log d'acces",
-    definition="Liste les IP les plus actives du log d'acces sur une periode, avec possibilite de retirer une IP du log.",
-    fields=(
-        FieldGuide(
-            label="24 heures / 7 jours / 30 jours",
-            definition="Choisit la periode analysee.",
-            utilisation="Un clic recalcule immediatement la liste.",
-            action="Relit et reanalyse le log d'acces.",
-            reaction="Aucun effet (lecture seule).",
-        ),
-        FieldGuide(
-            label="Retirer cette IP des logs",
-            definition="Supprime toutes les lignes du log d'acces correspondant a l'IP selectionnee.",
-            utilisation="Selectionner une ligne active le bouton, avec confirmation obligatoire.",
-            action="Reecrit le fichier de log sans les lignes de cette IP.",
-            reaction="Modification DEFINITIVE et immediate du fichier de log - action destructive.",
-        ),
-    ),
-    consequences="Le retrait d'IP modifie directement et irreversiblement le fichier de log d'acces.",
-)
-
 ALL_LOGS_GUIDES: tuple[ScreenGuide, ...] = (
     LOGS_MENU_SCREEN,
+    LOG_LIBRARY_SCREEN,
+    REMOTE_LOG_SOURCES_SCREEN,
+    LOG_FAVORITES_SCREEN,
+    LOG_VIEW_SCREEN,
+    LOG_SIMPLE_VIEWER_SCREEN,
     LOG_VIEWER_SCREEN,
     LNAV_SCREEN,
+    PROCESS_IP_SCREEN,
     LOG_ROTATION_SCREEN,
     RESTORE_LOG_ARCHIVE_SCREEN,
     PURGE_LOG_ARCHIVES_SCREEN,
     EXPORT_LOG_ARCHIVES_SCREEN,
-    LOG_STATS_SCREEN,
-    TOP_IPS_SCREEN,
 )

@@ -33,8 +33,8 @@ if TYPE_CHECKING:
     from omega_serv.core.capability import Capability
     from omega_serv.domain.config.entities import OmegaServConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
-    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.domain.security.audit.entities import AuditResult
+    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
     from omega_serv.ports.clock_port import ClockPort
@@ -84,6 +84,12 @@ def _run_audit(
         self_signed_public_bind_confirmed=self_signed_public_bind_confirmed,
         auth_without_tls_confirmed=auth_without_tls_confirmed,
     )
+
+
+async def _call_admin_endpoint(port: int, method: str, path_and_query: str) -> tuple[int, dict | None] | None:
+    from omega_serv.infrastructure.proxy_admin.http_admin_client import call_admin_endpoint
+
+    return await call_admin_endpoint(port, method, path_and_query)
 
 
 async def _run_simulate_request(
@@ -181,6 +187,12 @@ def _build_certificate_tool() -> CertificateToolPort:
 
 
 def _build_acme_client() -> ProcessRunnerPort:
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+
+    return SubprocessRunner()
+
+
+def _build_remote_log_fetch_runner() -> ProcessRunnerPort:
     from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
 
     return SubprocessRunner()
@@ -313,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
             config_check_runner=_run_config_check,
             audit_runner=_run_audit,
             simulate_request_runner=_run_simulate_request,
+            admin_request_runner=_call_admin_endpoint,
             waf_test_runner=_run_waf_test,
             magnet_compat_check_runner=_check_magnet_compatibility,
             blocklist_port_factory=_build_blocklist_port,
@@ -321,6 +334,7 @@ def main(argv: list[str] | None = None) -> int:
             incident_report_export_runner=_run_incident_report_export,
             certificate_tool_factory=_build_certificate_tool,
             acme_client_factory=_build_acme_client,
+            remote_log_fetch_runner_factory=_build_remote_log_fetch_runner,
             lnav_runner=_run_lnav,
             create_instance_runner=_run_create_instance,
             export_capabilities_html_fn=_export_capabilities_html,

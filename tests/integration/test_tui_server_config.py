@@ -12,18 +12,22 @@ from __future__ import annotations
 import shutil
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
-from textual.widgets import Button, DataTable, Input
+from textual.widgets import Button, DataTable, Input, Static
 
 from omega_serv.application.config.generate_config import generate_default_config
+from omega_serv.application.config.load_config import load_config
 from omega_serv.bootstrap.container import DependencyContainer
+from omega_serv.domain.config.option import Option
 from omega_serv.interfaces.tui.app import OmegaServApp
 from omega_serv.interfaces.tui.screens.config_check_screen import ConfigCheckScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.csp_zone_wizard_screen import CspZoneWizardScreen
 from omega_serv.interfaces.tui.screens.home import HomeScreen
 from omega_serv.interfaces.tui.screens.options_screen import OptionsScreen
+from omega_serv.interfaces.tui.screens.reverse_proxy_cache_screen import ReverseProxyCacheScreen
 from omega_serv.interfaces.tui.screens.server_config_menu_screen import ServerConfigMenuScreen
 from omega_serv.interfaces.tui.screens.terminal_warning import TerminalWarningScreen
 
@@ -47,6 +51,28 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
 
     def _generate_config(self, container: DependencyContainer) -> None:
         generate_default_config(container.configuration, container.filesystem, container.config_file)
+
+    def _seed_alias(self, container: DependencyContainer, *, url_prefix: str) -> None:
+        load_result = load_config(container.configuration, container.config_file)
+        assert load_result.config is not None
+        new_options = dict(load_result.config.options)
+        new_options["aliases"] = Option(
+            name="aliases", enabled=True,
+            settings={"list": [{"url_prefix": url_prefix, "target_path": "webroot/media", "allow_outside_webroot": False}]},
+        )
+        container.configuration.save(container.config_file, replace(load_result.config, options=new_options))
+
+    def _enable_reverse_proxy(self, container: DependencyContainer) -> None:
+        # `detect_zone_prefix_overlaps` n'inclut une zone que si son option est `enabled`
+        # (domain/config/rules.py::_collect_dispatch_zone_prefixes) - jamais active via le
+        # seul CRUD de zones (`reverse_proxy_screen.py` preserve `existing.enabled`).
+        load_result = load_config(container.configuration, container.config_file)
+        assert load_result.config is not None
+        existing = load_result.config.options.get("reverse_proxy")
+        new_settings = dict(existing.settings) if existing is not None else {"zones": []}
+        new_options = dict(load_result.config.options)
+        new_options["reverse_proxy"] = Option(name="reverse_proxy", enabled=True, settings=new_settings)
+        container.configuration.save(container.config_file, replace(load_result.config, options=new_options))
 
     async def _open_menu3(self, pilot) -> None:
         while not isinstance(pilot.app.screen, HomeScreen):
@@ -414,6 +440,64 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertIn("verdict", str(pilot.app.screen.query_one("#form-error").content))
             self.assertEqual(pilot.app.screen.query_one("#access-rules-table", DataTable).row_count, 0)
 
+    async def _add_upstream_in_editor(
+        self, pilot, *, host: str, port: str, use_tls: str = "non", weight: str = "1",
+        load_source: str = "none", load_check_path: str = "/", max_concurrent_requests: str = "",
+        active_health_check_enabled: str = "non", active_health_check_path: str = "/",
+    ) -> None:
+        pilot.app.screen.query_one("#add", Button).press()
+        await pilot.pause()
+        pilot.app.screen.query_one("#df-host", Input).value = host
+        pilot.app.screen.query_one("#df-port", Input).value = port
+        pilot.app.screen.query_one("#df-use_tls", Input).value = use_tls
+        pilot.app.screen.query_one("#df-weight", Input).value = weight
+        pilot.app.screen.query_one("#df-load_source", Input).value = load_source
+        pilot.app.screen.query_one("#df-load_check_path", Input).value = load_check_path
+        pilot.app.screen.query_one("#df-max_concurrent_requests", Input).value = max_concurrent_requests
+        pilot.app.screen.query_one("#df-active_health_check_enabled", Input).value = active_health_check_enabled
+        pilot.app.screen.query_one("#df-active_health_check_path", Input).value = active_health_check_path
+        pilot.app.screen.query_one("#confirm", Button).press()
+        await pilot.pause()
+
+    async def test_reverse_proxy_save_persists_backpressure_and_active_health_fields(self):
+        """Regression : `max_concurrent_requests` (Phase 7bis) n'etait
+        PAS serialise par `_save_zones` (capture correctement par
+        `UpstreamEditorScreen` mais silencieusement perdu a l'ecriture
+        disque - trouve en cablant le controle actif, §18.2) - verifie
+        ici un vrai aller-retour complet (saisie TUI -> ecriture disque
+        -> reparse) pour les deux, jamais seulement l'etat en memoire du
+        formulaire intermediaire."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(
+                pilot, host="127.0.0.1", port="3000", max_concurrent_requests="7",
+                active_health_check_enabled="oui", active_health_check_path="/healthz",
+            )
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+
+        reloaded = self._container()
+        load_result = load_config(reloaded.configuration, reloaded.config_file)
+        assert load_result.config is not None
+        zones = load_result.config.options["reverse_proxy"].settings["zones"]
+        upstream = zones[0]["upstreams"][0]
+        self.assertEqual(upstream["max_concurrent_requests"], 7)
+        self.assertTrue(upstream["active_health_check_enabled"])
+        self.assertEqual(upstream["active_health_check_path"], "/healthz")
+
     async def test_reverse_proxy_full_crud_cycle(self):
         container = self._container()
         self._generate_config(container)
@@ -426,32 +510,44 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#add", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
-            pilot.app.screen.query_one("#df-upstreams", Input).value = "127.0.0.1:3000"
             pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
             await pilot.pause()
             table = pilot.app.screen.query_one("#proxy-zones-table", DataTable)
             self.assertEqual(table.row_count, 1)
-            self.assertEqual(list(table.get_row_at(0)), ["/api/", "127.0.0.1:3000", "Non", "Oui", "Non"])
+            self.assertEqual(
+                list(table.get_row_at(0)), ["/api/", "round_robin", "127.0.0.1:3000", "Non", "Oui", "Non", "Non"],
+            )
 
             table.move_cursor(row=0)
             table.action_select_cursor()
             await pilot.pause()
             pilot.app.screen.query_one("#edit", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#df-upstreams", Input).value = "127.0.0.1:4000, https://127.0.0.1:4001"
             pilot.app.screen.query_one("#df-preserve_host_header", Input).value = "oui"
             pilot.app.screen.query_one("#df-verify_upstream_tls", Input).value = "non"
             pilot.app.screen.query_one("#df-websocket_enabled", Input).value = "oui"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
+            # Ecran d'edition des backends : le backend existant est deja liste, on en ajoute un second.
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="4001", use_tls="oui", weight="2")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
             config_text = container.config_file.read_text()
-            self.assertIn('"port": 4000', config_text)
+            self.assertIn('"port": 4001', config_text)
             self.assertIn('"use_tls": true', config_text)
+            self.assertIn('"weight": 2', config_text)
             self.assertIn('"verify_upstream_tls": false', config_text)
             self.assertIn('"websocket_enabled": true', config_text)
             self.assertEqual(
                 list(table.get_row_at(0)),
-                ["/api/", "127.0.0.1:4000, https://127.0.0.1:4001", "Oui", "Non", "Oui"],
+                ["/api/", "round_robin", "127.0.0.1:3000, https://127.0.0.1:4001 (poids 2)", "Oui", "Non", "Oui", "Non"],
             )
 
             table.move_cursor(row=0)
@@ -475,8 +571,12 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#add", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
-            pilot.app.screen.query_one("#df-upstreams", Input).value = "127.0.0.1:99999"
             pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="99999")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
             await pilot.pause()
             self.assertIn("port d'upstream invalide", str(pilot.app.screen.query_one("#form-error").content))
             self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
@@ -493,11 +593,203 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#add", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
-            pilot.app.screen.query_one("#df-upstreams", Input).value = "127.0.0.1:not-a-number"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("invalides", str(pilot.app.screen.query_one("#form-error").content))
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-host", Input).value = "127.0.0.1"
+            pilot.app.screen.query_one("#df-port", Input).value = "not-a-number"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIn("nombres entiers", str(pilot.app.screen.query_one("#upstream-error").content))
+            # Le backend invalide n'a pas ete ajoute a la liste - valider sans aucun backend
+            # doit etre rejete par validate_proxy_zone (point unique de validation).
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+            self.assertIn("au moins un upstream est requis", str(pilot.app.screen.query_one("#form-error").content))
             self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
+
+    async def test_reverse_proxy_rejects_invalid_load_balancing(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#df-load_balancing", Input).value = "lottery"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+            self.assertIn("load_balancing invalide", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
+
+    async def test_reverse_proxy_sticky_session_and_routing_rule_round_trip(self):
+        """§17 : champs d'affinite de session (etape 1) + une regle de
+        routage sur en-tete reellement ajoutee (etape 3, nouvel ecran
+        `RoutingRuleEditorScreen`) - bout en bout jusqu'a la config JSON."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#df-sticky_session_enabled", Input).value = "oui"
+            pilot.app.screen.query_one("#df-sticky_cookie_name", Input).value = "mon_cookie"
+            pilot.app.screen.query_one("#df-sticky_cookie_max_age_seconds", Input).value = "600"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3001")
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider UpstreamEditorScreen
+            await pilot.pause()
+            # RoutingRuleEditorScreen : ajouter une regle ciblant le 2e backend.
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-header_name", Input).value = "X-Canary"
+            pilot.app.screen.query_one("#df-pattern", Input).value = "true"
+            pilot.app.screen.query_one("#df-upstream_key", Input).value = "127.0.0.1:3001"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider RoutingRuleEditorScreen
+            await pilot.pause()
+
+            table = pilot.app.screen.query_one("#proxy-zones-table", DataTable)
+            self.assertEqual(table.row_count, 1)
+            self.assertEqual(list(table.get_row_at(0))[-1], "Oui")  # colonne Sticky
+
+            config_text = container.config_file.read_text()
+            self.assertIn('"sticky_session_enabled": true', config_text)
+            self.assertIn('"sticky_cookie_name": "mon_cookie"', config_text)
+            self.assertIn('"sticky_cookie_max_age_seconds": 600', config_text)
+            self.assertIn('"header_name": "X-Canary"', config_text)
+            self.assertIn('"upstream_key": "127.0.0.1:3001"', config_text)
+
+    async def test_reverse_proxy_rejects_unknown_upstream_key_in_routing_rule(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider UpstreamEditorScreen
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-header_name", Input).value = "X-Canary"
+            pilot.app.screen.query_one("#df-pattern", Input).value = "true"
+            pilot.app.screen.query_one("#df-upstream_key", Input).value = "10.0.0.99:9999"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider RoutingRuleEditorScreen
+            await pilot.pause()
+            self.assertIn("upstream_key", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("inconnu", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
+
+    async def test_reverse_proxy_real_load_round_trip(self):
+        """Phase 7 (§19) : strategie real_load + un backend natif et un
+        backend declaratif dans la MEME zone (granularite par upstream,
+        §19.3), jusqu'a la config JSON."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#df-load_balancing", Input).value = "real_load"
+            pilot.app.screen.query_one("#df-load_poll_interval_seconds", Input).value = "5"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000", load_source="native")
+            await self._add_upstream_in_editor(
+                pilot, host="127.0.0.1", port="3001", load_source="declarative", load_check_path="/ma-sonde",
+            )
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider UpstreamEditorScreen
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # Valider RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+
+            table = pilot.app.screen.query_one("#proxy-zones-table", DataTable)
+            self.assertEqual(table.row_count, 1)
+            self.assertEqual(list(table.get_row_at(0))[1], "real_load")
+
+            config_text = container.config_file.read_text()
+            self.assertIn('"load_balancing": "real_load"', config_text)
+            self.assertIn('"load_poll_interval_seconds": 5.0', config_text)
+            self.assertIn('"load_source": "native"', config_text)
+            self.assertIn('"load_source": "declarative"', config_text)
+            self.assertIn('"load_check_path": "/ma-sonde"', config_text)
+
+    async def test_reverse_proxy_cache_screen_stats_purge_and_max_size_round_trip(self):
+        """Phase 8 (§21) : l'ecran dedie lit reellement le disque
+        (var/cache/reverse_proxy/), purge reellement les fichiers, et
+        modifie reellement `cache_max_size_mb` dans la config JSON."""
+        container = self._container()
+        self._generate_config(container)
+        cache_dir = container.project_root / "var" / "cache" / "reverse_proxy" / "api"
+        cache_dir.mkdir(parents=True)
+        (cache_dir / "entry1.json").write_text("{}")
+        (cache_dir / "entry2.json").write_text("{}")
+
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy-cache", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ReverseProxyCacheScreen)
+            stats_text = str(pilot.app.screen.query_one("#cache-stats", Static).content)
+            self.assertIn("2 entree", stats_text)
+
+            # Modifier le plafond de taille global.
+            pilot.app.screen.query_one("#edit-max-size", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-cache_max_size_mb", Input).value = "250"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIn("250 Mo", str(pilot.app.screen.query_one("#cache-stats", Static).content))
+            config_text = container.config_file.read_text()
+            self.assertIn('"cache_max_size_mb": 250', config_text)
+
+            # Purger une zone precise.
+            pilot.app.screen.query_one("#purge-zone", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-zone_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # ConfirmScreen
+            await pilot.pause()
+            self.assertIn("0 entree", str(pilot.app.screen.query_one("#cache-stats", Static).content))
+            self.assertFalse(any(cache_dir.glob("*.json")))
 
     async def test_aliases_rejects_target_outside_webroot_without_flag(self):
         container = self._container()
@@ -859,6 +1151,58 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
                 pilot.app.screen.query_one("#back", Button).press()
                 await pilot.pause()
                 self.assertIsInstance(pilot.app.screen, ServerConfigMenuScreen)
+
+
+    async def test_reverse_proxy_save_warns_on_prefix_overlap_with_alias(self):
+        container = self._container()
+        self._generate_config(container)
+        self._seed_alias(container, url_prefix="/api/")
+        self._enable_reverse_proxy(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+            messages = [str(n.message) for n in pilot.app._notifications]
+            self.assertTrue(
+                any("chevauchement" in m and "options.alias" in m and "options.reverse_proxy" in m for m in messages),
+                messages,
+            )
+
+    async def test_reverse_proxy_save_without_overlap_warns_nothing(self):
+        container = self._container()
+        self._generate_config(container)
+        self._seed_alias(container, url_prefix="/media/")
+        self._enable_reverse_proxy(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#reverse-proxy", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/api/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            await pilot.pause()
+            messages = [str(n.message) for n in pilot.app._notifications]
+            self.assertFalse(any("chevauchement" in m for m in messages), messages)
 
 
 if __name__ == "__main__":

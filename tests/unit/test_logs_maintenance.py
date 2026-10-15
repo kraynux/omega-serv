@@ -41,6 +41,31 @@ class TestLogsMaintenance(unittest.TestCase):
         self.assertEqual(removed, 1)
         self.assertEqual(self.path.read_text(), "garbage\n")
 
+    def test_removes_ip_from_a_non_combined_format_line(self):
+        """Regression (gestion des logs, refonte menu 2026-10-15) :
+        l'ancienne implementation (parse_combined_log_line uniquement)
+        ne reconnaissait jamais une IP dans une ligne auth.log/syslog -
+        "Voir et traiter IP" generalise a n'importe quel log de la
+        Bibliotheque ne pouvait donc jamais rien retirer en dehors de
+        l'access log Combined d'Omega-Serv lui-meme."""
+        auth_line = "Oct 10 10:00:00 host sshd[123]: Failed password for root from 1.1.1.1 port 4242 ssh2\n"
+        self.path.write_text(auth_line + _LINE_B)
+        removed = self.maintenance.remove_ip("1.1.1.1", self.path)
+        self.assertEqual(removed, 1)
+        self.assertEqual(self.path.read_text(), _LINE_B)
+
+    def test_does_not_match_a_different_ip_sharing_a_prefix(self):
+        self.path.write_text(_LINE_A + _LINE_B)
+        removed = self.maintenance.remove_ip("1.1.1.11", self.path)
+        self.assertEqual(removed, 0)
+        self.assertEqual(self.path.read_text(), _LINE_A + _LINE_B)
+
+    def test_write_is_atomic_no_leftover_tmp_file(self):
+        self.path.write_text(_LINE_A + _LINE_B)
+        self.maintenance.remove_ip("1.1.1.1", self.path)
+        leftovers = list(self.path.parent.glob("*.omega-serv-tmp"))
+        self.assertEqual(leftovers, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -382,3 +382,14 @@ Screen {
     height: 1fr;
     overflow-y: auto;
 }
+
+/* Viewer 1 (log_simple_viewer_screen.py, gestion des logs, refonte menu
+   2026-10-15) - panneau stats a gauche (largeur fixe), tableau d'entrees
+   parsees a droite (flexible) - repris d'omega-log/base.tcss, regle
+   oubliee lors du portage initial (retour utilisateur : "il n'y a aucun
+   parser, juste les stats http" - la table etait ecrasee a 1 colonne de
+   large, invisible, faute de cette largeur fixe sur sa voisine). */
+#stats-box {
+    width: 34;
+    height: 1fr;
+}

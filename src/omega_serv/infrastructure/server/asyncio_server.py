@@ -29,6 +29,11 @@ from omega_serv.application.active_defense.manage_deception import (
 from omega_serv.application.active_defense.manage_incidents import create_or_update_incident
 from omega_serv.application.active_defense.observe_threat import observe_threat
 from omega_serv.application.security.evaluate_waf_request import evaluate_waf_request
+from omega_serv.application.server.poll_upstream_load import (
+    poll_upstream_load_forever,
+    stop_pollers,
+)
+from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.application.server.resolve_error_page import resolve_error_page_body
 from omega_serv.application.server.route_request import route_request
 from omega_serv.application.server.serve_proxy import serve_proxy
@@ -54,9 +59,12 @@ from omega_serv.domain.routing.access_rule import (
     parse_access_rules,
     resolve_access_verdict,
 )
+from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
+from omega_serv.domain.routing.proxy_health import ProxyHealthState
 from omega_serv.domain.routing.proxy_zone import (
-    ProxyRoundRobinState,
+    ProxyLoadBalancerState,
     ProxyZone,
+    UpstreamTarget,
     parse_proxy_zones,
     resolve_proxy_zone,
 )
@@ -102,6 +110,7 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
 from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
 from omega_serv.ports.logger_port import LoggerPort
+from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
 from omega_serv.ports.rate_limit_port import RateLimitPort
 from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
 from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
@@ -131,9 +140,13 @@ class AsyncioHttpServer:
         users_by_name: Mapping[str, UserAccount] | None = None,
         fastcgi_client: FastCgiClientPort | None = None,
         proxy_client: HttpProxyClientPort | None = None,
-        proxy_round_robin: ProxyRoundRobinState | None = None,
+        proxy_load_balancer: ProxyLoadBalancerState | None = None,
+        proxy_health_state: ProxyHealthState | None = None,
         proxy_client_ssl_context_verified: ssl.SSLContext | None = None,
         proxy_client_ssl_context_unverified: ssl.SSLContext | None = None,
+        proxy_cache_store: ProxyCacheStorePort | None = None,
+        proxy_cache_locks: ProxyCacheLocks | None = None,
+        proxy_cache_metrics: ProxyCacheMetrics | None = None,
         active_defense_config: ActiveDefenseConfig | None = None,
         threat_state_repository: ThreatStateRepositoryPort | None = None,
         incident_repository: IncidentRepositoryPort | None = None,
@@ -164,9 +177,13 @@ class AsyncioHttpServer:
         self._users_by_name = users_by_name or {}
         self._fastcgi_client = fastcgi_client
         self._proxy_client = proxy_client
-        self._proxy_round_robin = proxy_round_robin or ProxyRoundRobinState()
+        self._proxy_load_balancer = proxy_load_balancer or ProxyLoadBalancerState()
+        self._proxy_health_state = proxy_health_state or ProxyHealthState()
         self._proxy_client_ssl_context_verified = proxy_client_ssl_context_verified
         self._proxy_client_ssl_context_unverified = proxy_client_ssl_context_unverified
+        self._proxy_cache_store = proxy_cache_store
+        self._proxy_cache_locks = proxy_cache_locks or ProxyCacheLocks()
+        self._proxy_cache_metrics = proxy_cache_metrics or ProxyCacheMetrics()
         self._active_defense_config = active_defense_config
         self._threat_state_repository = threat_state_repository
         self._incident_repository = incident_repository
@@ -175,7 +192,8 @@ class AsyncioHttpServer:
         self._delay_scheduler = delay_scheduler
         self._active_defense_enriched_log_path = active_defense_enriched_log_path
         self._decoy_proxy_client = decoy_proxy_client
-        self._decoy_round_robin = ProxyRoundRobinState()
+        self._decoy_load_balancer = ProxyLoadBalancerState()
+        self._decoy_health_state = ProxyHealthState()
         self._active_defense_playbook: DefensePlaybook | None = (
             build_playbook(active_defense_config.war_mode) if active_defense_config is not None else None
         )
@@ -184,6 +202,7 @@ class AsyncioHttpServer:
         self._active_connections: set[asyncio.Task] = set()
         self._access_control_rules_cache: list[AccessRule] = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache: list[ProxyZone] = self._parse_websocket_proxy_zones()
+        self._proxy_load_poll_tasks: list[asyncio.Task] = []
 
     @property
     def sockets(self) -> tuple:
@@ -200,6 +219,7 @@ class AsyncioHttpServer:
             limit=RAW_LINE_BUFFER_LIMIT,
             ssl=self._ssl_context,
         )
+        self._start_proxy_load_pollers()
 
     async def serve_forever(self) -> None:
         assert self._server is not None
@@ -207,6 +227,7 @@ class AsyncioHttpServer:
             await self._server.serve_forever()
 
     async def close(self) -> None:
+        await self._stop_proxy_load_pollers()
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()
@@ -258,6 +279,7 @@ class AsyncioHttpServer:
         self._users_by_name = users_by_name or {}
         self._access_control_rules_cache = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache = self._parse_websocket_proxy_zones()
+        self._restart_proxy_load_pollers()
 
     async def shutdown(self, grace_period_seconds: float) -> int:
         """Arret propre (angle mort §9.2, meme patron "signal -> attente
@@ -277,6 +299,7 @@ class AsyncioHttpServer:
         prealable rend le delai de grace ci-dessous inoperant, la
         methode ne rendait jamais la main avant que toutes les
         connexions soient deja closes)."""
+        await self._stop_proxy_load_pollers()
         if self._server is not None:
             self._server.close()
 
@@ -476,8 +499,8 @@ class AsyncioHttpServer:
                     proxy_zone = self._match_websocket_proxy_zone(request.path)
                     if proxy_zone is not None:
                         ws_status = await serve_websocket_proxy(
-                            request, proxy_zone, self._proxy_client, self._proxy_round_robin,
-                            reader, writer,
+                            request, proxy_zone, self._proxy_client, self._proxy_load_balancer,
+                            self._proxy_health_state, reader, writer,
                             self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,
                         )
                         self._log_access(request, HttpResponse.empty(ws_status), start_time)
@@ -492,9 +515,13 @@ class AsyncioHttpServer:
                     self._fastcgi_client,
                     self._logger,
                     self._proxy_client,
-                    self._proxy_round_robin,
+                    self._proxy_load_balancer,
+                    self._proxy_health_state,
                     self._proxy_client_ssl_context_verified,
                     self._proxy_client_ssl_context_unverified,
+                    self._proxy_cache_store,
+                    self._proxy_cache_locks,
+                    self._proxy_cache_metrics,
                 )
                 apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
 
@@ -576,6 +603,62 @@ class AsyncioHttpServer:
             return None
         relative = str(option.settings.get("custom_dir", "webroot/.errors"))
         return self._project_root / relative
+
+    def _load_polling_upstream_pairs(self) -> list[tuple[ProxyZone, UpstreamTarget]]:
+        """Phase 7 (§19) puis §18.2 (controle actif, reouverture du §23
+        angle mort) : une paire (zone, upstream) par upstream dont
+        `load_source != "none"` OU `active_health_check_enabled=True` -
+        meme nom de methode conserve (reutilise telle quelle par
+        `_start_proxy_load_pollers`/`_restart_proxy_load_pollers`, le
+        mecanisme de tache de fond sous-jacent sert desormais les deux
+        besoins, §18.2/§19 - voir docstring de `poll_upstream_load.py`).
+        Filtrage en cache, reconstruit uniquement a `start()`/
+        `reload_scoped()`, jamais par requete (`parse_proxy_zones`
+        reste, lui, re-parse a chaque requete ailleurs - mais une tache
+        de fond n'a pas de "requete", ce cache est le seul point de
+        verite pour elle)."""
+        option = self._config.options.get("reverse_proxy")
+        if option is None or not option.enabled or self._proxy_client is None:
+            return []
+        pairs: list[tuple[ProxyZone, UpstreamTarget]] = []
+        for zone in parse_proxy_zones(option.settings.get("zones", [])):
+            for upstream in zone.upstreams:
+                if upstream.load_source != "none" or upstream.active_health_check_enabled:
+                    pairs.append((zone, upstream))
+        return pairs
+
+    def _start_proxy_load_pollers(self) -> None:
+        """Appelee seulement depuis `start()`/`reload_scoped()` (jamais
+        depuis `__init__`, avant qu'une boucle asyncio ne tourne
+        reellement - §19 angle mort "tache de fond dans le cycle de vie
+        du serveur"). `_load_polling_upstream_pairs()` retourne toujours
+        `[]` si `self._proxy_client is None` (option desactivee) -
+        aucune garde supplementaire necessaire ici (conserve quand meme
+        une verification locale pour satisfaire le typage statique)."""
+        proxy_client = self._proxy_client
+        if proxy_client is None:
+            return
+        for zone, upstream in self._load_polling_upstream_pairs():
+            task = asyncio.create_task(poll_upstream_load_forever(
+                zone, upstream, proxy_client, self._proxy_health_state,
+                self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,
+            ))
+            self._proxy_load_poll_tasks.append(task)
+
+    async def _stop_proxy_load_pollers(self) -> None:
+        tasks, self._proxy_load_poll_tasks = self._proxy_load_poll_tasks, []
+        await stop_pollers(tasks)
+
+    def _restart_proxy_load_pollers(self) -> None:
+        """Appelee depuis `reload_scoped()` (SIGHUP) - volontairement
+        SYNCHRONE : annule les anciennes taches sans attendre leur fin
+        (`task.cancel()` suffit, aucune ressource cote client a drainer
+        pour une sonde de charge) puis en recree de nouvelles a partir
+        de la configuration fraichement rechargee, jamais un cumul."""
+        for task in self._proxy_load_poll_tasks:
+            task.cancel()
+        self._proxy_load_poll_tasks = []
+        self._start_proxy_load_pollers()
 
     async def _write_error_response(self, writer: asyncio.StreamWriter, status: HttpStatus) -> None:
         response = HttpResponse.empty(status)
@@ -790,6 +873,6 @@ class AsyncioHttpServer:
             return None
         assert self._decoy_proxy_client is not None
         return await serve_proxy(
-            request, zone, self._decoy_proxy_client, self._decoy_round_robin,
+            request, zone, self._decoy_proxy_client, self._decoy_load_balancer, self._decoy_health_state,
             self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,
         )

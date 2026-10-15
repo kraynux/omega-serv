@@ -14,8 +14,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.routing.proxy_zone import ProxyRoundRobinState
+from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
+from omega_serv.domain.routing.proxy_health import ProxyHealthState
+from omega_serv.domain.routing.proxy_zone import ProxyLoadBalancerState
 from omega_serv.domain.routing.zone_resolver import Zone
 from omega_serv.domain.security.active_defense.config import (
     ActiveDefenseConfig,
@@ -45,6 +48,9 @@ from omega_serv.infrastructure.persistence.sqlite_threat_state_repository import
     SqliteThreatStateRepository,
 )
 from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
+from omega_serv.infrastructure.proxy_cache.filesystem_proxy_cache_store import (
+    FilesystemProxyCacheStore,
+)
 from omega_serv.infrastructure.server.asyncio_server import AsyncioHttpServer
 from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
 from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
@@ -275,13 +281,26 @@ def build_server(
 
     fastcgi_client = AsyncioFastCgiClient() if config.option_enabled("fastcgi") else None
     proxy_client = AsyncioHttpProxyClient() if config.option_enabled("reverse_proxy") else None
-    proxy_round_robin = ProxyRoundRobinState() if proxy_client is not None else None
+    proxy_load_balancer = ProxyLoadBalancerState() if proxy_client is not None else None
+    proxy_health_state = ProxyHealthState() if proxy_client is not None else None
     proxy_client_ssl_context_verified = None
     proxy_client_ssl_context_unverified = None
     if proxy_client is not None:
         from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
         proxy_client_ssl_context_verified = build_client_ssl_context(verify_upstream_tls=True)
         proxy_client_ssl_context_unverified = build_client_ssl_context(verify_upstream_tls=False)
+
+    proxy_cache_store = None
+    proxy_cache_locks = None
+    proxy_cache_metrics = None
+    if proxy_client is not None:
+        reverse_proxy_settings = config.options["reverse_proxy"].settings
+        cache_max_size_mb = int(reverse_proxy_settings.get("cache_max_size_mb", 100))
+        proxy_cache_store = FilesystemProxyCacheStore(
+            project_root / "var" / "cache" / "reverse_proxy", max_size_mb=cache_max_size_mb,
+        )
+        proxy_cache_locks = ProxyCacheLocks()
+        proxy_cache_metrics = ProxyCacheMetrics()
 
     return AsyncioHttpServer(
         config=config,
@@ -304,9 +323,13 @@ def build_server(
         users_by_name=auth.users_by_name if auth else None,
         fastcgi_client=fastcgi_client,
         proxy_client=proxy_client,
-        proxy_round_robin=proxy_round_robin,
+        proxy_load_balancer=proxy_load_balancer,
+        proxy_health_state=proxy_health_state,
         proxy_client_ssl_context_verified=proxy_client_ssl_context_verified,
         proxy_client_ssl_context_unverified=proxy_client_ssl_context_unverified,
+        proxy_cache_store=proxy_cache_store,
+        proxy_cache_locks=proxy_cache_locks,
+        proxy_cache_metrics=proxy_cache_metrics,
         active_defense_config=active_defense.config if active_defense else None,
         threat_state_repository=active_defense.threat_state_repository if active_defense else None,
         incident_repository=active_defense.incident_repository if active_defense else None,

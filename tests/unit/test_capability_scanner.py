@@ -72,5 +72,33 @@ class TestCertbotDetection(unittest.TestCase):
         self.assertEqual(certbot.status, CapabilityStatus.MISSING)
 
 
+class TestScpDetection(unittest.TestCase):
+    """OMEGA-SERV_ETUDE-FAISABILITE_LOGS_DISTANTS.md, 2026-10-15 - meme
+    sonde generique que certbot, aucune logique nouvelle a tester."""
+
+    def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
+        return SystemCapabilityScanner(
+            project_root=tmp_path, filesystem=LocalFilesystem(),
+            configured_port=8080, fastcgi_socket=None,
+        )
+
+    def test_scp_available_when_binary_found(self):
+        with patch(
+            "omega_serv.infrastructure.probe.scanner.shutil.which",
+            side_effect=lambda name: "/usr/bin/scp" if name == "scp" else None,
+        ):
+            capabilities = self._scanner(Path("/tmp")).scan()
+        scp = next(c for c in capabilities if c.id == "scp")
+        self.assertEqual(scp.status, CapabilityStatus.AVAILABLE)
+        self.assertIn("/usr/bin/scp", scp.reason)
+        self.assertEqual(scp.category, "outil")
+
+    def test_scp_missing_when_binary_absent(self):
+        with patch("omega_serv.infrastructure.probe.scanner.shutil.which", return_value=None):
+            capabilities = self._scanner(Path("/tmp")).scan()
+        scp = next(c for c in capabilities if c.id == "scp")
+        self.assertEqual(scp.status, CapabilityStatus.MISSING)
+
+
 if __name__ == "__main__":
     unittest.main()

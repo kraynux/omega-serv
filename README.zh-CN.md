@@ -35,7 +35,7 @@
 - 默认加固 HTTP 协议，且无法关闭：明确的允许方法列表、`Host` 头校验、拒绝 `Content-Length`/`Transfer-Encoding` 的歧义、不可绕过的安全响应头与基础 CSP。
 - 可选功能：WAF 过滤（签名、速率限制、封禁列表）、直接 TLS（自签名证书、由本地 CA 签发的证书，或通过 Let's Encrypt/Certbot 签发并自动续期的公共证书——见 §9）、按区域划分的 HTTP Basic 身份验证、通过 FastCGI/PHP-FPM 运行 PHP、受限的上传区域。
 - 审计自身配置（`audit security`），并可作为系统服务安装（systemd/OpenRC/runit）。
-- 端到端可脚本化的非交互式 CLI，**以及一个交互式（Textual）界面**，二者封装完全相同的用例——见 §3。界面路线图（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`，§12）**已全部交付**：能力注册表、配置文件/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/身份验证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（查看/跟踪/lnav/轮转/备份/自动化/统计/热门 IP）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、内置帮助指南（每屏一份带具体示例的说明卡片、FAQ、HTML 导出，覆盖率已做到全覆盖并通过测试验证）、每次保存后系统性地提示热重载/重启、无需手动编辑文件即可完成的 Active Defense 完整配置。
+- 端到端可脚本化的非交互式 CLI，**以及一个交互式（Textual）界面**，二者封装完全相同的用例——见 §3。界面路线图（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`，§12）**已全部交付**：能力注册表、配置文件/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/身份验证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（资料库/收藏夹，3 种查看器——简易/经典/合并 lnav——、查看并处理 IP、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、内置帮助指南（每屏一份带具体示例的说明卡片、FAQ、HTML 导出，覆盖率已做到全覆盖并通过测试验证）、每次保存后系统性地提示热重载/重启、无需手动编辑文件即可完成的 Active Defense 完整配置。
 
 ### Omega-serv 不做什么
 
@@ -105,17 +105,18 @@ cd omega-serv/
 - `openssl` —— 处理 TLS 证书相关的一切操作（自签名、本地 CA、导入）所必需；缺少它时 `certs *` 命令会失败，但服务器其余部分仍正常工作（见 §9）。
 - `certbot` —— 仅 **Let's Encrypt** 向导及其自动续期（§9c/9d）需要它；自签名/本地 CA TLS 从不需要它。
 - `lnav` —— 融合在**日志管理**屏幕（§3）中的高级日志分析；如果找不到可执行文件，会显示清晰明确的错误信息，不会崩溃，屏幕的其余部分（查看/跟踪/轮转/统计）在没有它的情况下仍正常工作。
+- `scp`（`openssh`/`openssh-clients` 软件包，几乎总是已经存在）—— 仅 **远程来源（SSH）**（§13a）需要它；缺少它时获取操作会以清晰的错误信息失败，资料库的其余部分仍正常工作。
 - `python-psutil`（与 PyPI 上的 `psutil` 等价的系统软件包）—— 在所有情况下都会由 `pip install -e .` 自动安装（软件包的强制依赖，**状态与资源**屏幕始终需要它），但通过系统包管理器预先安装可以让 `pip` 免于在本地编译其 wheel。
 
 ```bash
 # Arch Linux 及其衍生版（Manjaro……）
-sudo pacman -S openssl certbot lnav python-psutil
+sudo pacman -S openssl certbot lnav python-psutil openssh
 
 # Debian/Ubuntu 及其衍生版
-sudo apt install openssl certbot lnav python3-psutil
+sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
-sudo dnf install openssl certbot lnav python3-psutil
+sudo dnf install openssl certbot lnav python3-psutil openssh-clients
 ```
 
 ## 3. 使用方法
@@ -164,7 +165,7 @@ serv
 - **配置文件** —— 与 CLI 中的 `profile` 用例相同（§5），写入前始终显示差异对比。
 - **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/身份验证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、自签名生成、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用——见 §9）；下方第二个区域「**选项与验证**」汇集了指向**选项**（`option` CLI，§7）与**检查配置**（`config check` CLI，§10）的快捷入口——与先调整选项再验证是同一流程，这两个屏幕已不再能从主菜单直接进入。WAF 已不再位于此处（见下文「主动安全」）：它主要展示持续变化的运行状态，而非一份单纯的静态配置表单。每次保存都会明确说明后续操作：若有服务正在运行，则自动且静默地热重载（目录列表、访问控制、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、身份验证用户/区域），或者当更改涉及监听套接字、TLS 或 Active Defense 时则明确弹出重启确认——不再有任何屏幕让人猜测是否需要重启服务器。
 - **主动安全** —— 一个统一的屏幕，并排汇集两大板块：**Active Defense**（状态、带评分/等级的已跟踪威胁、带完整时间线/IoC 导出/报告的事件、欺骗分配情况、以 dry-run 方式模拟一次判定，以及**设置**——无需手动编辑 `config/omega-serve.json` 即可完成完整配置，见 §11）与 **WAF**（状态、模块——模式/规则包/封禁列表、测试一次请求、自定义——编写自定义规则、Magnet——导入外部 `mod_magnet` 脚本并在启用前进行兼容性检查）——见 §11。
-- **日志管理** —— 实时查看/跟踪文件（访问日志/错误日志/原生 WAF **以及** magnet 脚本 §7，magnet 日志默认即提供，但在其未启用前显示为灰色不可点击）、合并的 `lnav`（界面内真实终端渲染，默认包含 magnet 日志 + 可**固定**的手动路径以便跨会话保留）、按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划中的自动化任务（声明式——见下方说明）、恢复/清理归档、导出列表、统计（热门 IP、状态码分布、每小时直方图）并可从访问日志中移除某个 IP 的记录。
+- **日志管理** —— 一个两栏菜单。**资料库**栏：引用所有待处理日志的中心枢纽（手动添加——一键即可默认添加该实例自带的日志：访问/错误/原生 WAF，若 magnet 脚本 §7 处于活动状态则一并添加——或通过 SSH 获取的**远程来源**，见下文）；**收藏夹**（以名称保存的"日志+查看器"组合，直接启动）；**查看日志**，可根据所选日志数量从 3 种查看器中选择——简易（实时跟踪 + 适用于任何格式的通用统计：唯一 IP/错误率/HTTP 状态码）、经典（读取 + 跟踪）、合并的 `lnav`（界面内真实终端渲染，默认包含 magnet 日志 + 可**固定**的手动路径以便跨会话保留）；**查看并处理 IP**（对一个或多个所选日志统计热门 IP，周期 24 小时/7 天/30 天/全部，移除某个 IP）。**维护**栏（不变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划中的自动化任务（声明式——见下方说明）、恢复/清理归档、导出列表。
 - **服务** —— 与 CLI 中的 `service` 相同的操作（§12），按操作临时提升 `sudo` 权限，整个应用程序绝不会以 root 身份启动。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），显示各实例的 systemd 状态；可直接从界面创建新实例（复制代码树、独立全新的虚拟环境与依赖、生成使用不同端口的全新配置、检查嵌套冲突与端口冲突）。仅有单个安装时按钮在视觉上保持隐形（一旦已知实例达到 2 个，标签会自动变为“实例 (N)”）；也提供完整切换到另一实例的功能（`os.execv`，需明确确认，重启后显示专门的切换提示屏幕）；以及完整卸载某个实例（移除该服务单元、在没有其他实例仍使用时移除专用系统账户，并可选择性删除目录，默认从不删除）。
 - **状态与资源** —— 一目了然的总览，每 2 秒刷新一次：服务器状态（进程/PID、系统服务状态、当前配置文件/已启用选项/TLS/端口）、访问日志实时流量（吞吐量、状态码分布、唯一 IP、错误率）、系统资源（CPU/内存/磁盘/交换分区/负载/网络，基于 `psutil`）；同时汇集了**模拟请求**快捷入口（与相应 CLI 命令相同的用例，§10）。
@@ -332,9 +333,22 @@ src/omega_serv/
 | TLS | 直接支持（自签名、本地 CA，或通过 Let's Encrypt/Certbot 签发并自动续期的公共证书——见 §9），V1 中绝不支持 mTLS/OCSP |
 | 身份验证 | 按区域（`url_prefix`）划分的 HTTP Basic，采用带防时序攻击的 `hashlib.scrypt`（即使对未知用户也保持恒定耗时） |
 | FastCGI/PHP-FPM | 仅支持单一的 `(url_prefix, script_root)`，`script_root` 在结构上被限制在 `webroot/` 之外（静态处理器绝不可能泄露 PHP 源码） |
-| 出站反向代理 | Omega-serv 本身充当面向后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）——每个区域支持一个或多个 HTTP/HTTPS 上游，采用 round-robin 负载均衡（默认严格校验 TLS，可关闭但存在风险），剥离 hop-by-hop 头，`X-Forwarded-*` 始终被覆盖（绝不与客户端提供的值合并），支持 WebSocket（隧道建立后单个上游在整个生命周期内保持固定，且不设应用层超时） |
+| 出站反向代理 | Omega-serv 本身充当面向一个或多个后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）——负载均衡（round-robin、加权、least-connections、ip-hash、least-response-time、真实负载）、会话粘滞与基于请求头的路由规则、被动与主动健康检测、响应缓存（支持 `Vary`、多变体）、背压控制（backpressure）、防环路保护、热管理 API——完整细节见 §7a |
 | 上传 | 受限区域、按区域配额、由服务器生成文件名——V1 中不支持流式传输（受 `server.max_request_size` 限制） |
 | `active_defense` | 基于已计算好的 WAF 信号进行欺骗与战争模式（绝不进行第二次独立评分）：静态诱饵、针对性的减速/增强日志/速率限制、事件构建 + IoC 导出——见 §11 |
+
+### 7a. 出站反向代理——详情
+
+Omega-serv 可以自身充当面向一个或多个 HTTP/HTTPS 后端的反向代理——切勿与 `server.tls.mode = "behind_proxy"`（Omega-serv 位于代理**之后**，方向相反的机制）混淆。区域支持完整的增删改查管理（TUI：*详细配置 → Reverse Proxy*），每个区域可配置一个或多个上游。
+
+- **负载均衡** —— `round_robin`（默认）、`weighted_round_robin`/`weighted_least_connections`/`ip_hash`（加权）、`least_connections`、`least_response_time`、`real_load`（真实负载）。`real_load` 提供原生模式（探测 `/.omega-serv-load/`，复用与"系统状态"屏幕完全相同的 `psutil` 读数，绝不进行第二次调用）或声明式模式（探测第三方 HTTP 端点，最简格式为 `{"load_percent": ...}` 或裸数字）——粒度精确到每个上游，同一区域可混用两种模式。
+- **会话粘滞与条件路由** —— 不透明的粘滞 Cookie（真实的 host:port 永不暴露给客户端）以及基于请求头的规则（精确匹配或前缀匹配），两者均按目标上游的可用性过滤（若目标上游不可用，会干净地回退到当前激活的策略）。
+- **健康检测** —— 被动检测（连续失败/成功计数器，下线/恢复采用不同阈值以限制状态抖动）**以及**主动检测（独立于真实流量的周期性探测，按上游可选启用，复用与真实负载轮询相同的后台任务机制）。`DOWN` 状态始终自动判定；`DRAINING`/`MAINTENANCE` 始终由人工触发，明确为临时状态，绝不持久化——被人工标记的上游会被排除在新的选择之外，但绝不会中断已建立的连接。仅对幂等方法（GET/HEAD/OPTIONS）且仅在连接错误时，才会自动重试另一个上游。
+- **背压控制（backpressure）** —— 每个上游可配置的活跃连接数上限；达到上限的上游会干净地返回 503，这与真正故障的上游（502，仍会重试）有明确区分。
+- **响应缓存** —— 仅限 GET/HEAD，绝不缓存错误响应，除非区域显式启用，否则绝不缓存带 `Set-Cookie` 的响应；默认遵循上游的 `Cache-Control`/`Vary`（存在可关闭该遵循行为的开关，但这很危险，与 TLS 校验开关同样的理念）。同一资源的多个变体（`Vary`）会真正在磁盘上并存，绝不是简单的"后写入者获胜"。配备防惊群锁（并发请求中只有一个真正重建缓存）。每个响应都带有诊断头 `X-Omega-Cache: HIT`/`MISS`/`BYPASS`。统计查看与清理在专用 TUI 屏幕中进行（*反向代理缓存*）。
+- **防环路保护** —— 剥离 hop-by-hop 请求头，`X-Forwarded-*` 始终被覆盖（绝不与客户端提供的值合并），每次转发都会递增 `X-Omega-Proxy-Hops` 计数器（超过 5 跳即干净拒绝——用于检测两个实例之间的间接环路，这是单纯的本地配置校验永远无法察觉的问题）。
+- **WebSocket** —— 可按区域允许升级，隧道一旦建立，单个上游会在整个生命周期内保持固定，且不设应用层超时。
+- **热管理** —— 一个小型本地 HTTP API（`/.omega-serv-admin/`，与原生负载探测一样受 `trusted_proxy` 保护），允许 TUI 读取/强制设置某个后端的 DRAINING/MAINTENANCE 状态，并读取**实际运行中的服务器**的缓存命中/未命中实时比率（专用屏幕*后端实时状态*）——由于 TUI 与服务器始终是两个没有共享内存的独立进程，这条本地 HTTP 通道是两者之间唯一的桥梁。
 
 ## 8. HTTP 加固（不可禁用）
 
@@ -409,14 +423,20 @@ secure/certificates/ca/
 
 ## 13. 日志
 
-`var/log/access.log`（Apache combined 格式 + `request_id`，防日志注入转义）、`var/log/error.log`。按大小/保留文件数量进行轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。Magnet 脚本（§7）：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认值为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log`——在**日志管理**屏幕中默认即提供（查看/跟踪、`lnav`），在 magnet 未启用前**查看/跟踪**功能会显示为灰色不可用（`lnav` 一侧没有此限制，缺失的文件在启动时会被直接忽略）。
+`var/log/access.log`（Apache combined 格式 + `request_id`，防日志注入转义）、`var/log/error.log`。按大小/保留文件数量进行轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。Magnet 脚本（§7）：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认值为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log`——仅在 magnet 处于活动状态时才会默认添加到资料库中（"添加 Omega-Serv 已知日志"按钮）；`lnav` 则始终会提供它们（缺失的文件在启动时会被直接忽略）。
+
+### 13a. 远程来源（SSH）
+
+在明确请求下，集中获取位于反向代理之后、同一局域网内某个后端服务器的日志（**日志管理 → 资料库 → 远程来源（SSH）**屏幕）。"获取"是一次性的手动操作，绝不是实时流或自动轮询：点击*立即获取*的那一刻，会通过 `scp` 获取一份**副本**，写入 `var/log/remote/`，然后作为普通日志添加到资料库中（*访问*列 = `ssh`，*修改时间*列 = **本次**获取的时间——绝不是远程文件自身的时间）；再次获取只会用更新的副本替换之前的副本。
+
+刻意设定的防护措施（完整研究见 `OMEGA-SERV_ETUDE-FAISABILITE_LOGS_DISTANTS.md`）：绝不自动扫描网络，没有明确配置（标签/主机/远程路径，用户名/端口/私钥均为可选——留空时，由 `ssh`/`~/.ssh/config` 决定，如同手动输入命令一样）就绝不连接，绝不要求或保存任何密码（私钥仅通过其路径被引用，Omega-serv 绝不读取或保存其内容），传输前不做任何大小检查。`scp` 能力在**能力注册表**中仅做本地检测（只检测二进制文件是否存在，绝不测试某个主机是否可达）；Samba 被有意搁置（YAGNI，除非确认存在真实需求）。
 
 ## 14. 测试
 
 ```bash
 source .venv/bin/activate
 lint-imports        # 校验 8 项分层契约
-pytest -q           # 2085 项测试
+pytest -q           # 2485 项测试
 ruff check .
 mypy src
 ```

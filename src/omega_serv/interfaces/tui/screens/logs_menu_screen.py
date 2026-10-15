@@ -1,8 +1,21 @@
-"""Ecran Gestion des logs (plan interface §8, menu 4) - sous-menu plat
-vers les sous-ecrans deja construits. Phase V (2026-09-08) : voir/suivre
-un fichier, lnav. Phase VI (2026-09-08) : rotation/archivage, restaurer/
-purger une archive, export de la liste des archives, statistiques et top
-IPs - tableau §8 complet."""
+"""Ecran Gestion des logs (plan interface §8, menu 4) - REFONDU en deux
+colonnes (2026-10-15, au meme niveau qu'omega-log - OMEGA-LOG_PLAN
+§7) : colonne 1 "Bibliotheque" (Bibliotheque/Favoris/Voir les logs/
+Voir et traiter IP, portes depuis omega-log), colonne 2 "Maintenance"
+(Rotate/Restaurer/Purger/Exporter, deja existants, inchanges). Meme
+patron CSS que `active_defense_menu_screen.py` (`.omega-panel-row` + 2x
+`.omega-home-menu`, chacun son `border_title`).
+
+"Statistiques du log d'acces" (ancien `LogStatsScreen`) et "Top IPs"
+(ancien `TopIpsScreen`, desormais `ProcessIpScreen`) ne sont PLUS des
+boutons separes - leurs besoins sont desormais couverts par "Voir les
+logs" (Viewer Simple, stats generiques sur n'importe quel log) et "Voir
+et traiter IP" (generalise a toute la Bibliotheque) respectivement.
+`LogStatsScreen` reste present dans le code (fonctionnel, non
+supprime) mais n'est plus relie a ce menu - son besoin specifique
+(repartition HTTP detaillee sur l'access log, export 5 themes) reste a
+rouvrir separement si un besoin reel se confirme, jamais une
+suppression silencieuse de code qui marche."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -14,26 +27,28 @@ from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.export_log_archives_screen import ExportLogArchivesScreen
-from omega_serv.interfaces.tui.screens.lnav_screen import LnavScreen
+from omega_serv.interfaces.tui.screens.log_favorites_screen import LogFavoritesScreen
+from omega_serv.interfaces.tui.screens.log_library_screen import LogLibraryScreen
 from omega_serv.interfaces.tui.screens.log_rotation_screen import LogRotationScreen
-from omega_serv.interfaces.tui.screens.log_stats_screen import LogStatsScreen
-from omega_serv.interfaces.tui.screens.log_viewer_screen import LogViewerScreen
+from omega_serv.interfaces.tui.screens.log_view_screen import LogViewScreen
+from omega_serv.interfaces.tui.screens.process_ip_screen import ProcessIpScreen
 from omega_serv.interfaces.tui.screens.purge_log_archives_screen import PurgeLogArchivesScreen
 from omega_serv.interfaces.tui.screens.restore_log_archive_screen import RestoreLogArchiveScreen
-from omega_serv.interfaces.tui.screens.top_ips_screen import TopIpsScreen
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
-_MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("viewer", "Voir / suivre un fichier log"),
-    ("lnav", "Suivre les logs fusionnes (lnav)"),
-    ("rotation", "Rotation / archivage des logs"),
-    ("restore", "Restaurer une archive de log"),
-    ("purge", "Purger les archives de logs"),
-    ("export", "Exporter Archives"),
-    ("stats", "Statistiques du log d'acces"),
-    ("top-ips", "Top IPs du log d'acces"),
+_LIBRARY_ITEMS: tuple[tuple[str, str], ...] = (
+    ("library", "Bibliotheque"),
+    ("favorites", "Favoris"),
+    ("view-logs", "Voir les logs"),
+    ("process-ip", "Voir et traiter IP"),
+)
+_MAINTENANCE_ITEMS: tuple[tuple[str, str], ...] = (
+    ("rotation", "Rotate / archivage"),
+    ("restore", "Restaurer une archive"),
+    ("purge", "Purger les archives"),
+    ("export", "Exporter"),
 )
 
 
@@ -47,11 +62,17 @@ class LogsMenuScreen(OmegaScreen):
         with Vertical(classes="omega-panel"):
             with Center():
                 yield Static("GESTION DES LOGS", classes="omega-title")
-            with Center(), Vertical(classes="omega-home-menu") as menu:
-                for item_id, label in _MENU_ITEMS:
-                    with Container(classes="omega-btn-frame"):
-                        yield Button(label, id=item_id)
-                menu.border_title = "SOUS-ECRANS"
+            with Center(), Horizontal(classes="omega-panel-row"):
+                with Vertical(classes="omega-home-menu") as library_menu:
+                    for item_id, label in _LIBRARY_ITEMS:
+                        with Container(classes="omega-btn-frame"):
+                            yield Button(label, id=item_id)
+                    library_menu.border_title = "BIBLIOTHEQUE"
+                with Vertical(classes="omega-home-menu") as maintenance_menu:
+                    for item_id, label in _MAINTENANCE_ITEMS:
+                        with Container(classes="omega-btn-frame"):
+                            yield Button(label, id=item_id)
+                    maintenance_menu.border_title = "MAINTENANCE"
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button("Retour", id="back")
         yield Footer()
@@ -65,20 +86,17 @@ class LogsMenuScreen(OmegaScreen):
             self.app.push_screen(screen)
 
     def _screen_for(self, item_id: str | None) -> Screen[None] | None:
-        if item_id == "viewer":
-            return LogViewerScreen(container=self._container)
-        if item_id == "lnav":
-            return LnavScreen(container=self._container)
-        if item_id == "rotation":
-            return LogRotationScreen(container=self._container)
-        if item_id == "restore":
-            return RestoreLogArchiveScreen(container=self._container)
-        if item_id == "purge":
-            return PurgeLogArchivesScreen(container=self._container)
-        if item_id == "export":
-            return ExportLogArchivesScreen(container=self._container)
-        if item_id == "stats":
-            return LogStatsScreen(container=self._container)
-        if item_id == "top-ips":
-            return TopIpsScreen(container=self._container)
-        return None
+        mapping = {
+            "library": LogLibraryScreen,
+            "favorites": LogFavoritesScreen,
+            "view-logs": LogViewScreen,
+            "process-ip": ProcessIpScreen,
+            "rotation": LogRotationScreen,
+            "restore": RestoreLogArchiveScreen,
+            "purge": PurgeLogArchivesScreen,
+            "export": ExportLogArchivesScreen,
+        }
+        screen_cls = mapping.get(item_id) if item_id else None
+        if screen_cls is None:
+            return None
+        return screen_cls(container=self._container)

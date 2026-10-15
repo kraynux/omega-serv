@@ -30,8 +30,12 @@ from omega_serv.ports.configuration_port import ConfigurationPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.instance_registry_port import InstanceRegistryPort
 from omega_serv.ports.live_tail_port import LiveTailPort
+from omega_serv.ports.log_favorite_repository_port import LogFavoriteRepositoryPort
+from omega_serv.ports.log_library_repository_port import LogLibraryRepositoryPort
 from omega_serv.ports.logger_port import LoggerPort
 from omega_serv.ports.profile_repository_port import ProfileRepositoryPort
+from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
+from omega_serv.ports.remote_log_source_repository_port import RemoteLogSourceRepositoryPort
 from omega_serv.ports.service_manager_port import ServiceManagerPort
 from omega_serv.ports.settings_store import SettingsStore
 from omega_serv.ports.terminal_detector import TerminalDetector
@@ -46,12 +50,12 @@ if TYPE_CHECKING:
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
     from omega_serv.core.capability import Capability
     from omega_serv.domain.config.entities import OmegaServConfig
-    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.domain.logging.stats import LogStatsSummary
     from omega_serv.domain.persistence.backup import BackupRequest
     from omega_serv.domain.persistence.snapshots import SnapshotMetadata
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
     from omega_serv.domain.security.audit.entities import AuditResult
+    from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.infrastructure.logging.rotation_automation_store import RotationAutomationStore
     from omega_serv.infrastructure.persistence.backup_metadata_store import BackupMetadataStore
     from omega_serv.infrastructure.storage.files.archive_store import ArchiveStore
@@ -91,6 +95,7 @@ class DependencyContainer:
         simulate_request_runner: Callable[
             [str, str, OmegaServConfig, FilesystemPort, Path], Awaitable[SimulationReport]
         ] | None = None,
+        admin_request_runner: Callable[[int, str, str], Awaitable[tuple[int, dict | None] | None]] | None = None,
         waf_test_runner: Callable[
             [str, str, str, str, str, OmegaServConfig, FilesystemPort, Path, ClockPort],
             Awaitable[WafSimulationReport | None],
@@ -106,6 +111,7 @@ class DependencyContainer:
         incident_report_export_runner: Callable[[Incident, Path, FilesystemPort], ExportResult] | None = None,
         certificate_tool_factory: Callable[[], CertificateToolPort] | None = None,
         acme_client_factory: Callable[[], ProcessRunnerPort] | None = None,
+        remote_log_fetch_runner_factory: Callable[[], ProcessRunnerPort] | None = None,
         lnav_runner: Callable[[tuple[Path, ...], Palette, str, str], str | None] | None = None,
         export_capabilities_html_fn: Callable[[Sequence[Capability], str], str] | None = None,
         export_log_archives_html_fn: Callable[[Sequence[dict], str], str] | None = None,
@@ -123,6 +129,7 @@ class DependencyContainer:
         self._config_check_runner = config_check_runner
         self._audit_runner = audit_runner
         self._simulate_request_runner = simulate_request_runner
+        self._admin_request_runner = admin_request_runner
         self._waf_test_runner = waf_test_runner
         self._blocklist_port_factory = blocklist_port_factory
         self._magnet_compat_check_runner = magnet_compat_check_runner
@@ -131,6 +138,7 @@ class DependencyContainer:
         self._incident_report_export_runner = incident_report_export_runner
         self._certificate_tool_factory = certificate_tool_factory
         self._acme_client_factory = acme_client_factory
+        self._remote_log_fetch_runner_factory = remote_log_fetch_runner_factory
         self._lnav_runner = lnav_runner
         self._create_instance_runner = create_instance_runner
         self._export_capabilities_html_fn = export_capabilities_html_fn
@@ -234,6 +242,16 @@ class DependencyContainer:
         return self._simulate_request_runner
 
     @property
+    def admin_request_runner(self) -> Callable[[int, str, str], Awaitable[tuple[int, dict | None] | None]] | None:
+        """Canal HTTP local vers `/.omega-serv-admin/` du processus
+        serveur REELLEMENT en cours d'execution (§22 reouverture) - meme
+        regime d'injection que `simulate_request_runner` (property
+        brute, le `None`-check ET l'echec de connexion - `None` retourne
+        par l'appel lui-meme, serveur eteint ou injoignable - restent la
+        responsabilite de l'ecran)."""
+        return self._admin_request_runner
+
+    @property
     def waf_test_runner(
         self,
     ) -> Callable[
@@ -279,6 +297,19 @@ class DependencyContainer:
         `certbot` invoque par une suite automatisee), une vraie
         `SubprocessRunner()` en production (omega_serv.__main__)."""
         return self._acme_client_factory
+
+    @property
+    def remote_log_fetch_runner_factory(self) -> Callable[[], ProcessRunnerPort] | None:
+        """`ProcessRunnerPort` brut pour lancer `scp` depuis l'ecran
+        "Sources distantes (SSH)" (OMEGA-SERV_ETUDE-FAISABILITE_LOGS_
+        DISTANTS.md, 2026-10-15) - meme regime que `acme_client_factory` :
+        None dans les tests (jamais un vrai `scp` invoque par une suite
+        automatisee), une vraie `SubprocessRunner()` en production
+        (omega_serv.__main__). Factory distincte (pas de reutilisation
+        de `acme_client_factory`) : type identique mais semantiquement
+        "le runner Certbot/ACME", reutiliser ce nom pour `scp` serait un
+        nom trompeur meme si le type est identique."""
+        return self._remote_log_fetch_runner_factory
 
     @property
     def lnav_runner(self) -> Callable[[tuple[Path, ...], Palette, str, str], str | None] | None:
@@ -393,6 +424,48 @@ class DependencyContainer:
         from omega_serv.infrastructure.persistence.backup_metadata_store import BackupMetadataStore
 
         return BackupMetadataStore(base_dir)
+
+    def build_proxy_cache_store(self, *, max_size_mb: int) -> ProxyCacheStorePort:
+        """Usine pour `interfaces.tui.screens.reverse_proxy_cache_screen`
+        (Phase 8, OMEGA-SERV_PLAN-DETAILLE_REVERSE_PROXY.md §21) - meme
+        regime que `build_backup_metadata_store` : interfaces.tui ne peut
+        jamais importer infrastructure directement (contrat import-linter),
+        donc l'adaptateur concret est construit ici et rendu via son port.
+        Pointe vers le MEME repertoire que `start_server.py` pour que
+        l'ecran lise toujours l'etat reel du cache serveur sur disque."""
+        from omega_serv.infrastructure.proxy_cache.filesystem_proxy_cache_store import (
+            FilesystemProxyCacheStore,
+        )
+
+        return FilesystemProxyCacheStore(
+            self._project_root / "var" / "cache" / "reverse_proxy", max_size_mb=max_size_mb
+        )
+
+    def build_log_library_repository(self) -> LogLibraryRepositoryPort:
+        """Usine pour la Bibliotheque de logs (gestion des logs, refonte
+        menu 2026-10-15) - meme regime que `build_proxy_cache_store`."""
+        from omega_serv.infrastructure.logging.json_log_library_repository import (
+            JsonLogLibraryRepository,
+        )
+
+        return JsonLogLibraryRepository(self._project_root / "var" / "library.json")
+
+    def build_log_favorite_repository(self) -> LogFavoriteRepositoryPort:
+        from omega_serv.infrastructure.logging.json_log_favorite_repository import (
+            JsonLogFavoriteRepository,
+        )
+
+        return JsonLogFavoriteRepository(self._project_root / "var" / "favorites.json")
+
+    def build_remote_log_source_repository(self) -> RemoteLogSourceRepositoryPort:
+        """Usine pour les Sources distantes SSH (OMEGA-SERV_ETUDE-
+        FAISABILITE_LOGS_DISTANTS.md, 2026-10-15) - meme regime que
+        `build_log_favorite_repository`."""
+        from omega_serv.infrastructure.logging.json_remote_log_source_repository import (
+            JsonRemoteLogSourceRepository,
+        )
+
+        return JsonRemoteLogSourceRepository(self._project_root / "var" / "remote-log-sources.json")
 
     def create_backup(self, request: BackupRequest, config: OmegaServConfig, config_file: Path) -> BackupResult:
         from omega_serv.application.persistence.create_backup import create_backup
