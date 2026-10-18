@@ -29,6 +29,7 @@ chemin exclu."""
 from __future__ import annotations
 
 import asyncio
+import sys
 from concurrent.futures import Executor
 from datetime import datetime, timedelta, timezone
 
@@ -39,9 +40,13 @@ from omega_serv.domain.security.waf.combine_decisions import (
     magnet_fallback_decision,
 )
 from omega_serv.domain.security.waf.config import WafConfig
-from omega_serv.domain.security.waf.entities import BlocklistEntry, WafDecision
+from omega_serv.domain.security.waf.entities import (
+    BlocklistEntry,
+    KeywordListDefinition,
+    WafDecision,
+)
 from omega_serv.domain.security.waf.exclusions import is_extension_excluded, matches_any_prefix
-from omega_serv.domain.security.waf.reputation import evaluate_escalation
+from omega_serv.domain.security.waf.reputation import evaluate_escalation, is_exempt_from_auto_block
 from omega_serv.ports.blocklist_port import BlocklistPort
 from omega_serv.ports.rate_limit_port import RateLimitPort
 from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
@@ -94,17 +99,65 @@ async def evaluate_waf_request(
         decision = combine_decisions(decision, magnet_decision)
 
     if decision.findings and waf_config.reputation.enabled:
-        reputation_tracker.record_hit(request.remote_ip)
-        hit_count = reputation_tracker.count_hits_in_window(request.remote_ip, waf_config.reputation.window_seconds)
-        escalation = evaluate_escalation(hit_count, waf_config.reputation.suspicious_threshold)
-        if (
-            escalation.should_escalate
-            and waf_config.reputation.auto_block
-            and blocklist_port.count_auto_entries() < waf_config.reputation.auto_block_max_entries
-        ):
-            _auto_block(request.remote_ip, escalation.reason, waf_config, blocklist_port)
+        _apply_reputation(request.remote_ip, decision, waf_config, reputation_tracker, blocklist_port)
 
     return decision
+
+
+def _apply_reputation(
+    ip: str,
+    decision: WafDecision,
+    waf_config: WafConfig,
+    reputation_tracker: ReputationTrackerPort,
+    blocklist_port: BlocklistPort,
+) -> None:
+    """Recidive (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.12) :
+    - finding d'une keyword_list AVEC seuil propre -> compte UNIQUEMENT
+      dans le compteur de cette liste (sinon le seuil commun, plus bas,
+      se declencherait avant et rendrait le seuil de la liste inutile) ;
+    - finding d'un pack JSON, du magnet, ou d'une liste SANS seuil propre
+      -> compteur commun, exactement comme avant ce plan ;
+    - finding d'une liste en observation (`observe_only`) -> aucun compteur.
+    Plusieurs seuils depasses par la meme requete -> une seule entree de
+    blocklist, avec la duree la plus longue. Reseaux exemptes (§3.13) :
+    les compteurs avancent (diagnostic), mais jamais d'auto-ban."""
+    reputation = waf_config.reputation
+    lists_by_id = {definition.id: definition for definition in waf_config.keyword_lists}
+
+    counts_globally = False
+    own_threshold_lists: dict[str, KeywordListDefinition] = {}
+    for finding in decision.findings:
+        definition = lists_by_id.get(finding.pack)
+        if definition is None or (definition.escalation_threshold <= 0 and not definition.observe_only):
+            counts_globally = True
+        elif not definition.observe_only:
+            own_threshold_lists[definition.id] = definition
+
+    escalations: list[tuple[str, int]] = []
+    if counts_globally:
+        reputation_tracker.record_hit(ip)
+        hit_count = reputation_tracker.count_hits_in_window(ip, reputation.window_seconds)
+        escalation = evaluate_escalation(hit_count, reputation.suspicious_threshold)
+        if escalation.should_escalate:
+            escalations.append((escalation.reason, reputation.auto_block_duration_seconds))
+    for list_id, definition in own_threshold_lists.items():
+        reputation_tracker.record_hit(ip, key=list_id)
+        hit_count = reputation_tracker.count_hits_in_window(ip, definition.escalation_window_seconds, key=list_id)
+        escalation = evaluate_escalation(hit_count, definition.escalation_threshold)
+        if escalation.should_escalate:
+            escalations.append((
+                f"recidive {list_id} : {escalation.reason}",
+                definition.auto_block_duration_seconds or reputation.auto_block_duration_seconds,
+            ))
+
+    if (
+        escalations
+        and reputation.auto_block
+        and not is_exempt_from_auto_block(ip, reputation.never_auto_block)
+        and blocklist_port.count_auto_entries() < reputation.auto_block_max_entries
+    ):
+        reason, duration_seconds = max(escalations, key=lambda item: item[1])
+        _auto_block(ip, reason, duration_seconds, blocklist_port)
 
 
 async def _inspect_with_magnet(
@@ -129,14 +182,22 @@ async def _inspect_with_magnet(
         return magnet_fallback_decision(waf_config.magnet.on_error, waf_config.mode)
 
 
-def _auto_block(ip: str, reason: str, waf_config: WafConfig, blocklist_port: BlocklistPort) -> None:
+def _auto_block(ip: str, reason: str, duration_seconds: int, blocklist_port: BlocklistPort) -> None:
     now = datetime.now(timezone.utc)
     entry = BlocklistEntry(
-        network=f"{ip}/32",
+        # /128 pour une IPv6 : "<ipv6>/32" serait un reseau IPv6 invalide
+        # (refuse par validate_blocklist_entry), donc jamais bloque.
+        network=f"{ip}/128" if ":" in ip else f"{ip}/32",
         reason=reason,
         created_at=now.isoformat(),
-        expires_at=(now + timedelta(seconds=waf_config.reputation.auto_block_duration_seconds)).isoformat(),
+        expires_at=(now + timedelta(seconds=duration_seconds)).isoformat(),
         source="auto",
     )
     if validate_blocklist_entry(entry) is None:
-        blocklist_port.add_entry(entry)
+        try:
+            blocklist_port.add_entry(entry)
+        except OSError as e:
+            # Un ban qui ne peut pas etre ecrit (fichier illisible, ou secure/ non
+            # inscriptible par le service systemd) ne doit JAMAIS faire echouer la
+            # requete en cours : journalise (journalctl), la requete continue.
+            print(f"ERREUR auto-ban de {ip} non enregistre : {e}", file=sys.stderr)

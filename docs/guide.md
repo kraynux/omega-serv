@@ -193,7 +193,7 @@ Une sauvegarde de configuration inclut la configuration de base. L'inclusion des
 > - Les sauvegardes **ne sont pas chiffrées par défaut**.
 > - Stockez-les avec des permissions restrictives, dans un emplacement protégé, et testez périodiquement une restauration sur une instance de laboratoire.
 
-## 🛠️ Scénarios pratiques — 8 fiches
+## 🛠️ Scénarios pratiques — 9 fiches
 
 Des parcours complets, du premier lancement à la mise en production.
 
@@ -297,6 +297,26 @@ Des parcours complets, du premier lancement à la mise en production.
 2. Testez les règles avec `waf test` ou l'écran de test de requête. Consultez les logs WAF et le log d'accès pour comparer la décision avec le comportement attendu.
 3. Ajoutez une règle personnalisée uniquement lorsque sa portée, ses faux positifs potentiels et son mode d'action sont compris. Après une modification, vérifiez si l'interface demande un rechargement ou un redémarrage.
 4. Passez progressivement à un mode bloquant pour des règles validées. Surveillez les erreurs applicatives, les taux de réponses 4xx/5xx et les retours utilisateurs après chaque changement.
+
+### Protéger les chemins sensibles (listes WAF)
+
+**Objectif :** bloquer les sondes classiques (`.env`, `.git/`, sauvegardes, consoles d'administration…) avec une liste maintenue dans un simple fichier texte, sans jamais bannir ses propres machines.
+
+1. Ouvrez **Active Sécurité → Custom → Ajouter**, choisissez **« CHARGER une liste de chemins (fichier) »**, puis la référence livrée `sensitive-paths-hostile` (298 chemins sans usage légitime). Les réglages conseillés se remplissent seuls ; gardez la gravité **Observation** au premier chargement.
+
+1. Cliquez **Charger** : la copie locale est créée dans `secure/waf/rules/keywords/`, la liste est vérifiée (syntaxe, droits, conflits avec vos routes), puis la réputation et l'auto-ban sont activés avec un message. Rien n'est actif avant ce clic.
+
+1. Laissez tourner quelques jours en Observation : chaque détection est écrite dans le journal d'alertes WAF, sans blocage ni ban. Dans l'éditeur (**Éditer la liste**), **Vérifier contre mes logs** montre les lignes qui auraient touché des requêtes réussies ; ajoutez une exception `!/chemin` en un clic.
+
+1. Passez la liste en bloquant : **Modifier → Gravité Élevé**, récidive 2 accès en 10 min → ban 24 h. Vérifiez ensuite un chemin avec le simulateur :
+
+```
+./omega-serv.sh waf test --method GET --path /blog/.env --remote-ip 203.0.113.1
+```
+
+1. Chargez éventuellement `sensitive-paths-probe` (132 chemins de sondage, parfois servis par un vrai site) en gravité Moyen : il ne bloque jamais seul, il compte pour la récidive (5 accès en 10 min → ban 1 h).
+
+1. Vos machines ne sont jamais bannies automatiquement : hôte local, Tailscale (`100.64.0.0/10`) et réseau local sont exemptés (`options.waf.reputation.never_auto_block`). Derrière `tailscale serve` ou un reverse proxy local, activez **Proxy de confiance** avec `127.0.0.1` pour que les visiteurs externes soient vus avec leur vraie adresse.
 
 ### Active Defense : simulation avant activation
 
@@ -1212,7 +1232,7 @@ Tableau de bord en trois cadres, rafraîchi automatiquement toutes les 2 seconde
 
 Rejoue le vrai routage d'Omega-Serv sans envoyer de requête réseau. Idéal pour comprendre pourquoi une règle s'applique ou pas.
 
-## 🛡️ Active Sécurité (WAF + Active Defense) — 12 fiches
+## 🛡️ Active Sécurité (WAF + Active Defense) — 14 fiches
 
 Le centre de sécurité d'Omega-Serv. Tout est optionnel et désactivé par défaut.
 
@@ -1316,7 +1336,7 @@ Trois sections : mode, gestion des packs de règles, gestion de la liste de bloc
   - *Réaction :* **rechargement automatique**
 
 - **Liste de blocage**
-  - *En clair :* IP/réseaux bannis, avec motif et expiration optionnelle.
+  - *En clair :* IP/réseaux bannis, avec motif et expiration optionnelle. Fichier par défaut : `var/lib/waf/blocklist.json` (sous `var/`, le seul dossier où le service systemd peut écrire ses auto-bans) ; un ancien `secure/waf/blocklist.json` est repris une fois au démarrage et laissé en place comme sauvegarde.
   - *Réaction :* **effet immédiat** Relue depuis le disque à CHAQUE requête — aucun rechargement nécessaire.
 
 ### 🧪 WAF — Tester une requête
@@ -1328,26 +1348,98 @@ Teste une requête simulée contre les règles WAF enregistrées, sans requête 
 > **💡 À savoir**
 > Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur disque à chaque test. Si un serveur déjà lancé n'a pas encore été rechargé après un changement de règles, ce test peut refléter un comportement différent de ce que ce serveur applique réellement.
 
-### ✏️ WAF — Règles personnalisées
+### ✏️ WAF — Règles et listes personnalisées
 
 *Active Sécurité →*
 
-Crée de vraies règles WAF personnalisées, écrites dans `secure/waf/rules/custom.json` — le pack est référencé automatiquement, jamais une étape manuelle séparée.
+Un seul tableau pour les **règles** (écrites dans `secure/waf/rules/custom.json`, pack référencé automatiquement) et les **listes** (fichiers texte de `secure/waf/rules/keywords/`, chargées explicitement par l'assistant). La colonne **Type** fait la différence : une liste n'est pas une règle de `custom.json`.
+
+- **Ajouter**
+  - *En clair :* ouvre l'assistant : une règle simple, ou **CHARGER une liste**.
+
+- **Modifier · Éditer la liste · Activer/Désactiver**
+  - *En clair :* change gravité, récidive et zone de recherche d'une liste, ouvre son fichier dans l'éditeur intégré, ou bascule une règle/liste sans la supprimer. Chaque changement est vérifié comme au chargement, puis rechargé automatiquement.
+
+- **Supprimer / Retirer**
+  - *En clair :* supprime une règle de `custom.json`, ou retire une liste du WAF — son **fichier est conservé** et reste proposé par l'assistant.
+
+- **Colonnes Détail et Gravité**
+  - *En clair :* nombre d'entrées de la liste (ou « ⚠ fichier absent / illisible par le service »), gravité et récidive, ex. « Élevé, 2 en 10 min -> ban 24 h ».
 
 > **💡 Astuce**
-> L'assistant de création propose un questionnaire en langage clair pour les 4 scénarios les plus courants (chemin précis, mot-clé dans l'URL, mot-clé dans un formulaire, User-Agent de scanner). Un mode Avancé reste disponible pour écrire directement motif/portée.
+> L'assistant propose un questionnaire en langage clair pour les 4 scénarios les plus courants (chemin précis, mot-clé dans l'URL, mot-clé dans un formulaire, User-Agent de scanner). Un mode Avancé reste disponible pour écrire directement motif/portée.
 
-### 🧙 WAF — Assistant règle personnalisée
+### 🧙 WAF — Assistant règle / chargement de liste
 
 *Active Sécurité →*
 
-Questionnaire en langage clair pour construire une règle WAF sans connaître les expressions régulières.
+Questionnaire en langage clair pour construire une règle WAF sans connaître les expressions régulières, **ou** pour charger une liste de chemins / de mots-clés depuis un fichier texte. Le chargement est une action explicite : rien n'est actif avant le clic sur **Charger**.
 
 - **Que voulez-vous détecter ?**
-  - *Options :* Un chemin précis, un mot-clé dans l'adresse, un mot-clé envoyé en formulaire, un outil de scan connu, ou Avancé (regex/portée libres).
+  - *Options :* un chemin précis, un mot-clé dans l'adresse, un mot-clé envoyé en formulaire, un outil de scan connu, Avancé (regex/portée libres), **CHARGER une liste de chemins**, **CHARGER une liste de mots-clés**.
 
-- **Gravité**
-  - *En clair :* Poids de la règle dans le calcul du score de menace. Faible/Moyen/Élevé/Critique (1/3/6/9).
+- **Gravité (règle)**
+  - *En clair :* poids de la règle dans le calcul du score de menace. Faible/Moyen/Élevé/Critique (1/3/6/9).
+
+- **Fichier de liste**
+  - *Options :* vos fichiers `.txt` de `secure/waf/rules/keywords/`, les références livrées (`sensitive-paths-hostile`, `sensitive-paths-probe`) pas encore copiées, ou « Nouveau fichier… ».
+  - *En clair :* une référence est **copiée** au chargement ; c'est cette copie que vous modifiez, une mise à jour ne l'écrase jamais. Choisir une référence pré-remplit les réglages conseillés.
+
+- **Où chercher · Partie de la requête**
+  - *En clair :* liste de chemins : n'importe où dans l'adresse (attrape `/blog/.env`) ou seulement au début (plus prudent pour `/api`, `/admin`). Liste de mots-clés : adresse et paramètres, formulaire POST, User-Agent ou Referer.
+
+- **Gravité (liste)**
+  - *Options :* **Observation** (journal seulement, conseillé au premier chargement), Faible (1), Moyen (3, ne bloque jamais seul), Élevé (6, 403 dès le premier accès), Critique (9).
+
+- **Récidive**
+  - *En clair :* bannir après N accès à **cette** liste en M minutes, pendant une durée choisie (ban applicatif temporaire, réponse 451). Références : hostile 2 en 10 min → 24 h, sondage 5 en 10 min → 1 h. Grisée en Observation.
+
+- **Charger**
+  - *En clair :* vérifie dans l'ordre le nom du fichier, la syntaxe (numéro de ligne en cas d'erreur), la lisibilité par le compte du service, l'absence de doublon et les conflits avec les routes du site. Si une seule vérification échoue, la configuration n'est pas modifiée.
+
+> **⚠️ Point de vigilance**
+> Une liste qui bloque seule (gravité ≥ 5) et qui toucherait une route réellement servie (alias, reverse proxy, zone Auth, fichier du webroot) est refusée : ajoutez une exception `!/chemin` dans la liste, ou chargez-la en Observation.
+
+### 📝 WAF — Éditeur de liste
+
+*Active Sécurité → Custom →*
+
+Éditeur de texte intégré, sans éditeur externe. **Tout se fait à la souris** : aucun raccourci clavier, le clavier ne sert qu'à la saisie (caractères, Entrée, flèches, Début/Fin, Page préc./suiv., Retour arrière, Suppr).
+
+- **Syntaxe d'une liste de chemins**
+  - *En clair :* une entrée par ligne, `#` = commentaire. `/admin` → `/admin` et `/admin/xxx` (jamais `/administrator`) ; `/.git/` → tout ce qui est dessous ; `/*.bak` → extension ; `!/api/v1` → exception, toujours prioritaire.
+  - *Réaction :* analyse en direct ; les erreurs s'affichent avec leur numéro de ligne, un clic place le curseur dessus. Un texte en erreur ne peut pas être enregistré.
+
+- **Barre d'outils · Rechercher**
+  - *En clair :* Annuler, Rétablir, Couper, Copier, Coller, Sélectionner la ligne, Tout sélectionner, Supprimer la ligne ; recherche Précédent/Suivant. Le collage du terminal (clic du milieu) fonctionne aussi.
+
+- **Tester**
+  - *En clair :* indique ce que ferait la liste **en cours d'édition** d'un chemin : « DÉTECTÉ par la ligne N », « AUTORISÉ : exception ligne N » ou « aucune ligne ne correspond » — même normalisation que le WAF.
+
+- **Vérifier contre mes logs**
+  - *En clair :* rejoue les requêtes **réussies** (2xx/3xx) du journal d'accès : chaque ligne qui aurait touché une requête probablement légitime est montrée avec un exemple ; un clic ajoute une exception (pour le chemin ou son dossier) ou supprime la ligne.
+
+- **Nouveautés de la référence**
+  - *En clair :* propose, case par case, les entrées de la référence absentes de votre liste. Une ligne de la référence que vous supprimez est marquée `#retire: /x` et n'est plus jamais reproposée.
+
+- **Corriger les droits**
+  - *En clair :* rend le fichier lisible par le compte du service, en listant chaque changement de droits avant de l'appliquer — uniquement sur ce qui vous appartient, jamais via sudo.
+
+- **Enregistrer et appliquer**
+  - *En clair :* écriture sûre : droits et groupe conservés, nouveau fichier en `0644`, refus si le fichier a été modifié ailleurs ou si c'est un lien symbolique.
+  - *Réaction :* le serveur n'est rechargé que si la liste passe la vérification ; sinon la raison est affichée et le serveur garde ses règles actuelles.
+
+> **💡 Fermer, Aide et ctrl+q**
+> `Échap`, `F1` et `Ctrl+P` ne font rien dans l'éditeur, volontairement : utilisez les boutons **Fermer** (confirmation s'il reste des modifications) et **Aide**. Seul `Ctrl+Q` reste actif pour quitter l'application, avec confirmation.
+
+### ⚙️ WAF — Modifier une liste
+
+*Active Sécurité → Custom →*
+
+Change le nom affiché, la zone de recherche, la gravité et la récidive d'une liste déjà chargée, sans toucher à son fichier.
+
+- **Gravité · Récidive**
+  - *En clair :* mêmes choix que dans l'assistant. Typiquement : passer d'Observation à Élevé une fois les alertes lues. La nouvelle configuration est vérifiée avant d'être écrite ; rendre une liste bloquante réactive la réputation et l'auto-ban s'ils avaient été éteints.
 
 ### 🧲 WAF — Magnet (import d'un WAF externe)
 
@@ -1362,7 +1454,7 @@ Importe un script WAF `mod_magnet` Lighttpd EXISTANT (écrit pour un autre site)
   - *En clair :* Le fichier Lua à importer — une liste des scripts trouvés sous `secure/waf/scripts/` est affichée en indice.
 
 - **Chemins personnels dissociés**
-  - *En clair :* 5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine — propre à chaque script importé, jamais un contrat générique.
+  - *En clair :* 5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine — propre à chaque script importé, jamais un contrat générique. Blocklist par défaut : `var/lib/waf/magnet-blocklist.txt` (le script y écrit ; un ancien `secure/waf/magnet-blocklist.txt` est repris une fois). Un chemin choisi à la main doit rester inscriptible par le compte du service, sinon les bans sont perdus sans message.
   - *À noter :* Les dossiers parents sont créés automatiquement à l'usage réel, jamais lors d'un simple `config check`.
 
 - **Vérifier la compatibilité**
@@ -1460,7 +1552,7 @@ Active ou désactive les options superposables (14 options connues).
 > **⚠️ Piège classique**
 > - Activer une option ne suffit jamais à elle seule : sans un rechargement (ou redémarrage) du service déjà lancé, rien ne change réellement.
 
-## ❓ FAQ — questions fréquentes — 35 fiches
+## ❓ FAQ — questions fréquentes — 44 fiches
 
 Les questions qui reviennent le plus souvent, avec des réponses concrètes — la plupart du temps, ce sont des pièges déjà rencontrés par d'autres utilisateurs.
 
@@ -1539,6 +1631,30 @@ Non, jamais par défaut. Si vous incluez les zones d'authentification (hash de m
 **J'ai mis à jour le code d'Omega-Serv (nouvelle archive, correctif appliqué) mais rien ne change jamais, même après un rechargement (SIGHUP) — pourquoi ?** _Redémarrage_
 
 Piège réel rencontré (2026-10-10) : le rechargement à chaud (SIGHUP, écran SERVICE → Recharger) ne relit QUE certains éléments de configuration (règles WAF, zones d'authentification) — il ne recharge JAMAIS le code Python lui-même, qui reste celui chargé en mémoire depuis le DERNIER démarrage du processus. Après une mise à jour du code, un **redémarrage complet** est toujours nécessaire (`systemctl restart <service>`), jamais un simple rechargement. Vérifiez `systemctl status <service>` : une date de démarrage plus ancienne que votre mise à jour confirme immédiatement ce diagnostic.
+
+**Comment bloquer les chemins sensibles (.env, .git, sauvegardes, consoles d'admin…) sans tout écrire à la main ?** _WAF_
+
+Active Sécurité → Custom → Ajouter → **« CHARGER une liste de chemins (fichier) »**, puis la référence livrée `sensitive-paths-hostile` (298 chemins sans usage légitime) et/ou `sensitive-paths-probe` (132 chemins de sondage, parfois servis par un vrai site). Les réglages conseillés se remplissent seuls ; gardez Observation au premier chargement. Rien n'est actif avant le clic sur Charger.
+
+**Quelle différence entre une règle personnalisée et une liste ?** _WAF_
+
+Une règle détecte **un** motif et vit dans `custom.json`. Une liste est un fichier texte d'un chemin (ou mot-clé) par ligne, facile à maintenir à plusieurs centaines d'entrées, avec ses exceptions `!/x`, sa gravité et sa propre récidive. Les deux apparaissent dans le même tableau de l'écran Custom, colonne Type.
+
+**J'ai chargé une liste en Observation — comment savoir ce qu'elle aurait bloqué, puis l'activer ?** _WAF_
+
+En Observation, chaque détection est écrite dans le journal d'alertes WAF, sans blocage ni ban. Lisez ces alertes quelques jours, utilisez **Vérifier contre mes logs** dans l'éditeur pour repérer les lignes qui toucheraient des requêtes légitimes (exception `!/chemin` en un clic), puis **Custom → Modifier → Gravité Élevé ou Moyen**.
+
+**Mes propres machines (Wi-Fi, Ethernet, Tailscale) risquent-elles d'être bannies par la récidive ?** _WAF_
+
+Non : l'hôte local, le réseau Tailscale (`100.64.0.0/10`) et le réseau local (`192.168.x`, `10.x`, `172.16-31.x`…) ne sont **jamais** bannis automatiquement (`options.waf.reputation.never_auto_block`). Seule une adresse publique peut l'être. Leurs requêtes vers un chemin dangereux restent refusées (403) et journalisées, ce qui permet de tester le WAF. Derrière un proxy local, l'exemption de `127.0.0.1` n'est appliquée que si **Proxy de confiance** est actif — sinon tout Internet paraîtrait venir de `127.0.0.1`.
+
+**Mettre mes adresses dans « Proxy de confiance » évite-t-il qu'elles soient bannies ?** _WAF_
+
+Non. Les réseaux de confiance disent seulement **qui** a le droit de transmettre la vraie adresse du visiteur (en-tête `X-Forwarded-For`) — en pratique le proxy placé devant omega-serv (`127.0.0.1` pour `tailscale serve`). Ils n'exemptent de rien d'autre. Les réseaux à ne jamais bannir sont un réglage distinct (`never_auto_block`). Une plage large comme `100.0.0.0/8` contient des adresses publiques : préférez `100.64.0.0/10`.
+
+**J'ai modifié une liste mais le serveur ne l'applique pas — pourquoi ?** _WAF_
+
+Le message affiché après **Enregistrer et appliquer** donne la raison : la liste n'est pas encore chargée dans le WAF (assistant → Charger) ; la vérification a trouvé un problème (le serveur garde alors ses règles actuelles, rien n'est rechargé à moitié) ; le compte du service ne peut pas lire le fichier (**Corriger les droits**) ; ou aucun service actif — relancez le serveur lancé à la main.
 
 **J'ai activé le script magnet mais le serveur refuse de démarrer / l'écran signale "lupa" absent — pourquoi ?** _WAF — Magnet_
 

@@ -1,0 +1,157 @@
+# omega-serv - liste de reference : sensitive-paths-probe
+# 132 chemins de sondage courants, mais parfois servis par un vrai site (admin, API, supervision...).
+# Reglages conseilles : gravite Moyenne (3, ne bloque jamais seule), recherche au debut du chemin, recidive 5 acces en 10 min -> ban 1 h. 1er chargement conseille en Observation.
+# Fichier de REFERENCE (lecture seule, remplace a chaque mise a jour d'omega-serv).
+# Il n'est jamais charge tel quel : l'assistant WAF Custom en cree une copie
+# locale modifiable dans secure/waf/rules/keywords/ au premier chargement.
+# Genere depuis le fichier maitre ~/DEV/JAIL/sensitive-path.txt - ne pas editer ici.
+#
+# Syntaxe (une entree par ligne, '#' = commentaire) :
+#   /admin    -> /admin et /admin/xxx, jamais /administrator
+#   /.git/    -> tout ce qui est sous /.git/
+#   /*.bak    -> tout fichier dont le nom finit par .bak
+#   !/api/v1  -> exception : ce chemin n'est jamais compte par cette liste
+#               (prioritaire sur les entrees, quel que soit l'ordre des lignes)
+
+#Sauvegardes et fichiers temporaires
+/backups/
+/backup/
+#Panneaux d'administration et interfaces de gestion
+/admin
+/admin/
+/admin.php
+/admin.html
+/administrator
+/administrator/
+/admin/login
+/admin/login.php
+/admin/index.php
+/admin/dashboard
+/admin/panel
+/mysql
+/mysql/
+/console/
+/console
+/management/
+#API, documentation et endpoints de développement
+/api
+/api/
+/api/v1
+/api/v2
+/api/v3
+/api/docs
+/api-docs
+/api-docs/
+/graphql
+/playground
+/redoc
+/documentation
+/debug
+/debug/
+/debug.php
+/test.php
+/test
+/dev
+/development
+/staging
+/profiler
+/telescope
+/horizon
+/info.php
+/status
+/health
+/healthz
+/readyz
+/livez
+#Surveillance et métriques
+/metrics
+/prometheus
+/grafana
+/grafana/
+/kibana
+/kibana/
+/zabbix
+/zabbix/
+/solr/
+/nagios
+/icinga
+/munin
+/cacti
+/netdata
+/influxdb
+/chronograf
+/kapacitor
+/jaeger
+/zipkin
+/tracing
+#Journaux et fichiers de trace
+/logs/
+/log/
+/*.log
+/tmp/
+/temp/
+#Bases de données et fichiers de données
+/data/
+/database/
+/db/
+/dump/
+/dumps/
+/migrations/
+/migrate/
+/schema/
+/seeds/
+/storage/
+#Écosystème Node.js / JavaScript
+/server.js
+#Cloud et conteneurs
+/kubernetes/
+/k8s/
+/helm/
+/chart/
+/terraform/
+/cloudformation/
+/sam/
+/amplify/
+/aws/
+/azure/
+/gcp/
+#Interfaces d'administration d'applications tierces
+/exchange/
+/ecp/
+/rpc/
+/autodiscover/
+/login
+/signin
+/signup
+/register
+/auth
+/oauth
+/sso
+/saml
+/cas
+/keycloak/
+/identity/
+/idp/
+/adfs/
+/ldap/
+/jira/
+/confluence/
+/bitbucket/
+/gitlab/
+/jenkins/
+/nexus/
+/artifactory/
+/harbor/
+/vault/
+/consul/
+/nomad/
+#Fichiers d'énumération et de découverte
+/saml/metadata
+/metadata
+/wsdl
+/services/
+/service/
+/soap/
+/rest/
+/api/health
+/api/status

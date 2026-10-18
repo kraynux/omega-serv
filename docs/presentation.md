@@ -184,7 +184,7 @@ consommées, et même les menaces détectées par Active Defense.
 - Guide complet intégré, avec FAQ et exemples concrets, exportable en HTML
 
 **🔍 Un vrai compagnon de sécurité**
-- WAF optionnel : signatures, limitation de débit, liste de blocage
+- WAF optionnel : signatures, limitation de débit, liste de blocage, et listes de chemins sensibles prêtes à l'emploi (298 + 132 chemins), éditables à la souris dans l'interface
 - Active Defense : détection des comportements hostiles, leurres intelligents, journalisation
   enrichie
 - Incidents documentés avec chronologie et exports d'indicateurs de compromission
@@ -231,7 +231,7 @@ Tous désactivés par défaut — vous activez uniquement ce dont vous avez beso
 
 | Module | Rôle |
 |---|---|
-| **WAF** | Filtrage applicatif (signatures, limitation de débit, liste de blocage) |
+| **WAF** | Filtrage applicatif (signatures, limitation de débit, liste de blocage, listes de chemins sensibles éditables avec récidive propre à chaque liste — vos propres machines ne sont jamais bannies) |
 | **TLS** | HTTPS avec certificat auto-signé ou signé par une autorité locale |
 | **Authentification** | HTTP Basic par zone (protège des dossiers ou applications) |
 | **FastCGI/PHP-FPM** | Exécution PHP via un serveur PHP-FPM externe |
@@ -253,6 +253,10 @@ Tous désactivés par défaut — vous activez uniquement ce dont vous avez beso
 - Protection contre le path traversal, le double-encodage, les liens symboliques mal placés
 - Résolution des adresses IPv4-mappées-IPv6 avant toute vérification (contre un contournement
   connu)
+- Derrière un proxy, l'adresse du visiteur est lue de droite à gauche : impossible de se faire
+  passer pour une machine locale en envoyant soi-même l'en-tête `X-Forwarded-For`
+- Seul le trafic externe peut être banni automatiquement : hôte local, Tailscale et réseau local
+  sont toujours exemptés
 - Tests de propriétés (*hypothesis*) sur le parseur HTTP et le résolveur de chemin
 
 > 💡 **Bon à savoir :** le profil `hardened` recommande explicitement de placer Omega-Serv derrière

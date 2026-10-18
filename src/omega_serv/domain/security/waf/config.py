@@ -16,6 +16,10 @@ from omega_serv.domain.security.waf.keyword_list import (
     parse_keyword_list_definition,
     validate_keyword_list_definitions,
 )
+from omega_serv.domain.security.waf.reputation import (
+    DEFAULT_NEVER_AUTO_BLOCK,
+    validate_never_auto_block,
+)
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,9 @@ class ReputationConfig:
     auto_block: bool = False
     auto_block_duration_seconds: int = 3600
     auto_block_max_entries: int = 100
+    # Reseaux jamais bannis automatiquement (OMEGA-SERV_PLAN-DETAILLE_
+    # SENSITIVE_PATHS.md §3.13) - voir reputation.py::DEFAULT_NEVER_AUTO_BLOCK.
+    never_auto_block: tuple[str, ...] = DEFAULT_NEVER_AUTO_BLOCK
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ReputationConfig:
@@ -111,13 +118,36 @@ class ReputationConfig:
                 data.get("auto_block_duration_seconds", defaults.auto_block_duration_seconds)
             ),
             auto_block_max_entries=int(data.get("auto_block_max_entries", defaults.auto_block_max_entries)),
+            never_auto_block=tuple(str(n) for n in data.get("never_auto_block", defaults.never_auto_block)),
         )
+
+
+# Blocklists : etat ECRIT par le serveur pendant qu'il tourne (auto-ban), donc
+# sous var/ - le seul dossier inscriptible par le service systemd
+# (ReadWritePaths) et deja partage avec son groupe. Avant le 2026-10-18 :
+# secure/waf/, en lecture seule pour le service - un auto-ban n'y etait JAMAIS
+# enregistre (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md, apres l'incident
+# craftdark). Les anciens fichiers sont repris une fois au premier demarrage
+# (application/security/blocklist_location.py).
+DEFAULT_BLOCKLIST_PATH = "var/lib/waf/blocklist.json"
+LEGACY_BLOCKLIST_PATH = "secure/waf/blocklist.json"
+DEFAULT_MAGNET_BLOCKLIST_FILE = "var/lib/waf/magnet-blocklist.txt"
+LEGACY_MAGNET_BLOCKLIST_FILE = "secure/waf/magnet-blocklist.txt"
+
+
+def _relocated(value: str, legacy: str, default: str) -> str:
+    """L'ANCIEN chemin par defaut, meme enregistre en toutes lettres, vaut le
+    nouveau : l'ecran WAF Magnet enregistre toujours ses 5 chemins, donc chaque
+    installation existante porte `secure/waf/magnet-blocklist.txt` dans sa config
+    sans l'avoir jamais choisi - et ce chemin n'est pas inscriptible par le
+    service systemd. Tout autre chemin personnalise est garde tel quel."""
+    return default if value == legacy else value
 
 
 @dataclass(frozen=True)
 class BlocklistConfig:
     enabled: bool = True
-    path: str = "secure/waf/blocklist.json"
+    path: str = DEFAULT_BLOCKLIST_PATH
     allow_temporary_entries: bool = True
 
     @classmethod
@@ -125,7 +155,7 @@ class BlocklistConfig:
         defaults = cls()
         return cls(
             enabled=bool(data.get("enabled", defaults.enabled)),
-            path=data.get("path", defaults.path),
+            path=_relocated(data.get("path", defaults.path), LEGACY_BLOCKLIST_PATH, DEFAULT_BLOCKLIST_PATH),
             allow_temporary_entries=bool(data.get("allow_temporary_entries", defaults.allow_temporary_entries)),
         )
 
@@ -165,7 +195,7 @@ class MagnetPathsConfig:
     propre a CE script, pas un contrat generique - voir
     OMEGA-SERV_WAF_LUA_DEPERSONNALISATION.md, "limite assumee : la
     dissociation des chemins reste manuelle, script par script")."""
-    blocklist_file: str = "secure/waf/magnet-blocklist.txt"
+    blocklist_file: str = DEFAULT_MAGNET_BLOCKLIST_FILE
     rules_dir: str = "secure/waf/magnet-rules.d/"
     alerts_log: str = "var/log/waf-magnet-alerts.log"
     blocklist_log: str = "var/log/waf-magnet-blocklist.log"
@@ -175,7 +205,10 @@ class MagnetPathsConfig:
     def from_dict(cls, data: dict[str, Any]) -> MagnetPathsConfig:
         defaults = cls()
         return cls(
-            blocklist_file=data.get("blocklist_file", defaults.blocklist_file),
+            blocklist_file=_relocated(
+                data.get("blocklist_file", defaults.blocklist_file),
+                LEGACY_MAGNET_BLOCKLIST_FILE, DEFAULT_MAGNET_BLOCKLIST_FILE,
+            ),
             rules_dir=data.get("rules_dir", defaults.rules_dir),
             alerts_log=data.get("alerts_log", defaults.alerts_log),
             blocklist_log=data.get("blocklist_log", defaults.blocklist_log),
@@ -318,4 +351,30 @@ def validate_waf_config(config: WafConfig) -> list[str]:
             "tous les deux vides si le WAF est active"
         )
     errors.extend(validate_keyword_list_definitions(config.keyword_lists))
+    errors.extend(validate_never_auto_block(config.reputation.never_auto_block))
     return errors
+
+
+def with_reputation_enabled_for_lists(settings: dict[str, Any]) -> tuple[dict[str, Any], tuple[str, ...]]:
+    """Decision utilisateur 2026-10-18 (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_
+    PATHS.md, lot 2.2) : les valeurs par defaut du code restent INCHANGEES
+    (reputation et auto_block desactives) - jamais un changement de
+    comportement silencieux d'une instance existante a la mise a jour. C'est
+    l'action EXPLICITE "charger une liste" (assistant WAF Custom, lot 6) qui
+    active la reputation et l'auto-ban s'ils sont eteints, sans quoi la
+    recidive par liste (§3.12) ne ferait rien.
+
+    Fonction pure : renvoie une COPIE de `options.waf` (settings) et la liste
+    des changements effectues (vide = rien a faire), a afficher tels quels a
+    l'utilisateur. Les autres reglages de `reputation` sont conserves."""
+    reputation = dict(settings.get("reputation") or {})
+    changes: list[str] = []
+    if not reputation.get("enabled", ReputationConfig.enabled):
+        reputation["enabled"] = True
+        changes.append("reputation activee (recidive comptee par IP)")
+    if not reputation.get("auto_block", ReputationConfig.auto_block):
+        reputation["auto_block"] = True
+        changes.append("auto-ban active (blocklist temporaire, reponse 451)")
+    if not changes:
+        return settings, ()
+    return {**settings, "reputation": reputation}, tuple(changes)

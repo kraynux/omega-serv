@@ -21,14 +21,18 @@ from omega_serv.infrastructure.clock.system_clock import SystemClock
 from omega_serv.infrastructure.config.json_config_repository import JsonConfigRepository
 from omega_serv.infrastructure.config.json_settings_store import JsonSettingsStore
 from omega_serv.infrastructure.config.profile_repository import FileProfileRepository
+from omega_serv.infrastructure.filesystem.local_file_access import LocalFileAccess
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
 from omega_serv.infrastructure.instances.json_instance_registry import JsonInstanceRegistry
 from omega_serv.infrastructure.logging.file_line_logger import FileLineLogger
+from omega_serv.infrastructure.waf.keyword_reference_store import PackagedKeywordReferences
 from omega_serv.ports.capability_scanner_port import CapabilityScannerPort
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.configuration_port import ConfigurationPort
+from omega_serv.ports.file_access_port import FileAccessPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.instance_registry_port import InstanceRegistryPort
+from omega_serv.ports.keyword_reference_port import KeywordReferencePort
 from omega_serv.ports.live_tail_port import LiveTailPort
 from omega_serv.ports.log_favorite_repository_port import LogFavoriteRepositoryPort
 from omega_serv.ports.log_library_repository_port import LogLibraryRepositoryPort
@@ -148,6 +152,10 @@ class DependencyContainer:
         self._project_root = project_root
         self._systemd_unit_dir = systemd_unit_dir
         self._filesystem: FilesystemPort = LocalFilesystem()
+        # Fichiers edites depuis la TUI et lus par le service (OMEGA-SERV_PLAN-
+        # DETAILLE_SENSITIVE_PATHS.md §3.7) - port dedie, voir file_access_port.py.
+        self._file_access: FileAccessPort = LocalFileAccess()
+        self._keyword_references: KeywordReferencePort = PackagedKeywordReferences()
         self._configuration: ConfigurationPort = JsonConfigRepository(
             self._filesystem,
             backups_dir=project_root / "var" / "backups",
@@ -174,6 +182,14 @@ class DependencyContainer:
     @property
     def filesystem(self) -> FilesystemPort:
         return self._filesystem
+
+    @property
+    def file_access(self) -> FileAccessPort:
+        return self._file_access
+
+    @property
+    def keyword_references(self) -> KeywordReferencePort:
+        return self._keyword_references
 
     @property
     def configuration(self) -> ConfigurationPort:

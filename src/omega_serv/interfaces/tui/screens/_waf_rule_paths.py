@@ -26,7 +26,11 @@ def with_waf_rule_paths(config: OmegaServConfig, paths: list[str]) -> OmegaServC
     existing = config.options.get("waf")
     enabled = existing.enabled if existing is not None else False
     new_settings = dict(existing.settings) if existing is not None else {}
-    new_settings["rules"] = {"paths": paths}
+    # Ne remplace QUE `paths` : les autres cles de `rules` (keyword_lists...)
+    # sont conservees. Bug trouve le 2026-10-18 (OMEGA-SERV_PLAN-DETAILLE_
+    # SENSITIVE_PATHS.md, lot 6) : `{"paths": paths}` effacait toutes les
+    # keyword_lists a chaque ajout de regle custom ou modification des packs.
+    new_settings["rules"] = {**new_settings.get("rules", {}), "paths": paths}
     new_options = dict(config.options)
     new_options["waf"] = Option(name="waf", enabled=enabled, settings=new_settings)
     return replace(config, options=new_options)

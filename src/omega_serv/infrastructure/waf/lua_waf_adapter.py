@@ -128,6 +128,15 @@ class LuaWafAdapter:
         lighty["stat"] = self._lua_stat
         self._runtime.globals()["lighty"] = lighty
         self._runtime.globals()["omega_magnet_paths"] = self._runtime.table_from(paths)
+        # Reseaux jamais bannis automatiquement (OMEGA-SERV_PLAN-DETAILLE_
+        # SENSITIVE_PATHS.md lot 11) : la liste EFFECTIVE du WAF natif (deja
+        # calculee par build_waf_collaborators, garde-fou du proxy de confiance
+        # compris) - un script qui la lit (omega-waf.lua) n'auto-bannit jamais
+        # ces adresses, exactement comme le WAF natif. Un script qui l'ignore
+        # garde son comportement : jamais une obligation pour un script importe.
+        self._runtime.globals()["omega_never_auto_block"] = self._runtime.table_from(
+            list(config.reputation.never_auto_block)
+        )
 
         try:
             self._compiled = self._runtime.compile(script_source)

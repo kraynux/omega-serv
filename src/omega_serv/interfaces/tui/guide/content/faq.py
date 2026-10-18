@@ -194,6 +194,72 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
         ),
     ),
     FaqEntry(
+        category="WAF/Active Defense",
+        question="Comment bloquer les chemins sensibles (.env, .git, sauvegardes, consoles d'admin...) sans tout ecrire a la main ?",
+        answer=(
+            "Active Securite -> Custom -> Ajouter -> 'CHARGER une liste de chemins (fichier)', puis "
+            "choisissez la reference livree sensitive-paths-hostile (298 chemins sans usage "
+            "legitime) et/ou sensitive-paths-probe (132 chemins de sondage, parfois servis par un "
+            "vrai site). Les reglages conseilles se remplissent seuls ; gardez Observation au "
+            "premier chargement. Rien n'est actif avant le clic sur Charger."
+        ),
+    ),
+    FaqEntry(
+        category="WAF/Active Defense",
+        question="Quelle difference entre une regle personnalisee et une liste ?",
+        answer=(
+            "Une regle detecte UN motif et vit dans custom.json. Une liste est un fichier texte d'un "
+            "chemin (ou mot-cle) par ligne, facile a maintenir a plusieurs centaines d'entrees, avec "
+            "ses exceptions '!/x', sa gravite et sa propre recidive. Les deux apparaissent dans le "
+            "meme tableau de l'ecran Custom, colonne Type."
+        ),
+    ),
+    FaqEntry(
+        category="WAF/Active Defense",
+        question="J'ai charge une liste en Observation - comment savoir ce qu'elle aurait bloque, puis l'activer ?",
+        answer=(
+            "En Observation, chaque detection est ecrite dans le journal d'alertes WAF, sans aucun "
+            "blocage ni ban. Lisez ces alertes quelques jours, utilisez 'Verifier contre mes logs' "
+            "dans l'editeur pour reperer les lignes qui toucheraient des requetes legitimes "
+            "(exception '!/chemin' en un clic), puis Custom -> Modifier -> Gravite Eleve ou Moyen."
+        ),
+    ),
+    FaqEntry(
+        category="WAF/Active Defense",
+        question="Mes propres machines (Wi-Fi, Ethernet, Tailscale) risquent-elles d'etre bannies par la recidive ?",
+        answer=(
+            "Non : l'hote local, le reseau Tailscale (100.64.0.0/10) et le reseau local (192.168.x, "
+            "10.x, 172.16-31.x...) ne sont JAMAIS bannis automatiquement (reglage "
+            "options.waf.reputation.never_auto_block). Seule une adresse publique peut l'etre. Leurs "
+            "requetes vers un chemin dangereux restent refusees (403) et journalisees, ce qui permet "
+            "de tester le WAF. Derriere un proxy local (tailscale serve, reverse proxy), l'exemption "
+            "de 127.0.0.1 n'est appliquee que si 'Proxy de confiance' est actif - sinon tout Internet "
+            "paraitrait venir de 127.0.0.1."
+        ),
+    ),
+    FaqEntry(
+        category="WAF/Active Defense",
+        question="Mettre mes adresses dans 'Proxy de confiance' evite-t-il qu'elles soient bannies ?",
+        answer=(
+            "Non. Les reseaux de confiance disent seulement QUI a le droit de transmettre la vraie "
+            "adresse du visiteur (en-tete X-Forwarded-For) - en pratique le proxy place devant "
+            "omega-serv (127.0.0.1 pour tailscale serve). Ils n'exemptent de rien d'autre. Les "
+            "reseaux a ne jamais bannir sont un reglage distinct (never_auto_block). Une plage large "
+            "comme 100.0.0.0/8 contient des adresses publiques : preferez 100.64.0.0/10."
+        ),
+    ),
+    FaqEntry(
+        category="WAF/Active Defense",
+        question="J'ai modifie une liste mais le serveur ne l'applique pas - pourquoi ?",
+        answer=(
+            "Le message affiche apres 'Enregistrer et appliquer' donne la raison : (1) la liste n'est "
+            "pas encore chargee dans le WAF (utilisez l'assistant -> Charger) ; (2) la verification a "
+            "trouve un probleme (le serveur garde alors ses regles actuelles, rien n'est recharge a "
+            "moitie) ; (3) le compte du service ne peut pas lire le fichier ('Corriger les droits') ; "
+            "(4) aucun service actif - relancez le serveur lance a la main."
+        ),
+    ),
+    FaqEntry(
         category="WAF - Magnet (import d'un WAF externe)",
         question="J'ai active le script magnet mais le serveur refuse de demarrer / l'ecran signale 'lupa' absent - pourquoi ?",
         answer=(

@@ -56,7 +56,7 @@ from omega_serv.application.server.start_server import (
     build_server,
     build_users_repository,
     build_waf_collaborators,
-    reload_server,
+    try_reload_server,
 )
 from omega_serv.application.services.install_service import (
     install_systemd_service,
@@ -103,6 +103,8 @@ from omega_serv.domain.security.audit.entities import AuditFinding, Severity, se
 from omega_serv.domain.security.auth.entities import AuthZone
 from omega_serv.domain.security.tls.entities import CaParams, CsrParams, SelfSignedCertParams
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
+from omega_serv.domain.security.waf.config import parse_waf_config
+from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.systemd_unit import SystemdUnitParams
 from omega_serv.infrastructure.exporters.csv_ioc_exporter import CsvIoCExporter
@@ -178,7 +180,15 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
             return
         reloaded_config = reload_result.config
         assert reloaded_config is not None
-        reload_server(server, reloaded_config, container.project_root, container.filesystem, container.clock)
+        error = try_reload_server(
+            server, reloaded_config, container.project_root, container.filesystem, container.clock,
+        )
+        if error is not None:
+            print(
+                f"Rechargement REFUSE - les regles precedentes restent actives : {error}",
+                file=sys.stderr,
+            )
+            return
         print("Rechargement termine.")
 
     loop = asyncio.get_running_loop()
@@ -443,6 +453,29 @@ def cmd_simulate_request(args: argparse.Namespace, container: DependencyContaine
     print("En-tetes attendus :")
     for name, value in report.response_headers.items():
         print(f"  {name}: {value}")
+    return 0
+
+
+def cmd_waf_never_auto_block(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Affiche, un par ligne, les reseaux REELLEMENT exemptes d'auto-ban
+    pour cette configuration (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md
+    §3.13/§3.14-a : `reputation.never_auto_block`, exemption loopback
+    retiree sans proxy de confiance). Lu par omega-jail a l'installation
+    (lot 10 : `ignoreip` des jails, pont Tailscale) - jamais une copie
+    de la liste par defaut dans un autre projet. Ne charge aucune regle :
+    fonctionne meme si un pack ou une liste est en erreur."""
+    load_result = load_config(container.configuration, args.config)
+    if not load_result.success:
+        _print_errors(load_result.errors)
+        return 1
+    config = load_result.config
+    assert config is not None
+    waf_settings = config.options["waf"].settings if "waf" in config.options else {}
+    networks = effective_never_auto_block(
+        parse_waf_config(waf_settings).reputation.never_auto_block, config.option_enabled("trusted_proxy"),
+    )
+    for network in networks:
+        print(network)
     return 0
 
 
@@ -1453,6 +1486,7 @@ def build_parser() -> argparse.ArgumentParser:
     test_parser.add_argument("--body", default="")
     test_parser.add_argument("--remote-ip", default="127.0.0.1")
     test_parser.set_defaults(func=cmd_waf_test)
+    waf_sub.add_parser("never-auto-block").set_defaults(func=cmd_waf_never_auto_block)
 
     blocklist_parser = subparsers.add_parser("blocklist")
     blocklist_sub = blocklist_parser.add_subparsers(dest="blocklist_command", required=True)

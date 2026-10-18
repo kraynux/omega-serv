@@ -25,6 +25,14 @@ from omega_serv.ports.clock_port import ClockPort
 
 _DEFAULT_TTL_SECONDS = 3600.0
 _SWEEP_INTERVAL_SECONDS = 60.0
+_KEY_SEPARATOR = "\x00"
+
+
+def _counter_key(ip: str, key: str) -> str:
+    """Compteur global = l'IP seule (forme historique inchangee) ; compteur
+    d'une liste = `<id liste>\\x00<ip>` (separateur impossible dans une IP
+    ou un id de liste valide)."""
+    return ip if key == "global" else f"{key}{_KEY_SEPARATOR}{ip}"
 
 
 class InMemoryReputationTracker:
@@ -34,26 +42,28 @@ class InMemoryReputationTracker:
         self._ttl_seconds = ttl_seconds
         self._last_sweep = 0.0
 
-    def record_hit(self, ip: str) -> None:
+    def record_hit(self, ip: str, key: str = "global") -> None:
         now = self._clock.now().timestamp()
         self._sweep_stale_entries_if_due(now)
-        self._hits.setdefault(ip, []).append(now)
+        self._hits.setdefault(_counter_key(ip, key), []).append(now)
 
-    def count_hits_in_window(self, ip: str, window_seconds: int) -> int:
+    def count_hits_in_window(self, ip: str, window_seconds: int, key: str = "global") -> int:
         now = self._clock.now().timestamp()
         cutoff = now - window_seconds
-        timestamps = [t for t in self._hits.get(ip, []) if t >= cutoff]
+        counter = _counter_key(ip, key)
+        timestamps = [t for t in self._hits.get(counter, []) if t >= cutoff]
         if timestamps:
-            self._hits[ip] = timestamps
+            self._hits[counter] = timestamps
         else:
-            self._hits.pop(ip, None)
+            self._hits.pop(counter, None)
         return len(timestamps)
 
     def reset(self, ip: str | None = None) -> None:
         if ip is None:
             self._hits.clear()
-        else:
-            self._hits.pop(ip, None)
+            return
+        for counter in [c for c in self._hits if c == ip or c.endswith(_KEY_SEPARATOR + ip)]:
+            del self._hits[counter]
 
     def _sweep_stale_entries_if_due(self, now: float) -> None:
         if now - self._last_sweep < _SWEEP_INTERVAL_SECONDS:

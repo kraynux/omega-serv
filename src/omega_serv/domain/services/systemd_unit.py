@@ -185,3 +185,19 @@ def find_account_in_use(unit_contents: dict[str, str], user: str, exclude_servic
         if any(line.strip() == marker for line in content.splitlines()):
             return service_name
     return None
+
+
+def service_user_from_unit(unit_content: str) -> str | None:
+    """Valeur de `User=` d'une unite systemd (section [Service]) - le compte
+    qui lira reellement les fichiers du projet (OMEGA-SERV_PLAN-DETAILLE_
+    SENSITIVE_PATHS.md §3.7, regle R3). None si absent."""
+    in_service = False
+    for raw_line in unit_content.splitlines():
+        line = raw_line.strip()
+        if line.startswith("[") and line.endswith("]"):
+            in_service = line == "[Service]"
+            continue
+        if in_service and line.startswith("User="):
+            value = line[len("User="):].strip()
+            return value or None
+    return None

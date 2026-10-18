@@ -6,6 +6,7 @@ de fichier a moitie ecrit meme sous charge (auto-block)."""
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from omega_serv.domain.security.waf.blocklist import (
@@ -17,6 +18,11 @@ from omega_serv.domain.security.waf.blocklist import (
 from omega_serv.domain.security.waf.entities import BlocklistEntry
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.filesystem_port import FilesystemPort
+
+
+class BlocklistUnreadableError(OSError):
+    """Le fichier de blocklist existe mais ne peut pas etre lu : toute ECRITURE
+    est refusee (elle reecrirait le fichier sans les bans existants)."""
 
 
 class JsonBlocklistStore:
@@ -43,16 +49,44 @@ class JsonBlocklistStore:
         self._clock = clock
         self._cache: list[BlocklistEntry] | None = None
         self._cache_mtime: float | None = None
+        self._last_reported_error: str | None = None
 
-    def _load(self) -> list[BlocklistEntry]:
+    def _report_read_error(self, error: OSError) -> None:
+        """Une seule ligne par erreur DISTINCTE (jamais une par requete)."""
+        message = f"{type(error).__name__} : {error}"
+        if message != self._last_reported_error:
+            self._last_reported_error = message
+            print(
+                f"ERREUR blocklist illisible ({self._path}) - derniere liste valide conservee, "
+                f"aucun ban ne peut etre ajoute tant que le fichier reste illisible : {message}",
+                file=sys.stderr,
+            )
+
+    def _load(self, *, for_write: bool = False) -> list[BlocklistEntry]:
+        """Incident reel du 2026-10-18 (craftdark) : blocklist.json reecrit en
+        root:root 600 -> PermissionError a CHAQUE requete, site entier en 502.
+        Desormais : en LECTURE (is_blocked, list, count), une erreur garde la
+        derniere liste lue correctement (une seule ligne d'erreur sur stderr,
+        donc dans journalctl) ; en ECRITURE (`for_write=True`), elle leve
+        BlocklistUnreadableError - jamais un fichier reecrit avec une liste
+        vide qui effacerait les bans existants."""
         if not self._fs.exists(self._path):
             self._cache = None
             self._cache_mtime = None
             return []
-        current_mtime = self._fs.file_mtime(self._path)
-        if self._cache is not None and self._cache_mtime == current_mtime:
-            return self._cache
-        raw = self._fs.read_text(self._path)
+        try:
+            current_mtime = self._fs.file_mtime(self._path)
+            if self._cache is not None and self._cache_mtime == current_mtime:
+                return self._cache
+            raw = self._fs.read_text(self._path)
+        except OSError as e:
+            self._report_read_error(e)
+            if for_write:
+                raise BlocklistUnreadableError(
+                    f"blocklist illisible {self._path} : {e} - ecriture refusee pour ne pas effacer les bans existants"
+                ) from e
+            return list(self._cache or [])
+        self._last_reported_error = None
         try:
             data = json.loads(raw)
         except json.JSONDecodeError:
@@ -76,13 +110,13 @@ class JsonBlocklistStore:
         return tuple(self._load())
 
     def add_entry(self, entry: BlocklistEntry) -> None:
-        entries = self._load()
+        entries = self._load(for_write=True)
         entries = [e for e in entries if e.network != entry.network]
         entries.append(entry)
         self._save(entries)
 
     def remove_entry(self, network: str) -> bool:
-        entries = self._load()
+        entries = self._load(for_write=True)
         remaining = [e for e in entries if e.network != network]
         if len(remaining) == len(entries):
             return False
@@ -90,7 +124,7 @@ class JsonBlocklistStore:
         return True
 
     def purge_expired(self) -> int:
-        entries = self._load()
+        entries = self._load(for_write=True)
         kept, removed_count = purge_expired(entries, self._clock.now())
         if removed_count:
             self._save(kept)

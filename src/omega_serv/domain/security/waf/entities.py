@@ -34,6 +34,11 @@ class RuleDefinition:
     weight: int = 1
     action: Literal["score"] = "score"
     enabled: bool = True
+    # Motif d'exceptions (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md
+    # §3.10-3) : un texte qui le matche ne declenche JAMAIS la regle,
+    # meme s'il matche `pattern` - exception prioritaire. None = aucune
+    # exception (comportement de toutes les regles existantes).
+    exclude_pattern: str | None = None
 
 
 @dataclass(frozen=True)
@@ -55,12 +60,34 @@ class KeywordListDefinition:
     relatif au projet, jamais absolu (meme regle que les autres chemins
     de configuration). Converti en une regle unique a l'alternance par
     domain/security/waf/keyword_list.py - ne transporte ici que la
-    reference, jamais le contenu du fichier (aucune I/O dans ce module)."""
+    reference, jamais le contenu du fichier (aucune I/O dans ce module).
+
+    Champs ajoutes par OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md (tous
+    avec un defaut = comportement anterieur strictement identique) :
+    - `match` : "substring" (defaut, recherche de sous-chaine, ex. spam
+      Referer) ou "path" (une ligne = un chemin, frontieres de segments
+      respectees, jokers `/*.ext`, exceptions `!/x` - §3.1) ;
+    - `anchor` : "any_segment" (l'entree peut suivre n'importe quel '/')
+      ou "root" (debut du chemin) - n'a de sens qu'avec match="path" ;
+    - `observe_only` : journalise sans compter ni dans le score ni dans
+      la reputation (mode essai, §3.10-5) ;
+    - `escalation_*` : recidive propre a la liste (§3.12) -
+      `escalation_threshold` a 0 = pas de seuil propre (compteur commun
+      `reputation.suspicious_threshold`), `auto_block_duration_seconds`
+      a None = duree commune `reputation.auto_block_duration_seconds`."""
     id: str
     scope: tuple[str, ...]
     file: str
     weight: int = 1
     enabled: bool = True
+    match: Literal["substring", "path"] = "substring"
+    anchor: Literal["any_segment", "root"] = "any_segment"
+    observe_only: bool = False
+    escalation_threshold: int = 0
+    escalation_window_seconds: int = 600
+    auto_block_duration_seconds: int | None = None
+    # Nom affiche dans l'ecran WAF Custom (assistant, lot 6) - purement descriptif.
+    label: str = ""
 
 
 @dataclass(frozen=True)

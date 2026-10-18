@@ -1,4 +1,5 @@
 import unittest
+from typing import ClassVar
 
 from omega_serv.domain.http.headers import HttpHeaders
 from omega_serv.domain.security.trusted_proxy import (
@@ -62,6 +63,35 @@ class TestResolveClientIp(unittest.TestCase):
         headers = HttpHeaders.from_pairs([])
         result = resolve_client_ip("127.0.0.1", headers, trusted_networks=["127.0.0.1/32"], header_preference=["X-Forwarded-For"])
         self.assertEqual(result, "127.0.0.1")
+
+
+class TestRightmostUntrustedResolution(unittest.TestCase):
+    """OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.14-b (Q11) : la valeur
+    la plus a gauche est choisie par le client - jamais retenue si une
+    adresse non fiable se trouve a sa droite."""
+    _TRUSTED: ClassVar[list[str]] = ["127.0.0.1/32", "::1/128"]
+
+    def _resolve(self, header: str, value: str) -> str:
+        headers = HttpHeaders.from_pairs([(header, value)])
+        return resolve_client_ip("127.0.0.1", headers, trusted_networks=self._TRUSTED, header_preference=[header])
+
+    def test_spoofed_loopback_on_the_left_is_ignored(self):
+        self.assertEqual(self._resolve("X-Forwarded-For", "127.0.0.1, 203.0.113.9"), "203.0.113.9")
+
+    def test_spoofed_tailscale_address_is_ignored(self):
+        self.assertEqual(self._resolve("X-Forwarded-For", "100.106.10.47, 203.0.113.9"), "203.0.113.9")
+
+    def test_single_value_unchanged(self):
+        self.assertEqual(self._resolve("X-Forwarded-For", "203.0.113.9"), "203.0.113.9")
+
+    def test_chain_of_trusted_proxies_is_skipped(self):
+        self.assertEqual(self._resolve("X-Forwarded-For", "203.0.113.9, 127.0.0.1, ::1"), "203.0.113.9")
+
+    def test_all_trusted_falls_back_to_leftmost(self):
+        self.assertEqual(self._resolve("X-Forwarded-For", "127.0.0.1, ::1"), "127.0.0.1")
+
+    def test_forwarded_header_multi_hop(self):
+        self.assertEqual(self._resolve("Forwarded", 'for=127.0.0.1, for="[2001:db8::1]:443"'), "2001:db8::1")
 
 
 if __name__ == "__main__":

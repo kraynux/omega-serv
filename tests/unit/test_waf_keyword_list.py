@@ -129,5 +129,51 @@ class TestBuildRulePackFromKeywordList(unittest.TestCase):
         self.assertIsNone(compiled.search("anything"))
 
 
+class TestPathModeDefinitionFields(unittest.TestCase):
+    """Champs ajoutes par OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md."""
+    def _path(self, **overrides) -> KeywordListDefinition:
+        values = {"id": "L", "scope": ("path",), "file": "secure/waf/rules/keywords/l.txt", "match": "path"}
+        values.update(overrides)
+        return KeywordListDefinition(**values)
+
+    def test_new_fields_default_to_legacy_behaviour(self):
+        definition = parse_keyword_list_definition({"id": "X", "scope": ["referer"], "file": "f.txt"})
+        self.assertEqual(definition.match, "substring")
+        self.assertEqual(definition.anchor, "any_segment")
+        self.assertFalse(definition.observe_only)
+        self.assertEqual(definition.escalation_threshold, 0)
+        self.assertIsNone(definition.auto_block_duration_seconds)
+
+    def test_new_fields_parsed(self):
+        definition = parse_keyword_list_definition({
+            "id": "sensitive-paths-hostile", "scope": ["path"], "file": "f.txt", "match": "path",
+            "anchor": "root", "observe_only": True, "escalation_threshold": 2,
+            "escalation_window_seconds": 600, "auto_block_duration_seconds": 86400,
+        })
+        self.assertEqual(
+            (definition.match, definition.anchor, definition.observe_only, definition.escalation_threshold,
+             definition.escalation_window_seconds, definition.auto_block_duration_seconds),
+            ("path", "root", True, 2, 600, 86400),
+        )
+
+    def test_valid_path_definition_passes(self):
+        self.assertEqual(validate_keyword_list_definition(self._path()), [])
+
+    def test_unknown_match_and_anchor_rejected(self):
+        errors = validate_keyword_list_definition(self._path(match="regex", anchor="middle"))
+        self.assertTrue(any("'match' inconnu" in e for e in errors))
+        self.assertTrue(any("'anchor' inconnu" in e for e in errors))
+
+    def test_path_match_requires_path_scope_only(self):
+        errors = validate_keyword_list_definition(self._path(scope=("path", "query")))
+        self.assertTrue(any("scope=['path']" in e for e in errors))
+
+    def test_escalation_bounds(self):
+        errors = validate_keyword_list_definition(self._path(
+            escalation_threshold=-1, escalation_window_seconds=0, auto_block_duration_seconds=0,
+        ))
+        self.assertEqual(len(errors), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

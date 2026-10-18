@@ -7,10 +7,14 @@ from typing import Protocol
 
 
 class ReputationTrackerPort(Protocol):
-    def record_hit(self, ip: str) -> None:
+    # `key` (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.12) : compteur
+    # separe par (IP, cle) - "global" = compteur commun historique, l'id
+    # d'une keyword_list = son compteur de recidive propre. Defaut =
+    # comportement anterieur pour tous les appelants existants.
+    def record_hit(self, ip: str, key: str = "global") -> None:
         ...
 
-    def count_hits_in_window(self, ip: str, window_seconds: int) -> int:
+    def count_hits_in_window(self, ip: str, window_seconds: int, key: str = "global") -> int:
         ...
 
     def reset(self, ip: str | None = None) -> None:

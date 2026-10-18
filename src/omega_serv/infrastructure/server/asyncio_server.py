@@ -209,6 +209,14 @@ class AsyncioHttpServer:
         assert self._server is not None
         return self._server.sockets
 
+    @property
+    def reputation_tracker(self) -> ReputationTrackerPort | None:
+        """Compteur de recidive en cours - relu par reload_server pour le
+        CONSERVER au SIGHUP (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md
+        §3.12 : chaque enregistrement depuis l'editeur declenche un
+        rechargement, qui remettait sinon toutes les recidives a zero)."""
+        return self._reputation_tracker
+
     async def start(self) -> None:
         server_config = self._config.server
         self._server = await asyncio.start_server(

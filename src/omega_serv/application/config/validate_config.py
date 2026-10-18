@@ -9,11 +9,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
+from omega_serv.application.server.start_server import resolve_magnet_paths
 from omega_serv.domain.config.entities import OmegaServConfig
+from omega_serv.domain.routing.alias import parse_alias_rules
 from omega_serv.domain.routing.fastcgi_zone import (
     parse_fastcgi_config,
     validate_fastcgi_config_structure,
 )
+from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
+from omega_serv.domain.routing.redirect import parse_redirect_rules
+from omega_serv.domain.routing.rewrite import parse_rewrite_rules
 from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
 from omega_serv.domain.security.auth.exceptions import AuthZonesFileError, UsersFileError
 from omega_serv.domain.security.auth.zones import validate_auth_zone
@@ -21,7 +26,12 @@ from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.domain.security.tls.validation import TlsStartupFacts, validate_tls_startup
 from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
 from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
-from omega_serv.application.server.start_server import resolve_magnet_paths
+from omega_serv.domain.security.waf.keyword_list import (
+    analyze_path_list_text,
+    find_route_conflicts,
+    is_excepted,
+    is_suffix_entry,
+)
 from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_list
 from omega_serv.infrastructure.waf.lua_waf_adapter import WafMagnetScriptError, load_lua_waf_adapter
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_pack
@@ -69,7 +79,7 @@ def validate_config_environment(
     waf_option = config.options.get("waf")
     if waf_option is not None and waf_option.enabled:
         errors.extend(
-            _validate_waf_environment(waf_option.settings, filesystem, project_root, config.paths.waf_script)
+            _validate_waf_environment(waf_option.settings, filesystem, project_root, config.paths.waf_script, config)
         )
 
     if config.tls.enabled and config.tls.mode == "direct":
@@ -250,8 +260,80 @@ def _validate_tls_environment(
     return validate_tls_startup(facts)
 
 
+def _collect_site_routes(
+    config: OmegaServConfig, filesystem: FilesystemPort, project_root: Path,
+) -> tuple[tuple[str, str], ...]:
+    """Toutes les routes que le site sert reellement, hors fichiers du
+    webroot (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md, recensement 1.0) :
+    aliases, redirections, reecritures, zones de reverse proxy, zones
+    d'upload, FastCGI, zones Auth. Seules les options ACTIVES comptent."""
+    routes: list[tuple[str, str]] = []
+
+    def settings_of(name: str) -> dict | None:
+        option = config.options.get(name)
+        return option.settings if option is not None and option.enabled else None
+
+    if (aliases := settings_of("aliases")) is not None:
+        routes += [("aliases", r.url_prefix) for r in parse_alias_rules(aliases.get("list", []))]
+    if (redirects := settings_of("redirects")) is not None:
+        routes += [("redirects", r.url_prefix) for r in parse_redirect_rules(redirects.get("list", []))]
+    if (rewrites := settings_of("rewrites")) is not None:
+        routes += [("rewrites", r.match_prefix) for r in parse_rewrite_rules(rewrites.get("list", []))]
+    if (proxy := settings_of("reverse_proxy")) is not None:
+        routes += [("reverse_proxy", z.url_prefix) for z in parse_proxy_zones(proxy.get("zones", []))]
+    if (upload := settings_of("upload")) is not None:
+        routes += [("upload", z.url_prefix) for z in parse_upload_zone_rules(upload.get("zones", []))]
+    if (fastcgi := settings_of("fastcgi")) is not None:
+        routes.append(("fastcgi", parse_fastcgi_config(fastcgi).url_prefix))
+    if settings_of("auth") is not None:
+        zones_path = project_root / config.paths.auth_zones
+        if filesystem.exists(zones_path):
+            from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
+            try:
+                routes += [("auth", z.path_prefix) for z in JsonAuthZonesRepository(filesystem, zones_path).load()]
+            except AuthZonesFileError:
+                pass  # deja signale par _validate_auth_environment
+    return tuple(routes)
+
+
+def _route_conflict_errors(
+    list_id: str, anchor: str, text: str, config: OmegaServConfig, filesystem: FilesystemPort, project_root: Path,
+) -> list[str]:
+    """Garde-fou §3.10-2 : une liste qui BLOQUE seule (poids >= seuil, hors
+    observation) ne doit jamais toucher une route reellement servie. Pour
+    le webroot, seul le chemin exact de l'entree est verifie (un parcours
+    complet serait trop lent sur un gros site) - le rejeu des logs reels
+    de l'editeur integre couvre les cas plus profonds."""
+    analysis = analyze_path_list_text(text, anchor)
+    entries, exceptions = analysis.entries, analysis.exceptions
+    prefix = f"options.waf.rules.keyword_lists[{list_id!r}]"
+    errors = [
+        f"{prefix} : l'entree {c.entry!r} bloquerait la route {c.route!r} ({c.source}) "
+        "- ajouter une exception '!' ou passer la liste en observation"
+        for c in find_route_conflicts(
+            entries, anchor, _collect_site_routes(config, filesystem, project_root), exceptions,
+        )
+    ]
+    webroot = project_root / config.paths.webroot
+    for entry in entries:
+        relative = entry.strip("/")
+        if (
+            relative and not is_suffix_entry(entry) and filesystem.exists(webroot / relative)
+            and not is_excepted("/" + relative, exceptions, anchor)
+        ):
+            errors.append(
+                f"{prefix} : l'entree {entry!r} bloquerait {relative!r}, qui existe dans le webroot "
+                "- ajouter une exception '!' ou retirer l'entree"
+            )
+    return errors
+
+
 def _validate_waf_environment(
-    settings: dict, filesystem: FilesystemPort, project_root: Path, default_waf_script: str,
+    settings: dict,
+    filesystem: FilesystemPort,
+    project_root: Path,
+    default_waf_script: str,
+    config: OmegaServConfig | None = None,
 ) -> list[str]:
     """Verifie que les packs de regles configures existent reellement
     et sont chargeables - la validation structurelle pure
@@ -274,6 +356,14 @@ def _validate_waf_environment(
             load_keyword_list(filesystem, definition, path)
         except WafRuleLoadError as e:
             errors.append(f"options.waf.rules.keyword_lists[{definition.id!r}] : {e}")
+            continue
+        blocks_on_its_own = (
+            definition.enabled and not definition.observe_only
+            and definition.weight >= waf_config.scoring.block_threshold
+        )
+        if config is not None and definition.match == "path" and blocks_on_its_own:
+            errors.extend(_route_conflict_errors(definition.id, definition.anchor, filesystem.read_text(path),
+                                                 config, filesystem, project_root))
 
     if waf_config.magnet.enabled:
         script_path = project_root / (waf_config.magnet.script or default_waf_script)

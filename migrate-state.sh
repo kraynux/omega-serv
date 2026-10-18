@@ -103,6 +103,13 @@ _copy_dir_contents "secure/secrets"
 _copy "secure/waf/blocklist.json"
 _copy "secure/waf/allowlist.json"
 _copy "secure/waf/rules/custom.json"
+# Listes de chemins/mots-clefs de l'utilisateur (OMEGA-SERV_PLAN-DETAILLE_
+# SENSITIVE_PATHS.md §3.11 : le fichier LOCAL gagne toujours) - les .txt
+# seulement, les .example sont du contenu livre.
+for list_file in "$OLD_DIR"/secure/waf/rules/keywords/*.txt; do
+    [ -e "$list_file" ] || continue
+    _copy "secure/waf/rules/keywords/$(basename "$list_file")"
+done
 _copy_dir_contents "webroot"
 _copy "var/settings.json"
 _copy_dir_contents "var/lib"

@@ -35,6 +35,7 @@ class CompiledRule:
     definition: RuleDefinition
     pattern: re.Pattern[str]
     pack: str
+    exclude: re.Pattern[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -54,6 +55,10 @@ def compile_rule_pack(pack: RulePack) -> CompiledRulePack:
             definition=rule,
             pattern=re.compile(rule.pattern, flags_cache[rule.case_insensitive]),
             pack=pack.pack,
+            exclude=(
+                re.compile(rule.exclude_pattern, flags_cache[rule.case_insensitive])
+                if rule.exclude_pattern else None
+            ),
         )
         for rule in pack.rules
         if rule.enabled
@@ -82,7 +87,9 @@ def evaluate_rules(
                 text = scope_texts.get(scope)
                 if not text:
                     continue
-                if compiled_rule.pattern.search(text):
+                if compiled_rule.pattern.search(text) and not (
+                    compiled_rule.exclude is not None and compiled_rule.exclude.search(text)
+                ):
                     findings.append(
                         WafFinding(
                             rule_id=rule.id,

@@ -29,6 +29,11 @@ class ParsedAccessLogEntry:
     jete, jamais utilise jusqu'ici (compute_log_stats n'en a pas
     besoin). Defaut 0 pour ne rien casser sur les usages existants qui
     construisent cette dataclass sans le connaitre."""
+    path: str = ""
+    """Champ additif (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md, lot 4.5 :
+    "Verifier contre mes logs") - chemin de la ligne de requete, query
+    comprise, tel qu'ecrit dans le log. Vide si la ligne de requete est
+    illisible. Defaut "" : meme raison que `response_size`."""
 
 
 def parse_combined_log_line(line: str) -> ParsedAccessLogEntry | None:
@@ -46,4 +51,10 @@ def parse_combined_log_line(line: str) -> ParsedAccessLogEntry | None:
         timestamp=timestamp,
         status_code=int(match.group("status")),
         response_size=response_size,
+        path=_request_path(match.group("request")),
     )
+
+
+def _request_path(request_line: str) -> str:
+    parts = request_line.split(" ")
+    return parts[1] if len(parts) >= 2 else ""

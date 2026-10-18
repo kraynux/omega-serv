@@ -11,6 +11,7 @@ from pathlib import Path
 from omega_serv.domain.security.waf.entities import KeywordListDefinition
 from omega_serv.domain.security.waf.exceptions import WafRuleLoadError
 from omega_serv.domain.security.waf.keyword_list import (
+    analyze_path_list_text,
     build_rule_pack_from_keyword_list,
     tokens_from_text,
 )
@@ -25,6 +26,17 @@ def load_keyword_list(filesystem: FilesystemPort, definition: KeywordListDefinit
         raw = filesystem.read_text(path)
     except OSError as e:
         raise WafRuleLoadError(f"Impossible de lire {path} : {e}") from e
+    if definition.match == "path":
+        # Meme severite bloquante qu'un pack JSON invalide : une liste de
+        # chemins en erreur (syntaxe, chemin vital touche) n'est JAMAIS
+        # chargee a moitie - refus net, avec les numeros de ligne
+        # (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.1). Les
+        # avertissements (doublons, taille) ne bloquent pas.
+        errors = analyze_path_list_text(raw, definition.anchor).errors
+        if errors:
+            details = " ; ".join(f"ligne {e.line} : {e.message}" for e in errors[:5])
+            more = f" (+{len(errors) - 5} autre(s))" if len(errors) > 5 else ""
+            raise WafRuleLoadError(f"Liste de chemins invalide {path} : {details}{more}")
     tokens = tokens_from_text(raw)
     pack = build_rule_pack_from_keyword_list(definition, tokens)
     return compile_rule_pack(pack)

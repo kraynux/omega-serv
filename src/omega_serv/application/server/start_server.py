@@ -11,9 +11,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
+from omega_serv.application.security.blocklist_location import prepare_blocklist_location
 from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
@@ -25,7 +26,16 @@ from omega_serv.domain.security.active_defense.config import (
     parse_active_defense_config,
 )
 from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
-from omega_serv.domain.security.waf.config import MagnetPathsConfig, WafConfig, parse_waf_config
+from omega_serv.domain.security.waf.config import (
+    DEFAULT_BLOCKLIST_PATH,
+    DEFAULT_MAGNET_BLOCKLIST_FILE,
+    LEGACY_BLOCKLIST_PATH,
+    LEGACY_MAGNET_BLOCKLIST_FILE,
+    MagnetPathsConfig,
+    WafConfig,
+    parse_waf_config,
+)
+from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import AsyncioDelayScheduler
 from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
 from omega_serv.infrastructure.auth.users_repository import JsonUsersRepository
@@ -126,6 +136,19 @@ def _ensure_magnet_directories(filesystem: FilesystemPort, resolved_paths: dict[
         filesystem.make_directory(target if key == "rules_dir" else target.parent)
 
 
+def _prepare_blocklists(filesystem: FilesystemPort, project_root: Path, waf_config: WafConfig) -> None:
+    """Blocklists sous var/lib/waf/ (dossier partage 2770) et reprise unique des
+    anciens fichiers de secure/waf/ - voir application/security/blocklist_location.py."""
+    prepare_blocklist_location(
+        filesystem, project_root, waf_config.blocklist.path, DEFAULT_BLOCKLIST_PATH, LEGACY_BLOCKLIST_PATH,
+    )
+    if waf_config.magnet.enabled:
+        prepare_blocklist_location(
+            filesystem, project_root, waf_config.magnet.paths.blocklist_file,
+            DEFAULT_MAGNET_BLOCKLIST_FILE, LEGACY_MAGNET_BLOCKLIST_FILE,
+        )
+
+
 def build_waf_collaborators(
     config: OmegaServConfig,
     project_root: Path,
@@ -142,6 +165,16 @@ def build_waf_collaborators(
     if "waf" not in config.options:
         return None
     waf_config = parse_waf_config(config.options["waf"].settings)
+    # Garde-fou OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.14-a : sans
+    # proxy de confiance, l'exemption d'auto-ban du loopback est retiree
+    # (tout le trafic d'un proxy local paraitrait venir de 127.0.0.1).
+    waf_config = replace(waf_config, reputation=replace(
+        waf_config.reputation,
+        never_auto_block=effective_never_auto_block(
+            waf_config.reputation.never_auto_block, config.option_enabled("trusted_proxy"),
+        ),
+    ))
+    _prepare_blocklists(filesystem, project_root, waf_config)
     rule_paths = tuple(project_root / p for p in waf_config.rule_paths)
     compiled_packs = load_rule_packs(filesystem, rule_paths) + load_keyword_lists(
         filesystem, project_root, waf_config.keyword_lists,
@@ -226,6 +259,7 @@ def build_blocklist_port(
     (menu "Gestion blocklist") avant meme d'activer le WAF."""
     settings = config.options["waf"].settings if "waf" in config.options else {}
     waf_config = parse_waf_config(settings)
+    _prepare_blocklists(filesystem, project_root, waf_config)
     return JsonBlocklistStore(filesystem, project_root / waf_config.blocklist.path, clock)
 
 
@@ -372,10 +406,36 @@ def reload_server(
         waf_port=waf.waf_port if waf else None,
         blocklist_port=waf.blocklist_port if waf else None,
         rate_limit_port=waf.rate_limit_port if waf else None,
-        reputation_tracker=waf.reputation_tracker if waf else None,
+        # Compteur de recidive CONSERVE (etat en memoire, seul un restart complet
+        # le remet a zero) - voir AsyncioHttpServer.reputation_tracker.
+        reputation_tracker=(server.reputation_tracker or waf.reputation_tracker) if waf else None,
         waf_alert_log_path=waf.alert_log_path if waf else None,
         magnet_port=waf.magnet_port if waf else None,
         magnet_executor=waf.magnet_executor if waf else None,
         auth_zones=auth.zones if auth else (),
         users_by_name=auth.users_by_name if auth else None,
     )
+
+
+def try_reload_server(
+    server: AsyncioHttpServer,
+    config: OmegaServConfig,
+    project_root: Path,
+    filesystem: FilesystemPort,
+    clock: ClockPort | None = None,
+) -> str | None:
+    """Rechargement (SIGHUP) qui ne peut JAMAIS echouer en silence
+    (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.8, constat P5 du
+    2026-10-18) : avant, une liste illisible levait WafRuleLoadError dans
+    une tache asyncio jamais attendue - erreur invisible, anciennes regles
+    gardees PAR ACCIDENT, et la TUI affichait "recharge". `reload_server`
+    construit tous les collaborateurs AVANT d'appeler `reload_scoped` : une
+    erreur levee pendant la construction laisse donc le serveur
+    strictement inchange - ce comportement est ici rendu VOULU et teste.
+    Renvoie None si le rechargement a reussi, sinon le message d'erreur
+    (journalise par l'appelant, visible dans journalctl)."""
+    try:
+        reload_server(server, config, project_root, filesystem, clock)
+    except Exception as e:  # noqa: BLE001 - toute erreur de construction doit etre rapportee, jamais perdue
+        return f"{type(e).__name__} : {e}"
+    return None

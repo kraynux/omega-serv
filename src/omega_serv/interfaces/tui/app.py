@@ -136,8 +136,33 @@ class OmegaServApp(App[None]):
             return base
         return f"{base} | Instance : {self._current_instance_display_name()}"
 
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        """La palette de commandes de Textual (ctrl+p, active par defaut dans
+        toute l'application) est NEUTRALISEE tant qu'un ecran sans raccourcis
+        est au premier plan (editeur integre, OMEGA-SERV_PLAN-DETAILLE_
+        SENSITIVE_PATHS.md §3.6 : "aucun raccourci clavier"). Le reste de
+        l'application garde son comportement. ctrl+q reste joignable : c'est
+        la sortie de secours, toujours confirmee (voir action_quit)."""
+        if action == "command_palette" and getattr(self.screen, "BLOCKS_GLOBAL_SHORTCUTS", False):
+            return False
+        return super().check_action(action, parameters)
+
     async def action_quit(self) -> None:
-        """Surcharge : demande confirmation avant de fermer."""
+        """Surcharge : demande confirmation avant de fermer. Si un editeur
+        integre de la pile a des modifications non enregistrees
+        (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.6), la confirmation
+        le dit explicitement - ctrl+q reste joignable depuis l'editeur."""
+        if any(getattr(screen, "has_unsaved_changes", False) for screen in self.screen_stack):
+            from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
+
+            self.push_screen(
+                ConfirmScreen(
+                    title="QUITTER SANS ENREGISTRER ?",
+                    message="Un editeur contient des modifications non enregistrees : elles seront perdues.",
+                ),
+                self._quit_if_confirmed,
+            )
+            return
         self.push_screen(QuitConfirmScreen(), self._quit_if_confirmed)
 
     def _quit_if_confirmed(self, confirmed: bool | None) -> None:

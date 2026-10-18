@@ -1,6 +1,11 @@
 import unittest
 
-from omega_serv.domain.security.waf.config import WafConfig, parse_waf_config, validate_waf_config
+from omega_serv.domain.security.waf.config import (
+    WafConfig,
+    parse_waf_config,
+    validate_waf_config,
+    with_reputation_enabled_for_lists,
+)
 
 
 class TestParseWafConfig(unittest.TestCase):
@@ -48,8 +53,27 @@ class TestParseWafConfig(unittest.TestCase):
 
     def test_magnet_paths_default_to_project_local_locations(self):
         config = parse_waf_config({})
-        self.assertEqual(config.magnet.paths.blocklist_file, "secure/waf/magnet-blocklist.txt")
+        self.assertEqual(config.magnet.paths.blocklist_file, "var/lib/waf/magnet-blocklist.txt")
+        self.assertEqual(config.blocklist.path, "var/lib/waf/blocklist.json")
         self.assertEqual(config.magnet.paths.rules_dir, "secure/waf/magnet-rules.d/")
+
+    def test_legacy_default_paths_saved_explicitly_follow_the_new_default(self):
+        # L'ecran WAF Magnet enregistre toujours ses 5 chemins : l'ancien defaut
+        # ecrit en toutes lettres n'est pas un choix de l'utilisateur.
+        config = parse_waf_config({
+            "blocklist": {"path": "secure/waf/blocklist.json"},
+            "magnet": {"paths": {"blocklist_file": "secure/waf/magnet-blocklist.txt"}},
+        })
+        self.assertEqual(config.blocklist.path, "var/lib/waf/blocklist.json")
+        self.assertEqual(config.magnet.paths.blocklist_file, "var/lib/waf/magnet-blocklist.txt")
+
+    def test_custom_blocklist_paths_are_kept(self):
+        config = parse_waf_config({
+            "blocklist": {"path": "secure/waf/ma-liste.json"},
+            "magnet": {"paths": {"blocklist_file": "/etc/blocklist.txt"}},
+        })
+        self.assertEqual(config.blocklist.path, "secure/waf/ma-liste.json")
+        self.assertEqual(config.magnet.paths.blocklist_file, "/etc/blocklist.txt")
 
     def test_magnet_paths_overridable(self):
         settings = {"magnet": {"enabled": True, "script": "secure/waf/scripts/waf.lua", "paths": {
@@ -97,6 +121,55 @@ class TestValidateWafConfig(unittest.TestCase):
         config = parse_waf_config({"rules": {"paths": ["x"]}, "scoring": {"block_threshold": 0}})
         errors = validate_waf_config(config)
         self.assertTrue(any("block_threshold" in e for e in errors))
+
+
+class TestNeverAutoBlockConfig(unittest.TestCase):
+    """OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.13."""
+    def test_default_networks_applied(self):
+        config = parse_waf_config({})
+        self.assertIn("127.0.0.0/8", config.reputation.never_auto_block)
+        self.assertIn("100.64.0.0/10", config.reputation.never_auto_block)
+        self.assertNotIn("100.0.0.0/8", config.reputation.never_auto_block)
+
+    def test_override(self):
+        config = parse_waf_config({"reputation": {"never_auto_block": ["10.0.0.0/8"]}})
+        self.assertEqual(config.reputation.never_auto_block, ("10.0.0.0/8",))
+
+    def test_invalid_network_rejected(self):
+        config = parse_waf_config({
+            "rules": {"paths": ["secure/waf/rules/core.json"]},
+            "reputation": {"never_auto_block": ["10.0.0.0/8", "pas-un-reseau"]},
+        })
+        errors = validate_waf_config(config)
+        self.assertTrue(any("never_auto_block" in e and "pas-un-reseau" in e for e in errors))
+
+
+class TestReputationEnabledOnListLoad(unittest.TestCase):
+    """Lot 2.2 : defauts du code inchanges, activation au chargement d'une liste."""
+    def test_code_defaults_unchanged(self):
+        config = parse_waf_config({})
+        self.assertFalse(config.reputation.enabled)
+        self.assertFalse(config.reputation.auto_block)
+
+    def test_enables_both_when_absent(self):
+        settings, changes = with_reputation_enabled_for_lists({"mode": "block"})
+        self.assertEqual(len(changes), 2)
+        self.assertTrue(settings["reputation"]["enabled"])
+        self.assertTrue(settings["reputation"]["auto_block"])
+        self.assertEqual(settings["mode"], "block")
+
+    def test_keeps_other_reputation_settings_and_does_not_mutate_input(self):
+        original = {"reputation": {"enabled": True, "suspicious_threshold": 7}}
+        settings, changes = with_reputation_enabled_for_lists(original)
+        self.assertEqual(changes, ("auto-ban active (blocklist temporaire, reponse 451)",))
+        self.assertEqual(settings["reputation"]["suspicious_threshold"], 7)
+        self.assertNotIn("auto_block", original["reputation"])
+
+    def test_nothing_to_do_when_already_enabled(self):
+        original = {"reputation": {"enabled": True, "auto_block": True}}
+        settings, changes = with_reputation_enabled_for_lists(original)
+        self.assertEqual(changes, ())
+        self.assertIs(settings, original)
 
 
 if __name__ == "__main__":

@@ -335,7 +335,12 @@ WAF_MODULES_SCREEN = ScreenGuide(
         ),
         FieldGuide(
             label="Liste de blocage",
-            definition="IP/reseaux bannis, avec motif et expiration optionnelle.",
+            definition=(
+                "IP/reseaux bannis, avec motif et expiration optionnelle. Fichier par defaut : "
+                "var/lib/waf/blocklist.json (sous var/, le seul dossier ou le service systemd peut "
+                "ecrire ses auto-bans). Un ancien secure/waf/blocklist.json est repris une fois au "
+                "demarrage et laisse en place comme sauvegarde."
+            ),
             utilisation="Reseau (CIDR), motif, duree en secondes (vide = permanent, confirmation requise dans ce cas).",
             action="Ajoute/retire une entree.",
             reaction=(
@@ -379,31 +384,74 @@ WAF_TEST_SCREEN = ScreenGuide(
 
 WAF_CUSTOM_RULE_SCREEN = ScreenGuide(
     screen_class_name="WafCustomRuleScreen",
-    title="WAF - Regles personnalisees",
+    title="WAF - Regles et listes personnalisees",
     acces="Accueil -> Active Securite -> Custom (bloc WAF)",
     definition=(
-        "Cree de vraies regles WAF personnalisees, ecrites dans secure/waf/rules/custom.json - "
-        "reference AUTOMATIQUEMENT ce pack dans rule_paths, jamais une etape manuelle separee."
+        "Un seul tableau pour les REGLES (ecrites dans secure/waf/rules/custom.json, pack "
+        "reference automatiquement) et les LISTES (fichiers texte de secure/waf/rules/keywords/, "
+        "chargees explicitement par l'assistant). La colonne Type fait la difference : une "
+        "liste n'est pas une regle de custom.json."
     ),
     fields=(
         FieldGuide(
-            label="Ajouter une regle",
-            definition="Ouvre l'assistant de creation de regle (langage clair, voir sa propre fiche).",
-            utilisation="Voir la fiche de l'assistant.",
-            action="Ecrit la regle validee dans custom.json.",
+            label="Ajouter",
+            definition="Ouvre l'assistant : une regle simple, ou CHARGER une liste (voir sa fiche).",
+            utilisation="Clic, puis suivre l'assistant.",
+            action="Regle : ecrite dans custom.json. Liste : ajoutee a options.waf.rules.keyword_lists.",
             reaction="Rechargement automatique declenche immediatement si un service actif existe.",
         ),
         FieldGuide(
-            label="Supprimer",
-            definition="Retire une regle personnalisee existante.",
+            label="Colonne Detail (listes)",
+            definition="Nombre d'entrees du fichier, ou un avertissement.",
+            utilisation=(
+                "'fichier absent', 'illisible par le service' ou 'emplacement refuse' : la liste "
+                "n'est pas chargeable telle quelle - ouvrez-la avec Editer la liste."
+            ),
+            action="Recalcule a chaque affichage du tableau.",
+            reaction="Aucun effet en lui-meme.",
+        ),
+        FieldGuide(
+            label="Colonne Gravite (listes)",
+            definition="Observation, Faible, Moyen, Eleve ou Critique, suivie de la recidive propre a la liste.",
+            utilisation="Ex. 'Eleve, 2 en 10 min -> ban 24 h'.",
+            action="Se change avec Modifier.",
+            reaction="Aucun effet en lui-meme.",
+        ),
+        FieldGuide(
+            label="Modifier (listes)",
+            definition="Change gravite, recidive, zone de recherche et nom affiche d'une liste deja chargee.",
+            utilisation="Selectionner une ligne Liste, puis Modifier.",
+            action=(
+                "Verifie la nouvelle configuration comme au chargement : rendre bloquante une liste "
+                "qui toucherait une route du site est refuse avec la raison."
+            ),
+            reaction="Rechargement automatique declenche immediatement.",
+        ),
+        FieldGuide(
+            label="Editer la liste",
+            definition="Ouvre l'editeur integre sur le fichier de la liste (voir sa fiche).",
+            utilisation="Selectionner une ligne Liste, puis Editer la liste.",
+            action="Aucune ecriture tant que l'editeur n'a pas enregistre.",
+            reaction="Le tableau est rafraichi a la fermeture de l'editeur.",
+        ),
+        FieldGuide(
+            label="Activer/Desactiver",
+            definition="Bascule une regle ou une liste sans la supprimer.",
+            utilisation="Selectionner une ligne, puis cliquer.",
+            action="Regle : champ enabled de custom.json. Liste : champ enabled de keyword_lists.",
+            reaction="Rechargement automatique declenche immediatement.",
+        ),
+        FieldGuide(
+            label="Supprimer / Retirer",
+            definition="Supprimer une regle, ou Retirer une liste du WAF.",
             utilisation="Selectionner une ligne, puis confirmer.",
-            action="Retire la regle de custom.json.",
+            action="Regle : retiree de custom.json. Liste : retiree de la configuration, FICHIER CONSERVE.",
             reaction="Rechargement automatique declenche immediatement.",
         ),
     ),
     consequences=(
-        "Une regle refusee par la validation est refusee ICI de la meme facon qu'elle le serait "
-        "au chargement reel - jamais une double logique de validation divergente."
+        "Une regle ou une liste refusee par la validation est refusee ICI de la meme facon qu'elle "
+        "le serait au chargement reel - jamais une double logique de validation divergente."
     ),
     points_de_vigilance=(
         (
@@ -411,17 +459,22 @@ WAF_CUSTOM_RULE_SCREEN = ScreenGuide(
             "meme chose que creer une REGLE ici - cet ecran fait desormais les deux a la fois "
             "automatiquement."
         ),
+        (
+            "Retirer une liste ne supprime jamais son fichier : il reste propose par l'assistant, "
+            "pret a etre recharge."
+        ),
     ),
 )
 
 WAF_CUSTOM_RULE_WIZARD_SCREEN = ScreenGuide(
     screen_class_name="WafCustomRuleWizardScreen",
-    title="WAF - Assistant regle personnalisee",
-    acces="WAF - Regles personnalisees -> Ajouter une regle",
+    title="WAF - Assistant regle personnalisee / chargement de liste",
+    acces="WAF - Regles et listes personnalisees -> Ajouter",
     definition=(
         "Questionnaire en langage clair pour construire une regle WAF sans connaitre les "
-        "expressions regulieres, pour les 4 scenarios les plus courants - un mode Avance reste "
-        "disponible pour ecrire directement motif/portee."
+        "expressions regulieres (4 scenarios courants + mode Avance), OU pour CHARGER une liste "
+        "de chemins / de mots-cles depuis un fichier texte. Le chargement d'une liste est une "
+        "action explicite : rien n'est actif avant le clic sur Charger."
     ),
     fields=(
         FieldGuide(
@@ -429,10 +482,10 @@ WAF_CUSTOM_RULE_WIZARD_SCREEN = ScreenGuide(
             definition="Choisit le scenario de detection.",
             utilisation=(
                 "Un chemin precis visite, un mot-cle dans l'adresse/parametres, un mot-cle "
-                "envoye en formulaire (POST), un outil de scan connu (User-Agent), ou Avance "
-                "(regex/portee libres)."
+                "envoye en formulaire (POST), un outil de scan connu (User-Agent), Avance "
+                "(regex/portee libres), CHARGER une liste de chemins, CHARGER une liste de mots-cles."
             ),
-            action="Change le champ de saisie affiche en dessous et son indice.",
+            action="Change les champs affiches en dessous et leur indice.",
             reaction="Aucun effet en lui-meme.",
         ),
         FieldGuide(
@@ -450,14 +503,222 @@ WAF_CUSTOM_RULE_WIZARD_SCREEN = ScreenGuide(
             reaction="Aucun effet avant validation sur l'ecran precedent.",
         ),
         FieldGuide(
-            label="Gravite",
+            label="Gravite (regle)",
             definition="Poids de la regle dans le calcul du score de menace.",
             utilisation="Faible/Moyen/Eleve/Critique (1/3/6/9).",
             action="Inclus dans la regle produite.",
             reaction="Aucun effet avant validation sur l'ecran precedent.",
         ),
+        FieldGuide(
+            label="Fichier de liste (CHARGER)",
+            definition="Le fichier texte qui contient la liste.",
+            utilisation=(
+                "Vos fichiers .txt de secure/waf/rules/keywords/ (avec leur nombre d'entrees), les "
+                "references livrees avec omega-serv (sensitive-paths-hostile, sensitive-paths-probe) "
+                "pas encore copiees, ou 'Nouveau fichier...' (nom en lettres, chiffres et '-')."
+            ),
+            action=(
+                "Une reference est COPIEE dans keywords/ au chargement : c'est cette copie locale que "
+                "vous modifiez, une mise a jour d'omega-serv ne l'ecrase jamais. Choisir une reference "
+                "pre-remplit tous les reglages conseilles."
+            ),
+            reaction="Aucun effet avant Charger.",
+        ),
+        FieldGuide(
+            label="Ou chercher (liste de chemins)",
+            definition="N'importe ou dans l'adresse, ou seulement au debut.",
+            utilisation=(
+                "Partout attrape /blog/.env ; au debut seulement est plus prudent pour des chemins "
+                "qu'un vrai site peut servir (/api, /admin)."
+            ),
+            action="Champ anchor de la liste (any_segment / root).",
+            reaction="Aucun effet avant Charger.",
+        ),
+        FieldGuide(
+            label="Dans quelle partie de la requete (liste de mots-cles)",
+            definition="Ou chercher les mots-cles.",
+            utilisation="L'adresse et ses parametres, un formulaire envoye (POST), le User-Agent, ou le Referer.",
+            action="Champ scope de la liste.",
+            reaction="Aucun effet avant Charger.",
+        ),
+        FieldGuide(
+            label="Gravite (liste)",
+            definition="Observation, Faible (1), Moyen (3), Eleve (6), Critique (9).",
+            utilisation=(
+                "Observation (conseille au premier chargement) : alertes journalisees, AUCUN blocage, "
+                "aucune recidive. Eleve (6) atteint le seuil de blocage : 403 des le premier acces. "
+                "Moyen (3) ne bloque jamais seul."
+            ),
+            action="Champs weight et observe_only de la liste.",
+            reaction="Aucun effet avant Charger.",
+        ),
+        FieldGuide(
+            label="Recidive",
+            definition="Bannir apres N acces a CETTE liste en M minutes, pendant une duree choisie.",
+            utilisation=(
+                "'pas de recidive propre' = compteur commun du WAF. References : hostile 2 acces en "
+                "10 min -> 24 h, sondage 5 en 10 min -> 1 h. Grise en Observation."
+            ),
+            action=(
+                "Ban applicatif temporaire (blocklist, reponse 451), jamais pour l'hote local "
+                "(derriere un proxy de confiance), Tailscale ou le reseau local."
+            ),
+            reaction="Aucun effet avant Charger.",
+        ),
+        FieldGuide(
+            label="Ouvrir l'editeur",
+            definition="Ouvre le fichier choisi dans l'editeur integre (ou la reference si pas encore copiee).",
+            utilisation="Pour verifier ou adapter la liste AVANT de la charger.",
+            action="Rien n'est charge dans le WAF depuis l'editeur.",
+            reaction="Les nombres d'entrees sont rafraichis a la fermeture.",
+        ),
+        FieldGuide(
+            label="Charger",
+            definition="Charge la liste dans le WAF.",
+            utilisation="Dernier clic de l'assistant.",
+            action=(
+                "Verifie, dans l'ordre : nom de fichier, syntaxe (numero de ligne en cas d'erreur), "
+                "lisibilite par le compte du service, absence de doublon, conflits avec les routes du "
+                "site. Si une seule verification echoue, la configuration n'est PAS modifiee. Active "
+                "ensuite la reputation et l'auto-ban s'ils etaient eteints (avec un message)."
+            ),
+            reaction="Rechargement automatique declenche immediatement si un service actif existe.",
+        ),
     ),
-    consequences="Ne fait qu'assembler les valeurs - l'ecriture reelle a lieu sur l'ecran WAF - Regles personnalisees.",
+    consequences=(
+        "Regle : ne fait qu'assembler les valeurs, l'ecriture a lieu sur l'ecran WAF - Regles et "
+        "listes personnalisees. Liste : rien n'est actif tant que Charger n'a pas reussi."
+    ),
+    points_de_vigilance=(
+        (
+            "Une liste qui bloque seule (gravite >= 5) et qui toucherait une route reellement servie "
+            "(alias, reverse proxy, zone Auth, fichier du webroot) est refusee : ajoutez une exception "
+            "'!/chemin' dans la liste, ou chargez-la en Observation."
+        ),
+    ),
+)
+
+PATH_LIST_EDITOR_SCREEN = ScreenGuide(
+    screen_class_name="PathListEditorScreen",
+    title="WAF - Editeur de liste",
+    acces="WAF - Regles et listes personnalisees -> Editer la liste (ou Assistant -> Ouvrir l'editeur)",
+    definition=(
+        "Editeur de texte integre, sans editeur externe, pour une liste de chemins ou de mots-cles. "
+        "Tout se fait a la SOURIS : aucun raccourci clavier, le clavier ne sert qu'a la saisie "
+        "(caracteres, Entree, fleches, Debut/Fin, Page prec./suiv., Retour arriere, Suppr)."
+    ),
+    fields=(
+        FieldGuide(
+            label="Syntaxe d'une liste de chemins",
+            definition="Une entree par ligne, '#' = commentaire.",
+            utilisation=(
+                "/admin -> /admin et /admin/xxx (jamais /administrator) ; /.git/ -> tout ce qui est "
+                "sous /.git/ ; /*.bak -> fichiers finissant par .bak ; !/api/v1 -> exception, "
+                "toujours prioritaire sur les entrees, quel que soit l'ordre des lignes."
+            ),
+            action="Analysee en direct (compteur d'entrees, d'exceptions, d'erreurs et d'avertissements).",
+            reaction="Les erreurs s'affichent avec leur numero de ligne ; cliquer une erreur place le curseur dessus.",
+        ),
+        FieldGuide(
+            label="Barre d'outils",
+            definition="Annuler la modif, Retablir, Couper, Copier, Coller, Selectionner la ligne, Tout selectionner, Supprimer la ligne.",
+            utilisation="Clic. Le collage du terminal (clic du milieu, menu du terminal) fonctionne aussi.",
+            action="Modifie le texte affiche, jamais le fichier.",
+            reaction="Toujours annulable.",
+        ),
+        FieldGuide(
+            label="Rechercher",
+            definition="Trouve un texte dans la liste (casse ignoree).",
+            utilisation="Taper le texte, puis Precedent / Suivant.",
+            action="Selectionne l'occurrence trouvee.",
+            reaction="Recommence au debut apres la derniere occurrence.",
+        ),
+        FieldGuide(
+            label="Tester (liste de chemins)",
+            definition="Indique ce que ferait la liste EN COURS d'edition d'un chemin donne.",
+            utilisation="Taper un chemin (ex. /blog/.env), puis Tester.",
+            action="Meme normalisation que le WAF (parametres retires, decodage URL).",
+            reaction="'DETECTE par la ligne N', 'AUTORISE : exception ligne N', ou 'aucune ligne ne correspond'.",
+        ),
+        FieldGuide(
+            label="Verifier contre mes logs (liste de chemins)",
+            definition="Rejoue les requetes REUSSIES (2xx/3xx) du journal d'acces contre la liste.",
+            utilisation="Chaque ligne de la liste qui aurait touche une requete probablement legitime est montree avec un exemple.",
+            action="Cliquer une ligne : exception pour ce chemin, exception pour son dossier, ou suppression de la ligne.",
+            reaction="Modifie le texte affiche (annulable), jamais le fichier avant Enregistrer.",
+        ),
+        FieldGuide(
+            label="Nouveautes de la reference",
+            definition="Entrees de la reference livree absentes de votre liste.",
+            utilisation="Cocher celles a ajouter, puis Ajouter la selection.",
+            action=(
+                "Rien n'est ajoute sans etre coche. Une ligne de la reference que vous supprimez est "
+                "marquee '#retire: /x' a l'enregistrement et n'est plus jamais reproposee."
+            ),
+            reaction="Modifie le texte affiche.",
+        ),
+        FieldGuide(
+            label="Corriger les droits",
+            definition="Rend le fichier lisible par le compte du service (omega-serv).",
+            utilisation="Propose seulement si l'etat signale que le service ne peut pas lire le fichier.",
+            action=(
+                "Liste chaque changement de droits avant de l'appliquer, uniquement sur ce qui vous "
+                "appartient - jamais via sudo."
+            ),
+            reaction="L'etat est recalcule.",
+        ),
+        FieldGuide(
+            label="Enregistrer et appliquer",
+            definition="Ecrit le fichier, puis recharge le serveur si la liste est chargee.",
+            utilisation="Refuse tant qu'il reste une erreur.",
+            action=(
+                "Ecriture sure : droits et groupe conserves, nouveau fichier en 0644, refus si le "
+                "fichier a ete modifie ailleurs depuis l'ouverture, ou si c'est un lien symbolique."
+            ),
+            reaction=(
+                "Le rechargement n'est declenche que si la verification de la liste reussit - sinon "
+                "la raison est affichee et le serveur garde ses regles actuelles."
+            ),
+        ),
+        FieldGuide(
+            label="Fermer / Aide",
+            definition="Fermer l'editeur, ou ouvrir cette fiche.",
+            utilisation="Clic.",
+            action="Fermer demande une confirmation s'il reste des modifications non enregistrees.",
+            reaction="Retour a l'ecran precedent.",
+        ),
+    ),
+    consequences=(
+        "Le fichier n'est jamais modifie avant Enregistrer. Un fichier non modifiable par votre "
+        "compte s'ouvre en LECTURE SEULE, avec la raison."
+    ),
+    points_de_vigilance=(
+        (
+            "Echap et F1 ne font rien ici, volontairement (aucun raccourci) : utilisez Fermer et Aide. "
+            "Seul ctrl+q reste actif pour quitter l'application, avec confirmation."
+        ),
+        (
+            "L'etat en bas de l'ecran indique si le compte du service peut lire le fichier : un fichier "
+            "illisible ferait echouer le prochain rechargement."
+        ),
+    ),
+)
+
+KEYWORD_LIST_SETTINGS_SCREEN = ScreenGuide(
+    screen_class_name="KeywordListSettingsScreen",
+    title="WAF - Modifier une liste",
+    acces="WAF - Regles et listes personnalisees -> Modifier (ligne Liste)",
+    definition="Change les reglages d'une liste deja chargee, sans toucher a son fichier.",
+    fields=(
+        FieldGuide(
+            label="Nom affiche / Ou chercher / Gravite / Recidive",
+            definition="Memes choix que dans l'assistant (voir sa fiche).",
+            utilisation="Passer d'Observation a une gravite bloquante une fois les alertes lues.",
+            action="Verifie la nouvelle configuration avant de l'ecrire.",
+            reaction="Rechargement automatique ; refus affiche avec sa raison si la verification echoue.",
+        ),
+    ),
+    consequences="Rendre une liste bloquante reactive la reputation et l'auto-ban s'ils avaient ete eteints.",
 )
 
 WAF_MAGNET_SCREEN = ScreenGuide(
@@ -497,7 +758,10 @@ WAF_MAGNET_SCREEN = ScreenGuide(
             definition=(
                 "5 chemins (blocklist, dossier de regles, 2 journaux, fichier de persistance du "
                 "rate limiting) injectes dans le script a la place de ses chemins en dur d'origine - "
-                "propre a chaque script importe, jamais un contrat generique."
+                "propre a chaque script importe, jamais un contrat generique. Blocklist par defaut : "
+                "var/lib/waf/magnet-blocklist.txt (le script y ECRIT ; un ancien "
+                "secure/waf/magnet-blocklist.txt est repris une fois). Un chemin choisi a la main doit "
+                "rester inscriptible par le compte du service, sinon les bans sont perdus sans message."
             ),
             utilisation="Vide = le script garde son propre chemin en dur (aucune injection pour ce champ).",
             action="Enregistre avec Actif.",
@@ -551,6 +815,8 @@ ALL_ACTIVE_SECURITY_GUIDES: tuple[ScreenGuide, ...] = (
     WAF_TEST_SCREEN,
     WAF_CUSTOM_RULE_SCREEN,
     WAF_CUSTOM_RULE_WIZARD_SCREEN,
+    PATH_LIST_EDITOR_SCREEN,
+    KEYWORD_LIST_SETTINGS_SCREEN,
     WAF_RULE_PACK_PICKER_SCREEN,
     WAF_MAGNET_SCREEN,
 )

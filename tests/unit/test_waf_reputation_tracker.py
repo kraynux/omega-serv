@@ -77,5 +77,33 @@ class TestInMemoryReputationTrackerSweep(unittest.TestCase):
         self.assertIn("203.0.113.1", self.tracker._hits)
 
 
+class TestPerListCounters(unittest.TestCase):
+    """OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.12 : un compteur par (IP, cle)."""
+    def setUp(self):
+        self.clock = _FakeClock(datetime(2026, 10, 18, tzinfo=timezone.utc))
+        self.tracker = InMemoryReputationTracker(self.clock)
+
+    def test_keys_are_independent_counters(self):
+        self.tracker.record_hit("203.0.113.1")
+        self.tracker.record_hit("203.0.113.1", key="sensitive-paths-hostile")
+        self.tracker.record_hit("203.0.113.1", key="sensitive-paths-hostile")
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300), 1)
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300, key="sensitive-paths-hostile"), 2)
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300, key="sensitive-paths-probe"), 0)
+
+    def test_global_counter_keeps_its_historical_storage_key(self):
+        self.tracker.record_hit("203.0.113.1")
+        self.assertIn("203.0.113.1", self.tracker._hits)
+
+    def test_reset_ip_clears_every_counter_of_that_ip_only(self):
+        self.tracker.record_hit("203.0.113.1")
+        self.tracker.record_hit("203.0.113.1", key="liste")
+        self.tracker.record_hit("203.0.113.2", key="liste")
+        self.tracker.reset("203.0.113.1")
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300), 0)
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.1", 300, key="liste"), 0)
+        self.assertEqual(self.tracker.count_hits_in_window("203.0.113.2", 300, key="liste"), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -42,6 +42,19 @@ local enable_body_inspection = true
 local enable_rate_limit      = true
 -- Autorise l'ajout automatique à la blocklist.
 local enable_auto_block      = true
+-- Réseaux JAMAIS bannis automatiquement : seul le trafic externe peut l'être.
+-- Sous omega-serv, la liste est injectée par le serveur (table globale
+-- `omega_never_auto_block`, même réglage que son WAF natif :
+-- options.waf.reputation.never_auto_block) et prime toujours sur la valeur
+-- ci-dessous. En lighttpd natif (table absente) : hôte local, Tailscale et
+-- réseaux locaux. La requête elle-même reste refusée et journalisée ;
+-- seul le BAN (ajout à la blocklist) est évité.
+local never_auto_block       = omega_never_auto_block or {
+  "127.0.0.0/8", "::1/128",
+  "100.64.0.0/10", "fd7a:115c:a1e0::/48",
+  "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16",
+  "fc00::/7", "fe80::/10",
+}
 -- Bascule entre logs texte simples et logs JSON.
 local use_json_logs          = false
 -- Score minimum pour qu'une requête POST soit bloquée.
@@ -338,12 +351,113 @@ local function check_rate_limit(key, max_req, window)
   return e.count > max_req
 end
 
+-- =========================
+-- RÉSEAUX JAMAIS BANNIS (comparaison CIDR IPv4/IPv6)
+-- =========================
+-- Lua portable (5.1 à 5.5) : aucun opérateur binaire ni division entière,
+-- seulement math.floor, pour fonctionner dans tout lighttpd comme sous omega-serv.
+
+-- "a.b.c.d" -> entier 32 bits (nombre Lua), nil si invalide.
+local function ipv4_to_number(s)
+  local a, b, c, d = tostring(s or ""):match("^(%d+)%.(%d+)%.(%d+)%.(%d+)$")
+  if not a then return nil end
+  a, b, c, d = tonumber(a), tonumber(b), tonumber(c), tonumber(d)
+  if a > 255 or b > 255 or c > 255 or d > 255 then return nil end
+  return ((a * 256 + b) * 256 + c) * 256 + d
+end
+
+-- Adresse IPv6 -> tableau de 8 groupes de 16 bits, nil si invalide.
+-- Gère "::", la zone d'interface ("fe80::1%eth0") et la fin IPv4 ("::ffff:1.2.3.4").
+local function ipv6_to_groups(s)
+  s = tostring(s or ""):gsub("%%.*$", "")
+  if not s:find(":", 1, true) then return nil end
+  local tail_v4 = s:match(":(%d+%.%d+%.%d+%.%d+)$")
+  if tail_v4 then
+    local n = ipv4_to_number(tail_v4)
+    if not n then return nil end
+    s = s:sub(1, #s - #tail_v4) .. string.format("%x:%x", math.floor(n / 65536), n % 65536)
+  end
+  local function split(part)
+    local out = {}
+    if part == "" then return out end
+    for g in (part .. ":"):gmatch("([^:]*):") do
+      if not g:match("^%x%x?%x?%x?$") then return nil end
+      out[#out + 1] = tonumber(g, 16)
+    end
+    return out
+  end
+  local head, rest = s:match("^(.-)::(.*)$")
+  local groups
+  if head then
+    if rest:find("::", 1, true) then return nil end
+    local left, right = split(head), split(rest)
+    if not left or not right or #left + #right > 7 then return nil end
+    groups = {}
+    for _, g in ipairs(left) do groups[#groups + 1] = g end
+    for _ = 1, 8 - #left - #right do groups[#groups + 1] = 0 end
+    for _, g in ipairs(right) do groups[#groups + 1] = g end
+  else
+    groups = split(s)
+    if not groups or #groups ~= 8 then return nil end
+  end
+  return groups
+end
+
+-- Une IPv4 notée en IPv6 ("::ffff:a.b.c.d") est comparée comme une IPv4 :
+-- jamais de contournement par cette forme équivalente.
+local function ipv4_mapped(groups)
+  for i = 1, 5 do if groups[i] ~= 0 then return nil end end
+  if groups[6] ~= 65535 then return nil end
+  return groups[7] * 65536 + groups[8]
+end
+
+local function ip_in_cidr(ip, cidr)
+  local net, bits = tostring(cidr or ""):match("^([^/]+)/(%d+)$")
+  if not net then net, bits = tostring(cidr or ""), nil end
+  bits = tonumber(bits)
+  local ip_groups = ipv6_to_groups(ip)
+  local ip4 = ipv4_to_number(ip) or (ip_groups and ipv4_mapped(ip_groups))
+  local net4 = ipv4_to_number(net)
+  if net4 then
+    if not ip4 then return false end
+    bits = bits or 32
+    if bits < 0 or bits > 32 then return false end
+    local size = 2 ^ (32 - bits)
+    return math.floor(ip4 / size) == math.floor(net4 / size)
+  end
+  local net_groups = ipv6_to_groups(net)
+  if not net_groups or not ip_groups or ip4 then return false end
+  bits = bits or 128
+  if bits < 0 or bits > 128 then return false end
+  for i = 1, 8 do
+    local remaining = bits - (i - 1) * 16
+    if remaining <= 0 then return true end
+    if remaining >= 16 then
+      if ip_groups[i] ~= net_groups[i] then return false end
+    else
+      local size = 2 ^ (16 - remaining)
+      return math.floor(ip_groups[i] / size) == math.floor(net_groups[i] / size)
+    end
+  end
+  return true
+end
+
+local function is_never_auto_block(ip)
+  for _, cidr in ipairs(never_auto_block) do
+    if ip_in_cidr(ip, cidr) then return true end
+  end
+  return false
+end
+
 -- Enregistre un "hit" suspect pour une IP.
 -- C'est une logique d'escalade douce:
 --  - 1 hit: alerte / blocage ponctuel
 --  - plusieurs hits dans la fenêtre: ban définitif
 -- Cela évite de bannir instantanément sur un seul faux positif léger.
 local function record_suspicious_hit(ip, reason)
+  -- Réseau jamais banni : aucune escalade (l'appelant journalise et refuse
+  -- déjà la requête elle-même).
+  if is_never_auto_block(ip) then return false end
   local key = "susp:" .. tostring(ip or "0.0.0.0")
   local now = os.time()
   if not rate_store[key] then
@@ -405,6 +519,11 @@ end
 -- sans attendre le prochain refresh du fichier.
 function add_to_blocklist(ip, reason)
   if not enable_auto_block or not ip or ip == "" then return end
+  if is_never_auto_block(ip) then
+    -- Jamais une ligne "AJOUT BLOCKLIST" (relue par omega-jail pour bannir).
+    log_line(blocklist_log, string.format("[%s] BAN EVITE ip=%s reason=%s (reseau jamais banni)", now_str(), tostring(ip), tostring(reason or "")))
+    return
+  end
   local blocked = load_blocklist()
   if blocked[ip] then return end
   append_file(blocklist_file, string.format("# %s - %s\n%s\n", now_str(), tostring(reason or ""), tostring(ip)))
@@ -646,14 +765,14 @@ local sensitive_path_patterns = {
   "^/vendor/?",
   "^/phpunit/?",
   "^/phpmyadmin/?",
-  "^/%phpmyadmin%..+",
+  "^/phpmyadmin%..+",
   "^/pma/?",
   "^/adminer%.php$",
-  "^/%adminer%..+",
+  "^/adminer%..+",
   "^/wp%-admin/?",
-  "^/%wp%-admin%..+",
+  "^/wp%-admin%..+",
   "^/wp%-login%.php$",
-  "^/%wp%-login%.php%..+",
+  "^/wp%-login%.php%..+",
   "^/server%-status/?$",
   "^/%.DS_Store$"
 }

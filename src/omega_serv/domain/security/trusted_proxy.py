@@ -42,12 +42,11 @@ def is_trusted_proxy(peer_ip: str, trusted_networks: list[str]) -> bool:
     return False
 
 
-def _extract_forwarded_for(value: str) -> str | None:
-    """Extrait le champ `for=` du premier maillon d'un en-tete
-    `Forwarded` (RFC 7239) - gere la forme IPv6 entre crochets
-    (`for="[::1]:1234"`) et un eventuel port IPv4 (`for=1.2.3.4:5678`)."""
-    first_hop = value.split(",")[0].strip()
-    for part in first_hop.split(";"):
+def _forwarded_hop_for(hop: str) -> str | None:
+    """Extrait le champ `for=` d'UN maillon d'un en-tete `Forwarded`
+    (RFC 7239) - gere la forme IPv6 entre crochets (`for="[::1]:1234"`)
+    et un eventuel port IPv4 (`for=1.2.3.4:5678`)."""
+    for part in hop.split(";"):
         key, _, raw_value = part.strip().partition("=")
         if key.strip().lower() != "for":
             continue
@@ -58,6 +57,31 @@ def _extract_forwarded_for(value: str) -> str | None:
     return None
 
 
+def _header_hops(header_name: str, value: str) -> list[str]:
+    """Adresses de la chaine, dans l'ordre de l'en-tete (client d'origine
+    pretendu a gauche, dernier proxy a droite)."""
+    if header_name.lower() == "forwarded":
+        hops = [_forwarded_hop_for(hop) for hop in value.split(",")]
+        return [h for h in hops if h]
+    return [h.strip() for h in value.split(",") if h.strip()]
+
+
+def _rightmost_untrusted(hops: list[str], trusted_networks: list[str]) -> str:
+    """OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.14-b (Q11, 2026-10-18) :
+    la valeur la plus a GAUCHE est choisie par le client lui-meme - un
+    proxy qui AJOUTE son adresse a un en-tete fourni par le client (au lieu
+    de le remplacer) laissait alors n'importe qui se declarer `127.0.0.1`
+    et echapper a la blocklist, au rate-limit et a l'auto-ban. On parcourt
+    donc la chaine de DROITE a GAUCHE et on retient la premiere adresse qui
+    n'est PAS un proxy de confiance (methode standard). Un seul proxy qui
+    remplace l'en-tete : resultat identique a avant. Toute la chaine de
+    confiance : la plus a gauche (comportement anterieur)."""
+    for hop in reversed(hops):
+        if not is_trusted_proxy(hop, trusted_networks):
+            return normalize_ip(hop)
+    return normalize_ip(hops[0])
+
+
 def resolve_client_ip(
     peer_ip: str,
     headers: HttpHeaders,
@@ -65,8 +89,9 @@ def resolve_client_ip(
     header_preference: list[str],
 ) -> str:
     """Retourne l'adresse client a utiliser reellement (logs, blocklist,
-    rate-limit) - le pair TCP normalise si non fiable, sinon la valeur
-    du premier en-tete de confiance disponible."""
+    rate-limit) - le pair TCP normalise si non fiable, sinon l'adresse
+    retenue dans le premier en-tete de confiance disponible (voir
+    `_rightmost_untrusted`)."""
     normalized_peer = normalize_ip(peer_ip)
 
     if not is_trusted_proxy(peer_ip, trusted_networks):
@@ -76,13 +101,8 @@ def resolve_client_ip(
         value = headers.get(header_name)
         if not value:
             continue
-
-        if header_name.lower() == "forwarded":
-            extracted = _extract_forwarded_for(value)
-        else:
-            extracted = value.split(",")[0].strip()
-
-        if extracted:
-            return normalize_ip(extracted)
+        hops = _header_hops(header_name, value)
+        if hops:
+            return _rightmost_untrusted(hops, trusted_networks)
 
     return normalized_peer

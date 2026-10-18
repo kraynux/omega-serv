@@ -231,15 +231,25 @@ class WafMagnetScreen(OmegaScreen):
         lines: list[str] = []
         if check.unsupported_members:
             lines.append(
-                "ATTENTION - ce script reference lighty."
-                f"{{{', '.join(sorted(check.unsupported_members))}}}, non supporte par ce pont "
-                "(toujours nil - comportement potentiellement different qu'en Lighttpd reel)."
+                "ℹ️ INFORMATION (n'empeche jamais l'enregistrement/l'activation) - ce script "
+                "reference lighty."
+                f"{{{', '.join(sorted(check.unsupported_members))}}}, que ce pont ne branche pas "
+                "(restera toujours `nil` ici, jamais une erreur en soi). Si le script verifie deja "
+                "la presence de ce membre avant de l'utiliser (ex. "
+                "`type(lighty.X) == \"function\"`, un repli vers une ancienne API), ce code ne "
+                "s'execute tout simplement jamais sous omega-serv et n'a aucun effet reel - "
+                "regardez le code autour de cette reference pour en juger. Le resultat de la "
+                "requete de test ci-dessous reste le signal le plus fiable : une incompatibilite "
+                "reelle s'y traduit par une erreur, pas seulement par cet avertissement."
             )
         if check.dry_run_error:
-            lines.append(f"ATTENTION - le script a leve une erreur sur une requete de test benigne : {check.dry_run_error}")
+            lines.append(
+                "⚠️ PROBLEME REEL DETECTE - le script a leve une erreur sur une requete de test "
+                f"benigne : {check.dry_run_error}"
+            )
         if magnet.on_error == "fail-closed" and (check.unsupported_members or check.dry_run_error):
             lines.append(
-                "ATTENTION - on_error='fail-closed' combine a une incompatibilite detectee : toute "
+                "⚠️ ATTENTION - on_error='fail-closed' combine a une incompatibilite detectee : toute "
                 "requete future qui declenche la meme erreur sera BLOQUEE (y compris du trafic legitime)."
             )
         if not lines:

@@ -79,6 +79,27 @@ chmod +x "$SCRIPT_DIR/install.sh"
 ok "Scripts rendus exécutables."
 
 # -------------------------------------------------------------------------
+# 3b. Dossiers d'etat (var/, secure/auth/) - crees ICI, plus livres dans
+#     l'archive (2026-10-18, incident craftdark : extraire une mise a jour
+#     par-dessus l'installation remettait les droits de ces dossiers a ceux
+#     de l'archive et effacait le partage avec le compte du service, qui
+#     tombait en PermissionError jusqu'au bouton "Reappliquer les
+#     permissions"). Un dossier deja present n'est JAMAIS modifie (ni mode,
+#     ni groupe) : seuls les manquants sont crees.
+# -------------------------------------------------------------------------
+_state_dir() {
+    [ -d "$SCRIPT_DIR/$1" ] || mkdir -m "$2" "$SCRIPT_DIR/$1"
+}
+_state_dir "var" 0755
+for sub in log cache run uploads backups exports screenshots; do
+    _state_dir "var/$sub" 0755
+done
+_state_dir "var/lib" 0750
+_state_dir "secure" 0755
+_state_dir "secure/auth" 0750
+ok "Dossiers d'état présents (var/, secure/auth/) - les existants sont laissés tels quels."
+
+# -------------------------------------------------------------------------
 # 4. Verification de la presence d'openssl (necessaire pour tout ce qui
 #    touche aux certificats TLS - le reste du serveur fonctionne sans).
 # -------------------------------------------------------------------------

@@ -23,12 +23,26 @@ err()  { echo -e "${RED}❌ $1${NC}"; }
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OMEGA_LIB_SRC="${OMEGA_LIB_SRC:-$HOME/DEV/LIB/omega-lib}"
+# Fichier maitre des chemins sensibles (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_
+# PATHS.md §3.11) - meme convention que OMEGA_LIB_SRC. Absent (machine sans
+# ~/DEV/JAIL) : les references deja presentes dans src/ sont livrees telles
+# quelles, jamais une erreur.
+SENSITIVE_PATHS_MASTER="${SENSITIVE_PATHS_MASTER:-$HOME/DEV/JAIL/sensitive-path.txt}"
 DIST_DIR="${DIST_DIR:-$PROJECT_ROOT/../dist}"
 ARCHIVE_NAME="omega-serv.tar.gz"
 
 if [ ! -d "$OMEGA_LIB_SRC" ]; then
     err "omega-lib introuvable : $OMEGA_LIB_SRC (definissez OMEGA_LIB_SRC si le chemin differe)."
     exit 1
+fi
+
+if [ -f "$SENSITIVE_PATHS_MASTER" ]; then
+    info "Regeneration des listes de reference depuis $SENSITIVE_PATHS_MASTER..."
+    # Echec = arret du build (set -e) : jamais une reference invalide livree.
+    PYTHONPATH="$PROJECT_ROOT/src" python3 -m omega_serv.infrastructure.waf.keyword_reference_generator \
+        "$SENSITIVE_PATHS_MASTER" "$PROJECT_ROOT/src/omega_serv/infrastructure/waf/keyword_references"
+else
+    info "Fichier maitre des chemins sensibles absent ($SENSITIVE_PATHS_MASTER) : references existantes livrees telles quelles."
 fi
 
 STAGING_DIR="$(mktemp -d)"
@@ -65,6 +79,18 @@ info "Copie du projet omega-serv..."
 # (infrastructure/config/json_settings_store.py, infrastructure/
 # persistence/sqlite_active_defense_connection.py) - jamais suppose deja
 # present par le reste du code.
+# var/favorites.json, var/library.json, var/remote-log-sources.json
+# exclus (2026-10-15, retour utilisateur : "l'ancienne archive avait
+# garde des configurations de la machine de dev, notamment les chemins
+# de logs") : meme categorie que var/settings.json ci-dessus - ces 3
+# fichiers de la Bibliotheque de logs (refonte menu 2026-10-15)
+# contiennent des chemins ABSOLUS propres a la machine de dev (ex.
+# /home/<utilisateur>/log-test/access.log) et des noms de favoris
+# personnels, jamais des donnees generiques a expedier. Oublis au
+# moment de l'ajout de la fonctionnalite, pas une exclusion
+# deliberement differee. Se recreent vides au besoin
+# (infrastructure/logging/json_log_*_repository.py,
+# json_remote_log_source_repository.py), jamais supposes deja presents.
 # secure/waf/scripts/waf-personal.lua exclu (retour utilisateur
 # 2026-10-11, "le script Lua est-il bien depersonnalise, peut-il etre
 # distribue pour tous ?") : seuls les 5 chemins avaient ete dissocies
@@ -73,6 +99,10 @@ info "Copie du projet omega-serv..."
 # jamais distribuable tel quel. secure/waf/scripts/waf.lua (SANS ce
 # suffixe, jamais exclu) est desormais un exemple minimal et
 # generique, sans aucune logique propre a un site particulier.
+# var/ et secure/auth/ : jamais livres, meme vides (2026-10-18) - une entree
+# de dossier dans l'archive remet ses droits a l'extraction par-dessus une
+# installation existante et casse le partage avec le compte du service.
+# install.sh les cree s'ils manquent, sans jamais toucher aux existants.
 rsync -a \
     --exclude='.venv/' --exclude='venv/' \
     --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' \
@@ -80,10 +110,12 @@ rsync -a \
     --exclude='.import_linter_cache/' --exclude='.hypothesis/' \
     --exclude='.git/' --exclude='.claude/' \
     --exclude='docs/assets/' \
+    --exclude='/var/' --exclude='/secure/auth/' \
     --exclude='var/log/*' --exclude='var/cache/*' --exclude='var/run/*' \
     --exclude='var/uploads/*' --exclude='var/backups/*' \
     --exclude='var/lib/*' --exclude='var/exports/*' --exclude='var/screenshots/*' \
     --exclude='var/settings.json' \
+    --exclude='var/favorites.json' --exclude='var/library.json' --exclude='var/remote-log-sources.json' \
     --exclude='webroot/*' \
     --exclude='secure/auth/users.json' --exclude='secure/auth/zones.json' \
     --exclude='secure/certificates/**/*.key' --exclude='secure/certificates/**/*.pem' \
@@ -93,6 +125,7 @@ rsync -a \
     --exclude='secure/certificates/**/index.txt' --exclude='secure/certificates/letsencrypt/**' \
     --exclude='secure/secrets/*' --exclude='secure/waf/blocklist.json' --exclude='secure/waf/allowlist.json' \
     --exclude='secure/waf/rules/custom.json' --exclude='secure/waf/scripts/waf-personal.lua' \
+    --exclude='secure/waf/rules/keywords/*.txt' \
     --exclude='config/omega-serve.json' \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \
     --exclude='.coverage' --exclude='htmlcov/' \

@@ -98,10 +98,11 @@ class TestCreateBackup(unittest.TestCase):
     def test_include_waf_rules_archives_rule_paths_and_blocklist(self):
         (self.root / "secure" / "waf" / "rules").mkdir(parents=True)
         (self.root / "secure" / "waf" / "rules" / "sqli.json").write_text("[]")
-        (self.root / "secure" / "waf" / "blocklist.json").write_text("[]")
+        (self.root / "var" / "lib" / "waf").mkdir(parents=True)
+        (self.root / "var" / "lib" / "waf" / "blocklist.json").write_text("[]")
         waf_option = Option(
             name="waf", enabled=True,
-            settings={"rules": {"paths": ["secure/waf/rules/sqli.json"]}, "blocklist": {"path": "secure/waf/blocklist.json"}},
+            settings={"rules": {"paths": ["secure/waf/rules/sqli.json"]}, "blocklist": {"path": "var/lib/waf/blocklist.json"}},
         )
         request = BackupRequest(include_waf_rules=True)
         result = create_backup(
@@ -111,7 +112,7 @@ class TestCreateBackup(unittest.TestCase):
         with tarfile.open(result.metadata.file_path) as tar:
             names = tar.getnames()
             self.assertIn("secure/waf/rules/sqli.json", names)
-            self.assertIn("secure/waf/blocklist.json", names)
+            self.assertIn("var/lib/waf/blocklist.json", names)
 
     def test_missing_sources_are_skipped_not_fatal(self):
         request = BackupRequest(include_certificates=True)

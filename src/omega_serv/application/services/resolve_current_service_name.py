@@ -28,3 +28,27 @@ def resolve_current_service_name(
         if entry.path == current_path:
             return entry.service_name
     return settings_store.get(SERVICE_NAME_SETTINGS_KEY, "") or DEFAULT_SERVICE_NAME
+
+
+def resolve_current_service_account(
+    instance_registry: InstanceRegistryPort,
+    filesystem: FilesystemPort,
+    settings_store: SettingsStore,
+    project_root: Path,
+    systemd_unit_dir: Path,
+) -> str | None:
+    """Compte systeme qui lit REELLEMENT les fichiers de CETTE instance
+    (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.7, regle R3/R9) : la
+    valeur `User=` de son unite systemd installee. None si aucune unite
+    n'est installee (serveur lance a la main, sous le compte de
+    l'utilisateur : rien a verifier)."""
+    from omega_serv.domain.services.systemd_unit import service_user_from_unit
+
+    service_name = resolve_current_service_name(instance_registry, filesystem, settings_store, project_root)
+    unit_path = systemd_unit_dir / f"{service_name}.service"
+    if not filesystem.exists(unit_path):
+        return None
+    try:
+        return service_user_from_unit(filesystem.read_text(unit_path))
+    except OSError:
+        return None
