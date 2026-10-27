@@ -72,6 +72,6 @@ build/
 # fichiers HEADER.txt (en-tetes de listing de dossier) - jamais commit, ou qu ils soient
 **/HEADER.txt
 
-# contenu du dossier assets du site (css et js) - jamais commit
-webroot/assets/css/
-webroot/assets/js/
+# dossier assets du site : versionne vide (seul .gitkeep), contenu jamais commit
+webroot/assets/*
+!webroot/assets/.gitkeep
