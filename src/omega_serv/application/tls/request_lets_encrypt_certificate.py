@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from omega_serv.application.tls.import_certificate import import_certificate
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.acme import (
     CertbotRequestParams,
     build_certbot_argv,
@@ -78,7 +79,7 @@ def request_lets_encrypt_certificate(
     result = process_runner.run(build_certbot_argv(params), timeout=_CERTBOT_TIMEOUT_SECONDS)
     if not result.ok:
         return RequestLetsEncryptCertificateResult(
-            False, f"Certbot a echoue : {(result.stderr or result.stdout).strip()}",
+            False, _("Certbot a échoué : {value}").format(value=(result.stderr or result.stdout).strip()),
         )
 
     source_key = config_dir / "live" / domain / "privkey.pem"
@@ -89,10 +90,9 @@ def request_lets_encrypt_certificate(
     )
     if not import_result.success:
         return RequestLetsEncryptCertificateResult(
-            False, f"Certificat Let's Encrypt obtenu mais import echoue : {import_result.message}",
+            False, _("Certificat Let's Encrypt obtenu mais import échoué : {message}").format(message=import_result.message),
         )
 
     return RequestLetsEncryptCertificateResult(
-        True, f"Certificat Let's Encrypt obtenu et installe : {dest_cert_path}. "
-        f"Renouvellement automatique via : {hook_script_path}",
+        True, _("Certificat Let's Encrypt obtenu et installé : {dest_cert_path}. Renouvellement automatique via : {hook_script_path}").format(dest_cert_path=dest_cert_path, hook_script_path=hook_script_path),
     )

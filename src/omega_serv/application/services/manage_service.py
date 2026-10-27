@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.exceptions import (
     ServiceControlError,
@@ -28,31 +29,31 @@ def _control(manager: ServiceManagerPort, service_name: str, operation: str, ver
         return ManageServiceResult(False, str(e))
     except ServiceControlError as e:
         return ManageServiceResult(False, str(e))
-    return ManageServiceResult(True, f"Service {service_name!r} {verb_past}.")
+    return ManageServiceResult(True, _("Service {service_name!r} {verb_past}.").format(service_name=service_name, verb_past=verb_past))
 
 
 def start_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "start", "demarre")
+    return _control(manager, service_name, "start", _("démarré"))
 
 
 def stop_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "stop", "arrete")
+    return _control(manager, service_name, "stop", _("arrêté"))
 
 
 def restart_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "restart", "redemarre")
+    return _control(manager, service_name, "restart", _("redémarré"))
 
 
 def reload_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "reload", "recharge")
+    return _control(manager, service_name, "reload", _("rechargé"))
 
 
 def enable_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "enable", "active au demarrage")
+    return _control(manager, service_name, "enable", _("activé au démarrage"))
 
 
 def disable_service(manager: ServiceManagerPort, service_name: str) -> ManageServiceResult:
-    return _control(manager, service_name, "disable", "desactive au demarrage")
+    return _control(manager, service_name, "disable", _("désactivé au démarrage"))
 
 
 def get_service_status(manager: ServiceManagerPort, service_name: str) -> ServiceStatus | ManageServiceResult:

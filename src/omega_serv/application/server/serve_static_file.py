@@ -10,7 +10,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from omega_serv.domain.config.entities import SecurityConfig
+from omega_serv.domain.http.conditional import http_date, is_not_modified, make_etag, resolve_range
 from omega_serv.domain.http.mime_types import guess_mime_type
+from omega_serv.domain.http.precompressed import is_compressible, preferred_encodings
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus
@@ -23,6 +25,10 @@ from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathReso
 from omega_serv.ports.filesystem_port import FilesystemPort
 
 _STATIC_ALLOWED_METHODS = ("GET", "HEAD")
+# Au-dela, le fichier est envoye par blocs depuis le disque (HttpResponse.body_file) au lieu
+# d'etre lu en memoire : memoire bornee quelle que soit sa taille, serveur jamais fige pendant
+# la lecture. En dessous, une lecture directe reste la voie la plus rapide.
+STREAM_THRESHOLD_BYTES = 256 * 1024
 
 
 def serve_static_file(
@@ -77,14 +83,69 @@ def serve_static_file(
             "Cache-Control", resolve_cache_control(effective_display_path, target_path.name, cache_policy)
         )
 
+    size = filesystem.file_size(target_path)
+    mtime = filesystem.file_mtime(target_path)
+    etag = make_etag(size, mtime)
+    if is_compressible(target_path.name):
+        # Etude performance, priorite 5 : version pre-compressee a cote de l'original.
+        response.set_header("Vary", "Accept-Encoding")
+        encoded = _precompressed_variant(request, filesystem, target_path, mtime)
+        if encoded is not None:
+            encoding, target_path, size, mtime = encoded
+            etag = make_etag(size, mtime)[:-1] + f'-{encoding}"'
+            response.set_header("Content-Encoding", encoding)
+    # Validateurs (etude performance, priorite 2) : un rechargement ne coute plus qu'un 304.
+    response.set_header("ETag", etag)
+    response.set_header("Last-Modified", http_date(mtime))
+    response.set_header("Accept-Ranges", "bytes")
+
+    if is_not_modified(request.header("if-none-match"), request.header("if-modified-since"), etag, mtime):
+        response.status = HttpStatus.NOT_MODIFIED
+        return response
+
     if request.method == "HEAD":
-        response.set_header("Content-Length", str(filesystem.file_size(target_path)))
+        response.set_header("Content-Length", str(size))
+        return response
+
+    decision = resolve_range(request.header("range"), request.header("if-range"), size, etag, mtime)
+    if decision.unsatisfiable:
+        response.status = HttpStatus.RANGE_NOT_SATISFIABLE
+        response.set_header("Content-Range", f"bytes */{size}")
+        return response
+    start, length = 0, size
+    if decision.byte_range is not None:
+        start, length = decision.byte_range.start, decision.byte_range.length
+        response.status = HttpStatus.PARTIAL_CONTENT
+        response.set_header("Content-Range", f"bytes {start}-{decision.byte_range.end}/{size}")
+
+    if size > STREAM_THRESHOLD_BYTES:
+        response.body_file = target_path
+        response.body_file_offset = start
+        response.body_file_length = length
     else:
-        body = filesystem.read_bytes(target_path)
-        response.body = body
-        response.set_header("Content-Length", str(len(body)))
+        response.body = filesystem.read_bytes(target_path)[start:start + length]
+    response.set_header("Content-Length", str(length))
 
     return response
+
+
+def _precompressed_variant(
+    request: HttpRequest, filesystem: FilesystemPort, original: Path, original_mtime: float,
+) -> tuple[str, Path, int, float] | None:
+    """(codage, fichier, taille, date) du premier `fichier.br`/`fichier.gz` accepte par le
+    navigateur, dans le MEME dossier que l'original (un lien qui pointerait ailleurs est
+    ignore) et au moins aussi recent que lui (jamais une version perimee)."""
+    for encoding, suffix in preferred_encodings(request.header("accept-encoding")):
+        candidate = original.with_name(original.name + suffix)
+        if not filesystem.is_file(candidate):
+            continue
+        if filesystem.resolve_real_path(candidate).parent != original.parent:
+            continue
+        candidate_mtime = filesystem.file_mtime(candidate)
+        if candidate_mtime < original_mtime:
+            continue
+        return encoding, candidate, filesystem.file_size(candidate), candidate_mtime
+    return None
 
 
 def _render_listing(

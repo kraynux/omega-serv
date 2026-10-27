@@ -14,6 +14,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.core.capability_registry import CapabilityRegistry
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.wizard_profile_screen import WizardProfileScreen
 from omega_serv.interfaces.tui.widgets.capabilities_table import CapabilitiesTable
@@ -32,13 +33,13 @@ class WizardCapabilitiesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ETAPE 2/8 : REGISTRE DES CAPACITES (LECTURE SEULE)", classes="omega-title")
+            yield Static(_("ÉTAPE 2/8 : REGISTRE DES CAPACITÉS (LECTURE SEULE)"), classes="omega-title")
             yield CapabilitiesTable(id="capabilities-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivant", id="next", variant="primary")
+                    yield Button(_("Suivant"), id="next", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:

@@ -12,6 +12,7 @@ from textual.containers import Center, Container, Horizontal, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._waf_list_choices import (
     ANCHORS,
     BAN_DURATIONS,
@@ -36,19 +37,19 @@ class KeywordListSettingsScreen(ModalScreen[dict[str, Any] | None]):
     def compose(self) -> ComposeResult:
         entry = self._entry
         with Center(), VerticalScroll(classes="omega-dynamic-form-box"):
-            yield Static(f"MODIFIER LA LISTE - {entry.get('id')}", classes="omega-title")
-            yield Static(f"Fichier : {entry.get('file')}", classes="omega-hint")
-            yield Static("Nom affiche", classes="omega-subtitle")
+            yield Static(_("MODIFIER LA LISTE - {value}").format(value=entry.get('id')), classes="omega-title")
+            yield Static(_("Fichier : {value}").format(value=entry.get('file')), classes="omega-hint")
+            yield Static(_("Nom affiché"), classes="omega-subtitle")
             yield Input(value=str(entry.get("label") or entry.get("id")), id="settings-label")
             if self._path_mode:
-                yield Static("Ou chercher", classes="omega-subtitle")
+                yield Static(_("Où chercher"), classes="omega-subtitle")
                 yield Select(ANCHORS, value=_choice(ANCHORS, entry.get("anchor"), "any_segment"),
                              allow_blank=False, id="settings-anchor")
-            yield Static("Gravite", classes="omega-subtitle")
+            yield Static(_("Gravité"), classes="omega-subtitle")
             yield Select(GRAVITY_LEVELS,
                          value=gravity_value(int(entry.get("weight", 1)), bool(entry.get("observe_only"))),
                          allow_blank=False, id="settings-gravity")
-            yield Static("Recidive : bannir apres ... acces en ... pendant ...", classes="omega-subtitle")
+            yield Static(_("Récidive : bannir après ... accès en ... pendant ..."), classes="omega-subtitle")
             yield Select(RECIDIVE_COUNTS, value=_choice(RECIDIVE_COUNTS, entry.get("escalation_threshold", 0), "0"),
                          allow_blank=False, id="settings-count")
             yield Select(RECIDIVE_WINDOWS,
@@ -59,9 +60,9 @@ class KeywordListSettingsScreen(ModalScreen[dict[str, Any] | None]):
                          allow_blank=False, id="settings-duration")
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="settings-save", variant="primary")
+                    yield Button(_("Enregistrer"), id="settings-save", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Annuler", id="settings-cancel")
+                    yield Button(_("Annuler"), id="settings-cancel")
 
     def on_mount(self) -> None:
         self._apply_recidive_state()

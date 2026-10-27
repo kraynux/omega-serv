@@ -3,8 +3,13 @@ depuis omega-fire (service_manager/openrc.py, audite reutilisable),
 commandes `rc-service`/`rc-update` inchangees, via ProcessRunnerPort."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.services.entities import ServiceStatus
-from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError, ServiceStatusError
+from omega_serv.domain.services.exceptions import (
+    ServiceControlError,
+    ServiceNotFoundError,
+    ServiceStatusError,
+)
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
 
@@ -31,7 +36,7 @@ class OpenRCServiceManager:
             return True
         if "not found" in result.stderr.lower():
             raise ServiceNotFoundError(service_name, "openrc")
-        raise ServiceControlError(service_name, operation, result.stderr.strip() or f"code {result.returncode}", "openrc")
+        raise ServiceControlError(service_name, operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "openrc")
 
     def start(self, service_name: str) -> bool:
         return self._control(service_name, "start")
@@ -51,7 +56,7 @@ class OpenRCServiceManager:
             return True
         if "not found" in result.stderr.lower():
             raise ServiceNotFoundError(service_name, "openrc")
-        raise ServiceControlError(service_name, "enable", result.stderr.strip() or f"code {result.returncode}", "openrc")
+        raise ServiceControlError(service_name, "enable", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "openrc")
 
     def disable(self, service_name: str) -> bool:
         result = self._runner.run([self._rc_update, "del", service_name], timeout=_TIMEOUT_SECONDS)
@@ -59,15 +64,14 @@ class OpenRCServiceManager:
             return True
         if "not found" in result.stderr.lower():
             raise ServiceNotFoundError(service_name, "openrc")
-        raise ServiceControlError(service_name, "disable", result.stderr.strip() or f"code {result.returncode}", "openrc")
+        raise ServiceControlError(service_name, "disable", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "openrc")
 
     def status(self, service_name: str) -> ServiceStatus:
         result = self._runner.run([self._rc_service, service_name, "status"], timeout=_TIMEOUT_SECONDS)
         if result.returncode in (_TIMEOUT_RETURNCODE, _NOT_FOUND_RETURNCODE):
             raise ServiceStatusError(
                 service_name,
-                f"{result.stderr.strip()} - verifiez `rc-service {service_name} status` manuellement, "
-                "ou (re)installez le service depuis l'ecran SERVICE",
+                _("{value} - vérifiez `rc-service {service_name} status` manuellement, ou (re)installez le service depuis l'écran SERVICE").format(value=result.stderr.strip(), service_name=service_name),
                 "openrc",
             )
         if "not found" in result.stderr.lower():
@@ -84,6 +88,9 @@ class OpenRCServiceManager:
     def is_active(self, service_name: str) -> bool:
         result = self._runner.run([self._rc_service, service_name, "status"], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
+
+    def main_pid(self, service_name: str) -> int | None:
+        return None  # rc-service n'expose pas le PID : pas de detection de version perimee
 
     def is_enabled(self, service_name: str) -> bool:
         result = self._runner.run([self._rc_update, "show"], timeout=_TIMEOUT_SECONDS)

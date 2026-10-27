@@ -13,7 +13,13 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.active_defense.manage_incidents import close_incident
-from omega_serv.application.active_defense.queries import get_incident_timeline, list_incidents
+from omega_serv.application.active_defense.queries import (
+    get_incident_omitted_events,
+    get_incident_timeline,
+    list_incidents,
+    omitted_history_notice,
+)
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.entities import IncidentFilters
 from omega_serv.interfaces.tui.screens._active_defense_collaborators_cache import (
     ActiveDefenseCollaboratorsCacheMixin,
@@ -23,9 +29,12 @@ from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
     from omega_serv.bootstrap.container import DependencyContainer
-    from omega_serv.domain.security.active_defense.entities import Incident
+    from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
 
 
 class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
@@ -38,25 +47,25 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("INCIDENTS", classes="omega-title")
+            yield Static(_("INCIDENTS"), classes="omega-title")
             yield Static("", id="incidents-error", classes="omega-hint")
             yield DataTable(id="incidents-table")
             yield Static("", id="incident-detail", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Fermer l'incident", id="close-incident", variant="error", disabled=True)
+                    yield Button(_("Fermer l'incident"), id="close-incident", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Exporter IoC", id="export-ioc", disabled=True)
+                    yield Button(_("Exporter IoC"), id="export-ioc", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Generer rapport", id="generate-report", disabled=True)
+                    yield Button(_("Générer rapport"), id="generate-report", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#incidents-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Incident", "Source", "Statut", "Ouvert le", "Ferme le")
+        table.add_columns(_("Incident"), _("Source"), _("Statut"), _("Ouvert le"), _("Fermé le"))
         self._refresh()
 
     def _refresh(self) -> None:
@@ -88,8 +97,11 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         if active_defense is None:
             return
         events = get_incident_timeline(active_defense.incident_repository, self._selected_incident_id)
-        lines = [f"Chronologie de {self._selected_incident_id} :"]
-        lines += [f"  {e.occurred_at.isoformat()}  {e.kind}  {e.detail}" for e in events] or ["  (aucun evenement)"]
+        lines = [_("Chronologie de {selected_incident_id} :").format(selected_incident_id=self._selected_incident_id)]
+        lines += [f"  {e.occurred_at.isoformat()}  {e.kind}  {e.detail}" for e in events] or [_("  (aucun événement)")]
+        omitted = get_incident_omitted_events(active_defense.incident_repository, self._selected_incident_id)
+        if omitted:
+            lines.append("  " + omitted_history_notice(omitted))
         self.query_one("#incident-detail", Static).update("\n".join(lines))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -100,15 +112,15 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         if button_id == "close-incident" and self._selected_incident_id is not None:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="FERMER L'INCIDENT",
-                    message=f"Confirmer la fermeture de l'incident {self._selected_incident_id!r} ?",
+                    title=_("FERMER L'INCIDENT"),
+                    message=_("Confirmer la fermeture de l'incident {selected_incident_id!r} ?").format(selected_incident_id=self._selected_incident_id),
                 ),
                 self._close_incident,
             )
             return
         if button_id == "export-ioc" and self._selected_incident_id is not None:
             self.app.push_screen(
-                DynamicFormScreen(title="EXPORTER LES IOC", fields=[("format", "Format (json/csv)", "json")]),
+                DynamicFormScreen(title=_("EXPORTER LES IOC"), fields=[("format", _("Format (json/csv/stix/misp)"), "json")]),
                 self._export_ioc,
             )
             return
@@ -123,9 +135,9 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             return
         closed = close_incident(active_defense.incident_repository, self._container.clock, self._selected_incident_id)
         if closed is None:
-            self.app.notify("Incident introuvable ou deja ferme.", severity="error")
+            self.app.notify(_("Incident introuvable ou déjà fermé."), severity="error")
         else:
-            self.app.notify(f"Incident {closed.incident_id!r} ferme.")
+            self.app.notify(_("Incident {incident_id!r} fermé.").format(incident_id=closed.incident_id))
             self._auto_export_ioc_on_close(active_defense, closed)
         self._refresh()
 
@@ -144,13 +156,12 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         ioc_runner = self._container.ioc_export_runner
         report_runner = self._container.incident_report_export_runner
         for export_format in config.ioc.formats:
-            if export_format in ("json", "csv") and ioc_runner is not None:
-                result = ioc_runner(incident, export_format, export_dir, self._container.filesystem)
+            if export_format in ("json", "csv", "stix", "misp") and ioc_runner is not None:
+                result = ioc_runner(incident, export_format, export_dir, self._container.filesystem, config.ioc)
                 if result is not None:
-                    self.app.notify(f"Auto-export ({export_format}) : {result.path}")
+                    self.app.notify(_("Auto-export ({export_format}) : {path}").format(export_format=export_format, path=result.path))
             elif export_format == "markdown" and report_runner is not None:
-                result = report_runner(incident, export_dir, self._container.filesystem)
-                self.app.notify(f"Auto-export (markdown) : {result.path}")
+                self._export_report(report_runner, incident, export_dir, _("Auto-export (markdown) : {path}"))
 
     def _export_ioc(self, values: dict[str, str] | None) -> None:
         if values is None or self._selected_incident_id is None:
@@ -161,15 +172,15 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             return
         incident = active_defense.incident_repository.get(self._selected_incident_id)
         if incident is None:
-            self.app.notify("Incident introuvable.", severity="error")
+            self.app.notify(_("Incident introuvable."), severity="error")
             return
         export_format = values["format"].strip() or "json"
         export_dir = self._container.project_root / active_defense.config.storage.export_dir
-        result = runner(incident, export_format, export_dir, self._container.filesystem)
+        result = runner(incident, export_format, export_dir, self._container.filesystem, active_defense.config.ioc)
         if result is None:
-            self.app.notify(f"Format d'export inconnu : {export_format!r} (json ou csv).", severity="error")
+            self.app.notify(_("Format d'export inconnu : {export_format!r} (json, csv, stix ou misp).").format(export_format=export_format), severity="error")
             return
-        self.app.notify(f"Exporte : {result.path}")
+        self.app.notify(_("Exporté : {path}").format(path=result.path))
 
     def _generate_report(self) -> None:
         active_defense = self._active_defense_or_none()
@@ -178,8 +189,29 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             return
         incident = active_defense.incident_repository.get(self._selected_incident_id)
         if incident is None:
-            self.app.notify("Incident introuvable.", severity="error")
+            self.app.notify(_("Incident introuvable."), severity="error")
             return
         export_dir = self._container.project_root / active_defense.config.storage.export_dir
-        result = runner(incident, export_dir, self._container.filesystem)
-        self.app.notify(f"Rapport genere : {result.path}")
+        self._export_report(runner, incident, export_dir, _("Rapport généré : {path}"))
+
+    def _export_report(self, runner: Callable[..., ExportResult], incident: Incident, export_dir: Path, done_message: str) -> None:
+        """Hors du fil de l'interface : dans une langue d'export differente de
+        l'interface, le rapport est produit par un processus enfant (quelques
+        secondes). S'il echoue, le rapport existe quand meme, dans la langue de
+        l'interface - l'utilisateur en est prevenu."""
+        language_name = self._container.export_language_name
+        if language_name is not None:
+            self.app.notify(_("Export en cours dans la langue « {name} »…").format(name=language_name))
+
+        def work() -> None:
+            result = runner(incident, export_dir, self._container.filesystem)
+            error = self._container.last_export_error
+            self.app.call_from_thread(self._report_done, done_message.format(path=result.path), error)
+
+        self.run_worker(work, thread=True, group="report-export")
+
+    def _report_done(self, message: str, error: str | None) -> None:
+        self.app.notify(message)
+        if error is not None:
+            self.app.notify(
+                _("Rapport écrit dans la langue de l'interface : {error}").format(error=error), severity="warning")

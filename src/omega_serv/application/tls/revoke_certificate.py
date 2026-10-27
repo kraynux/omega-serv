@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 
@@ -28,11 +29,11 @@ def revoke_certificate(
     filesystem: FilesystemPort,
 ) -> RevokeCertificateResult:
     for label, path in (
-        ("certificat a revoquer", cert_path), ("cle de CA", ca_key_path),
-        ("certificat de CA", ca_cert_path), ("index de la CA", index_path),
+        (_("certificat à révoquer"), cert_path), (_("clé de CA"), ca_key_path),
+        (_("certificat de CA"), ca_cert_path), (_("index de la CA"), index_path),
     ):
         if not filesystem.exists(path):
-            return RevokeCertificateResult(False, f"{label} introuvable : {path}")
+            return RevokeCertificateResult(False, _("{label} introuvable : {path}").format(label=label, path=path))
 
     tool.revoke_certificate(cert_path, ca_key_path, ca_cert_path, ca_key_password, index_path)
-    return RevokeCertificateResult(True, f"Certificat {cert_path} marque comme revoque dans {index_path}")
+    return RevokeCertificateResult(True, _("Certificat {cert_path} marqué comme révoqué dans {index_path}").format(cert_path=cert_path, index_path=index_path))

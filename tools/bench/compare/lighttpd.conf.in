@@ -1,0 +1,10 @@
+server.document-root = "@W@/www"
+server.bind = "127.0.0.1"
+server.port = 18952
+server.pid-file = "@W@/logs/lighttpd.pid"
+server.errorlog = "@W@/logs/lighttpd-error.log"
+server.modules = ("mod_accesslog")
+accesslog.filename = "@W@/logs/lighttpd-access.log"
+server.max-keep-alive-requests = 65535
+server.max-worker = MAXWORKER
+mimetype.assign = (".html" => "text/html", ".png" => "image/png", ".bin" => "application/octet-stream")

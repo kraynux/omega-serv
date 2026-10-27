@@ -35,6 +35,8 @@ from itertools import groupby
 
 from textual.widgets import Static
 
+from omega_serv.core.i18n import _
+
 _WIDTH = 77
 """Largeur de la boite OMEGA-SERV (l'element le plus large) : axe de
 centrage commun a tout le logo."""
@@ -124,13 +126,13 @@ def _tagline(line: str) -> str:
 
 _LINUX_BOX = (
     "┌─────────────────────┐",
-    "│  LINUX WEB-SERVER   │",
+    _("│  LINUX WEB-SERVER   │"),
     "└─────────────────────┘",
 )
 
 _INDICATOR = (
     "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
-    "▄████▒V1.00▒████▄",
+    "▄████▒V2.00▒████▄",
     "┌█▒░▒░▒░▒░▒░▒░▒░▒█┐",
 )
 
@@ -154,7 +156,7 @@ _SERVER_BODY = (
     "█▓▒▒▓███████▓▒▒▓█",
 )
 
-_TAGLINE = "HTTP | WAF | TLS | LOG | SECURE | AUDIT | EXPORT"
+_TAGLINE = _("HTTP | WAF | TLS | LOG | SECURE | AUDIT | EXPORT")
 
 _LINES: tuple[str, ...] = (
     f"[$foreground]{_centered(_LINUX_BOX[0])}[/]",

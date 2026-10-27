@@ -15,12 +15,13 @@ from rich.text import Text
 from textual.widgets import DataTable
 
 from omega_serv.core.capability import Capability, CapabilityStatus
+from omega_serv.core.i18n import _
 
 _STATUS_LABELS: dict[CapabilityStatus, str] = {
-    CapabilityStatus.AVAILABLE: "DISPONIBLE",
-    CapabilityStatus.DEGRADED: "DEGRADE",
-    CapabilityStatus.MISSING: "MANQUANT",
-    CapabilityStatus.DISQUALIFIED: "DISQUALIFIE",
+    CapabilityStatus.AVAILABLE: _("DISPONIBLE"),
+    CapabilityStatus.DEGRADED: _("DÉGRADÉ"),
+    CapabilityStatus.MISSING: _("MANQUANT"),
+    CapabilityStatus.DISQUALIFIED: _("DISQUALIFIÉ"),
 }
 
 _STATUS_VARIABLE: dict[CapabilityStatus, str] = {
@@ -35,7 +36,7 @@ class CapabilitiesTable(DataTable[Any]):
 
     def on_mount(self) -> None:
         self.cursor_type = "row"
-        self.add_columns("Statut", "Categorie", "Capacite", "Raison")
+        self.add_columns(_("Statut"), _("Catégorie"), _("Capacité"), _("Raison"))
 
     def set_capabilities(self, capabilities: tuple[Capability, ...]) -> None:
         self.clear()
@@ -43,6 +44,6 @@ class CapabilitiesTable(DataTable[Any]):
         for cap in capabilities:
             variable = _STATUS_VARIABLE.get(cap.status)
             color = variables.get(variable, "") if variable is not None else ""
-            style = f"bold {color}" if color else "dim"
+            style = _("bold {color}").format(color=color) if color else "dim"
             badge = Text(_STATUS_LABELS[cap.status], style=style)
             self.add_row(badge, cap.category or "-", cap.id, cap.reason or "-", key=cap.id)

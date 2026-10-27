@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.core.platform_info import running_as_root
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.exceptions import (
@@ -80,7 +81,7 @@ class SystemdServiceManager:
 
         auth_code = self._runner.run_interactive(["sudo", "-v"])
         if auth_code != 0:
-            return ProcessResult(returncode=auth_code, stdout="", stderr="Authentification sudo echouee ou annulee.")
+            return ProcessResult(returncode=auth_code, stdout="", stderr=_("Authentification sudo échouée ou annulée."))
         return self._runner.run(["sudo", *args], input_text=input_text, timeout=timeout)
 
     def _control(self, service_name: str, operation: str) -> bool:
@@ -91,7 +92,7 @@ class SystemdServiceManager:
             return True
         if result.returncode == 5:
             raise ServiceNotFoundError(service_name, "systemd")
-        raise ServiceControlError(service_name, operation, result.stderr.strip() or f"code {result.returncode}", "systemd")
+        raise ServiceControlError(service_name, operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd")
 
     def start(self, service_name: str) -> bool:
         return self._control(service_name, "start")
@@ -116,8 +117,7 @@ class SystemdServiceManager:
         if result.returncode in (_TIMEOUT_RETURNCODE, _NOT_FOUND_RETURNCODE):
             raise ServiceStatusError(
                 service_name,
-                f"{result.stderr.strip()} - verifiez `systemctl status {service_name}` manuellement, "
-                "ou (re)installez le service depuis l'ecran SERVICE",
+                _("{value} - vérifiez `systemctl status {service_name}` manuellement, ou (re)installez le service depuis l'écran SERVICE").format(value=result.stderr.strip(), service_name=service_name),
                 "systemd",
             )
         if result.returncode == 4:
@@ -144,6 +144,13 @@ class SystemdServiceManager:
         result = self._runner.run([self._systemctl, "--version"], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
 
+    def main_pid(self, service_name: str) -> int | None:
+        result = self._runner.run(
+            [self._systemctl, "show", "-p", "MainPID", "--value", service_name], timeout=_TIMEOUT_SECONDS,
+        )
+        value = result.stdout.strip()
+        return int(value) if result.returncode == 0 and value.isdigit() and int(value) > 0 else None
+
     def reload_daemon(self) -> bool:
         """Pas dans ServiceManagerPort (specifique a systemd - OpenRC et
         runit n'ont pas d'equivalent) : necessaire apres avoir ecrit ou
@@ -165,14 +172,14 @@ class SystemdServiceManager:
         result = self._run_privileged(["tee", str(unit_path)], input_text=content)
         if result.returncode != 0:
             raise ServiceControlError(
-                str(unit_path), "write-unit-file", result.stderr.strip() or f"code {result.returncode}", "systemd"
+                str(unit_path), "write-unit-file", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd"
             )
 
     def remove_unit_file(self, unit_path: Path) -> None:
         result = self._run_privileged(["rm", "-f", str(unit_path)])
         if result.returncode != 0:
             raise ServiceControlError(
-                str(unit_path), "remove-unit-file", result.stderr.strip() or f"code {result.returncode}", "systemd"
+                str(unit_path), "remove-unit-file", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd"
             )
 
     def create_system_user(self, user: str, group: str) -> None:
@@ -190,14 +197,14 @@ class SystemdServiceManager:
         group_result = self._run_privileged(["groupadd", "--system", group])
         if group_result.returncode not in (0, _ALREADY_EXISTS):
             raise ServiceControlError(
-                group, "create-system-group", group_result.stderr.strip() or f"code {group_result.returncode}", "systemd",
+                group, "create-system-group", group_result.stderr.strip() or _("code {returncode}").format(returncode=group_result.returncode), "systemd",
             )
         user_result = self._run_privileged([
             "useradd", "--system", "--no-create-home", "--shell", "/usr/sbin/nologin", "--gid", group, user,
         ])
         if user_result.returncode not in (0, _ALREADY_EXISTS):
             raise ServiceControlError(
-                user, "create-system-user", user_result.stderr.strip() or f"code {user_result.returncode}", "systemd",
+                user, "create-system-user", user_result.stderr.strip() or _("code {returncode}").format(returncode=user_result.returncode), "systemd",
             )
 
     def remove_system_user(self, user: str, group: str) -> None:
@@ -218,12 +225,12 @@ class SystemdServiceManager:
         user_result = self._run_privileged(["userdel", user])
         if user_result.returncode not in (0, _NOT_FOUND):
             raise ServiceControlError(
-                user, "remove-system-user", user_result.stderr.strip() or f"code {user_result.returncode}", "systemd",
+                user, "remove-system-user", user_result.stderr.strip() or _("code {returncode}").format(returncode=user_result.returncode), "systemd",
             )
         group_result = self._run_privileged(["groupdel", group])
         if group_result.returncode not in (0, _NOT_FOUND):
             raise ServiceControlError(
-                group, "remove-system-group", group_result.stderr.strip() or f"code {group_result.returncode}", "systemd",
+                group, "remove-system-group", group_result.stderr.strip() or _("code {returncode}").format(returncode=group_result.returncode), "systemd",
             )
 
     def grant_directory_access(self, path: Path, group: str, extra_user: str) -> None:
@@ -257,7 +264,7 @@ class SystemdServiceManager:
             result = self._run_privileged(args)
             if result.returncode != 0:
                 raise ServiceControlError(
-                    str(path), operation, result.stderr.strip() or f"code {result.returncode}", "systemd",
+                    str(path), operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd",
                 )
 
     @staticmethod

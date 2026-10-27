@@ -13,6 +13,8 @@ avoir TLS active du tout), jamais une planification partagee entre
 plusieurs instances multi-instance sur la meme machine."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
+
 
 def renewal_unit_base_name(service_name: str) -> str:
     return f"{service_name}-certbot-renew"
@@ -21,7 +23,7 @@ def renewal_unit_base_name(service_name: str) -> str:
 def build_renewal_service_unit(*, certbot_config_dir: str, certbot_work_dir: str, certbot_logs_dir: str, user: str) -> str:
     return (
         "[Unit]\n"
-        "Description=Renouvellement Certbot (OMEGA-SERV, genere - ne pas editer a la main)\n"
+        "Description=Renouvellement Certbot (OMEGA-SERV, généré - ne pas éditer à la main)\n"
         "\n"
         "[Service]\n"
         "Type=oneshot\n"
@@ -34,7 +36,7 @@ def build_renewal_service_unit(*, certbot_config_dir: str, certbot_work_dir: str
 def build_renewal_timer_unit() -> str:
     return (
         "[Unit]\n"
-        "Description=Timer de renouvellement Certbot (OMEGA-SERV, genere - ne pas editer a la main)\n"
+        "Description=Timer de renouvellement Certbot (OMEGA-SERV, généré - ne pas éditer à la main)\n"
         "\n"
         "[Timer]\n"
         "OnCalendar=*-*-* 00,12:00:00\n"
@@ -73,9 +75,5 @@ def replace_marked_cron_line(existing_crontab: str, service_name: str, new_line:
 
 def render_manual_renewal_instructions(*, cron_line: str) -> str:
     return (
-        "Aucun mecanisme de planification automatique detecte sur ce systeme "
-        "(ni systemd, ni crontab). Ajoutez cette ligne vous-meme a votre "
-        "planificateur habituel (crontab -e, /etc/cron.d/, tache OpenRC/runit "
-        "equivalente...) :\n\n"
-        f"{cron_line}"
+        _("Aucun mécanisme de planification automatique détecté sur ce système (ni systemd, ni crontab). Ajoutez cette ligne vous-même à votre planificateur habituel (crontab -e, /etc/cron.d/, tâche OpenRC/runit équivalente...) :\n\n{cron_line}").format(cron_line=cron_line)
     )

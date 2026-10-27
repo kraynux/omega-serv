@@ -30,9 +30,9 @@ REFERENCES = (
         "block": "hostile",
         "name": "sensitive-paths-hostile",
         "anchor": "any_segment",
-        "description": "{count} chemins sans usage legitime connu (secrets, sauvegardes, VCS, consoles...).",
-        "advice": "gravite Elevee (6, bloque des le 1er acces), recherche n'importe ou dans le chemin, "
-                  "recidive 2 acces en 10 min -> ban 24 h. 1er chargement conseille en Observation.",
+        "description": "{count} chemins sans usage légitime connu (secrets, sauvegardes, VCS, consoles...).",
+        "advice": "gravité Élevée (6, bloque dès le 1er accès), recherche n'importe où dans le chemin, "
+                  "récidive 2 accès en 10 min -> ban 24 h. 1er chargement conseillé en Observation.",
     },
     {
         "block": "sondage",
@@ -40,8 +40,8 @@ REFERENCES = (
         "anchor": "root",
         "description": "{count} chemins de sondage courants, mais parfois servis par un vrai site "
                        "(admin, API, supervision...).",
-        "advice": "gravite Moyenne (3, ne bloque jamais seule), recherche au debut du chemin, "
-                  "recidive 5 acces en 10 min -> ban 1 h. 1er chargement conseille en Observation.",
+        "advice": "gravité Moyenne (3, ne bloque jamais seule), recherche au début du chemin, "
+                  "récidive 5 accès en 10 min -> ban 1 h. 1er chargement conseillé en Observation.",
     },
 )
 
@@ -73,13 +73,13 @@ def split_master(text: str) -> dict[str, list[tuple[str, list[str]]]]:
 def render_reference(reference: dict[str, str], sections: list[tuple[str, list[str]]]) -> str:
     count = sum(len(entries) for _, entries in sections)
     lines = [
-        f"# omega-serv - liste de reference : {reference['name']}",
+        f"# omega-serv - liste de référence : {reference['name']}",
         "# " + reference["description"].format(count=count),
-        f"# Reglages conseilles : {reference['advice']}",
-        "# Fichier de REFERENCE (lecture seule, remplace a chaque mise a jour d'omega-serv).",
-        "# Il n'est jamais charge tel quel : l'assistant WAF Custom en cree une copie",
+        f"# Réglages conseillés : {reference['advice']}",
+        "# Fichier de RÉFÉRENCE (lecture seule, remplacé à chaque mise à jour d'omega-serv).",
+        "# Il n'est jamais chargé tel quel : l'assistant WAF Custom en crée une copie",
         "# locale modifiable dans secure/waf/rules/keywords/ au premier chargement.",
-        "# Genere depuis le fichier maitre ~/DEV/JAIL/sensitive-path.txt - ne pas editer ici.",
+        "# Généré depuis le fichier maître ~/DEV/JAIL/sensitive-path.txt - ne pas éditer ici.",
         "#", SYNTAX_HELP, "",
     ]
     for title, entries in sections:

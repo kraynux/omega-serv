@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from omega_serv.application.server.start_server import resolve_magnet_paths
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.routing.alias import parse_alias_rules
 from omega_serv.domain.routing.fastcgi_zone import (
@@ -32,6 +33,7 @@ from omega_serv.domain.security.waf.keyword_list import (
     is_excepted,
     is_suffix_entry,
 )
+from omega_serv.domain.security.waf.shared_counters import shared_recidive_errors
 from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_list
 from omega_serv.infrastructure.waf.lua_waf_adapter import WafMagnetScriptError, load_lua_waf_adapter
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_pack
@@ -57,14 +59,13 @@ def validate_config_environment(
 
     webroot = (project_root / config.paths.webroot).resolve()
     if not filesystem.is_dir(webroot):
-        errors.append(f"paths.webroot n'est pas un dossier existant : {webroot}")
+        errors.append(_("paths.webroot n'est pas un dossier existant : {webroot}").format(webroot=webroot))
 
     secure_dir = (project_root / config.paths.secure).resolve()
     try:
         secure_dir.relative_to(webroot)
         errors.append(
-            f"paths.secure ({secure_dir}) est a l'interieur de paths.webroot ({webroot}) "
-            "- ne doit jamais etre accessible depuis HTTP (spec §4.2)"
+            _("paths.secure ({secure_dir}) est à l'intérieur de paths.webroot ({webroot}) - ne doit jamais être accessible depuis HTTP (spec §4.2)").format(secure_dir=secure_dir, webroot=webroot)
         )
     except ValueError:
         pass  # secure_dir hors webroot, c'est la situation attendue
@@ -72,7 +73,7 @@ def validate_config_environment(
     auth_file = (project_root / config.paths.auth_file).resolve()
     try:
         auth_file.relative_to(webroot)
-        errors.append(f"paths.auth_file ({auth_file}) est a l'interieur de paths.webroot - interdit (spec §4.2)")
+        errors.append(_("paths.auth_file ({auth_file}) est à l'intérieur de paths.webroot - interdit (spec §4.2)").format(auth_file=auth_file))
     except ValueError:
         pass
 
@@ -111,8 +112,7 @@ def _validate_upload_environment(settings: dict, filesystem: FilesystemPort, pro
         storage_dir = project_root / rule.storage_path
         if filesystem.exists(storage_dir) and not filesystem.is_dir(storage_dir):
             errors.append(
-                f"options.upload zone {rule.url_prefix!r} : storage_path existe deja et "
-                f"n'est pas un dossier : {storage_dir}"
+                _("options.upload zone {url_prefix!r} : storage_path existe déjà et n'est pas un dossier : {storage_dir}").format(url_prefix=rule.url_prefix, storage_dir=storage_dir)
             )
     return errors
 
@@ -129,7 +129,7 @@ def _validate_fastcgi_environment(
     meme si FastCGI est mal configure ou indisponible."""
     errors: list[str] = []
     fastcgi_config = parse_fastcgi_config(settings)
-    errors.extend(f"options.fastcgi : {e}" for e in validate_fastcgi_config_structure(fastcgi_config))
+    errors.extend(_("options.fastcgi : {e}").format(e=e) for e in validate_fastcgi_config_structure(fastcgi_config))
     if not fastcgi_config.script_root:
         return errors
 
@@ -138,18 +138,17 @@ def _validate_fastcgi_environment(
     try:
         script_root.relative_to(webroot)
         errors.append(
-            f"options.fastcgi.script_root ({script_root}) est a l'interieur de paths.webroot ({webroot}) "
-            "- interdit structurellement (spec §21, plan de developpement §6)"
+            _("options.fastcgi.script_root ({script_root}) est à l'intérieur de paths.webroot ({webroot}) - interdit structurellement (spec §21, plan de développement §6)").format(script_root=script_root, webroot=webroot)
         )
     except ValueError:
         pass
 
     if not filesystem.is_dir(script_root):
-        errors.append(f"options.fastcgi.script_root n'est pas un dossier existant : {script_root}")
+        errors.append(_("options.fastcgi.script_root n'est pas un dossier existant : {script_root}").format(script_root=script_root))
 
     socket_path = project_root / fastcgi_config.socket_path
     if not filesystem.exists(socket_path):
-        errors.append(f"options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM demarre ?)")
+        errors.append(_("options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM démarré ?)").format(socket_path=socket_path))
 
     return errors
 
@@ -170,8 +169,8 @@ def _validate_auth_environment(
     tls_effectively_covered = config.tls.enabled or config.tls.mode == "behind_proxy"
     if config.server.bind not in _LOCAL_BIND_HOSTS and not tls_effectively_covered and not auth_without_tls_confirmed:
         errors.append(
-            "options.auth actif avec un bind non local, sans TLS direct actif ni mode 'behind_proxy' declare "
-            "- Basic Auth transmettrait des identifiants en clair (spec §15.6, doc TLS §22)"
+            _("options.auth actif avec un bind non local, sans TLS direct actif ni mode 'behind_proxy' déclaré "
+            "- Basic Auth transmettrait des identifiants en clair (spec §15.6, doc TLS §22)")
         )
 
     zones_path = project_root / config.paths.auth_zones
@@ -182,13 +181,13 @@ def _validate_auth_environment(
     try:
         zones = JsonAuthZonesRepository(filesystem, zones_path).load()
     except AuthZonesFileError as e:
-        errors.append(f"paths.auth_zones : {e}")
+        errors.append(_("paths.auth_zones : {e}").format(e=e))
         return errors
 
     for zone in zones:
         reason = validate_auth_zone(zone)
         if reason is not None:
-            errors.append(f"paths.auth_zones : {reason}")
+            errors.append(_("paths.auth_zones : {reason}").format(reason=reason))
 
     users_path = project_root / config.paths.auth_file
     if filesystem.exists(users_path):
@@ -196,13 +195,13 @@ def _validate_auth_environment(
         try:
             users = JsonUsersRepository(filesystem, users_path).load()
         except UsersFileError as e:
-            errors.append(f"paths.auth_file : {e}")
+            errors.append(_("paths.auth_file : {e}").format(e=e))
             return errors
         known_usernames = {u.username for u in users}
         for zone in zones:
             unknown = set(zone.allowed_users) - known_usernames
             if unknown:
-                errors.append(f"paths.auth_zones : zone {zone.path_prefix!r} reference des utilisateurs inconnus : {sorted(unknown)}")
+                errors.append(_("paths.auth_zones : zone {path_prefix!r} référence des utilisateurs inconnus : {value}").format(path_prefix=zone.path_prefix, value=sorted(unknown)))
 
     return errors
 
@@ -223,15 +222,15 @@ def _validate_tls_environment(
     key_path = project_root / config.tls.private_key_path
 
     if not filesystem.exists(cert_path):
-        return [f"tls.certificate.certificate_path introuvable : {cert_path}"]
+        return [_("tls.certificate.certificate_path introuvable : {cert_path}").format(cert_path=cert_path)]
     if not filesystem.exists(key_path):
-        return [f"tls.certificate.private_key_path introuvable : {key_path}"]
+        return [_("tls.certificate.private_key_path introuvable : {key_path}").format(key_path=key_path)]
 
     webroot = (project_root / config.paths.webroot).resolve()
     for label, path in (("certificate_path", cert_path.resolve()), ("private_key_path", key_path.resolve())):
         try:
             path.relative_to(webroot)
-            return [f"tls.certificate.{label} ({path}) est a l'interieur de paths.webroot - interdit (doc TLS §9.1)"]
+            return [_("tls.certificate.{label} ({path}) est à l'intérieur de paths.webroot - interdit (doc TLS §9.1)").format(label=label, path=path)]
         except ValueError:
             pass
 
@@ -244,7 +243,7 @@ def _validate_tls_environment(
         certificate_info = certificate_tool.inspect_certificate(cert_path)
         keys_match = certificate_tool.keys_match(key_path, cert_path)
     except CertificateToolError as e:
-        return [f"tls : {e}"]
+        return [_("tls : {e}").format(e=e)]
 
     facts = TlsStartupFacts(
         tls_enabled=config.tls.enabled,
@@ -308,8 +307,7 @@ def _route_conflict_errors(
     entries, exceptions = analysis.entries, analysis.exceptions
     prefix = f"options.waf.rules.keyword_lists[{list_id!r}]"
     errors = [
-        f"{prefix} : l'entree {c.entry!r} bloquerait la route {c.route!r} ({c.source}) "
-        "- ajouter une exception '!' ou passer la liste en observation"
+        _("{prefix} : l'entrée {entry!r} bloquerait la route {route!r} ({source}) - ajouter une exception '!' ou passer la liste en observation").format(prefix=prefix, entry=c.entry, route=c.route, source=c.source)
         for c in find_route_conflicts(
             entries, anchor, _collect_site_routes(config, filesystem, project_root), exceptions,
         )
@@ -322,8 +320,7 @@ def _route_conflict_errors(
             and not is_excepted("/" + relative, exceptions, anchor)
         ):
             errors.append(
-                f"{prefix} : l'entree {entry!r} bloquerait {relative!r}, qui existe dans le webroot "
-                "- ajouter une exception '!' ou retirer l'entree"
+                _("{prefix} : l'entrée {entry!r} bloquerait {relative!r}, qui existe dans le webroot - ajouter une exception '!' ou retirer l'entrée").format(prefix=prefix, entry=entry, relative=relative)
             )
     return errors
 
@@ -341,21 +338,23 @@ def _validate_waf_environment(
     savoir, elle n'a pas acces au disque."""
     errors: list[str] = []
     waf_config = parse_waf_config(settings)
-    errors.extend(f"options.waf : {e}" for e in validate_waf_config(waf_config))
+    errors.extend(_("options.waf : {e}").format(e=e) for e in validate_waf_config(waf_config))
+    if config is not None and config.server.workers != 1:
+        errors.extend(shared_recidive_errors(waf_config))
 
     for relative_path in waf_config.rule_paths:
         path = project_root / relative_path
         try:
             load_rule_pack(filesystem, path)
         except (WafRuleLoadError, WafRuleValidationError) as e:
-            errors.append(f"options.waf.rules.paths : {e}")
+            errors.append(_("options.waf.rules.paths : {e}").format(e=e))
 
     for definition in waf_config.keyword_lists:
         path = project_root / definition.file
         try:
             load_keyword_list(filesystem, definition, path)
         except WafRuleLoadError as e:
-            errors.append(f"options.waf.rules.keyword_lists[{definition.id!r}] : {e}")
+            errors.append(_("options.waf.rules.keyword_lists[{id!r}] : {e}").format(id=definition.id, e=e))
             continue
         blocks_on_its_own = (
             definition.enabled and not definition.observe_only
@@ -371,11 +370,11 @@ def _validate_waf_environment(
         try:
             load_lua_waf_adapter(filesystem, script_path, waf_config, resolved_paths)
         except WafMagnetScriptError as e:
-            errors.append(f"options.waf.magnet : {e}")
+            errors.append(_("options.waf.magnet : {e}").format(e=e))
         except ImportError:
             errors.append(
-                "options.waf.magnet : dependance 'lupa' absente - installer l'extra optionnel "
-                "avec `pip install -e \".[magnet]\"` (jamais installe par defaut, voir pyproject.toml)"
+                _("options.waf.magnet : dépendance 'lupa' absente - installer l'extra optionnel "
+                "avec `pip install -e \".[magnet]\"` (jamais installé par défaut, voir pyproject.toml)")
             )
 
     return errors

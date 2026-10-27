@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from omega_serv.core.i18n import _
+
 _FORBIDDEN_TARGET_ROOTS = ("secure", "config", "src", "var")
 
 
@@ -41,17 +43,17 @@ def validate_alias_rule(rule: AliasRule) -> str | None:
     existence) reste la responsabilite de SafePathResolver au moment
     de servir une requete."""
     if not rule.url_prefix.startswith("/"):
-        return f"url_prefix doit commencer par '/' : {rule.url_prefix!r}"
+        return _("url_prefix doit commencer par '/' : {url_prefix!r}").format(url_prefix=rule.url_prefix)
 
     normalized = rule.target_path.replace("\\", "/").strip("/")
     first_segment = normalized.split("/", 1)[0] if normalized else ""
 
     if first_segment in _FORBIDDEN_TARGET_ROOTS:
-        return f"alias vers un dossier interdit ({first_segment}/) : {rule.target_path!r}"
+        return _("alias vers un dossier interdit ({first_segment}/) : {target_path!r}").format(first_segment=first_segment, target_path=rule.target_path)
 
     if not rule.allow_outside_webroot and first_segment != "webroot":
         return (
-            f"cible hors webroot sans allow_outside_webroot=true : {rule.target_path!r}"
+            _("cible hors webroot sans allow_outside_webroot=true : {target_path!r}").format(target_path=rule.target_path)
         )
 
     return None

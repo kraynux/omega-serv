@@ -12,6 +12,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Checkbox, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.validation import validate_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.wizard_summary_screen import WizardSummaryScreen
@@ -30,17 +31,17 @@ class WizardCheckScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ETAPE 6/8 : VERIFICATION DE LA CONFIGURATION", classes="omega-title")
+            yield Static(_("ÉTAPE 6/8 : VÉRIFICATION DE LA CONFIGURATION"), classes="omega-title")
             yield Static("", id="check-result")
-            yield Checkbox("Confirmer : bind public + certificat auto-signe", id="confirm-self-signed")
-            yield Checkbox("Confirmer : authentification sans TLS", id="confirm-auth-without-tls")
+            yield Checkbox(_("Confirmer : bind public + certificat auto-signé"), id="confirm-self-signed")
+            yield Checkbox(_("Confirmer : authentification sans TLS"), id="confirm-auth-without-tls")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Verifier", id="check", variant="primary")
+                    yield Button(_("Vérifier"), id="check", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivant", id="next", disabled=True)
+                    yield Button(_("Suivant"), id="next", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -62,7 +63,7 @@ class WizardCheckScreen(OmegaScreen):
 
         structural_errors = validate_config(self._state.config)
         if structural_errors:
-            result_widget.update("Erreur de validation :\n" + "\n".join(f"  - {e}" for e in structural_errors))
+            result_widget.update(_("Erreur de validation :\n") + "\n".join(f"  - {e}" for e in structural_errors))
             next_button.disabled = True
             return
 
@@ -71,7 +72,7 @@ class WizardCheckScreen(OmegaScreen):
 
         runner = self._container.config_check_runner
         if runner is None:
-            result_widget.update("Configuration valide (verification d'environnement indisponible).")
+            result_widget.update(_("Configuration valide (vérification d'environnement indisponible)."))
             next_button.disabled = False
             return
 
@@ -80,8 +81,8 @@ class WizardCheckScreen(OmegaScreen):
             self._state.self_signed_public_bind_confirmed, self._state.auth_without_tls_confirmed,
         )
         if env_errors:
-            result_widget.update("Erreur d'environnement :\n" + "\n".join(f"  - {e}" for e in env_errors))
+            result_widget.update(_("Erreur d'environnement :\n") + "\n".join(f"  - {e}" for e in env_errors))
             next_button.disabled = True
             return
-        result_widget.update("Configuration valide.")
+        result_widget.update(_("Configuration valide."))
         next_button.disabled = False

@@ -138,7 +138,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m and "PREMIERE activation" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "PREMIÈRE activation" in m for m in messages))
 
     async def test_enabling_reverse_proxy_first_time_warns_restart_required(self):
         app = OmegaServApp(self.container)
@@ -153,7 +153,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m and "PREMIERE activation" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "PREMIÈRE activation" in m for m in messages))
 
     async def test_enabling_non_fastcgi_option_never_warns_restart(self):
         app = OmegaServApp(self.container)
@@ -167,7 +167,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertFalse(any("REDÉMARRAGE COMPLET" in m for m in messages))
             self.assertTrue(any("Rechargez" in m for m in messages))
 
     async def test_disabling_fastcgi_never_triggers_first_enable_warning(self):
@@ -189,7 +189,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#disable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertFalse(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_enabling_active_defense_warns_restart_required(self):
         app = OmegaServApp(self.container)
@@ -204,7 +204,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m and "JAMAIS recharge" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "JAMAIS rechargé" in m for m in messages))
 
     async def test_disabling_active_defense_also_warns_restart_required(self):
         app = OmegaServApp(self.container)
@@ -225,7 +225,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#disable", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m and "JAMAIS recharge" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "JAMAIS rechargé" in m for m in messages))
 
 
 if __name__ == "__main__":

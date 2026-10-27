@@ -17,7 +17,10 @@ liste dans aucun de ces contrats (plan interface §3.6/§12, Phase II)."""
 from __future__ import annotations
 
 import sys
+from collections.abc import MutableMapping
 from typing import TYPE_CHECKING
+
+from omega_serv.core.i18n import _
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -32,6 +35,7 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
     from omega_serv.core.capability import Capability
     from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.active_defense.config import IoCConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
     from omega_serv.domain.security.audit.entities import AuditResult
     from omega_serv.domain.security.waf.config import MagnetConfig
@@ -40,8 +44,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.clock_port import ClockPort
     from omega_serv.ports.filesystem_port import FilesystemPort
     from omega_serv.ports.instance_registry_port import InstanceRegistryPort
-    from omega_serv.ports.ioc_exporter_port import IoCExporterPort
-    from omega_serv.ports.process_runner_port import ProcessRunnerPort
+    from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
 
 
 def _run_config_check(
@@ -129,6 +132,21 @@ async def _run_waf_test(
     return await simulate_waf_request(method, path, query, body, remote_ip, waf)
 
 
+def _service_runs_older_code(service_name: str) -> bool:
+    from pathlib import Path
+
+    import omega_serv
+    from omega_serv.application.services.build_service_manager import build_service_manager
+    from omega_serv.application.services.check_stale_service import service_runs_older_code
+    from omega_serv.infrastructure.process.process_info import newest_code_time, process_start_time
+
+    manager = build_service_manager()
+    if manager is None:
+        return False
+    code_time = newest_code_time(Path(omega_serv.__file__).resolve().parent)
+    return service_runs_older_code(manager, service_name, process_start_time, code_time)
+
+
 async def _check_magnet_compatibility(
     magnet: MagnetConfig, project_root: Path, filesystem: FilesystemPort,
 ) -> MagnetCompatibilityCheck:
@@ -159,15 +177,11 @@ def _build_active_defense_collaborators(
 
 
 def _run_ioc_export(
-    incident: Incident, export_format: str, export_dir: Path, filesystem: FilesystemPort,
+    incident: Incident, export_format: str, export_dir: Path, filesystem: FilesystemPort, ioc: IoCConfig,
 ) -> ExportResult | None:
-    from omega_serv.infrastructure.exporters.csv_ioc_exporter import CsvIoCExporter
-    from omega_serv.infrastructure.exporters.json_ioc_exporter import JsonIoCExporter
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
 
-    exporters: dict[str, IoCExporterPort] = {
-        "json": JsonIoCExporter(filesystem, export_dir), "csv": CsvIoCExporter(filesystem, export_dir),
-    }
-    exporter = exporters.get(export_format)
+    exporter = build_ioc_exporters(filesystem, export_dir, ioc).get(export_format)
     return None if exporter is None else exporter.export(incident)
 
 
@@ -231,9 +245,9 @@ def _run_lnav(log_paths: tuple[Path, ...], palette: Palette, title: str, menu_la
     try:
         render_lnav_live(list(log_paths), palette, title, menu_label)
     except FileNotFoundError:
-        return "L'executable 'lnav' est introuvable (non installe ou absent du PATH)."
+        return _("L'exécutable 'lnav' est introuvable (non installé ou absent du PATH).")
     except OSError as exc:
-        return f"Echec du lancement de lnav : {exc}"
+        return _("Échec du lancement de lnav : {exc}").format(exc=exc)
     return None
 
 
@@ -271,6 +285,20 @@ def _build_execv_invocation(python_executable: Path) -> tuple[str, list[str]]:
     return path, [path, "-m", "omega_serv"]
 
 
+def _prepare_language_restart_environment(environ: MutableMapping[str, str], language_code: str) -> None:
+    """Environnement transmis au processus relance par os.execv() apres un changement de
+    langue (OMEGA-SERV_PLAN-DETAILLE_I18N.md §5.4) : le splash de confirmation est demande,
+    et une eventuelle surcharge OMEGA_SERV_LANG (voie de secours, une fois) est retiree -
+    sinon elle masquerait la langue que l'utilisateur vient de choisir."""
+    from omega_serv.application.terminal.select_language import (
+        LANGUAGE_CHANGED_ENV_VAR,
+        LANGUAGE_ENV_VAR,
+    )
+
+    environ[LANGUAGE_CHANGED_ENV_VAR] = language_code
+    environ.pop(LANGUAGE_ENV_VAR, None)
+
+
 def _export_capabilities_html(capabilities: Sequence[Capability], theme_name: str) -> str:
     from omega_serv.infrastructure.exporters.html_exporter import export_capabilities_html
 
@@ -289,11 +317,155 @@ def _export_guide_html(screen_guides: Sequence[dict], faq_entries: Sequence[dict
     return export_guide_html(screen_guides, faq_entries, theme_name)
 
 
+# Lot « langue des exports » (decision utilisateur 2026-10-23) : un export dans une autre langue
+# que l'interface est genere par un processus enfant lance dans cette langue. Le guide et les
+# raisons du registre des capacites sont traduits a leur creation (import, scan) : seul un
+# processus demarre dans la langue voulue les produit sans melange de langues.
+EXPORT_HTML_CHILD_COMMAND = "_export-html"
+EXPORT_REPORT_CHILD_COMMAND = "_export-report"
+# Code de sortie convenu avec DependencyContainer : le message est traduit par le parent,
+# dans la langue de l'interface (l'enfant parle la langue des exports).
+EXPORT_CHILD_INCIDENT_NOT_FOUND = 3
+
+
+def _run_export_in_language(command: list[str], language_code: str) -> ProcessResult:
+    from omega_serv.bootstrap.early_language import EXPORT_CHILD_ENV_VAR
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+
+    return SubprocessRunner().run(
+        ["env", f"OMEGA_SERV_LANG={language_code}", f"{EXPORT_CHILD_ENV_VAR}=1",
+         sys.executable, "-m", "omega_serv", *command],
+        timeout=180,
+    )
+
+
+def _render_html_export_here(kind: str, theme_name: str) -> str | None:
+    """Rendu HTML dans la langue de CE processus (enfant d'export)."""
+    from dataclasses import asdict
+
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.core.capability_registry import CapabilityRegistry
+
+    container = DependencyContainer()
+    if kind == "guide":
+        from omega_serv.interfaces.tui.guide.menu_tree import GUIDE_MENU_ENTRIES
+        from omega_serv.interfaces.tui.guide.registry import ALL_FAQ_ENTRIES, SCREEN_GUIDES
+
+        guides = [asdict(SCREEN_GUIDES[e.screen_class_name]) for e in GUIDE_MENU_ENTRIES if e.screen_class_name in SCREEN_GUIDES]
+        return _export_guide_html(guides, [asdict(f) for f in ALL_FAQ_ENTRIES], theme_name)
+    if kind == "log-archives":
+        store = container.build_archive_store(container.project_root / "var" / "backups" / "logs")
+        return _export_log_archives_html([store.get_archive_info(p) for p in store.list_archives()], theme_name)
+    if kind == "capabilities":
+        load_result = load_config(container.configuration, container.config_file)
+        if not load_result.success or load_result.config is None:
+            sys.stderr.write("; ".join(load_result.errors))
+            return None
+        config = load_result.config
+        fastcgi_socket = None
+        fastcgi_option = config.options.get("fastcgi")
+        if fastcgi_option is not None and fastcgi_option.enabled:
+            fastcgi_socket = container.project_root / fastcgi_option.settings.get("socket_path", "var/run/php-fpm.sock")
+        scanner = container.build_capability_scanner(config.server.port, fastcgi_socket)
+        return _export_capabilities_html(CapabilityRegistry(scanner.scan()).list_all(), theme_name)
+    return None
+
+
+def _write_report_here(incident_id: str) -> Path | None:
+    """Rapport d'incident Markdown dans la langue de CE processus (enfant d'export)."""
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.bootstrap.container import DependencyContainer
+
+    container = DependencyContainer()
+    load_result = load_config(container.configuration, container.config_file)
+    if not load_result.success or load_result.config is None:
+        sys.stderr.write("; ".join(load_result.errors))
+        return None
+    active_defense = _build_active_defense_collaborators(load_result.config, container.project_root)
+    incident = None if active_defense is None else active_defense.incident_repository.get(incident_id)
+    if active_defense is None or incident is None:
+        raise LookupError(incident_id)
+    export_dir = container.project_root / active_defense.config.storage.export_dir
+    return _run_incident_report_export(incident, export_dir, container.filesystem).path
+
+
+def _run_export_child_command(argv: list[str]) -> int:
+    """`_export-html <guide|capabilities|log-archives> <theme>` : HTML sur stdout.
+    `_export-report <incident_id>` : chemin du rapport ecrit sur stdout. Commandes internes,
+    lancees uniquement par `_run_export_in_language` (absentes de --help)."""
+    if argv[0] == EXPORT_HTML_CHILD_COMMAND and len(argv) == 3:
+        content = _render_html_export_here(argv[1], argv[2])
+        if content is None:
+            return 1
+        sys.stdout.write(content)
+        return 0
+    if argv[0] == EXPORT_REPORT_CHILD_COMMAND and len(argv) == 2:
+        try:
+            path = _write_report_here(argv[1])
+        except LookupError:
+            return EXPORT_CHILD_INCIDENT_NOT_FOUND
+        if path is None:
+            return 1
+        sys.stdout.write(f"{path}\n")
+        return 0
+    return 2
+
+
+def _run_with_text_direction(app) -> None:  # type: ignore[no-untyped-def]
+    """Arabe (plan i18n lot 11, option C) : omega-serv ordonne lui-meme le texte droite-a-gauche,
+    le terminal passe en mode bidi explicite le temps de la TUI pour ne plus rien deplacer."""
+    from omega_lib.i18n.policies import text_direction
+
+    from omega_serv.core.i18n import STATE
+    from omega_serv.interfaces.tui.terminal_bidi import (
+        ENTER_EXPLICIT_MODE,
+        LEAVE_EXPLICIT_MODE,
+        install_visual_reordering,
+    )
+
+    if text_direction(STATE.language.code) != "rtl" or not install_visual_reordering():
+        app.run()
+        return
+    sys.stdout.write(ENTER_EXPLICIT_MODE)
+    sys.stdout.flush()
+    try:
+        app.run()
+    finally:
+        sys.stdout.write(LEAVE_EXPLICIT_MODE)
+        sys.stdout.flush()
+
+
 def main(argv: list[str] | None = None) -> int:
     effective_argv = sys.argv[1:] if argv is None else argv
 
+    import os
+
+    from omega_serv.bootstrap.early_language import (
+        install_language_early,
+        install_page_language_early,
+        is_server_process,
+    )
+
+    # Langue installee AVANT tout autre import du programme (plan i18n, lot 4) : une phrase
+    # traduite au chargement d'un module est ainsi deja dans la bonne langue. Jamais pour
+    # `serve` (D18b : journalctl reste en francais).
+    if not is_server_process(effective_argv):
+        install_language_early(os.environ)
+    install_page_language_early(os.environ)  # pages visiteurs (D19), y compris pour `serve`
+
+    # Hindi (plan i18n, lots 10-11) : Rich compte les voyelles devanagari espacantes pour 0
+    # colonne, le terminal pour 1 - aligne avant tout rendu, sans effet sur les autres langues.
+    from omega_serv.infrastructure.i18n.terminal_cell_widths import (
+        align_spacing_marks_with_terminal,
+    )
+
+    align_spacing_marks_with_terminal()
+
+    if effective_argv and effective_argv[0] in (EXPORT_HTML_CHILD_COMMAND, EXPORT_REPORT_CHILD_COMMAND):
+        return _run_export_child_command(effective_argv)
+
     if not effective_argv:
-        import os
 
         os.environ.setdefault("TEXTUAL_DISABLE_KITTY_KEY", "1")
 
@@ -318,7 +490,6 @@ def main(argv: list[str] | None = None) -> int:
 
         from omega_serv.application.services.build_service_manager import build_service_manager
         from omega_serv.bootstrap.container import DependencyContainer
-        from omega_serv.interfaces.tui.app import OmegaServApp
 
         container = DependencyContainer(
             service_manager_factory=build_service_manager,
@@ -328,6 +499,7 @@ def main(argv: list[str] | None = None) -> int:
             admin_request_runner=_call_admin_endpoint,
             waf_test_runner=_run_waf_test,
             magnet_compat_check_runner=_check_magnet_compatibility,
+            stale_service_checker=_service_runs_older_code,
             blocklist_port_factory=_build_blocklist_port,
             active_defense_collaborators_factory=_build_active_defense_collaborators,
             ioc_export_runner=_run_ioc_export,
@@ -340,15 +512,21 @@ def main(argv: list[str] | None = None) -> int:
             export_capabilities_html_fn=_export_capabilities_html,
             export_log_archives_html_fn=_export_log_archives_html,
             export_guide_html_fn=_export_guide_html,
+            export_in_language_runner=_run_export_in_language,
             serve_foreground_runner=_run_serve_foreground,
         )
-        app = OmegaServApp(container)
-        app.run()
-        if app.pending_switch is not None:
-            import os
+        from omega_serv.interfaces.tui.app import OmegaServApp
 
+        app = OmegaServApp(container)
+        _run_with_text_direction(app)
+        if app.pending_switch is not None:
             os.environ["OMEGA_SERV_SWITCHED_FROM"] = app.pending_switch.source_name
             path, exec_argv = _build_execv_invocation(app.pending_switch.python_executable)
+            os.execv(path, exec_argv)  # pragma: no cover - remplace le processus, jamais testable pour de vrai
+        if app.pending_restart is not None:
+            # Meme Python, meme installation : seule l'interface redemarre, jamais le service.
+            _prepare_language_restart_environment(os.environ, app.pending_restart.language_code)
+            path, exec_argv = _build_execv_invocation(Path(sys.executable))
             os.execv(path, exec_argv)  # pragma: no cover - remplace le processus, jamais testable pour de vrai
         return 0
 

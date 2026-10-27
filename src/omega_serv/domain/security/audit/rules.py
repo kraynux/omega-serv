@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
 from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
@@ -25,12 +26,12 @@ def rule_public_bind(config: OmegaServConfig) -> list[AuditFinding]:
     'behind_proxy')."""
     if config.server.bind in ("0.0.0.0", "::"):
         return [AuditFinding(
-            rule_id="TLS-003", rule_name="Serveur bind sur toutes les interfaces",
+            rule_id="TLS-003", rule_name=_("Serveur bind sur toutes les interfaces"),
             severity=Severity.MEDIUM, category="tls",
-            message=f"server.bind = {config.server.bind!r} (toutes interfaces)",
+            message=_("server.bind = {bind!r} (toutes interfaces)").format(bind=config.server.bind),
             recommendation=(
-                "Verifier qu'un reverse proxy ou tls.mode='behind_proxy' est bien en place ; "
-                "sinon restreindre server.bind a 127.0.0.1."
+                _("Vérifier qu'un reverse proxy ou tls.mode='behind_proxy' est bien en place ; "
+                "sinon restreindre server.bind à 127.0.0.1.")
             ),
             details={"bind": config.server.bind},
         )]
@@ -44,7 +45,7 @@ def _csp_candidates(config: OmegaServConfig, csp_policy: str) -> list[tuple[str,
     Une exception de zone reste toujours visible ici, jamais silencieuse
     - meme deliberee, elle doit apparaitre dans `audit security`."""
     candidates = [("globale", csp_policy)]
-    candidates.extend((f"zone {zone.path_prefix!r}", zone.data) for zone in config.security.csp_zones)
+    candidates.extend((_("zone {path_prefix!r}").format(path_prefix=zone.path_prefix), zone.data) for zone in config.security.csp_zones)
     return candidates
 
 
@@ -57,10 +58,10 @@ def rule_csp_unsafe_inline(config: OmegaServConfig, csp_policy: str = DEFAULT_CS
     for label, policy in _csp_candidates(config, csp_policy):
         if "'unsafe-inline'" in policy:
             findings.append(AuditFinding(
-                rule_id="CSP-001", rule_name="CSP contient unsafe-inline",
+                rule_id="CSP-001", rule_name=_("CSP contient unsafe-inline"),
                 severity=Severity.MEDIUM, category="csp",
-                message=f"La CSP {label} contient 'unsafe-inline'.",
-                recommendation="Supprimer unsafe-inline, utiliser des hashes/nonces si necessaire.",
+                message=_("La CSP {label} contient 'unsafe-inline'.").format(label=label),
+                recommendation=_("Supprimer unsafe-inline, utiliser des hashes/nonces si nécessaire."),
                 details={"csp": policy, "scope": label},
             ))
     return findings
@@ -78,15 +79,15 @@ def rule_csp_too_permissive(config: OmegaServConfig, csp_policy: str = DEFAULT_C
             directive = directive.strip()
             if not directive:
                 continue
-            name, _, values = directive.partition(" ")
+            name, _ignored, values = directive.partition(" ")
             if "*" in values.split():
                 permissive_directives.append(name)
         if permissive_directives:
             findings.append(AuditFinding(
-                rule_id="CSP-002", rule_name="CSP contient une directive trop permissive",
+                rule_id="CSP-002", rule_name=_("CSP contient une directive trop permissive"),
                 severity=Severity.MEDIUM, category="csp",
-                message=f"CSP {label} - directive(s) avec source generique '*' : {', '.join(permissive_directives)}",
-                recommendation="Remplacer '*' par une liste explicite d'origines de confiance.",
+                message=_("CSP {label} - directive(s) avec source générique '*' : {value}").format(label=label, value=', '.join(permissive_directives)),
+                recommendation=_("Remplacer '*' par une liste explicite d'origines de confiance."),
                 details={"directives": permissive_directives, "scope": label},
             ))
     return findings
@@ -97,10 +98,10 @@ def rule_dangerous_methods(config: OmegaServConfig) -> list[AuditFinding]:
     enabled = _DANGEROUS_METHODS.intersection(set(config.security.allowed_methods))
     if enabled:
         return [AuditFinding(
-            rule_id="GEN-001", rule_name="Methodes HTTP dangereuses activees",
+            rule_id="GEN-001", rule_name=_("Méthodes HTTP dangereuses activées"),
             severity=Severity.HIGH, category="generic",
-            message=f"Methodes activees : {', '.join(sorted(enabled))}",
-            recommendation="Restreindre security.allowed_methods a GET/HEAD/POST si possible.",
+            message=_("Méthodes activées : {value}").format(value=', '.join(sorted(enabled))),
+            recommendation=_("Restreindre security.allowed_methods à GET/HEAD/POST si possible."),
             details={"allowed_methods": list(config.security.allowed_methods)},
         )]
     return []
@@ -110,13 +111,12 @@ def rule_high_timeouts(config: OmegaServConfig) -> list[AuditFinding]:
     """GEN-002."""
     if config.server.read_timeout_seconds > _HIGH_TIMEOUT_THRESHOLD_SECONDS:
         return [AuditFinding(
-            rule_id="GEN-002", rule_name="read_timeout_seconds eleve",
+            rule_id="GEN-002", rule_name=_("read_timeout_seconds élevé"),
             severity=Severity.MEDIUM, category="generic",
             message=(
-                f"server.read_timeout_seconds = {config.server.read_timeout_seconds}s "
-                f"(recommande <= {_HIGH_TIMEOUT_THRESHOLD_SECONDS}s)"
+                _("server.read_timeout_seconds = {read_timeout_seconds}s (recommandé <= {HIGH_TIMEOUT_THRESHOLD_SECONDS}s)").format(read_timeout_seconds=config.server.read_timeout_seconds, HIGH_TIMEOUT_THRESHOLD_SECONDS=_HIGH_TIMEOUT_THRESHOLD_SECONDS)
             ),
-            recommendation="Reduire pour limiter l'impact d'un client lent (slowloris).",
+            recommendation=_("Réduire pour limiter l'impact d'un client lent (slowloris)."),
             details={"read_timeout_seconds": config.server.read_timeout_seconds},
         )]
     return []
@@ -137,15 +137,14 @@ def rule_upload_zones_without_type_restriction(config: OmegaServConfig) -> list[
     for zone in parse_upload_zone_rules(upload_option.settings.get("zones", [])):
         if not zone.policy.allowed_extensions and not zone.policy.allowed_content_types:
             findings.append(AuditFinding(
-                rule_id="UPLOAD-001", rule_name="Zone d'upload sans restriction de type de fichier",
+                rule_id="UPLOAD-001", rule_name=_("Zone d'upload sans restriction de type de fichier"),
                 severity=Severity.MEDIUM, category="upload",
                 message=(
-                    f"Zone {zone.url_prefix!r} accepte n'importe quel type de fichier "
-                    "(aucune policy.allowed_extensions ni policy.allowed_content_types)."
+                    _("Zone {url_prefix!r} accepte n'importe quel type de fichier (aucune policy.allowed_extensions ni policy.allowed_content_types).").format(url_prefix=zone.url_prefix)
                 ),
                 recommendation=(
-                    "Restreindre policy.allowed_extensions et/ou policy.allowed_content_types "
-                    "a la liste minimale necessaire pour cette zone."
+                    _("Restreindre policy.allowed_extensions et/ou policy.allowed_content_types "
+                    "à la liste minimale nécessaire pour cette zone.")
                 ),
                 details={"url_prefix": zone.url_prefix, "storage_path": zone.storage_path},
             ))
@@ -171,15 +170,14 @@ def rule_reverse_proxy_upstream_tls_unverified(config: OmegaServConfig) -> list[
         if not any(upstream.use_tls for upstream in zone.upstreams):
             continue
         findings.append(AuditFinding(
-            rule_id="PROXY-001", rule_name="Verification TLS upstream desactivee",
+            rule_id="PROXY-001", rule_name=_("Vérification TLS upstream désactivée"),
             severity=Severity.HIGH, category="proxy",
             message=(
-                f"Zone {zone.url_prefix!r} : verify_upstream_tls=False sur un upstream HTTPS - "
-                "le certificat presente par le backend n'est jamais verifie."
+                _("Zone {url_prefix!r} : verify_upstream_tls=False sur un upstream HTTPS - le certificat présenté par le backend n'est jamais vérifié.").format(url_prefix=zone.url_prefix)
             ),
             recommendation=(
-                "Activer verify_upstream_tls (defaut) sauf necessite reelle et documentee "
-                "(backend interne en certificat auto-signe, reseau intermediaire de confiance)."
+                _("Activer verify_upstream_tls (défaut) sauf nécessité réelle et documentée "
+                "(backend interne en certificat auto-signé, réseau intermédiaire de confiance).")
             ),
             details={"url_prefix": zone.url_prefix},
         ))

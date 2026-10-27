@@ -13,6 +13,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.audit.entities import Severity
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -29,8 +30,8 @@ if TYPE_CHECKING:
     AuditRunner = Callable[[OmegaServConfig, Path, Path, FilesystemPort, ClockPort, str, bool, bool], AuditResult]
 
 _SEVERITY_LABELS = {
-    Severity.CRITICAL: "CRITICAL", Severity.HIGH: "HIGH", Severity.MEDIUM: "MEDIUM",
-    Severity.LOW: "LOW", Severity.INFO: "INFO",
+    Severity.CRITICAL: _("CRITICAL"), Severity.HIGH: _("HIGH"), Severity.MEDIUM: _("MEDIUM"),
+    Severity.LOW: _("LOW"), Severity.INFO: _("INFO"),
 }
 
 _DEFAULT_SERVICE_NAME = "omega-serv"
@@ -44,13 +45,13 @@ class AuditScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("AUDIT DE SECURITE", classes="omega-title")
+            yield Static(_("AUDIT DE SÉCURITÉ"), classes="omega-title")
             yield Static("", id="audit-result")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Auditer", id="audit", variant="primary")
+                    yield Button(_("Auditer"), id="audit", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -68,21 +69,21 @@ class AuditScreen(OmegaScreen):
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
             result_widget.update(
-                "Erreur de configuration :\n" + "\n".join(f"  - {e}" for e in load_result.errors)
+                _("Erreur de configuration :\n") + "\n".join(f"  - {e}" for e in load_result.errors)
             )
             if notify:
-                self.app.notify("Audit impossible : configuration invalide.", severity="error")
+                self.app.notify(_("Audit impossible : configuration invalide."), severity="error")
             return
         assert load_result.config is not None
 
         runner = self._container.audit_runner
         if runner is None:
-            result_widget.update("Audit indisponible dans cet environnement.")
+            result_widget.update(_("Audit indisponible dans cet environnement."))
             if notify:
-                self.app.notify("Audit indisponible dans cet environnement.", severity="error")
+                self.app.notify(_("Audit indisponible dans cet environnement."), severity="error")
             return
 
-        result_widget.update("Audit en cours...")
+        result_widget.update(_("Audit en cours..."))
         self.query_one("#audit", Button).disabled = True
         config = load_result.config
         self.run_worker(lambda: self._run_audit_in_thread(runner, config, notify), thread=True, exclusive=True)
@@ -100,7 +101,7 @@ class AuditScreen(OmegaScreen):
 
         lines: list[str] = []
         if not audit.findings:
-            lines.append("Aucun probleme detecte.")
+            lines.append(_("Aucun problème détecté."))
         else:
             for finding in audit.findings:
                 label = _SEVERITY_LABELS[finding.severity]
@@ -110,14 +111,13 @@ class AuditScreen(OmegaScreen):
         summary = audit.summary
         lines.append("")
         lines.append(
-            f"Resume : {summary['critical']} critical, {summary['high']} high, "
-            f"{summary['medium']} medium, {summary['low']} low, {summary['info']} info"
+            _("Résumé : {critical} critical, {high} high, {medium} medium, {low} low, {info} info").format(critical=summary['critical'], high=summary['high'], medium=summary['medium'], low=summary['low'], info=summary['info'])
         )
-        lines.append("Etat : securise" if audit.is_secure else "Etat : NON SECURISE")
+        lines.append(_("État : sécurisé") if audit.is_secure else _("État : NON SÉCURISÉ"))
         result_widget.update("\n".join(lines))
         if notify:
             self.app.notify(
-                "Audit termine : aucun probleme detecte." if audit.is_secure
-                else f"Audit termine : {summary['critical']} critical, {summary['high']} high.",
+                _("Audit terminé : aucun problème détecté.") if audit.is_secure
+                else _("Audit terminé : {critical} critical, {high} high.").format(critical=summary['critical'], high=summary['high']),
                 severity="information" if audit.is_secure else "warning",
             )

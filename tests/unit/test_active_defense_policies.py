@@ -181,17 +181,16 @@ class TestDecideIncidentTransition(unittest.TestCase):
     voir le docstring de decide_incident_transition)."""
 
     def test_below_threshold_is_no_change(self):
-        self.assertEqual(decide_incident_transition(None, 50, incident_score_threshold=70), "no_change")
+        self.assertEqual(decide_incident_transition(False, 50, incident_score_threshold=70), "no_change")
 
     def test_above_threshold_without_existing_incident_opens_new(self):
-        self.assertEqual(decide_incident_transition(None, 70, incident_score_threshold=70), "open_new")
+        self.assertEqual(decide_incident_transition(False, 70, incident_score_threshold=70), "open_new")
 
     def test_above_threshold_with_existing_incident_merges(self):
-        incident = Incident(incident_id="i1", subject_id="s1", status="open", opened_at=_NOW)
-        self.assertEqual(decide_incident_transition(incident, 90, incident_score_threshold=70), "merge_into_existing")
+        self.assertEqual(decide_incident_transition(True, 90, incident_score_threshold=70), "merge_into_existing")
 
     def test_custom_threshold_respected(self):
-        self.assertEqual(decide_incident_transition(None, 35, incident_score_threshold=30), "open_new")
+        self.assertEqual(decide_incident_transition(False, 35, incident_score_threshold=30), "open_new")
 
 
 class TestDecideIncidentClosure(unittest.TestCase):
@@ -369,6 +368,30 @@ class TestComputeSlowdownDelayMs(unittest.TestCase):
         self.assertEqual(low, 250)
         self.assertEqual(high, 450)
 
+
+
+class TestUserAgentFingerprint(unittest.TestCase):
+    def test_same_value_as_hash_payload_and_bounded_cache(self):
+        from omega_serv.domain.security.active_defense.policies import (
+            hash_payload,
+            user_agent_fingerprint,
+        )
+        self.assertEqual(user_agent_fingerprint("sqlmap/1.7"), hash_payload(b"sqlmap/1.7"))
+        self.assertEqual(user_agent_fingerprint.cache_info().maxsize, 4096)
+
+
+class TestIndicatorsFromIpv6Subject(unittest.TestCase):
+    def test_ipv6_source_is_exported_whole(self):
+        from omega_serv.domain.security.active_defense.entities import Incident, ThreatObservation
+        from omega_serv.domain.security.active_defense.policies import extract_indicator_candidates
+        subject = "2001:db8::7:" + "ab" * 32
+        incident = Incident(
+            incident_id="i", subject_id=subject, status="open", opened_at=_NOW,
+            observations=(ThreatObservation(subject_id=subject, observed_at=_NOW, kind="waf_decision",
+                                            attack_class="recon", score_delta=80, detail="d"),),
+        )
+        values = {c.kind: c.value for c in extract_indicator_candidates(incident)}
+        self.assertEqual(values, {"ip": "2001:db8::7", "user_agent": "ab" * 32})
 
 if __name__ == "__main__":
     unittest.main()

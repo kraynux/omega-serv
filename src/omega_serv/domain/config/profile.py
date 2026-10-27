@@ -12,6 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from omega_serv.core.i18n import _
+
 KNOWN_PROFILE_NAMES: frozenset[str] = frozenset({
     "minimal",
     "standard",
@@ -34,7 +36,7 @@ class Profile:
     def from_dict(cls, data: dict[str, Any]) -> Profile:
         name = data.get("name")
         if not name:
-            raise ValueError("Un profil doit avoir un champ 'name'.")
+            raise ValueError(_("Un profil doit avoir un champ 'name'."))
         description = data.get("description", "")
         values = {k: v for k, v in data.items() if k not in ("name", "description")}
         return cls(name=name, description=description, values=values)

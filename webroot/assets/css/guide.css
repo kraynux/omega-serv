@@ -463,3 +463,25 @@
             .wiki-section summary .wiki-title { font-size: 0.9rem; }
         }
 
+        /* ============================================
+           LANGUES (barre commune index/readme/guide)
+           ============================================ */
+        .langs {
+            text-align: center;
+            padding: 0.6rem 2rem;
+            color: #9098a8;
+            font-size: 0.8rem;
+            line-height: 1.9;
+            border-bottom: 1px solid #2a2e3a;
+        }
+        .langs .langs-label { color: #a0b0c0; }
+        .langs strong { color: #e0e0e0; }
+
+        /* ============================================
+           ex-styles inline de guide.html (CSP style-src 'self')
+           ============================================ */
+        .part-title { color: #00d4ff; text-align: center; margin-top: 2rem; }
+        .part-title-next { margin-top: 3rem; }
+        .part-intro { text-align: center; color: #a0b0c0; margin-bottom: 2rem; }
+        .limit-title-out { color: #ff6b35; }
+        .limit-title { color: #ffbc6e; }

@@ -20,6 +20,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.timer import Timer
 from textual.widgets import Button, Footer, Header, RichLog, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.ports.live_tail_port import LiveTailPort
 
@@ -42,14 +43,14 @@ class LogViewerScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static(f"VOIR / SUIVRE - {self._path}", classes="omega-title")
+            yield Static(_("VOIR / SUIVRE - {path}").format(path=self._path), classes="omega-title")
             yield Static("", id="viewer-error", classes="omega-hint")
             yield RichLog(id="log-content", wrap=False, highlight=False, markup=False)
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivre en direct", id="follow")
+                    yield Button(_("Suivre en direct"), id="follow")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -70,14 +71,14 @@ class LogViewerScreen(OmegaScreen):
         log_widget.clear()
 
         if not path.exists():
-            error_widget.update(f"Fichier introuvable : {path}")
+            error_widget.update(_("Fichier introuvable : {path}").format(path=path))
             self._tail_reader = None
             return
 
         try:
             content = path.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:
-            error_widget.update(f"Impossible de lire {path} : {exc}")
+            error_widget.update(_("Impossible de lire {path} : {exc}").format(path=path, exc=exc))
             self._tail_reader = None
             return
 
@@ -88,7 +89,7 @@ class LogViewerScreen(OmegaScreen):
 
     def _toggle_follow(self) -> None:
         if self._tail_reader is None:
-            self.query_one("#viewer-error", Static).update("Aucun fichier valide a suivre.")
+            self.query_one("#viewer-error", Static).update(_("Aucun fichier valide à suivre."))
             return
         if self._following:
             self._stop_following()
@@ -97,7 +98,7 @@ class LogViewerScreen(OmegaScreen):
 
     def _start_following(self) -> None:
         self._following = True
-        self.query_one("#follow", Button).label = "Arreter le suivi"
+        self.query_one("#follow", Button).label = _("Arrêter le suivi")
         self._timer = self.set_interval(_TAIL_INTERVAL_SECONDS, self._poll_new_lines)
 
     def _stop_following(self) -> None:
@@ -106,7 +107,7 @@ class LogViewerScreen(OmegaScreen):
             self._timer.stop()
             self._timer = None
         if self.is_mounted:
-            self.query_one("#follow", Button).label = "Suivre en direct"
+            self.query_one("#follow", Button).label = _("Suivre en direct")
 
     def on_unmount(self) -> None:
         if self._timer is not None:
@@ -118,7 +119,7 @@ class LogViewerScreen(OmegaScreen):
         try:
             new_lines = self._tail_reader.read_new_lines()
         except OSError as exc:
-            self.query_one("#log-content", RichLog).write(f"(suivi interrompu : {exc})")
+            self.query_one("#log-content", RichLog).write(_("(suivi interrompu : {exc})").format(exc=exc))
             self._stop_following()
             return
         for line in new_lines:

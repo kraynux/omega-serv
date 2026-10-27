@@ -17,6 +17,7 @@ from textual.widgets import Button, Footer, Header, Input, Static
 from omega_serv.application.active_defense.preview_playbook_decision import (
     preview_playbook_decision,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.policies import hash_payload
 from omega_serv.domain.security.active_defense.value_objects import (
     KNOWN_ATTACK_CLASSES,
@@ -40,10 +41,10 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ACTIVE DEFENSE - SIMULER", classes="omega-title")
+            yield Static(_("ACTIVE DEFENSE - SIMULER"), classes="omega-title")
             yield Static(
-                "Observation synthetique : aucune ecriture n'est faite, aucun impact reseau "
-                "(dry-run, plan Phase 4).",
+                _("Observation synthétique : aucune écriture n'est faite, aucun impact réseau "
+                "(dry-run, plan Phase 4)."),
                 classes="omega-hint",
             )
             yield Input(value="203.0.113.42", id="sim-ip-input")
@@ -53,9 +54,9 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
             yield Input(value="10", id="sim-score-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Simuler", id="simulate", variant="primary")
+                    yield Button(_("Simuler"), id="simulate", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield Static("", id="simulate-result", classes="omega-hint")
         yield Footer()
 
@@ -75,14 +76,13 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
         attack_class = self.query_one("#sim-attack-class-input", Input).value.strip() or "scan"
         if attack_class not in KNOWN_ATTACK_CLASSES:
             result_widget.update(
-                f"Classe d'attaque inconnue : {attack_class!r} "
-                f"(valeurs possibles : {', '.join(sorted(KNOWN_ATTACK_CLASSES))})."
+                _("Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value}).").format(attack_class=attack_class, value=', '.join(sorted(KNOWN_ATTACK_CLASSES)))
             )
             return
         try:
             score_delta = int(self.query_one("#sim-score-input", Input).value.strip() or "0")
         except ValueError:
-            result_widget.update("Score invalide (entier attendu).")
+            result_widget.update(_("Score invalide (entier attendu)."))
             return
         ip = self.query_one("#sim-ip-input", Input).value.strip() or "203.0.113.42"
         user_agent = self.query_one("#sim-user-agent-input", Input).value.strip()
@@ -94,9 +94,9 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
             subject_id=subject_id, attack_class=cast("AttackClass", attack_class), score_delta=score_delta,
         )
         lines = [
-            f"Source (simulee) : {preview.subject_id}",
-            f"Score : {preview.previous_score} -> {preview.projected_score}",
-            f"Niveau : {preview.previous_level} -> {preview.projected_level}",
-            *(f"  - {line}" for line in preview.explanation),
+            _("Source (simulée) : {subject_id}").format(subject_id=preview.subject_id),
+            _("Score : {previous_score} -> {projected_score}").format(previous_score=preview.previous_score, projected_score=preview.projected_score),
+            _("Niveau : {previous_level} -> {projected_level}").format(previous_level=preview.previous_level, projected_level=preview.projected_level),
+            *(_("  - {line}").format(line=line) for line in preview.explanation),
         ]
         result_widget.update("\n".join(lines))

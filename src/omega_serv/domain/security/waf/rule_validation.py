@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.entities import _VALID_SCOPES, RuleDefinition, RulePack
 
 SUPPORTED_RULE_PACK_VERSIONS = frozenset({1})
@@ -63,30 +64,30 @@ def validate_rule_pack(pack: RulePack) -> list[str]:
     reel)."""
     errors: list[str] = []
     if pack.version not in SUPPORTED_RULE_PACK_VERSIONS:
-        errors.append(f"{pack.pack} : version de pack non supportee : {pack.version}")
+        errors.append(_("{pack} : version de pack non supportée : {version}").format(pack=pack.pack, version=pack.version))
 
     seen_ids: set[str] = set()
     for rule in pack.rules:
         if not rule.id:
-            errors.append(f"{pack.pack} : une regle a un id vide")
+            errors.append(_("{pack} : une règle a un id vide").format(pack=pack.pack))
             continue
         if rule.id in seen_ids:
-            errors.append(f"{pack.pack} : id de regle duplique : {rule.id}")
+            errors.append(_("{pack} : id de règle dupliqué : {id}").format(pack=pack.pack, id=rule.id))
         seen_ids.add(rule.id)
 
         unknown_scopes = set(rule.scope) - _VALID_SCOPES
         if unknown_scopes:
-            errors.append(f"{pack.pack}/{rule.id} : scope inconnu : {sorted(unknown_scopes)}")
+            errors.append(_("{pack}/{id} : scope inconnu : {value}").format(pack=pack.pack, id=rule.id, value=sorted(unknown_scopes)))
         if not rule.scope:
-            errors.append(f"{pack.pack}/{rule.id} : scope ne peut pas etre vide")
+            errors.append(_("{pack}/{id} : scope ne peut pas être vide").format(pack=pack.pack, id=rule.id))
         if rule.action != "score":
-            errors.append(f"{pack.pack}/{rule.id} : action non supportee en V1 : {rule.action!r}")
+            errors.append(_("{pack}/{id} : action non supportée en V1 : {action!r}").format(pack=pack.pack, id=rule.id, action=rule.action))
         if rule.weight < 0:
-            errors.append(f"{pack.pack}/{rule.id} : weight doit etre >= 0")
+            errors.append(_("{pack}/{id} : weight doit être >= 0").format(pack=pack.pack, id=rule.id))
 
         try:
             re.compile(rule.pattern)
         except re.error as e:
-            errors.append(f"{pack.pack}/{rule.id} : motif regex invalide ({e})")
+            errors.append(_("{pack}/{id} : motif regex invalide ({e})").format(pack=pack.pack, id=rule.id, e=e))
 
     return errors

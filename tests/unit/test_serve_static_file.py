@@ -2,7 +2,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from omega_serv.application.server.serve_static_file import serve_static_file
+from omega_serv.application.server.serve_static_file import (
+    STREAM_THRESHOLD_BYTES,
+    serve_static_file,
+)
 from omega_serv.domain.config.entities import SecurityConfig
 from omega_serv.domain.http.headers import HttpHeaders
 from omega_serv.domain.http.request import HttpRequest
@@ -66,6 +69,59 @@ class TestServeStaticFile(unittest.TestCase):
         self.assertEqual(response.status, HttpStatus.OK)
         self.assertEqual(response.body, b"")
         self.assertEqual(response.headers["Content-Length"], str(len(b"<html>ok</html>")))
+
+    def test_big_file_is_referenced_never_loaded_in_memory(self):
+        (self.webroot / "big.bin").write_bytes(b"x" * (STREAM_THRESHOLD_BYTES + 1))
+        response = self._serve("GET", "/big.bin")
+        self.assertEqual(response.status, HttpStatus.OK)
+        self.assertEqual(response.body, b"")
+        self.assertEqual(response.body_file, (self.webroot / "big.bin").resolve())
+        self.assertEqual(response.body_file_length, STREAM_THRESHOLD_BYTES + 1)
+        self.assertEqual(response.content_length, STREAM_THRESHOLD_BYTES + 1)
+        self.assertEqual(response.headers["Content-Length"], str(STREAM_THRESHOLD_BYTES + 1))
+
+    def test_file_at_the_threshold_is_read_directly(self):
+        (self.webroot / "edge.bin").write_bytes(b"y" * STREAM_THRESHOLD_BYTES)
+        response = self._serve("GET", "/edge.bin")
+        self.assertIsNone(response.body_file)
+        self.assertEqual(len(response.body), STREAM_THRESHOLD_BYTES)
+
+    def _serve_with(self, method, path, headers):
+        from dataclasses import replace
+        request = replace(_make_request(method, path), headers=HttpHeaders.from_pairs(headers))
+        return serve_static_file(request, self.resolver, self.filesystem, self.security, index_files=("index.html",))
+
+    def test_validators_and_304(self):
+        first = self._serve("GET", "/index.html")
+        etag, last_modified = first.headers["ETag"], first.headers["Last-Modified"]
+        self.assertEqual(first.headers["Accept-Ranges"], "bytes")
+        again = self._serve_with("GET", "/index.html", [("if-none-match", etag)])
+        self.assertEqual(again.status, HttpStatus.NOT_MODIFIED)
+        self.assertEqual(again.body, b"")
+        self.assertEqual(again.headers["ETag"], etag)
+        by_date = self._serve_with("HEAD", "/index.html", [("if-modified-since", last_modified)])
+        self.assertEqual(by_date.status, HttpStatus.NOT_MODIFIED)
+        changed = self._serve_with("GET", "/index.html", [("if-none-match", '"perime"')])
+        self.assertEqual(changed.status, HttpStatus.OK)
+        self.assertEqual(changed.body, b"<html>ok</html>")
+
+    def test_range_on_small_and_big_files(self):
+        small = self._serve_with("GET", "/index.html", [("range", "bytes=6-7")])
+        self.assertEqual(small.status, HttpStatus.PARTIAL_CONTENT)
+        self.assertEqual(small.body, b"ok")
+        self.assertEqual(small.headers["Content-Range"], "bytes 6-7/15")
+        self.assertEqual(small.headers["Content-Length"], "2")
+        size = STREAM_THRESHOLD_BYTES + 100
+        (self.webroot / "big.bin").write_bytes(b"z" * size)
+        big = self._serve_with("GET", "/big.bin", [("range", "bytes=-10")])
+        self.assertEqual(big.status, HttpStatus.PARTIAL_CONTENT)
+        self.assertEqual((big.body_file_offset, big.body_file_length), (size - 10, 10))
+        self.assertEqual(big.headers["Content-Range"], f"bytes {size - 10}-{size - 1}/{size}")
+
+    def test_unsatisfiable_range_is_416(self):
+        response = self._serve_with("GET", "/index.html", [("range", "bytes=500-")])
+        self.assertEqual(response.status, HttpStatus.RANGE_NOT_SATISFIABLE)
+        self.assertEqual(response.headers["Content-Range"], "bytes */15")
 
     def test_missing_file_is_404(self):
         response = self._serve("GET", "/does-not-exist.html")

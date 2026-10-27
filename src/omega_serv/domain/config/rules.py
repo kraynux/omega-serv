@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.routing.alias import parse_alias_rules
 from omega_serv.domain.routing.fastcgi_zone import parse_fastcgi_config
@@ -106,11 +107,7 @@ def detect_zone_prefix_overlaps(config: OmegaServConfig) -> list[ConfigConflict]
             loser_type, loser_prefix = (type_b, prefix_b) if rank_a < rank_b else (type_a, prefix_a)
             conflicts.append(ConfigConflict(
                 "warning",
-                f"chevauchement de prefixe entre options.{type_a} ({prefix_a!r}) et options.{type_b} "
-                f"({prefix_b!r}) : options.{winner_type} ({winner_prefix!r}) l'emporte toujours pour "
-                f"les chemins correspondant aux deux (ordre du pipeline de dispatch, pas le prefixe "
-                f"le plus long) - options.{loser_type} ({loser_prefix!r}) restera inatteignable pour "
-                "ces chemins (plan reverse proxy §29.4/§30.1)",
+                _("chevauchement de préfixe entre options.{type_a} ({prefix_a!r}) et options.{type_b} ({prefix_b!r}) : options.{winner_type} ({winner_prefix!r}) l'emporte toujours pour les chemins correspondant aux deux (ordre du pipeline de dispatch, pas le préfixe le plus long) - options.{loser_type} ({loser_prefix!r}) restera inatteignable pour ces chemins (plan reverse proxy §29.4/§30.1)").format(type_a=type_a, prefix_a=prefix_a, type_b=type_b, prefix_b=prefix_b, winner_type=winner_type, winner_prefix=winner_prefix, loser_type=loser_type, loser_prefix=loser_prefix),
             ))
     return conflicts
 
@@ -124,7 +121,7 @@ def detect_conflicts(config: OmegaServConfig) -> list[ConfigConflict]:
         if not networks:
             conflicts.append(ConfigConflict(
                 "error",
-                "trusted_proxy.enabled=true sans trusted_networks defini (spec §6.4, §19.3)",
+                _("trusted_proxy.enabled=true sans trusted_networks défini (spec §6.4, §19.3)"),
             ))
 
     conflicts.extend(detect_zone_prefix_overlaps(config))

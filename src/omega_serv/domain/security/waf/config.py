@@ -8,9 +8,11 @@ parsing, pas de validation d'existence de fichiers ici (ca, c'est
 application/config/validate_config.py, qui a acces au filesystem)."""
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.entities import KeywordListDefinition
 from omega_serv.domain.security.waf.keyword_list import (
     parse_keyword_list_definition,
@@ -79,10 +81,49 @@ class GlobalRateLimitConfig:
 
 
 @dataclass(frozen=True)
+class PathRateLimitPolicy:
+    """Regle de debit d'un dossier (OMEGA-SERV_ETUDE_RATE_LIMIT_EXCLUSIONS.md,
+    D1/D2) : REMPLACE la limite globale pour ce prefixe, compteur propre.
+    `requests == 0` = illimite (aucun comptage)."""
+    prefix: str
+    requests: int
+    window_seconds: int = 60
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> PathRateLimitPolicy:
+        return cls(
+            prefix=str(data.get("prefix", "")),
+            requests=int(data.get("requests", 0)),
+            window_seconds=int(data.get("window_seconds", 60)),
+        )
+
+
+@dataclass(frozen=True)
+class SourceRateLimitPolicy:
+    """Regle de debit d'une IP/d'un reseau (D1/D2) ; `trusted` = source sure,
+    jamais bannie pour un depassement de debit (D4)."""
+    network: str
+    requests: int
+    window_seconds: int = 60
+    trusted: bool = False
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SourceRateLimitPolicy:
+        return cls(
+            network=str(data.get("network", "")),
+            requests=int(data.get("requests", 0)),
+            window_seconds=int(data.get("window_seconds", 60)),
+            trusted=bool(data.get("trusted", False)),
+        )
+
+
+@dataclass(frozen=True)
 class RateLimitConfig:
     enabled: bool = False
     algorithm: Literal["token_bucket"] = "token_bucket"
     global_: GlobalRateLimitConfig = field(default_factory=GlobalRateLimitConfig)
+    path_policies: tuple[PathRateLimitPolicy, ...] = ()
+    source_policies: tuple[SourceRateLimitPolicy, ...] = ()
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RateLimitConfig:
@@ -91,6 +132,8 @@ class RateLimitConfig:
             enabled=bool(data.get("enabled", defaults.enabled)),
             algorithm=data.get("algorithm", defaults.algorithm),
             global_=GlobalRateLimitConfig.from_dict(data.get("global", {})),
+            path_policies=tuple(PathRateLimitPolicy.from_dict(d) for d in data.get("path_policies", [])),
+            source_policies=tuple(SourceRateLimitPolicy.from_dict(d) for d in data.get("source_policies", [])),
         )
 
 
@@ -322,36 +365,67 @@ def validate_waf_config(config: WafConfig) -> list[str]:
     application/config/validate_config.py)."""
     errors: list[str] = []
     if config.engine != "python":
-        errors.append(f"options.waf.engine invalide : {config.engine!r} (seul 'python' est supporte en V1)")
+        errors.append(_("options.waf.engine invalide : {engine!r} (seul 'python' est supporte en V1)").format(engine=config.engine))
     if config.mode not in ("log-only", "block"):
-        errors.append(f"options.waf.mode invalide : {config.mode!r}")
+        errors.append(_("options.waf.mode invalide : {mode!r}").format(mode=config.mode))
     if config.on_internal_error not in ("fail-open", "fail-closed"):
-        errors.append(f"options.waf.on_internal_error invalide : {config.on_internal_error!r}")
+        errors.append(_("options.waf.on_internal_error invalide : {on_internal_error!r}").format(on_internal_error=config.on_internal_error))
     if config.magnet.on_error not in ("ignore", "fail-closed"):
-        errors.append(f"options.waf.magnet.on_error invalide : {config.magnet.on_error!r}")
+        errors.append(_("options.waf.magnet.on_error invalide : {on_error!r}").format(on_error=config.magnet.on_error))
     if config.magnet.timeout_ms <= 0:
-        errors.append("options.waf.magnet.timeout_ms doit etre strictement positif")
+        errors.append(_("options.waf.magnet.timeout_ms doit être strictement positif"))
     if config.inspect.decode_depth < 1:
-        errors.append("options.waf.inspect.decode_depth doit etre >= 1")
+        errors.append(_("options.waf.inspect.decode_depth doit être >= 1"))
     if config.inspect.body_max_inspect_bytes < 0:
-        errors.append("options.waf.inspect.body_max_inspect_bytes doit etre >= 0")
+        errors.append(_("options.waf.inspect.body_max_inspect_bytes doit être >= 0"))
     if config.scoring.block_threshold <= 0:
-        errors.append("options.waf.scoring.block_threshold doit etre strictement positif")
+        errors.append(_("options.waf.scoring.block_threshold doit être strictement positif"))
     if not (100 <= config.scoring.response_status < 600):
-        errors.append(f"options.waf.scoring.response_status invalide : {config.scoring.response_status}")
-    if config.rate_limit.global_.requests <= 0:
-        errors.append("options.waf.rate_limit.global.requests doit etre strictement positif")
-    if config.rate_limit.global_.window_seconds <= 0:
-        errors.append("options.waf.rate_limit.global.window_seconds doit etre strictement positif")
+        errors.append(_("options.waf.scoring.response_status invalide : {response_status}").format(response_status=config.scoring.response_status))
+    errors.extend(validate_rate_limit_config(config.rate_limit))
     if config.reputation.auto_block_max_entries < 0:
-        errors.append("options.waf.reputation.auto_block_max_entries doit etre >= 0")
+        errors.append(_("options.waf.reputation.auto_block_max_entries doit être >= 0"))
     if not config.rule_paths and not config.keyword_lists:
         errors.append(
-            "options.waf.rules.paths et options.waf.rules.keyword_lists ne peuvent pas etre "
-            "tous les deux vides si le WAF est active"
+            _("options.waf.rules.paths et options.waf.rules.keyword_lists ne peuvent pas être "
+            "tous les deux vides si le WAF est activé")
         )
     errors.extend(validate_keyword_list_definitions(config.keyword_lists))
     errors.extend(validate_never_auto_block(config.reputation.never_auto_block))
+    return errors
+
+
+def validate_rate_limit_config(rate_limit: RateLimitConfig) -> list[str]:
+    """Partie debit de `validate_waf_config`, appelable seule (ecran
+    Exclusions et debit : une config invalide AILLEURS ne doit pas empecher
+    de regler le debit)."""
+    errors: list[str] = []
+    if rate_limit.global_.requests <= 0:
+        errors.append(_("options.waf.rate_limit.global.requests doit être strictement positif"))
+    if rate_limit.global_.window_seconds <= 0:
+        errors.append(_("options.waf.rate_limit.global.window_seconds doit être strictement positif"))
+    errors.extend(validate_rate_limit_policies(rate_limit))
+    return errors
+
+
+def validate_rate_limit_policies(rate_limit: RateLimitConfig) -> list[str]:
+    errors: list[str] = []
+    for policy in rate_limit.path_policies:
+        if not policy.prefix.startswith("/"):
+            errors.append(_("options.waf.rate_limit.path_policies : préfixe invalide (doit commencer par /) : {prefix!r}").format(prefix=policy.prefix))
+        if policy.requests < 0:
+            errors.append(_("options.waf.rate_limit.path_policies : requests doit être >= 0 ({prefix})").format(prefix=policy.prefix))
+        if policy.window_seconds <= 0:
+            errors.append(_("options.waf.rate_limit.path_policies : window_seconds doit être strictement positif ({prefix})").format(prefix=policy.prefix))
+    for source in rate_limit.source_policies:
+        try:
+            ipaddress.ip_network(source.network, strict=False)
+        except ValueError:
+            errors.append(_("options.waf.rate_limit.source_policies : réseau invalide : {network!r}").format(network=source.network))
+        if source.requests < 0:
+            errors.append(_("options.waf.rate_limit.source_policies : requests doit être >= 0 ({network})").format(network=source.network))
+        if source.window_seconds <= 0:
+            errors.append(_("options.waf.rate_limit.source_policies : window_seconds doit être strictement positif ({network})").format(network=source.network))
     return errors
 
 
@@ -371,10 +445,10 @@ def with_reputation_enabled_for_lists(settings: dict[str, Any]) -> tuple[dict[st
     changes: list[str] = []
     if not reputation.get("enabled", ReputationConfig.enabled):
         reputation["enabled"] = True
-        changes.append("reputation activee (recidive comptee par IP)")
+        changes.append(_("réputation activée (récidive comptée par IP)"))
     if not reputation.get("auto_block", ReputationConfig.auto_block):
         reputation["auto_block"] = True
-        changes.append("auto-ban active (blocklist temporaire, reponse 451)")
+        changes.append(_("auto-ban activé (blocklist temporaire, réponse 451)"))
     if not changes:
         return settings, ()
     return {**settings, "reputation": reputation}, tuple(changes)

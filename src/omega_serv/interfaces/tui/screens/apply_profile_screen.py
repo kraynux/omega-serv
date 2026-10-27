@@ -13,6 +13,7 @@ from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.apply_profile import ApplyProfileResult, plan_profile_application
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -37,21 +38,21 @@ class ApplyProfileScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static(f"APPLIQUER LE PROFIL '{self._profile_name.upper()}'", classes="omega-title")
+            yield Static(_("APPLIQUER LE PROFIL '{value}'").format(value=self._profile_name.upper()), classes="omega-title")
             yield Static("", id="plan-text")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Appliquer", id="apply", variant="primary", disabled=True)
+                    yield Button(_("Appliquer"), id="apply", variant="primary", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
             self.query_one("#plan-text", Static).update(
-                "Configuration introuvable ou invalide : " + "; ".join(load_result.errors) +
-                "\n\nCreez d'abord une configuration (`omega-serv config init` en CLI pour l'instant)."
+                _("Configuration introuvable ou invalide : ") + "; ".join(load_result.errors) +
+                _("\n\nCréez d'abord une configuration (`omega-serv config init` en CLI pour l'instant).")
             )
             return
         assert load_result.config is not None
@@ -59,7 +60,7 @@ class ApplyProfileScreen(OmegaScreen):
         try:
             profile = self._container.profiles.load_profile(self._profile_name)
         except (ProfileNotFoundError, ProfileLoadError) as exc:
-            self.query_one("#plan-text", Static).update(f"Erreur : {exc}")
+            self.query_one("#plan-text", Static).update(_("Erreur : {exc}").format(exc=exc))
             return
 
         self._previous_config = load_result.config
@@ -71,17 +72,17 @@ class ApplyProfileScreen(OmegaScreen):
         assert self._plan is not None
         lines = []
         if not self._plan.changes:
-            lines.append("Aucune modification.")
+            lines.append(_("Aucune modification."))
         else:
-            lines.append("Modifications :")
+            lines.append(_("Modifications :"))
             lines.extend(str(change) for change in self._plan.changes)
         if self._plan.conflicts:
             lines.append("")
-            lines.append("Conflits detectes :")
+            lines.append(_("Conflits détectés :"))
             lines.extend(f"  [{c.severity.upper()}] {c.message}" for c in self._plan.conflicts)
         if self._plan.validation_errors:
             lines.append("")
-            lines.append("Erreurs de validation :")
+            lines.append(_("Erreurs de validation :"))
             lines.extend(f"  - {e}" for e in self._plan.validation_errors)
         return "\n".join(lines)
 
@@ -93,9 +94,9 @@ class ApplyProfileScreen(OmegaScreen):
             if self._plan.has_blocking_issues:
                 self.app.push_screen(
                     ConfirmScreen(
-                        title="PROBLEMES BLOQUANTS DETECTES",
-                        message="Des conflits ou erreurs de validation existent (voir ci-dessus). "
-                        "Forcer l'application quand meme ?",
+                        title=_("PROBLÈMES BLOQUANTS DÉTECTÉS"),
+                        message=_("Des conflits ou erreurs de validation existent (voir ci-dessus). "
+                        "Forcer l'application quand même ?"),
                     ),
                     self._apply_if_confirmed,
                 )
@@ -106,7 +107,7 @@ class ApplyProfileScreen(OmegaScreen):
         if not confirmed or self._plan is None:
             return
         self._container.configuration.save(self._container.config_file, self._plan.new_config)
-        message = f"Profil '{self._profile_name}' applique dans {self._container.config_file}."
+        message = _("Profil '{profile_name}' appliqué dans {config_file}.").format(profile_name=self._profile_name, config_file=self._container.config_file)
         new_server = self._plan.new_config.server
         new_tls = self._plan.new_config.tls
         needs_restart = self._previous_config is not None and (
@@ -118,8 +119,7 @@ class ApplyProfileScreen(OmegaScreen):
         if needs_restart:
             notify_restart_required(
                 self, self._container,
-                f"{message} Necessite un REDEMARRAGE COMPLET pour prendre effet (bind/port/"
-                "listen_backlog/TLS ont change).",
+                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (bind/port/listen_backlog/TLS ont changé).").format(message=message),
             )
         else:
             notify_reload_required(self, self._container, message)

@@ -433,7 +433,7 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
 
             pilot.app.screen.query_one("#follow", Button).press()
             await pilot.pause()
-            self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Arreter le suivi")
+            self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Arrêter le suivi")
 
             with self.access_log.open("a", encoding="utf-8") as f:
                 f.write("line3\n")
@@ -481,7 +481,7 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
                 await self._open_classic_viewer(pilot, container)
                 pilot.app.screen.query_one("#follow", Button).press()
                 await pilot.pause()
-                self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Arreter le suivi")
+                self.assertEqual(str(pilot.app.screen.query_one("#follow", Button).label), "Arrêter le suivi")
 
                 with self.access_log.open("a", encoding="utf-8") as f:
                     f.write("line2\n")
@@ -670,7 +670,7 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, LogRotationScreen)
             pilot.app.screen.query_one("#launch", Button).press()
             await pilot.pause()
-            self.assertIn("non necessaire", str(pilot.app.screen.query_one("#rotation-result").content))
+            self.assertIn("non nécessaire", str(pilot.app.screen.query_one("#rotation-result").content))
 
     async def test_backup_now_rotates_unconditionally(self):
         self.access_log.write_text("small")
@@ -686,7 +686,7 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#launch", Button).press()
             await pilot.pause()
-            self.assertIn("Log tourne", str(pilot.app.screen.query_one("#rotation-result").content))
+            self.assertIn("Log tourné", str(pilot.app.screen.query_one("#rotation-result").content))
         archives = list((self._archives_dir(container)).glob("access.log.*.tar.gz"))
         self.assertEqual(len(archives), 1)
 
@@ -704,7 +704,7 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#launch", Button).press()
             await pilot.pause()
-            self.assertIn("Automatisation enregistree", str(pilot.app.screen.query_one("#rotation-result").content))
+            self.assertIn("Automatisation enregistrée", str(pilot.app.screen.query_one("#rotation-result").content))
 
             pilot.app.screen.query_one("#mode-select", Select).value = "manage"
             await pilot.pause()

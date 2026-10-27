@@ -68,3 +68,6 @@ omega-serv-*.tar.gz
 vendor/
 dist/
 build/
+
+# fichiers HEADER.txt (en-tetes de listing de dossier) - jamais commit, ou qu ils soient
+**/HEADER.txt

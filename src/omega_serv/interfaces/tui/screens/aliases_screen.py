@@ -13,6 +13,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.alias import AliasRule, parse_alias_rules, validate_alias_rule
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -20,6 +21,7 @@ from omega_serv.interfaces.tui.screens._zone_overlap_notice import notify_zone_p
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
+from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -34,28 +36,28 @@ class AliasesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ALIAS", classes="omega-title")
+            yield Static(_("ALIAS"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'aliases' se fait dans le menu Options.",
+                _("L'activation de l'option 'aliases' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="aliases-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#aliases-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe URL", "Cible", "Hors webroot")
+        table.add_columns(_("Préfixe URL"), _("Cible"), _("Hors webroot"))
         self._refresh_table()
 
     def _rules(self) -> list[AliasRule]:
@@ -71,7 +73,7 @@ class AliasesScreen(OmegaScreen):
         table = self.query_one("#aliases-table", DataTable)
         table.clear()
         for index, rule in enumerate(self._rules()):
-            table.add_row(rule.url_prefix, rule.target_path, "oui" if rule.allow_outside_webroot else "non", key=str(index))
+            table.add_row(rule.url_prefix, rule.target_path, to_text(rule.allow_outside_webroot), key=str(index))
         self._selected_index = None
         self.query_one("#edit", Button).disabled = True
         self.query_one("#delete", Button).disabled = True
@@ -88,11 +90,11 @@ class AliasesScreen(OmegaScreen):
         if event.button.id == "add":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UN ALIAS",
+                    title=_("AJOUTER UN ALIAS"),
                     fields=[
-                        ("url_prefix", "Prefixe URL (ex: /media/)", ""),
-                        ("target_path", "Chemin cible (ex: webroot/media)", ""),
-                        ("allow_outside_webroot", "Autoriser hors webroot (oui/non)", "non"),
+                        ("url_prefix", _("Préfixe URL (ex: /media/)"), ""),
+                        ("target_path", _("Chemin cible (ex: webroot/media)"), ""),
+                        ("allow_outside_webroot", _("Autoriser hors webroot (oui/non)"), to_text(False)),
                     ],
                 ),
                 self._add_rule,
@@ -103,11 +105,11 @@ class AliasesScreen(OmegaScreen):
             rule = rules[self._selected_index]
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="MODIFIER L'ALIAS",
+                    title=_("MODIFIER L'ALIAS"),
                     fields=[
-                        ("url_prefix", "Prefixe URL", rule.url_prefix),
-                        ("target_path", "Chemin cible", rule.target_path),
-                        ("allow_outside_webroot", "Autoriser hors webroot (oui/non)", "oui" if rule.allow_outside_webroot else "non"),
+                        ("url_prefix", _("Préfixe URL"), rule.url_prefix),
+                        ("target_path", _("Chemin cible"), rule.target_path),
+                        ("allow_outside_webroot", _("Autoriser hors webroot (oui/non)"), to_text(rule.allow_outside_webroot)),
                     ],
                 ),
                 self._edit_rule,
@@ -115,7 +117,7 @@ class AliasesScreen(OmegaScreen):
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER L'ALIAS", message="Confirmer la suppression de cet alias ?"),
+                ConfirmScreen(title=_("SUPPRIMER L'ALIAS"), message=_("Confirmer la suppression de cet alias ?")),
                 self._delete_rule,
             )
 
@@ -125,11 +127,11 @@ class AliasesScreen(OmegaScreen):
         rule = AliasRule(
             url_prefix=values["url_prefix"],
             target_path=values["target_path"],
-            allow_outside_webroot=values["allow_outside_webroot"].strip().lower() in ("oui", "true", "1", "o", "y"),
+            allow_outside_webroot=is_yes(values["allow_outside_webroot"]),
         )
         error = validate_alias_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules.append(rule)
@@ -141,11 +143,11 @@ class AliasesScreen(OmegaScreen):
         rule = AliasRule(
             url_prefix=values["url_prefix"],
             target_path=values["target_path"],
-            allow_outside_webroot=values["allow_outside_webroot"].strip().lower() in ("oui", "true", "1", "o", "y"),
+            allow_outside_webroot=is_yes(values["allow_outside_webroot"]),
         )
         error = validate_alias_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules[self._selected_index] = rule
@@ -161,7 +163,7 @@ class AliasesScreen(OmegaScreen):
     def _save_rules(self, rules: list[AliasRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("aliases")
         enabled = existing.enabled if existing is not None else False
@@ -177,4 +179,4 @@ class AliasesScreen(OmegaScreen):
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
         notify_zone_prefix_overlaps(self, self._container, "alias")
-        notify_reload_required(self, self._container, "Liste des alias mise a jour.")
+        notify_reload_required(self, self._container, _("Liste des alias mise à jour."))

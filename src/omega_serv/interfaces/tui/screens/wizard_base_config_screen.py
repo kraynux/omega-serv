@@ -12,6 +12,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.validation import validate_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.wizard_tls_screen import WizardTlsScreen
@@ -30,17 +31,17 @@ class WizardBaseConfigScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("ETAPE 4/8 : CONFIGURATION DE BASE", classes="omega-title")
+            yield Static(_("ÉTAPE 4/8 : CONFIGURATION DE BASE"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
-            yield Static("Adresse d'ecoute (server.bind)", classes="omega-subtitle")
+            yield Static(_("Adresse d'écoute (server.bind)"), classes="omega-subtitle")
             yield Input(value=self._state.config.server.bind, id="bind-input")
-            yield Static("Port (server.port)", classes="omega-subtitle")
+            yield Static(_("Port (server.port)"), classes="omega-subtitle")
             yield Input(value=str(self._state.config.server.port), id="port-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivant", id="next", variant="primary")
+                    yield Button(_("Suivant"), id="next", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -56,7 +57,7 @@ class WizardBaseConfigScreen(OmegaScreen):
         try:
             port = int(port_text)
         except ValueError:
-            error_widget.update(f"Port invalide (nombre attendu) : {port_text!r}")
+            error_widget.update(_("Port invalide (nombre attendu) : {port_text!r}").format(port_text=port_text))
             return
 
         new_server = replace(
@@ -68,7 +69,7 @@ class WizardBaseConfigScreen(OmegaScreen):
 
         errors = validate_config(new_config)
         if errors:
-            error_widget.update("Erreur de validation :\n" + "\n".join(f"  - {e}" for e in errors))
+            error_widget.update(_("Erreur de validation :\n") + "\n".join(f"  - {e}" for e in errors))
             return
 
         self._state.config = new_config

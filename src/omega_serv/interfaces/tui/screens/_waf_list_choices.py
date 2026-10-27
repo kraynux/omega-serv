@@ -4,33 +4,35 @@ DETAILLE_SENSITIVE_PATHS.md lots 6/7), jamais deux listes de choix
 divergentes."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
+
 NEW_FILE = "__new__"
 GRAVITY_LEVELS: tuple[tuple[str, str], ...] = (
-    ("Observation (journal seulement - conseille au 1er chargement)", "observe"),
-    ("Faible (1)", "1"),
-    ("Moyen (3) - ne bloque jamais seul", "3"),
-    ("Eleve (6) - bloque des le 1er acces", "6"),
-    ("Critique (9)", "9"),
+    (_("Observation (journal seulement - conseillé au 1er chargement)"), "observe"),
+    (_("Faible (1)"), "1"),
+    (_("Moyen (3) - ne bloque jamais seul"), "3"),
+    (_("Élevé (6) - bloque dès le 1er accès"), "6"),
+    (_("Critique (9)"), "9"),
 )
 ANCHORS: tuple[tuple[str, str], ...] = (
-    ("n'importe ou dans l'adresse", "any_segment"),
-    ("seulement au debut de l'adresse", "root"),
+    (_("n'importe où dans l'adresse"), "any_segment"),
+    (_("seulement au début de l'adresse"), "root"),
 )
 KEYWORD_SCOPES: tuple[tuple[str, str], ...] = (
-    ("l'adresse et ses parametres", "path,query"),
-    ("un formulaire envoye (POST)", "body"),
-    ("le logiciel du visiteur (User-Agent)", "user_agent"),
-    ("la page d'origine (Referer)", "referer"),
+    (_("l'adresse et ses paramètres"), "path,query"),
+    (_("un formulaire envoyé (POST)"), "body"),
+    (_("le logiciel du visiteur (User-Agent)"), "user_agent"),
+    (_("la page d'origine (Referer)"), "referer"),
 )
 RECIDIVE_COUNTS: tuple[tuple[str, str], ...] = (
-    ("pas de recidive propre (compteur commun du WAF)", "0"),
-    *((f"{n} acces", str(n)) for n in (1, 2, 3, 5, 10, 20)),
+    (_("pas de récidive propre (compteur commun du WAF)"), "0"),
+    *((_("{n} accès").format(n=n), str(n)) for n in (1, 2, 3, 5, 10, 20)),
 )
 RECIDIVE_WINDOWS: tuple[tuple[str, str], ...] = (
-    ("1 min", "60"), ("5 min", "300"), ("10 min", "600"), ("30 min", "1800"), ("1 h", "3600"),
+    (_("1 min"), "60"), (_("5 min"), "300"), (_("10 min"), "600"), (_("30 min"), "1800"), (_("1 h"), "3600"),
 )
 BAN_DURATIONS: tuple[tuple[str, str], ...] = (
-    ("1 h", "3600"), ("6 h", "21600"), ("24 h", "86400"), ("7 jours", "604800"),
+    (_("1 h"), "3600"), (_("6 h"), "21600"), (_("24 h"), "86400"), (_("7 jours"), "604800"),
 )
 
 

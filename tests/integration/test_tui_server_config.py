@@ -9,6 +9,7 @@ test_tui_active_defense.py, qui couvre desormais l'ecran combine
 "Active Securite" (Active Defense + WAF)."""
 from __future__ import annotations
 
+import json
 import shutil
 import tempfile
 import unittest
@@ -21,6 +22,7 @@ from omega_serv.application.config.generate_config import generate_default_confi
 from omega_serv.application.config.load_config import load_config
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.domain.config.option import Option
+from omega_serv.domain.routing.cache_policy import DEFAULT_EXTENSION_CACHE
 from omega_serv.interfaces.tui.app import OmegaServApp
 from omega_serv.interfaces.tui.screens.config_check_screen import ConfigCheckScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -106,7 +108,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
         data = container.config_file.read_text()
         self.assertIn('"port": 9090', data)
@@ -124,7 +126,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertFalse(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_base_config_rejects_invalid_port(self):
         container = self._container()
@@ -155,6 +157,34 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
         self.assertIn('"max_connections": 512', container.config_file.read_text())
 
+    async def test_limits_screen_workers_follow_this_machine(self):
+        """Mode boost (OMEGA-SERV_ETUDE_MODE_BOOST.md) : chiffres reels de la machine sous le
+        champ ; au-dela des CPU disponibles, refus ; changement = redemarrage complet."""
+        from omega_serv.core.platform_info import cpu_info
+        available = cpu_info().available
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#limits", Button).press()
+            await pilot.pause()
+            hint = str(pilot.app.screen.query_one("#workers-hint").content)
+            self.assertIn(f"{available} CPU", hint)
+            self.assertEqual(pilot.app.screen.query_one("#field-workers", Input).value, "1")
+            before = container.config_file.read_text()
+            pilot.app.screen.query_one("#field-workers", Input).value = str(available + 1)
+            pilot.app.screen.query_one("#save", Button).press()
+            await pilot.pause()
+            self.assertIn("CPU", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertEqual(container.config_file.read_text(), before)
+            pilot.app.screen.query_one("#field-workers", Input).value = "0"
+            pilot.app.screen.query_one("#save", Button).press()
+            await pilot.pause()
+            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
+        self.assertIn('"workers": 0', container.config_file.read_text())
+
     async def test_limits_screen_no_restart_warning_when_backlog_unchanged(self):
         container = self._container()
         self._generate_config(container)
@@ -168,7 +198,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertFalse(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_limits_screen_warns_on_restart_when_backlog_changed(self):
         container = self._container()
@@ -183,7 +213,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m and "listen_backlog" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "listen_backlog" in m for m in messages))
         self.assertIn('"listen_backlog": 256', container.config_file.read_text())
 
     async def test_security_screen_saves_values(self):
@@ -195,6 +225,14 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await self._open_menu3(pilot)
             pilot.app.screen.query_one("#security", Button).press()
             await pilot.pause()
+            # Le formulaire se remplit apres le montage : saisir avant ecraserait la saisie
+            # par la valeur enregistree (echec intermittent en suite complete).
+            for _ in range(50):
+                if pilot.app.screen.query("#csp-mode-input") and pilot.app.screen.query_one(
+                    "#csp-mode-input", Input,
+                ).value:
+                    break
+                await pilot.pause(0.05)
             pilot.app.screen.query_one("#csp-mode-input", Input).value = "report-only"
             pilot.app.screen.query_one("#coep-mode-input", Input).value = "require-corp"
             pilot.app.screen.query_one("#save", Button).press()
@@ -768,7 +806,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ReverseProxyCacheScreen)
             stats_text = str(pilot.app.screen.query_one("#cache-stats", Static).content)
-            self.assertIn("2 entree", stats_text)
+            self.assertIn("2 entrée", stats_text)
 
             # Modifier le plafond de taille global.
             pilot.app.screen.query_one("#edit-max-size", Button).press()
@@ -788,7 +826,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#confirm", Button).press()  # ConfirmScreen
             await pilot.pause()
-            self.assertIn("0 entree", str(pilot.app.screen.query_one("#cache-stats", Static).content))
+            self.assertIn("0 entrée", str(pilot.app.screen.query_one("#cache-stats", Static).content))
             self.assertFalse(any(cache_dir.glob("*.json")))
 
     async def test_aliases_rejects_target_outside_webroot_without_flag(self):
@@ -917,6 +955,25 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"trusted_networks"', container.config_file.read_text())
         self.assertIn('"header_preference"', container.config_file.read_text())
 
+    async def test_trusted_proxy_rejects_invalid_header_name_and_shows_hints(self):
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#trusted-proxy", Button).press()
+            await pilot.pause()
+            hints = " ".join(str(w.content) for w in pilot.app.screen.query(".omega-hint"))
+            self.assertIn("never_auto_block", hints)
+            self.assertIn("X-Real-IP", hints)
+            before = container.config_file.read_text()
+            pilot.app.screen.query_one("#header-preference-input", Input).value = "X-Forwarded-For, X Real IP"
+            pilot.app.screen.query_one("#save-headers", Button).press()
+            await pilot.pause()
+            self.assertIn("X Real IP", str(pilot.app.screen.query_one("#form-error").content))
+        self.assertEqual(container.config_file.read_text(), before)
+
     async def test_trusted_proxy_rejects_invalid_network(self):
         container = self._container()
         self._generate_config(container)
@@ -1003,13 +1060,20 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#zones-table", DataTable).row_count, 1)
 
+            # Regles par extension fournies par defaut (etude performance, point 3) : affichees,
+            # et toute modification enregistre une table complete qui les remplace.
+            defaults = len(DEFAULT_EXTENSION_CACHE)
+            self.assertEqual(pilot.app.screen.query_one("#extensions-table", DataTable).row_count, defaults)
             pilot.app.screen.query_one("#add-extension", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#df-extension", Input).value = ".css"
             pilot.app.screen.query_one("#df-cache_control", Input).value = "public, max-age=86400"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertEqual(pilot.app.screen.query_one("#extensions-table", DataTable).row_count, 1)
+            self.assertEqual(pilot.app.screen.query_one("#extensions-table", DataTable).row_count, defaults)
+        saved = json.loads(container.config_file.read_text())["options"]["cache"]["extensions"]
+        self.assertEqual(saved[".css"], "public, max-age=86400")
+        self.assertEqual(saved[".png"], DEFAULT_EXTENSION_CACHE[".png"])
 
     async def test_error_pages_screen_saves_custom_dir_and_reflects_existing_file(self):
         container = self._container()
@@ -1045,13 +1109,13 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#error-pages", Button).press()
             await pilot.pause()
             state = str(pilot.app.screen.query_one("#enabled-state").content)
-            self.assertIn("DESACTIVEE", state)
+            self.assertIn("DÉSACTIVÉE", state)
             self.assertIn("Options", state)
 
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             state_after_save = str(pilot.app.screen.query_one("#enabled-state").content)
-            self.assertIn("DESACTIVEE", state_after_save)
+            self.assertIn("DÉSACTIVÉE", state_after_save)
 
     async def test_auth_add_user_create_zone_check_permissions_and_remove(self):
         """Regression 2026-09-29 (retour utilisateur : suppression/

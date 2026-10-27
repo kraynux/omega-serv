@@ -113,13 +113,13 @@ class TestWizardLoadsReference(_ListsCase):
             reputation = self.config()["options"]["waf"]["reputation"]
             self.assertTrue(reputation["enabled"] and reputation["auto_block"])
             self.assertTrue((self.root / _KEYWORDS / "sensitive-paths-hostile.txt").exists())
-            self.assertTrue(any("reputation activee" in m for m in self.notifications(pilot)))
+            self.assertTrue(any("réputation activée" in m for m in self.notifications(pilot)))
             self.assertTrue(any("Observation" in m for m in self.notifications(pilot)))
 
             table = pilot.app.screen.query_one("#custom-rules-table", DataTable)
             row = table.get_row("list:sensitive-paths-hostile")
             self.assertEqual(row[0], "Liste")
-            self.assertEqual(row[4], "298 entrees")
+            self.assertEqual(row[4], "298 entrées")
             self.assertEqual(row[5], "Observation")
 
     async def test_rule_types_still_produce_rules_and_keep_lists(self):
@@ -210,7 +210,7 @@ class TestCustomScreenListActions(_ListsCase):
             self.assertEqual((entry["observe_only"], entry["weight"], entry["escalation_threshold"],
                               entry["auto_block_duration_seconds"]), (False, 6, 2, 86400))
             row = pilot.app.screen.query_one("#custom-rules-table", DataTable).get_row("list:sensitive-paths-hostile")
-            self.assertEqual(row[5], "Eleve, 2 en 10 min -> ban 24 h")
+            self.assertEqual(row[5], "Élevé, 2 en 10 min -> ban 24 h")
 
             self.select_row(pilot, "list:sensitive-paths-hostile")
             await pilot.pause()
@@ -239,7 +239,7 @@ class TestCustomScreenListActions(_ListsCase):
             await self.set_select(pilot, pilot.app.screen, "#settings-gravity", "6")
             pilot.app.screen.query_one("#settings-save", Button).press()
             await pilot.pause()
-            self.assertIn("Modification refusee", str(pilot.app.screen.query_one("#form-error").render()))
+            self.assertIn("Modification refusée", str(pilot.app.screen.query_one("#form-error").render()))
             self.assertTrue(self.keyword_lists()[0]["observe_only"])
 
     async def test_missing_file_is_flagged_not_crashing(self):

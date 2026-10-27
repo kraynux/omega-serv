@@ -85,7 +85,7 @@ class TestUninstallInstance(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertEqual(self.registry.load(), [])
-        self.assertIn("Aucune unite systemd installee", result.message)
+        self.assertIn("Aucune unité systemd installée", result.message)
         self.assertTrue(self.instance_dir.exists())
 
     def test_unit_present_stops_disables_and_removes_it(self):
@@ -112,7 +112,7 @@ class TestUninstallInstance(unittest.TestCase):
             self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False,
         )
         self.assertIn(("remove-system-user", "omega-serv:omega-serv"), manager.calls)
-        self.assertIn("Compte systeme 'omega-serv' retire", result.message)
+        self.assertIn("Compte système 'omega-serv' retiré", result.message)
 
     def test_keeps_shared_account_when_another_unit_still_references_it(self):
         entry = self._entry()
@@ -128,7 +128,7 @@ class TestUninstallInstance(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertNotIn(("remove-system-user", "omega-serv:omega-serv"), manager.calls)
-        self.assertIn("conserve", result.message)
+        self.assertIn("conservé", result.message)
 
     def test_skips_account_removal_when_manager_does_not_support_it(self):
         entry = self._entry()
@@ -162,7 +162,7 @@ class TestUninstallInstance(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertFalse(self.instance_dir.exists())
-        self.assertIn("supprime", result.message)
+        self.assertIn("supprimé", result.message)
 
     def test_delete_directory_false_keeps_it_on_disk(self):
         entry = self._entry()
@@ -173,7 +173,7 @@ class TestUninstallInstance(unittest.TestCase):
         )
         self.assertTrue(result.success)
         self.assertTrue(self.instance_dir.exists())
-        self.assertIn("conserve", result.message)
+        self.assertIn("conservé", result.message)
 
     def test_failed_unit_removal_aborts_before_touching_registry_or_directory(self):
         entry = self._entry()

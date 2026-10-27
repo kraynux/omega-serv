@@ -14,6 +14,24 @@ from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 
 DEFAULT_CACHE_CONTROL = "no-cache, must-revalidate"
 
+_ONE_HOUR = "max-age=3600"
+_ONE_DAY = "max-age=86400"
+_ONE_WEEK = "max-age=604800"
+DEFAULT_EXTENSION_CACHE: dict[str, str] = {
+    # Images et medias : rarement modifies, souvent nombreux sur une meme page (galerie
+    # de captures : ~130 requetes evitees a chaque visite, et donc jamais de 429).
+    **dict.fromkeys((".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg", ".ico"), _ONE_DAY),
+    **dict.fromkeys((".mp4", ".webm", ".mp3", ".ogg"), _ONE_DAY),
+    **dict.fromkeys((".woff", ".woff2", ".ttf", ".otf"), _ONE_WEEK),
+    # Styles et scripts : une mise a jour du site est visible en moins d'une heure.
+    **dict.fromkeys((".css", ".js"), _ONE_HOUR),
+}
+"""Regles par extension appliquees tant que la configuration n'a pas sa propre table
+`extensions` (decision utilisateur 2026-10-26, etude performance point 3) : modifiables dans
+l'ecran Cache - toute modification y enregistre une table complete, qui remplace celle-ci.
+Jamais de `public` (voir docstring du module) ; le reste (HTML...) garde `default`,
+revalide a chaque fois mais a moindre cout grace a l'ETag (304)."""
+
 
 @dataclass(frozen=True)
 class CachePolicy:
@@ -30,7 +48,7 @@ def parse_cache_policy(settings: dict[str, Any]) -> CachePolicy:
     return CachePolicy(
         default=settings.get("default", DEFAULT_CACHE_CONTROL),
         zones=zones,
-        extensions=dict(settings.get("extensions", {})),
+        extensions=dict(settings.get("extensions", DEFAULT_EXTENSION_CACHE)),
     )
 
 

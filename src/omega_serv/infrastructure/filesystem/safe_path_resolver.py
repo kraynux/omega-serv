@@ -43,7 +43,9 @@ class SafePathResolver:
         return self._webroot
 
     def resolve(self, raw_uri_path: str) -> ResolvedPath:
-        return self.resolve_against_root(raw_uri_path, self._webroot)
+        # Webroot deja canonique depuis __init__ : jamais re-resolu a chaque requete
+        # (seuls les segments demandes le sont - etude performance, priorite 3).
+        return self._resolve_under(raw_uri_path, self._webroot)
 
     def resolve_against_root(self, raw_uri_path: str, root: Path) -> ResolvedPath:
         """Meme algorithme que resolve(), mais confine a `root` plutot
@@ -52,6 +54,9 @@ class SafePathResolver:
         explicite. `root` est toujours resolu (liens symboliques compris)
         avant la verification de confinement, jamais suppose deja
         canonique."""
+        return self._resolve_under(raw_uri_path, self._fs.resolve_real_path(root))
+
+    def _resolve_under(self, raw_uri_path: str, real_root: Path) -> ResolvedPath:
         decision = normalize_uri_path(raw_uri_path)
         if not decision.ok:
             return ResolvedPath(
@@ -59,14 +64,10 @@ class SafePathResolver:
                 rejection_reason=decision.rejection_reason,
                 suggested_status=decision.suggested_status,
             )
+        real = self._fs.resolve_real_path_under(real_root, decision.segments)
 
-        real_root = self._fs.resolve_real_path(root)
-        candidate = real_root.joinpath(*decision.segments) if decision.segments else real_root
-        real = self._fs.resolve_real_path(candidate)
-
-        try:
-            real.relative_to(real_root)
-        except ValueError:
+        root_text, real_text = str(real_root), str(real)
+        if real_text != root_text and not real_text.startswith(root_text.rstrip("/") + "/"):
             return ResolvedPath(
                 ok=False,
                 rejection_reason=PathRejectionReason.TRAVERSAL_ATTEMPT,

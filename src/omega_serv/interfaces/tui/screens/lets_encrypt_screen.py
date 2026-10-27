@@ -25,6 +25,7 @@ from omega_serv.application.services.resolve_current_service_name import (
 from omega_serv.application.tls.request_lets_encrypt_certificate import (
     request_lets_encrypt_certificate,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -49,26 +50,26 @@ class LetsEncryptScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("ASSISTANT LET'S ENCRYPT (CERTBOT)", classes="omega-title")
+            yield Static(_("ASSISTANT LET'S ENCRYPT (CERTBOT)"), classes="omega-title")
             yield Static(
-                "Necessite un domaine public deja pointe vers ce serveur et le port 80 "
-                "accessible depuis Internet (defi HTTP-01, mode webroot).",
+                _("Nécessite un domaine public déjà pointé vers ce serveur et le port 80 "
+                "accessible depuis Internet (défi HTTP-01, mode webroot)."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
-            yield Static("Domaine (ex : monserveur.dynu.com)", classes="omega-subtitle")
+            yield Static(_("Domaine (ex : monserveur.dynu.com)"), classes="omega-subtitle")
             yield Input(id="domain-input")
-            yield Static("Email (optionnel, alertes d'expiration Let's Encrypt)", classes="omega-subtitle")
+            yield Static(_("Email (optionnel, alertes d'expiration Let's Encrypt)"), classes="omega-subtitle")
             yield Input(id="email-input")
             yield Checkbox(
-                "Mode test (staging - recommande avant la premiere emission reelle)",
+                _("Mode test (staging - recommandé avant la première émission réelle)"),
                 value=True, id="staging-checkbox",
             )
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Obtenir le certificat", id="request", variant="primary")
+                    yield Button(_("Obtenir le certificat"), id="request", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -82,19 +83,16 @@ class LetsEncryptScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         domain = self.query_one("#domain-input", Input).value.strip()
         if not domain:
-            error_widget.update("Le domaine ne peut pas etre vide.")
+            error_widget.update(_("Le domaine ne peut pas être vide."))
             return
 
         staging = self.query_one("#staging-checkbox", Checkbox).value
-        mode = "TEST (staging - certificat non reconnu par les navigateurs)" if staging else "PRODUCTION (certificat reel, soumis aux limites de taux Let's Encrypt)"
+        mode = _("TEST (staging - certificat non reconnu par les navigateurs)") if staging else _("PRODUCTION (certificat réel, soumis aux limites de taux Let's Encrypt)")
         self.app.push_screen(
             ConfirmScreen(
-                title="OBTENIR UN CERTIFICAT LET'S ENCRYPT",
+                title=_("OBTENIR UN CERTIFICAT LET'S ENCRYPT"),
                 message=(
-                    f"Domaine : {domain}\nMode : {mode}\n\n"
-                    "Certbot sera invoque (defi HTTP-01 via webroot), puis le certificat obtenu "
-                    "sera importe automatiquement. Un script de renouvellement est installe pour "
-                    "les prochaines fois. Confirmer ?"
+                    _("Domaine : {domain}\nMode : {mode}\n\nCertbot sera invoqué (défi HTTP-01 via webroot), puis le certificat obtenu sera importe automatiquement. Un script de renouvellement est installé pour les prochaines fois. Confirmer ?").format(domain=domain, mode=mode)
                 ),
             ),
             self._request_if_confirmed,
@@ -106,13 +104,13 @@ class LetsEncryptScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
 
         certificate_tool_factory = self._container.certificate_tool_factory
         acme_client_factory = self._container.acme_client_factory
         if certificate_tool_factory is None or acme_client_factory is None:
-            error_widget.update("Assistant Let's Encrypt indisponible dans cet environnement.")
+            error_widget.update(_("Assistant Let's Encrypt indisponible dans cet environnement."))
             return
 
         domain = self.query_one("#domain-input", Input).value.strip()
@@ -131,7 +129,7 @@ class LetsEncryptScreen(OmegaScreen):
         )
         tls_enabled = load_result.config.tls.enabled
 
-        error_widget.update("Demande en cours aupres de Let's Encrypt...")
+        error_widget.update(_("Demande en cours auprès de Let's Encrypt..."))
         self.query_one("#request", Button).disabled = True
         self.run_worker(
             lambda: self._request_in_thread(
@@ -178,19 +176,17 @@ class LetsEncryptScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
 
         if error is not None:
-            error_widget.update(f"Erreur : {error}")
+            error_widget.update(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction dans _request_in_thread : error XOR result
         if not result.success:
-            error_widget.update(f"Erreur : {result.message}")
+            error_widget.update(_("Erreur : {message}").format(message=result.message))
             return
         error_widget.update("")
         if tls_enabled:
             notify_restart_required(
                 self, self._container,
-                f"{result.message} TLS est actif : le serveur en cours d'execution continue de "
-                "servir l'ancien certificat jusqu'a un REDEMARRAGE COMPLET (le fichier a change, "
-                "la memoire du processus non).",
+                _("{message} TLS est actif : le serveur en cours d'exécution continue de servir l'ancien certificat jusqu'à un REDÉMARRAGE COMPLET (le fichier a changé, la mémoire du processus non).").format(message=result.message),
             )
         else:
             self.app.notify(result.message)

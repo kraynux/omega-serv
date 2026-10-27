@@ -2,485 +2,515 @@
 Cache, Pages d'erreur, Proxies de confiance (plan guide d'aide, Phase 3)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 ALIASES_SCREEN = ScreenGuide(
     screen_class_name="AliasesScreen",
-    title="Alias",
-    acces="Accueil -> Configuration detaillee -> Alias",
-    definition="CRUD d'alias : sert un prefixe d'URL depuis un chemin cible, y compris hors du webroot.",
+    title=_("Alias"),
+    acces=_("Accueil -> Configuration détaillée -> Alias"),
+    definition=_("CRUD d'alias : sert un préfixe d'URL depuis un chemin cible, y compris hors du webroot."),
     fields=(
         FieldGuide(
-            label="Prefixe URL",
-            definition="Le prefixe d'URL a rediriger vers un autre emplacement disque.",
-            utilisation="Doit commencer par '/', ex: /media/.",
-            action="Ajoute/modifie un alias.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            label=_("Préfixe URL"),
+            definition=_("Le préfixe d'URL à rediriger vers un autre emplacement disque."),
+            utilisation=_("Doit commencer par '/', ex: /media/."),
+            action=_("Ajoute/modifie un alias."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="Chemin cible",
-            definition="L'emplacement disque reellement servi pour ce prefixe.",
-            utilisation="Chemin relatif au projet, ex: webroot/media, ou un chemin hors webroot.",
-            action="Ajoute/modifie un alias.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Chemin cible"),
+            definition=_("L'emplacement disque réellement servi pour ce préfixe."),
+            utilisation=_("Chemin relatif au projet, ex: webroot/media, ou un chemin hors webroot."),
+            action=_("Ajoute/modifie un alias."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Autoriser hors webroot (oui/non)",
-            definition="Autorise explicitement une cible situee en dehors du webroot habituel.",
-            utilisation="oui ou non. Valeur par defaut : non.",
-            action="Ajoute/modifie un alias.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Autoriser hors webroot (oui/non)"),
+            definition=_("Autorise explicitement une cible située en dehors du webroot habituel."),
+            utilisation=_("oui ou non. Valeur par défaut : non."),
+            action=_("Ajoute/modifie un alias."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option aliases doit etre activee (ecran Options) pour que ces alias soient "
-        "reellement appliques. Toutes les modifications se rechargent a chaud."
+        _("L'option aliases doit être activée (écran Options) pour que ces alias soient "
+        "réellement appliqués. Toutes les modifications se rechargent à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Directory listing et Cache se configurent par ZONE (prefixe d'URL), jamais par "
+            _("Directory listing et Cache se configurent par ZONE (préfixe d'URL), jamais par "
             "dossier cible : un alias '/media/' pointant sur 'webroot/photos/' a besoin de sa "
-            "PROPRE zone '/media/' sur ces ecrans - une zone deja creee pour '/photos/' (le nom "
-            "du dossier reel) ne s'applique jamais a l'alias, meme si les deux menent au meme "
-            "contenu sur le disque."
+            "PROPRE zone '/media/' sur ces écrans - une zone déjà créée pour '/photos/' (le nom "
+            "du dossier réel) ne s'applique jamais à l'alias, même si les deux mènent au même "
+            "contenu sur le disque.")
         ),
     ),
 )
 
 REDIRECTS_SCREEN = ScreenGuide(
     screen_class_name="RedirectsScreen",
-    title="Redirections",
-    acces="Accueil -> Configuration detaillee -> Redirections",
-    definition="CRUD de redirections HTTP (reponse 3xx avec en-tete Location).",
+    title=_("Redirections"),
+    acces=_("Accueil -> Configuration détaillée -> Redirections"),
+    definition=_("CRUD de redirections HTTP (réponse 3xx avec en-tête Location)."),
     fields=(
         FieldGuide(
-            label="Prefixe URL",
-            definition="Le prefixe d'URL qui declenche la redirection.",
-            utilisation="Doit commencer par '/', ex: /old/.",
-            action="Ajoute/modifie une redirection.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Préfixe URL"),
+            definition=_("Le préfixe d'URL qui déclenche la redirection."),
+            utilisation=_("Doit commencer par '/', ex: /old/."),
+            action=_("Ajoute/modifie une redirection."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Destination",
-            definition="L'URL ou le chemin envoye dans l'en-tete Location de la reponse.",
-            utilisation="Chaine libre, ex: /new/.",
-            action="Ajoute/modifie une redirection.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Destination"),
+            definition=_("L'URL ou le chemin envoyé dans l'en-tête Location de la réponse."),
+            utilisation=_("Chaîne libre, ex: /new/."),
+            action=_("Ajoute/modifie une redirection."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Code",
-            definition="Le code de statut HTTP de redirection utilise.",
-            utilisation="301, 302, 307 ou 308. Valeur par defaut : 302.",
-            action="Ajoute/modifie une redirection.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Code"),
+            definition=_("Le code de statut HTTP de redirection utilisé."),
+            utilisation=_("301, 302, 307 ou 308. Valeur par défaut : 302."),
+            action=_("Ajoute/modifie une redirection."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option redirects doit etre activee (ecran Options). Toutes les modifications se "
-        "rechargent a chaud."
+        _("L'option redirects doit être activée (écran Options). Toutes les modifications se "
+        "rechargent à chaud.")
     ),
 )
 
 REWRITES_SCREEN = ScreenGuide(
     screen_class_name="RewritesScreen",
-    title="Rewrites",
-    acces="Accueil -> Configuration detaillee -> Rewrites",
+    title=_("Rewrites"),
+    acces=_("Accueil -> Configuration détaillée -> Rewrites"),
     definition=(
-        "CRUD de reecritures d'URL internes - remplace un prefixe par un autre AVANT le "
-        "traitement de la requete, sans jamais renvoyer de redirection au client (invisible cote navigateur)."
+        _("CRUD de réécritures d'URL internes - remplace un préfixe par un autre AVANT le "
+        "traitement de la requête, sans jamais renvoyer de redirection au client (invisible côté navigateur).")
     ),
     fields=(
         FieldGuide(
-            label="Prefixe recherche",
-            definition="Le prefixe d'URL a reconnaitre.",
-            utilisation="Doit commencer par '/', ex: /old/.",
-            action="Ajoute/modifie un rewrite.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Préfixe recherche"),
+            definition=_("Le préfixe d'URL à reconnaître."),
+            utilisation=_("Doit commencer par '/', ex: /old/."),
+            action=_("Ajoute/modifie un rewrite."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Prefixe remplacement",
-            definition="Le prefixe qui remplace le prefixe recherche.",
-            utilisation="Chaine non vide, ex: /new/.",
-            action="Ajoute/modifie un rewrite.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Préfixe remplacement"),
+            definition=_("Le préfixe qui remplace le préfixe recherche."),
+            utilisation=_("Chaîne non vide, ex: /new/."),
+            action=_("Ajoute/modifie un rewrite."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option rewrites doit etre activee (ecran Options). Toutes les modifications se "
-        "rechargent a chaud."
+        _("L'option rewrites doit être activée (écran Options). Toutes les modifications se "
+        "rechargent à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Distinct d'une redirection : le client ne voit jamais l'URL rewritee, "
-            "contrairement a une redirection qui change l'URL affichee dans le navigateur."
+            _("Distinct d'une redirection : le client ne voit jamais l'URL rewritee, "
+            "contrairement à une redirection qui change l'URL affichée dans le navigateur.")
         ),
     ),
 )
 
 DIRLISTING_SCREEN = ScreenGuide(
     screen_class_name="DirlistingScreen",
-    title="Directory listing",
-    acces="Accueil -> Configuration detaillee -> Directory listing",
+    title=_("Directory listing"),
+    acces=_("Accueil -> Configuration détaillée -> Directory listing"),
     definition=(
-        "Deux sections sur le meme ecran : reglages d'affichage (theme CSS, header/readme) et "
-        "CRUD des zones ou le listing de repertoire est actif."
+        _("Deux sections sur le même écran : réglages d'affichage (thème CSS, header/readme) et "
+        "CRUD des zones où le listing de répertoire est actif.")
     ),
     fields=(
         FieldGuide(
-            label="Theme du CSS de base",
-            definition="Palette de couleurs utilisee pour le CSS genere automatiquement du listing.",
-            utilisation="5 themes disponibles (dont 'omega-base'). Valeur par defaut : omega-base.",
-            action="Enregistre au clic sur 'Enregistrer les reglages'.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            label=_("Thème du CSS de base"),
+            definition=_("Palette de couleurs utilisée pour le CSS généré automatiquement du listing."),
+            utilisation=_("5 thèmes disponibles (dont 'omega-base'). Valeur par défaut : omega-base."),
+            action=_("Enregistre au clic sur 'Enregistrer les réglages'."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="CSS externe",
-            definition="URL optionnelle d'une feuille de style chargee EN PLUS du CSS de base (jamais a la place).",
-            utilisation="Une URL/chemin, ex: /.assets/css/folder.css. Vide par defaut.",
-            action="Enregistre avec les reglages.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("CSS externe"),
+            definition=_("URL optionnelle d'une feuille de style chargée EN PLUS du CSS de base (jamais à la place)."),
+            utilisation=_("Une URL/chemin, ex: /.assets/css/folder.css. Vide par défaut."),
+            action=_("Enregistre avec les réglages."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Afficher un fichier HEADER (oui/non) + nom du fichier",
-            definition="Affiche le contenu d'un fichier texte en haut du listing, s'il existe dans le repertoire liste.",
-            utilisation="oui/non ; nom de fichier par defaut : HEADER.txt.",
-            action="Enregistre avec les reglages.",
-            reaction="Aucun effet sans rechargement - absence du fichier sur disque : ignore silencieusement, jamais une erreur.",
+            label=_("Afficher un fichier HEADER (oui/non) + nom du fichier"),
+            definition=_("Affiche le contenu d'un fichier texte en haut du listing, s'il existe dans le répertoire liste."),
+            utilisation=_("oui/non ; nom de fichier par défaut : HEADER.txt."),
+            action=_("Enregistre avec les réglages."),
+            reaction=_("Aucun effet sans rechargement - absence du fichier sur disque : ignore silencieusement, jamais une erreur."),
         ),
         FieldGuide(
-            label="Encoder le contenu HEADER (oui/non)",
-            definition="Si oui, echappe le contenu comme texte pur ; si non, l'insere tel quel (HTML autorise).",
-            utilisation="oui/non. Valeur par defaut : non (HTML tel quel).",
-            action="Enregistre avec les reglages.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Encoder le contenu HEADER (oui/non)"),
+            definition=_("Si oui, échappe le contenu comme texte pur ; si non, l'insère tel quel (HTML autorisé)."),
+            utilisation=_("oui/non. Valeur par défaut : non (HTML tel quel)."),
+            action=_("Enregistre avec les réglages."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Masquer le fichier HEADER dans la liste (oui/non)",
-            definition="Retire ce fichier de la liste des entrees affichees (pour ne pas le voir apparaitre deux fois).",
-            utilisation="oui/non. Valeur par defaut : oui.",
-            action="Enregistre avec les reglages.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Masquer le fichier HEADER dans la liste (oui/non)"),
+            definition=_("Retire ce fichier de la liste des entrées affichées (pour ne pas le voir apparaître deux fois)."),
+            utilisation=_("oui/non. Valeur par défaut : oui."),
+            action=_("Enregistre avec les réglages."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="README (memes 4 reglages que HEADER, affiche en bas du listing)",
-            definition="Equivalent de HEADER, affiche apres la liste des fichiers plutot qu'avant.",
-            utilisation="oui/non ; nom de fichier par defaut : README.txt.",
-            action="Enregistre avec les reglages.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("README (mêmes 4 réglages que HEADER, affiché en bas du listing)"),
+            definition=_("Équivalent de HEADER, affiché après la liste des fichiers plutôt qu'avant."),
+            utilisation=_("oui/non ; nom de fichier par défaut : README.txt."),
+            action=_("Enregistre avec les réglages."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Zones (table)",
+            label=_("Zones (table)"),
             definition=(
-                "Prefixes d'URL ou le listing de repertoire est propose quand aucun index n'existe. "
-                "Un prefixe est une URL TELLE QUE LE NAVIGATEUR LA VOIT, jamais un chemin ou un nom "
-                "de dossier reel sur le disque."
+                _("Préfixes d'URL où le listing de répertoire est proposé quand aucun index n'existe. "
+                "Un préfixe est une URL TELLE QUE LE NAVIGATEUR LA VOIT, jamais un chemin ou un nom "
+                "de dossier réel sur le disque.")
             ),
-            utilisation="Un prefixe par ligne, doit commencer par '/'.",
-            action="Ajouter/Supprimer une zone.",
-            reaction="Aucun effet sans rechargement du service.",
+            utilisation=_("Un préfixe par ligne, doit commencer par '/'."),
+            action=_("Ajouter/Supprimer une zone."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option dirlisting doit etre activee (ecran Options) pour que le listing apparaisse "
-        "reellement. Toutes les modifications (reglages et zones) se rechargent a chaud."
+        _("L'option dirlisting doit être activée (écran Options) pour que le listing apparaisse "
+        "réellement. Toutes les modifications (réglages et zones) se rechargent à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Les fichiers/dossiers commencant par un point restent masques du listing par la "
-            "regle generique 'deny_hidden_files' (ecran Securite generique), independamment des "
-            "reglages de cet ecran."
+            _("Les fichiers/dossiers commençant par un point restent masques du listing par la "
+            "règle générique 'deny_hidden_files' (écran Sécurité générique), indépendamment des "
+            "réglages de cet écran.")
         ),
         (
-            "Servir un MEME dossier par deux URLs differentes (ex: directement en '/mondossier/' "
-            "ET via un alias '/autre-nom/' pointant sur ce meme dossier, ecran Alias) exige DEUX "
-            "zones ici, une par URL - le listing ne 'suit' jamais le dossier reel, seulement le "
-            "prefixe d'URL exact tape par le visiteur. Ajouter uniquement '/mondossier/' n'active "
-            "jamais le listing sur '/autre-nom/', meme si les deux menent au meme contenu sur le "
-            "disque."
+            _("Servir un MÊME dossier par deux URLs différentes (ex: directement en '/mondossier/' "
+            "ET via un alias '/autre-nom/' pointant sur ce même dossier, écran Alias) exige DEUX "
+            "zones ici, une par URL - le listing ne 'suit' jamais le dossier réel, seulement le "
+            "préfixe d'URL exact tapé par le visiteur. Ajouter uniquement '/mondossier/' n'active "
+            "jamais le listing sur '/autre-nom/', même si les deux mènent au même contenu sur le "
+            "disque.")
         ),
     ),
 )
 
 CACHE_SCREEN = ScreenGuide(
     screen_class_name="CacheScreen",
-    title="Cache",
-    acces="Accueil -> Configuration detaillee -> Cache",
-    definition="Valeur Cache-Control par defaut, plus des regles specifiques par zone d'URL et par extension de fichier.",
+    title=_("Cache"),
+    acces=_("Accueil -> Configuration détaillée -> Cache"),
+    definition=_("Valeur Cache-Control par défaut, plus des règles spécifiques par zone d'URL et par extension de fichier."),
     fields=(
         FieldGuide(
-            label="Valeur par defaut (Cache-Control)",
-            definition="En-tete Cache-Control envoye quand aucune regle de zone/extension ne s'applique.",
+            label=_("Valeur par défaut (Cache-Control)"),
+            definition=_("En-tête Cache-Control envoyé quand aucune règle de zone/extension ne s'applique."),
             utilisation=(
-                "Directives usuelles combinables par virgule : no-cache, no-store, must-revalidate, "
-                "private, public, max-age=<secondes>, immutable. Valeur par defaut : "
-                "'no-cache, must-revalidate'."
+                _("Directives usuelles combinables par virgule : no-cache, no-store, must-revalidate, "
+                "private, public, max-age=<secondes>, immutable. Valeur par défaut : "
+                "'no-cache, must-revalidate'.")
             ),
-            action="Enregistree au clic sur 'Enregistrer la valeur par defaut'.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            action=_("Enregistrée au clic sur 'Enregistrer la valeur par défaut'."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="Regles par zone",
-            definition="Cache-Control specifique pour un prefixe d'URL donne.",
-            utilisation="Un prefixe (ex: /static/) + une valeur Cache-Control.",
-            action="Ajouter/Supprimer une regle de zone.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Règles par zone"),
+            definition=_("Cache-Control spécifique pour un préfixe d'URL donné."),
+            utilisation=_("Un préfixe (ex: /static/) + une valeur Cache-Control."),
+            action=_("Ajouter/Supprimer une règle de zone."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Regles par extension",
-            definition="Cache-Control specifique pour une extension de fichier donnee.",
-            utilisation="Une extension (ex: .css, doit commencer par un point) + une valeur Cache-Control.",
-            action="Ajouter/Supprimer une regle d'extension.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Règles par extension"),
+            definition=(
+                _("Cache-Control spécifique pour une extension de fichier donnée. Règles fournies par "
+                "défaut tant qu'aucune n'est modifiée : images et médias max-age=86400 (1 jour), polices "
+                "max-age=604800 (7 jours), CSS et JS max-age=3600 (1 heure) - une page riche en images "
+                "n'est plus redemandée à chaque visite. Toute modification enregistre votre propre liste, "
+                "qui remplace celle-ci.")
+            ),
+            utilisation=_("Une extension (ex: .css, doit commencer par un point) + une valeur Cache-Control."),
+            action=_("Ajouter/Supprimer une règle d'extension."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option cache doit etre activee (ecran Options). Toutes les modifications se "
-        "rechargent a chaud."
+        _("L'option cache doit être activée (écran Options). Toutes les modifications se "
+        "rechargent à chaud. Indépendamment de cette option, chaque fichier statique porte un ETag "
+        "et une date de modification : un rechargement ne retélécharge que ce qui a changé "
+        "(réponse 304), et un téléchargement interrompu ou une vidéo peut reprendre en cours de "
+        "fichier (Range).")
     ),
 )
 
 ERROR_PAGES_SCREEN = ScreenGuide(
     screen_class_name="ErrorPagesScreen",
-    title="Pages d'erreur",
-    acces="Accueil -> Configuration detaillee -> Pages d'erreur",
+    title=_("Pages d'erreur"),
+    acces=_("Accueil -> Configuration détaillée -> Pages d'erreur"),
     definition=(
-        "Des pages HTML par defaut sont TOUJOURS servies pour toute reponse d'erreur (404, 403, "
-        "500...), meme sans rien configurer ici. Cet ecran ne controle que la SURCHARGE "
-        "personnalisee optionnelle."
+        _("Des pages HTML par défaut sont TOUJOURS servies pour toute réponse d'erreur (404, 403, "
+        "500...), même sans rien configurer ici. Cet écran ne contrôle que la SURCHARGE "
+        "personnalisée optionnelle.")
     ),
     fields=(
         FieldGuide(
-            label="Repertoire de surcharge",
-            definition="Repertoire contenant des fichiers <statut>.html qui remplacent la page par defaut.",
-            utilisation="Chemin relatif au projet. Valeur par defaut : webroot/.errors.",
-            action="Enregistre au clic sur Enregistrer.",
+            label=_("Langue des pages visiteurs (pages d'erreur et listing de dossier)"),
+            definition=_("Langue des pages d'erreur et du listing de dossier vus par les visiteurs du site - jamais celle de votre interface."),
+            utilisation=_("Une langue de la liste. Valeur par défaut : Français."),
+            action=_("Enregistrée dès le choix dans la liste."),
             reaction=(
-                "Si l'option error_pages est deja activee : rechargement du service necessaire "
-                "(automatique si actif). Si l'option est desactivee : AUCUN EFFET tant qu'elle "
-                "n'est pas activee depuis Options - un rechargement seul ne suffit pas."
+                _("Nécessite un REDÉMARRAGE COMPLET du serveur (proposé aussitôt si un service est "
+                "détecté) - un simple rechargement ne change pas la langue des pages.")
+            ),
+        ),
+        FieldGuide(
+            label=_("Répertoire de surcharge"),
+            definition=_("Répertoire contenant des fichiers <statut>.html qui remplacent la page par défaut."),
+            utilisation=_("Chemin relatif au projet. Valeur par défaut : webroot/.errors."),
+            action=_("Enregistre au clic sur Enregistrer."),
+            reaction=(
+                _("Si l'option error_pages est déjà activée : rechargement du service nécessaire "
+                "(automatique si actif). Si l'option est désactivée : AUCUN EFFET tant qu'elle "
+                "n'est pas activée depuis Options - un rechargement seul ne suffit pas.")
             ),
         ),
     ),
     consequences=(
-        "Le tableau des statuts geres indique 'Personnalisee: Oui' des qu'un fichier "
-        "<statut>.html existe reellement dans le repertoire configure, meme si l'option "
-        "error_pages reste desactivee - a ne pas confondre avec 'applique reellement'."
+        _("Le tableau des statuts gérés indique 'Personnalisée: Oui' dès qu'un fichier "
+        "<statut>.html existe réellement dans le répertoire configuré, même si l'option "
+        "error_pages reste désactivée - à ne pas confondre avec 'appliqué réellement'.")
     ),
     points_de_vigilance=(
         (
-            "Cas reel deja rencontre : un fichier 404.html correctement place n'avait aucun "
-            "effet car l'option 'error_pages' n'etait pas activee separement dans Options - "
-            "l'ecran l'indique desormais explicitement."
+            _("Cas réel déjà rencontré : un fichier 404.html correctement place n'avait aucun "
+            "effet car l'option 'error_pages' n'était pas activée séparément dans Options - "
+            "l'écran l'indique désormais explicitement.")
         ),
     ),
 )
 
 TRUSTED_PROXY_SCREEN = ScreenGuide(
     screen_class_name="TrustedProxyScreen",
-    title="Proxies de confiance",
-    acces="Accueil -> Configuration detaillee -> Proxies de confiance",
+    title=_("Proxies de confiance"),
+    acces=_("Accueil -> Configuration détaillée -> Proxies de confiance"),
     definition=(
-        "Declare les reseaux CIDR consideres comme des proxys de confiance (pour lire la vraie IP "
-        "cliente derriere eux) et l'ordre de preference des en-tetes X-Forwarded-*."
+        _("Déclare les réseaux CIDR considérés comme des proxys de confiance (pour lire la vraie IP "
+        "cliente derrière eux) et l'ordre de préférence des en-têtes X-Forwarded-*.")
     ),
     fields=(
         FieldGuide(
-            label="Reseaux de confiance (CIDR)",
-            definition="Reseaux dont l'adresse source est consideree comme un proxy legitime.",
-            utilisation="Notation CIDR, ex: 10.0.0.0/8. Verifie reellement au moment de l'ajout.",
-            action="Ajouter/Supprimer un reseau.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            label=_("Réseaux de confiance (CIDR)"),
+            definition=_("Réseaux dont l'adresse source est considérée comme un proxy légitime."),
+            utilisation=(
+                _("Notation CIDR, ex: 127.0.0.1/32 pour tailscale serve ou un reverse proxy local. "
+                "Uniquement le proxy placé devant omega-serv, jamais vos propres appareils : une "
+                "adresse mise ici n'est pas exemptée de bannissement (réglage never_auto_block). "
+                "Vérifié réellement au moment de l'ajout.")
+            ),
+            action=_("Ajouter/Supprimer un réseau."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="En-tetes preferes (ordre)",
-            definition="Ordre de preference des en-tetes utilises pour retrouver l'IP cliente reelle.",
-            utilisation="Liste separee par des virgules, ex: Forwarded, X-Forwarded-For. Ne peut pas etre vide.",
-            action="Enregistre au clic sur 'Enregistrer les en-tetes'.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("En-têtes préférés (ordre)"),
+            definition=_("Ordre de préférence des en-têtes utilisés pour retrouver l'IP cliente réelle."),
+            utilisation=(
+                _("Liste séparée par des virgules, essayée dans l'ordre : X-Forwarded-For (tailscale "
+                "serve, nginx, Caddy, Apache), Forwarded (RFC 7239), X-Real-IP. Ne peut pas être vide : "
+                "pour ne lire aucun en-tête, désactiver l'option trusted_proxy. Un nom d'en-tête "
+                "invalide est refusé.")
+            ),
+            action=_("Enregistre au clic sur 'Enregistrer les en-têtes'."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option trusted_proxy doit etre activee (ecran Options). Toutes les modifications se "
-        "rechargent a chaud."
+        _("L'option trusted_proxy doit être activée (écran Options). Toutes les modifications se "
+        "rechargent à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Ne jamais faire confiance a X-Forwarded-For sans restreindre les reseaux sources - "
-            "n'importe quel client pourrait sinon usurper une IP arbitraire."
+            _("Ne jamais faire confiance à X-Forwarded-For sans restreindre les réseaux sources - "
+            "n'importe quel client pourrait sinon usurper une IP arbitraire.")
         ),
     ),
 )
 
 REVERSE_PROXY_SCREEN = ScreenGuide(
     screen_class_name="ReverseProxyScreen",
-    title="Reverse Proxy",
-    acces="Accueil -> Configuration detaillee -> Reverse Proxy",
+    title=_("Reverse Proxy"),
+    acces=_("Accueil -> Configuration détaillée -> Reverse Proxy"),
     definition=(
-        "CRUD de zones de relais sortant : OMEGA-SERV agit lui-meme comme reverse proxy vers un "
-        "ou plusieurs backends (repartition de charge round-robin, TLS amont optionnel, WebSocket)."
+        _("CRUD de zones de relais sortant : OMEGA-SERV agit lui-même comme reverse proxy vers un "
+        "ou plusieurs backends (répartition de charge round-robin, TLS amont optionnel, WebSocket).")
     ),
     fields=(
         FieldGuide(
-            label="Prefixe URL",
-            definition="Le prefixe d'URL relaye vers les upstreams.",
-            utilisation="Doit commencer par '/', ex: /api/.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement (une fois l'option deja active une premiere fois).",
+            label=_("Préfixe URL"),
+            definition=_("Le préfixe d'URL relayé vers les upstreams."),
+            utilisation=_("Doit commencer par '/', ex: /api/."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement (une fois l'option déjà activé une première fois)."),
         ),
         FieldGuide(
-            label="Upstreams",
-            definition="Backends vers lesquels la requete est relayee, en round-robin si plusieurs.",
-            utilisation="Liste 'host:port' separee par des virgules, prefixe 'https://' optionnel par upstream.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement.",
+            label=_("Upstreams"),
+            definition=_("Backends vers lesquels la requête est relayée, en round-robin si plusieurs."),
+            utilisation=_("Liste 'host:port' séparée par des virgules, préfixe 'https://' optionnel par upstream."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement."),
         ),
         FieldGuide(
-            label="Delai de connexion / Delai de lecture",
-            definition="Delais reseau appliques a la connexion vers l'upstream et a la lecture de sa reponse.",
-            utilisation="Nombres en secondes.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement.",
+            label=_("Délai de connexion / Délai de lecture"),
+            definition=_("Délais réseau appliqués à la connexion vers l'upstream et à la lecture de sa réponse."),
+            utilisation=_("Nombres en secondes."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement."),
         ),
         FieldGuide(
-            label="Preserver le Host du client (oui/non)",
-            definition="Transmet l'en-tete Host original du client a l'upstream plutot que le sien.",
-            utilisation="oui/non.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement.",
+            label=_("Préserver le Host du client (oui/non)"),
+            definition=_("Transmet l'en-tête Host original du client à l'upstream plutôt que le sien."),
+            utilisation=_("oui/non."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement."),
         ),
         FieldGuide(
-            label="Verifier le certificat des upstreams HTTPS (oui/non)",
-            definition="Verifie ou non le certificat TLS presente par un upstream HTTPS.",
-            utilisation="oui/non. DANGEREUX si non (attaque MITM possible) - defaut sur, jamais desactive silencieusement.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement.",
+            label=_("Vérifier le certificat des upstreams HTTPS (oui/non)"),
+            definition=_("Vérifie ou non le certificat TLS présenté par un upstream HTTPS."),
+            utilisation=_("oui/non. DANGEREUX si non (attaque MITM possible) - défaut sur, jamais désactivé silencieusement."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement."),
         ),
         FieldGuide(
-            label="Autoriser Upgrade: websocket (oui/non)",
-            definition="Autorise la mise a niveau WebSocket sur cette zone.",
-            utilisation="oui/non. Une fois le tube etabli, un seul upstream reste fige pour sa duree de vie.",
-            action="Ajoute/modifie une zone.",
-            reaction="Aucun effet sans rechargement.",
+            label=_("Autoriser Upgrade: websocket (oui/non)"),
+            definition=_("Autorise la mise à niveau WebSocket sur cette zone."),
+            utilisation=_("oui/non. Une fois le tube établi, un seul upstream reste figé pour sa durée de vie."),
+            action=_("Ajoute/modifie une zone."),
+            reaction=_("Aucun effet sans rechargement."),
         ),
     ),
     consequences=(
-        "La PREMIERE activation de l'option reverse_proxy exige un REDEMARRAGE COMPLET (le "
-        "client HTTP n'est construit qu'au demarrage). Une fois deja active, modifier les zones "
-        "ici ne demande plus qu'un simple rechargement. Le bouton 'Etat en direct' (zone "
-        "selectionnee) ouvre un ecran separe pour consulter/forcer l'etat de sante de chaque "
-        "backend du serveur REELLEMENT en cours d'execution - voir sa fiche dediee."
+        _("La PREMIÈRE activation de l'option reverse_proxy exige un REDÉMARRAGE COMPLET (le "
+        "client HTTP n'est construit qu'au démarrage). Une fois déjà activé, modifier les zones "
+        "ici ne demande plus qu'un simple rechargement. Le bouton 'État en direct' (zone "
+        "sélectionnée) ouvre un écran séparé pour consulter/forcer l'état de santé de chaque "
+        "backend du serveur RÉELLEMENT en cours d'exécution - voir sa fiche dédiée.")
     ),
     points_de_vigilance=(
         (
-            "A ne jamais confondre avec le reglage TLS 'mode = behind_proxy' (OMEGA-SERV "
-            "DERRIERE un proxy) - ici, c'est OMEGA-SERV qui EST le proxy vers d'autres backends."
+            _("À ne jamais confondre avec le réglage TLS 'mode = behind_proxy' (OMEGA-SERV "
+            "DERRIÈRE un proxy) - ici, c'est OMEGA-SERV qui EST le proxy vers d'autres backends.")
         ),
     ),
 )
 
 REVERSE_PROXY_CACHE_SCREEN = ScreenGuide(
     screen_class_name="ReverseProxyCacheScreen",
-    title="Cache du reverse proxy",
-    acces="Accueil -> Configuration detaillee -> Cache du reverse proxy",
+    title=_("Cache du reverse proxy"),
+    acces=_("Accueil -> Configuration détaillée -> Cache du reverse proxy"),
     definition=(
-        "Supervision et purge du cache des reponses proxiees (DISTINCT du cache fichiers "
-        "statiques, ecran 'Cache') : nombre d'entrees et taille occupee sur disque, lus "
-        "directement dans var/cache/reverse_proxy/, que le serveur soit demarre ou non, plus un "
-        "ratio hits/miss EN DIRECT (interroge le serveur reellement en cours d'execution via "
-        "/.omega-serv-admin/cache-stats - affiche 'indisponible' si le serveur est eteint ou "
-        "injoignable, sans jamais bloquer le reste de l'ecran)."
+        _("Supervision et purge du cache des réponses proxiées (DISTINCT du cache fichiers "
+        "statiques, écran 'Cache') : nombre d'entrées et taille occupée sur disque, lus "
+        "directement dans var/cache/reverse_proxy/, que le serveur soit démarré ou non, plus un "
+        "ratio hits/miss EN DIRECT (interroge le serveur réellement en cours d'exécution via "
+        "/.omega-serv-admin/cache-stats - affiche 'indisponible' si le serveur est éteint ou "
+        "injoignable, sans jamais bloquer le reste de l'écran).")
     ),
     fields=(
         FieldGuide(
-            label="Plafond (Mo)",
-            definition="Taille maximale occupee sur disque par le cache avant eviction des entrees les plus anciennes.",
-            utilisation="Nombre entier >= 1, en megaoctets.",
-            action="Modifier le plafond.",
-            reaction="Enregistre dans la configuration ; s'applique a la prochaine ecriture en cache (eviction immediate non declenchee par ce seul changement).",
+            label=_("Plafond (Mo)"),
+            definition=_("Taille maximale occupée sur disque par le cache avant éviction des entrées les plus anciennes."),
+            utilisation=_("Nombre entier >= 1, en megaoctets."),
+            action=_("Modifier le plafond."),
+            reaction=_("Enregistre dans la configuration ; s'applique à la prochaine écriture en cache (éviction immédiate non déclenchée par ce seul changement)."),
         ),
         FieldGuide(
-            label="Purger une zone",
-            definition="Supprime toutes les entrees de cache pour un prefixe de zone donne.",
-            utilisation="Saisir le prefixe exact de la zone, ex: /api/.",
-            action="Confirme puis purge.",
-            reaction="Entrees supprimees du disque immediatement, y compris si le serveur tourne (il relira a froid).",
+            label=_("Purger une zone"),
+            definition=_("Supprime toutes les entrées de cache pour un préfixe de zone donné."),
+            utilisation=_("Saisir le préfixe exact de la zone, ex: /api/."),
+            action=_("Confirme puis purge."),
+            reaction=_("Entrées supprimées du disque immédiatement, y compris si le serveur tourne (il relira à froid)."),
         ),
         FieldGuide(
-            label="Purger tout",
-            definition="Supprime toutes les entrees de cache, toutes zones confondues.",
-            utilisation="Action destructive, confirmation demandee.",
-            action="Confirme puis purge.",
-            reaction="Cache entierement vide immediatement.",
+            label=_("Purger tout"),
+            definition=_("Supprime toutes les entrées de cache, toutes zones confondues."),
+            utilisation=_("Action destructive, confirmation demandée."),
+            action=_("Confirme puis purge."),
+            reaction=_("Cache entièrement vide immédiatement."),
         ),
     ),
     consequences=(
-        "Activation/parametres du cache (active, TTL, respect des en-tetes Cache-Control de "
-        "l'upstream, autorisation Set-Cookie) se configurent sur l'ecran Reverse Proxy, zone par "
-        "zone - cet ecran-ci ne fait que superviser et purger ce qui existe deja sur disque."
+        _("Activation/parametres du cache (active, TTL, respect des en-têtes Cache-Control de "
+        "l'upstream, autorisation Set-Cookie) se configurent sur l'écran Reverse Proxy, zone par "
+        "zone - cet écran-ci ne fait que superviser et purger ce qui existe déjà sur disque.")
     ),
     points_de_vigilance=(
         (
-            "Le ratio hits/miss est cumule EN MEMOIRE depuis le dernier demarrage COMPLET du "
-            "serveur (jamais persiste) - un simple rechargement (SIGHUP) ne le remet jamais a "
-            "zero. Necessite trusted_proxy actif avec 127.0.0.1 dans ses reseaux de confiance, "
-            "sinon affiche 'indisponible'. Le diagnostic PAR REQUETE reste l'en-tete de reponse "
-            "X-Omega-Cache (HIT/MISS/BYPASS), visible via les outils du navigateur ou 'curl -I'."
+            _("Le ratio hits/miss est cumulé EN MÉMOIRE depuis le dernier démarrage COMPLET du "
+            "serveur (jamais persiste) - un simple rechargement (SIGHUP) ne le remet jamais à "
+            "zéro. Nécessite trusted_proxy actif avec 127.0.0.1 dans ses réseaux de confiance, "
+            "sinon affiche 'indisponible'. Le diagnostic PAR REQUÊTE reste l'en-tête de réponse "
+            "X-Omega-Cache (HIT/MISS/BYPASS), visible via les outils du navigateur ou 'curl -I'.")
         ),
     ),
 )
 
 REVERSE_PROXY_UPSTREAM_STATUS_SCREEN = ScreenGuide(
     screen_class_name="ReverseProxyUpstreamStatusScreen",
-    title="Etat en direct des backends",
-    acces="Accueil -> Configuration detaillee -> Reverse Proxy -> selectionner une zone -> Etat en direct",
+    title=_("État en direct des backends"),
+    acces=_("Accueil -> Configuration détaillée -> Reverse Proxy -> sélectionner une zone -> État en direct"),
     definition=(
-        "Interroge le serveur REELLEMENT en cours d'execution (jamais la configuration sur "
-        "disque) pour afficher l'etat actuel de chaque backend d'une zone (up/down/draining/"
-        "maintenance) et permettre de forcer DRAINING ou MAINTENANCE a chaud, via la route "
+        _("Interroge le serveur RÉELLEMENT en cours d'exécution (jamais la configuration sur "
+        "disque) pour afficher l'état actuel de chaque backend d'une zone (up/down/draining/"
+        "maintenance) et permettre de forcer DRAINING ou MAINTENANCE à chaud, via la route "
         "/.omega-serv-admin/health - un vrai appel HTTP local, jamais une modification en "
-        "memoire de cet ecran (qui ne tourne pas dans le processus serveur)."
+        "mémoire de cet écran (qui ne tourne pas dans le processus serveur).")
     ),
     fields=(
         FieldGuide(
-            label="Mettre en DRAINING",
-            definition="Exclut le backend selectionne des NOUVEAUX choix sans le marquer en panne.",
-            utilisation="Selectionner une ligne puis cliquer.",
-            action="Appel HTTP immediat vers le serveur en cours.",
-            reaction="Statut visible immediatement apres actualisation ; jamais ecrit dans la configuration.",
+            label=_("Mettre en DRAINING"),
+            definition=_("Exclut le backend sélectionné des NOUVEAUX choix sans le marquer en panne."),
+            utilisation=_("Sélectionner une ligne puis cliquer."),
+            action=_("Appel HTTP immédiat vers le serveur en cours."),
+            reaction=_("Statut visible immédiatement après actualisation ; jamais écrit dans la configuration."),
         ),
         FieldGuide(
-            label="Mettre en MAINTENANCE",
-            definition="Meme exclusion que DRAINING, intention operateur distincte (intervention planifiee).",
-            utilisation="Selectionner une ligne puis cliquer.",
-            action="Appel HTTP immediat vers le serveur en cours.",
-            reaction="Statut visible immediatement apres actualisation ; jamais ecrit dans la configuration.",
+            label=_("Mettre en MAINTENANCE"),
+            definition=_("Même exclusion que DRAINING, intention opérateur distincte (intervention planifiée)."),
+            utilisation=_("Sélectionner une ligne puis cliquer."),
+            action=_("Appel HTTP immédiat vers le serveur en cours."),
+            reaction=_("Statut visible immédiatement après actualisation ; jamais écrit dans la configuration."),
         ),
         FieldGuide(
-            label="Revenir a l'automatique",
-            definition="Annule DRAINING/MAINTENANCE - l'etat redevient derive de la sante reelle observee (up/down).",
-            utilisation="Selectionner une ligne puis cliquer.",
-            action="Appel HTTP immediat vers le serveur en cours.",
+            label=_("Revenir à l'automatique"),
+            definition=_("Annule DRAINING/MAINTENANCE - l'état redevient dérivé de la santé réelle observée (up/down)."),
+            utilisation=_("Sélectionner une ligne puis cliquer."),
+            action=_("Appel HTTP immédiat vers le serveur en cours."),
             reaction=(
-                "Ne force jamais 'up' aveuglement : un backend reellement en panne pendant la "
-                "maintenance reste 'down' une fois celle-ci levee."
+                _("Ne force jamais 'up' aveuglément : un backend réellement en panne pendant la "
+                "maintenance reste 'down' une fois celle-ci levée.")
             ),
         ),
     ),
     consequences=(
-        "DRAINING/MAINTENANCE restent EPHEMERES : jamais ecrits dans la configuration, jamais "
-        "persistes - seul un REDEMARRAGE COMPLET du serveur les efface (un simple rechargement "
-        "SIGHUP les conserve). 'DOWN' reste toujours derive automatiquement de la sante "
-        "observee, jamais affecte par cet ecran."
+        _("DRAINING/MAINTENANCE restent ÉPHÉMÈRES : jamais écrits dans la configuration, jamais "
+        "persistés - seul un REDÉMARRAGE COMPLET du serveur les efface (un simple rechargement "
+        "SIGHUP les conserve). 'DOWN' reste toujours dérivé automatiquement de la santé "
+        "observée, jamais affecté par cet écran.")
     ),
     points_de_vigilance=(
         (
-            "Necessite trusted_proxy actif avec 127.0.0.1 dans ses reseaux de confiance - sinon "
-            "l'ecran affiche 'serveur injoignable', jamais une erreur bloquante."
+            _("Nécessite trusted_proxy actif avec 127.0.0.1 dans ses réseaux de confiance - sinon "
+            "l'écran affiche 'serveur injoignable', jamais une erreur bloquante.")
         ),
         (
-            "Un serveur eteint rend cet ecran entierement indisponible (contrairement aux "
-            "statistiques disque du cache, lisibles a froid) : il interroge exclusivement le "
-            "PROCESSUS en cours, jamais la configuration sur disque."
+            _("Un serveur éteint rend cet écran entièrement indisponible (contrairement aux "
+            "statistiques disque du cache, lisibles à froid) : il interroge exclusivement le "
+            "PROCESSUS en cours, jamais la configuration sur disque.")
         ),
     ),
 )

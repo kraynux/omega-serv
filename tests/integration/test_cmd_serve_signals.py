@@ -101,6 +101,21 @@ class TestCmdServeSignals(unittest.TestCase):
         self.assertTrue(_wait_for_exit(proc, timeout=8), "le processus n'a pas quitte apres SIGINT")
         self.assertFalse(self.pid_path.exists(), "fichier PID toujours present apres arret propre")
 
+    def test_messages_reach_the_log_immediately_not_at_shutdown(self):
+        """Sous systemd, stdout n'est pas un terminal : sans tampon ligne, journalctl
+        ne recevait tout qu'a l'arret, date de l'heure d'arret (craftdark 2026-10-26)."""
+        proc = self._spawn_server()
+        self.assertTrue(_wait_for_port(18765))
+        os.set_blocking(proc.stdout.fileno(), False)
+        deadline = time.monotonic() + 3
+        seen = ""
+        while time.monotonic() < deadline and "a l'ecoute" not in seen:
+            seen += proc.stdout.read() or ""
+            time.sleep(0.05)
+        self.assertIn("a l'ecoute", seen)
+        proc.send_signal(signal.SIGTERM)
+        self.assertTrue(_wait_for_exit(proc, timeout=8))
+
     def test_sigterm_drains_in_flight_request(self):
         import socket
 

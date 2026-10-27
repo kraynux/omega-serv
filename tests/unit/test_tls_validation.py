@@ -98,11 +98,11 @@ class TestValidateTlsStartup(unittest.TestCase):
 
     def test_world_readable_private_key_rejected(self):
         errors = validate_tls_startup(_facts(private_key_mode=0o644))
-        self.assertTrue(any("cle privee" in e for e in errors))
+        self.assertTrue(any("clé privée" in e for e in errors))
 
     def test_group_readable_private_key_rejected(self):
         errors = validate_tls_startup(_facts(private_key_mode=0o640))
-        self.assertTrue(any("cle privee" in e for e in errors))
+        self.assertTrue(any("clé privée" in e for e in errors))
 
     def test_strict_private_key_mode_passes(self):
         errors = validate_tls_startup(_facts(private_key_mode=0o600))
@@ -111,11 +111,11 @@ class TestValidateTlsStartup(unittest.TestCase):
     def test_expired_certificate_rejected(self):
         expired = _cert(not_after=_NOW - timedelta(days=1))
         errors = validate_tls_startup(_facts(certificate_info=expired))
-        self.assertTrue(any("expire" in e for e in errors))
+        self.assertTrue(any("expiré" in e for e in errors))
 
     def test_self_signed_public_bind_without_confirmation_rejected(self):
         errors = validate_tls_startup(_facts(bind_host="0.0.0.0", self_signed_public_bind_confirmed=False))
-        self.assertTrue(any("auto-signe" in e for e in errors))
+        self.assertTrue(any("auto-signé" in e for e in errors))
 
     def test_self_signed_public_bind_with_confirmation_passes(self):
         errors = validate_tls_startup(_facts(bind_host="0.0.0.0", self_signed_public_bind_confirmed=True))
@@ -155,7 +155,7 @@ class TestValidateCertificateImport(unittest.TestCase):
 
     def test_missing_source_key_rejected(self):
         errors = validate_certificate_import(_import_facts(source_key_exists=False, keys_match=None))
-        self.assertTrue(any("cle privee source" in e for e in errors))
+        self.assertTrue(any("clé privée source" in e for e in errors))
 
     def test_missing_source_cert_rejected(self):
         errors = validate_certificate_import(
@@ -167,7 +167,7 @@ class TestValidateCertificateImport(unittest.TestCase):
         errors = validate_certificate_import(
             _import_facts(source_chain_path_given=True, source_chain_exists=False)
         )
-        self.assertTrue(any("chaine intermediaire" in e for e in errors))
+        self.assertTrue(any("chaîne intermédiaire" in e for e in errors))
 
     def test_declared_chain_present_on_disk_passes(self):
         errors = validate_certificate_import(
@@ -182,7 +182,7 @@ class TestValidateCertificateImport(unittest.TestCase):
     def test_expired_certificate_rejected(self):
         expired = _cert(not_after=_NOW - timedelta(days=1))
         errors = validate_certificate_import(_import_facts(certificate_info=expired))
-        self.assertTrue(any("expire" in e for e in errors))
+        self.assertTrue(any("expiré" in e for e in errors))
 
 if __name__ == "__main__":
     unittest.main()

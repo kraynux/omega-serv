@@ -36,6 +36,7 @@ from omega_serv.application.services.manage_service import (
     start_service,
     stop_service,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.instances.entities import InstanceEntry
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.systemd_unit import (
@@ -69,13 +70,13 @@ class ServiceScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("SERVICE", classes="omega-title")
+            yield Static(_("SERVICE"), classes="omega-title")
             directory_hint = self._directory_hint()
             if directory_hint:
                 yield Static(directory_hint, classes="omega-hint")
             registered_entry = self._registered_entry_for_this_instance()
             with Horizontal(classes="omega-actions omega-labeled-input-row"):
-                yield Static("Nom du service :", classes="omega-input-row-label")
+                yield Static(_("Nom du service :"), classes="omega-input-row-label")
                 yield Input(
                     value=(
                         registered_entry.service_name if registered_entry is not None
@@ -86,33 +87,33 @@ class ServiceScreen(OmegaScreen):
                 )
             if registered_entry is not None:
                 yield Static(
-                    "Nom fige (instance enregistree en multi-instance) - "
-                    "voir Menu Multi-instance pour gerer d'autres instances/services.",
+                    _("Nom figé (instance enregistrée en multi-instance) - "
+                    "voir Menu Multi-instance pour gérer d'autres instances/services."),
                     classes="omega-hint",
                 )
             yield Static("", id="service-status", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh")
+                    yield Button(_("Rafraîchir"), id="refresh")
                 for item_id, label in (
-                    ("start", "Demarrer"), ("stop", "Arreter"), ("restart", "Redemarrer"), ("reload", "Recharger"),
+                    ("start", _("Démarrer")), ("stop", _("Arrêter")), ("restart", _("Redémarrer")), ("reload", _("Recharger")),
                 ):
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
             with Horizontal(classes="omega-actions"):
-                for item_id, label in (("enable", "Activer au demarrage"), ("disable", "Desactiver au demarrage")):
+                for item_id, label in (("enable", _("Activer au démarrage")), ("disable", _("Désactiver au démarrage"))):
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Installer l'unite", id="install")
+                    yield Button(_("Installer l'unité"), id="install")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Desinstaller l'unite", id="uninstall", variant="error")
+                    yield Button(_("Désinstaller l'unité"), id="uninstall", variant="error")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Reparer les permissions", id="repair-permissions")
+                    yield Button(_("Réparer les permissions"), id="repair-permissions")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield Static("", id="journey-hint", classes="omega-hint")
         yield Footer()
 
@@ -121,7 +122,7 @@ class ServiceScreen(OmegaScreen):
         self._manager = factory() if factory is not None else None
         if self._manager is None:
             self.query_one("#service-status", Static).update(
-                "Aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce systeme."
+                _("Aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce système.")
             )
             self._set_mutating_buttons_disabled(True)
             return
@@ -136,15 +137,13 @@ class ServiceScreen(OmegaScreen):
         assert self._manager is not None
         if self._manager.manager_type() == "systemd":
             return (
-                "SYSTEMD uniquement : 'Installer l'unite' (une fois) prepare tout "
-                "(fichier systemd + compte dedie) ; 'Demarrer' echoue tant que ce n'est "
-                "pas fait. Lancement immediat sans service : assistant premier lancement "
-                "-> 'Lancer maintenant'."
+                _("SYSTEMD uniquement : 'Installer l'unité' (une fois) prépare tout "
+                "(fichier systemd + compte dédié) ; 'Démarrer' échoue tant que ce n'est "
+                "pas fait. Lancement immédiat sans service : assistant premier lancement "
+                "-> 'Lancer maintenant'.")
             )
         return (
-            f"{self._manager.manager_type().upper()} : service deja configure sur le "
-            "systeme requis (installation/desinstallation non proposees ici) - voir le "
-            "guide d'aide pour le detail (a venir)."
+            _("{value} : service déjà configuré sur le système requis (installation/desinstallation non proposées ici) - voir le guide d'aide pour le détail (à venir).").format(value=self._manager.manager_type().upper())
         )
 
     def on_input_changed(self, event: Input.Changed) -> None:
@@ -154,7 +153,7 @@ class ServiceScreen(OmegaScreen):
     def _directory_hint(self) -> str:
         if len(self._container.instance_registry.load()) <= 1:
             return ""
-        return f"Repertoire pilote : {self._container.project_root}"
+        return _("Répertoire pilote : {project_root}").format(project_root=self._container.project_root)
 
     def _set_mutating_buttons_disabled(self, disabled: bool) -> None:
         for item_id in (
@@ -180,8 +179,7 @@ class ServiceScreen(OmegaScreen):
         status_widget = self.query_one("#service-status", Static)
         if isinstance(result, ServiceStatus):
             status_widget.update(
-                f"Actif : {result.active}   Active au demarrage : {result.enabled}   "
-                f"Etat : {result.state} ({result.sub_state})\n{result.description}"
+                _("Actif : {active}   Activé au démarrage : {enabled}   État : {state} ({sub_state})\n{description}").format(active=result.active, enabled=result.enabled, state=result.state, sub_state=result.sub_state, description=result.description)
             )
         else:
             status_widget.update(result.message)
@@ -212,14 +210,7 @@ class ServiceScreen(OmegaScreen):
             )
             if conflict is not None:
                 self.app.notify(
-                    f"Une autre unite ({conflict!r}) pointe deja vers ce repertoire - "
-                    "l'installer sous un second nom creerait un conflit (meme fichier PID, "
-                    "meme config, meme compte systeme). Pour heberger plusieurs serveurs, "
-                    "installez une copie separee d'OMEGA-SERV dans un autre repertoire "
-                    "(chaque copie a son propre var/config/unite) - cet ecran peut deja "
-                    "piloter n'importe quelle unite installee (demarrer/arreter/statut) en "
-                    "tapant simplement son nom, sans avoir a lancer l'interface depuis "
-                    "chaque repertoire.",
+                    _("Une autre unité ({conflict!r}) pointe déjà vers ce répertoire - l'installer sous un second nom créerait un conflit (même fichier PID, même config, même compte système). Pour héberger plusieurs serveurs, installez une copie séparée d'OMEGA-SERV dans un autre répertoire (chaque copie a son propre var/config/unite) - cet écran peut déjà piloter n'importe quelle unité installée (demarrer/arreter/statut) en tapant simplement son nom, sans avoir à lancer l'interface depuis chaque répertoire.").format(conflict=conflict),
                     severity="error",
                     timeout=15,
                 )
@@ -230,23 +221,16 @@ class ServiceScreen(OmegaScreen):
             )
             if hijack is not None:
                 self.app.notify(
-                    f"Le nom {self._service_name()!r} est deja utilise par une unite "
-                    f"pointant vers {str(hijack)!r} (une autre installation) - "
-                    "l'installer ici ecraserait cette unite et vous priverait du controle "
-                    "sur ce serveur-la. Choisissez un nom different, ou lancez cette action "
-                    "depuis l'installation d'origine.",
+                    _("Le nom {value!r} est déjà utilisé par une unité pointant vers {value2!r} (une autre installation) - l'installer ici écraserait cette unité et vous priverait du contrôle sur ce serveur-la. Choisissez un nom différent, ou lancez cette action depuis l'installation d'origine.").format(value=self._service_name(), value2=str(hijack)),
                     severity="error",
                     timeout=15,
                 )
                 return
             self.app.push_screen(
                 ConfirmScreen(
-                    title="INSTALLER L'UNITE SYSTEMD",
+                    title=_("INSTALLER L'UNITÉ SYSTEMD"),
                     message=(
-                        f"Service : {self._service_name()}\n"
-                        f"Utilisateur/groupe dedies : {DEFAULT_SYSTEM_USER}/{DEFAULT_SYSTEM_GROUP}\n"
-                        f"Une authentification (sudo) sera demandee pour l'ecriture dans "
-                        f"/etc/systemd/system/ et le rechargement de systemd. Continuer ?"
+                        _("Service : {value}\nUtilisateur/groupe dédiés : {DEFAULT_SYSTEM_USER}/{DEFAULT_SYSTEM_GROUP}\nUne authentification (sudo) sera demandée pour l'écriture dans /etc/systemd/system/ et le rechargement de systemd. Continuer ?").format(value=self._service_name(), DEFAULT_SYSTEM_USER=DEFAULT_SYSTEM_USER, DEFAULT_SYSTEM_GROUP=DEFAULT_SYSTEM_GROUP)
                     ),
                 ),
                 self._install_if_confirmed,
@@ -255,8 +239,8 @@ class ServiceScreen(OmegaScreen):
         if button_id == "uninstall":
             self.app.push_screen(
                 ConfirmScreen(
-                    title="DESINSTALLER L'UNITE SYSTEMD",
-                    message=f"Retirer l'unite du service {self._service_name()!r} ? Une authentification (sudo) sera demandee.",
+                    title=_("DÉSINSTALLER L'UNITÉ SYSTEMD"),
+                    message=_("Retirer l'unité du service {value!r} ? Une authentification (sudo) sera demandée.").format(value=self._service_name()),
                 ),
                 self._uninstall_if_confirmed,
             )
@@ -264,14 +248,9 @@ class ServiceScreen(OmegaScreen):
         if button_id == "repair-permissions":
             self.app.push_screen(
                 ConfirmScreen(
-                    title="REPARER LES PERMISSIONS",
+                    title=_("RÉPARER LES PERMISSIONS"),
                     message=(
-                        "Reapplique le partage de permissions sur var/ et secure/auth/ pour "
-                        f"le compte systeme dedie ({DEFAULT_SYSTEM_GROUP}) - utile apres une mise "
-                        "a jour par extraction d'archive (tar restaure les permissions d'origine, "
-                        "annulant ce partage) si le service boucle en redemarrage avec une "
-                        "'PermissionError' dans les journaux. Ne touche jamais a l'unite systemd "
-                        "elle-meme. Une authentification (sudo) sera demandee. Continuer ?"
+                        _("Réapplique le partage de permissions sur var/ et secure/auth/ pour le compte système dédié ({DEFAULT_SYSTEM_GROUP}) - utile après une mise à jour par extraction d'archive (tar restaure les permissions d'origine, annulant ce partage) si le service boucle en redémarrage avec une 'PermissionError' dans les journaux. Ne touche jamais à l'unité systemd elle-même. Une authentification (sudo) sera demandée. Continuer ?").format(DEFAULT_SYSTEM_GROUP=DEFAULT_SYSTEM_GROUP)
                     ),
                 ),
                 self._repair_permissions_if_confirmed,
@@ -294,7 +273,7 @@ class ServiceScreen(OmegaScreen):
         service_name = self._service_name()
         params = SystemdUnitParams(
             service_name=service_name,
-            description="OMEGA-SERV web server",
+            description=_("OMEGA-SERV web server"),
             python_executable=self._default_python_executable(),
             project_root=self._container.project_root,
             config_path=self._container.config_file,

@@ -69,7 +69,7 @@ class TestImportCertificate(unittest.TestCase):
         self.source_key.unlink()
         result = self._import()
         self.assertFalse(result.success)
-        self.assertIn("cle privee source", result.message)
+        self.assertIn("clé privée source", result.message)
         self.assertFalse(self.dest_cert.exists())
 
     def test_missing_source_cert_rejected(self):
@@ -87,7 +87,7 @@ class TestImportCertificate(unittest.TestCase):
     def test_expired_certificate_rejected(self):
         result = self._import(tool=_FakeCertificateTool(is_expired=True))
         self.assertFalse(result.success)
-        self.assertIn("expire", result.message)
+        self.assertIn("expiré", result.message)
 
     def test_successful_import_copies_files_with_correct_permissions(self):
         result = self._import()
@@ -137,7 +137,7 @@ class TestImportCertificate(unittest.TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertIn("chaine intermediaire", result.message)
+        self.assertIn("chaîne intermédiaire", result.message)
 
 
 if __name__ == "__main__":

@@ -178,10 +178,15 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         app = OmegaServApp(self._container(manager))
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_service_screen(pilot)
-            hint = str(pilot.app.screen.query_one("#journey-hint", Static).content)
+            hint = ""
+            for _ in range(50):  # rempli au montage : sous forte charge, attendre qu'il le soit
+                hint = str(pilot.app.screen.query_one("#journey-hint", Static).content)
+                if hint:
+                    break
+                await pilot.pause(0.05)
             self.assertIn("SYSTEMD uniquement", hint)
-            self.assertIn("Installer l'unite", hint)
-            self.assertIn("Demarrer", hint)
+            self.assertIn("Installer l'unité", hint)
+            self.assertIn("Démarrer", hint)
 
     async def test_start_stop_updates_status_and_calls_manager(self):
         manager = FakeServiceManager()

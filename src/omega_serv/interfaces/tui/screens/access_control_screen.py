@@ -19,6 +19,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.access_rule import (
     AccessRule,
@@ -47,33 +48,33 @@ class AccessControlScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("CONTROLE D'ACCES", classes="omega-title")
+            yield Static(_("CONTRÔLE D'ACCÈS"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'access_control' se fait dans le menu Options. "
-                "Le plus long prefixe correspondant gagne : une regle 'allow' plus specifique "
-                "leve le 'deny' d'un prefixe parent (ex: deny /private/, allow /private/.assets/). "
-                "Une regle 'allow' explicite leve aussi deny_hidden_files/deny_patterns sur ce "
-                "chemin precis (ecran Securite generique) - un dossier commencant par un point "
-                "peut donc etre re-expose deliberement sans desactiver ces regles partout.",
+                _("L'activation de l'option 'access_control' se fait dans le menu Options. "
+                "Le plus long préfixe correspondant gagne : une règle 'allow' plus spécifique "
+                "lève le 'deny' d'un préfixe parent (ex: deny /private/, allow /private/.assets/). "
+                "Une règle 'allow' explicite lève aussi deny_hidden_files/deny_patterns sur ce "
+                "chemin précis (écran Sécurité générique) - un dossier commençant par un point "
+                "peut donc être re-exposé délibérément sans désactiver ces règles partout."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="access-rules-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#access-rules-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe URL", "Verdict", "Extensions")
+        table.add_columns(_("Préfixe URL"), _("Verdict"), _("Extensions"))
         self._refresh_table()
 
     def _rules(self) -> list[AccessRule]:
@@ -106,11 +107,11 @@ class AccessControlScreen(OmegaScreen):
         if event.button.id == "add":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UNE REGLE D'ACCES",
+                    title=_("AJOUTER UNE RÈGLE D'ACCÈS"),
                     fields=[
-                        ("path_prefix", "Prefixe URL (ex: /private/)", ""),
-                        ("verdict", "Verdict (allow/deny)", "deny"),
-                        ("extensions", "Extensions concernees (vide=toutes, ex: .key, .pem)", ""),
+                        ("path_prefix", _("Préfixe URL (ex: /private/)"), ""),
+                        ("verdict", _("Verdict (allow/deny)"), "deny"),
+                        ("extensions", _("Extensions concernées (vide=toutes, ex: .key, .pem)"), ""),
                     ],
                 ),
                 self._add_rule,
@@ -121,13 +122,13 @@ class AccessControlScreen(OmegaScreen):
             rule = rules[self._selected_index]
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="MODIFIER LA REGLE D'ACCES",
+                    title=_("MODIFIER LA RÈGLE D'ACCÈS"),
                     fields=[
-                        ("path_prefix", "Prefixe URL", rule.path_prefix),
-                        ("verdict", "Verdict (allow/deny)", rule.verdict),
+                        ("path_prefix", _("Préfixe URL"), rule.path_prefix),
+                        ("verdict", _("Verdict (allow/deny)"), rule.verdict),
                         (
                             "extensions",
-                            "Extensions concernees, separees par des virgules (vide = toutes)",
+                            _("Extensions concernées, séparées par des virgules (vide = toutes)"),
                             ", ".join(rule.extensions),
                         ),
                     ],
@@ -137,7 +138,7 @@ class AccessControlScreen(OmegaScreen):
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REGLE", message="Confirmer la suppression de cette regle d'acces ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA RÈGLE"), message=_("Confirmer la suppression de cette règle d'accès ?")),
                 self._delete_rule,
             )
 
@@ -150,7 +151,7 @@ class AccessControlScreen(OmegaScreen):
         )
         error = validate_access_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules.append(rule)
@@ -165,7 +166,7 @@ class AccessControlScreen(OmegaScreen):
         )
         error = validate_access_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules[self._selected_index] = rule
@@ -181,7 +182,7 @@ class AccessControlScreen(OmegaScreen):
     def _save_rules(self, rules: list[AccessRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("access_control")
         enabled = existing.enabled if existing is not None else False
@@ -195,4 +196,4 @@ class AccessControlScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
-        notify_reload_required(self, self._container, "Regles de controle d'acces mises a jour.")
+        notify_reload_required(self, self._container, _("Règles de contrôle d'accès mises à jour."))

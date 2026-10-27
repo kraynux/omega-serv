@@ -11,7 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-_CONTROL_CHARS = frozenset(chr(c) for c in range(0x20))
+# Neutralisation des caracteres de controle 0x00-0x1F, en une passe C (str.translate) : execute plusieurs fois par requete.
+_CONTROL_TO_SPACE = str.maketrans(dict.fromkeys(range(0x20), " "))
 
 
 def sanitize_log_field(value: str, max_length: int = 512) -> str:
@@ -19,13 +20,12 @@ def sanitize_log_field(value: str, max_length: int = 512) -> str:
     venant du client (referer, user-agent, chemin) doivent avoir leurs
     caracteres de controle (dont CR/LF) neutralises et leur longueur
     bornee avant ecriture."""
-    cleaned = "".join(" " if ch in _CONTROL_CHARS else ch for ch in value)
-    return cleaned[:max_length]
+    return value.translate(_CONTROL_TO_SPACE)[:max_length]
 
 
 def _format_apache_timestamp(ts: datetime) -> str:
-    offset = ts.strftime("%z") or "+0000"
-    return f"{ts.strftime('%d/%b/%Y:%H:%M:%S')} {offset}"
+    text = ts.strftime("%d/%b/%Y:%H:%M:%S %z")
+    return text + "+0000" if text.endswith(" ") else text  # date sans fuseau : UTC
 
 
 @dataclass(frozen=True)

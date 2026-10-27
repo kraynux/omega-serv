@@ -30,6 +30,8 @@ class JsonIoCExporter:
             "status": incident.status,
             "opened_at": incident.opened_at.isoformat(),
             "closed_at": incident.closed_at.isoformat() if incident.closed_at else None,
+            "omitted_observations": incident.omitted_observations,
+            "omitted_events": incident.omitted_events,
             "indicators": [
                 {
                     "kind": indicator.kind, "value": indicator.value, "confidence": indicator.confidence,

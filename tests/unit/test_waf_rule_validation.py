@@ -45,7 +45,7 @@ class TestValidateRulePack(unittest.TestCase):
         data["rules"].append(dict(data["rules"][0]))
         pack = parse_rule_pack(data)
         errors = validate_rule_pack(pack)
-        self.assertTrue(any("duplique" in e for e in errors))
+        self.assertTrue(any("dupliqué" in e for e in errors))
 
     def test_unknown_scope_rejected(self):
         data = _valid_pack_data()
@@ -79,7 +79,7 @@ class TestValidateRulePack(unittest.TestCase):
         data["rules"][0]["action"] = "block"
         pack = parse_rule_pack(data)
         errors = validate_rule_pack(pack)
-        self.assertTrue(any("action non supportee" in e for e in errors))
+        self.assertTrue(any("action non supportée" in e for e in errors))
 
 
 class TestBuildPathSegmentPattern(unittest.TestCase):

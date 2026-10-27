@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.instances.entities import InstanceEntry
 
 
@@ -50,16 +51,15 @@ def validate_new_instance(
     un message d'erreur (str) ou None si tout est valide. `path` doit
     deja etre resolu par l'appelant."""
     if not name.strip():
-        return "le nom d'instance ne peut pas etre vide"
+        return _("le nom d'instance ne peut pas être vide")
     if find_name_conflict(entries, name) is not None:
-        return f"une instance nommee {name!r} existe deja dans le registre"
+        return _("une instance nommée {name!r} existe déjà dans le registre").format(name=name)
     nesting = find_nesting_conflict(entries, path)
     if nesting is not None:
         return (
-            f"{path} est imbrique avec l'instance {nesting.name!r} ({nesting.path}) - "
-            "deux instances doivent etre des repertoires freres, jamais l'un dans l'autre"
+            _("{path} est imbriqué avec l'instance {name!r} ({path2}) - deux instances doivent être des répertoires frères, jamais l'un dans l'autre").format(path=path, name=nesting.name, path2=nesting.path)
         )
     port_conflict = find_port_conflict(entries, bind, port)
     if port_conflict is not None:
-        return f"{bind}:{port} est deja utilise par l'instance {port_conflict.name!r}"
+        return _("{bind}:{port} est déjà utilisé par l'instance {name!r}").format(bind=bind, port=port, name=port_conflict.name)
     return None

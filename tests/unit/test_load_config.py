@@ -249,13 +249,13 @@ class TestValidateTlsEnvironment(unittest.TestCase):
         self.key_path.chmod(0o644)
         config = self._config()
         errors = validate_config_environment(config, self.filesystem, self.project_root, _FakeCertificateTool(self._cert()))
-        self.assertTrue(any("cle privee" in e for e in errors))
+        self.assertTrue(any("clé privée" in e for e in errors))
 
     def test_expired_certificate_fails(self):
         expired = self._cert(not_after=datetime.now(timezone.utc) - timedelta(days=1))
         config = self._config()
         errors = validate_config_environment(config, self.filesystem, self.project_root, _FakeCertificateTool(expired))
-        self.assertTrue(any("expire" in e for e in errors))
+        self.assertTrue(any("expiré" in e for e in errors))
 
     def test_key_cert_mismatch_fails(self):
         config = self._config()
@@ -265,7 +265,7 @@ class TestValidateTlsEnvironment(unittest.TestCase):
     def test_self_signed_public_bind_without_confirmation_fails(self):
         config = self._config(server={"bind": "0.0.0.0"})
         errors = validate_config_environment(config, self.filesystem, self.project_root, _FakeCertificateTool(self._cert()))
-        self.assertTrue(any("auto-signe" in e for e in errors))
+        self.assertTrue(any("auto-signé" in e for e in errors))
 
     def test_self_signed_public_bind_with_confirmation_passes(self):
         config = self._config(server={"bind": "0.0.0.0"})

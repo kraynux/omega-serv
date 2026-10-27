@@ -34,6 +34,7 @@ from urllib.parse import urlparse
 from urllib.request import url2pathname
 
 from omega_serv.application.instances.register_instance import register_instance
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.defaults import builtin_safe_defaults
 from omega_serv.domain.instances.registry import validate_new_instance
 from omega_serv.infrastructure.config.json_config_repository import JsonConfigRepository
@@ -122,34 +123,34 @@ def _attempt_create(
     service_name: str,
     on_step: Callable[[int, int, str], None] | None,
 ) -> str | None:
-    _report(on_step, 3, "Creation de l'environnement virtuel")
+    _report(on_step, 3, _("Création de l'environnement virtuel"))
     venv_result = process_runner.run([sys.executable, "-m", "venv", str(target_root / ".venv")], timeout=120)
     if not venv_result.ok:
-        return f"Echec de la creation du venv : {venv_result.stderr.strip() or venv_result.stdout.strip()}"
+        return _("Échec de la création du venv : {value}").format(value=venv_result.stderr.strip() or venv_result.stdout.strip())
 
-    _report(on_step, 4, "Installation des dependances")
+    _report(on_step, 4, _("Installation des dépendances"))
     pip = str(target_root / ".venv" / "bin" / "pip")
     upgrade_result = process_runner.run([pip, "install", "-q", "--upgrade", "pip"], timeout=120)
     if not upgrade_result.ok:
-        return f"Echec de la mise a jour de pip : {upgrade_result.stderr.strip()}"
+        return _("Échec de la mise à jour de pip : {value}").format(value=upgrade_result.stderr.strip())
     vendored_lib = target_root / "vendor" / "omega-lib"
     lib_source = vendored_lib if filesystem.exists(vendored_lib) else _resolve_omega_lib_editable_source()
     if lib_source is not None and filesystem.exists(lib_source):
         lib_result = process_runner.run([pip, "install", "-q", "-e", str(lib_source)], timeout=120)
         if not lib_result.ok:
-            return f"Echec de l'installation de omega-lib ({lib_source}) : {lib_result.stderr.strip()}"
+            return _("Échec de l'installation de omega-lib ({lib_source}) : {value}").format(lib_source=lib_source, value=lib_result.stderr.strip())
     install_result = process_runner.run([pip, "install", "-q", "-e", str(target_root)], timeout=180)
     if not install_result.ok:
-        return f"Echec de l'installation des dependances : {install_result.stderr.strip()}"
+        return _("Échec de l'installation des dépendances : {value}").format(value=install_result.stderr.strip())
 
-    _report(on_step, 5, "Generation de la configuration")
+    _report(on_step, 5, _("Génération de la configuration"))
     try:
         _write_fresh_config(filesystem, target_root, bind, port)
         JsonSettingsStore(target_root / "var" / "settings.json").set("service_name", service_name)
     except OSError as e:
-        return f"Echec de la generation de la configuration : {e}"
+        return _("Échec de la génération de la configuration : {e}").format(e=e)
 
-    _report(on_step, 6, "Enregistrement dans le registre")
+    _report(on_step, 6, _("Enregistrement dans le registre"))
     return register_instance(
         registry, filesystem, clock, name=name, path=target_root, bind=bind, port=port, service_name=service_name,
     )
@@ -184,9 +185,9 @@ def create_instance(
     le nom redevienne immediatement reutilisable."""
     target_root = target_parent_dir / name
 
-    _report(on_step, 1, "Validation des parametres")
+    _report(on_step, 1, _("Validation des paramètres"))
     if filesystem.exists(target_root):
-        return f"{target_root} existe deja - choisissez un autre nom ou repertoire"
+        return _("{target_root} existe déjà - choisissez un autre nom ou répertoire").format(target_root=target_root)
     resolved_parent = filesystem.resolve_real_path(target_parent_dir)
     error = validate_new_instance(
         registry.load(), name=name, path=resolved_parent / name, bind=bind, port=port,
@@ -194,13 +195,13 @@ def create_instance(
     if error is not None:
         return error
 
-    _report(on_step, 2, "Copie de l'arborescence")
+    _report(on_step, 2, _("Copie de l'arborescence"))
     try:
         _copy_tree(filesystem, source_root, target_root)
     except OSError as e:
         if filesystem.exists(target_root):
             filesystem.delete_directory(target_root)
-        return f"Echec de la copie de l'arborescence : {e}"
+        return _("Échec de la copie de l'arborescence : {e}").format(e=e)
 
     error = _attempt_create(
         filesystem, process_runner, registry, clock,

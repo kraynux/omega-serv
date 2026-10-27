@@ -100,7 +100,7 @@ class TestValidateNewInstance(unittest.TestCase):
         error = validate_new_instance(
             entries, name="test", path=Path("/a/omega-serv/webroot/x"), bind="127.0.0.1", port=8081,
         )
-        self.assertIn("imbrique", error)
+        self.assertIn("imbriqué", error)
 
     def test_port_conflict_rejected(self):
         entries = [_entry(name="prod", path=Path("/a/omega-serv"), bind="127.0.0.1", port=8080)]

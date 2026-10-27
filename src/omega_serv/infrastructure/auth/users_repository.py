@@ -32,6 +32,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.auth.entities import UserAccount
 from omega_serv.domain.security.auth.exceptions import UsersFileError
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -50,9 +51,9 @@ class JsonUsersRepository:
         try:
             data = json.loads(self._fs.read_text(self._path))
         except json.JSONDecodeError as e:
-            raise UsersFileError(f"JSON invalide dans {self._path} : {e}") from e
+            raise UsersFileError(_("JSON invalide dans {path} : {e}").format(path=self._path, e=e)) from e
         if not isinstance(data, dict) or data.get("version") not in _SUPPORTED_VERSIONS:
-            raise UsersFileError(f"{self._path} : version non supportee ou structure invalide")
+            raise UsersFileError(_("{path} : version non supportée ou structure invalide").format(path=self._path))
         return tuple(
             UserAccount(username=item["username"], password_hash=item["password_hash"])
             for item in data.get("users", [])

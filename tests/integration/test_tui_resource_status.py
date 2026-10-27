@@ -77,11 +77,11 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             system_text = screen.query_one("#box-system", Static).render().plain
 
             self.assertIn("PROCESSUS", state_text)
-            self.assertIn("ARRETE", state_text)
+            self.assertIn("ARRÊTÉ", state_text)
             self.assertIn("standard", state_text)  # profil par defaut de generate_default_config
 
             self.assertIn("RENDEMENT", traffic_text)
-            self.assertIn("Total    : 0", traffic_text)
+            self.assertRegex(traffic_text, r"Total\s+: 0")
 
             self.assertIn("CPU", system_text)
             self.assertIn("RAM", system_text)
@@ -96,7 +96,7 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(160, 50)) as pilot:
             await self._open_resource_status(pilot)
             state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-            self.assertIn("DEMARRE", state_text)
+            self.assertIn("DÉMARRÉ", state_text)
 
     async def test_stale_pid_file_shows_stopped(self):
         container = self._container()
@@ -107,8 +107,8 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(160, 50)) as pilot:
             await self._open_resource_status(pilot)
             state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-            self.assertIn("ARRETE", state_text)
-            self.assertIn("obsolete", state_text)
+            self.assertIn("ARRÊTÉ", state_text)
+            self.assertIn("obsolète", state_text)
 
     @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
     async def test_unreadable_pid_file_shows_unknown_not_stopped(self):
@@ -122,9 +122,9 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             async with app.run_test(size=(160, 50)) as pilot:
                 await self._open_resource_status(pilot)
                 state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-                self.assertIn("a confirmer", state_text)
+                self.assertIn("à confirmer", state_text)
                 self.assertIn("rien d'alarmant", state_text)
-                self.assertNotIn("ARRETE", state_text)
+                self.assertNotIn("ARRÊTÉ", state_text)
         finally:
             pid_path.chmod(0o600)
 
@@ -137,7 +137,7 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(160, 50)) as pilot:
             await self._open_resource_status(pilot)
             state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-            self.assertIn("Actif   : True", state_text)
+            self.assertRegex(state_text, r"Actif\s+: True")
 
     async def test_service_manager_status_reflects_renamed_service(self):
         manager = FakeServiceManager(known_service="mon-service-renomme")
@@ -149,7 +149,7 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(160, 50)) as pilot:
             await self._open_resource_status(pilot)
             state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-            self.assertIn("Actif   : True", state_text)
+            self.assertRegex(state_text, r"Actif\s+: True")
 
     async def test_renaming_in_service_screen_is_reflected_here_end_to_end(self):
         manager = FakeServiceManager(known_service="mon-service-renomme")
@@ -174,7 +174,7 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
 
             await self._open_resource_status(pilot)
             state_text = pilot.app.screen.query_one("#box-server-state", Static).render().plain
-            self.assertIn("Actif   : True", state_text)
+            self.assertRegex(state_text, r"Actif\s+: True")
 
     async def test_refresh_button_picks_up_new_log_lines(self):
         container = self._container()
@@ -197,8 +197,8 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#refresh", Button).press()
             await pilot.pause()
             traffic_text = pilot.app.screen.query_one("#box-traffic", Static).render().plain
-            self.assertIn("Total    : 2", traffic_text)
-            self.assertIn("IPs uniques   : 2", traffic_text)
+            self.assertRegex(traffic_text, r"Total\s+: 2")
+            self.assertRegex(traffic_text, r"IPs\ uniques\s+: 2")
 
     async def test_simulate_request_shortcut_reachable_and_returns(self):
         container = self._container()

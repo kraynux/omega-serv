@@ -20,6 +20,7 @@ from textual.binding import Binding, BindingType
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 
 
 class CreateInstanceProgressScreen(OmegaScreen):
-    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "back", "Retour", show=True)]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "back", _("Retour"), show=True)]
 
     def __init__(
         self, *, container: DependencyContainer, source_root: Path, name: str,
@@ -49,13 +50,13 @@ class CreateInstanceProgressScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("CREATION D'INSTANCE", classes="omega-title")
+            yield Static(_("CRÉATION D'INSTANCE"), classes="omega-title")
             target_root = self._target_parent_dir / self._instance_name
-            yield Static(f"Nom : {self._instance_name}  -  Repertoire : {target_root}", classes="omega-hint")
-            yield Static("En attente...", id="progress-label", classes="omega-hint")
+            yield Static(_("Nom : {instance_name}  -  Répertoire : {target_root}").format(instance_name=self._instance_name, target_root=target_root), classes="omega-hint")
+            yield Static(_("En attente..."), id="progress-label", classes="omega-hint")
             yield Static("", id="progress-result", classes="omega-hint")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Fermer", id="close", disabled=True)
+                yield Button(_("Fermer"), id="close", disabled=True)
         yield Footer()
 
     def on_mount(self) -> None:
@@ -64,7 +65,7 @@ class CreateInstanceProgressScreen(OmegaScreen):
     def _run_creation(self) -> None:
         runner = self._container.create_instance_runner
         if runner is None:
-            self.app.call_from_thread(self._finish, "Fonction de creation d'instance indisponible dans cet environnement.")
+            self.app.call_from_thread(self._finish, _("Fonction de création d'instance indisponible dans cet environnement."))
             return
         error = runner(
             self._source_root, self._instance_name, self._target_parent_dir, self._bind, self._port, self._service_name,
@@ -77,16 +78,16 @@ class CreateInstanceProgressScreen(OmegaScreen):
         self.app.call_from_thread(self._update_progress, index, total, label)
 
     def _update_progress(self, index: int, total: int, label: str) -> None:
-        self.query_one("#progress-label", Static).update(f"Etape {index}/{total} : {label}...")
+        self.query_one("#progress-label", Static).update(_("Étape {index}/{total} : {label}...").format(index=index, total=total, label=label))
 
     def _finish(self, error: str | None) -> None:
         self._finished = True
         self._success = error is None
         if error is None:
-            self.query_one("#progress-label", Static).update("Etape 6/6 : Enregistrement dans le registre...")
-            self.query_one("#progress-result", Static).update("Instance creee avec succes.")
+            self.query_one("#progress-label", Static).update(_("Étape 6/6 : Enregistrement dans le registre..."))
+            self.query_one("#progress-result", Static).update(_("Instance créée avec succès."))
         else:
-            self.query_one("#progress-result", Static).update(f"Echec : {error}")
+            self.query_one("#progress-result", Static).update(_("Échec : {error}").format(error=error))
         self.query_one("#close", Button).disabled = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

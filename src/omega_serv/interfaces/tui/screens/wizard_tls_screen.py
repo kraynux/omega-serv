@@ -15,6 +15,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.tls.generate_self_signed import generate_self_signed_certificate
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import VALID_KEY_TYPES, KeyType, SelfSignedCertParams
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -39,27 +40,27 @@ class WizardTlsScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("ETAPE 5/8 : TLS (OPTIONNEL)", classes="omega-title")
+            yield Static(_("ÉTAPE 5/8 : TLS (OPTIONNEL)"), classes="omega-title")
             if self._state.profile_name == "development":
                 yield Static(
-                    "TLS n'est pas propose pour le profil 'development'. Cette etape est ignoree.",
+                    _("TLS n'est pas proposé pour le profil 'development'. Cette étape est ignorée."),
                     classes="omega-hint",
                 )
             else:
                 yield Static("", id="form-error", classes="omega-hint")
-                yield Static("Nom commun (CN)", classes="omega-subtitle")
+                yield Static(_("Nom commun (CN)"), classes="omega-subtitle")
                 yield Input(id="cn-input")
-                yield Static("SAN DNS (separes par des virgules)", classes="omega-subtitle")
+                yield Static(_("SAN DNS (séparés par des virgules)"), classes="omega-subtitle")
                 yield Input(id="san-dns-input")
-                yield Static(f"Type de cle ({'/'.join(sorted(VALID_KEY_TYPES))})", classes="omega-subtitle")
+                yield Static(_("Type de clé ({value})").format(value='/'.join(sorted(VALID_KEY_TYPES))), classes="omega-subtitle")
                 yield Input(value="rsa2048", id="key-type-input")
                 with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                    yield Button("Generer et activer TLS", id="generate", variant="primary")
+                    yield Button(_("Générer et activer TLS"), id="generate", variant="primary")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivant (sans TLS)" if self._state.profile_name != "development" else "Suivant", id="next")
+                    yield Button(_("Suivant (sans TLS)") if self._state.profile_name != "development" else _("Suivant"), id="next")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -79,12 +80,12 @@ class WizardTlsScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         factory = self._container.certificate_tool_factory
         if factory is None:
-            error_widget.update("Generation indisponible dans cet environnement.")
+            error_widget.update(_("Génération indisponible dans cet environnement."))
             return
 
         key_type_text = self.query_one("#key-type-input", Input).value.strip()
         if key_type_text not in VALID_KEY_TYPES:
-            error_widget.update(f"Type de cle invalide : {key_type_text!r}")
+            error_widget.update(_("Type de clé invalide : {key_type_text!r}").format(key_type_text=key_type_text))
             return
 
         params = SelfSignedCertParams(
@@ -96,7 +97,7 @@ class WizardTlsScreen(OmegaScreen):
         cert_path = self._container.project_root / self._state.config.tls.certificate_path
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
 
-        error_widget.update("Generation en cours...")
+        error_widget.update(_("Génération en cours..."))
         self.query_one("#generate", Button).disabled = True
         self.run_worker(
             lambda: self._generate_in_thread(params, key_path, cert_path, backups_dir, factory),
@@ -121,11 +122,11 @@ class WizardTlsScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
 
         if error is not None:
-            error_widget.update(f"Erreur : {error}")
+            error_widget.update(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction : error XOR result
         if not result.success:
-            error_widget.update(f"Erreur : {result.message}")
+            error_widget.update(_("Erreur : {message}").format(message=result.message))
             return
 
         self._state.config = replace(

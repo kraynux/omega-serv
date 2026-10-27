@@ -134,7 +134,7 @@ class TestExceptions(unittest.TestCase):
         pack = build_rule_pack_from_keyword_list(_definition(), ("!/x", "/y"))
         rule = pack.rules[0]
         self.assertIsNotNone(rule.exclude_pattern)
-        self.assertIn("1 entree(s), 1 exception(s)", rule.description)
+        self.assertIn("1 entrée(s), 1 exception(s)", rule.description)
 
     def test_no_exception_means_no_exclude_pattern(self):
         rule = build_rule_pack_from_keyword_list(_definition(), ("/y",)).rules[0]
@@ -159,7 +159,7 @@ class TestSubstringModeUnchanged(unittest.TestCase):
         definition = KeywordListDefinition(id="REFERER-SPAM", scope=("referer",), file="f.txt", weight=3)
         rule = build_rule_pack_from_keyword_list(definition, ("casino", "viagra")).rules[0]
         self.assertEqual(rule.pattern, "(casino|viagra)")
-        self.assertEqual(rule.description, "Liste de mots-clefs (2 entree(s))")
+        self.assertEqual(rule.description, "Liste de mots-clefs (2 entrée(s))")
         self.assertEqual(rule.weight, 3)
         self.assertIsNone(rule.exclude_pattern)
 
@@ -195,7 +195,7 @@ class TestAnalyzePathListText(unittest.TestCase):
                 errors = self._errors(vital + "\n")
                 self.assertEqual(len(errors), 1)
                 # "/" est deja refuse par la syntaxe (entree vide), avant le controle des chemins vitaux
-                self.assertIn("entree vide" if vital == "/" else "chemin vital", errors[0].message)
+                self.assertIn("entrée vide" if vital == "/" else "chemin vital", errors[0].message)
 
     def test_well_known_prefix_refused_because_of_acme(self):
         errors = self._errors("/.well-known/\n")

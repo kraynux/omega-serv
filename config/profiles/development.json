@@ -1,6 +1,6 @@
 {
   "name": "development",
-  "description": "Developpement local uniquement - ne doit jamais etre presente comme adapte a Internet. Bind loopback obligatoire, CSP en report-only, pages d'erreurs plus detaillees.",
+  "description": "Développement local uniquement - ne doit jamais être présenté comme adapté à Internet. Bind loopback obligatoire, CSP en report-only, pages d'erreurs plus détaillées.",
   "server": {
     "bind": "127.0.0.1"
   },

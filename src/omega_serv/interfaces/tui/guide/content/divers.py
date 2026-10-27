@@ -3,201 +3,240 @@ Sauvegarde de configuration, Reglages de l'application (plan guide
 d'aide, Phase 9)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 CAPABILITIES_SCREEN = ScreenGuide(
     screen_class_name="CapabilitiesScreen",
-    title="Registre des capacites",
-    acces="Accueil -> Registre des capacites",
-    definition="Scan complet de l'environnement (port libre, openssl present, PHP-FPM si FastCGI actif...), avec export.",
+    title=_("Registre des capacités"),
+    acces=_("Accueil -> Registre des capacités"),
+    definition=_("Scan complet de l'environnement (port libre, openssl présent, PHP-FPM si FastCGI actif...), avec export."),
     fields=(
         FieldGuide(
-            label="Theme d'export HTML",
-            definition="Palette de couleurs pour l'export HTML.",
-            utilisation="5 themes disponibles.",
-            action="Utilise au clic sur Exporter HTML.",
-            reaction="Aucun effet sur le serveur.",
+            label=_("Thème d'export HTML"),
+            definition=_("Palette de couleurs pour l'export HTML."),
+            utilisation=_("5 thèmes disponibles."),
+            action=_("Utilisé au clic sur Exporter HTML."),
+            reaction=_("Aucun effet sur le serveur."),
         ),
         FieldGuide(
-            label="Rafraichir / Exporter JSON / Exporter HTML",
-            definition="Relance le scan, ou exporte son resultat.",
-            utilisation="Aucune saisie supplementaire.",
-            action="Rafraichir relance le scan ; les exports ecrivent un fichier horodate.",
-            reaction="Aucun effet sur le serveur ou sa configuration (lecture seule + export).",
+            label=_("Rafraîchir / Exporter JSON / Exporter HTML"),
+            definition=_("Relance le scan, ou exporte son résultat."),
+            utilisation=_("Aucune saisie supplémentaire."),
+            action=_("Rafraîchir relance le scan ; les exports écrivent un fichier horodate."),
+            reaction=_("Aucun effet sur le serveur ou sa configuration (lecture seule + export)."),
         ),
     ),
-    consequences="Purement consultatif/export.",
+    consequences=_("Purement consultatif/export."),
 )
 
 CAPABILITY_DETAIL_SCREEN = ScreenGuide(
     screen_class_name="CapabilityDetailScreen",
-    title="Detail d'une capacite",
-    acces="Registre des capacites -> clic sur une ligne",
-    definition="Detail complet d'une capacite deja scannee (jamais un nouveau scan) : statut, raison, details techniques, date du dernier scan.",
+    title=_("Détail d'une capacité"),
+    acces=_("Registre des capacités -> clic sur une ligne"),
+    definition=_("Détail complet d'une capacité déjà scannee (jamais un nouveau scan) : statut, raison, détails techniques, date du dernier scan."),
     fields=(),
-    consequences="Purement consultatif.",
+    consequences=_("Purement consultatif."),
 )
 
 PROFILES_SCREEN = ScreenGuide(
     screen_class_name="ProfilesScreen",
-    title="Profils",
-    acces="Accueil -> Profils",
-    definition="Liste et decrit les 4 profils de base preconfigures (minimal/standard/hardened/development).",
+    title=_("Profils"),
+    acces=_("Accueil -> Profils"),
+    definition=_("Liste et décrit les 4 profils de base preconfigures (minimal/standard/hardened/development)."),
     fields=(
         FieldGuide(
-            label="Appliquer",
-            definition="Ouvre l'ecran de confirmation d'application du profil selectionne.",
-            utilisation="Selectionner un profil active ce bouton.",
-            action="Ouvre ApplyProfileScreen.",
-            reaction="Aucun effet ici - voir la fiche d'ApplyProfileScreen.",
+            label=_("Appliquer"),
+            definition=_("Ouvre l'écran de confirmation d'application du profil sélectionné."),
+            utilisation=_("Sélectionner un profil active ce bouton."),
+            action=_("Ouvre ApplyProfileScreen."),
+            reaction=_("Aucun effet ici - voir la fiche d'ApplyProfileScreen."),
         ),
     ),
-    consequences="Purement consultatif - aucune modification depuis cet ecran lui-meme.",
+    consequences=_("Purement consultatif - aucune modification depuis cet écran lui-même."),
 )
 
 APPLY_PROFILE_SCREEN = ScreenGuide(
     screen_class_name="ApplyProfileScreen",
-    title="Appliquer un profil",
-    acces="Profils -> Appliquer",
-    definition="Affiche TOUJOURS la difference complete avant toute confirmation, puis ecrase la configuration active avec le profil choisi.",
+    title=_("Appliquer un profil"),
+    acces=_("Profils -> Appliquer"),
+    definition=_("Affiche TOUJOURS la différence complète avant toute confirmation, puis écrase la configuration active avec le profil choisi."),
     fields=(
         FieldGuide(
-            label="Appliquer",
-            definition="Confirme et ecrit le profil choisi.",
-            utilisation="Le diff complet est deja affiche au-dessus - a verifier avant de cliquer.",
-            action="Ecrase config/omega-serve.json avec la configuration composee du profil.",
+            label=_("Appliquer"),
+            definition=_("Confirme et écrit le profil choisi."),
+            utilisation=_("Le diff complet est déjà affiché au-dessus - à vérifier avant de cliquer."),
+            action=_("Écrase config/omega-serve.json avec la configuration composée du profil."),
             reaction=(
-                "Un profil peut changer N'IMPORTE QUEL reglage d'un coup. Si bind/port/"
-                "listen_backlog/TLS changent, un REDEMARRAGE COMPLET est necessaire ; sinon un "
-                "simple rechargement suffit (automatique si un service actif existe)."
+                _("Un profil peut changer N'IMPORTE QUEL réglage d'un coup. Si bind/port/"
+                "listen_backlog/TLS changent, un REDÉMARRAGE COMPLET est nécessaire ; sinon un "
+                "simple rechargement suffit (automatique si un service actif existe).")
             ),
         ),
     ),
-    consequences="Des conflits ou erreurs de validation bloquants demandent une confirmation supplementaire explicite pour forcer quand meme.",
+    consequences=_("Des conflits ou erreurs de validation bloquants demandent une confirmation supplémentaire explicite pour forcer quand même."),
     points_de_vigilance=(
-        "Un profil ne modifie QUE les champs qu'il specifie explicitement - le reste de la configuration active est conserve tel quel.",
+        _("Un profil ne modifie QUE les champs qu'il spécifie explicitement - le reste de la configuration active est conservé tel quel."),
     ),
 )
 
 AUDIT_SCREEN = ScreenGuide(
     screen_class_name="AuditScreen",
-    title="Audit de securite",
-    acces="Accueil -> Audit de securite",
-    definition="Verifications consultatives (service, rotation des logs, mode WAF...) - memes regles que l'audit CLI.",
+    title=_("Audit de sécurité"),
+    acces=_("Accueil -> Audit de sécurité"),
+    definition=_("Vérifications consultatives (service, rotation des logs, mode WAF...) - mêmes règles que l'audit CLI."),
     fields=(
         FieldGuide(
-            label="Auditer",
-            definition="Relance explicitement l'audit.",
-            utilisation="Aucune saisie - un premier audit a deja lieu automatiquement a l'ouverture de l'ecran.",
-            action="Relit la configuration et recalcule toutes les regles d'audit.",
-            reaction="Aucun effet sur le serveur (lecture seule) - notifie explicitement le resultat sur un clic explicite.",
+            label=_("Auditer"),
+            definition=_("Relance explicitement l'audit."),
+            utilisation=_("Aucune saisie - un premier audit a déjà lieu automatiquement à l'ouverture de l'écran."),
+            action=_("Relit la configuration et recalculé toutes les règles d'audit."),
+            reaction=_("Aucun effet sur le serveur (lecture seule) - notifie explicitement le résultat sur un clic explicite."),
         ),
     ),
-    consequences="Purement consultatif - ne modifie jamais rien.",
+    consequences=_("Purement consultatif - ne modifie jamais rien."),
 )
 
 BACKUP_SCREEN = ScreenGuide(
     screen_class_name="BackupScreen",
-    title="Sauvegarde de configuration",
-    acces="Accueil -> Sauvegarde de configuration",
-    definition="Creer, lister, restaurer ou supprimer des sauvegardes completes de la configuration - le fichier de configuration est toujours inclus, jamais chiffre par defaut.",
+    title=_("Sauvegarde de configuration"),
+    acces=_("Accueil -> Sauvegarde de configuration"),
+    definition=_("Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration - le fichier de configuration est toujours inclus, jamais chiffre par défaut."),
     fields=(
         FieldGuide(
-            label="Inclure les regles WAF",
-            definition="Ajoute les regles WAF et la liste de blocage a la sauvegarde.",
-            utilisation="Case a cocher.",
-            action="Pris en compte a la creation.",
-            reaction="Aucun effet immediat - juste le contenu de la sauvegarde creee.",
+            label=_("Inclure les règles WAF"),
+            definition=_("Ajoute les règles WAF et la liste de blocage à la sauvegarde."),
+            utilisation=_("Case à cocher."),
+            action=_("Pris en compte à la création."),
+            reaction=_("Aucun effet immédiat - juste le contenu de la sauvegarde créée."),
         ),
         FieldGuide(
-            label="Inclure les zones d'authentification",
-            definition="Ajoute users.json/zones.json (SECRETS REELS : hash de mots de passe) a la sauvegarde.",
-            utilisation="Case a cocher - demande une confirmation supplementaire explicite si cochee.",
-            action="Pris en compte a la creation.",
-            reaction="La sauvegarde contient des secrets reels, jamais chiffres.",
+            label=_("Inclure les zones d'authentification"),
+            definition=_("Ajoute users.json/zones.json (SECRETS RÉELS : hash de mots de passe) à la sauvegarde."),
+            utilisation=_("Case à cocher - demande une confirmation supplémentaire explicite si cochée."),
+            action=_("Pris en compte à la création."),
+            reaction=_("La sauvegarde contient des secrets réels, jamais chiffres."),
         ),
         FieldGuide(
-            label="Inclure les certificats",
-            definition="Ajoute les certificats TLS, CLES PRIVEES INCLUSES, a la sauvegarde.",
-            utilisation="Case a cocher - demande une confirmation supplementaire explicite si cochee.",
-            action="Pris en compte a la creation.",
-            reaction="La sauvegarde contient des cles privees reelles, jamais chiffrees.",
+            label=_("Inclure les certificats"),
+            definition=_("Ajoute les certificats TLS, CLÉS PRIVÉES INCLUSES, à la sauvegarde."),
+            utilisation=_("Case à cocher - demande une confirmation supplémentaire explicite si cochée."),
+            action=_("Pris en compte à la création."),
+            reaction=_("La sauvegarde contient des clés privées réelles, jamais chiffrées."),
         ),
         FieldGuide(
-            label="Inclure Active Defense",
-            definition="Ajoute la base de menaces/incidents Active Defense a la sauvegarde.",
-            utilisation="Case a cocher.",
-            action="Pris en compte a la creation.",
-            reaction="Aucun effet immediat.",
+            label=_("Inclure Active Defense"),
+            definition=_("Ajoute la base de menaces/incidents Active Defense à la sauvegarde."),
+            utilisation=_("Case à cocher."),
+            action=_("Pris en compte à la création."),
+            reaction=_("Aucun effet immédiat."),
         ),
         FieldGuide(
-            label="Description",
-            definition="Note libre associee a la sauvegarde, pour la retrouver plus tard.",
-            utilisation="Texte libre, optionnel.",
-            action="Enregistree avec la sauvegarde.",
-            reaction="Aucun effet immediat.",
+            label=_("Description"),
+            definition=_("Note libre associée à la sauvegarde, pour la retrouver plus tard."),
+            utilisation=_("Texte libre, optionnel."),
+            action=_("Enregistrée avec la sauvegarde."),
+            reaction=_("Aucun effet immédiat."),
         ),
         FieldGuide(
-            label="Restaurer",
-            definition="Ecrase les fichiers actuels avec ceux de la sauvegarde selectionnee, AUX MEMES EMPLACEMENTS.",
-            utilisation="Selectionner une sauvegarde, puis confirmer.",
-            action="Ecriture reelle et immediate des fichiers concernes.",
+            label=_("Restaurer"),
+            definition=_("Écrase les fichiers actuels avec ceux de la sauvegarde sélectionnée, AUX MÊMES EMPLACEMENTS."),
+            utilisation=_("Sélectionner une sauvegarde, puis confirmer."),
+            action=_("Écriture réelle et immédiate des fichiers concernés."),
             reaction=(
-                "Necessite TOUJOURS un REDEMARRAGE COMPLET par prudence - une restauration peut "
-                "ecraser n'importe quel fichier (configuration, certificats TLS...), et un "
-                "certificat deja en memoire ne se recharge jamais tout seul."
+                _("Nécessite TOUJOURS un REDÉMARRAGE COMPLET par prudence - une restauration peut "
+                "écraser n'importe quel fichier (configuration, certificats TLS...), et un "
+                "certificat déjà en mémoire ne se recharge jamais tout seul.")
             ),
         ),
         FieldGuide(
-            label="Supprimer",
-            definition="Supprime definitivement une sauvegarde (n'existe pas cote CLI, confort TUI uniquement).",
-            utilisation="Selectionner une sauvegarde, puis confirmer.",
-            action="Suppression immediate et definitive.",
-            reaction="Aucun effet sur le serveur - seulement sur les sauvegardes disponibles.",
+            label=_("Supprimer"),
+            definition=_("Supprime définitivement une sauvegarde (n'existe pas côté CLI, confort TUI uniquement)."),
+            utilisation=_("Sélectionner une sauvegarde, puis confirmer."),
+            action=_("Suppression immédiate et définitive."),
+            reaction=_("Aucun effet sur le serveur - seulement sur les sauvegardes disponibles."),
         ),
     ),
-    consequences="Restaurer ecrase directement les fichiers vises, sans filet - la seule protection est la confirmation demandee avant.",
+    consequences=_("Restaurer écrase directement les fichiers vises, sans filet - la seule protection est la confirmation demandée avant."),
 )
 
 SETTINGS_SCREEN = ScreenGuide(
     screen_class_name="SettingsScreen",
-    title="Reglages de l'application",
-    acces="Raccourci clavier 'o' (footer), depuis n'importe quel ecran",
+    title=_("Réglages de l'application"),
+    acces=_("Raccourci clavier 'o' (footer), depuis n'importe quel écran"),
     definition=(
-        "PREFERENCES D'INTERFACE uniquement (theme, rendu, chemins d'export/captures) - "
-        "PAS des reglages du serveur (ceux-la vivent dans Configuration detaillee)."
+        _("PRÉFÉRENCES D'INTERFACE uniquement (thème, rendu, chemins d'export/captures) - "
+        "PAS des réglages du serveur (ceux-là vivent dans Configuration détaillée).")
     ),
     fields=(
         FieldGuide(
-            label="Theme",
-            definition="Theme visuel de l'interface elle-meme.",
-            utilisation="Un des themes disponibles.",
-            action="Applique immediatement au changement.",
-            reaction="Effet immediat, aucun redemarrage necessaire.",
+            label=_("Thème"),
+            definition=_("Thème visuel de l'interface elle-même."),
+            utilisation=_("Un des thèmes disponibles."),
+            action=_("Appliqué immédiatement au changement."),
+            reaction=_("Effet immédiat, aucun redémarrage nécessaire."),
         ),
         FieldGuide(
-            label="Profil de rendu",
-            definition="Force un profil de rendu Textual particulier plutot que la detection automatique.",
-            utilisation="Automatique, ou un profil precis.",
-            action="Enregistre la preference.",
-            reaction="Applique seulement AU PROCHAIN DEMARRAGE de l'interface, jamais a chaud.",
+            label=_("Profil de rendu"),
+            definition=_("Force un profil de rendu Textual particulier plutôt que la détection automatique."),
+            utilisation=_("Automatique, ou un profil précis."),
+            action=_("Enregistre la préférence."),
+            reaction=_("Appliqué seulement AU PROCHAIN DÉMARRAGE de l'interface, jamais à chaud."),
         ),
         FieldGuide(
-            label="Export / Captures d'ecran (chemins)",
-            definition="Repertoires ou sont ecrits les exports et les captures d'ecran.",
-            utilisation="Chemin libre - vide revient au repertoire par defaut.",
-            action="Enregistre a chaque changement de texte.",
-            reaction="Effet immediat sur les prochains exports/captures.",
+            label="Langue / Language",
+            definition=(
+                _("Langue de l'interface. Chaque langue est écrite dans sa propre langue, Français "
+                "toujours en tête ; le libellé 'Langue / Language' n'est jamais traduit, pour être "
+                "retrouvé même dans une langue qu'on ne lit pas. Une langue non encore validée "
+                "porte la mention 'en test'.")
+            ),
+            utilisation=_("Choisir une langue dans la liste, puis confirmer le redémarrage de l'interface."),
+            action=(
+                _("Enregistre la langue puis redémarre L'INTERFACE (pas le service : le serveur continue "
+                "de tourner). Un écran de confirmation affiche la langue et la phrase d'invite déjà traduite.")
+            ),
+            reaction=(
+                _("Retour au français toujours possible : ce même réglage ; ou lancer une fois "
+                "'OMEGA_SERV_LANG=fr serv' ; ou retirer la clé 'language' de var/settings.json. Langue "
+                "indisponible ou catalogue illisible : l'interface démarre en français avec un message. "
+                "Les journaux du serveur (journalctl) restent toujours en français.")
+            ),
         ),
         FieldGuide(
-            label="Supprimer les exports / Supprimer les screenshots",
-            definition="Vide completement le repertoire concerne.",
-            utilisation="Confirmation obligatoire.",
-            action="Suppression immediate et definitive de tous les fichiers du repertoire.",
-            reaction="Action irreversible.",
+            label=_("Export / Captures d'écran (chemins)"),
+            definition=_("Répertoires où sont écrits les exports et les captures d'écran."),
+            utilisation=_("Chemin libre - vide revient au répertoire par défaut."),
+            action=_("Enregistre à chaque changement de texte."),
+            reaction=_("Effet immédiat sur les prochains exports/captures."),
+        ),
+        FieldGuide(
+            label=_("Langue des exports"),
+            definition=_(
+                "Langue des exports HTML (registre des capacités, archives de logs, guide d'aide) et du "
+                "rapport d'incident Markdown - un fichier qui se diffuse, pas forcément à quelqu'un qui "
+                "lit la langue de l'interface. Les exports JSON et CSV n'ont pas de texte à traduire."
+            ),
+            utilisation=_("« Comme l'interface » (défaut) ou une des langues de la liste."),
+            action=_(
+                "Enregistre immédiatement. Dans une autre langue que l'interface, chaque export est "
+                "produit par un processus séparé lancé dans cette langue : quelques secondes, "
+                "l'interface reste utilisable."
+            ),
+            reaction=_(
+                "Si ce processus échoue, l'export HTML n'est pas écrit (raison affichée) ; le rapport "
+                "d'incident, lui, est quand même écrit dans la langue de l'interface, avec un avertissement."
+            ),
+        ),
+        FieldGuide(
+            label=_("Supprimer les exports / Supprimer les screenshots"),
+            definition=_("Vide complètement le répertoire concerne."),
+            utilisation=_("Confirmation obligatoire."),
+            action=_("Suppression immédiate et définitive de tous les fichiers du répertoire."),
+            reaction=_("Action irréversible."),
         ),
     ),
-    consequences="Ne touche jamais config/omega-serve.json - reglages purement locaux a cette interface.",
+    consequences=_("Ne touche jamais config/omega-serve.json - réglages purement locaux à cette interface."),
 )
 
 ALL_DIVERS_GUIDES: tuple[ScreenGuide, ...] = (

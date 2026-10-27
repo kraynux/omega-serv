@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.upload_zone import UploadPolicy
 from omega_serv.domain.upload.entities import UploadRequest
 
@@ -17,11 +18,11 @@ _MAX_FILENAME_LENGTH = 255
 def validate_filename(filename: str) -> str | None:
     """Retourne un message d'erreur, ou None si le nom est valide."""
     if not filename or filename in (".", ".."):
-        return "nom de fichier vide ou invalide"
+        return _("nom de fichier vide ou invalide")
     if len(filename) > _MAX_FILENAME_LENGTH:
-        return f"nom de fichier trop long ({len(filename)} > {_MAX_FILENAME_LENGTH})"
+        return _("nom de fichier trop long ({count} > {MAX_FILENAME_LENGTH})").format(count=len(filename), MAX_FILENAME_LENGTH=_MAX_FILENAME_LENGTH)
     if not _SAFE_FILENAME_RE.match(filename):
-        return "nom de fichier contient des caracteres non autorises"
+        return _("nom de fichier contient des caractères non autorisés")
     return None
 
 
@@ -33,7 +34,7 @@ def validate_upload(request: UploadRequest, policy: UploadPolicy) -> str | None:
     """Retourne un message d'erreur, ou None si l'upload respecte la
     politique de la zone."""
     if request.size > policy.max_file_size_bytes:
-        return f"fichier trop volumineux ({request.size} > {policy.max_file_size_bytes})"
+        return _("fichier trop volumineux ({size} > {max_file_size_bytes})").format(size=request.size, max_file_size_bytes=policy.max_file_size_bytes)
 
     error = validate_filename(request.filename)
     if error is not None:
@@ -41,9 +42,9 @@ def validate_upload(request: UploadRequest, policy: UploadPolicy) -> str | None:
 
     extension = _extension_of(request.filename)
     if policy.allowed_extensions and extension not in policy.allowed_extensions:
-        return f"extension non autorisee : {extension!r} (attendu : {list(policy.allowed_extensions)})"
+        return _("extension non autorisée : {extension!r} (attendu : {value})").format(extension=extension, value=list(policy.allowed_extensions))
 
     if policy.allowed_content_types and request.content_type not in policy.allowed_content_types:
-        return f"Content-Type non autorise : {request.content_type!r} (attendu : {list(policy.allowed_content_types)})"
+        return _("Content-Type non autorisé : {content_type!r} (attendu : {value})").format(content_type=request.content_type, value=list(policy.allowed_content_types))
 
     return None

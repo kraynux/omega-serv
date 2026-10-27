@@ -1,6 +1,6 @@
 {
   "name": "minimal",
-  "description": "Demonstration ou environnement local simple : serveur statique uniquement, peu de headers, aucune option activee par defaut.",
+  "description": "Démonstration ou environnement local simple : serveur statique uniquement, peu de headers, aucune option activée par défaut.",
   "server": {
     "bind": "127.0.0.1"
   },

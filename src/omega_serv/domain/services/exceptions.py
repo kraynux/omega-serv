@@ -6,6 +6,7 @@ rien retourne simplement "none" (voir infrastructure/services/detector.py)."""
 from __future__ import annotations
 
 from omega_serv.core.exceptions import OmegaServError
+from omega_serv.core.i18n import _
 
 
 class ServiceManagerError(OmegaServError):
@@ -16,7 +17,7 @@ class ServiceNotFoundError(ServiceManagerError):
     def __init__(self, service_name: str, manager_type: str = ""):
         self.service_name = service_name
         self.manager_type = manager_type
-        super().__init__(f"service {service_name!r} introuvable ({manager_type})")
+        super().__init__(_("service {service_name!r} introuvable ({manager_type})").format(service_name=service_name, manager_type=manager_type))
 
 
 class ServiceControlError(ServiceManagerError):
@@ -25,7 +26,7 @@ class ServiceControlError(ServiceManagerError):
         self.operation = operation
         self.reason = reason
         self.manager_type = manager_type
-        super().__init__(f"echec de {operation} sur {service_name!r} ({manager_type}) : {reason}")
+        super().__init__(_("échec de {operation} sur {service_name!r} ({manager_type}) : {reason}").format(operation=operation, service_name=service_name, manager_type=manager_type, reason=reason))
 
 
 class ServiceStatusError(ServiceManagerError):
@@ -33,4 +34,4 @@ class ServiceStatusError(ServiceManagerError):
         self.service_name = service_name
         self.reason = reason
         self.manager_type = manager_type
-        super().__init__(f"echec de lecture du statut de {service_name!r} ({manager_type}) : {reason}")
+        super().__init__(_("échec de lecture du statut de {service_name!r} ({manager_type}) : {reason}").format(service_name=service_name, manager_type=manager_type, reason=reason))

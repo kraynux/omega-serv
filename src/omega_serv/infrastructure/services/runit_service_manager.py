@@ -5,12 +5,20 @@ commande `sv` inchangee, activation/desactivation par symlink dans
 OMEGA-SERV)."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.services.entities import ServiceStatus
-from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError, ServiceStatusError
+from omega_serv.domain.services.exceptions import (
+    ServiceControlError,
+    ServiceNotFoundError,
+    ServiceStatusError,
+)
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
+
+_SV_PID = re.compile(r"\(pid (\d+)\)")
 
 _TIMEOUT_SECONDS = 10.0
 """Meme garde-fou que systemd_service_manager.py::_TIMEOUT_SECONDS - `sv
@@ -41,7 +49,7 @@ class RunitServiceManager:
         stderr_lower = result.stderr.lower()
         if "fail" in stderr_lower or "not found" in stderr_lower:
             raise ServiceNotFoundError(service_name, "runit")
-        raise ServiceControlError(service_name, operation, result.stderr.strip() or f"code {result.returncode}", "runit")
+        raise ServiceControlError(service_name, operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "runit")
 
     def start(self, service_name: str) -> bool:
         return self._control(service_name, "up")
@@ -81,8 +89,7 @@ class RunitServiceManager:
         if result.returncode in (_TIMEOUT_RETURNCODE, _NOT_FOUND_RETURNCODE):
             raise ServiceStatusError(
                 service_name,
-                f"{result.stderr.strip()} - verifiez `sv status {self._service_path(service_name)}` "
-                "manuellement, ou (re)installez le service depuis l'ecran SERVICE",
+                _("{value} - vérifiez `sv status {value2}` manuellement, ou (re)installez le service depuis l'écran SERVICE").format(value=result.stderr.strip(), value2=self._service_path(service_name)),
                 "runit",
             )
         stderr_lower = result.stderr.lower()
@@ -97,6 +104,12 @@ class RunitServiceManager:
     def is_active(self, service_name: str) -> bool:
         result = self._runner.run([self._sv, "status", self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0 and "run:" in result.stdout
+
+    def main_pid(self, service_name: str) -> int | None:
+        """`sv status` : "run: /etc/sv/x: (pid 1234) 56s; ..." ."""
+        result = self._runner.run([self._sv, "status", self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
+        match = _SV_PID.search(result.stdout) if result.returncode == 0 and result.stdout.startswith("run:") else None
+        return int(match.group(1)) if match else None
 
     def is_enabled(self, service_name: str) -> bool:
         run_path = Path(self._run_dir) / service_name

@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from omega_lib.theme.policies import DEFAULT_EXPORT_THEME
 
+from omega_serv.core.i18n import _, interface_html_dir, interface_html_lang
+
 if TYPE_CHECKING:
     from omega_serv.core.capability import Capability
 
@@ -28,6 +30,11 @@ _env = Environment(
     loader=FileSystemLoader(_TEMPLATES_DIR),
     autoescape=select_autoescape(["html"]),
 )
+# Exports dans la langue de l'interface (retour utilisateur 2026-10-21, plan i18n lot 4) :
+# `{{ _("...") }}` dans les modeles, `<html lang="{{ html_lang() }}">`.
+_env.globals["_"] = _
+_env.globals["html_lang"] = interface_html_lang
+_env.globals["html_dir"] = interface_html_dir
 
 
 def export_capabilities_html(capabilities: Sequence[Capability], theme_name: str = DEFAULT_EXPORT_THEME) -> str:

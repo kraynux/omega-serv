@@ -29,6 +29,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, DataTable, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.security.active_defense.config import (
     parse_active_defense_config,
@@ -38,20 +39,20 @@ from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_restart_required
+from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
     from omega_serv.domain.config.entities import OmegaServConfig
 
-_TRUE_VALUES = frozenset({"oui", "true", "1", "o", "y"})
 
 
 def _bool_to_text(value: bool) -> str:
-    return "oui" if value else "non"
+    return to_text(value)
 
 
 def _text_to_bool(value: str) -> bool:
-    return value.strip().lower() in _TRUE_VALUES
+    return is_yes(value)
 
 
 def _csv(values: tuple[str, ...] | list[str]) -> str:
@@ -72,108 +73,110 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("ACTIVE DEFENSE - REGLAGES", classes="omega-title")
+            yield Static(_("ACTIVE DEFENSE - RÉGLAGES"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'active_defense' se fait dans le menu Options. "
-                "TOUT changement ici exige un REDEMARRAGE COMPLET (jamais un simple "
-                "rechargement) - active_defense n'est jamais recharge a chaud.",
+                _("L'activation de l'option 'active_defense' se fait dans le menu Options. "
+                "TOUT changement ici exige un REDÉMARRAGE COMPLET (jamais un simple "
+                "rechargement) - active_defense n'est jamais rechargé à chaud."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
 
-            yield Static("GENERAL", classes="omega-subtitle")
-            yield Static("Mode (monitor/enforce)")
+            yield Static(_("GÉNÉRAL"), classes="omega-subtitle")
+            yield Static(_("Mode (monitor/enforce)"))
             yield Input(id="mode-input")
-            yield Static("Duree de vie d'un etat de menace sans nouvel evenement (state_ttl_seconds)")
+            yield Static(_("Durée de vie d'un état de menace sans nouvel événement (state_ttl_seconds)"))
             yield Input(id="state-ttl-input")
 
-            yield Static("MODE GUERRE (war_mode)", classes="omega-subtitle")
-            yield Static("Mode guerre actif (oui/non) - LE VRAI INTERRUPTEUR qui declenche tout")
+            yield Static(_("MODE GUERRE (war_mode)"), classes="omega-subtitle")
+            yield Static(_("Mode guerre actif (oui/non) - LE VRAI INTERRUPTEUR qui déclenche tout"))
             yield Input(id="war-enabled-input")
-            yield Static("Portee (source/instance)")
+            yield Static(_("Portée (source/instance)"))
             yield Input(id="war-scope-input")
-            yield Static("Actions autorisees (separees par des virgules)")
+            yield Static(_("Actions autorisées (séparées par des virgules)"))
             yield Input(id="war-actions-input")
-            yield Static("Seuil suspect / hostile / incident / confine (suspicious_score, hostile_score, incident_score, contained_score)")
+            yield Static(_("Seuil suspect / hostile / incident / confine (suspicious_score, hostile_score, incident_score, contained_score)"))
             yield Input(id="war-suspicious-input")
             yield Input(id="war-hostile-input")
             yield Input(id="war-incident-input")
             yield Input(id="war-contained-input")
-            yield Static("Ralentissement actif (oui/non) + delai min/max/jitter en millisecondes")
+            yield Static(_("Ralentissement actif (oui/non) + délai min/max/jitter en millisecondes"))
             yield Input(id="slowdown-enabled-input")
             yield Input(id="slowdown-min-input")
             yield Input(id="slowdown-max-input")
             yield Input(id="slowdown-jitter-input")
-            yield Static("Limite de requetes : nombre + fenetre en secondes")
+            yield Static(_("Limite de requêtes : nombre + fenêtre en secondes"))
             yield Input(id="rate-limit-requests-input")
             yield Input(id="rate-limit-window-input")
 
-            yield Static("DECEPTION", classes="omega-subtitle")
-            yield Static("Deception active (oui/non)")
+            yield Static(_("DECEPTION"), classes="omega-subtitle")
+            yield Static(_("Deception active (oui/non)"))
             yield Input(id="deception-enabled-input")
-            yield Static("Comportement si aucun profil ne correspond (pass_through/reject)")
+            yield Static(_("Comportement si aucun profil ne correspond (pass_through/reject)"))
             yield Input(id="deception-fallback-input")
-            yield Static("Duree de vie d'une affectation vers un leurre (assignments_ttl_seconds)")
+            yield Static(_("Durée de vie d'une affectation vers un leurre (assignments_ttl_seconds)"))
             yield Input(id="deception-ttl-input")
 
-            yield Static("Profils de leurre", classes="omega-subtitle")
+            yield Static(_("Profils de leurre"), classes="omega-subtitle")
             yield DataTable(id="profiles-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter un profil", id="add-profile", variant="primary")
+                    yield Button(_("Ajouter un profil"), id="add-profile", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer le profil", id="delete-profile", variant="error", disabled=True)
+                    yield Button(_("Supprimer le profil"), id="delete-profile", variant="error", disabled=True)
 
-            yield Static("Zones de leurre (Niveau 2, cibles reellement isolees)", classes="omega-subtitle")
+            yield Static(_("Zones de leurre (Niveau 2, cibles réellement isolées)"), classes="omega-subtitle")
             yield DataTable(id="decoy-zones-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter une zone", id="add-decoy-zone", variant="primary")
+                    yield Button(_("Ajouter une zone"), id="add-decoy-zone", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer la zone", id="delete-decoy-zone", variant="error", disabled=True)
+                    yield Button(_("Supprimer la zone"), id="delete-decoy-zone", variant="error", disabled=True)
 
-            yield Static("IOC (INDICATEURS DE COMPROMISSION)", classes="omega-subtitle")
-            yield Static("Export IoC actif (oui/non)")
+            yield Static(_("IOC (INDICATEURS DE COMPROMISSION)"), classes="omega-subtitle")
+            yield Static(_("Export IoC actif (oui/non)"))
             yield Input(id="ioc-enabled-input")
-            yield Static("Export automatique a la fermeture d'un incident (oui/non)")
+            yield Static(_("Export automatique à la fermeture d'un incident (oui/non)"))
             yield Input(id="ioc-auto-export-input")
-            yield Static("Formats d'export (separes par des virgules : json, csv, markdown)")
+            yield Static(_("Formats d'export (séparés par des virgules : json, csv, markdown, stix, misp)"))
             yield Input(id="ioc-formats-input")
-            yield Static("Politique de partage (local_only/manual_export)")
+            yield Static(_("Politique de partage (local_only/manual_export)"))
             yield Input(id="ioc-share-policy-input")
-            yield Static("Confiance minimale requise (0-100)")
+            yield Static(_("Confiance minimale requise (0-100)"))
             yield Input(id="ioc-min-confidence-input")
+            yield Static(_("Marquage TLP des exports STIX et MISP (white/green/amber/red)"))
+            yield Input(id="ioc-tlp-input")
 
-            yield Static("STOCKAGE ET JOURNALISATION", classes="omega-subtitle")
-            yield Static("Base de donnees (storage.database)")
+            yield Static(_("STOCKAGE ET JOURNALISATION"), classes="omega-subtitle")
+            yield Static(_("Base de données (storage.database)"))
             yield Input(id="storage-database-input")
-            yield Static("Repertoire d'export (storage.export_dir)")
+            yield Static(_("Répertoire d'export (storage.export_dir)"))
             yield Input(id="storage-export-dir-input")
-            yield Static("Capture enrichie active (oui/non)")
+            yield Static(_("Capture enrichie active (oui/non)"))
             yield Input(id="logging-enhanced-input")
-            yield Static("Capturer le corps de la requete (oui/non)")
+            yield Static(_("Capturer le corps de la requête (oui/non)"))
             yield Input(id="logging-capture-body-input")
-            yield Static("Taille max du corps capture, en octets (max_body_bytes)")
+            yield Static(_("Taille max du corps capturé, en octets (max_body_bytes)"))
             yield Input(id="logging-max-body-input")
-            yield Static("Champs a masquer (separes par des virgules)")
+            yield Static(_("Champs à masquer (séparés par des virgules)"))
             yield Input(id="logging-redact-input")
-            yield Static("Fichier de journal enrichi (log_path)")
+            yield Static(_("Fichier de journal enrichi (log_path)"))
             yield Input(id="logging-log-path-input")
 
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="save", variant="primary")
+                    yield Button(_("Enregistrer"), id="save", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#profiles-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Nom", "Actif", "Classes d'attaque", "Isolation", "Zone leurre")
+        table.add_columns(_("Nom"), _("Actif"), _("Classes d'attaque"), _("Isolation"), _("Zone leurre"))
         decoy_table = self.query_one("#decoy-zones-table", DataTable)
         decoy_table.cursor_type = "row"
-        decoy_table.add_columns("Nom", "Upstreams", "Verifie TLS")
+        decoy_table.add_columns(_("Nom"), _("Upstreams"), _("Vérifie TLS"))
         self._refresh()
 
     def _config(self) -> OmegaServConfig | None:
@@ -238,6 +241,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         self.query_one("#ioc-formats-input", Input).value = _csv(ioc.formats)
         self.query_one("#ioc-share-policy-input", Input).value = ioc.share_policy
         self.query_one("#ioc-min-confidence-input", Input).value = str(ioc.minimum_confidence)
+        self.query_one("#ioc-tlp-input", Input).value = ioc.tlp
 
         self.query_one("#storage-database-input", Input).value = active_defense.storage.database
         self.query_one("#storage-export-dir-input", Input).value = active_defense.storage.export_dir
@@ -266,49 +270,49 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         if button_id == "add-profile":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UN PROFIL DE LEURRE",
+                    title=_("AJOUTER UN PROFIL DE LEURRE"),
                     fields=[
                         (
                             "name",
                             (
-                                "Nom du profil.\n"
-                                "Si Isolation = fixture (ci-dessous), ce nom DOIT etre exactement l'un de :\n"
+                                _("Nom du profil.\n"
+                                "Si Isolation = fixture (ci-dessous), ce nom DOIT être exactement l'un de :\n"
                                 "fake_admin, fake_cms, fake_api, fake_secrets - sinon le leurre ne se\n"
-                                "declenchera jamais (aucune erreur visible, l'attaquant tombe sur le\n"
-                                "comportement normal). Libre si Isolation = proxy."
+                                "déclenchera jamais (aucune erreur visible, l'attaquant tombe sur le\n"
+                                "comportement normal). Libre si Isolation = proxy.")
                             ),
                             "",
                         ),
-                        ("enabled", "Actif (oui/non)", "oui"),
+                        ("enabled", _("Actif (oui/non)"), to_text(True)),
                         (
                             "match_attack_classes",
                             (
-                                "Classes d'attaque visees, separees par des virgules. Valeurs possibles :\n"
+                                _("Classes d'attaque visées, séparées par des virgules. Valeurs possibles :\n"
                                 "scan (sondage d'URLs/ports), credential_stuffing (essais massifs de\n"
-                                "mots de passe), sqli (injection SQL), xss (script injecte), path_traversal\n"
+                                "mots de passe), sqli (injection SQL), xss (script injecté), path_traversal\n"
                                 "(ex: ../../etc/passwd), upload_probe (upload de fichier suspect),\n"
                                 "api_probe (sondage d'endpoints /api/...), unknown (tout le reste).\n"
-                                "Ex : scan,credential_stuffing"
+                                "Ex : scan,credential_stuffing")
                             ),
                             "",
                         ),
                         (
                             "isolation_level",
                             (
-                                "Isolation (fixture/proxy).\n"
-                                "fixture = simulation interne integree, rapide et sans risque (voir Nom\n"
+                                _("Isolation (fixture/proxy).\n"
+                                "fixture = simulation interne intégrée, rapide et sans risque (voir Nom\n"
                                 "du profil ci-dessus pour les 4 noms valides).\n"
-                                "proxy = redirige vers un VRAI serveur isole que vous faites tourner\n"
-                                "vous-meme, plus realiste mais necessite une zone de leurre (ci-dessous)."
+                                "proxy = redirigé vers un VRAI serveur isolé que vous faites tourner\n"
+                                "vous-même, plus réaliste mais nécessite une zone de leurre (ci-dessous).")
                             ),
                             "fixture",
                         ),
                         (
                             "reverse_proxy_zone_name",
                             (
-                                "Zone de leurre associee (requis si Isolation = proxy, laisser vide si\n"
-                                "fixture). Doit correspondre au nom exact d'une zone definie dans la\n"
-                                "section 'Zones de leurre' plus bas."
+                                _("Zone de leurre associée (requis si Isolation = proxy, laisser vide si\n"
+                                "fixture). Doit correspondre au nom exact d'une zone définie dans la\n"
+                                "section 'Zones de leurre' plus bas.")
                             ),
                             "",
                         ),
@@ -319,40 +323,40 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             return
         if button_id == "delete-profile" and self._selected_profile_name is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LE PROFIL", message="Confirmer la suppression de ce profil de leurre ?"),
+                ConfirmScreen(title=_("SUPPRIMER LE PROFIL"), message=_("Confirmer la suppression de ce profil de leurre ?")),
                 self._delete_profile,
             )
             return
         if button_id == "add-decoy-zone":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UNE ZONE DE LEURRE",
+                    title=_("AJOUTER UNE ZONE DE LEURRE"),
                     fields=[
                         (
                             "name",
                             (
-                                "Nom de la zone.\n"
-                                "Un simple identifiant (PAS une URL, PAS un dossier) - reference depuis\n"
-                                "un profil de leurre en Isolation = proxy. C'est une cible reseau pure,\n"
-                                "elle n'a besoin d'exister nulle part sur le disque."
+                                _("Nom de la zone.\n"
+                                "Un simple identifiant (PAS une URL, PAS un dossier) - référence depuis\n"
+                                "un profil de leurre en Isolation = proxy. C'est une cible réseau pure,\n"
+                                "elle n'a besoin d'exister nulle part sur le disque.")
                             ),
                             "",
                         ),
                         (
                             "upstreams",
                             (
-                                "Upstreams (host:port, separes par des virgules).\n"
-                                "Adresse(s) d'un serveur DEJA EN COURS D'EXECUTION que vous controlez -\n"
-                                "rien n'est cree automatiquement ici, et aucune verification n'a lieu a\n"
+                                _("Upstreams (host:port, séparés par des virgules).\n"
+                                "Adresse(s) d'un serveur DÉJÀ EN COURS D'EXÉCUTION que vous contrôlez -\n"
+                                "rien n'est créé automatiquement ici, et aucune vérification n'a lieu à\n"
                                 "l'enregistrement. Ex : 127.0.0.1:9001\n"
-                                "Si rien n'ecoute a cette adresse au moment d'une requete, l'attaquant\n"
-                                "recoit simplement une erreur 502 (pas de crash, pas de creation)."
+                                "Si rien n'écoute à cette adresse au moment d'une requête, l'attaquant\n"
+                                "reçoit simplement une erreur 502 (pas de crash, pas de création).")
                             ),
                             "",
                         ),
-                        ("connect_timeout_seconds", "Delai de connexion (secondes)", "5"),
-                        ("read_timeout_seconds", "Delai de lecture (secondes)", "30"),
-                        ("verify_upstream_tls", "Verifier le certificat TLS de l'upstream (oui/non)", "oui"),
+                        ("connect_timeout_seconds", _("Délai de connexion (secondes)"), "5"),
+                        ("read_timeout_seconds", _("Délai de lecture (secondes)"), "30"),
+                        ("verify_upstream_tls", _("Vérifier le certificat TLS de l'upstream (oui/non)"), to_text(True)),
                     ],
                 ),
                 self._add_decoy_zone,
@@ -360,7 +364,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             return
         if button_id == "delete-decoy-zone" and self._selected_decoy_zone_name is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA ZONE", message="Confirmer la suppression de cette zone de leurre ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA ZONE"), message=_("Confirmer la suppression de cette zone de leurre ?")),
                 self._delete_decoy_zone,
             )
 
@@ -369,7 +373,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             return
         name = values["name"].strip()
         if not name:
-            self.query_one("#form-error", Static).update("Le nom du profil ne peut pas etre vide.")
+            self.query_one("#form-error", Static).update(_("Le nom du profil ne peut pas être vide."))
             return
         settings = self._settings()
         deception = dict(settings.get("deception", {}))
@@ -400,7 +404,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             return
         name = values["name"].strip()
         if not name:
-            self.query_one("#form-error", Static).update("Le nom de la zone ne peut pas etre vide.")
+            self.query_one("#form-error", Static).update(_("Le nom de la zone ne peut pas être vide."))
             return
         upstreams: list[dict[str, object]] = []
         for chunk in values["upstreams"].split(","):
@@ -414,22 +418,22 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                 item = item[len("http://"):]
             host, sep, port_text = item.rpartition(":")
             if not sep:
-                self.query_one("#form-error", Static).update(f"Upstream invalide (attendu host:port) : {chunk!r}")
+                self.query_one("#form-error", Static).update(_("Upstream invalide (attendu host:port) : {chunk!r}").format(chunk=chunk))
                 return
             try:
                 port = int(port_text.strip())
             except ValueError:
-                self.query_one("#form-error", Static).update(f"Port invalide : {port_text!r}")
+                self.query_one("#form-error", Static).update(_("Port invalide : {port_text!r}").format(port_text=port_text))
                 return
             upstreams.append({"host": host.strip(), "port": port, "use_tls": use_tls})
         if not upstreams:
-            self.query_one("#form-error", Static).update("Au moins un upstream est requis.")
+            self.query_one("#form-error", Static).update(_("Au moins un upstream est requis."))
             return
         try:
             connect_timeout = float(values["connect_timeout_seconds"].strip())
             read_timeout = float(values["read_timeout_seconds"].strip())
         except ValueError:
-            self.query_one("#form-error", Static).update("Delais invalides (nombres attendus).")
+            self.query_one("#form-error", Static).update(_("Délais invalides (nombres attendus)."))
             return
 
         settings = self._settings()
@@ -475,50 +479,51 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             try:
                 return int(text)
             except ValueError as exc:
-                raise ValueError(f"{label} invalide (entier attendu) : {text!r}") from exc
+                raise ValueError(_("{label} invalide (entier attendu) : {text!r}").format(label=label, text=text)) from exc
 
         def _float_field(field_id: str, label: str) -> float:
             text = self.query_one(f"#{field_id}", Input).value.strip()
             try:
                 return float(text)
             except ValueError as exc:
-                raise ValueError(f"{label} invalide (nombre attendu) : {text!r}") from exc
+                raise ValueError(_("{label} invalide (nombre attendu) : {text!r}").format(label=label, text=text)) from exc
 
         return {
             "mode": self.query_one("#mode-input", Input).value.strip(),
-            "state_ttl_seconds": _int_field("state-ttl-input", "Duree de vie d'un etat"),
+            "state_ttl_seconds": _int_field("state-ttl-input", _("Durée de vie d'un état")),
             "war_mode": {
                 "enabled": _text_to_bool(self.query_one("#war-enabled-input", Input).value),
                 "scope": self.query_one("#war-scope-input", Input).value.strip(),
                 "actions": _parse_csv(self.query_one("#war-actions-input", Input).value),
                 "thresholds": {
-                    "suspicious_score": _int_field("war-suspicious-input", "Seuil suspect"),
-                    "hostile_score": _int_field("war-hostile-input", "Seuil hostile"),
-                    "incident_score": _int_field("war-incident-input", "Seuil incident"),
-                    "contained_score": _int_field("war-contained-input", "Seuil confine"),
+                    "suspicious_score": _int_field("war-suspicious-input", _("Seuil suspect")),
+                    "hostile_score": _int_field("war-hostile-input", _("Seuil hostile")),
+                    "incident_score": _int_field("war-incident-input", _("Seuil incident")),
+                    "contained_score": _int_field("war-contained-input", _("Seuil confine")),
                 },
                 "slowdown": {
                     "enabled": _text_to_bool(self.query_one("#slowdown-enabled-input", Input).value),
-                    "minimum_ms": _int_field("slowdown-min-input", "Delai minimum"),
-                    "maximum_ms": _int_field("slowdown-max-input", "Delai maximum"),
-                    "jitter_ms": _int_field("slowdown-jitter-input", "Jitter"),
+                    "minimum_ms": _int_field("slowdown-min-input", _("Délai minimum")),
+                    "maximum_ms": _int_field("slowdown-max-input", _("Délai maximum")),
+                    "jitter_ms": _int_field("slowdown-jitter-input", _("Jitter")),
                 },
                 "rate_limit": {
-                    "requests": _int_field("rate-limit-requests-input", "Nombre de requetes"),
-                    "window_seconds": _int_field("rate-limit-window-input", "Fenetre"),
+                    "requests": _int_field("rate-limit-requests-input", _("Nombre de requêtes")),
+                    "window_seconds": _int_field("rate-limit-window-input", _("Fenêtre")),
                 },
             },
             "deception": {
                 "enabled": _text_to_bool(self.query_one("#deception-enabled-input", Input).value),
                 "fallback": self.query_one("#deception-fallback-input", Input).value.strip(),
-                "assignments_ttl_seconds": _int_field("deception-ttl-input", "Duree de vie d'une affectation"),
+                "assignments_ttl_seconds": _int_field("deception-ttl-input", _("Durée de vie d'une affectation")),
             },
             "ioc": {
                 "enabled": _text_to_bool(self.query_one("#ioc-enabled-input", Input).value),
                 "auto_export_on_close": _text_to_bool(self.query_one("#ioc-auto-export-input", Input).value),
                 "formats": _parse_csv(self.query_one("#ioc-formats-input", Input).value),
                 "share_policy": self.query_one("#ioc-share-policy-input", Input).value.strip(),
-                "minimum_confidence": _int_field("ioc-min-confidence-input", "Confiance minimale"),
+                "minimum_confidence": _int_field("ioc-min-confidence-input", _("Confiance minimale")),
+                "tlp": self.query_one("#ioc-tlp-input", Input).value.strip().lower() or "amber",
             },
             "storage": {
                 "database": self.query_one("#storage-database-input", Input).value.strip(),
@@ -527,7 +532,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             "logging": {
                 "enhanced_capture": _text_to_bool(self.query_one("#logging-enhanced-input", Input).value),
                 "capture_request_body": _text_to_bool(self.query_one("#logging-capture-body-input", Input).value),
-                "max_body_bytes": _int_field("logging-max-body-input", "Taille max du corps"),
+                "max_body_bytes": _int_field("logging-max-body-input", _("Taille max du corps")),
                 "redact_fields": _parse_csv(self.query_one("#logging-redact-input", Input).value),
                 "log_path": self.query_one("#logging-log-path-input", Input).value.strip(),
             },
@@ -537,13 +542,13 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration - impossible d'enregistrer.")
+            error_widget.update(_("Erreur de configuration - impossible d'enregistrer."))
             return
 
         candidate = parse_active_defense_config(new_settings)
         errors = validate_active_defense_config(candidate)
         if errors:
-            error_widget.update("Erreur :\n" + "\n".join(f"  - {e}" for e in errors))
+            error_widget.update(_("Erreur :\n") + "\n".join(f"  - {e}" for e in errors))
             return
 
         existing = load_result.config.options.get("active_defense")
@@ -556,6 +561,6 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         self._refresh()
         notify_restart_required(
             self, self._container,
-            "Reglages Active Defense enregistres. Necessite un REDEMARRAGE COMPLET pour "
-            "prendre effet (active_defense n'est jamais recharge a chaud).",
+            _("Réglages Active Defense enregistrés. Nécessite un REDÉMARRAGE COMPLET pour "
+            "prendre effet (active_defense n'est jamais rechargé à chaud)."),
         )

@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from omega_serv.core.i18n import _
+
 VALID_REDIRECT_CODES = (301, 302, 307, 308)
 
 
@@ -32,9 +34,9 @@ def parse_redirect_rules(raw_list: list[dict[str, Any]]) -> list[RedirectRule]:
 
 def validate_redirect_rule(rule: RedirectRule) -> str | None:
     if not rule.url_prefix.startswith("/"):
-        return f"url_prefix doit commencer par '/' : {rule.url_prefix!r}"
+        return _("url_prefix doit commencer par '/' : {url_prefix!r}").format(url_prefix=rule.url_prefix)
     if rule.status_code not in VALID_REDIRECT_CODES:
-        return f"status_code invalide : {rule.status_code} (attendu : {VALID_REDIRECT_CODES})"
+        return _("status_code invalide : {status_code} (attendu : {VALID_REDIRECT_CODES})").format(status_code=rule.status_code, VALID_REDIRECT_CODES=VALID_REDIRECT_CODES)
     if not rule.destination:
-        return "destination ne peut pas etre vide"
+        return _("destination ne peut pas être vide")
     return None

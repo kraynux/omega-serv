@@ -62,7 +62,7 @@ async def _read_line_bounded(reader: asyncio.StreamReader, max_size: int, on_too
     except asyncio.IncompleteReadError as e:
         if not e.partial:
             raise ConnectionClosedCleanly() from e
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "connexion fermee de maniere inattendue") from e
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "connexion fermée de manière inattendue") from e
 
     line = raw[:-2]  # retire le CRLF final
     if len(line) > max_size:
@@ -74,26 +74,26 @@ def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
     line = raw_line.decode("latin-1")
     parts = line.split(" ")
     if len(parts) != 3:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requete malformee")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requête malformée")
     method, target, http_version = parts
     if not method or not target or not http_version.startswith("HTTP/"):
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requete malformee")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requête malformée")
     return method, target, http_version
 
 
 def _parse_header_line(raw_line: bytes) -> tuple[str, str]:
     line = raw_line.decode("latin-1")
     if line and line[0] in (" ", "\t"):
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "repliage d'en-tete non supporte")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "repliage d'en-tête non supporte")
     if ":" not in line:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tete malforme (pas de ':')")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tête malformé (pas de ':')")
     name, _, value = line.partition(":")
     name = name.strip()
     value = value.strip()
     if not name:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tete malforme (nom vide)")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tête malformé (nom vide)")
     if has_control_characters(name) or has_control_characters(value):
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tete contient un caractere de controle")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tête contient un caractère de contrôle")
     return name, value
 
 
@@ -114,11 +114,11 @@ async def read_request_head(
         raw_line = await _read_line_bounded(reader, max_header_size, HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
         total_header_bytes += len(raw_line) + 2
         if total_header_bytes > max_header_size:
-            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "en-tetes trop volumineux au total")
+            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "en-têtes trop volumineux au total")
         if not raw_line:
             break
         if len(headers) >= MAX_HEADER_COUNT:
-            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "trop d'en-tetes")
+            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "trop d'en-têtes")
         name, value = _parse_header_line(raw_line)
         headers.append((name, value))
 
@@ -147,7 +147,7 @@ def _reject_ambiguous_content_length(headers: list[tuple[str, str]]) -> None:
     systematiquement plutot que choisir laquelle croire."""
     values = [value for name, value in headers if name.lower() == "content-length"]
     if len(values) > 1:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length duplique")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length dupliqué")
 
 
 async def read_and_discard_body(
@@ -184,16 +184,16 @@ async def read_and_discard_body(
     except ValueError as e:
         raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length invalide") from e
     if content_length < 0:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length negatif")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length négatif")
     if content_length > max_request_size:
-        raise HttpParseError(HttpStatus.PAYLOAD_TOO_LARGE, "corps de requete trop volumineux")
+        raise HttpParseError(HttpStatus.PAYLOAD_TOO_LARGE, "corps de requête trop volumineux")
 
     captured = b""
     if content_length > 0:
         try:
             body = await reader.readexactly(content_length)
         except asyncio.IncompleteReadError as e:
-            raise HttpParseError(HttpStatus.BAD_REQUEST, "corps de requete incomplet") from e
+            raise HttpParseError(HttpStatus.BAD_REQUEST, "corps de requête incomplet") from e
         if capture_max_bytes > 0:
             captured = body[:capture_max_bytes]
     return content_length, captured

@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.config.exceptions import ConfigLoadError
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -21,17 +22,17 @@ class JsonConfigRepository:
 
     def load(self, path: Path) -> OmegaServConfig:
         if not self._fs.exists(path):
-            raise ConfigLoadError(f"Fichier de configuration introuvable : {path}")
+            raise ConfigLoadError(_("Fichier de configuration introuvable : {path}").format(path=path))
         try:
             raw = self._fs.read_text(path)
         except OSError as e:
-            raise ConfigLoadError(f"Impossible de lire {path} : {e}") from e
+            raise ConfigLoadError(_("Impossible de lire {path} : {e}").format(path=path, e=e)) from e
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            raise ConfigLoadError(f"JSON invalide dans {path} : {e}") from e
+            raise ConfigLoadError(_("JSON invalide dans {path} : {e}").format(path=path, e=e)) from e
         if not isinstance(data, dict):
-            raise ConfigLoadError(f"{path} ne contient pas un objet JSON a la racine")
+            raise ConfigLoadError(_("{path} ne contient pas un objet JSON à la racine").format(path=path))
         return OmegaServConfig.from_dict(data)
 
     def save(self, path: Path, config: OmegaServConfig) -> None:

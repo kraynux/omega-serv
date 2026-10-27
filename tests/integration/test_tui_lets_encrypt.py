@@ -260,7 +260,7 @@ class TestTuiLetsEncrypt(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await self._wait_for_request_to_finish(pilot)
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
 
 if __name__ == "__main__":

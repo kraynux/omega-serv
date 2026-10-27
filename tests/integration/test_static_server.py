@@ -99,7 +99,7 @@ class TestStaticServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 404)
         self.assertIn("text/html", headers["Content-Type"])
         self.assertIn(b"404", data)
-        self.assertIn(b"Not Found", data)
+        self.assertIn("Page non trouvée".encode(), data)
 
     async def test_custom_error_page_overrides_default_when_option_enabled(self):
         errors_dir = self.root / "webroot" / ".errors"

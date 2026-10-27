@@ -79,6 +79,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 
 if TYPE_CHECKING:
@@ -349,72 +350,67 @@ def parse_proxy_zones(raw_list: list[dict[str, Any]]) -> list[ProxyZone]:
 
 def validate_proxy_zone(zone: ProxyZone) -> str | None:
     if not zone.url_prefix.startswith("/"):
-        return f"url_prefix doit commencer par '/' : {zone.url_prefix!r}"
+        return _("url_prefix doit commencer par '/' : {url_prefix!r}").format(url_prefix=zone.url_prefix)
     if not zone.upstreams:
-        return f"au moins un upstream est requis (zone {zone.url_prefix!r})"
+        return _("au moins un upstream est requis (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     for upstream in zone.upstreams:
         if not upstream.host:
-            return f"host d'upstream vide (zone {zone.url_prefix!r})"
+            return _("host d'upstream vide (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
         if not (1 <= upstream.port <= 65535):
-            return f"port d'upstream invalide : {upstream.port!r} (zone {zone.url_prefix!r})"
+            return _("port d'upstream invalide : {port!r} (zone {url_prefix!r})").format(port=upstream.port, url_prefix=zone.url_prefix)
         if upstream.weight < 1:
-            return f"weight d'upstream invalide : {upstream.weight!r} (zone {zone.url_prefix!r}, doit etre >= 1)"
+            return _("weight d'upstream invalide : {weight!r} (zone {url_prefix!r}, doit être >= 1)").format(weight=upstream.weight, url_prefix=zone.url_prefix)
         if upstream.load_source not in _VALID_LOAD_SOURCES:
             return (
-                f"load_source invalide : {upstream.load_source!r} (zone {zone.url_prefix!r}, "
-                f"attendu l'un de {_VALID_LOAD_SOURCES})"
+                _("load_source invalide : {load_source!r} (zone {url_prefix!r}, attendu l'un de {VALID_LOAD_SOURCES})").format(load_source=upstream.load_source, url_prefix=zone.url_prefix, VALID_LOAD_SOURCES=_VALID_LOAD_SOURCES)
             )
         if upstream.load_source == "declarative" and not upstream.load_check_path.startswith("/"):
-            return f"load_check_path doit commencer par '/' : {upstream.load_check_path!r} (zone {zone.url_prefix!r})"
+            return _("load_check_path doit commencer par '/' : {load_check_path!r} (zone {url_prefix!r})").format(load_check_path=upstream.load_check_path, url_prefix=zone.url_prefix)
         if upstream.active_health_check_enabled and not upstream.active_health_check_path.startswith("/"):
             return (
-                f"active_health_check_path doit commencer par '/' : "
-                f"{upstream.active_health_check_path!r} (zone {zone.url_prefix!r})"
+                _("active_health_check_path doit commencer par '/' : {active_health_check_path!r} (zone {url_prefix!r})").format(active_health_check_path=upstream.active_health_check_path, url_prefix=zone.url_prefix)
             )
         if upstream.max_concurrent_requests is not None and upstream.max_concurrent_requests < 1:
             return (
-                f"max_concurrent_requests invalide : {upstream.max_concurrent_requests!r} "
-                f"(zone {zone.url_prefix!r}, doit etre >= 1 ou absent/null pour illimite)"
+                _("max_concurrent_requests invalide : {max_concurrent_requests!r} (zone {url_prefix!r}, doit être >= 1 ou absent/null pour illimité)").format(max_concurrent_requests=upstream.max_concurrent_requests, url_prefix=zone.url_prefix)
             )
     if zone.connect_timeout_seconds <= 0:
-        return f"connect_timeout_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("connect_timeout_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.read_timeout_seconds <= 0:
-        return f"read_timeout_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("read_timeout_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.load_balancing not in PROXY_LOAD_BALANCING_STRATEGIES:
         return (
-            f"load_balancing invalide : {zone.load_balancing!r} (zone {zone.url_prefix!r}, "
-            f"attendu l'un de {', '.join(PROXY_LOAD_BALANCING_STRATEGIES)})"
+            _("load_balancing invalide : {load_balancing!r} (zone {url_prefix!r}, attendu l'un de {value})").format(load_balancing=zone.load_balancing, url_prefix=zone.url_prefix, value=', '.join(PROXY_LOAD_BALANCING_STRATEGIES))
         )
     if zone.sticky_session_enabled:
         if not zone.sticky_cookie_name.strip():
-            return f"sticky_cookie_name ne peut pas etre vide quand sticky_session_enabled=true (zone {zone.url_prefix!r})"
+            return _("sticky_cookie_name ne peut pas être vide quand sticky_session_enabled=true (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
         if zone.sticky_cookie_max_age_seconds <= 0:
-            return f"sticky_cookie_max_age_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+            return _("sticky_cookie_max_age_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     known_upstream_keys = {upstream_key(u) for u in zone.upstreams}
     for rule in zone.routing_rules:
         if not rule.header_name.strip():
-            return f"header_name ne peut pas etre vide (regle de routage, zone {zone.url_prefix!r})"
+            return _("header_name ne peut pas être vide (règle de routage, zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
         if not rule.pattern:
-            return f"pattern ne peut pas etre vide (regle de routage, zone {zone.url_prefix!r})"
+            return _("pattern ne peut pas être vide (règle de routage, zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
         if rule.upstream_key not in known_upstream_keys:
             return (
-                f"upstream_key {rule.upstream_key!r} inconnu dans cette zone (regle de routage, "
-                f"zone {zone.url_prefix!r}, upstreams connus : {sorted(known_upstream_keys)})"
+                _("upstream_key {upstream_key!r} inconnu dans cette zone (règle de routage, zone {url_prefix!r}, upstreams connus : {value})").format(upstream_key=rule.upstream_key, url_prefix=zone.url_prefix, value=sorted(known_upstream_keys))
             )
     if zone.unhealthy_after < 1:
-        return f"unhealthy_after doit etre >= 1 (zone {zone.url_prefix!r})"
+        return _("unhealthy_after doit être >= 1 (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.healthy_after < 1:
-        return f"healthy_after doit etre >= 1 (zone {zone.url_prefix!r})"
+        return _("healthy_after doit être >= 1 (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.load_poll_interval_seconds <= 0:
-        return f"load_poll_interval_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("load_poll_interval_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.load_poll_timeout_seconds <= 0:
-        return f"load_poll_timeout_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("load_poll_timeout_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.load_smoothing_samples < 1:
-        return f"load_smoothing_samples doit etre >= 1 (zone {zone.url_prefix!r})"
+        return _("load_smoothing_samples doit être >= 1 (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.load_sample_max_age_seconds <= 0:
-        return f"load_sample_max_age_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("load_sample_max_age_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.cache_default_ttl_seconds <= 0:
-        return f"cache_default_ttl_seconds doit etre strictement positif (zone {zone.url_prefix!r})"
+        return _("cache_default_ttl_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     return None
 
 

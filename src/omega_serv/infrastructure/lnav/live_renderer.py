@@ -39,8 +39,10 @@ from pathlib import Path
 
 import pyte
 from omega_lib.theme.policies import Palette
+from rich.cells import cell_len, set_cell_size
 from rich.style import Style
 
+from omega_serv.core.i18n import _
 from omega_serv.infrastructure.lnav.pty_session import (
     TerminalResponder,
     kill_lnav,
@@ -73,7 +75,9 @@ def move_to(row: int, col: int = 1) -> str:
 
 
 def pad_line(text: str, width: int) -> str:
-    return text[:width].ljust(width)
+    """Coupe/complete en COLONNES de terminal (un caractere chinois en occupe 2), jamais en
+    nombre de caracteres."""
+    return set_cell_size(text, width)
 
 
 def classify_hue(fg: str) -> str:
@@ -275,33 +279,33 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
             title_style.render(title)
             + muted_style.render("  |  ")
             + heading_style.render(menu_label)
-            + muted_style.render(" " * max(cols - len(header_plain), 0))
+            + muted_style.render(" " * max(cols - cell_len(header_plain), 0))
         )
 
         sep_line = border_style.render("-" * cols)
 
         shortcuts_plain = (
-            "[up/down] Naviguer  |  [left/right] Defiler  |  [g/G] Debut/Fin  |  "
-            "[Ctrl-C] Marquer+Copier  |  [Ctrl-Q] Quitter"
+            _("[up/down] Naviguer  |  [left/right] Défiler  |  [g/G] Debut/Fin  |  "
+            "[Ctrl-C] Marquer+Copier  |  [Ctrl-Q] Quitter")
         )
         shortcuts_line = (
-            link_style.render("[up/down] Naviguer")
+            link_style.render(_("[up/down] Naviguer"))
             + muted_style.render("  |  ")
-            + link_style.render("[left/right] Defiler")
+            + link_style.render(_("[left/right] Défiler"))
             + muted_style.render("  |  ")
-            + link_style.render("[g/G] Debut/Fin")
+            + link_style.render(_("[g/G] Debut/Fin"))
             + muted_style.render("  |  ")
-            + link_style.render("[Ctrl-C] Marquer+Copier")
+            + link_style.render(_("[Ctrl-C] Marquer+Copier"))
             + muted_style.render("  |  ")
-            + link_style.render("[Ctrl-Q] Quitter")
-            + muted_style.render(" " * max(cols - len(shortcuts_plain), 0))
+            + link_style.render(_("[Ctrl-Q] Quitter"))
+            + muted_style.render(" " * max(cols - cell_len(shortcuts_plain), 0))
         )
 
         if copy_status is not None:
             status_line = link_style.render(pad_line(copy_status, cols))
         else:
             names = ", ".join(p.name for p in log_paths)
-            status_line = muted_style.render(pad_line(f"Fichiers ({len(log_paths)}) : {names}", cols))
+            status_line = muted_style.render(pad_line(_("Fichiers ({count}) : {names}").format(count=len(log_paths), names=names), cols))
 
         buf = (
             move_to(1) + header_line
@@ -350,7 +354,7 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
 
     try:
         while True:
-            r, _, _ = select.select([master_fd, stdin_fd], [], [], 0.05)
+            r, _ignored, _ignored = select.select([master_fd, stdin_fd], [], [], 0.05)
 
             if stdin_fd in r:
                 key = os.read(stdin_fd, 4096)
@@ -366,9 +370,9 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
                     if current_line:
                         os.write(out_fd, osc52_copy(current_line))
                         preview = current_line if len(current_line) <= 60 else current_line[:57] + "..."
-                        copy_status = f"Copie (OSC 52) : {preview}"
+                        copy_status = _("Copie (OSC 52) : {preview}").format(preview=preview)
                     else:
-                        copy_status = "Rien a copier : ligne courante introuvable (breadcrumb lnav non detecte)"
+                        copy_status = _("Rien à copier : ligne courante introuvable (breadcrumb lnav non détecté)")
                     draw_chrome(term_cols, term_rows)
                     key = key.replace(b"\x03", b"")
 
@@ -389,7 +393,7 @@ def render_lnav_live(log_paths: list[Path], palette: Palette, title: str, menu_l
                     responder.feed(data)
                     relay_osc52(data, out_fd)
                     stream.feed(data.decode("utf-8", errors="replace"))
-                    more, _, _ = select.select([master_fd], [], [], 0.002)
+                    more, _ignored, _ignored = select.select([master_fd], [], [], 0.002)
                     if master_fd not in more:
                         break
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.auth.entities import AuthZone
 
 SUPPORTED_ZONES_FILE_VERSIONS = frozenset({1})
@@ -25,9 +26,9 @@ def parse_auth_zones(raw_list: list[dict[str, Any]]) -> list[AuthZone]:
 
 def validate_auth_zone(zone: AuthZone) -> str | None:
     if not zone.path_prefix.startswith("/"):
-        return f"path_prefix doit commencer par '/' : {zone.path_prefix!r}"
+        return _("path_prefix doit commencer par '/' : {path_prefix!r}").format(path_prefix=zone.path_prefix)
     if not zone.realm:
-        return "realm ne peut pas etre vide"
+        return _("realm ne peut pas être vide")
     if not zone.allowed_users:
-        return f"la zone {zone.path_prefix!r} n'a aucun allowed_users - personne ne pourrait jamais y acceder"
+        return _("la zone {path_prefix!r} n'a aucun allowed_users - personne ne pourrait jamais y accéder").format(path_prefix=zone.path_prefix)
     return None

@@ -12,6 +12,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Input, Select, St
 
 from omega_serv.application.logs.favorites import create_favorite, list_favorites, remove_favorite
 from omega_serv.application.logs.library import list_library
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.domain.logs.viewer_type import ViewerType
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -34,36 +35,36 @@ class LogFavoritesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("FAVORIS", classes="omega-title")
+            yield Static(_("FAVORIS"), classes="omega-title")
             yield Static("", id="favorites-error", classes="omega-hint")
 
             yield DataTable(id="favorites-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Lancer", id="launch", variant="primary")
+                    yield Button(_("Lancer"), id="launch", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error")
+                    yield Button(_("Supprimer"), id="delete", variant="error")
 
-            yield Static("Creer un favori (depuis la Bibliotheque)", classes="omega-subtitle")
+            yield Static(_("Créer un favori (depuis la Bibliothèque)"), classes="omega-subtitle")
             yield DataTable(id="library-table")
-            yield Input(placeholder="Numeros separes par des virgules (ex: 1,3)", id="selection-input")
+            yield Input(placeholder=_("Numéros séparés par des virgules (ex: 1,3)"), id="selection-input")
             with Horizontal(classes="omega-actions"):
-                yield Input(placeholder="Nom du favori", id="name-input")
+                yield Input(placeholder=_("Nom du favori"), id="name-input")
                 yield Select[str](
                     [(v.value, v.value) for v in ViewerType], value=ViewerType.SIMPLE.value, id="viewer-select",
                 )
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="save")
+                    yield Button(_("Enregistrer"), id="save")
 
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#favorites-table", DataTable).cursor_type = "row"
-        self.query_one("#favorites-table", DataTable).add_columns("Nom", "Logs", "Viewer")
+        self.query_one("#favorites-table", DataTable).add_columns(_("Nom"), _("Logs"), _("Viewer"))
         self.query_one("#library-table", DataTable).cursor_type = "row"
-        self.query_one("#library-table", DataTable).add_columns("#", "Chemin")
+        self.query_one("#library-table", DataTable).add_columns("#", _("Chemin"))
         self._refresh_favorites()
         self._refresh_library()
 
@@ -99,7 +100,7 @@ class LogFavoritesScreen(OmegaScreen):
     def _launch(self) -> None:
         error_widget = self.query_one("#favorites-error", Static)
         if self._selected_favorite is None:
-            error_widget.update("Selectionnez un favori.")
+            error_widget.update(_("Sélectionnez un favori."))
             return
         favorite = next(
             (f for f in list_favorites(self._container.build_log_favorite_repository())
@@ -121,11 +122,11 @@ class LogFavoritesScreen(OmegaScreen):
     def _delete(self) -> None:
         error_widget = self.query_one("#favorites-error", Static)
         if self._selected_favorite is None:
-            error_widget.update("Selectionnez un favori.")
+            error_widget.update(_("Sélectionnez un favori."))
             return
         name = self._selected_favorite
         self.app.push_screen(
-            ConfirmScreen(title="SUPPRIMER CE FAVORI ?", message=name),
+            ConfirmScreen(title=_("SUPPRIMER CE FAVORI ?"), message=name),
             lambda confirmed: self._delete_if_confirmed(confirmed, name),
         )
 
@@ -149,7 +150,7 @@ class LogFavoritesScreen(OmegaScreen):
             if not token:
                 continue
             if not token.isdigit() or not (1 <= int(token) <= len(self._library_entries)):
-                error_widget.update(f"Numero invalide : {token!r}.")
+                error_widget.update(_("Numéro invalide : {token!r}.").format(token=token))
                 return
             paths.append(self._library_entries[int(token) - 1].path)
 

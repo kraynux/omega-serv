@@ -27,6 +27,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
@@ -46,34 +47,31 @@ class ReverseProxyUpstreamStatusScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ETAT EN DIRECT DES BACKENDS", classes="omega-title")
+            yield Static(_("ÉTAT EN DIRECT DES BACKENDS"), classes="omega-title")
             yield Static(
-                f"Zone {self._zone.url_prefix!r} - interroge le serveur REELLEMENT en cours "
-                "d'execution (pas la configuration sur disque). Necessite trusted_proxy actif "
-                "avec 127.0.0.1 dans ses reseaux de confiance. DRAINING/MAINTENANCE sont "
-                "ephemeres (jamais ecrits dans la configuration) - un redemarrage les efface.",
+                _("Zone {url_prefix!r} - interroge le serveur RÉELLEMENT en cours d'exécution (pas la configuration sur disque). Nécessite trusted_proxy actif avec 127.0.0.1 dans ses réseaux de confiance. DRAINING/MAINTENANCE sont éphémères (jamais écrits dans la configuration) - un redémarrage les efface.").format(url_prefix=self._zone.url_prefix),
                 classes="omega-hint",
             )
             yield Static("", id="status-error", classes="omega-hint")
             yield DataTable(id="upstream-status-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Actualiser", id="refresh", variant="primary")
+                    yield Button(_("Actualiser"), id="refresh", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Mettre en DRAINING", id="draining", disabled=True)
+                    yield Button(_("Mettre en DRAINING"), id="draining", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Mettre en MAINTENANCE", id="maintenance", disabled=True)
+                    yield Button(_("Mettre en MAINTENANCE"), id="maintenance", disabled=True)
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Revenir a l'automatique", id="clear", disabled=True)
+                    yield Button(_("Revenir à l'automatique"), id="clear", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#upstream-status-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Upstream (host:port)", "Statut")
+        table.add_columns(_("Upstream (host:port)"), _("Statut"))
         self.run_worker(self._refresh(), exclusive=True)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -113,13 +111,13 @@ class ReverseProxyUpstreamStatusScreen(OmegaScreen):
         result = await self._call("GET", {})
         if result is None:
             error_widget.update(
-                "Serveur injoignable - verifiez qu'il est demarre et que trusted_proxy autorise "
-                "127.0.0.1 (fonctionnalite indisponible hors TUI avec runner d'administration cable)."
+                _("Serveur injoignable - vérifiez qu'il est démarré et que trusted_proxy autorise "
+                "127.0.0.1 (fonctionnalité indisponible hors TUI avec runner d'administration câblé).")
             )
             return
         status, body = result
         if status != 200 or body is None:
-            error_widget.update(f"Reponse inattendue du serveur (statut {status}).")
+            error_widget.update(_("Réponse inattendue du serveur (statut {status}).").format(status=status))
             return
         error_widget.update("")
         table = self.query_one("#upstream-status-table", DataTable)
@@ -136,10 +134,10 @@ class ReverseProxyUpstreamStatusScreen(OmegaScreen):
         assert self._selected_upstream_key is not None
         result = await self._call("POST", {"upstream": self._selected_upstream_key, "status": new_status})
         if result is None:
-            error_widget.update("Serveur injoignable - le changement n'a pas pu etre applique.")
+            error_widget.update(_("Serveur injoignable - le changement n'a pas pu être appliqué."))
             return
         status, _body = result
         if status != 200:
-            error_widget.update(f"Le serveur a refuse ce changement (statut {status}).")
+            error_widget.update(_("Le serveur a refusé ce changement (statut {status}).").format(status=status))
             return
         await self._refresh()

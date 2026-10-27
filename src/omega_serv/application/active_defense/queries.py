@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.entities import (
     Incident,
     IncidentEvent,
@@ -12,7 +13,11 @@ from omega_serv.domain.security.active_defense.entities import (
     Indicator,
     ThreatState,
 )
-from omega_serv.domain.security.active_defense.policies import extract_indicators
+from omega_serv.domain.security.active_defense.policies import (
+    INCIDENT_HISTORY_KEEP_FIRST,
+    INCIDENT_HISTORY_KEEP_LAST,
+    extract_indicators,
+)
 from omega_serv.domain.security.active_defense.value_objects import ThreatLevel
 from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
 from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
@@ -34,6 +39,19 @@ def get_threat_state(repository: ThreatStateRepositoryPort, subject_id: str) -> 
 def list_incidents(repository: IncidentRepositoryPort, filters: IncidentFilters) -> list[Incident]:
     """ListIncidentsQuery."""
     return repository.list_recent(filters)
+
+
+def omitted_history_notice(omitted_events: int) -> str:
+    """Mention affichee sous la chronologie quand l'elagage a supprime des evenements du milieu
+    (INCIDENT_HISTORY_KEEP_* du domaine) - meme texte dans le rapport, la CLI et la TUI."""
+    return _("{count} événement(s) intermédiaire(s) omis : l'historique garde les {first} premiers et les {last} derniers.").format(
+        count=omitted_events, first=INCIDENT_HISTORY_KEEP_FIRST, last=INCIDENT_HISTORY_KEEP_LAST,
+    )
+
+
+def get_incident_omitted_events(repository: IncidentRepositoryPort, incident_id: str) -> int:
+    incident = repository.get(incident_id)
+    return 0 if incident is None else incident.omitted_events
 
 
 def get_incident_timeline(repository: IncidentRepositoryPort, incident_id: str) -> tuple[IncidentEvent, ...]:

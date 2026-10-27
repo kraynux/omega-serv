@@ -40,6 +40,11 @@ class TestSqliteThreatStateRepository(unittest.TestCase):
         self.assertTrue(self.database_path.parent.is_dir())
         self.assertTrue(self.database_path.exists())
 
+    def test_connection_uses_wal_with_normal_synchronous(self):
+        """Etude performance, priorite 4 : WAL + synchronous=NORMAL (1 = NORMAL)."""
+        self.assertEqual(self.connection.execute("PRAGMA journal_mode").fetchone()[0], "wal")
+        self.assertEqual(self.connection.execute("PRAGMA synchronous").fetchone()[0], 1)
+
     def test_get_missing_subject_returns_none(self):
         self.assertIsNone(self.repository.get("does-not-exist"))
 

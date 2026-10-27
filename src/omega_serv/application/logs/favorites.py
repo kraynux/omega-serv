@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.favorite import Favorite
 from omega_serv.domain.logs.viewer_type import ViewerType, allowed_viewers
 from omega_serv.ports.log_favorite_repository_port import LogFavoriteRepositoryPort
@@ -26,17 +27,17 @@ def create_favorite(
     repository: LogFavoriteRepositoryPort, *, name: str, paths: list[str], viewer: ViewerType,
 ) -> CreateFavoriteResult:
     if not name.strip():
-        return CreateFavoriteResult(success=False, message="Nom requis.")
+        return CreateFavoriteResult(success=False, message=_("Nom requis."))
     if not paths:
-        return CreateFavoriteResult(success=False, message="Au moins un log est requis.")
+        return CreateFavoriteResult(success=False, message=_("Au moins un log est requis."))
     if viewer not in allowed_viewers(len(paths)):
         return CreateFavoriteResult(
             success=False,
-            message=f"{len(paths)} log(s) selectionne(s) : seul {allowed_viewers(len(paths))[-1].value} est compatible.",
+            message=_("{count} log(s) sélectionné(s) : seul {value} est compatible.").format(count=len(paths), value=allowed_viewers(len(paths))[-1].value),
         )
 
     repository.add(Favorite(name=name.strip(), paths=tuple(paths), viewer=viewer))
-    return CreateFavoriteResult(success=True, message=f"Favori '{name}' enregistre.")
+    return CreateFavoriteResult(success=True, message=_("Favori '{name}' enregistré.").format(name=name))
 
 
 def remove_favorite(repository: LogFavoriteRepositoryPort, name: str) -> None:

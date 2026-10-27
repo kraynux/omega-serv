@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class FastCgiConfig:
@@ -50,17 +52,17 @@ def validate_fastcgi_config_structure(config: FastCgiConfig) -> list[str]:
     application/config/validate_config.py."""
     errors: list[str] = []
     if not config.url_prefix.startswith("/"):
-        errors.append(f"url_prefix doit commencer par '/' : {config.url_prefix!r}")
+        errors.append(_("url_prefix doit commencer par '/' : {url_prefix!r}").format(url_prefix=config.url_prefix))
     if not config.script_root:
-        errors.append("script_root ne peut pas etre vide")
+        errors.append(_("script_root ne peut pas être vide"))
     if not config.socket_path:
-        errors.append("socket_path ne peut pas etre vide")
+        errors.append(_("socket_path ne peut pas être vide"))
     if not config.allowed_extensions:
-        errors.append("allowed_extensions ne peut pas etre vide")
+        errors.append(_("allowed_extensions ne peut pas être vide"))
     if config.connect_timeout_seconds <= 0:
-        errors.append("connect_timeout_seconds doit etre strictement positif")
+        errors.append(_("connect_timeout_seconds doit être strictement positif"))
     if config.read_timeout_seconds <= 0:
-        errors.append("read_timeout_seconds doit etre strictement positif")
+        errors.append(_("read_timeout_seconds doit être strictement positif"))
     if any(not name or name.startswith("/") for name in config.allowed_scripts):
-        errors.append("allowed_scripts doit contenir des chemins relatifs non vides (pas de '/' en tete)")
+        errors.append(_("allowed_scripts doit contenir des chemins relatifs non vides (pas de '/' en tête)"))
     return errors

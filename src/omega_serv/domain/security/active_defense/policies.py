@@ -7,6 +7,7 @@ plan pour le raisonnement complet (evite une duplication avec
 domain/security/waf/scoring.py et reputation.py)."""
 from __future__ import annotations
 
+import functools
 import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -51,6 +52,28 @@ BLOCKLIST_ENTRY_SCORE_DELTA = 25
 OMEGA_FIRE_BAN_SCORE_DELTA = 25
 DECOY_POST_SCORE_DELTA = 30
 
+
+
+AUDIT_RETENTION_DAYS = 30
+AUDIT_MAX_ROWS = 200_000
+"""Journal d'audit d'Active Defense (decision utilisateur 2026-10-26, « c'est un trou de
+securite ») : il n'etait jamais purge, un attaquant changeant d'adresse a chaque requete pouvait
+remplir le disque. Lignes de plus de 30 jours supprimees, et jamais plus de 200 000 lignes (les
+plus anciennes d'abord) - purge automatique du serveur ET `active-defense purge`."""
+
+MAX_TRACKED_SUBJECTS = 200_000
+"""Sources suivies en base (decision utilisateur 2026-10-26) : au-dela, les sources au niveau
+« normal » les plus anciennes sont supprimees d'abord (vues une fois, sans action) ; une source
+suspecte ou hostile n'est supprimee que s'il ne reste plus de source normale. Sans ce plafond, un
+botnet a 400 nouvelles adresses/s accumulait ~2,9 millions de lignes avant leur expiration."""
+
+INCIDENT_HISTORY_KEEP_FIRST = 100
+INCIDENT_HISTORY_KEEP_LAST = 1_000
+"""Historique d'un incident (decision utilisateur 2026-10-26) : un attaquant persistant ajoutait
+2 lignes par requete tant que l'incident restait ouvert. On garde les 100 premieres et les 1 000
+dernieres observations et evenements ; ceux du milieu sont supprimes et COMPTES (affiches
+« N omis » dans le rapport, la CLI et la TUI). Les IoC n'en souffrent pas : ils reposent sur la
+premiere et la derniere observation (gardees) et une confiance plafonnee a 100."""
 
 def score_delta_for_waf_decision(decision: WafDecision) -> int:
     """`decision.score > 0`, jamais `decision.action == "block"`
@@ -177,7 +200,7 @@ def is_assignment_active(assignment: DeceptionAssignment, now: datetime) -> bool
     return now < assignment.expires_at
 
 
-def decide_incident_transition(existing_open_incident: Incident | None, score: int, *, incident_score_threshold: int) -> str:
+def decide_incident_transition(has_open_incident: bool, score: int, *, incident_score_threshold: int) -> str:
     """Retourne "open_new", "merge_into_existing" ou "no_change" (plan
     §"Cas d'usage applicatifs", CreateOrUpdateIncidentCommand). Base sur
     le SCORE brut et `WarModeThresholds.incident_score` (Phase 2,
@@ -188,7 +211,7 @@ def decide_incident_transition(existing_open_incident: Incident | None, score: i
     hostile_score=60 et contained_score=80 dans l'exemple du plan)."""
     if score < incident_score_threshold:
         return "no_change"
-    return "merge_into_existing" if existing_open_incident is not None else "open_new"
+    return "merge_into_existing" if has_open_incident else "open_new"
 
 
 def decide_incident_closure(level: ThreatLevel, quiet_seconds: float, *, close_after_quiet_seconds: int) -> bool:
@@ -217,6 +240,15 @@ def hash_payload(payload: bytes) -> str:
     scrypt utilise un sel distinct mais le meme choix d'algorithme
     stdlib partout)."""
     return hashlib.sha256(payload).hexdigest()
+
+
+@functools.lru_cache(maxsize=4096)
+def user_agent_fingerprint(user_agent: str) -> str:
+    """Empreinte du User-Agent dans l'identifiant d'une source (`ip:empreinte`). Memorisee : un
+    scanner ou un botnet reutilise le meme User-Agent pour des milliers de requetes (mesure du
+    2026-10-26). Cache BORNE (4 096, le moins recent est oublie) : un attaquant qui change de
+    User-Agent a chaque requete ne fait pas grossir la memoire, il perd seulement le cache."""
+    return hash_payload(user_agent.encode("utf-8"))
 
 
 def validate_playbook_action(action: ActionType, playbook: DefensePlaybook) -> bool:
@@ -288,7 +320,9 @@ def extract_indicator_candidates(incident: Incident) -> list[IndicatorCandidate]
     stade, delibere et documente plutot que fait a moitie."""
     if not incident.observations:
         return []
-    source_ip, _, user_agent_hash = incident.subject_id.partition(":")
+    # dernier « : » - l'empreinte (SHA-256 hexadecimal) n'en contient jamais, une IPv6 si : couper
+    # au premier exportait « 2001 » comme adresse (defaut trouve le 2026-10-26 avec l'export STIX)
+    source_ip, _, user_agent_hash = incident.subject_id.rpartition(":")
     first_seen = min(o.observed_at for o in incident.observations)
     last_seen = max(o.observed_at for o in incident.observations)
     confidence = clamp_confidence(sum(o.score_delta for o in incident.observations))

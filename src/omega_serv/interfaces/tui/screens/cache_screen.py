@@ -12,7 +12,9 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, DataTable, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
+from omega_serv.domain.routing.cache_policy import DEFAULT_CACHE_CONTROL, DEFAULT_EXTENSION_CACHE
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
@@ -21,7 +23,6 @@ from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_requi
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
-_DEFAULT_CACHE_CONTROL = "no-cache, must-revalidate"
 
 
 class CacheScreen(OmegaScreen):
@@ -34,49 +35,55 @@ class CacheScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("CACHE", classes="omega-title")
+            yield Static(_("CACHE"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'cache' se fait dans le menu Options.",
+                _("L'activation de l'option 'cache' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield Static(
-                "Valeur par defaut (Cache-Control) - directives usuelles : "
+                _("Valeur par défaut (Cache-Control) - directives usuelles : "
                 "no-cache, no-store, must-revalidate, private, public, max-age=<secondes>, immutable "
                 "(combinables par virgule, ex: \"no-store, no-cache, must-revalidate\" pour une zone "
-                "sensible, \"public, max-age=31536000, immutable\" pour un asset versionne)",
+                "sensible, \"public, max-age=31536000, immutable\" pour un asset versionné)"),
                 classes="omega-subtitle",
             )
             yield Input(id="default-input")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Enregistrer la valeur par defaut", id="save-default", variant="primary")
+                yield Button(_("Enregistrer la valeur par défaut"), id="save-default", variant="primary")
 
-            yield Static("Regles par zone", classes="omega-subtitle")
+            yield Static(_("Règles par zone"), classes="omega-subtitle")
             yield DataTable(id="zones-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter une zone", id="add-zone", variant="primary")
+                    yield Button(_("Ajouter une zone"), id="add-zone", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer la zone", id="delete-zone", variant="error", disabled=True)
+                    yield Button(_("Supprimer la zone"), id="delete-zone", variant="error", disabled=True)
 
-            yield Static("Regles par extension", classes="omega-subtitle")
+            yield Static(_("Règles par extension"), classes="omega-subtitle")
+            yield Static(
+                _("Règles fournies par défaut tant que vous n'en modifiez aucune : images et médias 1 jour, "
+                "polices 7 jours, CSS et JS 1 heure. Toute modification les remplace par votre propre liste "
+                "(supprimez-les toutes pour n'en garder aucune)."),
+                classes="omega-hint",
+            )
             yield DataTable(id="extensions-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter une extension", id="add-extension", variant="primary")
+                    yield Button(_("Ajouter une extension"), id="add-extension", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer l'extension", id="delete-extension", variant="error", disabled=True)
+                    yield Button(_("Supprimer l'extension"), id="delete-extension", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         zones_table = self.query_one("#zones-table", DataTable)
         zones_table.cursor_type = "row"
-        zones_table.add_columns("Prefixe", "Cache-Control")
+        zones_table.add_columns(_("Préfixe"), _("Cache-Control"))
         extensions_table = self.query_one("#extensions-table", DataTable)
         extensions_table.cursor_type = "row"
-        extensions_table.add_columns("Extension", "Cache-Control")
+        extensions_table.add_columns(_("Extension"), _("Cache-Control"))
         self._refresh()
 
     def _settings(self) -> dict:
@@ -88,7 +95,7 @@ class CacheScreen(OmegaScreen):
 
     def _refresh(self) -> None:
         settings = self._settings()
-        self.query_one("#default-input", Input).value = settings.get("default", _DEFAULT_CACHE_CONTROL)
+        self.query_one("#default-input", Input).value = settings.get("default", DEFAULT_CACHE_CONTROL)
 
         zones_table = self.query_one("#zones-table", DataTable)
         zones_table.clear()
@@ -99,7 +106,7 @@ class CacheScreen(OmegaScreen):
 
         extensions_table = self.query_one("#extensions-table", DataTable)
         extensions_table.clear()
-        for extension, cache_control in sorted(settings.get("extensions", {}).items()):
+        for extension, cache_control in sorted(settings.get("extensions", DEFAULT_EXTENSION_CACHE).items()):
             extensions_table.add_row(extension, cache_control, key=extension)
         self._selected_extension = None
         self.query_one("#delete-extension", Button).disabled = True
@@ -118,15 +125,15 @@ class CacheScreen(OmegaScreen):
             self.dismiss()
             return
         if button_id == "save-default":
-            self._save_settings(default=self.query_one("#default-input", Input).value.strip() or _DEFAULT_CACHE_CONTROL)
+            self._save_settings(default=self.query_one("#default-input", Input).value.strip() or DEFAULT_CACHE_CONTROL)
             return
         if button_id == "add-zone":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UNE REGLE DE ZONE",
+                    title=_("AJOUTER UNE RÈGLE DE ZONE"),
                     fields=[
-                        ("path_prefix", "Prefixe (ex: /static/)", ""),
-                        ("cache_control", "Cache-Control (ex: no-cache, no-store, must-revalidate, private, public, max-age=<s>, immutable)", ""),
+                        ("path_prefix", _("Préfixe (ex: /static/)"), ""),
+                        ("cache_control", _("Cache-Control (ex: no-cache, no-store, must-revalidate, private, public, max-age=<s>, immutable)"), ""),
                     ],
                 ),
                 self._add_zone,
@@ -134,17 +141,17 @@ class CacheScreen(OmegaScreen):
             return
         if button_id == "delete-zone" and self._selected_zone_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REGLE", message="Confirmer la suppression de cette regle de zone ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA RÈGLE"), message=_("Confirmer la suppression de cette règle de zone ?")),
                 self._delete_zone,
             )
             return
         if button_id == "add-extension":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UNE REGLE D'EXTENSION",
+                    title=_("AJOUTER UNE RÈGLE D'EXTENSION"),
                     fields=[
-                        ("extension", "Extension (ex: .css)", ""),
-                        ("cache_control", "Cache-Control (ex: no-cache, no-store, must-revalidate, private, public, max-age=<s>, immutable)", ""),
+                        ("extension", _("Extension (ex: .css)"), ""),
+                        ("cache_control", _("Cache-Control (ex: no-cache, no-store, must-revalidate, private, public, max-age=<s>, immutable)"), ""),
                     ],
                 ),
                 self._add_extension,
@@ -152,7 +159,7 @@ class CacheScreen(OmegaScreen):
             return
         if button_id == "delete-extension" and self._selected_extension is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REGLE", message="Confirmer la suppression de cette regle d'extension ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA RÈGLE"), message=_("Confirmer la suppression de cette règle d'extension ?")),
                 self._delete_extension,
             )
 
@@ -161,7 +168,7 @@ class CacheScreen(OmegaScreen):
             return
         path_prefix = values["path_prefix"].strip()
         if not path_prefix.startswith("/"):
-            self.query_one("#form-error", Static).update(f"Le prefixe doit commencer par '/' : {path_prefix!r}")
+            self.query_one("#form-error", Static).update(_("Le préfixe doit commencer par '/' : {path_prefix!r}").format(path_prefix=path_prefix))
             return
         zones = list(self._settings().get("zones", []))
         zones.append({"path_prefix": path_prefix, "cache_control": values["cache_control"].strip()})
@@ -179,23 +186,23 @@ class CacheScreen(OmegaScreen):
             return
         extension = values["extension"].strip()
         if not extension.startswith("."):
-            self.query_one("#form-error", Static).update(f"L'extension doit commencer par '.' : {extension!r}")
+            self.query_one("#form-error", Static).update(_("L'extension doit commencer par '.' : {extension!r}").format(extension=extension))
             return
-        extensions = dict(self._settings().get("extensions", {}))
+        extensions = dict(self._settings().get("extensions", DEFAULT_EXTENSION_CACHE))
         extensions[extension] = values["cache_control"].strip()
         self._save_settings(extensions=extensions)
 
     def _delete_extension(self, confirmed: bool | None) -> None:
         if not confirmed or self._selected_extension is None:
             return
-        extensions = dict(self._settings().get("extensions", {}))
+        extensions = dict(self._settings().get("extensions", DEFAULT_EXTENSION_CACHE))
         extensions.pop(self._selected_extension, None)
         self._save_settings(extensions=extensions)
 
     def _save_settings(self, **updates: object) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("cache")
         enabled = existing.enabled if existing is not None else False
@@ -207,4 +214,4 @@ class CacheScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh()
-        notify_reload_required(self, self._container, "Regles de cache mises a jour.")
+        notify_reload_required(self, self._container, _("Règles de cache mises à jour."))

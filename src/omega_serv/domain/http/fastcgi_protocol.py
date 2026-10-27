@@ -133,10 +133,10 @@ def decode_record_header(header: bytes) -> DecodedHeader:
     est une responsabilite d'infrastructure/fastcgi/asyncio_fastcgi_client.py,
     qui orchestre la lecture incrementale ; ce module reste pur)."""
     if len(header) != HEADER_SIZE:
-        raise FastCgiProtocolError(f"en-tete FastCGI incomplet : {len(header)} octets")
+        raise FastCgiProtocolError(f"en-tête FastCGI incomplet : {len(header)} octets")
     version, record_type, request_id, content_length, padding_length = _HEADER_STRUCT.unpack(header)
     if version != FCGI_VERSION_1:
-        raise FastCgiProtocolError(f"version FastCGI non supportee : {version}")
+        raise FastCgiProtocolError(f"version FastCGI non supportée : {version}")
     return DecodedHeader(type=record_type, request_id=request_id, content_length=content_length, padding_length=padding_length)
 
 

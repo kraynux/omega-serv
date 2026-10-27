@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ html_lang() }}" dir="{{ html_dir() }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OMEGA-SERV — Archives de logs</title>
+<title>OMEGA-SERV — {{ _("Archives de logs") }}</title>
 <style>
   /* Voir capabilities_report.html.j2 pour le raisonnement complet sur
      le theme et la mise en page - meme gabarit, contenu different. */
@@ -54,13 +54,13 @@
 </head>
 <body>
   <div class="container">
-    <h1>OMEGA-SERV — Archives de logs</h1>
-    <p class="meta">Généré le {{ generated_at }} · {{ archives|length }} archive(s)</p>
+    <h1>OMEGA-SERV — {{ _("Archives de logs") }}</h1>
+    <p class="meta">{{ _("Généré le {date} · {count} archive(s)").format(date=generated_at, count=archives|length) }}</p>
 
     <div class="box">
       <table>
         <thead>
-          <tr><th>Archive</th><th>Taille (octets)</th><th>Modifiée le</th></tr>
+          <tr><th>{{ _("Archive") }}</th><th>{{ _("Taille (octets)") }}</th><th>{{ _("Modifiée le") }}</th></tr>
         </thead>
         <tbody>
           {% for archive in archives %}
@@ -74,7 +74,7 @@
       </table>
     </div>
 
-    <footer>Rapport généré par <strong>OMEGA-SERV</strong></footer>
+    <footer>{{ _("Rapport généré par") }} <strong>OMEGA-SERV</strong></footer>
   </div>
 </body>
 </html>

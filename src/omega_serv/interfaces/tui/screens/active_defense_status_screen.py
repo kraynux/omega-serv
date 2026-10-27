@@ -13,6 +13,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._active_defense_collaborators_cache import (
     ActiveDefenseCollaboratorsCacheMixin,
 )
@@ -31,15 +32,15 @@ class ActiveDefenseStatusScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScree
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ACTIVE DEFENSE - ETAT", classes="omega-title")
+            yield Static(_("ACTIVE DEFENSE - ÉTAT"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'active_defense' se fait dans le menu Options "
-                "(Configuration detaillee -> Options et verification).",
+                _("L'activation de l'option 'active_defense' se fait dans le menu Options "
+                "(Configuration détaillée -> Options et vérification)."),
                 classes="omega-hint",
             )
             yield Static("", id="status-body")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -53,10 +54,10 @@ class ActiveDefenseStatusScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScree
             return
         tracked = active_defense.threat_state_repository.list_all()
         lines = [
-            f"Active Defense : active (mode={active_defense.config.mode})",
-            f"Mode guerre : {'actif' if active_defense.config.war_mode.enabled else 'inactif'}",
-            f"Deception : {'active' if active_defense.config.deception.enabled else 'inactive'}",
-            f"Sources suivies : {len(tracked)}",
+            _("Active Defense : activé (mode={mode})").format(mode=active_defense.config.mode),
+            _("Mode guerre : {value}").format(value=_('actif') if active_defense.config.war_mode.enabled else _('inactif')),
+            _("Deception : {value}").format(value=_('activé') if active_defense.config.deception.enabled else _('inactive')),
+            _("Sources suivies : {count}").format(count=len(tracked)),
         ]
         body.update("\n".join(lines))
 

@@ -144,11 +144,11 @@ class TestTuiRenewalSchedule(unittest.IsolatedAsyncioTestCase):
         async with app.run_test(size=(120, 50)) as pilot:
             await self._start(pilot)
             await self._open_screen(pilot)
-            self.assertIn("non installe", str(pilot.app.screen.query_one("#status-text", Static).content))
+            self.assertIn("non installé", str(pilot.app.screen.query_one("#status-text", Static).content))
 
             pilot.app.screen.query_one("#configure", Button).press()
             await pilot.pause()
-            self.assertIn("installe et actif", str(pilot.app.screen.query_one("#status-text", Static).content))
+            self.assertIn("installé et actif", str(pilot.app.screen.query_one("#status-text", Static).content))
 
         self.assertIn(self.systemd_unit_dir / "omega-serv-certbot-renew.service", manager.unit_files)
         self.assertIn(self.systemd_unit_dir / "omega-serv-certbot-renew.timer", manager.unit_files)
@@ -177,7 +177,7 @@ class TestTuiRenewalSchedule(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             status_text = str(pilot.app.screen.query_one("#status-text", Static).content)
             self.assertIn("certbot renew", status_text)
-            self.assertIn("vous-meme", status_text.lower())
+            self.assertIn("vous-même", status_text.lower())
 
     async def test_two_instances_never_collide(self):
         manager = _PermissiveSystemdManager()

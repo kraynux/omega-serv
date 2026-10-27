@@ -11,6 +11,7 @@ from textual.containers import Center, Container, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.ca_wizard_screen import CaWizardScreen
 from omega_serv.interfaces.tui.screens.generate_self_signed_screen import GenerateSelfSignedScreen
@@ -24,13 +25,13 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("status", "Statut TLS"),
-    ("self-signed", "Generer un certificat auto-signe"),
-    ("ca-wizard", "Assistant CA locale"),
-    ("lets-encrypt", "Assistant Let's Encrypt (Certbot)"),
-    ("renewal-schedule", "Renouvellement automatique (Certbot)"),
-    ("revoke", "Revoquer un certificat"),
-    ("toggle", "Activer / desactiver TLS"),
+    ("status", _("Statut TLS")),
+    ("self-signed", _("Générer un certificat auto-signé")),
+    ("ca-wizard", _("Assistant CA locale")),
+    ("lets-encrypt", _("Assistant Let's Encrypt (Certbot)")),
+    ("renewal-schedule", _("Renouvellement automatique (Certbot)")),
+    ("revoke", _("Révoquer un certificat")),
+    ("toggle", _("Activer / désactiver TLS")),
 )
 
 
@@ -43,14 +44,14 @@ class TlsMenuScreen(OmegaScreen):
         yield Header()
         with Vertical(classes="omega-panel"):
             with Center():
-                yield Static("TLS", classes="omega-title")
+                yield Static(_("TLS"), classes="omega-title")
             with Center(), Vertical(classes="omega-home-menu") as menu:
                 for item_id, label in _MENU_ITEMS:
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
-                menu.border_title = "SOUS-ECRANS TLS"
+                menu.border_title = _("SOUS-ÉCRANS TLS")
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

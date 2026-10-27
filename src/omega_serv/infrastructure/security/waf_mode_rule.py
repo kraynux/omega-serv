@@ -30,6 +30,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.security.audit.entities import AuditFinding, Severity
 from omega_serv.ports.clock_port import ClockPort
@@ -65,12 +66,12 @@ def check_waf_log_only_duration(
         return []
 
     return [AuditFinding(
-        rule_id="WAF-001", rule_name="WAF en mode log-only depuis trop longtemps",
+        rule_id="WAF-001", rule_name=_("WAF en mode log-only depuis trop longtemps"),
         severity=Severity.HIGH, category="waf",
-        message=f"options.waf.settings.mode = 'log-only' depuis au moins {days_in_mode} jour(s) (observe(s) par l'audit).",
+        message=_("options.waf.settings.mode = 'log-only' depuis au moins {days_in_mode} jour(s) (observé(s) par l'audit).").format(days_in_mode=days_in_mode),
         recommendation=(
-            "Passer en mode 'block' une fois les faux positifs stabilises, "
-            "ou justifier explicitement le maintien en log-only."
+            _("Passer en mode 'block' une fois les faux positifs stabilisés, "
+            "ou justifier explicitement le maintien en log-only.")
         ),
         details={"days_in_mode": days_in_mode, "since": stored_since.isoformat()},
     )]

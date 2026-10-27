@@ -31,6 +31,14 @@ class TestRunitServiceManager(unittest.TestCase):
     def _svc_path(self, name):
         return str(self.service_dir / name)
 
+    def test_main_pid_parsed_from_sv_status(self):
+        path = self._svc_path("svc")
+        running = _FakeProcessRunner({("sv", "status", path): ProcessResult(0, f"run: {path}: (pid 1234) 56s; ", "")})
+        manager = RunitServiceManager(running, str(self.service_dir), str(self.run_dir))
+        self.assertEqual(manager.main_pid("svc"), 1234)
+        down = _FakeProcessRunner({("sv", "status", path): ProcessResult(0, f"down: {path}: 3s, normally up", "")})
+        self.assertIsNone(RunitServiceManager(down, str(self.service_dir), str(self.run_dir)).main_pid("svc"))
+
     def test_start_success(self):
         runner = _FakeProcessRunner({("sv", "up", self._svc_path("svc")): ProcessResult(0, "", "")})
         manager = RunitServiceManager(runner, str(self.service_dir), str(self.run_dir))

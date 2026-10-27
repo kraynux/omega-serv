@@ -59,6 +59,7 @@ from omega_serv.interfaces.tui.screens.waf_custom_rule_wizard_screen import (
 )
 from omega_serv.interfaces.tui.screens.waf_magnet_screen import WafMagnetScreen
 from omega_serv.interfaces.tui.screens.waf_modules_screen import WafModulesScreen
+from omega_serv.interfaces.tui.screens.waf_rate_limit_screen import WafRateLimitScreen
 from omega_serv.interfaces.tui.screens.waf_status_screen import WafStatusScreen
 from omega_serv.interfaces.tui.screens.waf_test_screen import WafTestScreen
 
@@ -112,12 +113,10 @@ async def _fake_waf_test_runner(method, path, query, body, remote_ip, config, fi
     return _FakeReport()
 
 
-def _run_ioc_export(incident, export_format, export_dir, filesystem):
-    from omega_serv.infrastructure.exporters.csv_ioc_exporter import CsvIoCExporter
-    from omega_serv.infrastructure.exporters.json_ioc_exporter import JsonIoCExporter
+def _run_ioc_export(incident, export_format, export_dir, filesystem, ioc):
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
 
-    exporters = {"json": JsonIoCExporter(filesystem, export_dir), "csv": CsvIoCExporter(filesystem, export_dir)}
-    exporter = exporters.get(export_format)
+    exporter = build_ioc_exporters(filesystem, export_dir, ioc).get(export_format)
     return None if exporter is None else exporter.export(incident)
 
 
@@ -241,7 +240,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#status", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ActiveDefenseStatusScreen)
-            self.assertIn("desactive", str(pilot.app.screen.query_one("#status-body", Static).content))
+            self.assertIn("désactivé", str(pilot.app.screen.query_one("#status-body", Static).content))
 
     async def test_status_screen_shows_enabled_details(self):
         self._enable_active_defense(mode="enforce", war_mode={"enabled": True}, deception={"enabled": True})
@@ -417,7 +416,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
                 ("incidents", IncidentsScreen), ("deception", DeceptionScreen),
                 ("simulate", ActiveDefenseSimulateScreen),
                 ("waf-status", WafStatusScreen), ("waf-modules", WafModulesScreen),
-                ("waf-test", WafTestScreen), ("waf-custom", WafCustomRuleScreen),
+                ("waf-rate-limit", WafRateLimitScreen), ("waf-test", WafTestScreen), ("waf-custom", WafCustomRuleScreen),
                 ("waf-magnet", WafMagnetScreen),
             ):
                 pilot.app.screen.query_one(f"#{item_id}", Button).press()
@@ -442,7 +441,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
                 await pilot.pause()
                 self.assertIsInstance(pilot.app.screen, ActiveDefenseStatusScreen)
                 body = str(pilot.app.screen.query_one("#status-body", Static).content)
-                self.assertIn("acces", body)
+                self.assertIn("accès", body)
                 self.assertIn("session", body)
 
                 pilot.app.screen.query_one("#back", Button).press()
@@ -459,6 +458,130 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
         new_config = replace(result.config, options=new_options)
         self.container.configuration.save(self.container.config_file, new_config)
 
+    def _waf_settings(self) -> dict:
+        load_result = load_config(self.container.configuration, self.container.config_file)
+        assert load_result.config is not None
+        return load_result.config.options["waf"].settings
+
+    async def _submit_form(self, pilot, values: dict[str, str]) -> None:
+        for field_id, value in values.items():
+            pilot.app.screen.query_one(f"#df-{field_id}", Input).value = value
+        pilot.app.screen.query_one("#confirm", Button).press()
+        await pilot.pause()
+
+    async def test_waf_rate_limit_screen_global_and_folder_rules_crud(self):
+        self._enable_waf(mode="block", rate_limit={"enabled": False, "global": {"requests": 60, "response_status": 429}})
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-rate-limit", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, WafRateLimitScreen)
+
+            pilot.app.screen.query_one("#enabled-input", Input).value = "oui"
+            pilot.app.screen.query_one("#global-requests-input", Input).value = "120"
+            pilot.app.screen.query_one("#save-global", Button).press()
+            await pilot.pause()
+            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
+            rate_limit = self._waf_settings()["rate_limit"]
+            self.assertTrue(rate_limit["enabled"])
+            self.assertEqual(rate_limit["global"]["requests"], 120)
+            self.assertEqual(rate_limit["global"]["response_status"], 429)  # cle non editee conservee
+
+            pilot.app.screen.query_one("#add-path", Button).press()
+            await pilot.pause()
+            await self._submit_form(pilot, {"prefix": "/omega-serv/screenshots/", "requests": "600", "window_seconds": "60"})
+            table = pilot.app.screen.query_one("#path-policies-table", DataTable)
+            self.assertEqual(table.row_count, 1)
+            self.assertEqual(
+                self._waf_settings()["rate_limit"]["path_policies"],
+                [{"prefix": "/omega-serv/screenshots/", "requests": 600, "window_seconds": 60}],
+            )
+
+            table.move_cursor(row=0)
+            table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#edit-path", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#df-prefix", Input).value, "/omega-serv/screenshots/")
+            await self._submit_form(pilot, {"requests": "0"})
+            self.assertEqual(self._waf_settings()["rate_limit"]["path_policies"][0]["requests"], 0)
+            self.assertIn("illimité", str(pilot.app.screen.query_one("#path-policies-table", DataTable).get_row_at(0)))
+
+            table = pilot.app.screen.query_one("#path-policies-table", DataTable)
+            table.move_cursor(row=0)
+            table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#delete-path", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#path-policies-table", DataTable).row_count, 0)
+            self.assertEqual(self._waf_settings()["rate_limit"]["path_policies"], [])
+
+    async def test_waf_rate_limit_screen_rejects_invalid_rules_without_writing(self):
+        self._enable_waf(mode="block")
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-rate-limit", Button).press()
+            await pilot.pause()
+            before = self.container.config_file.read_text()
+
+            pilot.app.screen.query_one("#add-path", Button).press()
+            await pilot.pause()
+            await self._submit_form(pilot, {"prefix": "screenshots"})
+            self.assertIn("préfixe invalide", str(pilot.app.screen.query_one("#form-error").content))
+
+            pilot.app.screen.query_one("#add-source", Button).press()
+            await pilot.pause()
+            await self._submit_form(pilot, {"network": "pas-une-ip"})
+            self.assertIn("réseau invalide", str(pilot.app.screen.query_one("#form-error").content))
+
+            pilot.app.screen.query_one("#add-source", Button).press()
+            await pilot.pause()
+            await self._submit_form(pilot, {"network": "100.64.0.0/10", "requests": "beaucoup"})
+            self.assertIn("nombre entier", str(pilot.app.screen.query_one("#form-error").content))
+
+            pilot.app.screen.query_one("#exclusion-prefixes-input", Input).value = "healthz"
+            pilot.app.screen.query_one("#save-exclusions", Button).press()
+            await pilot.pause()
+            self.assertIn("healthz", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertEqual(self.container.config_file.read_text(), before)
+
+    async def test_waf_rate_limit_screen_source_rules_and_exclusions(self):
+        self._enable_waf(mode="block", reputation={"never_auto_block": ["10.0.0.0/8"]})
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-rate-limit", Button).press()
+            await pilot.pause()
+            self.assertIn("10.0.0.0/8", str(pilot.app.screen.query_one("#trusted-networks-hint").content))
+
+            pilot.app.screen.query_one("#add-source", Button).press()
+            await pilot.pause()
+            await self._submit_form(
+                pilot, {"network": "100.64.0.0/10", "requests": "0", "window_seconds": "60", "trusted": "oui"},
+            )
+            self.assertEqual(pilot.app.screen.query_one("#source-policies-table", DataTable).row_count, 1)
+            self.assertEqual(
+                self._waf_settings()["rate_limit"]["source_policies"],
+                [{"network": "100.64.0.0/10", "requests": 0, "window_seconds": 60, "trusted": True}],
+            )
+
+            pilot.app.screen.query_one("#exclusion-prefixes-input", Input).value = "/healthz, /static/"
+            pilot.app.screen.query_one("#exclusion-extensions-input", Input).value = ".png,.css"
+            pilot.app.screen.query_one("#save-exclusions", Button).press()
+            await pilot.pause()
+            exclusions = self._waf_settings()["exclusions"]
+            self.assertEqual(exclusions["path_prefixes"], ["/healthz", "/static/"])
+            self.assertEqual(exclusions["extensions"], [".png", ".css"])
+            self.assertEqual(exclusions["do_not_inspect_body_path_prefixes"], [])
+            self.assertEqual(self._waf_settings()["reputation"], {"never_auto_block": ["10.0.0.0/8"]})
+
     async def test_waf_status_screen_shows_disabled_then_enabled(self):
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 45)) as pilot:
@@ -467,7 +590,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#waf-status", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, WafStatusScreen)
-            self.assertIn("desactive", str(pilot.app.screen.query_one("#status-body", Static).content))
+            self.assertIn("désactivé", str(pilot.app.screen.query_one("#status-body", Static).content))
 
             pilot.app.screen.query_one("#back", Button).press()
             await pilot.pause()
@@ -529,6 +652,59 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#save-mode", Button).press()
             await pilot.pause()
             self.assertEqual(self.fake_service_manager.reload_calls, ["omega-serv"])
+
+    def _with_stale_checker(self, stale: bool) -> None:
+        """Retour utilisateur 2026-10-26 : service lance avec un code anterieur a
+        la mise a jour installee - le rechargement reussit mais ne relit que la
+        configuration."""
+        self.checked_services: list[str] = []
+
+        def checker(service_name: str) -> bool:
+            self.checked_services.append(service_name)
+            return stale
+
+        self.container._stale_service_checker = checker
+
+    @staticmethod
+    def _notifications(pilot) -> str:
+        return "\n".join(str(n.message) for n in pilot.app._notifications)
+
+    async def test_home_warns_when_the_running_service_predates_the_installed_code(self):
+        self.fake_service_manager.active = True
+        self._with_stale_checker(True)
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            self.assertIn("antérieure à la mise à jour", self._notifications(pilot))
+            self.assertIn("omega-serv", self.checked_services)
+
+    async def test_home_stays_silent_when_the_service_is_up_to_date_or_stopped(self):
+        for active, stale in ((True, False), (False, True)):
+            self.fake_service_manager.active = active
+            self._with_stale_checker(stale)
+            app = OmegaServApp(self.container)
+            async with app.run_test(size=(120, 45)) as pilot:
+                await self._reach_home(pilot)
+                await pilot.app.workers.wait_for_complete()
+                await pilot.pause()
+                self.assertNotIn("antérieure à la mise à jour", self._notifications(pilot))
+
+    async def test_reload_message_warns_when_the_running_service_predates_the_code(self):
+        self.fake_service_manager.active = True
+        self._with_stale_checker(True)
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-modules", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#mode-input", Input).value = "block"
+            pilot.app.screen.query_one("#save-mode", Button).press()
+            await pilot.pause()
+            self.assertEqual(self.fake_service_manager.reload_calls, ["omega-serv"])
+            self.assertIn("redémarrez le service", self._notifications(pilot))
 
     async def test_waf_modules_save_mode_never_reloads_when_service_inactive(self):
         app = OmegaServApp(self.container)
@@ -606,7 +782,7 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#script-input", Input).value = "secure/waf/scripts/check-test.lua"
             pilot.app.screen.query_one("#check-compat", Button).press()
             await pilot.pause()
-            self.assertIn("Compatibilite OK", str(pilot.app.screen.query_one("#compat-result").content))
+            self.assertIn("Compatibilité OK", str(pilot.app.screen.query_one("#compat-result").content))
 
             pilot.app.screen.query_one("#enabled-input", Input).value = "oui"
             pilot.app.screen.query_one("#save", Button).press()
@@ -748,13 +924,21 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await self._open_menu(pilot)
             pilot.app.screen.query_one("#settings", Button).press()
             await pilot.pause()
+            # Le formulaire se remplit apres le montage de l'ecran : une seule pause
+            # ne suffisait pas toujours sous charge (echec intermittent en suite complete).
+            for _ in range(50):
+                if pilot.app.screen.query("#war-enabled-input") and pilot.app.screen.query_one(
+                    "#war-enabled-input", Input,
+                ).value:
+                    break
+                await pilot.pause(0.05)
             self.assertEqual(pilot.app.screen.query_one("#war-enabled-input", Input).value, "non")
             pilot.app.screen.query_one("#war-enabled-input", Input).value = "oui"
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)
             static_texts = [str(s.content) for s in pilot.app.screen.query(Static)]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in t for t in static_texts))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in t for t in static_texts))
             await self._dismiss_restart_prompt(pilot)
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
 

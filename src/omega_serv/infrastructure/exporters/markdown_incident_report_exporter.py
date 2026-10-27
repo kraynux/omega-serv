@@ -9,6 +9,8 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
+from omega_serv.application.active_defense.queries import omitted_history_notice
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
 from omega_serv.domain.security.active_defense.policies import extract_indicators
 from omega_serv.infrastructure.exporters.export_checksum import write_export_checksum
@@ -18,24 +20,26 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 def render_incident_report_markdown(incident: Incident) -> str:
     indicators = extract_indicators(incident, id_factory=lambda: str(uuid.uuid4()))
     lines = [
-        f"# Incident {incident.incident_id}",
+        _("# Incident {incident_id}").format(incident_id=incident.incident_id),
         "",
-        f"- Source : `{incident.subject_id}`",
-        f"- Statut : {incident.status}",
-        f"- Ouvert le : {incident.opened_at.isoformat()}",
-        f"- Ferme le : {incident.closed_at.isoformat() if incident.closed_at else '-'}",
+        _("- Source : `{subject_id}`").format(subject_id=incident.subject_id),
+        _("- Statut : {status}").format(status=incident.status),
+        _("- Ouvert le : {value}").format(value=incident.opened_at.isoformat()),
+        _("- Fermé le : {value}").format(value=incident.closed_at.isoformat() if incident.closed_at else '-'),
         "",
-        "## Chronologie",
+        _("## Chronologie"),
         "",
     ]
     if incident.events:
         for event in incident.events:
             lines.append(f"- `{event.occurred_at.isoformat()}` **{event.kind}** - {event.detail}")
+        if incident.omitted_events:
+            lines.append(f"- _{omitted_history_notice(incident.omitted_events)}_")
     else:
-        lines.append("_Aucun evenement enregistre._")
-    lines += ["", "## Indicateurs de compromission (IoC)", ""]
+        lines.append(_("_Aucun événement enregistré._"))
+    lines += ["", _("## Indicateurs de compromission (IoC)"), ""]
     if indicators:
-        lines.append("| Type | Valeur | Confiance | Premiere observation | Derniere observation |")
+        lines.append(_("| Type | Valeur | Confiance | Première observation | Dernière observation |"))
         lines.append("|---|---|---|---|---|")
         for indicator in indicators:
             lines.append(
@@ -43,7 +47,7 @@ def render_incident_report_markdown(incident: Incident) -> str:
                 f"{indicator.first_seen.isoformat()} | {indicator.last_seen.isoformat()} |"
             )
     else:
-        lines.append("_Aucun IoC extrait._")
+        lines.append(_("_Aucun IoC extrait._"))
     lines.append("")
     return "\n".join(lines)
 

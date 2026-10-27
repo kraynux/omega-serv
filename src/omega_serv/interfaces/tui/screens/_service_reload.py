@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING
 from omega_serv.application.services.resolve_current_service_name import (
     resolve_current_service_name,
 )
+from omega_serv.core.i18n import _
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -71,8 +72,41 @@ def reload_service_if_active(screen: OmegaScreen, container: DependencyContainer
         from omega_serv.application.services.manage_service import reload_service
 
         with screen._maybe_suspend():
-            return reload_service(manager, service_name).message
+            message = reload_service(manager, service_name).message
+        stale = _stale_warning(container, service_name)
+        return f"{message}\n{stale}" if stale else message
     except Exception:  # noqa: BLE001 - effet de bord auxiliaire, jamais une raison d'echouer la sauvegarde appelante
+        return None
+
+
+def _stale_warning(container: DependencyContainer, service_name: str) -> str | None:
+    checker = container.stale_service_checker
+    if checker is None or not checker(service_name):
+        return None
+    return _(
+        "Attention : le service tourne avec une version du code antérieure à la mise à jour installée. "
+        "Un rechargement ne relit que la configuration : redémarrez le service (écran SERVICE -> "
+        "Redémarrer) pour que les nouveautés s'appliquent."
+    )
+
+
+def stale_service_warning(container: DependencyContainer) -> str | None:
+    """Avertissement a afficher si le service actif de ce repertoire a demarre
+    avant la derniere mise a jour du code (retour utilisateur 2026-10-26) -
+    None sinon, jamais une exception. Bloquant (appels au gestionnaire de
+    service) : a appeler hors du fil de l'interface."""
+    try:
+        factory = container.service_manager_factory
+        manager = factory() if factory is not None else None
+        if manager is None:
+            return None
+        service_name = resolve_current_service_name(
+            container.instance_registry, container.filesystem, container.settings_store, container.project_root,
+        )
+        if not manager.is_active(service_name):
+            return None
+        return _stale_warning(container, service_name)
+    except Exception:  # noqa: BLE001 - diagnostic auxiliaire
         return None
 
 

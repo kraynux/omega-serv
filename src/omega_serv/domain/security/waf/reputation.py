@@ -8,6 +8,8 @@ from __future__ import annotations
 import ipaddress
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class ReputationDecision:
@@ -21,11 +23,11 @@ def evaluate_escalation(hit_count_in_window: int, suspicious_threshold: int) -> 
     configuree (reputation.window_seconds) - calcule par l'appelant
     (le tracker d'infrastructure), pas ici."""
     if suspicious_threshold <= 0:
-        return ReputationDecision(should_escalate=False, reason="seuil desactive (<= 0)")
+        return ReputationDecision(should_escalate=False, reason="seuil désactivé (<= 0)")
     if hit_count_in_window >= suspicious_threshold:
         return ReputationDecision(
             should_escalate=True,
-            reason=f"{hit_count_in_window} detections suspectes dans la fenetre (seuil {suspicious_threshold})",
+            reason=f"{hit_count_in_window} détections suspectes dans la fenêtre (seuil {suspicious_threshold})",
         )
     return ReputationDecision(should_escalate=False, reason="sous le seuil")
 
@@ -98,5 +100,5 @@ def validate_never_auto_block(networks: tuple[str, ...]) -> list[str]:
         try:
             ipaddress.ip_network(network, strict=False)
         except ValueError:
-            errors.append(f"options.waf.reputation.never_auto_block : reseau invalide : {network!r}")
+            errors.append(_("options.waf.reputation.never_auto_block : réseau invalide : {network!r}").format(network=network))
     return errors

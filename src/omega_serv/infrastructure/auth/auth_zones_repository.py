@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.auth.entities import AuthZone
 from omega_serv.domain.security.auth.exceptions import AuthZonesFileError
 from omega_serv.domain.security.auth.zones import parse_auth_zones
@@ -34,9 +35,9 @@ class JsonAuthZonesRepository:
         try:
             data = json.loads(self._fs.read_text(self._path))
         except json.JSONDecodeError as e:
-            raise AuthZonesFileError(f"JSON invalide dans {self._path} : {e}") from e
+            raise AuthZonesFileError(_("JSON invalide dans {path} : {e}").format(path=self._path, e=e)) from e
         if not isinstance(data, dict) or data.get("version") not in _SUPPORTED_VERSIONS:
-            raise AuthZonesFileError(f"{self._path} : version non supportee ou structure invalide")
+            raise AuthZonesFileError(_("{path} : version non supportée ou structure invalide").format(path=self._path))
         return tuple(parse_auth_zones(data.get("zones", [])))
 
     def save(self, zones: tuple[AuthZone, ...]) -> None:

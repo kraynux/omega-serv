@@ -12,6 +12,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
 from omega_serv.application.config.manage_option import set_option_enabled
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import (
@@ -32,22 +33,22 @@ class OptionsScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("OPTIONS", classes="omega-title")
+            yield Static(_("OPTIONS"), classes="omega-title")
             yield Static("", id="options-error", classes="omega-hint")
             yield DataTable(id="options-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Activer", id="enable", variant="primary", disabled=True)
+                    yield Button(_("Activer"), id="enable", variant="primary", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Desactiver", id="disable", variant="error", disabled=True)
+                    yield Button(_("Désactiver"), id="disable", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#options-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Option", "Etat")
+        table.add_columns(_("Option"), _("État"))
         self._refresh_table()
 
     def _refresh_table(self) -> None:
@@ -56,14 +57,14 @@ class OptionsScreen(OmegaScreen):
         result = load_config(self._container.configuration, self._container.config_file)
         if not result.success:
             self.query_one("#options-error", Static).update(
-                "Configuration introuvable ou invalide : " + "; ".join(result.errors)
+                _("Configuration introuvable ou invalide : ") + "; ".join(result.errors)
             )
             return
         assert result.config is not None
         self.query_one("#options-error", Static).update("")
         for name in sorted(KNOWN_OPTION_NAMES):
             option = result.config.options.get(name)
-            state = "actif" if option is not None and option.enabled else "inactif"
+            state = _("actif") if option is not None and option.enabled else _("inactif")
             table.add_row(name, state, key=name)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -82,7 +83,7 @@ class OptionsScreen(OmegaScreen):
         assert self._selected_name is not None
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
-            self.app.notify("Configuration introuvable ou invalide.", severity="error")
+            self.app.notify(_("Configuration introuvable ou invalide."), severity="error")
             return
         assert load_result.config is not None
 
@@ -101,14 +102,12 @@ class OptionsScreen(OmegaScreen):
         if client_built_once_first_enable:
             notify_restart_required(
                 self, self._container,
-                f"{result.message} Necessite un REDEMARRAGE COMPLET pour prendre effet "
-                "(un simple rechargement ne suffit pas pour une PREMIERE activation).",
+                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (un simple rechargement ne suffit pas pour une PREMIÈRE activation).").format(message=result.message),
             )
         elif active_defense_always_needs_restart:
             notify_restart_required(
                 self, self._container,
-                f"{result.message} Necessite un REDEMARRAGE COMPLET pour prendre effet "
-                "(Active Defense n'est JAMAIS recharge a chaud, meme pour la desactiver).",
+                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (Active Defense n'est JAMAIS rechargé à chaud, même pour la désactiver).").format(message=result.message),
             )
         else:
             notify_reload_required(self, self._container, result.message)

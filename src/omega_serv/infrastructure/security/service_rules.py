@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.security.audit.entities import AuditFinding, Severity
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -29,12 +30,12 @@ def check_service_unit(unit_path: Path, filesystem: FilesystemPort) -> list[Audi
     content = filesystem.read_text(unit_path)
     if "User=" not in content or "Group=" not in content:
         return [AuditFinding(
-            rule_id="SVC-001", rule_name="Unite systemd sans User/Group dedie",
+            rule_id="SVC-001", rule_name=_("Unité systemd sans User/Group dédié"),
             severity=Severity.HIGH, category="service",
-            message=f"{unit_path} ne declare pas User=/Group= explicitement.",
+            message=_("{unit_path} ne déclare pas User=/Group= explicitement.").format(unit_path=unit_path),
             recommendation=(
-                "Regenerer l'unite via `omega-serv service install` (qui les impose deja "
-                "par defaut, voir domain/services/systemd_unit.py)."
+                _("Régénérer l'unité via `omega-serv service install` (qui les impose déjà "
+                "par défaut, voir domain/services/systemd_unit.py).")
             ),
             details={"unit_path": str(unit_path)},
         )]
@@ -49,10 +50,10 @@ def check_log_sizes(config: OmegaServConfig, project_root: Path, filesystem: Fil
 
     if not config.logs.rotation.enabled:
         findings.append(AuditFinding(
-            rule_id="SVC-002", rule_name="Rotation des logs desactivee",
+            rule_id="SVC-002", rule_name=_("Rotation des logs désactivée"),
             severity=Severity.MEDIUM, category="service",
-            message="logs.rotation.enabled = false",
-            recommendation="Activer la rotation (logs.rotation.enabled = true).",
+            message=_("logs.rotation.enabled = false"),
+            recommendation=_("Activer la rotation (logs.rotation.enabled = true)."),
         ))
 
     for label, relative in (
@@ -65,10 +66,10 @@ def check_log_sizes(config: OmegaServConfig, project_root: Path, filesystem: Fil
         size = filesystem.file_size(path)
         if size > _MAX_LOG_SIZE_BYTES:
             findings.append(AuditFinding(
-                rule_id="SVC-002", rule_name=f"Log {label} volumineux",
+                rule_id="SVC-002", rule_name=_("Log {label} volumineux").format(label=label),
                 severity=Severity.MEDIUM, category="service",
-                message=f"{path} : {size / 1024 / 1024:.1f} Mo",
-                recommendation="Verifier que la rotation fonctionne reellement (logs.rotation.max_bytes).",
+                message=_("{path} : {value:.1f} Mo").format(path=path, value=size / 1024 / 1024),
+                recommendation=_("Vérifier que la rotation fonctionne réellement (logs.rotation.max_bytes)."),
                 details={"path": str(path), "size_bytes": size},
             ))
 

@@ -55,7 +55,9 @@ from textual.containers import Center, Container, Grid, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import show_contextual_help
+from omega_serv.interfaces.tui.screens._service_reload import stale_service_warning
 from omega_serv.interfaces.tui.screens.active_defense_menu_screen import ActiveDefenseMenuScreen
 from omega_serv.interfaces.tui.screens.audit_screen import AuditScreen
 from omega_serv.interfaces.tui.screens.backup_screen import BackupScreen
@@ -76,20 +78,20 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("capabilities", "Registre des capacites"),
-    ("service", "Service"),
-    ("wizard", "Assistant premier lancement"),
-    ("instances", "Multi-instance"),
-    ("profiles", "Profils"),
-    ("audit", "Audit de securite"),
-    ("server-config", "Configuration detaillee"),
-    ("backup", "Sauvegarde de configuration"),
-    ("active-defense", "Active Securite"),
-    ("help", "Aide"),
-    ("resource-status", "Etat & Ressources"),
-    ("options", "Options"),
-    ("logs", "Gestion des logs"),
-    ("quit", "Quitter"),
+    ("capabilities", _("Registre des capacités")),
+    ("service", _("Service")),
+    ("wizard", _("Assistant premier lancement")),
+    ("instances", _("Multi-instance")),
+    ("profiles", _("Profils")),
+    ("audit", _("Audit de sécurité")),
+    ("server-config", _("Configuration détaillée")),
+    ("backup", _("Sauvegarde de configuration")),
+    ("active-defense", _("Active Sécurité")),
+    ("help", _("Aide")),
+    ("resource-status", _("État & Ressources")),
+    ("options", _("Options")),
+    ("logs", _("Gestion des logs")),
+    ("quit", _("Quitter")),
 )
 
 
@@ -99,8 +101,8 @@ class HomeScreen(Screen[None]):
     dismiss() (rien "en dessous" de cet ecran)."""
 
     BINDINGS: ClassVar[list[BindingType]] = [
-        Binding("escape", "back", "Retour", show=True),
-        Binding("f1", "show_help", "Aide de cet ecran", show=True),
+        Binding("escape", "back", _("Retour"), show=True),
+        Binding("f1", "show_help", _("Aide de cet écran"), show=True),
     ]
 
     def __init__(self, *, container: DependencyContainer) -> None:
@@ -117,14 +119,25 @@ class HomeScreen(Screen[None]):
                     for item_id, label in _MENU_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(self._label_for(item_id, label).upper(), id=item_id)
-                menu.border_title = "MENU PRINCIPAL"
+                menu.border_title = _("MENU PRINCIPAL")
         yield Footer()
+
+    def on_mount(self) -> None:
+        # Service lance avec un code anterieur a la mise a jour installee (retour
+        # utilisateur 2026-10-26) : verifie hors du fil de l'interface (appels au
+        # gestionnaire de service), signale par une notification, jamais bloquant.
+        self.run_worker(self._check_stale_service, thread=True, exclusive=True, group="stale-service")
+
+    def _check_stale_service(self) -> None:
+        warning = stale_service_warning(self._container)
+        if warning is not None:
+            self.app.call_from_thread(self.app.notify, warning, severity="warning", timeout=30)
 
     def _label_for(self, item_id: str, default_label: str) -> str:
         if item_id != "instances":
             return default_label
         count = len(self._container.instance_registry.load())
-        return f"Instances ({count})" if count >= 2 else default_label
+        return _("Instances ({count})").format(count=count) if count >= 2 else default_label
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "quit":

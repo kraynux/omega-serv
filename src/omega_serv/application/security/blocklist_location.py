@@ -40,16 +40,16 @@ def prepare_blocklist_location(
     try:
         ensure_shared_directory(filesystem, target.parent)
     except OSError as e:
-        return f"dossier {target.parent} impossible a creer : {e}"
+        return f"dossier {target.parent} impossible à créer : {e}"
     source = project_root / legacy
     if filesystem.exists(target) or not filesystem.exists(source):
         return None
     try:
         filesystem.atomic_write_text(target, filesystem.read_text(source))
     except OSError as e:
-        message = f"ancienne blocklist {source} non reprise ({e}) - le fichier reste en place, a recopier a la main"
+        message = f"ancienne blocklist {source} non reprise ({e}) - le fichier reste en place, à recopier à la main"
         print(f"ERREUR {message}", file=sys.stderr)
         return message
-    message = f"blocklist reprise depuis {source} vers {target} (l'ancien fichier est conserve)"
+    message = f"blocklist reprise depuis {source} vers {target} (l'ancien fichier est conservé)"
     print(message, file=sys.stderr)
     return message

@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from omega_serv.application.tls.inspect_certificate import inspect_certificate_report
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.security.audit.entities import AuditFinding, Severity
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
@@ -45,10 +46,10 @@ def check_certificate_expiry(
 
     if not report.is_expired and report.expiring_soon:
         return [AuditFinding(
-            rule_id="TLS-002", rule_name="Certificat TLS expire bientot",
+            rule_id="TLS-002", rule_name=_("Certificat TLS expire bientôt"),
             severity=Severity.MEDIUM, category="tls",
-            message=f"Expire dans {report.days_remaining} jours ({cert_path}).",
-            recommendation="Prevoir le renouvellement (`omega-serv certs generate-self-signed` ou remplacement).",
+            message=_("Expire dans {days_remaining} jours ({cert_path}).").format(days_remaining=report.days_remaining, cert_path=cert_path),
+            recommendation=_("Prévoir le renouvellement (`omega-serv certs generate-self-signed` ou remplacement)."),
             details={"certificate_path": str(cert_path), "days_remaining": report.days_remaining},
         )]
     return []

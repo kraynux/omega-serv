@@ -155,7 +155,7 @@ class TestTuiInstances(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ServiceScreen)
             self.assertTrue(any(
-                "Repertoire pilote" in str(w.render())
+                "Répertoire pilote" in str(w.render())
                 for w in pilot.app.screen.query(Static) if w.id is None
             ))
 
@@ -222,7 +222,7 @@ class TestTuiInstances(unittest.IsolatedAsyncioTestCase):
             else:
                 self.fail("la creation d'instance ne s'est jamais terminee")
 
-            self.assertIn("succes", str(pilot.app.screen.query_one("#progress-result", Static).render()))
+            self.assertIn("succès", str(pilot.app.screen.query_one("#progress-result", Static).render()))
             pilot.app.screen.query_one("#close", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, InstancesScreen)

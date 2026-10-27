@@ -18,6 +18,8 @@ from __future__ import annotations
 import stat
 from dataclasses import dataclass, field
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class PathNode:
@@ -43,10 +45,10 @@ class ReadabilityVerdict:
 
     def explain(self, account: str) -> str:
         if self.readable:
-            return f"lisible par le compte {account}"
+            return _("lisible par le compte {account}").format(account=account)
         node = self.blocking[0]
-        what = "n'est pas traversable" if node.is_dir else "n'est pas lisible"
-        return f"{node.path} {what} par le compte {account}"
+        what = _("n'est pas traversable") if node.is_dir else _("n'est pas lisible")
+        return _("{path} {what} par le compte {account}").format(path=node.path, what=what, account=account)
 
 
 @dataclass(frozen=True)

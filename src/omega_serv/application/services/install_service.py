@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.services.systemd_unit import (
     SystemdUnitParams,
     find_account_in_use,
@@ -113,7 +114,7 @@ def repair_directory_permissions(
     jamais besoin de desinstaller/reinstaller pour ce seul probleme."""
     grant_directory_access = getattr(service_manager, "grant_directory_access", None)
     if grant_directory_access is None:
-        return ManageServiceResult(False, "Ce gestionnaire de service ne supporte pas cette operation.")
+        return ManageServiceResult(False, _("Ce gestionnaire de service ne supporte pas cette opération."))
 
     grant_directory_access(project_root / "var", group, repairing_user)
     # secure/auth/ (2026-09-29, crash reel en boucle : PermissionError
@@ -139,9 +140,7 @@ def repair_directory_permissions(
 
     return ManageServiceResult(
         True,
-        f"Permissions reappliquees sur var/ et secure/auth/ - {repairing_user!r} ajoute au "
-        f"groupe {group!r} si besoin : reconnectez votre session (ou 'newgrp {group}') pour "
-        "que l'interface puisse lire ce que le service ecrit.",
+        _("Permissions reappliquees sur var/ et secure/auth/ - {repairing_user!r} ajouté au groupe {group!r} si besoin : reconnectez votre session (ou 'newgrp {group}') pour que l'interface puisse lire ce que le service écrit.").format(repairing_user=repairing_user, group=group),
     )
 
 
@@ -172,15 +171,14 @@ def install_systemd_service(
     if reload_daemon is not None:
         reload_daemon()
 
-    user_note = f" (compte systeme {params.user!r} cree ou deja present)" if create_system_user is not None else ""
+    user_note = _(" (compte système {user!r} créé ou déjà présent)").format(user=params.user) if create_system_user is not None else ""
     group_note = ""
     if grant_directory_access is not None and installing_user is not None:
         group_note = (
-            f" - {installing_user!r} ajoute au groupe {params.group!r} : "
-            "reconnectez votre session (ou 'newgrp " + params.group + "') pour que "
-            "l'interface puisse lire ce que le service ecrit"
+            _(" - {installing_user!r} ajouté au groupe {group!r} : reconnectez votre session (ou 'newgrp ").format(installing_user=installing_user, group=params.group) + params.group + _("') pour que "
+            "l'interface puisse lire ce que le service écrit")
         )
-    return ManageServiceResult(True, f"Unite installee : {unit_path}{user_note}{group_note}")
+    return ManageServiceResult(True, _("Unité installée : {unit_path}{user_note}{group_note}").format(unit_path=unit_path, user_note=user_note, group_note=group_note))
 
 
 def uninstall_systemd_service(
@@ -189,7 +187,7 @@ def uninstall_systemd_service(
     service_manager: ServiceManagerPort,
 ) -> ManageServiceResult:
     if not filesystem.exists(unit_path):
-        return ManageServiceResult(False, f"Unite introuvable : {unit_path}")
+        return ManageServiceResult(False, _("Unité introuvable : {unit_path}").format(unit_path=unit_path))
 
     remove_unit_file = getattr(service_manager, "remove_unit_file", None)
     if remove_unit_file is not None:
@@ -201,4 +199,4 @@ def uninstall_systemd_service(
     if reload_daemon is not None:
         reload_daemon()
 
-    return ManageServiceResult(True, f"Unite retiree : {unit_path}")
+    return ManageServiceResult(True, _("Unité retirée : {unit_path}").format(unit_path=unit_path))

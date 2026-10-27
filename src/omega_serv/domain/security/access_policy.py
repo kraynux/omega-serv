@@ -29,13 +29,13 @@ def validate_host_header(headers: tuple[tuple[str, str], ...]) -> str | None:
     if len(host_values) == 0:
         return "Host manquant"
     if len(host_values) > 1:
-        return "Host duplique (ambigu)"
+        return "Host dupliqué (ambigu)"
 
     host = host_values[0]
     if not host:
         return "Host vide"
     if has_control_characters(host):
-        return "Host contient un caractere de controle"
+        return "Host contient un caractère de contrôle"
 
     return None
 

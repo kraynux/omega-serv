@@ -109,5 +109,42 @@ class TestSqliteIncidentRepository(unittest.TestCase):
         self.assertEqual([i.incident_id for i in result], ["second", "first"])
 
 
+class TestIncidentHistoryPruning(unittest.TestCase):
+    """Decision utilisateur 2026-10-26 : un attaquant persistant ajoutait 2 lignes par requete a
+    un incident ouvert, sans limite. On garde le debut et la fin, le milieu est compte."""
+
+    setUp = TestSqliteIncidentRepository.setUp
+    tearDown = TestSqliteIncidentRepository.tearDown
+    _observation = TestSqliteIncidentRepository._observation
+
+    def test_keeps_first_and_last_and_counts_the_middle(self):
+        self.repository.create("i1", "203.0.113.1:abcd", _NOW)
+        for index in range(10):
+            at = _NOW + timedelta(seconds=index)
+            self.repository.add_observation("i1", self._observation(observed_at=at, detail=f"o{index}"))
+            self.repository.add_event("i1", IncidentEvent(occurred_at=at, kind="waf_decision", detail=f"e{index}"))
+        self.assertEqual(self.repository.prune_history(keep_first=2, keep_last=3), 10)
+        incident = self.repository.get("i1")
+        self.assertEqual([o.detail for o in incident.observations], ["o0", "o1", "o7", "o8", "o9"])
+        self.assertEqual([e.detail for e in incident.events], ["e0", "e1", "e7", "e8", "e9"])
+        self.assertEqual((incident.omitted_observations, incident.omitted_events), (5, 5))
+        # un second elagage ajoute au compteur, jamais ne le remet a zero
+        for index in range(10, 13):
+            self.repository.add_event("i1", IncidentEvent(occurred_at=_NOW + timedelta(seconds=index), kind="k", detail=f"e{index}"))
+        self.repository.prune_history(keep_first=2, keep_last=3)
+        self.assertEqual(self.repository.get("i1").omitted_events, 8)
+
+    def test_small_history_untouched(self):
+        self.repository.create("i1", "203.0.113.1:abcd", _NOW)
+        self.repository.add_event("i1", IncidentEvent(occurred_at=_NOW, kind="k", detail="seul"))
+        self.assertEqual(self.repository.prune_history(keep_first=2, keep_last=3), 0)
+        self.assertEqual(self.repository.get("i1").omitted_events, 0)
+
+    def test_find_open_id_for_does_not_need_the_history(self):
+        self.repository.create("i1", "203.0.113.1:abcd", _NOW)
+        self.assertEqual(self.repository.find_open_id_for("203.0.113.1:abcd"), "i1")
+        self.repository.close("i1", _NOW)
+        self.assertIsNone(self.repository.find_open_id_for("203.0.113.1:abcd"))
+
 if __name__ == "__main__":
     unittest.main()

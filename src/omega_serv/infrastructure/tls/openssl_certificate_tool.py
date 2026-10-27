@@ -24,6 +24,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import (
     CaParams,
     CertificateInfo,
@@ -88,7 +89,7 @@ class OpensslCertificateTool:
 
         result = self._runner.run(args, timeout=60)
         if not result.ok:
-            raise CertificateToolError(f"echec de generation du certificat auto-signe : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de génération du certificat auto-signé : {value}").format(value=result.stderr.strip()))
 
     def inspect_certificate(self, cert_path: Path) -> CertificateInfo:
         result = self._runner.run(
@@ -96,18 +97,18 @@ class OpensslCertificateTool:
             timeout=15,
         )
         if not result.ok:
-            raise CertificateToolError(f"echec de lecture du certificat {cert_path} : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de lecture du certificat {cert_path} : {value}").format(cert_path=cert_path, value=result.stderr.strip()))
 
         return _parse_certificate_text(result.stdout)
 
     def keys_match(self, key_path: Path, cert_path: Path) -> bool:
         key_result = self._runner.run(["openssl", "pkey", "-in", str(key_path), "-pubout"], timeout=15)
         if not key_result.ok:
-            raise CertificateToolError(f"echec de lecture de la cle privee {key_path} : {key_result.stderr.strip()}")
+            raise CertificateToolError(_("échec de lecture de la clé privée {key_path} : {value}").format(key_path=key_path, value=key_result.stderr.strip()))
 
         cert_result = self._runner.run(["openssl", "x509", "-in", str(cert_path), "-pubkey", "-noout"], timeout=15)
         if not cert_result.ok:
-            raise CertificateToolError(f"echec de lecture du certificat {cert_path} : {cert_result.stderr.strip()}")
+            raise CertificateToolError(_("échec de lecture du certificat {cert_path} : {value}").format(cert_path=cert_path, value=cert_result.stderr.strip()))
 
         key_digest = hashlib.sha256(key_result.stdout.encode("ascii")).hexdigest()
         cert_digest = hashlib.sha256(cert_result.stdout.encode("ascii")).hexdigest()
@@ -134,7 +135,7 @@ class OpensslCertificateTool:
         ]
         result = self._runner.run(args, timeout=120)
         if not result.ok:
-            raise CertificateToolError(f"echec de generation de la CA locale : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de génération de la CA locale : {value}").format(value=result.stderr.strip()))
 
         serial_path.write_text("1000\n")
         index_path.write_text("")
@@ -153,7 +154,7 @@ class OpensslCertificateTool:
         ]
         result = self._runner.run(args, timeout=60)
         if not result.ok:
-            raise CertificateToolError(f"echec de generation de la CSR : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de génération de la CSR : {value}").format(value=result.stderr.strip()))
 
     def sign_csr(
         self,
@@ -187,7 +188,7 @@ class OpensslCertificateTool:
         finally:
             ext_file.unlink(missing_ok=True)
         if not result.ok:
-            raise CertificateToolError(f"echec de signature de la CSR : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de signature de la CSR : {value}").format(value=result.stderr.strip()))
 
         self._append_index_entry(index_path, out_cert_path)
 
@@ -203,12 +204,11 @@ class OpensslCertificateTool:
         )
         if not verify_result.ok:
             raise CertificateToolError(
-                f"le certificat {cert_path} n'est pas signe par cette CA, revocation refusee : "
-                f"{verify_result.stderr.strip()}"
+                _("le certificat {cert_path} n'est pas signé par cette CA, révocation refusée : {value}").format(cert_path=cert_path, value=verify_result.stderr.strip())
             )
         serial = self._read_serial(cert_path)
         if not index_path.exists():
-            raise CertificateToolError(f"index de la CA introuvable : {index_path}")
+            raise CertificateToolError(_("index de la CA introuvable : {index_path}").format(index_path=index_path))
 
         now = datetime.now(timezone.utc).strftime("%y%m%d%H%M%SZ")
         lines = index_path.read_text().splitlines()
@@ -224,13 +224,13 @@ class OpensslCertificateTool:
             else:
                 updated.append(line)
         if not found:
-            raise CertificateToolError(f"aucune entree valide pour le numero de serie {serial} dans {index_path}")
+            raise CertificateToolError(_("aucune entrée valide pour le numéro de série {serial} dans {index_path}").format(serial=serial, index_path=index_path))
         index_path.write_text("\n".join(updated) + "\n")
 
     def _read_serial(self, cert_path: Path) -> str:
         result = self._runner.run(["openssl", "x509", "-in", str(cert_path), "-noout", "-serial"], timeout=15)
         if not result.ok:
-            raise CertificateToolError(f"echec de lecture du certificat {cert_path} : {result.stderr.strip()}")
+            raise CertificateToolError(_("échec de lecture du certificat {cert_path} : {value}").format(cert_path=cert_path, value=result.stderr.strip()))
         return result.stdout.strip().removeprefix("serial=")
 
     def _append_index_entry(self, index_path: Path, cert_path: Path) -> None:
@@ -252,7 +252,7 @@ def _parse_certificate_text(text: str) -> CertificateInfo:
     not_before_match = re.search(r"^notBefore=(.+)$", text, re.MULTILINE)
     not_after_match = re.search(r"^notAfter=(.+)$", text, re.MULTILINE)
     if not (subject_match and issuer_match and not_before_match and not_after_match):
-        raise CertificateToolError("sortie openssl inattendue : champs subject/issuer/dates introuvables")
+        raise CertificateToolError(_("sortie openssl inattendue : champs subject/issuer/dates introuvables"))
 
     san_match = re.search(r"X509v3 Subject Alternative Name:\s*\n\s*(.+)", text)
     san_dns: list[str] = []

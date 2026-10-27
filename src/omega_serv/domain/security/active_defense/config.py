@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.proxy_zone import ProxyZone, UpstreamTarget
 from omega_serv.domain.security.active_defense.value_objects import (
     KNOWN_ACTION_TYPES,
@@ -223,6 +224,13 @@ class WarModeConfig:
         )
 
 
+IOC_EXPORT_FORMATS = ("json", "csv", "markdown", "stix", "misp")
+"""Formats d'export d'un incident. stix = bundle STIX 2.1, misp = evenement MISP (JSON a importer
+par l'interface de MISP) : fichiers locaux, jamais envoyes (plan Active Defense, « l'export est
+local, explicite et revisable »)."""
+IOC_TLP_LEVELS = ("white", "green", "amber", "red")
+
+
 @dataclass(frozen=True)
 class IoCConfig:
     enabled: bool = False
@@ -230,6 +238,9 @@ class IoCConfig:
     formats: tuple[str, ...] = ("json", "csv", "markdown")
     share_policy: Literal["local_only", "manual_export"] = "local_only"
     minimum_confidence: int = 70
+    tlp: str = "amber"
+    """Marquage de diffusion des exports STIX 2.1 / MISP (TLP 1.0 : white, green, amber, red).
+    AMBER par defaut, jamais WHITE (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md, Q2)."""
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> IoCConfig:
@@ -240,6 +251,7 @@ class IoCConfig:
             formats=tuple(data.get("formats", defaults.formats)),
             share_policy=data.get("share_policy", defaults.share_policy),
             minimum_confidence=int(data.get("minimum_confidence", defaults.minimum_confidence)),
+            tlp=str(data.get("tlp", defaults.tlp)).lower(),
         )
 
 
@@ -277,67 +289,70 @@ def validate_active_defense_config(config: ActiveDefenseConfig) -> list[str]:
     validate_waf_config)."""
     errors: list[str] = []
     if config.mode not in ("monitor", "enforce"):
-        errors.append(f"options.active_defense.mode invalide : {config.mode!r}")
+        errors.append(_("options.active_defense.mode invalide : {mode!r}").format(mode=config.mode))
     if config.state_ttl_seconds <= 0:
-        errors.append("options.active_defense.state_ttl_seconds doit etre strictement positif")
+        errors.append(_("options.active_defense.state_ttl_seconds doit être strictement positif"))
     if config.deception.fallback not in ("pass_through", "reject"):
-        errors.append(f"options.active_defense.deception.fallback invalide : {config.deception.fallback!r}")
+        errors.append(_("options.active_defense.deception.fallback invalide : {fallback!r}").format(fallback=config.deception.fallback))
     if config.deception.assignments_ttl_seconds <= 0:
-        errors.append("options.active_defense.deception.assignments_ttl_seconds doit etre strictement positif")
+        errors.append(_("options.active_defense.deception.assignments_ttl_seconds doit être strictement positif"))
     for name, profile in config.deception.profiles.items():
         if profile.isolation_level == "proxy":
             if not profile.reverse_proxy_zone_name:
                 errors.append(
-                    f"options.active_defense.deception.profiles.{name}.reverse_proxy_zone_name "
-                    "requis quand isolation_level == 'proxy'"
+                    _("options.active_defense.deception.profiles.{name}.reverse_proxy_zone_name requis quand isolation_level == 'proxy'").format(name=name)
                 )
             elif profile.reverse_proxy_zone_name not in config.deception.decoy_zones:
                 errors.append(
-                    f"options.active_defense.deception.profiles.{name}.reverse_proxy_zone_name "
-                    f"{profile.reverse_proxy_zone_name!r} n'existe pas dans "
-                    "options.active_defense.deception.decoy_zones (Niveau 2, Phase 5)"
+                    _("options.active_defense.deception.profiles.{name}.reverse_proxy_zone_name {reverse_proxy_zone_name!r} n'existe pas dans options.active_defense.deception.decoy_zones (Niveau 2, Phase 5)").format(name=name, reverse_proxy_zone_name=profile.reverse_proxy_zone_name)
                 )
         elif name not in KNOWN_FIXTURE_PROFILE_NAMES:
             errors.append(
-                f"options.active_defense.deception.profiles.{name} : nom de profil inconnu pour "
-                f"isolation_level == 'fixture' (attendu : {', '.join(sorted(KNOWN_FIXTURE_PROFILE_NAMES))}) "
-                "- ce leurre ne se declenchera jamais tant que le nom ne correspond pas exactement"
+                _("options.active_defense.deception.profiles.{name} : nom de profil inconnu pour isolation_level == 'fixture' (attendu : {value}) - ce leurre ne se déclenchera jamais tant que le nom ne correspond pas exactement").format(name=name, value=', '.join(sorted(KNOWN_FIXTURE_PROFILE_NAMES)))
             )
         for attack_class in profile.match_attack_classes:
             if attack_class not in KNOWN_ATTACK_CLASSES:
                 errors.append(
-                    f"options.active_defense.deception.profiles.{name}.match_attack_classes "
-                    f"contient une valeur inconnue : {attack_class!r}"
+                    _("options.active_defense.deception.profiles.{name}.match_attack_classes contient une valeur inconnue : {attack_class!r}").format(name=name, attack_class=attack_class)
                 )
     if config.war_mode.scope not in ("source", "instance"):
-        errors.append(f"options.active_defense.war_mode.scope invalide : {config.war_mode.scope!r}")
+        errors.append(_("options.active_defense.war_mode.scope invalide : {scope!r}").format(scope=config.war_mode.scope))
     for action in config.war_mode.actions:
         if action not in KNOWN_ACTION_TYPES:
-            errors.append(f"options.active_defense.war_mode.actions contient une valeur inconnue : {action!r}")
+            errors.append(_("options.active_defense.war_mode.actions contient une valeur inconnue : {action!r}").format(action=action))
     if config.war_mode.rate_limit.requests <= 0:
-        errors.append("options.active_defense.war_mode.rate_limit.requests doit etre strictement positif")
+        errors.append(_("options.active_defense.war_mode.rate_limit.requests doit être strictement positif"))
     if config.war_mode.rate_limit.window_seconds <= 0:
-        errors.append("options.active_defense.war_mode.rate_limit.window_seconds doit etre strictement positif")
+        errors.append(_("options.active_defense.war_mode.rate_limit.window_seconds doit être strictement positif"))
     thresholds = config.war_mode.thresholds
     if not (0 <= thresholds.suspicious_score <= thresholds.hostile_score <= thresholds.incident_score):
         errors.append(
-            "options.active_defense.war_mode.thresholds doit verifier "
-            "0 <= suspicious_score <= hostile_score <= incident_score"
+            _("options.active_defense.war_mode.thresholds doit vérifier "
+            "0 <= suspicious_score <= hostile_score <= incident_score")
         )
     if thresholds.contained_score < thresholds.hostile_score:
         errors.append(
-            "options.active_defense.war_mode.thresholds.contained_score doit etre >= hostile_score"
+            _("options.active_defense.war_mode.thresholds.contained_score doit être >= hostile_score")
         )
     if config.war_mode.slowdown.minimum_ms > config.war_mode.slowdown.maximum_ms:
-        errors.append("options.active_defense.war_mode.slowdown.minimum_ms doit etre <= maximum_ms")
+        errors.append(_("options.active_defense.war_mode.slowdown.minimum_ms doit être <= maximum_ms"))
     if config.ioc.share_policy not in ("local_only", "manual_export"):
-        errors.append(f"options.active_defense.ioc.share_policy invalide : {config.ioc.share_policy!r}")
+        errors.append(_("options.active_defense.ioc.share_policy invalide : {share_policy!r}").format(share_policy=config.ioc.share_policy))
     if not (0 <= config.ioc.minimum_confidence <= 100):
-        errors.append("options.active_defense.ioc.minimum_confidence doit etre entre 0 et 100")
+        errors.append(_("options.active_defense.ioc.minimum_confidence doit être entre 0 et 100"))
+    unknown_formats = [f for f in config.ioc.formats if f not in IOC_EXPORT_FORMATS]
+    if unknown_formats:
+        errors.append(_("options.active_defense.ioc.formats : format(s) inconnu(s) {formats} (attendus : {allowed})").format(
+            formats=", ".join(unknown_formats), allowed=", ".join(IOC_EXPORT_FORMATS),
+        ))
+    if config.ioc.tlp not in IOC_TLP_LEVELS:
+        errors.append(_("options.active_defense.ioc.tlp invalide : {tlp!r} (attendus : {allowed})").format(
+            tlp=config.ioc.tlp, allowed=", ".join(IOC_TLP_LEVELS),
+        ))
     for zone_name, decoy_zone in config.deception.decoy_zones.items():
         reason = validate_decoy_zone(decoy_zone)
         if reason is not None:
-            errors.append(f"options.active_defense.deception.decoy_zones.{zone_name} : {reason}")
+            errors.append(_("options.active_defense.deception.decoy_zones.{zone_name} : {reason}").format(zone_name=zone_name, reason=reason))
     return errors
 
 
@@ -349,14 +364,14 @@ def validate_decoy_zone(zone: ProxyZone) -> str | None:
     prefixe de chemin HTTP reel - reutiliser `validate_proxy_zone` tel
     quel rejetterait a tort un nom de zone qui ne commence pas par '/'."""
     if not zone.upstreams:
-        return f"au moins un upstream est requis (zone leurre {zone.url_prefix!r})"
+        return _("au moins un upstream est requis (zone leurre {url_prefix!r})").format(url_prefix=zone.url_prefix)
     for upstream in zone.upstreams:
         if not upstream.host:
-            return f"host d'upstream vide (zone leurre {zone.url_prefix!r})"
+            return _("host d'upstream vide (zone leurre {url_prefix!r})").format(url_prefix=zone.url_prefix)
         if not (1 <= upstream.port <= 65535):
-            return f"port d'upstream invalide : {upstream.port!r} (zone leurre {zone.url_prefix!r})"
+            return _("port d'upstream invalide : {port!r} (zone leurre {url_prefix!r})").format(port=upstream.port, url_prefix=zone.url_prefix)
     if zone.connect_timeout_seconds <= 0:
-        return f"connect_timeout_seconds doit etre strictement positif (zone leurre {zone.url_prefix!r})"
+        return _("connect_timeout_seconds doit être strictement positif (zone leurre {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.read_timeout_seconds <= 0:
-        return f"read_timeout_seconds doit etre strictement positif (zone leurre {zone.url_prefix!r})"
+        return _("read_timeout_seconds doit être strictement positif (zone leurre {url_prefix!r})").format(url_prefix=zone.url_prefix)
     return None

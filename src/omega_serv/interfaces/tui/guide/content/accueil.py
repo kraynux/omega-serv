@@ -1,100 +1,101 @@
 """Fiche guide : Accueil (plan guide d'aide, Phase 1)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 HOME_SCREEN = ScreenGuide(
     screen_class_name="HomeScreen",
-    title="Accueil",
-    acces="Ecran racine, affiche au lancement de l'interface (apres le splash).",
+    title=_("Accueil"),
+    acces=_("Écran racine, affiché au lancement de l'interface (après le splash)."),
     definition=(
-        "Menu principal : un bouton par grande section de l'application. Aucun reglage ici, "
-        "uniquement de la navigation."
+        _("Menu principal : un bouton par grande section de l'application. Aucun réglage ici, "
+        "uniquement de la navigation.")
     ),
     fields=(
         FieldGuide(
-            label="Assistant premier lancement",
-            definition="Parcours guide en 8 etapes pour composer et ecrire une premiere configuration.",
-            utilisation="A utiliser une seule fois, au tout premier demarrage (ou pour repartir de zero).",
-            action="Ouvre l'assistant.",
-            reaction="Aucun effet tant que l'etape 7 (Resume) n'a pas ete validee - rien n'est ecrit avant.",
+            label=_("Assistant premier lancement"),
+            definition=_("Parcours guide en 8 étapes pour composer et écrire une première configuration."),
+            utilisation=_("À utiliser une seule fois, au tout premier démarrage (ou pour repartir de zéro)."),
+            action=_("Ouvre l'assistant."),
+            reaction=_("Aucun effet tant que l'étape 7 (Résumé) n'a pas été validée - rien n'est écrit avant."),
         ),
         FieldGuide(
-            label="Registre des capacites",
-            definition="Scan en lecture seule de l'environnement (port libre, openssl present, PHP-FPM...).",
-            utilisation="Consultation uniquement.",
-            action="Ouvre le registre des capacites.",
-            reaction="Aucun effet (lecture seule).",
+            label=_("Registre des capacités"),
+            definition=_("Scan en lecture seule de l'environnement (port libre, openssl présent, PHP-FPM...)."),
+            utilisation=_("Consultation uniquement."),
+            action=_("Ouvre le registre des capacités."),
+            reaction=_("Aucun effet (lecture seule)."),
         ),
         FieldGuide(
-            label="Profils",
-            definition="Quatre profils de base preconfigures (minimal/standard/hardened/development).",
-            utilisation="Consultation puis application optionnelle.",
-            action="Ouvre l'ecran des profils.",
-            reaction="Appliquer un profil ECRASE la configuration active - voir sa propre fiche.",
+            label=_("Profils"),
+            definition=_("Quatre profils de base preconfigures (minimal/standard/hardened/development)."),
+            utilisation=_("Consultation puis application optionnelle."),
+            action=_("Ouvre l'écran des profils."),
+            reaction=_("Appliquer un profil ÉCRASE la configuration active - voir sa propre fiche."),
         ),
         FieldGuide(
-            label="Configuration detaillee",
-            definition="Tous les reglages du serveur et des options superposables, ecran par ecran.",
-            utilisation="Le cœur de la configuration au quotidien.",
-            action="Ouvre le menu de configuration detaillee.",
-            reaction="Depend de l'ecran ouvert ensuite - voir sa propre fiche.",
+            label=_("Configuration détaillée"),
+            definition=_("Tous les réglages du serveur et des options superposables, écran par écran."),
+            utilisation=_("Le cœur de la configuration au quotidien."),
+            action=_("Ouvre le menu de configuration détaillée."),
+            reaction=_("Dépend de l'écran ouvert ensuite - voir sa propre fiche."),
         ),
         FieldGuide(
-            label="Gestion des logs",
-            definition="Consultation, suivi en direct, rotation/archivage et statistiques des journaux.",
-            utilisation="Consultation et maintenance des logs.",
-            action="Ouvre le menu de gestion des logs.",
-            reaction="Depend de l'ecran ouvert ensuite - voir sa propre fiche.",
+            label=_("Gestion des logs"),
+            definition=_("Consultation, suivi en direct, rotation/archivage et statistiques des journaux."),
+            utilisation=_("Consultation et maintenance des logs."),
+            action=_("Ouvre le menu de gestion des logs."),
+            reaction=_("Dépend de l'écran ouvert ensuite - voir sa propre fiche."),
         ),
         FieldGuide(
-            label="Service",
-            definition="Pilotage du service systeme (demarrer/arreter/redemarrer/recharger/installer).",
-            utilisation="A utiliser pour piloter le serveur en tant que service systeme.",
-            action="Ouvre l'ecran Service.",
-            reaction="Voir sa propre fiche - certaines actions demandent une authentification (sudo).",
+            label=_("Service"),
+            definition=_("Pilotage du service système (demarrer/arreter/redemarrer/recharger/installer)."),
+            utilisation=_("À utiliser pour piloter le serveur en tant que service système."),
+            action=_("Ouvre l'écran Service."),
+            reaction=_("Voir sa propre fiche - certaines actions demandent une authentification (sudo)."),
         ),
         FieldGuide(
-            label="Multi-instance / Instances (N)",
-            definition="Registre des installations d'OMEGA-SERV connues sur cette machine.",
-            utilisation="Le libelle affiche le nombre d'instances des que 2 ou plus sont enregistrees.",
-            action="Ouvre l'ecran Multi-instance.",
-            reaction="Aucun effet direct (lecture) - voir sa propre fiche pour les actions possibles.",
+            label=_("Multi-instance / Instances (N)"),
+            definition=_("Registre des installations d'OMEGA-SERV connues sur cette machine."),
+            utilisation=_("Le libellé affiche le nombre d'instances dès que 2 ou plus sont enregistrées."),
+            action=_("Ouvre l'écran Multi-instance."),
+            reaction=_("Aucun effet direct (lecture) - voir sa propre fiche pour les actions possibles."),
         ),
         FieldGuide(
-            label="Etat & Ressources",
-            definition="Vue d'ensemble en direct : etat du serveur/service, flux du log d'acces, ressources systeme.",
-            utilisation="A consulter pour un diagnostic rapide.",
-            action="Ouvre l'ecran Etat & Ressources.",
-            reaction="Aucun effet (lecture, rafraichie automatiquement toutes les 2 secondes).",
+            label=_("État & Ressources"),
+            definition=_("Vue d'ensemble en direct : état du serveur/service, flux du log d'accès, ressources système."),
+            utilisation=_("À consulter pour un diagnostic rapide."),
+            action=_("Ouvre l'écran État & Ressources."),
+            reaction=_("Aucun effet (lecture, rafraîchie automatiquement toutes les 2 secondes)."),
         ),
         FieldGuide(
-            label="Active Securite",
-            definition="Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF).",
-            utilisation="A utiliser pour la securite active du serveur.",
-            action="Ouvre le menu Active Securite.",
-            reaction="Depend de l'ecran ouvert ensuite - voir sa propre fiche.",
+            label=_("Active Sécurité"),
+            definition=_("Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."),
+            utilisation=_("À utiliser pour la sécurité active du serveur."),
+            action=_("Ouvre le menu Active Sécurité."),
+            reaction=_("Dépend de l'écran ouvert ensuite - voir sa propre fiche."),
         ),
         FieldGuide(
-            label="Audit de securite",
-            definition="Verifications consultatives (service, rotation des logs, mode WAF...).",
-            utilisation="A lancer ponctuellement pour un avis global.",
-            action="Ouvre l'ecran d'audit.",
-            reaction="Aucun effet (lecture seule).",
+            label=_("Audit de sécurité"),
+            definition=_("Vérifications consultatives (service, rotation des logs, mode WAF...)."),
+            utilisation=_("À lancer ponctuellement pour un avis global."),
+            action=_("Ouvre l'écran d'audit."),
+            reaction=_("Aucun effet (lecture seule)."),
         ),
         FieldGuide(
-            label="Sauvegarde de configuration",
-            definition="Créer, lister, restaurer ou supprimer des sauvegardes completes de la configuration.",
-            utilisation="A utiliser avant un changement risque, ou pour migrer une configuration.",
-            action="Ouvre l'ecran de sauvegarde.",
-            reaction="Restaurer ECRASE directement les fichiers vises - voir sa propre fiche.",
+            label=_("Sauvegarde de configuration"),
+            definition=_("Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."),
+            utilisation=_("À utiliser avant un changement risque, ou pour migrer une configuration."),
+            action=_("Ouvre l'écran de sauvegarde."),
+            reaction=_("Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."),
         ),
     ),
-    consequences="Cet ecran ne modifie jamais la configuration lui-meme - uniquement de la navigation.",
+    consequences=_("Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."),
     points_de_vigilance=(
         (
-            "Appuyer sur Echap depuis cet ecran demande une confirmation de sortie de "
-            "l'application (contrairement aux autres ecrans, ou Echap revient simplement en arriere)."
+            _("Appuyer sur Échap depuis cet écran demande une confirmation de sortie de "
+            "l'application (contrairement aux autres écrans, où Échap revient simplement en arrière).")
         ),
     ),
 )

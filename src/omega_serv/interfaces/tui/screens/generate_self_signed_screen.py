@@ -13,6 +13,7 @@ from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
 from omega_serv.application.tls.generate_self_signed import generate_self_signed_certificate
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import VALID_KEY_TYPES, KeyType, SelfSignedCertParams
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -35,33 +36,33 @@ class GenerateSelfSignedScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("CERTIFICAT AUTO-SIGNE", classes="omega-title")
+            yield Static(_("CERTIFICAT AUTO-SIGNÉ"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
-            yield Static("Nom commun (CN)", classes="omega-subtitle")
+            yield Static(_("Nom commun (CN)"), classes="omega-subtitle")
             yield Input(id="cn-input")
-            yield Static("SAN DNS (separes par des virgules)", classes="omega-subtitle")
+            yield Static(_("SAN DNS (séparés par des virgules)"), classes="omega-subtitle")
             yield Input(id="san-dns-input")
-            yield Static("SAN IP (separees par des virgules)", classes="omega-subtitle")
+            yield Static(_("SAN IP (séparées par des virgules)"), classes="omega-subtitle")
             yield Input(id="san-ip-input")
-            yield Static("Organisation", classes="omega-subtitle")
+            yield Static(_("Organisation"), classes="omega-subtitle")
             yield Input(value="OMEGA-SERV", id="org-input")
-            yield Static("Unite organisationnelle", classes="omega-subtitle")
+            yield Static(_("Unité organisationnelle"), classes="omega-subtitle")
             yield Input(id="ou-input")
-            yield Static("Ville / region / pays", classes="omega-subtitle")
+            yield Static(_("Ville / région / pays"), classes="omega-subtitle")
             yield Input(id="city-input")
             yield Input(id="region-input")
             yield Input(id="country-input")
-            yield Static("Validite en jours", classes="omega-subtitle")
+            yield Static(_("Validité en jours"), classes="omega-subtitle")
             yield Input(value="365", id="days-input")
-            yield Static(f"Type de cle ({'/'.join(sorted(VALID_KEY_TYPES))})", classes="omega-subtitle")
+            yield Static(_("Type de clé ({value})").format(value='/'.join(sorted(VALID_KEY_TYPES))), classes="omega-subtitle")
             yield Input(value="rsa2048", id="key-type-input")
-            yield Static("Mot de passe de cle (optionnel)", classes="omega-subtitle")
+            yield Static(_("Mot de passe de clé (optionnel)"), classes="omega-subtitle")
             yield Input(password=True, id="password-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Generer", id="generate", variant="primary")
+                    yield Button(_("Générer"), id="generate", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -75,24 +76,24 @@ class GenerateSelfSignedScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
 
         factory = self._container.certificate_tool_factory
         if factory is None:
-            error_widget.update("Generation indisponible dans cet environnement.")
+            error_widget.update(_("Génération indisponible dans cet environnement."))
             return
 
         days_text = self.query_one("#days-input", Input).value.strip()
         try:
             days = int(days_text)
         except ValueError:
-            error_widget.update(f"Validite invalide (nombre attendu) : {days_text!r}")
+            error_widget.update(_("Validité invalide (nombre attendu) : {days_text!r}").format(days_text=days_text))
             return
 
         key_type_text = self.query_one("#key-type-input", Input).value.strip()
         if key_type_text not in VALID_KEY_TYPES:
-            error_widget.update(f"Type de cle invalide : {key_type_text!r} (attendu : {', '.join(sorted(VALID_KEY_TYPES))})")
+            error_widget.update(_("Type de clé invalide : {key_type_text!r} (attendu : {value})").format(key_type_text=key_type_text, value=', '.join(sorted(VALID_KEY_TYPES))))
             return
 
         password = self.query_one("#password-input", Input).value.strip() or None
@@ -114,7 +115,7 @@ class GenerateSelfSignedScreen(OmegaScreen):
         cert_path = self._container.project_root / load_result.config.tls.certificate_path
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
 
-        error_widget.update("Generation en cours...")
+        error_widget.update(_("Génération en cours..."))
         self.query_one("#generate", Button).disabled = True
         self.run_worker(
             lambda: self._generate_in_thread(params, key_path, cert_path, factory, backups_dir, load_result.config.tls.enabled),
@@ -144,19 +145,17 @@ class GenerateSelfSignedScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
 
         if error is not None:
-            error_widget.update(f"Erreur : {error}")
+            error_widget.update(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction dans _generate_in_thread : error XOR result
         if not result.success:
-            error_widget.update(f"Erreur : {result.message}")
+            error_widget.update(_("Erreur : {message}").format(message=result.message))
             return
         error_widget.update("")
         if tls_enabled:
             notify_restart_required(
                 self, self._container,
-                f"{result.message} TLS est actif : le serveur en cours d'execution continue de "
-                "servir l'ancien certificat jusqu'a un REDEMARRAGE COMPLET (le fichier a change, "
-                "la memoire du processus non).",
+                _("{message} TLS est actif : le serveur en cours d'exécution continue de servir l'ancien certificat jusqu'à un REDÉMARRAGE COMPLET (le fichier a changé, la mémoire du processus non).").format(message=result.message),
             )
         else:
             self.app.notify(result.message)

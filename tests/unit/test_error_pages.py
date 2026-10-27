@@ -1,6 +1,6 @@
 import unittest
 
-from omega_serv.domain.http.error_pages import render_default_error_page
+from omega_serv.domain.http.error_pages import error_pages_css, render_default_error_page
 
 
 class TestRenderDefaultErrorPage(unittest.TestCase):
@@ -41,8 +41,17 @@ class TestCuratedDefaultPages(unittest.TestCase):
         self.assertIn(b"451", body)
         self.assertIn(b"banni", body)
 
+    def test_429_uses_the_curated_page_with_the_external_stylesheet(self):
+        body = render_default_error_page(429)
+        self.assertIn(b"429", body)
+        self.assertIn("Accès limité".encode(), body)
+        self.assertIn(b'class="container theme-yellow"', body)
+        self.assertIn(b'href="/.omega-serv-error-css/error-pages.css"', body)
+        self.assertNotIn(b"<style>", body)  # jamais de style inline : bloque par la CSP du profil durci
+        self.assertIn(b".theme-yellow", error_pages_css().encode())
+
     def test_curated_pages_never_leak_personal_contact_info(self):
-        for status in (401, 403, 404, 451):
+        for status in (401, 403, 404, 429, 451):
             body = render_default_error_page(status)
             self.assertNotIn(b"mailto:", body)
             self.assertNotIn(b"ts.net", body)

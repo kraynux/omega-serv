@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from pathlib import Path, PurePath
 from typing import TYPE_CHECKING, ClassVar, cast
 
+from omega_lib.i18n.policies import language_for, text_direction
 from omega_lib.terminal.models import RenderProfile
 from omega_lib.theme.policies import TUI_THEMES
 from textual.app import App, SystemCommand
@@ -16,18 +17,28 @@ from textual.binding import Binding, BindingType
 
 from omega_serv.application.terminal.detect_terminal import detect_terminal
 from omega_serv.application.terminal.exceptions import UnknownThemeError
+from omega_serv.application.terminal.select_language import (
+    LANGUAGE_CHANGED_ENV_VAR,
+    console_fallback_from,
+    devanagari_misaligned_in,
+)
 from omega_serv.application.terminal.select_theme import select_theme
+from omega_serv.core.i18n import STATE, _
 from omega_serv.interfaces.tui.controllers.startup_controller import (
     StartupState,
     resolve_startup_state,
 )
 from omega_serv.interfaces.tui.pending_instance_switch import PendingInstanceSwitch
+from omega_serv.interfaces.tui.pending_interface_restart import PendingInterfaceRestart
 from omega_serv.interfaces.tui.rendering.stylesheet_loader import load_paths_for
 from omega_serv.interfaces.tui.rendering.textual_theme_builder import build_all_textual_themes
 from omega_serv.interfaces.tui.screens.guide_menu_screen import GuideMenuScreen
 from omega_serv.interfaces.tui.screens.home import HomeScreen
 from omega_serv.interfaces.tui.screens.instance_switch_splash_screen import (
     InstanceSwitchSplashScreen,
+)
+from omega_serv.interfaces.tui.screens.language_changed_splash_screen import (
+    LanguageChangedSplashScreen,
 )
 from omega_serv.interfaces.tui.screens.quit_confirm import QuitConfirmScreen
 from omega_serv.interfaces.tui.screens.settings_screen import SettingsScreen
@@ -39,7 +50,7 @@ if TYPE_CHECKING:
 
     from omega_serv.bootstrap.container import DependencyContainer
 
-TITLE = "\U0001f512 OMEGA-SERV"
+TITLE = _("\U0001f512 OMEGA-SERV")
 """Icone cadenas incluse DANS la chaine de titre (HeaderIcon/HeaderTitle
 sont deux widgets Textual distincts, les fondre dans une seule chaine
 les fait apparaitre comme une unite - meme raisonnement que le reste de
@@ -65,12 +76,12 @@ class OmegaServApp(App[None]):
 
     TITLE = TITLE
     BINDINGS: ClassVar[list[BindingType]] = [
-        Binding("q", "quit", "Quitter", show=True),
-        Binding("ctrl+q", "quit", "Quitter", show=False),
-        Binding("t", "cycle_theme", "Theme suivant", show=True),
-        Binding("r", "refresh_terminal", "Rafraichir", show=True),
-        Binding("a", "help", "Aide", show=True),
-        Binding("o", "open_settings", "Options", show=True),
+        Binding("q", "quit", _("Quitter"), show=True),
+        Binding("ctrl+q", "quit", _("Quitter"), show=False),
+        Binding("t", "cycle_theme", _("Thème suivant"), show=True),
+        Binding("r", "refresh_terminal", _("Rafraîchir"), show=True),
+        Binding("a", "help", _("Aide"), show=True),
+        Binding("o", "open_settings", _("Options"), show=True),
     ]
 
     def __init__(self, container: DependencyContainer) -> None:
@@ -87,10 +98,14 @@ class OmegaServApp(App[None]):
             self.register_theme(theme)
         self.theme = self._startup_state.theme.theme_name
         self.pending_switch: PendingInstanceSwitch | None = None
+        self.pending_restart: PendingInterfaceRestart | None = None
 
     def on_mount(self) -> None:
         switched_from = os.environ.pop(_SWITCHED_FROM_ENV_VAR, None)
-        if switched_from is not None:
+        language_changed = os.environ.pop(LANGUAGE_CHANGED_ENV_VAR, None)
+        if language_changed is not None:
+            self.push_screen(LanguageChangedSplashScreen(native_name=STATE.language.native_name), self._after_splash)
+        elif switched_from is not None:
             self.push_screen(
                 InstanceSwitchSplashScreen(
                     source_name=switched_from,
@@ -110,13 +125,34 @@ class OmegaServApp(App[None]):
         return self._container.project_root.name
 
     def _after_splash(self, _result: None) -> None:
+        if STATE.fell_back_from is not None:
+            self.notify(
+                _("Langue « {code} » indisponible : interface en français.").format(code=STATE.fell_back_from),
+                title="Langue / Language", severity="warning", timeout=10,
+            )
+        if text_direction(STATE.language.code) == "rtl":
+            # Arabe (option A3, decision utilisateur 2026-10-22) : l'interface terminal reste
+            # « en test » - l'ordre droite-a-gauche depend du terminal, jamais d'omega-serv.
+            self.notify(
+                _("Interface en écriture de droite à gauche : son affichage dépend de votre terminal (lettres liées, ordre des mots autour des chemins). La CLI, le guide HTML et les pages visiteurs restent toujours corrects."),
+                title="Langue / Language", severity="warning", timeout=15,
+            )
         terminal = self._startup_state.terminal
+        if devanagari_misaligned_in(STATE.language.code, terminal.signals.family):
+            self.notify(
+                _("Ce terminal ({family}) compose lui-même les lettres liées du hindi sur une largeur variable : cadres et colonnes peuvent se décaler. Affichage aligné dans Terminator, GNOME Terminal, Xfce Terminal ou Alacritty ; sinon OMEGA_SERV_LANG=en serv.").format(family=terminal.signals.family),
+                title="Langue / Language", severity="warning", timeout=15,
+            )
+        fallback_code = console_fallback_from()
+        if fallback_code is not None:
+            self.notify(
+                _("Ce terminal (console texte) ne peut pas afficher la langue « {name} » : interface en anglais pour cette session. Le réglage est conservé - la langue revient dans un terminal graphique.").format(name=language_for(fallback_code).native_name),
+                title="Langue / Language", severity="warning", timeout=15,
+            )
         too_small = terminal.signals.columns < 80 or terminal.signals.rows < 24
         if terminal.render_profile == RenderProfile.MONO or too_small:
             message = (
-                f"Terminal detecte : {terminal.signals.family} "
-                f"({terminal.signals.columns}x{terminal.signals.rows}). "
-                f"Rendu applique : {terminal.render_profile.value}."
+                _("Terminal détecté : {family} ({columns}x{rows}). Rendu appliqué : {value}.").format(family=terminal.signals.family, columns=terminal.signals.columns, rows=terminal.signals.rows, value=terminal.render_profile.value)
             )
             self.push_screen(TerminalWarningScreen(message=message), self._show_home)
         else:
@@ -134,7 +170,7 @@ class OmegaServApp(App[None]):
         instance_count = len(self._container.instance_registry.load())
         if instance_count <= 1:
             return base
-        return f"{base} | Instance : {self._current_instance_display_name()}"
+        return _("{base} | Instance : {value}").format(base=base, value=self._current_instance_display_name())
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """La palette de commandes de Textual (ctrl+p, active par defaut dans
@@ -157,8 +193,8 @@ class OmegaServApp(App[None]):
 
             self.push_screen(
                 ConfirmScreen(
-                    title="QUITTER SANS ENREGISTRER ?",
-                    message="Un editeur contient des modifications non enregistrees : elles seront perdues.",
+                    title=_("QUITTER SANS ENREGISTRER ?"),
+                    message=_("Un éditeur contient des modifications non enregistrées : elles seront perdues."),
                 ),
                 self._quit_if_confirmed,
             )
@@ -181,7 +217,7 @@ class OmegaServApp(App[None]):
             self.notify(str(exc), severity="error")
             return
         except OSError as exc:
-            self.notify(f"Theme applique mais non enregistre : {exc}", severity="warning")
+            self.notify(_("Thème appliqué mais non enregistré : {exc}").format(exc=exc), severity="warning")
         self.theme = next_name
 
     def action_refresh_terminal(self) -> None:
@@ -191,8 +227,8 @@ class OmegaServApp(App[None]):
         self._startup_state = StartupState(terminal=terminal, theme=self._startup_state.theme)
         self.sub_title = self._build_sub_title()
         self.notify(
-            f"{terminal.signals.family} ({terminal.signals.columns}x{terminal.signals.rows})",
-            title="Terminal rafraichi",
+            _("{family} ({columns}x{rows})").format(family=terminal.signals.family, columns=terminal.signals.columns, rows=terminal.signals.rows),
+            title=_("Terminal rafraîchi"),
         )
 
     def action_help(self) -> None:
@@ -204,17 +240,17 @@ class OmegaServApp(App[None]):
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         """Remplace la liste par defaut de Textual plutot que d'appeler
         `super()` (meme raisonnement que le reste de la suite)."""
-        yield SystemCommand("Theme", "Changer le theme actif", self.action_change_theme)
+        yield SystemCommand(_("Thème"), _("Changer le thème actif"), self.action_change_theme)
         yield SystemCommand(
-            "Quitter", "Quitter l'application (avec confirmation)", self.action_quit
+            _("Quitter"), _("Quitter l'application (avec confirmation)"), self.action_quit
         )
         yield SystemCommand(
-            "Capture d'ecran",
-            "Enregistrer une capture SVG de l'ecran courant",
+            _("Capture d'écran"),
+            _("Enregistrer une capture SVG de l'écran courant"),
             self._deliver_screenshot_to_configured_dir,
         )
         yield SystemCommand(
-            "Options", "Theme, profil de rendu, chemins d'export/captures", self.action_open_settings
+            _("Options"), _("Thème, profil de rendu, chemins d'export/captures"), self.action_open_settings
         )
 
     def _deliver_screenshot_to_configured_dir(self) -> None:
@@ -232,7 +268,7 @@ class OmegaServApp(App[None]):
         logging.getLogger("omega_serv").error("Exception non prevue", exc_info=error)
         self.notify(
             str(error) or type(error).__name__,
-            title="Erreur inattendue",
+            title=_("Erreur inattendue"),
             severity="error",
             timeout=10,
         )

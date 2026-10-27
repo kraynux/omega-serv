@@ -8,6 +8,7 @@ from textual.containers import Center, Middle
 from textual.screen import Screen
 from textual.widgets import Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.widgets.splash_hero import SplashHero
 
 
@@ -21,7 +22,7 @@ class SplashScreen(Screen[None]):
             with Center():
                 yield SplashHero()
             with Center():
-                yield Static("Appuyez sur une touche pour continuer...", classes="omega-splash-prompt")
+                yield Static(_("Cliquez ou appuyez sur une touche pour continuer..."), classes="omega-splash-prompt")
 
     def on_key(self, event: events.Key) -> None:
         event.stop()

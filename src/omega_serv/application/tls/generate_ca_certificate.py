@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import CaParams
 from omega_serv.domain.security.tls.validation import validate_ca_params
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
@@ -51,5 +52,5 @@ def generate_ca_certificate(
     filesystem.set_file_mode(index_path, 0o600)
 
     return GenerateCaResult(
-        True, f"CA locale generee : {cert_path} (cle : {key_path}, mode 0600, dossier 0700)"
+        True, _("CA locale générée : {cert_path} (clé : {key_path}, mode 0600, dossier 0700)").format(cert_path=cert_path, key_path=key_path)
     )

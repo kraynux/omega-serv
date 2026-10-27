@@ -35,6 +35,7 @@ from omega_serv.domain.security.waf.config import (
     WafConfig,
     parse_waf_config,
 )
+from omega_serv.domain.security.waf.rate_limit_policy import effective_source_policies
 from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import AsyncioDelayScheduler
 from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
@@ -45,6 +46,13 @@ from omega_serv.infrastructure.decoys.in_process_fixture_dispatcher import (
 )
 from omega_serv.infrastructure.fastcgi.asyncio_fastcgi_client import AsyncioFastCgiClient
 from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
+from omega_serv.infrastructure.persistence.active_defense_write_behind import (
+    READER_LOCK_TIMEOUT_SECONDS,
+    SqliteActiveDefenseWriter,
+    WriteBehindDeceptionAssignmentRepository,
+    WriteBehindThreatStateRepository,
+    purge_interval_for,
+)
 from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
     open_active_defense_connection,
 )
@@ -69,6 +77,8 @@ from omega_serv.infrastructure.waf.python_waf_engine import PythonWafEngine
 from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStore
 from omega_serv.infrastructure.waf.reputation_tracker import InMemoryReputationTracker
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
+from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+from omega_serv.ports.active_defense_writer_port import ActiveDefenseWriterPort
 from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
 from omega_serv.ports.blocklist_port import BlocklistPort
 from omega_serv.ports.clock_port import ClockPort
@@ -155,6 +165,7 @@ def build_waf_collaborators(
     filesystem: FilesystemPort,
     clock: ClockPort,
     force: bool = False,
+    shared_counters: SharedCounters | None = None,
 ) -> WafCollaborators | None:
     """`force=True` construit les collaborateurs meme si l'option "waf"
     est desactivee - utilise par `omega-serv waf test` (doc WAF,
@@ -172,6 +183,14 @@ def build_waf_collaborators(
         waf_config.reputation,
         never_auto_block=effective_never_auto_block(
             waf_config.reputation.never_auto_block, config.option_enabled("trusted_proxy"),
+        ),
+    ), rate_limit=replace(
+        # Meme garde-fou pour les regles de debit IP/reseau (OMEGA-SERV_ETUDE_
+        # RATE_LIMIT_EXCLUSIONS.md D4) : une regle couvrant le loopback est
+        # ignoree sans proxy de confiance.
+        waf_config.rate_limit,
+        source_policies=effective_source_policies(
+            waf_config.rate_limit.source_policies, config.option_enabled("trusted_proxy"),
         ),
     ))
     _prepare_blocklists(filesystem, project_root, waf_config)
@@ -193,8 +212,15 @@ def build_waf_collaborators(
         config=waf_config,
         waf_port=PythonWafEngine(compiled_packs, waf_config),
         blocklist_port=JsonBlocklistStore(filesystem, project_root / waf_config.blocklist.path, clock),
-        rate_limit_port=InMemoryRateLimitStore(clock),
-        reputation_tracker=InMemoryReputationTracker(clock),
+        # Mode « boost » : compteurs partages entre workers (OMEGA-SERV_ETUDE_MODE_BOOST.md,
+        # option A) - sinon, en memoire de ce seul processus (fonctionnement historique).
+        rate_limit_port=(
+            shared_counters.rate_limit_store(clock) if shared_counters is not None else InMemoryRateLimitStore(clock)
+        ),
+        reputation_tracker=(
+            shared_counters.reputation_tracker(clock) if shared_counters is not None
+            else InMemoryReputationTracker(clock)
+        ),
         alert_log_path=project_root / waf_config.logging.path,
         magnet_port=magnet_port,
         magnet_executor=magnet_executor,
@@ -211,11 +237,16 @@ class ActiveDefenseCollaborators:
     delay_scheduler: DelaySchedulerPort
     enriched_log_path: Path
     decoy_proxy_client: HttpProxyClientPort
+    writer: ActiveDefenseWriterPort | None = None
+    """Seulement pour le serveur (`write_behind=True`) : la CLI et la TUI ecrivent directement."""
 
 
 def build_active_defense_collaborators(
     config: OmegaServConfig,
     project_root: Path,
+    clock: ClockPort | None = None,
+    *,
+    write_behind: bool = False,
 ) -> ActiveDefenseCollaborators | None:
     """Meme patron exact que build_waf_collaborators - seul point de
     construction reel de la connexion sqlite (plan_active_defense_omega_
@@ -235,16 +266,35 @@ def build_active_defense_collaborators(
     if "active_defense" not in config.options:
         return None
     active_defense_config = parse_active_defense_config(config.options["active_defense"].settings)
-    connection = open_active_defense_connection(project_root / active_defense_config.storage.database)
+    database = project_root / active_defense_config.storage.database
+    if not write_behind:
+        # CLI et TUI : ecriture directe, comme avant - aucun fil d'ecriture n'y tourne (une
+        # ecriture differee n'y serait jamais en base : regression trouvee le 2026-10-26).
+        connection = open_active_defense_connection(database)
+        threat_states: ThreatStateRepositoryPort = SqliteThreatStateRepository(connection)
+        assignments: DeceptionAssignmentRepositoryPort = SqliteDeceptionAssignmentRepository(connection)
+        writer: SqliteActiveDefenseWriter | None = None
+    else:
+        # Serveur - ecriture differee (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6) :
+        # cette connexion-ci ne sert qu'aux LECTURES faites sur la boucle (attente de verrou tres
+        # courte) ; toutes les ecritures passent par le fil d'ecriture et sa propre connexion.
+        connection = open_active_defense_connection(database, lock_timeout=READER_LOCK_TIMEOUT_SECONDS)
+        writer = SqliteActiveDefenseWriter(
+            database, clock or SystemClock(),
+            purge_interval_seconds=purge_interval_for(active_defense_config.state_ttl_seconds),
+        )
+        threat_states = WriteBehindThreatStateRepository(SqliteThreatStateRepository(connection), writer)
+        assignments = WriteBehindDeceptionAssignmentRepository(SqliteDeceptionAssignmentRepository(connection), writer)
     return ActiveDefenseCollaborators(
         config=active_defense_config,
-        threat_state_repository=SqliteThreatStateRepository(connection),
+        threat_state_repository=threat_states,
         incident_repository=SqliteIncidentRepository(connection),
-        deception_assignment_repository=SqliteDeceptionAssignmentRepository(connection),
+        deception_assignment_repository=assignments,
         decoy_dispatch_port=InProcessFixtureDispatcher(),
         delay_scheduler=AsyncioDelayScheduler(),
         enriched_log_path=project_root / active_defense_config.logging.log_path,
         decoy_proxy_client=AsyncioHttpProxyClient(),
+        writer=writer,
     )
 
 
@@ -298,12 +348,13 @@ def build_server(
     filesystem: FilesystemPort,
     logger: LoggerPort,
     clock: ClockPort | None = None,
+    shared_counters: SharedCounters | None = None,
 ) -> AsyncioHttpServer:
     clock = clock or SystemClock()
     webroot = project_root / config.paths.webroot
     path_resolver = SafePathResolver(filesystem, webroot)
 
-    waf = build_waf_collaborators(config, project_root, filesystem, clock)
+    waf = build_waf_collaborators(config, project_root, filesystem, clock, shared_counters=shared_counters)
 
     ssl_context = None
     if config.tls.enabled and config.tls.mode == "direct":
@@ -311,7 +362,7 @@ def build_server(
         ssl_context = build_ssl_context(config.tls, project_root)
 
     auth = build_auth_collaborators(config, project_root, filesystem)
-    active_defense = build_active_defense_collaborators(config, project_root)
+    active_defense = build_active_defense_collaborators(config, project_root, clock, write_behind=True)
 
     fastcgi_client = AsyncioFastCgiClient() if config.option_enabled("fastcgi") else None
     proxy_client = AsyncioHttpProxyClient() if config.option_enabled("reverse_proxy") else None
@@ -336,7 +387,7 @@ def build_server(
         proxy_cache_locks = ProxyCacheLocks()
         proxy_cache_metrics = ProxyCacheMetrics()
 
-    return AsyncioHttpServer(
+    server = AsyncioHttpServer(
         config=config,
         path_resolver=path_resolver,
         filesystem=filesystem,
@@ -372,8 +423,13 @@ def build_server(
         delay_scheduler=active_defense.delay_scheduler if active_defense else None,
         active_defense_enriched_log_path=active_defense.enriched_log_path if active_defense else None,
         decoy_proxy_client=active_defense.decoy_proxy_client if active_defense else None,
+        active_defense_writer=active_defense.writer if active_defense else None,
         clock=clock,
     )
+    # Gardes par le serveur : un rechargement a chaud les reutilise (compteurs de securite
+    # jamais remis a zero par un SIGHUP).
+    server.shared_counters = shared_counters
+    return server
 
 
 def reload_server(
@@ -397,7 +453,7 @@ def reload_server(
     necessite un restart complet pour l'instant, `reload_scoped()` ne
     touche jamais `_active_defense_config`/`_threat_state_repository`."""
     clock = clock or SystemClock()
-    waf = build_waf_collaborators(config, project_root, filesystem, clock)
+    waf = build_waf_collaborators(config, project_root, filesystem, clock, shared_counters=server.shared_counters)
     auth = build_auth_collaborators(config, project_root, filesystem)
 
     server.reload_scoped(

@@ -19,6 +19,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Checkbox, DataTable, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.persistence.backup import BackupRequest
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -40,36 +41,36 @@ class BackupScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("SAUVEGARDE / RESTAURATION DE LA CONFIGURATION", classes="omega-title")
+            yield Static(_("SAUVEGARDE / RESTAURATION DE LA CONFIGURATION"), classes="omega-title")
             yield Static("", id="backup-error", classes="omega-hint")
             yield Static(
-                "Le fichier de configuration est toujours inclus. Une sauvegarde "
-                "n'est jamais chiffree par defaut.",
+                _("Le fichier de configuration est toujours inclus. Une sauvegarde "
+                "n'est jamais chiffrée par défaut."),
                 classes="omega-hint",
             )
-            yield Checkbox("Inclure les regles WAF (regles + liste de blocage)", id="include-waf")
-            yield Checkbox("Inclure les zones d'authentification (secrets reels)", id="include-auth")
-            yield Checkbox("Inclure les certificats (cles privees TLS incluses)", id="include-certificates")
-            yield Checkbox("Inclure Active Defense (base de menaces/incidents)", id="include-active-defense")
-            yield Static("Description", classes="omega-subtitle")
+            yield Checkbox(_("Inclure les règles WAF (règles + liste de blocage)"), id="include-waf")
+            yield Checkbox(_("Inclure les zones d'authentification (secrets réels)"), id="include-auth")
+            yield Checkbox(_("Inclure les certificats (clés privées TLS incluses)"), id="include-certificates")
+            yield Checkbox(_("Inclure Active Defense (base de menaces/incidents)"), id="include-active-defense")
+            yield Static(_("Description"), classes="omega-subtitle")
             yield Input(id="description-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Creer une sauvegarde", id="create", variant="primary")
+                    yield Button(_("Créer une sauvegarde"), id="create", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield DataTable(id="backups-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Restaurer", id="restore", variant="error", disabled=True)
+                    yield Button(_("Restaurer"), id="restore", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#backups-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("ID", "Date", "Contenu", "Taille (octets)", "Description")
+        table.add_columns(_("ID"), _("Date"), _("Contenu"), _("Taille (octets)"), _("Description"))
         self._refresh()
 
     def _refresh(self) -> None:
@@ -104,10 +105,9 @@ class BackupScreen(OmegaScreen):
         if button_id == "restore" and self._selected_snapshot_id is not None:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="RESTAURER LA SAUVEGARDE",
+                    title=_("RESTAURER LA SAUVEGARDE"),
                     message=(
-                        f"Restaurer {self._selected_snapshot_id} ecrasera les fichiers actuels "
-                        "aux memes emplacements. Continuer ?"
+                        _("Restaurer {selected_snapshot_id} écrasera les fichiers actuels aux mêmes emplacements. Continuer ?").format(selected_snapshot_id=self._selected_snapshot_id)
                     ),
                 ),
                 self._restore_if_confirmed,
@@ -116,8 +116,8 @@ class BackupScreen(OmegaScreen):
         if button_id == "delete" and self._selected_snapshot_id is not None:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="SUPPRIMER LA SAUVEGARDE",
-                    message=f"Supprimer definitivement {self._selected_snapshot_id} ?",
+                    title=_("SUPPRIMER LA SAUVEGARDE"),
+                    message=_("Supprimer définitivement {selected_snapshot_id} ?").format(selected_snapshot_id=self._selected_snapshot_id),
                 ),
                 self._delete_if_confirmed,
             )
@@ -126,7 +126,7 @@ class BackupScreen(OmegaScreen):
         error_widget = self.query_one("#backup-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
 
         include_auth = self.query_one("#include-auth", Checkbox).value
@@ -134,10 +134,10 @@ class BackupScreen(OmegaScreen):
         if include_auth or include_certificates:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="INCLURE DES SECRETS REELS",
+                    title=_("INCLURE DES SECRETS RÉELS"),
                     message=(
-                        "Cette sauvegarde inclura des secrets reels (hash de mot de passe "
-                        "et/ou cle privee TLS), jamais chiffres par defaut. Continuer ?"
+                        _("Cette sauvegarde inclura des secrets réels (hash de mot de passe "
+                        "et/ou clé privée TLS), jamais chiffres par défaut. Continuer ?")
                     ),
                 ),
                 self._create_if_confirmed,
@@ -153,7 +153,7 @@ class BackupScreen(OmegaScreen):
         error_widget = self.query_one("#backup-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
 
         request = BackupRequest(
@@ -163,7 +163,7 @@ class BackupScreen(OmegaScreen):
             include_active_defense=self.query_one("#include-active-defense", Checkbox).value,
             description=self.query_one("#description-input", Input).value,
         )
-        error_widget.update("Creation de la sauvegarde en cours...")
+        error_widget.update(_("Création de la sauvegarde en cours..."))
         self.query_one("#create", Button).disabled = True
         config = load_result.config
         self.run_worker(lambda: self._create_in_thread(request, config), thread=True, exclusive=True)
@@ -210,8 +210,8 @@ class BackupScreen(OmegaScreen):
         deleted = self._container.delete_backup(self._selected_snapshot_id)
         error_widget = self.query_one("#backup-error", Static)
         if not deleted:
-            error_widget.update(f"Sauvegarde introuvable : {self._selected_snapshot_id}")
+            error_widget.update(_("Sauvegarde introuvable : {selected_snapshot_id}").format(selected_snapshot_id=self._selected_snapshot_id))
         else:
             error_widget.update("")
-            self.app.notify(f"Sauvegarde supprimee : {self._selected_snapshot_id}")
+            self.app.notify(_("Sauvegarde supprimée : {selected_snapshot_id}").format(selected_snapshot_id=self._selected_snapshot_id))
         self._refresh()

@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.validation import (
     CertificateImportFacts,
     validate_certificate_import,
@@ -87,5 +88,5 @@ def import_certificate(
     filesystem.set_file_mode(dest_cert_path, 0o644)
 
     return ImportCertificateResult(
-        True, f"Certificat importe : {dest_cert_path} (cle : {dest_key_path}, mode 0600)",
+        True, _("Certificat importe : {dest_cert_path} (clé : {dest_key_path}, mode 0600)").format(dest_cert_path=dest_cert_path, dest_key_path=dest_key_path),
     )

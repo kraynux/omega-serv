@@ -50,3 +50,10 @@ class ServiceManagerPort(Protocol):
 
     def is_available(self) -> bool:
         ...
+
+    def main_pid(self, service_name: str) -> int | None:
+        """PID du processus principal du service actif, None si inconnu
+        (service arrete, ou gestionnaire qui ne l'expose pas : OpenRC) -
+        sert a detecter un service lance avec une version du code plus
+        ancienne que celle installee (domain/services/stale_service.py)."""
+        ...

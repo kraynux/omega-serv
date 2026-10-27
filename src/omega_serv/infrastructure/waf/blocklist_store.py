@@ -83,7 +83,7 @@ class JsonBlocklistStore:
             self._report_read_error(e)
             if for_write:
                 raise BlocklistUnreadableError(
-                    f"blocklist illisible {self._path} : {e} - ecriture refusee pour ne pas effacer les bans existants"
+                    f"blocklist illisible {self._path} : {e} - écriture refusée pour ne pas effacer les bans existants"
                 ) from e
             return list(self._cache or [])
         self._last_reported_error = None

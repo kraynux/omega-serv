@@ -120,6 +120,15 @@ class WafDecision:
     retry_after_seconds: int | None = None
     matched_zone_id: str | None = None
     blocked_reason: str | None = None
+    # Rejet de debit d'une source sure (OMEGA-SERV_ETUDE_RATE_LIMIT_EXCLUSIONS.md
+    # D4) : la reponse reste un blocage (429), mais l'alerte est journalisee
+    # avec l'action "throttle" pour que fail2ban ne la compte jamais.
+    throttle_only: bool = False
+    # Rejet de VOLUME renvoye par le script magnet (429/413/414, son propre
+    # rate limit) : jamais une detection - aucun finding, donc jamais compte
+    # par la reputation ni l'auto-ban (decision utilisateur 2026-10-26, cas
+    # reel : une page de captures en 4G faisait bannir le visiteur).
+    volume_only: bool = False
 
 
 @dataclass(frozen=True)

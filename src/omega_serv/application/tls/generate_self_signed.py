@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import SelfSignedCertParams
 from omega_serv.domain.security.tls.validation import validate_self_signed_params
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
@@ -45,4 +46,4 @@ def generate_self_signed_certificate(
     filesystem.set_file_mode(key_path, 0o600)
     filesystem.set_file_mode(cert_path, 0o644)
 
-    return GenerateSelfSignedResult(True, f"Certificat auto-signe genere : {cert_path} (cle : {key_path}, mode 0600)")
+    return GenerateSelfSignedResult(True, _("Certificat auto-signé généré : {cert_path} (clé : {key_path}, mode 0600)").format(cert_path=cert_path, key_path=key_path))

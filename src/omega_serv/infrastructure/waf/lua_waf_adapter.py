@@ -76,6 +76,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.security.waf.combine_decisions import magnet_fallback_decision
 from omega_serv.domain.security.waf.config import WafConfig
@@ -85,6 +86,7 @@ from omega_serv.domain.security.waf.lighty_compat import unsupported_lighty_memb
 from omega_serv.ports.filesystem_port import FilesystemPort
 
 _MAX_LUA_MEMORY_BYTES = 64 * 1024 * 1024
+_VOLUME_STATUS_CODES = frozenset({429, 413, 414})
 
 
 class WafMagnetScriptError(WafError):
@@ -141,7 +143,7 @@ class LuaWafAdapter:
         try:
             self._compiled = self._runtime.compile(script_source)
         except Exception as e:
-            raise WafMagnetScriptError(f"erreur de syntaxe du script magnet : {e}") from e
+            raise WafMagnetScriptError(_("erreur de syntaxe du script magnet : {e}").format(e=e)) from e
 
     def _lua_stat(self, path: Any) -> bool | None:
         """`lighty.stat(path)`/`lighty.c.stat(path)` reel : verification
@@ -209,13 +211,30 @@ class LuaWafAdapter:
         if code <= 0:
             return WafDecision(action="allow", status_code=None, score=0, log_level="debug")
 
-        severity, weight = _severity_for_status(code)
         action: str = "block"
         status_code: int | None = code
         if self._config.mode != "block":
             # log-only ne bloque JAMAIS (decision a retenir #14) - meme
             # invariant applique au magnet qu'au moteur natif.
             action, status_code = "log", None
+
+        if code in _VOLUME_STATUS_CODES:
+            # Abus de VOLUME (rate limit propre au script, corps/URL trop
+            # longs) : traite comme le rate limit natif - aucun finding, score
+            # 0, donc jamais une "detection suspecte" pour la reputation. Avant
+            # (2026-10-26, craftdark) : un 429 du script devenait le finding
+            # "magnet-external" et 3 d'entre eux suffisaient a l'auto-ban d'un
+            # visiteur legitime qui chargeait une page de ~130 images.
+            return WafDecision(
+                action=action,  # type: ignore[arg-type]
+                status_code=status_code,
+                score=0,
+                blocked_reason=f"magnet : rejet de volume ({code})",
+                log_level="warning",
+                volume_only=True,
+            )
+
+        severity, weight = _severity_for_status(code)
 
         finding = WafFinding(
             rule_id="magnet-external",
@@ -247,9 +266,9 @@ def load_lua_waf_adapter(
     start_server.py, qui connait `project_root`) - cette fonction ne
     resout jamais de chemin relatif elle-meme."""
     if not filesystem.exists(path):
-        raise WafMagnetScriptError(f"script magnet introuvable : {path}")
+        raise WafMagnetScriptError(_("script magnet introuvable : {path}").format(path=path))
     try:
         source = filesystem.read_text(path)
     except OSError as e:
-        raise WafMagnetScriptError(f"impossible de lire {path} : {e}") from e
+        raise WafMagnetScriptError(_("impossible de lire {path} : {e}").format(path=path, e=e)) from e
     return LuaWafAdapter(source, config, resolved_paths)

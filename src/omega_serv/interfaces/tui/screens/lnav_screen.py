@@ -40,6 +40,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Checkbox, Footer, Header, Input, Select, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.config import MagnetPathsConfig, parse_waf_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -47,18 +48,18 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
     from omega_serv.domain.config.entities import OmegaServConfig
 
-_TITLE = "\U0001f512 OMEGA-SERV"
-_MENU_LABEL = "Suivre les logs fusionnes (lnav)"
+_TITLE = _("\U0001f512 OMEGA-SERV")
+_MENU_LABEL = _("Suivre les logs fusionnés (lnav)")
 
 _KNOWN_LOGS: tuple[tuple[str, str], ...] = (
-    ("access", "Access log"),
-    ("error", "Error log"),
-    ("waf_alerts", "WAF alerts log"),
+    ("access", _("Access log")),
+    ("error", _("Error log")),
+    ("waf_alerts", _("WAF alerts log")),
 )
 
 _MAGNET_LOGS: tuple[tuple[str, str], ...] = (
-    ("magnet_alerts", "WAF magnet - alertes"),
-    ("magnet_blocklist", "WAF magnet - blocklist"),
+    ("magnet_alerts", _("WAF magnet - alertes")),
+    ("magnet_blocklist", _("WAF magnet - blocklist")),
 )
 
 _PINNED_PATHS_SETTINGS_KEY = "lnav_pinned_paths"
@@ -92,10 +93,10 @@ class LnavScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("SUIVRE LES LOGS FUSIONNES (LNAV)", classes="omega-title")
+            yield Static(_("SUIVRE LES LOGS FUSIONNÉS (LNAV)"), classes="omega-title")
             yield Static(
-                "Cochez un ou plusieurs logs a fusionner. lnav quitte avec Ctrl-Q "
-                "(ou sa propre commande de sortie) ; vous revenez alors a cet ecran.",
+                _("Cochez un ou plusieurs logs à fusionner. lnav quitte avec Ctrl-Q "
+                "(ou sa propre commande de sortie) ; vous revenez alors à cet écran."),
                 classes="omega-hint",
             )
             yield Static("", id="lnav-error", classes="omega-hint")
@@ -105,30 +106,28 @@ class LnavScreen(OmegaScreen):
                 yield Checkbox(label, id=f"check-{log_id}")
 
             if self._preset_paths:
-                yield Static("Logs selectionnes depuis la Bibliotheque", classes="omega-subtitle")
+                yield Static(_("Logs sélectionnés depuis la Bibliothèque"), classes="omega-subtitle")
                 for index, preset_path in enumerate(self._preset_paths):
                     yield Checkbox(preset_path, value=True, id=f"check-preset-{index}")
 
-            yield Static("Chemins epingles", classes="omega-subtitle")
+            yield Static(_("Chemins épinglés"), classes="omega-subtitle")
             yield Container(id="pinned-checkboxes")
 
-            yield Static("Chemin manuel - 'Epingler' le conserve pour les prochains lancements", classes="omega-subtitle")
+            yield Static(_("Chemin manuel - 'Épingler' le conserve pour les prochains lancements"), classes="omega-subtitle")
             yield Input(id="manual-path-input")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button("Epingler ce chemin", id="pin-manual")
+            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+                yield Button(_("Épingler ce chemin"), id="pin-manual")
 
-            yield Static("Retirer une epingle existante", classes="omega-subtitle")
-            yield Select[str]([], id="unpin-select", allow_blank=True, prompt="(aucune epingle)")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button("Retirer l'epingle choisie", id="unpin")
+            yield Static(_("Retirer une épingle existante"), classes="omega-subtitle")
+            yield Select[str]([], id="unpin-select", allow_blank=True, prompt=_("(aucune épingle)"))
+            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+                yield Button(_("Retirer l'épingle choisie"), id="unpin")
 
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Lancer lnav", id="launch", variant="primary")
+                    yield Button(_("Lancer lnav"), id="launch", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -177,11 +176,11 @@ class LnavScreen(OmegaScreen):
         manual_input = self.query_one("#manual-path-input", Input)
         manual = manual_input.value.strip()
         if not manual:
-            error_widget.update("Saisissez d'abord un chemin a epingler.")
+            error_widget.update(_("Saisissez d'abord un chemin à épingler."))
             return
         pins = self._load_pinned_paths()
         if manual in pins:
-            error_widget.update("Ce chemin est deja epingle.")
+            error_widget.update(_("Ce chemin est déjà épinglé."))
             return
         pins.append(manual)
         self._save_pinned_paths(pins)
@@ -190,7 +189,7 @@ class LnavScreen(OmegaScreen):
         # le meme fichier DEUX FOIS au lancement si les deux sont cochees.
         manual_input.value = ""
         error_widget.update("")
-        self.app.notify("Chemin epingle.")
+        self.app.notify(_("Chemin épinglé."))
         self._refresh_pins()
 
     def _unpin_selected(self) -> None:
@@ -198,14 +197,14 @@ class LnavScreen(OmegaScreen):
         select = self.query_one("#unpin-select", Select)
         value = select.value
         if value is Select.BLANK or not value:
-            error_widget.update("Choisissez d'abord une epingle a retirer.")
+            error_widget.update(_("Choisissez d'abord une épingle à retirer."))
             return
         pins = self._load_pinned_paths()
         if str(value) in pins:
             pins.remove(str(value))
             self._save_pinned_paths(pins)
             error_widget.update("")
-            self.app.notify("Epingle retiree.")
+            self.app.notify(_("Épingle retirée."))
         self._refresh_pins()
 
     def _resolve_known_log_path(self, config: OmegaServConfig, log_id: str) -> Path:
@@ -244,16 +243,16 @@ class LnavScreen(OmegaScreen):
         error_widget = self.query_one("#lnav-error", Static)
         runner = self._container.lnav_runner
         if runner is None:
-            error_widget.update("lnav indisponible dans cet environnement.")
+            error_widget.update(_("lnav indisponible dans cet environnement."))
             return
 
         paths = self._selected_paths()
         existing = [p for p in paths if p.exists()]
         missing = [p for p in paths if not p.exists()]
         if missing:
-            error_widget.update("Fichier(s) introuvable(s), ignore(s) : " + ", ".join(str(p) for p in missing))
+            error_widget.update(_("Fichier(s) introuvable(s), ignore(s) : ") + ", ".join(str(p) for p in missing))
         if not existing:
-            error_widget.update("Aucun fichier valide selectionne.")
+            error_widget.update(_("Aucun fichier valide sélectionné."))
             return
 
         theme = TUI_THEMES.get(self.app.theme)

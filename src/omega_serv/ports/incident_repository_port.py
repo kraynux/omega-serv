@@ -26,6 +26,11 @@ class IncidentRepositoryPort(Protocol):
     def find_open_for(self, subject_id: str) -> Incident | None:
         ...
 
+    def find_open_id_for(self, subject_id: str) -> str | None:
+        """Identifiant de l'incident ouvert, SANS charger son historique (chemin d'ecriture
+        d'Active Defense : charger tout l'historique a chaque observation coutait O(n²))."""
+        ...
+
     def get(self, incident_id: str) -> Incident | None:
         ...
 
@@ -39,6 +44,10 @@ class IncidentRepositoryPort(Protocol):
         ...
 
     def add_observation(self, incident_id: str, observation: ThreatObservation) -> None:
+        ...
+
+    def prune_history(self, keep_first: int, keep_last: int) -> int:
+        """Elagage de l'historique des incidents (INCIDENT_HISTORY_KEEP_* du domaine)."""
         ...
 
     def list_recent(self, filters: IncidentFilters) -> list[Incident]:

@@ -21,13 +21,14 @@ from textual.containers import Center, Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.proxy_zone import RoutingRule, UpstreamTarget, upstream_key
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 
 
 class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
-    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", "Annuler", show=True)]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", _("Annuler"), show=True)]
 
     def __init__(self, *, rules: list[RoutingRule], upstreams: list[UpstreamTarget]) -> None:
         super().__init__()
@@ -37,33 +38,30 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
 
     def compose(self) -> ComposeResult:
         with Center(), Vertical(classes="omega-dynamic-form-box"):
-            yield Static("REGLES DE ROUTAGE CONDITIONNEL (optionnel)", classes="omega-title")
+            yield Static(_("RÈGLES DE ROUTAGE CONDITIONNEL (optionnel)"), classes="omega-title")
             yield Static(
-                "Si l'en-tete correspond au motif (egalite exacte, ou prefixe si le motif se "
-                "termine par '*'), force cet upstream precis - sinon la strategie normale "
-                "s'applique. Evaluee AVANT le cookie sticky et avant la strategie active. "
-                f"Backends disponibles pour cette zone : {', '.join(self._upstream_keys) or '(aucun)'}.",
+                _("Si l'en-tête correspond au motif (égalité exacte, ou préfixe si le motif se termine par '*'), force cet upstream précis - sinon la stratégie normale s'applique. Évaluée AVANT le cookie sticky et avant la stratégie active. Backends disponibles pour cette zone : {value}.").format(value=', '.join(self._upstream_keys) or _('(aucun)')),
                 classes="omega-hint",
             )
             yield Static("", id="rule-error", classes="omega-hint")
             yield DataTable(id="routing-rules-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Valider", id="confirm", variant="primary")
+                    yield Button(_("Valider"), id="confirm", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Annuler", id="cancel")
+                    yield Button(_("Annuler"), id="cancel")
 
     def on_mount(self) -> None:
         table = self.query_one("#routing-rules-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("En-tete", "Motif", "Upstream cible")
+        table.add_columns(_("En-tête"), _("Motif"), _("Upstream cible"))
         self._refresh_table()
 
     def _refresh_table(self) -> None:
@@ -84,9 +82,9 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
     def _fields_for(rule: RoutingRule | None) -> list[tuple[str, str, str]]:
         r = rule or RoutingRule(header_name="", pattern="", upstream_key="")
         return [
-            ("header_name", "Nom de l'en-tete (ex: X-Canary)", r.header_name),
-            ("pattern", "Motif (egalite exacte, ou se termine par '*' pour un prefixe)", r.pattern),
-            ("upstream_key", "Upstream cible (host:port, voir la liste ci-dessus)", r.upstream_key),
+            ("header_name", _("Nom de l'en-tête (ex: X-Canary)"), r.header_name),
+            ("pattern", _("Motif (égalité exacte, ou se termine par '*' pour un préfixe)"), r.pattern),
+            ("upstream_key", _("Upstream cible (host:port, voir la liste ci-dessus)"), r.upstream_key),
         ]
 
     def _rule_from_values(self, values: dict[str, str]) -> RoutingRule | None:
@@ -94,7 +92,7 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
         pattern = values["pattern"].strip()
         target = values["upstream_key"].strip()
         if not header_name or not pattern or not target:
-            self.query_one("#rule-error", Static).update("Tous les champs sont requis.")
+            self.query_one("#rule-error", Static).update(_("Tous les champs sont requis."))
             return None
         return RoutingRule(header_name=header_name, pattern=pattern, upstream_key=target)
 
@@ -107,18 +105,18 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
             return
         if event.button.id == "add":
             self.app.push_screen(
-                DynamicFormScreen(title="AJOUTER UNE REGLE", fields=self._fields_for(None)), self._add_rule,
+                DynamicFormScreen(title=_("AJOUTER UNE RÈGLE"), fields=self._fields_for(None)), self._add_rule,
             )
             return
         if event.button.id == "edit" and self._selected_index is not None:
             rule = self._rules[self._selected_index]
             self.app.push_screen(
-                DynamicFormScreen(title="MODIFIER LA REGLE", fields=self._fields_for(rule)), self._edit_rule,
+                DynamicFormScreen(title=_("MODIFIER LA RÈGLE"), fields=self._fields_for(rule)), self._edit_rule,
             )
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REGLE", message="Confirmer la suppression de cette regle ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA RÈGLE"), message=_("Confirmer la suppression de cette règle ?")),
                 self._delete_rule,
             )
 

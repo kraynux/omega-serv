@@ -23,6 +23,7 @@ from omega_serv.application.services.install_service import (
     uninstall_systemd_service,
 )
 from omega_serv.application.services.manage_service import disable_service, stop_service
+from omega_serv.core.i18n import _
 from omega_serv.domain.instances.entities import InstanceEntry
 from omega_serv.domain.services.exceptions import ServiceControlError
 from omega_serv.domain.services.systemd_unit import DEFAULT_SYSTEM_GROUP, DEFAULT_SYSTEM_USER
@@ -68,25 +69,25 @@ def uninstall_instance(
         if still_used is None and remove_system_user is not None:
             try:
                 remove_system_user(DEFAULT_SYSTEM_USER, DEFAULT_SYSTEM_GROUP)
-                messages.append(f"Compte systeme {DEFAULT_SYSTEM_USER!r} retire (plus reference par aucune autre instance).")
+                messages.append(_("Compte système {DEFAULT_SYSTEM_USER!r} retiré (plus référence par aucune autre instance).").format(DEFAULT_SYSTEM_USER=DEFAULT_SYSTEM_USER))
             except ServiceControlError as e:
-                messages.append(f"Echec du retrait du compte systeme {DEFAULT_SYSTEM_USER!r} : {e}")
+                messages.append(_("Échec du retrait du compte système {DEFAULT_SYSTEM_USER!r} : {e}").format(DEFAULT_SYSTEM_USER=DEFAULT_SYSTEM_USER, e=e))
         elif still_used is not None:
-            messages.append(f"Compte systeme {DEFAULT_SYSTEM_USER!r} conserve (encore utilise par {still_used!r}).")
+            messages.append(_("Compte système {DEFAULT_SYSTEM_USER!r} conservé (encore utilisé par {still_used!r}).").format(DEFAULT_SYSTEM_USER=DEFAULT_SYSTEM_USER, still_used=still_used))
     else:
-        messages.append("Aucune unite systemd installee pour cette instance.")
+        messages.append(_("Aucune unité systemd installée pour cette instance."))
 
     registry.save([e for e in registry.load() if e.path != entry.path])
-    messages.append(f"Instance {entry.name!r} retiree du registre.")
+    messages.append(_("Instance {name!r} retirée du registre.").format(name=entry.name))
 
     if delete_directory:
         try:
             filesystem.delete_directory(entry.path)
-            messages.append(f"Repertoire {entry.path} supprime.")
+            messages.append(_("Répertoire {path} supprimé.").format(path=entry.path))
         except OSError as e:
-            messages.append(f"Echec de la suppression du repertoire {entry.path} : {e}")
+            messages.append(_("Échec de la suppression du répertoire {path} : {e}").format(path=entry.path, e=e))
             return UninstallInstanceResult(False, "\n".join(messages))
     else:
-        messages.append(f"Repertoire {entry.path} conserve (suppression non demandee).")
+        messages.append(_("Répertoire {path} conservé (suppression non demandée).").format(path=entry.path))
 
     return UninstallInstanceResult(True, "\n".join(messages))

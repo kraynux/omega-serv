@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
 from omega_serv.domain.config.profile import Profile
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -26,5 +27,5 @@ class FileProfileRepository:
             raw = self._fs.read_text(path)
             data = json.loads(raw)
         except (OSError, json.JSONDecodeError) as e:
-            raise ProfileLoadError(f"Impossible de lire/parser {path} : {e}") from e
+            raise ProfileLoadError(_("Impossible de lire/parser {path} : {e}").format(path=path, e=e)) from e
         return Profile.from_dict(data)

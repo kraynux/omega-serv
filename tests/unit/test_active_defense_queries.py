@@ -23,6 +23,13 @@ class _FakeIncidentRepository:
     def __init__(self, incidents):
         self._incidents = {i.incident_id: i for i in incidents}
 
+    def find_open_id_for(self, subject_id):
+
+        incident = self.find_open_for(subject_id)
+
+        return None if incident is None else incident.incident_id
+
+
     def find_open_for(self, subject_id):
         return next((i for i in self._incidents.values() if i.subject_id == subject_id and i.status == "open"), None)
 

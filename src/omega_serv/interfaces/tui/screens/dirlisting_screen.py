@@ -18,25 +18,26 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Input, Select, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.dirlisting import DirlistingSettings
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
+from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
-_TRUE_VALUES = frozenset({"oui", "true", "1", "o", "y"})
 
 
 def _bool_to_text(value: bool) -> str:
-    return "oui" if value else "non"
+    return to_text(value)
 
 
 def _text_to_bool(value: str) -> bool:
-    return value.strip().lower() in _TRUE_VALUES
+    return is_yes(value)
 
 
 class DirlistingScreen(OmegaScreen):
@@ -48,55 +49,55 @@ class DirlistingScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("DIRECTORY LISTING", classes="omega-title")
+            yield Static(_("DIRECTORY LISTING"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'dirlisting' se fait dans le menu Options.",
+                _("L'activation de l'option 'dirlisting' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
 
-            yield Static("REGLAGES D'AFFICHAGE", classes="omega-subtitle")
-            yield Static("Theme du CSS de base")
+            yield Static(_("RÉGLAGES D'AFFICHAGE"), classes="omega-subtitle")
+            yield Static(_("Thème du CSS de base"))
             yield Select(
                 [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME,
                 allow_blank=False, id="theme-select",
             )
-            yield Static("CSS externe (URL optionnelle, charge en plus du CSS de base)")
+            yield Static(_("CSS externe (URL optionnelle, chargé en plus du CSS de base)"))
             yield Input(id="external-css-input")
-            yield Static("Afficher un fichier HEADER en haut du listing (oui/non)")
+            yield Static(_("Afficher un fichier HEADER en haut du listing (oui/non)"))
             yield Input(id="show-header-input")
-            yield Static("Nom du fichier HEADER")
+            yield Static(_("Nom du fichier HEADER"))
             yield Input(id="header-file-input")
-            yield Static("Encoder (echapper) le contenu HEADER plutot que l'inserer tel quel (oui/non)")
+            yield Static(_("Encoder (échapper) le contenu HEADER plutôt que l'insérer tel quel (oui/non)"))
             yield Input(id="encode-header-input")
-            yield Static("Masquer ce fichier HEADER dans la liste (oui/non)")
+            yield Static(_("Masquer ce fichier HEADER dans la liste (oui/non)"))
             yield Input(id="hide-header-file-input")
-            yield Static("Afficher un fichier README en bas du listing (oui/non)")
+            yield Static(_("Afficher un fichier README en bas du listing (oui/non)"))
             yield Input(id="show-readme-input")
-            yield Static("Nom du fichier README")
+            yield Static(_("Nom du fichier README"))
             yield Input(id="readme-file-input")
-            yield Static("Encoder (echapper) le contenu README plutot que l'inserer tel quel (oui/non)")
+            yield Static(_("Encoder (échapper) le contenu README plutôt que l'insérer tel quel (oui/non)"))
             yield Input(id="encode-readme-input")
-            yield Static("Masquer ce fichier README dans la liste (oui/non)")
+            yield Static(_("Masquer ce fichier README dans la liste (oui/non)"))
             yield Input(id="hide-readme-file-input")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Enregistrer les reglages", id="save-settings", variant="primary")
+                yield Button(_("Enregistrer les réglages"), id="save-settings", variant="primary")
 
-            yield Static("ZONES OU LE LISTING EST ACTIF", classes="omega-subtitle")
+            yield Static(_("ZONES OÙ LE LISTING EST ACTIF"), classes="omega-subtitle")
             yield DataTable(id="zones-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#zones-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe de zone")
+        table.add_columns(_("Préfixe de zone"))
         self._refresh_table()
         self._load_settings_form()
 
@@ -152,13 +153,13 @@ class DirlistingScreen(OmegaScreen):
             return
         if event.button.id == "add":
             self.app.push_screen(
-                DynamicFormScreen(title="AJOUTER UNE ZONE", fields=[("prefix", "Prefixe de zone (ex: /files/)", "")]),
+                DynamicFormScreen(title=_("AJOUTER UNE ZONE"), fields=[("prefix", _("Préfixe de zone (ex: /files/)"), "")]),
                 self._add_prefix,
             )
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA ZONE", message="Confirmer la suppression de cette zone ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA ZONE"), message=_("Confirmer la suppression de cette zone ?")),
                 self._delete_prefix,
             )
 
@@ -167,7 +168,7 @@ class DirlistingScreen(OmegaScreen):
             return
         prefix = values["prefix"].strip()
         if not prefix.startswith("/"):
-            self.query_one("#form-error", Static).update(f"Le prefixe doit commencer par '/' : {prefix!r}")
+            self.query_one("#form-error", Static).update(_("Le préfixe doit commencer par '/' : {prefix!r}").format(prefix=prefix))
             return
         prefixes = self._prefixes()
         prefixes.append(prefix)
@@ -183,12 +184,12 @@ class DirlistingScreen(OmegaScreen):
     def _save_settings(self) -> None:
         theme = self.query_one("#theme-select", Select).value
         if theme not in EXPORT_PALETTES:
-            self.query_one("#form-error", Static).update(f"Theme inconnu : {theme!r}")
+            self.query_one("#form-error", Static).update(_("Thème inconnu : {theme!r}").format(theme=theme))
             return
         header_file = self.query_one("#header-file-input", Input).value.strip()
         readme_file = self.query_one("#readme-file-input", Input).value.strip()
         if not header_file or not readme_file:
-            self.query_one("#form-error", Static).update("Les noms de fichiers HEADER/README ne peuvent pas etre vides.")
+            self.query_one("#form-error", Static).update(_("Les noms de fichiers HEADER/README ne peuvent pas être vides."))
             return
 
         self._save_settings_dict({
@@ -202,12 +203,12 @@ class DirlistingScreen(OmegaScreen):
             "readme_file": readme_file,
             "encode_readme": _text_to_bool(self.query_one("#encode-readme-input", Input).value),
             "hide_readme_file": _text_to_bool(self.query_one("#hide-readme-file-input", Input).value),
-        }, "Reglages d'affichage du listing enregistres.")
+        }, _("Réglages d'affichage du listing enregistrés."))
 
-    def _save_settings_dict(self, updates: dict[str, object], success_message: str = "Zones mises a jour.") -> None:
+    def _save_settings_dict(self, updates: dict[str, object], success_message: str = _("Zones mises à jour.")) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("dirlisting")
         enabled = existing.enabled if existing is not None else False

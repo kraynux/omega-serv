@@ -17,7 +17,7 @@ def handle_fake_api(request: HttpRequest) -> HttpResponse:
     if request.path.rstrip("/").endswith(("/health", "/status", "/diagnostic")):
         payload = {"status": "ok", "version": "1.4.2"}
     elif request.method == "POST":
-        payload = {"error": "unauthorized", "message": "Jeton invalide ou expire."}
+        payload = {"error": "unauthorized", "message": "Jeton invalide ou expiré."}
     else:
         payload = {"error": "not_found", "path": request.path}
     body = json.dumps(payload).encode("utf-8")

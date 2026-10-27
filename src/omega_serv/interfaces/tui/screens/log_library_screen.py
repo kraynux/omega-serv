@@ -26,6 +26,7 @@ from omega_serv.application.logs.library import (
     list_library,
     remove_from_library,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.domain.security.waf.config import parse_waf_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -49,24 +50,24 @@ class LogLibraryScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("BIBLIOTHEQUE", classes="omega-title")
+            yield Static(_("BIBLIOTHÈQUE"), classes="omega-title")
             yield Static("", id="library-hint", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
-                yield Input(placeholder="Chemin a ajouter manuellement", id="path-input")
+                yield Input(placeholder=_("Chemin à ajouter manuellement"), id="path-input")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Ajouter les logs connus d'Omega-Serv", id="add-known")
+                yield Button(_("Ajouter les logs connus d'Omega-Serv"), id="add-known")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Sources distantes (SSH)", id="remote-sources")
+                yield Button(_("Sources distantes (SSH)"), id="remote-sources")
             yield LogLibraryTable(id="log-list")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retirer la selection", id="remove", variant="error")
+                    yield Button(_("Retirer la sélection"), id="remove", variant="error")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh")
+                    yield Button(_("Rafraîchir"), id="refresh")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -99,14 +100,14 @@ class LogLibraryScreen(OmegaScreen):
         stale = sum(1 for e in entries if e.is_stale)
         missing = sum(1 for e in entries if not e.exists)
         self.query_one("#library-hint", Static).update(
-            f"{len(entries)} log(s) reference(s) - {stale} suspect(s), {missing} introuvable(s) actuellement."
+            _("{count} log(s) référence(s) - {stale} suspect(s), {missing} introuvable(s) actuellement.").format(count=len(entries), stale=stale, missing=missing)
         )
 
     def _add_manual(self) -> None:
         path_input = self.query_one("#path-input", Input)
         raw_path = path_input.value.strip()
         if not raw_path:
-            self.app.notify("Saisissez un chemin.", severity="warning")
+            self.app.notify(_("Saisissez un chemin."), severity="warning")
             return
         add_to_library(self._container.build_log_library_repository(), LogFile(path=raw_path, access="file"))
         path_input.value = ""
@@ -120,7 +121,7 @@ class LogLibraryScreen(OmegaScreen):
     def _add_known(self) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.app.notify("Erreur de configuration - impossible d'ajouter.", severity="error")
+            self.app.notify(_("Erreur de configuration - impossible d'ajouter."), severity="error")
             return
         config = load_result.config
         repository = self._container.build_log_library_repository()
@@ -138,16 +139,16 @@ class LogLibraryScreen(OmegaScreen):
                 path = self._container.project_root / relative_path
                 add_to_library(repository, LogFile(path=str(path), access="file", service_id="omega-serv-magnet"))
                 added += 1
-        self.app.notify(f"{added} log(s) connu(s) d'Omega-Serv ajoute(s) (deja presents remplaces, jamais dupliques).")
+        self.app.notify(_("{added} log(s) connu(s) d'Omega-Serv ajouté(s) (déjà présents remplacés, jamais dupliques).").format(added=added))
         self._refresh()
 
     def _remove_selected(self) -> None:
         if self._selected_path is None:
-            self.app.notify("Selectionnez une ligne dans la liste.", severity="warning")
+            self.app.notify(_("Sélectionnez une ligne dans la liste."), severity="warning")
             return
         path = self._selected_path
         self.app.push_screen(
-            ConfirmScreen(title="RETIRER DE LA BIBLIOTHEQUE ?", message=path),
+            ConfirmScreen(title=_("RETIRER DE LA BIBLIOTHÈQUE ?"), message=path),
             lambda confirmed: self._remove_if_confirmed(confirmed, path),
         )
 

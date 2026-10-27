@@ -14,13 +14,15 @@ from textual.containers import Center, Container, Horizontal, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 
+from omega_serv.core.i18n import _
+
 
 class DynamicFormScreen(ModalScreen[dict[str, str] | None]):
     """`fields` : sequence de (id, label, valeur_par_defaut). `password_fields` :
     identifiants a masquer (mot de passe - auth_menu_screen.py, jamais
     affiche en clair a l'ecran)."""
 
-    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "back", "Annuler", show=True)]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "back", _("Annuler"), show=True)]
 
     def __init__(
         self,
@@ -42,9 +44,9 @@ class DynamicFormScreen(ModalScreen[dict[str, str] | None]):
                 yield Input(value=default, id=f"df-{field_id}", password=field_id in self._password_fields)
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Valider", id="confirm", variant="primary")
+                    yield Button(_("Valider"), id="confirm", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Annuler", id="cancel")
+                    yield Button(_("Annuler"), id="cancel")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "cancel":

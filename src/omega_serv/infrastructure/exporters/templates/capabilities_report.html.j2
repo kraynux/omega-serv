@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ html_lang() }}" dir="{{ html_dir() }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OMEGA-SERV — Registre des capacités</title>
+<title>OMEGA-SERV — {{ _("Registre des capacités") }}</title>
 <style>
   /* Couleurs pilotees par le theme d'export choisi (voir
      infrastructure/exporters/html_theme_resolver.py, omega_lib.theme.policies
@@ -71,13 +71,13 @@
 </head>
 <body>
   <div class="container">
-    <h1>OMEGA-SERV — Registre des capacités</h1>
-    <p class="meta">Généré le {{ generated_at }} · {{ capabilities|length }} capacité(s)</p>
+    <h1>OMEGA-SERV — {{ _("Registre des capacités") }}</h1>
+    <p class="meta">{{ _("Généré le {date} · {count} capacité(s)").format(date=generated_at, count=capabilities|length) }}</p>
 
     <div class="box">
       <table>
         <thead>
-          <tr><th>Statut</th><th>Catégorie</th><th>Capacité</th><th>Raison</th></tr>
+          <tr><th>{{ _("Statut") }}</th><th>{{ _("Catégorie") }}</th><th>{{ _("Capacité") }}</th><th>{{ _("Raison") }}</th></tr>
         </thead>
         <tbody>
           {% for capability in capabilities %}
@@ -92,7 +92,7 @@
       </table>
     </div>
 
-    <footer>Rapport généré par <strong>OMEGA-SERV</strong></footer>
+    <footer>{{ _("Rapport généré par") }} <strong>OMEGA-SERV</strong></footer>
   </div>
 </body>
 </html>

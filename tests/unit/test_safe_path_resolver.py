@@ -57,5 +57,50 @@ class TestSafePathResolver(unittest.TestCase):
         self.assertEqual(result.absolute_path, self.webroot / "does-not-exist.html")
 
 
+class TestResolveRealPathUnderMatchesFullResolution(unittest.TestCase):
+    """Optimisation (etude performance, priorite 3) : seuls les segments sous la racine
+    sont examines - le resultat doit rester STRICTEMENT celui de Path.resolve()."""
+
+    def setUp(self):
+        import tempfile
+
+        from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
+        self._tmp = tempfile.TemporaryDirectory()
+        base = Path(self._tmp.name).resolve()
+        self.root = base / "webroot"
+        (self.root / "a" / "b").mkdir(parents=True)
+        (self.root / "a" / "b" / "f.txt").write_text("x")
+        self.outside = base / "dehors"
+        self.outside.mkdir()
+        (self.outside / "secret.txt").write_text("s")
+        (self.root / "fuite").symlink_to(self.outside)
+        (self.root / "interne").symlink_to(self.root / "a")
+        (self.root / "a" / "lien-milieu").symlink_to(self.outside)
+        self.fs = LocalFilesystem()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_same_result_as_path_resolve(self):
+        for segments in (
+            ("a", "b", "f.txt"), ("a", "absent", "x"), ("fuite", "secret.txt"), ("interne", "b", "f.txt"),
+            ("a", "lien-milieu", "secret.txt"), ("absent",), (),
+            ("a", "a", "a"), ("absent", "absent", "x"), ("a", "absent", "absent"),
+        ):
+            with self.subTest(segments=segments):
+                self.assertEqual(
+                    self.fs.resolve_real_path_under(self.root, segments),
+                    self.root.joinpath(*segments).resolve(),
+                )
+
+    def test_symlink_escape_is_still_rejected(self):
+        from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
+        resolver = SafePathResolver(self.fs, self.root)
+        for path in ("/fuite/secret.txt", "/a/lien-milieu/secret.txt"):
+            with self.subTest(path=path):
+                self.assertFalse(resolver.resolve(path).ok)
+        self.assertTrue(resolver.resolve("/interne/b/f.txt").ok)
+
+
 if __name__ == "__main__":
     unittest.main()

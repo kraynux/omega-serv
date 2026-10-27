@@ -1,17 +1,17 @@
-# omega-serv - liste de reference : sensitive-paths-probe
+# omega-serv - liste de référence : sensitive-paths-probe
 # 132 chemins de sondage courants, mais parfois servis par un vrai site (admin, API, supervision...).
-# Reglages conseilles : gravite Moyenne (3, ne bloque jamais seule), recherche au debut du chemin, recidive 5 acces en 10 min -> ban 1 h. 1er chargement conseille en Observation.
-# Fichier de REFERENCE (lecture seule, remplace a chaque mise a jour d'omega-serv).
-# Il n'est jamais charge tel quel : l'assistant WAF Custom en cree une copie
+# Réglages conseillés : gravité Moyenne (3, ne bloque jamais seule), recherche au début du chemin, récidive 5 accès en 10 min -> ban 1 h. 1er chargement conseillé en Observation.
+# Fichier de RÉFÉRENCE (lecture seule, remplacé à chaque mise à jour d'omega-serv).
+# Il n'est jamais chargé tel quel : l'assistant WAF Custom en crée une copie
 # locale modifiable dans secure/waf/rules/keywords/ au premier chargement.
-# Genere depuis le fichier maitre ~/DEV/JAIL/sensitive-path.txt - ne pas editer ici.
+# Généré depuis le fichier maître ~/DEV/JAIL/sensitive-path.txt - ne pas éditer ici.
 #
-# Syntaxe (une entree par ligne, '#' = commentaire) :
+# Syntaxe (une entrée par ligne, '#' = commentaire) :
 #   /admin    -> /admin et /admin/xxx, jamais /administrator
 #   /.git/    -> tout ce qui est sous /.git/
 #   /*.bak    -> tout fichier dont le nom finit par .bak
 #   !/api/v1  -> exception : ce chemin n'est jamais compte par cette liste
-#               (prioritaire sur les entrees, quel que soit l'ordre des lignes)
+#               (prioritaire sur les entrées, quel que soit l'ordre des lignes)
 
 #Sauvegardes et fichiers temporaires
 /backups/

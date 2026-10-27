@@ -7,6 +7,8 @@ from textual.containers import Center, Container, Horizontal, Middle
 from textual.screen import Screen
 from textual.widgets import Button, Static
 
+from omega_serv.core.i18n import _
+
 
 class TerminalWarningScreen(Screen[None]):
     """Affiche avant HomeScreen quand le profil de rendu resolu est MONO,
@@ -19,10 +21,10 @@ class TerminalWarningScreen(Screen[None]):
 
     def compose(self) -> ComposeResult:
         with Middle(), Center():
-            yield Static("TERMINAL LIMITE", classes="omega-title")
+            yield Static(_("TERMINAL LIMITE"), classes="omega-title")
             yield Static(self._message, classes="omega-subtitle")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Continuer quand meme", id="continue", variant="primary")
+                yield Button(_("Continuer quand même"), id="continue", variant="primary")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "continue":

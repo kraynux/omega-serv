@@ -12,6 +12,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.validation import validate_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import (
@@ -31,28 +32,28 @@ class BaseConfigScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("CONFIGURATION DE BASE", classes="omega-title")
+            yield Static(_("CONFIGURATION DE BASE"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
-            yield Static("Adresse d'ecoute (server.bind)", classes="omega-subtitle")
+            yield Static(_("Adresse d'écoute (server.bind)"), classes="omega-subtitle")
             yield Input(id="bind-input")
-            yield Static("Port (server.port)", classes="omega-subtitle")
+            yield Static(_("Port (server.port)"), classes="omega-subtitle")
             yield Input(id="port-input")
-            yield Static("Nom du serveur (server.server_name)", classes="omega-subtitle")
+            yield Static(_("Nom du serveur (server.server_name)"), classes="omega-subtitle")
             yield Input(id="server-name-input")
-            yield Static("Fichiers d'index (separes par des virgules)", classes="omega-subtitle")
+            yield Static(_("Fichiers d'index (séparés par des virgules)"), classes="omega-subtitle")
             yield Input(id="index-files-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="save", variant="primary")
+                    yield Button(_("Enregistrer"), id="save", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         result = load_config(self._container.configuration, self._container.config_file)
         if not result.success:
             self.query_one("#form-error", Static).update(
-                "Erreur de configuration : " + "; ".join(result.errors)
+                _("Erreur de configuration : ") + "; ".join(result.errors)
             )
             self.query_one("#save", Button).disabled = True
             return
@@ -74,7 +75,7 @@ class BaseConfigScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
         assert load_result.config is not None
 
@@ -82,7 +83,7 @@ class BaseConfigScreen(OmegaScreen):
         try:
             port = int(port_text)
         except ValueError:
-            error_widget.update(f"Port invalide (nombre attendu) : {port_text!r}")
+            error_widget.update(_("Port invalide (nombre attendu) : {port_text!r}").format(port_text=port_text))
             return
 
         index_files = tuple(
@@ -99,7 +100,7 @@ class BaseConfigScreen(OmegaScreen):
 
         errors = validate_config(new_config)
         if errors:
-            error_widget.update("Erreur de validation :\n" + "\n".join(f"  - {e}" for e in errors))
+            error_widget.update(_("Erreur de validation :\n") + "\n".join(f"  - {e}" for e in errors))
             return
 
         self._container.configuration.save(self._container.config_file, new_config)
@@ -107,8 +108,8 @@ class BaseConfigScreen(OmegaScreen):
         if new_server.bind != load_result.config.server.bind or new_server.port != load_result.config.server.port:
             notify_restart_required(
                 self, self._container,
-                "Enregistre - mais bind/port necessitent un REDEMARRAGE COMPLET pour prendre "
-                "effet (jamais un simple rechargement, le socket d'ecoute n'est jamais retouche).",
+                _("Enregistré - mais bind/port nécessitent un REDÉMARRAGE COMPLET pour prendre "
+                "effet (jamais un simple rechargement, le socket d'écoute n'est jamais retouché)."),
             )
         else:
-            notify_reload_required(self, self._container, "Configuration de base enregistree.")
+            notify_reload_required(self, self._container, _("Configuration de base enregistrée."))

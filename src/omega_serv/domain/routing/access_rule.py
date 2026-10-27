@@ -29,6 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 
 _VALID_VERDICTS = ("allow", "deny")
@@ -54,9 +55,9 @@ def parse_access_rules(raw_list: list[dict[str, Any]]) -> list[AccessRule]:
 
 def validate_access_rule(rule: AccessRule) -> str | None:
     if not rule.path_prefix.startswith("/"):
-        return f"path_prefix doit commencer par '/' : {rule.path_prefix!r}"
+        return _("path_prefix doit commencer par '/' : {path_prefix!r}").format(path_prefix=rule.path_prefix)
     if rule.verdict not in _VALID_VERDICTS:
-        return f"verdict invalide (attendu allow/deny) : {rule.verdict!r}"
+        return _("verdict invalide (attendu allow/deny) : {verdict!r}").format(verdict=rule.verdict)
     return None
 
 

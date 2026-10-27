@@ -2,171 +2,172 @@
 d'aide, Phase 4)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 FASTCGI_SCREEN = ScreenGuide(
     screen_class_name="FastCgiScreen",
-    title="FastCGI / PHP-FPM",
-    acces="Accueil -> Configuration detaillee -> FastCGI / PHP-FPM",
+    title=_("FastCGI / PHP-FPM"),
+    acces=_("Accueil -> Configuration détaillée -> FastCGI / PHP-FPM"),
     definition=(
-        "Un seul enregistrement (jamais une liste) : proxy vers un serveur PHP-FPM pour executer "
-        "du PHP sous un prefixe d'URL donne."
+        _("Un seul enregistrement (jamais une liste) : proxy vers un serveur PHP-FPM pour exécuter "
+        "du PHP sous un préfixe d'URL donné.")
     ),
     fields=(
         FieldGuide(
-            label="Prefixe URL (url_prefix)",
-            definition="Le prefixe d'URL sous lequel les requetes sont relayees vers PHP-FPM.",
-            utilisation="Doit commencer par '/'. Valeur par defaut : /app/.",
-            action="Enregistre au clic sur Enregistrer, apres validation structurelle.",
+            label=_("Préfixe URL (url_prefix)"),
+            definition=_("Le préfixe d'URL sous lequel les requêtes sont relayées vers PHP-FPM."),
+            utilisation=_("Doit commencer par '/'. Valeur par défaut : /app/."),
+            action=_("Enregistre au clic sur Enregistrer, après validation structurelle."),
             reaction=(
-                "Si l'option fastcgi est deja active : rechargement suffit (automatique si un "
-                "service actif existe). Sinon, sa PREMIERE activation exige un redemarrage complet."
+                _("Si l'option fastcgi est déjà activé : rechargement suffit (automatique si un "
+                "service actif existe). Sinon, sa PREMIÈRE activation exige un redémarrage complet.")
             ),
         ),
         FieldGuide(
-            label="Racine d'execution (script_root)",
-            definition="Repertoire, relatif au projet, contenant les scripts PHP executables.",
-            utilisation="Chemin relatif - ne peut jamais etre a l'interieur du webroot (verifie structurellement).",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            label=_("Racine d'exécution (script_root)"),
+            definition=_("Répertoire, relatif au projet, contenant les scripts PHP exécutables."),
+            utilisation=_("Chemin relatif - ne peut jamais être à l'intérieur du webroot (vérifié structurellement)."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
         FieldGuide(
-            label="Socket PHP-FPM (socket_path)",
-            definition="Chemin du socket Unix utilise pour communiquer avec PHP-FPM.",
-            utilisation="Chemin relatif. Valeur par defaut : var/run/php-fpm.sock.",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            label=_("Socket PHP-FPM (socket_path)"),
+            definition=_("Chemin du socket Unix utilisé pour communiquer avec PHP-FPM."),
+            utilisation=_("Chemin relatif. Valeur par défaut : var/run/php-fpm.sock."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
         FieldGuide(
-            label="Delai de connexion / Delai de lecture",
-            definition="Delais reseau appliques a la communication avec PHP-FPM.",
-            utilisation="Nombres en secondes. Valeurs par defaut : 5 (connexion), 30 (lecture).",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            label=_("Délai de connexion / Délai de lecture"),
+            definition=_("Délais réseau appliqués à la communication avec PHP-FPM."),
+            utilisation=_("Nombres en secondes. Valeurs par défaut : 5 (connexion), 30 (lecture)."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
         FieldGuide(
-            label="Extensions autorisees",
-            definition="Extensions de fichiers executees via PHP-FPM.",
-            utilisation="Liste separee par des virgules. Valeur par defaut : .php.",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            label=_("Extensions autorisées"),
+            definition=_("Extensions de fichiers exécutées via PHP-FPM."),
+            utilisation=_("Liste séparée par des virgules. Valeur par défaut : .php."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
         FieldGuide(
-            label="Fichiers d'index",
-            definition="Fichiers cherches quand une URL sous ce prefixe pointe vers un repertoire.",
-            utilisation="Liste separee par des virgules. Valeur par defaut : index.php.",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            label=_("Fichiers d'index"),
+            definition=_("Fichiers cherches quand une URL sous ce préfixe pointe vers un répertoire."),
+            utilisation=_("Liste séparée par des virgules. Valeur par défaut : index.php."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
         FieldGuide(
-            label="Liste blanche de scripts",
+            label=_("Liste blanche de scripts"),
             definition=(
-                "Restreint les scripts reellement executables (chemins relatifs a script_root) - "
-                "vide signifie 'tout fichier avec une extension autorisee sous script_root reste executable'."
+                _("Restreint les scripts réellement exécutables (chemins relatifs à script_root) - "
+                "vide signifie 'tout fichier avec une extension autorisée sous script_root reste exécutable'.")
             ),
-            utilisation="Liste separee par des virgules, ex: index.php, api/router.php. Vide par defaut.",
-            action="Enregistre avec le reste des champs.",
-            reaction="Meme reaction que url_prefix.",
+            utilisation=_("Liste séparée par des virgules, ex: index.php, api/router.php. Vide par défaut."),
+            action=_("Enregistre avec le reste des champs."),
+            reaction=_("Même réaction que url_prefix."),
         ),
     ),
     consequences=(
-        "La PREMIERE activation de l'option fastcgi (ecran Options) exige un REDEMARRAGE "
-        "COMPLET (le client FastCGI n'est construit qu'au demarrage). Une fois deja active, "
-        "modifier ces reglages ici ne demande plus qu'un simple rechargement."
+        _("La PREMIÈRE activation de l'option fastcgi (écran Options) exige un REDÉMARRAGE "
+        "COMPLET (le client FastCGI n'est construit qu'au démarrage). Une fois déjà activé, "
+        "modifier ces réglages ici ne demande plus qu'un simple rechargement.")
     ),
     points_de_vigilance=(
         (
-            "script_root ne peut structurellement jamais se trouver a l'interieur du webroot - "
-            "bloque avant meme l'enregistrement, pas seulement par 'Verifier la configuration'."
+            _("script_root ne peut structurellement jamais se trouver à l'intérieur du webroot - "
+            "bloqué avant même l'enregistrement, pas seulement par 'Vérifier la configuration'.")
         ),
     ),
 )
 
 AUTH_MENU_SCREEN = ScreenGuide(
     screen_class_name="AuthMenuScreen",
-    title="Authentification",
-    acces="Accueil -> Configuration detaillee -> Authentification",
+    title=_("Authentification"),
+    acces=_("Accueil -> Configuration détaillée -> Authentification"),
     definition=(
-        "Gestion des utilisateurs et des zones protegees par authentification HTTP. Les "
-        "identifiants et zones sont stockes dans des fichiers SEPARES (users.json/zones.json), "
-        "jamais dans config/omega-serve.json."
+        _("Gestion des utilisateurs et des zones protégées par authentification HTTP. Les "
+        "identifiants et zones sont stockés dans des fichiers SÉPARÉS (users.json/zones.json), "
+        "jamais dans config/omega-serve.json.")
     ),
     fields=(
         FieldGuide(
-            label="Table Utilisateurs",
+            label=_("Table Utilisateurs"),
             definition=(
-                "Liste les comptes existants - cliquer une ligne la SELECTIONNE (active "
-                "Changer le mot de passe/Supprimer) sans jamais retaper le nom d'utilisateur."
+                _("Liste les comptes existants - cliquer une ligne la SÉLECTIONNE (active "
+                "Changer le mot de passe/Supprimer) sans jamais retaper le nom d'utilisateur.")
             ),
-            utilisation="Selection par clic, une seule ligne a la fois.",
-            action="Aucune ecriture - lecture seule.",
-            reaction="Active/desactive les boutons Changer le mot de passe et Supprimer.",
+            utilisation=_("Sélection par clic, une seule ligne à la fois."),
+            action=_("Aucune écriture - lecture seule."),
+            reaction=_("Active/desactive les boutons Changer le mot de passe et Supprimer."),
         ),
         FieldGuide(
-            label="Ajouter",
-            definition="Cree un compte utilisateur.",
-            utilisation="Nom d'utilisateur + mot de passe saisi deux fois (jamais affiche en clair).",
-            action="Ecrit directement dans users.json.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            label=_("Ajouter"),
+            definition=_("Crée un compte utilisateur."),
+            utilisation=_("Nom d'utilisateur + mot de passe saisi deux fois (jamais affiché en clair)."),
+            action=_("Écrit directement dans users.json."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="Changer le mot de passe",
-            definition="Change le mot de passe de l'utilisateur SELECTIONNE dans la table.",
+            label=_("Changer le mot de passe"),
+            definition=_("Change le mot de passe de l'utilisateur SÉLECTIONNÉ dans la table."),
             utilisation=(
-                "Selectionner une ligne d'abord (le nom d'utilisateur n'est jamais retape) - "
-                "puis le nouveau mot de passe, saisi deux fois."
+                _("Sélectionner une ligne d'abord (le nom d'utilisateur n'est jamais retape) - "
+                "puis le nouveau mot de passe, saisi deux fois.")
             ),
-            action="Ecrit directement dans users.json.",
-            reaction="Aucun effet sans rechargement du service.",
+            action=_("Écrit directement dans users.json."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Supprimer (utilisateur)",
-            definition="Retire definitivement le compte utilisateur SELECTIONNE dans la table.",
-            utilisation="Selectionner une ligne d'abord, puis confirmer - aucune saisie.",
-            action="Ecrit directement dans users.json.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Supprimer (utilisateur)"),
+            definition=_("Retire définitivement le compte utilisateur SÉLECTIONNÉ dans la table."),
+            utilisation=_("Sélectionner une ligne d'abord, puis confirmer - aucune saisie."),
+            action=_("Écrit directement dans users.json."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Table Zones protegees",
-            definition="Liste les zones existantes - cliquer une ligne la SELECTIONNE (active Supprimer).",
-            utilisation="Selection par clic, une seule ligne a la fois.",
-            action="Aucune ecriture - lecture seule.",
-            reaction="Active/desactive le bouton Supprimer.",
+            label=_("Table Zones protégées"),
+            definition=_("Liste les zones existantes - cliquer une ligne la SÉLECTIONNE (active Supprimer)."),
+            utilisation=_("Sélection par clic, une seule ligne à la fois."),
+            action=_("Aucune écriture - lecture seule."),
+            reaction=_("Active/desactive le bouton Supprimer."),
         ),
         FieldGuide(
-            label="Creer une zone",
-            definition="Protege un prefixe d'URL par authentification HTTP.",
+            label=_("Créer une zone"),
+            definition=_("Protège un préfixe d'URL par authentification HTTP."),
             utilisation=(
-                "Prefixe URL (ex: /admin/), realm (texte affiche par le navigateur), "
-                "utilisateurs autorises (separes par des virgules), methodes autorisees "
-                "(vide = toutes)."
+                _("Préfixe URL (ex: /admin/), realm (texte affiché par le navigateur), "
+                "utilisateurs autorisés (séparés par des virgules), méthodes autorisées "
+                "(vide = toutes).")
             ),
-            action="Ecrit directement dans zones.json.",
-            reaction="Aucun effet sans rechargement du service.",
+            action=_("Écrit directement dans zones.json."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Supprimer (zone)",
-            definition="Retire la protection de la zone SELECTIONNEE dans la table.",
-            utilisation="Selectionner une ligne d'abord, puis confirmer - aucune saisie.",
-            action="Ecrit directement dans zones.json.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Supprimer (zone)"),
+            definition=_("Retire la protection de la zone SÉLECTIONNÉE dans la table."),
+            utilisation=_("Sélectionner une ligne d'abord, puis confirmer - aucune saisie."),
+            action=_("Écrit directement dans zones.json."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Verifier les permissions",
-            definition="Verifie que users.json/zones.json ne sont pas lisibles par d'autres utilisateurs du systeme.",
-            utilisation="Aucune saisie - lecture seule.",
-            action="Affiche le mode de permission reel de chaque fichier.",
-            reaction="Aucun effet (lecture seule).",
+            label=_("Vérifier les permissions"),
+            definition=_("Vérifie que users.json/zones.json ne sont pas lisibles par d'autres utilisateurs du système."),
+            utilisation=_("Aucune saisie - lecture seule."),
+            action=_("Affiche le mode de permission réel de chaque fichier."),
+            reaction=_("Aucun effet (lecture seule)."),
         ),
     ),
     consequences=(
-        "L'option auth doit etre activee (ecran Options) pour que les zones protegees soient "
-        "reellement appliquees. Toute modification d'utilisateur/zone se recharge a chaud."
+        _("L'option auth doit être activée (écran Options) pour que les zones protégées soient "
+        "réellement appliquées. Toute modification d'utilisateur/zone se recharge à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Une authentification active SANS TLS transmet les identifiants en clair sur le "
-            "reseau - l'assistant premier lancement demande une confirmation explicite dans ce cas."
+            _("Une authentification active SANS TLS transmet les identifiants en clair sur le "
+            "réseau - l'assistant premier lancement demande une confirmation explicite dans ce cas.")
         ),
     ),
 )

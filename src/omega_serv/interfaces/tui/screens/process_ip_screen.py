@@ -21,6 +21,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Input, Static
 
 from omega_serv.application.logs.library import list_library
 from omega_serv.application.logs.top_ips import compute_top_ips_for_paths
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 _PERIODS: tuple[tuple[str, str | None], ...] = (
     ("24h", "24h"), ("7d", "7d"), ("30d", "30d"), ("all", None),
 )
-_PERIOD_LABELS: dict[str, str] = {"24h": "24 heures", "7d": "7 jours", "30d": "30 jours", "all": "Tout"}
+_PERIOD_LABELS: dict[str, str] = {"24h": _("24 heures"), "7d": _("7 jours"), "30d": _("30 jours"), "all": _("Tout")}
 
 
 class ProcessIpScreen(OmegaScreen):
@@ -45,10 +46,10 @@ class ProcessIpScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("VOIR ET TRAITER IP", classes="omega-title")
+            yield Static(_("VOIR ET TRAITER IP"), classes="omega-title")
             yield DataTable(id="library-table")
-            yield Static("Logs a analyser (numeros ci-dessus, separes par des virgules)", classes="omega-subtitle")
-            yield Input(placeholder="ex: 1,2", id="selection-input")
+            yield Static(_("Logs à analyser (numéros ci-dessus, séparés par des virgules)"), classes="omega-subtitle")
+            yield Input(placeholder=_("ex: 1,2"), id="selection-input")
             with Horizontal(classes="omega-actions"):
                 for period_id, _period in _PERIODS:
                     with Container(classes="omega-btn-frame"):
@@ -56,16 +57,16 @@ class ProcessIpScreen(OmegaScreen):
             yield Static("", id="ip-error", classes="omega-hint")
             yield DataTable(id="top-ips-table")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retirer cette IP des logs analyses", id="remove-ip", variant="error", disabled=True)
+                yield Button(_("Retirer cette IP des logs analyses"), id="remove-ip", variant="error", disabled=True)
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#library-table", DataTable).cursor_type = "row"
-        self.query_one("#library-table", DataTable).add_columns("#", "Chemin")
+        self.query_one("#library-table", DataTable).add_columns("#", _("Chemin"))
         self.query_one("#top-ips-table", DataTable).cursor_type = "row"
-        self.query_one("#top-ips-table", DataTable).add_columns("IP", "Occurrences")
+        self.query_one("#top-ips-table", DataTable).add_columns(_("IP"), _("Occurrences"))
         self._entries = list_library(self._container.build_log_library_repository())
         table = self.query_one("#library-table", DataTable)
         for idx, entry in enumerate(self._entries, start=1):
@@ -93,13 +94,13 @@ class ProcessIpScreen(OmegaScreen):
         error_widget = self.query_one("#ip-error", Static)
         raw = self.query_one("#selection-input", Input).value.strip()
         if not raw:
-            error_widget.update("Saisissez au moins un numero de ligne.")
+            error_widget.update(_("Saisissez au moins un numéro de ligne."))
             return None
         paths: list[str] = []
         for token in raw.split(","):
             token = token.strip()
             if not token.isdigit() or not (1 <= int(token) <= len(self._entries)):
-                error_widget.update(f"Numero invalide : {token!r}.")
+                error_widget.update(_("Numéro invalide : {token!r}.").format(token=token))
                 return None
             paths.append(self._entries[int(token) - 1].path)
         error_widget.update("")
@@ -119,7 +120,7 @@ class ProcessIpScreen(OmegaScreen):
         for top_ip in top_ips:
             table.add_row(top_ip.ip, str(top_ip.count), key=top_ip.ip)
         if not top_ips:
-            self.app.notify("Aucune IP trouvee dans les log(s) selectionne(s) pour cette periode.")
+            self.app.notify(_("Aucune IP trouvée dans les log(s) sélectionné(s) pour cette période."))
 
     def _remove_selected_ip(self) -> None:
         if self._selected_ip is None or not self._current_paths:
@@ -127,8 +128,8 @@ class ProcessIpScreen(OmegaScreen):
         ip = self._selected_ip
         self.app.push_screen(
             ConfirmScreen(
-                title="RETIRER CETTE IP ?",
-                message=f"Retirer toutes les lignes contenant {ip} de {len(self._current_paths)} fichier(s).",
+                title=_("RETIRER CETTE IP ?"),
+                message=_("Retirer toutes les lignes contenant {ip} de {count} fichier(s).").format(ip=ip, count=len(self._current_paths)),
             ),
             lambda confirmed: self._remove_if_confirmed(confirmed, ip),
         )
@@ -139,5 +140,5 @@ class ProcessIpScreen(OmegaScreen):
         total = 0
         for path in self._current_paths:
             total += self._container.remove_ip_from_log(ip, Path(path))
-        self.app.notify(f"{total} occurrence(s) de {ip} retiree(s) au total.")
+        self.app.notify(_("{total} occurrence(s) de {ip} retirée(s) au total.").format(total=total, ip=ip))
         self._compute(None)

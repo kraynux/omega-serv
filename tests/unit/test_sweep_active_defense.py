@@ -8,6 +8,11 @@ from datetime import datetime, timedelta, timezone
 from omega_serv.application.active_defense.sweep_active_defense import sweep_active_defense
 from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
 from omega_serv.domain.security.active_defense.entities import Incident, IncidentEvent, ThreatState
+from omega_serv.domain.security.active_defense.policies import (
+    AUDIT_MAX_ROWS,
+    AUDIT_RETENTION_DAYS,
+    MAX_TRACKED_SUBJECTS,
+)
 
 _NOW = datetime(2026, 9, 12, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -21,6 +26,14 @@ class _FakeThreatStateRepository:
 
     def save(self, state):
         self.states[state.subject_id] = state
+
+    def cap_tracked_subjects(self, max_subjects):
+        self.capped = max_subjects
+        return 0
+
+    def prune_audit_log(self, older_than, max_rows):
+        self.pruned_audit = (older_than, max_rows)
+        return 0
 
     def expire_before(self, instant):
         expired = [sid for sid, s in self.states.items() if s.expires_at < instant]
@@ -36,8 +49,19 @@ class _FakeIncidentRepository:
     def __init__(self):
         self._incidents: dict[str, Incident] = {}
 
+    def prune_history(self, keep_first, keep_last):
+        self.pruned_history = (keep_first, keep_last)
+        return 0
+
     def add(self, incident: Incident) -> None:
         self._incidents[incident.incident_id] = incident
+
+    def find_open_id_for(self, subject_id):
+
+        incident = self.find_open_for(subject_id)
+
+        return None if incident is None else incident.incident_id
+
 
     def find_open_for(self, subject_id):
         for incident in self._incidents.values():
@@ -86,6 +110,12 @@ class TestSweepActiveDefense(unittest.TestCase):
         ))
         result = sweep_active_defense(threat_repo, _FakeIncidentRepository(), _FixedClock(), ActiveDefenseConfig())
         self.assertEqual(result.purged_threat_states, 1)
+
+    def test_manual_purge_also_prunes_the_audit_log(self):
+        threat_repo = _FakeThreatStateRepository()
+        sweep_active_defense(threat_repo, _FakeIncidentRepository(), _FixedClock(), ActiveDefenseConfig())
+        self.assertEqual(threat_repo.pruned_audit, (_NOW - timedelta(days=AUDIT_RETENTION_DAYS), AUDIT_MAX_ROWS))
+        self.assertEqual(threat_repo.capped, MAX_TRACKED_SUBJECTS)
 
     def test_closes_incident_for_a_source_back_to_normal_and_quiet_long_enough(self):
         threat_repo = _FakeThreatStateRepository()

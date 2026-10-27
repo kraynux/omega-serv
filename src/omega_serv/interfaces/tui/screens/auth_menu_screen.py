@@ -19,6 +19,7 @@ from omega_serv.application.auth.manage_users import (
 )
 from omega_serv.application.auth.manage_zones import ManageZonesResult, add_zone, remove_zone
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.auth.entities import AuthZone
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -42,42 +43,42 @@ class AuthMenuScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("AUTHENTIFICATION", classes="omega-title")
+            yield Static(_("AUTHENTIFICATION"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
 
-            yield Static("UTILISATEURS", classes="omega-subtitle")
+            yield Static(_("UTILISATEURS"), classes="omega-subtitle")
             yield DataTable(id="users-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add-user", variant="primary")
+                    yield Button(_("Ajouter"), id="add-user", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Changer le mot de passe", id="change-password", disabled=True)
+                    yield Button(_("Changer le mot de passe"), id="change-password", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="remove-user", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="remove-user", variant="error", disabled=True)
 
-            yield Static("ZONES PROTEGEES", classes="omega-subtitle")
+            yield Static(_("ZONES PROTÉGÉES"), classes="omega-subtitle")
             yield DataTable(id="zones-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Creer une zone", id="create-zone", variant="primary")
+                    yield Button(_("Créer une zone"), id="create-zone", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="remove-zone", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="remove-zone", variant="error", disabled=True)
 
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Verifier les permissions", id="check-permissions")
+                    yield Button(_("Vérifier les permissions"), id="check-permissions")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         users_table = self.query_one("#users-table", DataTable)
         users_table.cursor_type = "row"
-        users_table.add_columns("Nom d'utilisateur")
+        users_table.add_columns(_("Nom d'utilisateur"))
 
         zones_table = self.query_one("#zones-table", DataTable)
         zones_table.cursor_type = "row"
-        zones_table.add_columns("Prefixe URL", "Realm", "Utilisateurs autorises", "Methodes")
+        zones_table.add_columns(_("Préfixe URL"), _("Realm"), _("Utilisateurs autorisés"), _("Méthodes"))
 
         self._refresh_lists()
 
@@ -98,7 +99,7 @@ class AuthMenuScreen(OmegaScreen):
         self.query_one("#remove-zone", Button).disabled = True
 
         if config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration."))
             return
 
         users_repo = self._container.build_users_repository(self._container.project_root / config.paths.auth_file)
@@ -108,7 +109,7 @@ class AuthMenuScreen(OmegaScreen):
             users_table.add_row(user.username, key=user.username)
 
         for zone in zones_repo.load():
-            methods = ", ".join(zone.allow_methods) or "toutes"
+            methods = ", ".join(zone.allow_methods) or _("toutes")
             zones_table.add_row(
                 zone.path_prefix, zone.realm, ", ".join(zone.allowed_users) or "(aucun)", methods,
                 key=zone.path_prefix,
@@ -131,11 +132,11 @@ class AuthMenuScreen(OmegaScreen):
         if button_id == "add-user":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UN UTILISATEUR",
+                    title=_("AJOUTER UN UTILISATEUR"),
                     fields=[
-                        ("username", "Nom d'utilisateur", ""),
-                        ("password", "Mot de passe", ""),
-                        ("password_confirm", "Confirmer le mot de passe", ""),
+                        ("username", _("Nom d'utilisateur"), ""),
+                        ("password", _("Mot de passe"), ""),
+                        ("password_confirm", _("Confirmer le mot de passe"), ""),
                     ],
                     password_fields=frozenset({"password", "password_confirm"}),
                 ),
@@ -145,7 +146,7 @@ class AuthMenuScreen(OmegaScreen):
         if button_id == "remove-user" and self._selected_username is not None:
             username = self._selected_username
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER L'UTILISATEUR", message=f"Confirmer la suppression de {username!r} ?"),
+                ConfirmScreen(title=_("SUPPRIMER L'UTILISATEUR"), message=_("Confirmer la suppression de {username!r} ?").format(username=username)),
                 lambda confirmed: self._do_remove_user(username, confirmed),
             )
             return
@@ -153,10 +154,10 @@ class AuthMenuScreen(OmegaScreen):
             username = self._selected_username
             self.app.push_screen(
                 DynamicFormScreen(
-                    title=f"CHANGER LE MOT DE PASSE DE {username!r}",
+                    title=_("CHANGER LE MOT DE PASSE DE {username!r}").format(username=username),
                     fields=[
-                        ("password", "Nouveau mot de passe", ""),
-                        ("password_confirm", "Confirmer le mot de passe", ""),
+                        ("password", _("Nouveau mot de passe"), ""),
+                        ("password_confirm", _("Confirmer le mot de passe"), ""),
                     ],
                     password_fields=frozenset({"password", "password_confirm"}),
                 ),
@@ -166,12 +167,12 @@ class AuthMenuScreen(OmegaScreen):
         if button_id == "create-zone":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="CREER UNE ZONE PROTEGEE",
+                    title=_("CRÉER UNE ZONE PROTÉGÉE"),
                     fields=[
-                        ("path_prefix", "Prefixe URL (ex: /admin/)", ""),
-                        ("realm", "Realm", ""),
-                        ("allowed_users", "Utilisateurs autorises (separes par des virgules)", ""),
-                        ("allow_methods", "Methodes autorisees (vide = toutes)", ""),
+                        ("path_prefix", _("Préfixe URL (ex: /admin/)"), ""),
+                        ("realm", _("Realm"), ""),
+                        ("allowed_users", _("Utilisateurs autorisés (séparés par des virgules)"), ""),
+                        ("allow_methods", _("Méthodes autorisées (vide = toutes)"), ""),
                     ],
                 ),
                 self._create_zone,
@@ -180,7 +181,7 @@ class AuthMenuScreen(OmegaScreen):
         if button_id == "remove-zone" and self._selected_zone_prefix is not None:
             path_prefix = self._selected_zone_prefix
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA ZONE", message=f"Confirmer la suppression de {path_prefix!r} ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA ZONE"), message=_("Confirmer la suppression de {path_prefix!r} ?").format(path_prefix=path_prefix)),
                 lambda confirmed: self._do_remove_zone(path_prefix, confirmed),
             )
             return
@@ -198,7 +199,7 @@ class AuthMenuScreen(OmegaScreen):
 
     def _report(self, result: ManageUsersResult | ManageZonesResult) -> None:
         error_widget = self.query_one("#form-error", Static)
-        error_widget.update("" if result.success else f"Erreur : {result.message}")
+        error_widget.update("" if result.success else _("Erreur : {message}").format(message=result.message))
         if result.success:
             notify_reload_required(self, self._container, result.message)
         else:
@@ -209,7 +210,7 @@ class AuthMenuScreen(OmegaScreen):
         if values is None:
             return
         if values["password"] != values["password_confirm"]:
-            self.query_one("#form-error", Static).update("Les deux mots de passe ne correspondent pas.")
+            self.query_one("#form-error", Static).update(_("Les deux mots de passe ne correspondent pas."))
             return
         repos = self._repos()
         if repos is None:
@@ -228,7 +229,7 @@ class AuthMenuScreen(OmegaScreen):
         if values is None:
             return
         if values["password"] != values["password_confirm"]:
-            self.query_one("#form-error", Static).update("Les deux mots de passe ne correspondent pas.")
+            self.query_one("#form-error", Static).update(_("Les deux mots de passe ne correspondent pas."))
             return
         repos = self._repos()
         if repos is None:
@@ -261,14 +262,14 @@ class AuthMenuScreen(OmegaScreen):
         config = self._config()
         error_widget = self.query_one("#form-error", Static)
         if config is None:
-            error_widget.update("Erreur de configuration.")
+            error_widget.update(_("Erreur de configuration."))
             return
         lines = []
         ok = True
         for label, relative_path in (("users.json", config.paths.auth_file), ("zones.json", config.paths.auth_zones)):
             path = self._container.project_root / relative_path
             if not self._container.filesystem.exists(path):
-                lines.append(f"[INFO] {label} absent ({path})")
+                lines.append(_("[INFO] {label} absent ({path})").format(label=label, path=path))
                 continue
             mode = self._container.filesystem.file_mode(path)
             # Masque 0o007 ("other" uniquement), pas 0o077 (2026-09-29,
@@ -278,11 +279,11 @@ class AuthMenuScreen(OmegaScreen):
             # sous ce groupe, jamais sous le compte interactif qui
             # l'ecrit) - seul un acces "other" reste une vraie fuite.
             strict = not (mode & 0o007)
-            lines.append(f"[{'OK' if strict else 'AVERTISSEMENT'}] {label} permissions : {oct(mode)}")
+            lines.append(_("[{value}] {label} permissions : {value2}").format(value=_('OK') if strict else _('AVERTISSEMENT'), label=label, value2=oct(mode)))
             if not strict:
                 ok = False
         error_widget.update("\n".join(lines))
-        self.app.notify("Permissions verifiees." if ok else "Permissions trop permissives detectees.", severity="information" if ok else "error")
+        self.app.notify(_("Permissions vérifiées.") if ok else _("Permissions trop permissives détectées."), severity="information" if ok else "error")
 
 # <-- INFO DEV ---------------------------------------------------------
 # Role :

@@ -3,332 +3,333 @@ LetsEncryptScreen/RenewalScheduleScreen ajoutes par
 OMEGA-SERV_PLAN-DETAILLE_TLS_AUTO.md, Phase 6)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 TLS_MENU_SCREEN = ScreenGuide(
     screen_class_name="TlsMenuScreen",
-    title="TLS (menu)",
-    acces="Accueil -> Configuration detaillee -> TLS",
-    definition="Sous-menu regroupant les 5 ecrans lies a TLS : statut, generation, CA locale, revocation, activation.",
+    title=_("TLS (menu)"),
+    acces=_("Accueil -> Configuration détaillée -> TLS"),
+    definition=_("Sous-menu regroupant les 5 écrans liés à TLS : statut, génération, CA locale, révocation, activation."),
     fields=(),
-    consequences="Aucune - purement navigation.",
+    consequences=_("Aucune - purement navigation."),
 )
 
 TLS_STATUS_SCREEN = ScreenGuide(
     screen_class_name="TlsStatusScreen",
-    title="Statut TLS",
-    acces="Configuration detaillee -> TLS -> Statut TLS",
-    definition="Inspecte le certificat actuellement configure : validite, expiration, correspondance avec la cle privee, permissions.",
+    title=_("Statut TLS"),
+    acces=_("Configuration détaillée -> TLS -> Statut TLS"),
+    definition=_("Inspecte le certificat actuellement configuré : validité, expiration, correspondance avec la clé privée, permissions."),
     fields=(
         FieldGuide(
-            label="Rafraichir",
-            definition="Relit et reanalyse le certificat configure.",
-            utilisation="Aucune saisie.",
-            action="Relance l'inspection.",
-            reaction="Aucun effet (lecture seule).",
+            label=_("Rafraîchir"),
+            definition=_("Relit et reanalyse le certificat configuré."),
+            utilisation=_("Aucune saisie."),
+            action=_("Relance l'inspection."),
+            reaction=_("Aucun effet (lecture seule)."),
         ),
     ),
-    consequences="Aucune - purement consultatif.",
+    consequences=_("Aucune - purement consultatif."),
     points_de_vigilance=(
         (
-            "Inspecte le FICHIER sur disque, pas necessairement celui reellement servi par un "
-            "serveur deja lance si celui-ci a change depuis le dernier redemarrage."
+            _("Inspecte le FICHIER sur disque, pas nécessairement celui réellement servi par un "
+            "serveur déjà lancé si celui-ci a changé depuis le dernier redémarrage.")
         ),
     ),
 )
 
 GENERATE_SELF_SIGNED_SCREEN = ScreenGuide(
     screen_class_name="GenerateSelfSignedScreen",
-    title="Generer un certificat auto-signe",
-    acces="Configuration detaillee -> TLS -> Generer un certificat auto-signe",
-    definition="Genere un certificat auto-signe (jamais reconnu par defaut par les navigateurs) et l'ecrit sur disque.",
+    title=_("Générer un certificat auto-signé"),
+    acces=_("Configuration détaillée -> TLS -> Générer un certificat auto-signé"),
+    definition=_("Génère un certificat auto-signé (jamais reconnu par défaut par les navigateurs) et l'écrit sur disque."),
     fields=(
         FieldGuide(
-            label="Nom commun (CN)",
-            definition="Nom commun du certificat.",
-            utilisation="Chaine libre, generalement le nom d'hote du serveur.",
-            action="Utilise a la generation.",
-            reaction="Ecrit reellement le certificat/la cle sur disque immediatement.",
+            label=_("Nom commun (CN)"),
+            definition=_("Nom commun du certificat."),
+            utilisation=_("Chaîne libre, généralement le nom d'hôte du serveur."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit réellement le certificat/la clé sur disque immédiatement."),
         ),
         FieldGuide(
-            label="SAN DNS / SAN IP",
-            definition="Noms DNS et adresses IP alternatifs couverts par le certificat.",
-            utilisation="Listes separees par des virgules, optionnelles.",
-            action="Utilise a la generation.",
-            reaction="Ecrit sur disque immediatement.",
+            label=_("SAN DNS / SAN IP"),
+            definition=_("Noms DNS et adresses IP alternatifs couverts par le certificat."),
+            utilisation=_("Listes séparées par des virgules, optionnelles."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit sur disque immédiatement."),
         ),
         FieldGuide(
-            label="Organisation / Unite / Ville / Region / Pays",
-            definition="Champs d'identite du certificat (sujet X.509).",
-            utilisation="Chaines libres, tous optionnels sauf Organisation (pre-rempli : OMEGA-SERV).",
-            action="Utilise a la generation.",
-            reaction="Ecrit sur disque immediatement.",
+            label=_("Organisation / Unité / Ville / Région / Pays"),
+            definition=_("Champs d'identité du certificat (sujet X.509)."),
+            utilisation=_("Chaînes libres, tous optionnels sauf Organisation (pré-rempli : OMEGA-SERV)."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit sur disque immédiatement."),
         ),
         FieldGuide(
-            label="Validite en jours",
-            definition="Duree de validite du certificat genere.",
-            utilisation="Entier positif, en jours. Valeur par defaut : 365.",
-            action="Utilise a la generation.",
-            reaction="Ecrit sur disque immediatement.",
+            label=_("Validité en jours"),
+            definition=_("Durée de validité du certificat généré."),
+            utilisation=_("Entier positif, en jours. Valeur par défaut : 365."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit sur disque immédiatement."),
         ),
         FieldGuide(
-            label="Type de cle",
-            definition="Algorithme et taille de la cle privee generee.",
-            utilisation="Valeurs valides indiquees dans le sous-titre. Valeur par defaut : rsa2048.",
-            action="Utilise a la generation.",
-            reaction="Ecrit sur disque immediatement.",
+            label=_("Type de clé"),
+            definition=_("Algorithme et taille de la clé privée générée."),
+            utilisation=_("Valeurs valides indiquées dans le sous-titre. Valeur par défaut : rsa2048."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit sur disque immédiatement."),
         ),
         FieldGuide(
-            label="Mot de passe de cle (optionnel)",
-            definition="Passphrase protegeant la cle privee generee.",
-            utilisation="Chaine libre, optionnelle - saisie masquee.",
-            action="Utilise a la generation.",
-            reaction="Ecrit sur disque immediatement.",
+            label=_("Mot de passe de clé (optionnel)"),
+            definition=_("Passphrase protégeant la clé privée générée."),
+            utilisation=_("Chaîne libre, optionnelle - saisie masquée."),
+            action=_("Utilisé à la génération."),
+            reaction=_("Écrit sur disque immédiatement."),
         ),
     ),
     consequences=(
-        "Genere reellement des fichiers sur disque des le clic sur Generer. Si TLS est DEJA "
-        "actif, le serveur en cours d'execution continue de servir l'ANCIEN certificat jusqu'a "
-        "un REDEMARRAGE COMPLET, meme si le fichier a change (le contexte SSL n'est construit "
-        "qu'une seule fois au demarrage)."
+        _("Génère réellement des fichiers sur disque des le clic sur Générer. Si TLS est DÉJÀ "
+        "actif, le serveur en cours d'exécution continue de servir l'ANCIEN certificat jusqu'à "
+        "un REDÉMARRAGE COMPLET, même si le fichier a changé (le contexte SSL n'est construit "
+        "qu'une seule fois au démarrage).")
     ),
 )
 
 CA_WIZARD_SCREEN = ScreenGuide(
     screen_class_name="CaWizardScreen",
-    title="Assistant CA locale",
-    acces="Configuration detaillee -> TLS -> Assistant CA locale",
+    title=_("Assistant CA locale"),
+    acces=_("Configuration détaillée -> TLS -> Assistant CA locale"),
     definition=(
-        "Enchaine trois etapes independantes : generer une autorite de certification locale, "
-        "generer une demande de signature (CSR) pour ce serveur, signer cette CSR avec la CA - "
+        _("Enchaîne trois étapes indépendantes : générer une autorité de certification locale, "
+        "générer une demande de signature (CSR) pour ce serveur, signer cette CSR avec la CA - "
         "permet d'obtenir un certificat reconnu par les clients ayant importe la CA, sans passer "
-        "par une autorite publique."
+        "par une autorité publique.")
     ),
     fields=(
         FieldGuide(
-            label="1. Generer la CA",
-            definition="Cree l'autorite de certification locale (cle + certificat racine).",
-            utilisation="CN, organisation, validite (defaut 3650 jours), type de cle, passphrase OBLIGATOIRE (saisie deux fois).",
-            action="Ecrit root-ca.key/root-ca.pem/serial.txt/index.txt sous secure/certificates/ca/.",
-            reaction="Ecrit reellement sur disque immediatement. A faire une seule fois.",
+            label=_("1. Générer la CA"),
+            definition=_("Crée l'autorité de certification locale (clé + certificat racine)."),
+            utilisation=_("CN, organisation, validité (défaut 3650 jours), type de clé, passphrase OBLIGATOIRE (saisie deux fois)."),
+            action=_("Écrit root-ca.key/root-ca.pem/serial.txt/index.txt sous secure/certificates/ca/."),
+            reaction=_("Écrit réellement sur disque immédiatement. À faire une seule fois."),
         ),
         FieldGuide(
-            label="2. Generer la CSR",
-            definition="Cree une demande de signature de certificat pour CE serveur.",
-            utilisation="CN, SAN DNS/IP, identite, type de cle - pas de passphrase ici.",
-            action="Ecrit le fichier .csr a cote de la cle privee du serveur.",
-            reaction="Ecrit reellement sur disque immediatement.",
+            label=_("2. Générer la CSR"),
+            definition=_("Crée une demande de signature de certificat pour CE serveur."),
+            utilisation=_("CN, SAN DNS/IP, identité, type de clé - pas de passphrase ici."),
+            action=_("Écrit le fichier .csr à côté de la clé privée du serveur."),
+            reaction=_("Écrit réellement sur disque immédiatement."),
         ),
         FieldGuide(
-            label="3. Signer la CSR",
-            definition="Signe la CSR generee a l'etape 2 avec la CA de l'etape 1, produit le certificat final.",
-            utilisation="Chemin de la CSR (pre-rempli), passphrase de la CA (resaisie), validite en jours (defaut 365).",
-            action="Ecrit le certificat signe (et la chaine complete) sur disque.",
+            label=_("3. Signer la CSR"),
+            definition=_("Signe la CSR générée à l'étape 2 avec la CA de l'étape 1, produit le certificat final."),
+            utilisation=_("Chemin de la CSR (pré-rempli), passphrase de la CA (resaisie), validité en jours (défaut 365)."),
+            action=_("Écrit le certificat signé (et la chaîne complète) sur disque."),
             reaction=(
-                "Ecrit reellement sur disque immediatement. Si TLS est DEJA actif, un "
-                "REDEMARRAGE COMPLET reste necessaire pour que le serveur serve ce nouveau "
-                "certificat (le contexte SSL en memoire ne se recharge jamais tout seul)."
+                _("Écrit réellement sur disque immédiatement. Si TLS est DÉJÀ actif, un "
+                "REDÉMARRAGE COMPLET reste nécessaire pour que le serveur serve ce nouveau "
+                "certificat (le contexte SSL en mémoire ne se recharge jamais tout seul).")
             ),
         ),
     ),
     consequences=(
-        "Le certificat racine de la CA (root-ca.pem) doit etre importe manuellement dans le "
+        _("Le certificat racine de la CA (root-ca.pem) doit être importe manuellement dans le "
         "magasin de confiance de chaque client pour que le certificat final soit reconnu - "
-        "rappele dans le journal de l'assistant apres chaque etape reussie."
+        "rappelé dans le journal de l'assistant après chaque étape réussie.")
     ),
     points_de_vigilance=(
         (
-            "La passphrase de la CA n'est jamais conservee en memoire entre les etapes - elle "
-            "est resaisie explicitement a l'etape 3."
+            _("La passphrase de la CA n'est jamais conservée en mémoire entre les étapes - elle "
+            "est resaisie explicitement à l'étape 3.")
         ),
     ),
 )
 
 LETS_ENCRYPT_SCREEN = ScreenGuide(
     screen_class_name="LetsEncryptScreen",
-    title="Assistant Let's Encrypt (Certbot)",
-    acces="Configuration detaillee -> TLS -> Assistant Let's Encrypt (Certbot)",
+    title=_("Assistant Let's Encrypt (Certbot)"),
+    acces=_("Configuration détaillée -> TLS -> Assistant Let's Encrypt (Certbot)"),
     definition=(
-        "Obtient un certificat public reconnu par les navigateurs via Certbot (defi HTTP-01, "
-        "mode webroot) - jamais --standalone (le port 80 est deja occupe par OMEGA-SERV) et "
-        "jamais /etc/letsencrypt/ (tout est ecrit sous secure/certificates/letsencrypt/ du "
-        "projet, entierement non-privilegie). Importe automatiquement le certificat obtenu et "
-        "installe un script de renouvellement (voir Renouvellement automatique (Certbot))."
+        _("Obtient un certificat public reconnu par les navigateurs via Certbot (défi HTTP-01, "
+        "mode webroot) - jamais --standalone (le port 80 est déjà occupé par OMEGA-SERV) et "
+        "jamais /etc/letsencrypt/ (tout est écrit sous secure/certificates/letsencrypt/ du "
+        "projet, entièrement non-privilégié). Importe automatiquement le certificat obtenu et "
+        "installe un script de renouvellement (voir Renouvellement automatique (Certbot)).")
     ),
     fields=(
         FieldGuide(
-            label="Domaine",
-            definition="Nom de domaine public deja pointe vers ce serveur (obligatoire).",
-            utilisation="Ex : monserveur.dynu.com - un DDNS (Dynu ou equivalent) reste a configurer par vous-meme, hors de cet assistant.",
-            action="Utilise pour la demande Certbot et le defi HTTP-01.",
-            reaction="Aucun effet avant confirmation - le resume prealable rappelle le domaine et le mode choisis.",
+            label=_("Domaine"),
+            definition=_("Nom de domaine public déjà pointé vers ce serveur (obligatoire)."),
+            utilisation=_("Ex : monserveur.dynu.com - un DDNS (Dynu ou équivalent) reste à configurer par vous-même, hors de cet assistant."),
+            action=_("Utilisé pour la demande Certbot et le défi HTTP-01."),
+            reaction=_("Aucun effet avant confirmation - le résumé préalable rappelle le domaine et le mode choisis."),
         ),
         FieldGuide(
-            label="Email",
-            definition="Adresse utilisee par Let's Encrypt pour les alertes d'expiration (optionnelle).",
-            utilisation="Chaine libre. Vide : Certbot s'enregistre sans email (--register-unsafely-without-email).",
-            action="Transmis a Certbot a la demande.",
-            reaction="Aucun effet avant confirmation.",
+            label=_("Email"),
+            definition=_("Adresse utilisée par Let's Encrypt pour les alertes d'expiration (optionnelle)."),
+            utilisation=_("Chaîne libre. Vide : Certbot s'enregistre sans email (--register-unsafely-without-email)."),
+            action=_("Transmis à Certbot à la demande."),
+            reaction=_("Aucun effet avant confirmation."),
         ),
         FieldGuide(
-            label="Mode test (staging)",
-            definition="Utilise l'environnement de test de Let's Encrypt plutot que la production.",
-            utilisation="Case a cocher, COCHEE PAR DEFAUT - certificat non reconnu par les navigateurs mais jamais soumis aux limites de taux reelles.",
-            action="Transmis a Certbot (--staging) si coche.",
-            reaction="A decocher seulement une fois le domaine/webroot verifies fonctionnels en mode test.",
+            label=_("Mode test (staging)"),
+            definition=_("Utilise l'environnement de test de Let's Encrypt plutôt que la production."),
+            utilisation=_("Case à cocher, COCHÉE PAR DÉFAUT - certificat non reconnu par les navigateurs mais jamais soumis aux limites de taux réelles."),
+            action=_("Transmis à Certbot (--staging) si coché."),
+            reaction=_("À décocher seulement une fois le domaine/webroot vérifiés fonctionnels en mode test."),
         ),
         FieldGuide(
-            label="Obtenir le certificat",
-            definition="Lance la demande apres un resume et une confirmation explicite.",
-            utilisation="Aucune saisie - declenche l'appel reseau reel a Let's Encrypt.",
-            action="Execute Certbot puis importe le certificat obtenu (deporte dans un thread de travail, l'interface reste reactive).",
+            label=_("Obtenir le certificat"),
+            definition=_("Lance la demande après un résumé et une confirmation explicite."),
+            utilisation=_("Aucune saisie - déclenche l'appel réseau réel à Let's Encrypt."),
+            action=_("Exécute Certbot puis importe le certificat obtenu (déporté dans un thread de travail, l'interface reste réactive)."),
             reaction=(
-                "Ecrit reellement sur disque en cas de succes. Si TLS est DEJA actif, le serveur "
-                "en cours d'execution continue de servir l'ANCIEN certificat jusqu'a un "
-                "REDEMARRAGE COMPLET."
+                _("Écrit réellement sur disque en cas de succès. Si TLS est DÉJÀ actif, le serveur "
+                "en cours d'exécution continue de servir l'ANCIEN certificat jusqu'à un "
+                "REDÉMARRAGE COMPLET.")
             ),
         ),
     ),
     consequences=(
-        "Le port 80 doit rester accessible depuis Internet le temps du defi HTTP-01 (webroot) - "
-        "echoue sinon (pare-feu, redirection de port non faite sur le routeur, DNS/DDNS pas "
-        "encore propage). Soumis aux limites de taux reelles de Let's Encrypt en mode production "
-        "(jamais en mode test)."
+        _("Le port 80 doit rester accessible depuis Internet le temps du défi HTTP-01 (webroot) - "
+        "échoue sinon (pare-feu, redirection de port non faite sur le routeur, DNS/DDNS pas "
+        "encore propagé). Soumis aux limites de taux réelles de Let's Encrypt en mode production "
+        "(jamais en mode test).")
     ),
     points_de_vigilance=(
         (
-            "Le DDNS (Dynu ou equivalent) et la redirection de port restent ENTIEREMENT a votre "
-            "charge - cet assistant ne configure jamais rien en dehors de ce serveur."
+            _("Le DDNS (Dynu ou équivalent) et la redirection de port restent ENTIÈREMENT à votre "
+            "charge - cet assistant ne configure jamais rien en dehors de ce serveur.")
         ),
         (
-            "Si OMEGA-SERV tourne dans un conteneur : executez cet assistant HORS du conteneur "
-            "qui sert le trafic (sur l'hote, ou un conteneur/sidecar distinct partageant le meme "
-            "volume secure/ et le meme webroot) - jamais Certbot a l'interieur du conteneur "
-            "servant deja le trafic public, voir la FAQ."
+            _("Si OMEGA-SERV tourne dans un conteneur : exécutez cet assistant HORS du conteneur "
+            "qui sert le trafic (sur l'hôte, ou un conteneur/sidecar distinct partageant le même "
+            "volume secure/ et le même webroot) - jamais Certbot à l'intérieur du conteneur "
+            "servant déjà le trafic public, voir la FAQ.")
         ),
     ),
 )
 
 RENEWAL_SCHEDULE_SCREEN = ScreenGuide(
     screen_class_name="RenewalScheduleScreen",
-    title="Renouvellement automatique (Certbot)",
-    acces="Configuration detaillee -> TLS -> Renouvellement automatique (Certbot)",
+    title=_("Renouvellement automatique (Certbot)"),
+    acces=_("Configuration détaillée -> TLS -> Renouvellement automatique (Certbot)"),
     definition=(
-        "Planifie le renouvellement automatique des certificats Certbot deja obtenus (Assistant "
-        "Let's Encrypt) - s'adapte au gestionnaire de service reellement detecte pour CETTE "
-        "instance : timer systemd installe depuis l'interface, sinon une ligne crontab si "
-        "possible, sinon des instructions manuelles affichees sans rien ecrire. Jamais un "
-        "mecanisme global partage entre plusieurs instances multi-instance."
+        _("Planifie le renouvellement automatique des certificats Certbot déjà obtenus (Assistant "
+        "Let's Encrypt) - s'adapte au gestionnaire de service réellement détecté pour CETTE "
+        "instance : timer systemd installé depuis l'interface, sinon une ligne crontab si "
+        "possible, sinon des instructions manuelles affichées sans rien écrire. Jamais un "
+        "mécanisme global partagé entre plusieurs instances multi-instance.")
     ),
     fields=(
         FieldGuide(
-            label="Configurer maintenant",
-            definition="Installe (ou reinstalle) le mecanisme de renouvellement adapte a ce systeme.",
-            utilisation="Aucune saisie.",
+            label=_("Configurer maintenant"),
+            definition=_("Installe (ou réinstalle) le mécanisme de renouvellement adapté à ce système."),
+            utilisation=_("Aucune saisie."),
             action=(
-                "systemd : ecrit et active un timer (sudo ponctuel, meme mecanisme que l'ecran "
-                "SERVICE). OpenRC/runit/aucun gestionnaire reconnu : ajoute une ligne a votre "
-                "crontab utilisateur si `crontab` est disponible, sinon affiche la ligne a ajouter "
-                "vous-meme."
+                _("systemd : écrit et active un timer (sudo ponctuel, même mécanisme que l'écran "
+                "SERVICE). OpenRC/runit/aucun gestionnaire reconnu : ajoute une ligne à votre "
+                "crontab utilisateur si `crontab` est disponible, sinon affiche la ligne à ajouter "
+                "vous-même.")
             ),
-            reaction="Reconfigurer ne duplique jamais l'entree (idempotent) - remplace toujours l'entree precedente de CETTE instance.",
+            reaction=_("Reconfigurer ne dupliqué jamais l'entrée (idempotent) - remplace toujours l'entrée précédente de CETTE instance."),
         ),
     ),
     consequences=(
-        "Une fois installe, le renouvellement tourne deux fois par jour sans aucune intervention "
-        "- le script de hook (Assistant Let's Encrypt) reimporte automatiquement chaque "
-        "certificat renouvele puis redemarre le service."
+        _("Une fois installé, le renouvellement tourne deux fois par jour sans aucune intervention "
+        "- le script de hook (Assistant Let's Encrypt) réimporte automatiquement chaque "
+        "certificat renouvelé puis redémarre le service.")
     ),
     points_de_vigilance=(
         (
-            "Sur certaines distributions (dont Arch/Manjaro), le paquet Certbot n'installe AUCUN "
-            "timer par defaut, contrairement a Debian/Ubuntu - verifiez toujours le statut affiche "
-            "ici plutot que de supposer qu'un mecanisme existe deja."
+            _("Sur certaines distributions (dont Arch/Manjaro), le paquet Certbot n'installe AUCUN "
+            "timer par défaut, contrairement à Debian/Ubuntu - vérifiez toujours le statut affiché "
+            "ici plutôt que de supposer qu'un mécanisme existe déjà.")
         ),
         (
-            "Ne concerne QUE les certificats geres par Certbot (secure/certificates/letsencrypt/) "
-            "- un certificat auto-signe ou signe par la CA locale n'a pas besoin (et ne beneficie "
-            "pas) de ce renouvellement."
+            _("Ne concerne QUE les certificats gérés par Certbot (secure/certificates/letsencrypt/) "
+            "- un certificat auto-signé ou signé par la CA locale n'a pas besoin (et ne bénéficie "
+            "pas) de ce renouvellement.")
         ),
     ),
 )
 
 REVOKE_CERTIFICATE_SCREEN = ScreenGuide(
     screen_class_name="RevokeCertificateScreen",
-    title="Revoquer un certificat",
-    acces="Configuration detaillee -> TLS -> Revoquer un certificat",
-    definition="Marque un certificat comme revoque dans le registre de la CA (index.txt) - action irreversible pour ce certificat.",
+    title=_("Révoquer un certificat"),
+    acces=_("Configuration détaillée -> TLS -> Révoquer un certificat"),
+    definition=_("Marque un certificat comme révoqué dans le registre de la CA (index.txt) - action irréversible pour ce certificat."),
     fields=(
         FieldGuide(
-            label="Certificat a revoquer",
-            definition="Chemin du certificat a marquer comme revoque.",
-            utilisation="Chemin relatif au projet.",
-            action="Utilise a la confirmation.",
-            reaction="Modifie index.txt immediatement apres confirmation.",
+            label=_("Certificat à révoquer"),
+            definition=_("Chemin du certificat à marquer comme révoqué."),
+            utilisation=_("Chemin relatif au projet."),
+            action=_("Utilisé à la confirmation."),
+            reaction=_("Modifie index.txt immédiatement après confirmation."),
         ),
         FieldGuide(
-            label="Cle / Certificat de la CA",
-            definition="Identite de l'autorite de certification qui a signe le certificat vise.",
-            utilisation="Chemins pre-remplis vers secure/certificates/ca/.",
-            action="Utilise a la confirmation.",
-            reaction="Modifie index.txt immediatement.",
+            label=_("Clé / Certificat de la CA"),
+            definition=_("Identité de l'autorité de certification qui a signé le certificat visé."),
+            utilisation=_("Chemins pré-remplis vers secure/certificates/ca/."),
+            action=_("Utilisé à la confirmation."),
+            reaction=_("Modifie index.txt immédiatement."),
         ),
         FieldGuide(
-            label="Passphrase de la cle CA",
-            definition="Necessaire pour prouver l'autorite sur la CA avant de revoquer.",
-            utilisation="Saisie masquee.",
-            action="Utilise a la confirmation.",
-            reaction="Modifie index.txt immediatement.",
+            label=_("Passphrase de la clé CA"),
+            definition=_("Nécessaire pour prouver l'autorité sur la CA avant de révoquer."),
+            utilisation=_("Saisie masquée."),
+            action=_("Utilisé à la confirmation."),
+            reaction=_("Modifie index.txt immédiatement."),
         ),
     ),
     consequences=(
-        "Demande une confirmation explicite (action irreversible pour ce certificat). Si le "
-        "certificat revoque est celui ACTUELLEMENT utilise par un serveur TLS deja actif, un "
-        "REDEMARRAGE COMPLET est necessaire, sinon il continue d'etre presente aux clients "
-        "malgre sa revocation."
+        _("Demande une confirmation explicite (action irréversible pour ce certificat). Si le "
+        "certificat révoqué est celui ACTUELLEMENT utilisé par un serveur TLS déjà actif, un "
+        "REDÉMARRAGE COMPLET est nécessaire, sinon il continue d'être présenté aux clients "
+        "malgré sa révocation.")
     ),
     points_de_vigilance=(
         (
-            "Pas de distribution CRL complete en V1 - la revocation reste locale (index.txt), "
-            "jamais publiee vers les clients automatiquement."
+            _("Pas de distribution CRL complète en V1 - la révocation reste locale (index.txt), "
+            "jamais publiée vers les clients automatiquement.")
         ),
     ),
 )
 
 TLS_TOGGLE_SCREEN = ScreenGuide(
     screen_class_name="TlsToggleScreen",
-    title="Activer / desactiver TLS",
-    acces="Configuration detaillee -> TLS -> Activer / desactiver TLS",
-    definition="Active ou desactive TLS, et choisit son mode (direct ou derriere un proxy qui termine deja le TLS).",
+    title=_("Activer / désactiver TLS"),
+    acces=_("Configuration détaillée -> TLS -> Activer / désactiver TLS"),
+    definition=_("Active ou désactive TLS, et choisit son mode (direct ou derrière un proxy qui termine déjà le TLS)."),
     fields=(
         FieldGuide(
-            label="Mode",
-            definition="Comment TLS est gere par ce serveur.",
+            label=_("Mode"),
+            definition=_("Comment TLS est géré par ce serveur."),
             utilisation=(
-                "direct (ce serveur termine TLS lui-meme, via ssl.SSLContext local) ou "
-                "behind_proxy (TLS deja termine en amont, ce serveur reste en HTTP simple)."
+                _("direct (ce serveur termine TLS lui-même, via ssl.SSLContext local) ou "
+                "behind_proxy (TLS déjà terminé en amont, ce serveur reste en HTTP simple).")
             ),
-            action="Enregistre au clic sur Activer TLS.",
-            reaction="Necessite TOUJOURS un REDEMARRAGE COMPLET, jamais un simple rechargement.",
+            action=_("Enregistre au clic sur Activer TLS."),
+            reaction=_("Nécessite TOUJOURS un REDÉMARRAGE COMPLET, jamais un simple rechargement."),
         ),
         FieldGuide(
-            label="Chemin du certificat / de la cle privee",
-            definition="Fichiers utilises si le mode est 'direct'. Optionnels : conservent la valeur actuelle si vides.",
-            utilisation="Chemins relatifs au projet.",
-            action="Enregistre avec le mode.",
-            reaction="Necessite TOUJOURS un REDEMARRAGE COMPLET.",
+            label=_("Chemin du certificat / de la clé privée"),
+            definition=_("Fichiers utilisés si le mode est 'direct'. Optionnels : conservent la valeur actuelle si vides."),
+            utilisation=_("Chemins relatifs au projet."),
+            action=_("Enregistre avec le mode."),
+            reaction=_("Nécessite TOUJOURS un REDÉMARRAGE COMPLET."),
         ),
     ),
     consequences=(
-        "Le contexte SSL n'est construit qu'une seule fois au demarrage - activer, desactiver, "
-        "ou changer le mode TLS exige SYSTEMATIQUEMENT un redemarrage complet, que ce soit pour "
-        "l'activation ou la desactivation."
+        _("Le contexte SSL n'est construit qu'une seule fois au démarrage - activer, désactiver, "
+        "ou changer le mode TLS exige SYSTÉMATIQUEMENT un redémarrage complet, que ce soit pour "
+        "l'activation ou la désactivation.")
     ),
     points_de_vigilance=(
         (
-            "A ne pas confondre avec le reglage 'reverse_proxy' (Configuration detaillee -> "
-            "Reverse Proxy) : ici, 'behind_proxy' signifie qu'OMEGA-SERV est DERRIERE un proxy "
-            "TLS externe, l'inverse d'agir soi-meme comme proxy."
+            _("À ne pas confondre avec le réglage 'reverse_proxy' (Configuration détaillée -> "
+            "Reverse Proxy) : ici, 'behind_proxy' signifie qu'OMEGA-SERV est DERRIÈRE un proxy "
+            "TLS externe, l'inverse d'agir soi-même comme proxy.")
         ),
     ),
 )

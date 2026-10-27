@@ -51,7 +51,7 @@ class TestRotateLogIfNeeded(unittest.TestCase):
         self.log_path.write_text("x" * 20)
         result = rotate_log_if_needed(self.log_path, 10, 2, self.filesystem, self.archive_store, now=_NOW)
         self.assertTrue(result.success)
-        self.assertIn("supprimee", result.message)
+        self.assertIn("supprimée", result.message)
         remaining = sorted(p.name for p in (self.root / "archives").glob("*.tar.gz"))
         self.assertEqual(len(remaining), 2)
 

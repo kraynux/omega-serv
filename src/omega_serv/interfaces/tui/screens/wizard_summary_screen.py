@@ -13,6 +13,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.defaults import builtin_safe_defaults
 from omega_serv.domain.config.diff import diff_configs
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -32,22 +33,22 @@ class WizardSummaryScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("ETAPE 7/8 : RESUME", classes="omega-title")
+            yield Static(_("ÉTAPE 7/8 : RÉSUMÉ"), classes="omega-title")
             yield Static("", id="summary-diff")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ecrire la configuration", id="write", variant="primary")
+                    yield Button(_("Écrire la configuration"), id="write", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         changes = diff_configs(builtin_safe_defaults().to_dict(), self._state.config.to_dict())
         if not changes:
-            self.query_one("#summary-diff", Static).update("Aucune difference avec les valeurs par defaut.")
+            self.query_one("#summary-diff", Static).update(_("Aucune différence avec les valeurs par défaut."))
             return
         self.query_one("#summary-diff", Static).update(
-            f"Profil : {self._state.profile_name or '(aucun)'}\n\nModifications :\n"
+            _("Profil : {value}\n\nModifications :\n").format(value=self._state.profile_name or _('(aucun)'))
             + "\n".join(str(change) for change in changes)
         )
 
@@ -60,5 +61,5 @@ class WizardSummaryScreen(OmegaScreen):
 
     def _write(self) -> None:
         self._container.configuration.save(self._container.config_file, self._state.config)
-        self.app.notify(f"Configuration ecrite dans {self._container.config_file}.")
+        self.app.notify(_("Configuration écrite dans {config_file}.").format(config_file=self._container.config_file))
         self.app.push_screen(WizardServiceScreen(container=self._container))

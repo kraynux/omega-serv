@@ -1,0 +1,5 @@
+Catalogues de traduction de l'interface d'omega-serv (OMEGA-SERV_PLAN-DETAILLE_I18N.md).
+
+Disposition : <langue>/LC_MESSAGES/omega-serv.mo   (ex. en/LC_MESSAGES/omega-serv.mo)
+Une langue apparait dans Options -> "Langue / Language" des que son fichier .mo est present.
+Le francais (langue source) ne demande aucun fichier.

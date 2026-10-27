@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.validation import is_safe_relative_path
 from omega_serv.domain.security.file_access import (
     AccessFix,
@@ -54,9 +55,9 @@ class ListFileStatus:
 
     def service_message(self) -> str:
         if self.service_check == "no_service":
-            return "aucun service installe : le serveur lance a la main lit le fichier sous votre compte"
+            return _("aucun service installé : le serveur lancé à la main lit le fichier sous votre compte")
         if self.service_check == "missing_file":
-            return "fichier pas encore cree"
+            return _("fichier pas encore créé")
         assert self.readability is not None and self.service_account is not None
         return self.readability.explain(self.service_account)
 
@@ -71,12 +72,12 @@ class SaveResult:
 
 def _location_error(file_access: FileAccessPort, project_root: Path, relative: str) -> str | None:
     if not is_safe_relative_path(relative):
-        return f"chemin refuse (absolu ou contenant '..') : {relative!r}"
+        return _("chemin refusé (absolu ou contenant '..') : {relative!r}").format(relative=relative)
     path = project_root / relative
     if path.parent != project_root / KEYWORDS_DIR or path.suffix != ".txt":
-        return f"une liste doit etre un fichier .txt directement dans {KEYWORDS_DIR}/ : {relative!r}"
+        return _("une liste doit être un fichier .txt directement dans {KEYWORDS_DIR}/ : {relative!r}").format(KEYWORDS_DIR=KEYWORDS_DIR, relative=relative)
     if file_access.has_symlink_between(project_root, path):
-        return f"lien symbolique refuse entre le projet et {relative!r} (il pourrait ecrire hors du projet)"
+        return _("lien symbolique refusé entre le projet et {relative!r} (il pourrait écrire hors du projet)").format(relative=relative)
     return None
 
 
@@ -118,9 +119,9 @@ def save_list_file(
     if before.location_error is not None:
         return SaveResult(False, before.location_error, before)
     if not before.writable:
-        return SaveResult(False, "fichier ou dossier non modifiable par votre compte (lecture seule)", before)
+        return SaveResult(False, _("fichier ou dossier non modifiable par votre compte (lecture seule)"), before)
     if file_access.fingerprint(before.path) != expected_fingerprint:
-        return SaveResult(False, "le fichier a ete modifie en dehors de l'editeur depuis son ouverture", before)
+        return SaveResult(False, _("le fichier a été modifié en dehors de l'éditeur depuis son ouverture"), before)
 
     outcome = file_access.atomic_write_preserving(before.path, content, NEW_LIST_FILE_MODE)
     after = inspect_list_file(file_access, project_root, relative, service_account)

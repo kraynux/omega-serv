@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ html_lang() }}" dir="{{ html_dir() }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OMEGA-SERV — Guide d'aide complet</title>
+<title>OMEGA-SERV — {{ _("Guide d'aide complet") }}</title>
 <style>
   /* Voir capabilities_report.html.j2 pour le raisonnement complet sur
      le theme et la mise en page - meme gabarit, contenu different. */
@@ -57,8 +57,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>OMEGA-SERV — Guide d'aide complet</h1>
-    <p class="meta">Généré le {{ generated_at }} · {{ screen_guides|length }} écran(s) documenté(s)</p>
+    <h1>OMEGA-SERV — {{ _("Guide d'aide complet") }}</h1>
+    <p class="meta">{{ _("Généré le {date} · {count} écran(s) documenté(s)").format(date=generated_at, count=screen_guides|length) }}</p>
 
     {% for guide in screen_guides %}
     <div class="box">
@@ -68,17 +68,17 @@
       {% for field in guide.fields %}
       <div class="field">
         <p class="field-label">{{ field.label }}</p>
-        <p><span class="dim">Définition :</span> {{ field.definition }}</p>
-        <p><span class="dim">Utilisation :</span> {{ field.utilisation }}</p>
-        <p><span class="dim">Action :</span> {{ field.action }}</p>
-        <p><span class="dim">Réaction :</span> {{ field.reaction }}</p>
+        <p><span class="dim">{{ _("Définition :") }}</span> {{ field.definition }}</p>
+        <p><span class="dim">{{ _("Utilisation :") }}</span> {{ field.utilisation }}</p>
+        <p><span class="dim">{{ _("Action :") }}</span> {{ field.action }}</p>
+        <p><span class="dim">{{ _("Réaction :") }}</span> {{ field.reaction }}</p>
       </div>
       {% endfor %}
       {% if guide.consequences %}
-      <p><span class="field-label">Conséquences :</span> {{ guide.consequences }}</p>
+      <p><span class="field-label">{{ _("Conséquences :") }}</span> {{ guide.consequences }}</p>
       {% endif %}
       {% if guide.points_de_vigilance %}
-      <p class="vigilance"><span class="field-label">Points de vigilance :</span></p>
+      <p class="vigilance"><span class="field-label">{{ _("Points de vigilance :") }}</span></p>
       <ul class="vigilance">
         {% for point in guide.points_de_vigilance %}
         <li>{{ point }}</li>
@@ -88,7 +88,7 @@
     </div>
     {% endfor %}
 
-    <h1>FAQ</h1>
+    <h1>{{ _("FAQ") }}</h1>
     {% for entry in faq_entries %}
     <div class="box">
       <p class="acces">{{ entry.category }}</p>
@@ -97,7 +97,7 @@
     </div>
     {% endfor %}
 
-    <footer>Guide généré par <strong>OMEGA-SERV</strong></footer>
+    <footer>{{ _("Guide généré par") }} <strong>OMEGA-SERV</strong></footer>
   </div>
 </body>
 </html>

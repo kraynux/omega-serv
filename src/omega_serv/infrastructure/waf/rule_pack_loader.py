@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
 from omega_serv.domain.security.waf.rule_validation import parse_rule_pack, validate_rule_pack
 from omega_serv.domain.security.waf.signature_engine import CompiledRulePack, compile_rule_pack
@@ -16,17 +17,17 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 
 def load_rule_pack(filesystem: FilesystemPort, path: Path) -> CompiledRulePack:
     if not filesystem.exists(path):
-        raise WafRuleLoadError(f"Fichier de pack de regles introuvable : {path}")
+        raise WafRuleLoadError(_("Fichier de pack de règles introuvable : {path}").format(path=path))
     try:
         raw = filesystem.read_text(path)
     except OSError as e:
-        raise WafRuleLoadError(f"Impossible de lire {path} : {e}") from e
+        raise WafRuleLoadError(_("Impossible de lire {path} : {e}").format(path=path, e=e)) from e
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
-        raise WafRuleLoadError(f"JSON invalide dans {path} : {e}") from e
+        raise WafRuleLoadError(_("JSON invalide dans {path} : {e}").format(path=path, e=e)) from e
     if not isinstance(data, dict):
-        raise WafRuleLoadError(f"{path} ne contient pas un objet JSON a la racine")
+        raise WafRuleLoadError(_("{path} ne contient pas un objet JSON à la racine").format(path=path))
 
     pack = parse_rule_pack(data)
     errors = validate_rule_pack(pack)

@@ -127,7 +127,7 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             content = str(pilot.app.screen.query_one("#check-result").content)
             self.assertIn("valide", content)
             self.assertIn("avertissement", content)
-            self.assertIn("chevauchement de prefixe", content)
+            self.assertIn("chevauchement de préfixe", content)
 
 
     async def test_simulate_request_calls_runner_with_form_values(self):
@@ -201,7 +201,7 @@ class TestTuiAdvancedTools(unittest.IsolatedAsyncioTestCase):
             self.assertIn("TEST-001", text)
             self.assertIn("probleme simule", text)
             self.assertIn("1 high", text)
-            self.assertIn("NON SECURISE", text)
+            self.assertIn("NON SÉCURISÉ", text)
 
     async def test_audit_button_reruns_audit(self):
         calls = {"n": 0}

@@ -9,6 +9,7 @@ import tarfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
 
 
@@ -69,7 +70,7 @@ class ArchiveStore:
                     arcname = self._arcname_for(source, base_path)
                     tar.add(source, arcname=arcname)
         except (OSError, tarfile.TarError) as exc:
-            raise ArchiveStoreError(f"Echec de creation de l'archive {archive_name} : {exc}") from exc
+            raise ArchiveStoreError(_("Échec de création de l'archive {archive_name} : {exc}").format(archive_name=archive_name, exc=exc)) from exc
         return archive_path
 
     def extract_archive(self, archive_path: Path, dest_dir: Path) -> None:
@@ -81,7 +82,7 @@ class ArchiveStore:
                 except TypeError:
                     tar.extractall(dest_dir, members=_safe_members(tar, dest_dir))
         except (OSError, tarfile.TarError) as exc:
-            raise ArchiveStoreError(f"Echec d'extraction de l'archive {archive_path} : {exc}") from exc
+            raise ArchiveStoreError(_("Échec d'extraction de l'archive {archive_path} : {exc}").format(archive_path=archive_path, exc=exc)) from exc
 
     def list_archives(self, pattern: str = "*.tar.gz") -> list[Path]:
         return sorted(self._base_dir.glob(pattern))
@@ -90,7 +91,7 @@ class ArchiveStore:
         try:
             stat = archive_path.stat()
         except OSError as exc:
-            raise ArchiveStoreError(f"Echec de lecture des informations de {archive_path} : {exc}") from exc
+            raise ArchiveStoreError(_("Échec de lecture des informations de {archive_path} : {exc}").format(archive_path=archive_path, exc=exc)) from exc
         return {
             "path": str(archive_path),
             "name": archive_path.name,

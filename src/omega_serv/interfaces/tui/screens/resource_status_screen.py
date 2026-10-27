@@ -58,11 +58,13 @@ from textual.widgets import Button, Footer, Header, Static
 from omega_serv.application.config.load_config import load_config
 from omega_serv.application.services.manage_service import get_service_status
 from omega_serv.application.services.pid_file import pid_file_status
+from omega_serv.core.i18n import _
 from omega_serv.core.platform_info import is_process_running
 from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
 from omega_serv.domain.logging.access_log_parser import parse_combined_log_line
 from omega_serv.domain.logging.live_traffic_stats import LiveTrafficBuffer, LiveTrafficStats
 from omega_serv.domain.services.entities import ServiceStatus
+from omega_serv.interfaces.tui.rendering.aligned_block import AlignedBlock, section_title
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.simulate_request_screen import SimulateRequestScreen
 
@@ -81,11 +83,12 @@ SERVICE (bug latent signale, corrige ici)."""
 
 
 def _bytes_to_human(num_bytes: float) -> str:
-    for unit in ("B", "Ko", "Mo", "Go"):
+    units = (_("o"), _("Ko"), _("Mo"), _("Go"))
+    for unit in units:
         if num_bytes < 1024:
             return f"{num_bytes:.1f} {unit}"
         num_bytes /= 1024
-    return f"{num_bytes:.1f} To"
+    return f"{num_bytes:.1f} {_('To')}"
 
 
 def _progress_bar(percent: float, width: int = 20) -> str:
@@ -121,7 +124,7 @@ class ResourceStatusScreen(OmegaScreen):
         yield Header()
         with Vertical(classes="omega-panel"):
             with Center():
-                yield Static("ETAT & RESSOURCES", classes="omega-title")
+                yield Static(_("ÉTAT & RESSOURCES"), classes="omega-title")
             with Horizontal(id="resource-dashboard-body"):
                 with Vertical(classes="resource-dash-col"):
                     yield Static(id="box-server-state", classes="omega-dash-box")
@@ -131,19 +134,20 @@ class ResourceStatusScreen(OmegaScreen):
                     yield Static(id="box-system", classes="omega-dash-box")
             with Center(), Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh", variant="primary")
+                    yield Button(_("Rafraîchir"), id="refresh", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Simuler une requete", id="simulate-request")
+                    yield Button(_("Simuler une requête"), id="simulate-request")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
-        self.query_one("#box-server-state", Static).border_title = "ETAT DU SERVEUR"
-        self.query_one("#box-server-state", Static).update("  Chargement...")
-        self.query_one("#box-traffic", Static).border_title = "FLUX (LOG D'ACCES)"
-        self.query_one("#box-system", Static).border_title = "RESSOURCES SYSTEME"
-        self.query_one("#box-system", Static).update("  Chargement...")
+        loading = "  " + _("Chargement...")
+        self.query_one("#box-server-state", Static).border_title = _("ÉTAT DU SERVEUR")
+        self.query_one("#box-server-state", Static).update(loading)
+        self.query_one("#box-traffic", Static).border_title = _("FLUX (LOG D'ACCÈS)")
+        self.query_one("#box-system", Static).border_title = _("RESSOURCES SYSTÈME")
+        self.query_one("#box-system", Static).update(loading)
 
         factory = self._container.service_manager_factory
         self._manager = factory() if factory is not None else None
@@ -209,7 +213,7 @@ class ResourceStatusScreen(OmegaScreen):
         try:
             content = self._panel_server_state()
         except Exception as e:  # noqa: BLE001 - filet de secours large, volontaire
-            content = Text(f"  ERREUR INATTENDUE : {e}\n", style="bold red")
+            content = Text("  " + _("ERREUR INATTENDUE : {error}").format(error=e) + "\n", style="bold red")
         self.app.call_from_thread(self._apply_server_state, content)
 
     def _apply_server_state(self, content: Text) -> None:
@@ -239,7 +243,7 @@ class ResourceStatusScreen(OmegaScreen):
             stats = self._container.collect_system_stats()
             content = self._panel_system(stats)
         except Exception as e:  # noqa: BLE001 - filet de secours large, volontaire
-            content = Text(f"  ERREUR INATTENDUE : {e}\n", style="bold red")
+            content = Text("  " + _("ERREUR INATTENDUE : {error}").format(error=e) + "\n", style="bold red")
         self.app.call_from_thread(self._apply_system_stats, content)
 
     def _apply_system_stats(self, content: Text) -> None:
@@ -248,127 +252,134 @@ class ResourceStatusScreen(OmegaScreen):
 
     def _panel_server_state(self) -> Text:
         content = Text()
-        content.append("── PROCESSUS ────────────────\n", style="bold")
-
+        content.append(section_title(_("PROCESSUS")), style="bold")
+        status_label = _("Statut")
+        process = AlignedBlock()
         pid_path = self._container.project_root / "var" / "run" / "omega-serv.pid"
         pid, unreadable = pid_file_status(self._container.filesystem, pid_path)
         if pid is not None and is_process_running(pid):
-            content.append(f"  Statut  : DEMARRE (PID {pid})\n", style="green")
+            process.row(status_label, _("DÉMARRÉ (PID {pid})").format(pid=pid), "green")
         elif pid is not None:
-            content.append(f"  Statut  : ARRETE (PID {pid} obsolete)\n", style="yellow")
+            process.row(status_label, _("ARRÊTÉ (PID {pid} obsolète)").format(pid=pid), "yellow")
         elif unreadable:
-            content.append(
-                "  Statut  : a confirmer (rien d'alarmant, normal juste apres "
-                "l'installation) - reconnectez votre session UNE SEULE FOIS pour que "
-                "cet ecran l'affiche ; verifiez via SERVICE en attendant\n",
-                style="yellow",
-            )
+            process.row(status_label, _(
+                "à confirmer (rien d'alarmant, normal juste après l'installation) - reconnectez "
+                "votre session UNE SEULE FOIS pour que cet écran l'affiche ; vérifiez via SERVICE "
+                "en attendant"
+            ), "yellow")
         else:
-            content.append("  Statut  : ARRETE (aucun fichier PID)\n", style="dim")
+            process.row(status_label, _("ARRÊTÉ (aucun fichier PID)"), "dim")
+        process.render_into(content)
 
-        content.append("\n── SERVICE SYSTEME ──────────\n", style="bold")
+        content.append("\n" + section_title(_("SERVICE SYSTÈME")), style="bold")
         if self._manager is None:
-            content.append("  Aucun gestionnaire de service reconnu\n", style="dim")
+            content.append("  " + _("Aucun gestionnaire de service reconnu") + "\n", style="dim")
         else:
             service_name = self._container.settings_store.get(_SERVICE_NAME_KEY, "") or _DEFAULT_SERVICE_NAME
             result = get_service_status(self._manager, service_name)
             if isinstance(result, ServiceStatus):
                 state_style = "green" if result.is_running else ("red" if result.is_failed else "yellow")
-                content.append(f"  Actif   : {result.active}\n", style=state_style)
-                content.append(f"  Demarrage auto : {result.enabled}\n")
-                content.append(f"  Etat    : {result.state} ({result.sub_state})\n")
+                AlignedBlock() \
+                    .row(_("Actif"), str(result.active), state_style) \
+                    .row(_("Démarrage auto"), str(result.enabled)) \
+                    .row(_("État"), f"{result.state} ({result.sub_state})") \
+                    .render_into(content)
             else:
                 # Erreur remontee par status() (ex. timeout systemctl/rc-service/sv -
                 # retour utilisateur 2026-09-21 : jamais laisser cet ecran se figer en
                 # silence, afficher clairement de quoi corriger a la place) - visible,
                 # jamais "dim" comme le message informatif "aucun gestionnaire reconnu".
-                content.append(f"  ERREUR STATUT : {result.message}\n", style="bold red")
+                AlignedBlock().row(_("ERREUR STATUT"), result.message, style="bold red").render_into(content)
 
-        content.append("\n── CONFIGURATION ACTIVE ─────\n", style="bold")
+        content.append("\n" + section_title(_("CONFIGURATION ACTIVE")), style="bold")
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            content.append("  Erreur de configuration : " + "; ".join(load_result.errors) + "\n", style="red")
+            content.append("  " + _("Erreur de configuration : ") + "; ".join(load_result.errors) + "\n", style="red")
             return content
         config = load_result.config
 
-        content.append(f"  Profil  : {config.profile}\n")
-        content.append(f"  Ecoute  : {config.server.bind}:{config.server.port}\n")
-        content.append(f"  TLS     : {'active (' + config.tls.mode + ')' if config.tls.enabled else 'desactive'}\n")
+        tls = _("activé ({mode})").format(mode=config.tls.mode) if config.tls.enabled else _("désactivé")
+        AlignedBlock() \
+            .row(_("Profil"), str(config.profile)) \
+            .row(_("Écoute"), f"{config.server.bind}:{config.server.port}") \
+            .row(_("TLS"), tls) \
+            .render_into(content)
 
         enabled_options = sorted(name for name, opt in config.options.items() if opt.enabled)
-        content.append(f"\n  Options actives ({len(enabled_options)}/{len(KNOWN_OPTION_NAMES)}) :\n")
+        content.append("\n  " + _("Options actives ({enabled}/{known}) :").format(
+            enabled=len(enabled_options), known=len(KNOWN_OPTION_NAMES)) + "\n")
         if enabled_options:
             for name in enabled_options:
                 content.append(f"    - {name}\n", style="green")
         else:
-            content.append("    (aucune)\n", style="dim")
+            content.append("    " + _("(aucune)") + "\n", style="dim")
         return content
 
     def _panel_traffic(self, stats: LiveTrafficStats) -> Text:
         content = Text()
-        content.append("── RENDEMENT ────────────────\n", style="bold")
-        content.append(f"  Debit    : {stats.rps:.2f} req/s\n")
-        content.append(f"  Volume   : {_bytes_to_human(stats.bps)}/s\n\n")
+        content.append(section_title(_("RENDEMENT")), style="bold")
+        AlignedBlock() \
+            .row(_("Débit"), _("{rate:.2f} req/s").format(rate=stats.rps)) \
+            .row(_("Volume"), _("{size}/s").format(size=_bytes_to_human(stats.bps))) \
+            .render_into(content)
 
-        content.append("── STATUTS HTTP ─────────────\n", style="bold")
-        content.append(f"  Total    : {stats.total}\n")
-        content.append(f"  Succes 2xx    : {stats.success_2xx}\n", style="green")
-        content.append(f"  Redirect 3xx  : {stats.redirect_3xx}\n")
-        content.append(f"  Erreurs 4xx   : {stats.errors_4xx}\n", style="yellow")
-        content.append(f"  Erreurs 5xx   : {stats.errors_5xx}\n\n", style="red")
+        content.append("\n" + section_title(_("STATUTS HTTP")), style="bold")
+        AlignedBlock() \
+            .row(_("Total"), str(stats.total)) \
+            .row(_("Succès 2xx"), str(stats.success_2xx), "green") \
+            .row(_("Redirections 3xx"), str(stats.redirect_3xx)) \
+            .row(_("Erreurs 4xx"), str(stats.errors_4xx), "yellow") \
+            .row(_("Erreurs 5xx"), str(stats.errors_5xx), "red") \
+            .render_into(content)
 
-        content.append("── CLIENTS ──────────────────\n", style="bold")
-        content.append(f"  IPs uniques   : {stats.unique_ips}\n")
-        content.append(f"  Top IP        : {stats.top_ip}\n\n")
+        content.append("\n" + section_title(_("CLIENTS")), style="bold")
+        AlignedBlock() \
+            .row(_("IPs uniques"), str(stats.unique_ips)) \
+            .row(_("Top IP"), str(stats.top_ip)) \
+            .render_into(content)
 
-        content.append("── SANTE ────────────────────\n", style="bold")
+        content.append("\n" + section_title(_("SANTÉ")), style="bold")
         health_style = "green" if stats.error_rate < 5 else ("yellow" if stats.error_rate < 15 else "red")
-        content.append(f"  Taux d'erreur : {stats.error_rate:.1f}%\n", style=health_style)
-        content.append(f"  Taille moy.   : {_bytes_to_human(stats.avg_size)}\n")
-        content.append(f"  Tampon        : {stats.buffer_size}\n")
+        AlignedBlock() \
+            .row(_("Taux d'erreur"), f"{stats.error_rate:.1f}%", health_style) \
+            .row(_("Taille moy."), _bytes_to_human(stats.avg_size)) \
+            .row(_("Tampon"), str(stats.buffer_size)) \
+            .render_into(content)
         return content
 
     def _panel_system(self, stats: dict[str, Any]) -> Text:
         content = Text()
-        content.append(f"  CPU  : {_progress_bar(stats['cpu_percent'])}\n")
+        system = AlignedBlock().row(_("CPU"), _progress_bar(stats["cpu_percent"]))
         if stats.get("temps"):
             temp_str = " / ".join(f"{v:.0f}°C" for v in list(stats["temps"].values())[:3])
-            content.append(f"         Temp: {temp_str}\n", style="dim")
-
-        content.append(f"\n  RAM  : {_progress_bar(stats['mem_percent'])}\n")
-        content.append(
-            f"         ({_bytes_to_human(stats['mem_used'])} / {_bytes_to_human(stats['mem_total'])})\n",
-            style="dim",
-        )
-
-        content.append(f"\n  Disk : {_progress_bar(stats['disk_percent'])}\n")
-        content.append(
-            f"         ({_bytes_to_human(stats['disk_used'])} / {_bytes_to_human(stats['disk_total'])})\n",
-            style="dim",
-        )
-
-        content.append(
-            f"\n  Swap : {stats['swap_percent']:5.1f}% "
-            f"({_bytes_to_human(stats['swap_used'])} / {_bytes_to_human(stats['swap_total'])})\n"
-        )
-        content.append(
-            f"  Load : {stats['load_1']:.2f} {stats['load_5']:.2f} {stats['load_15']:.2f}"
-            f"   Processus: {stats['num_processes']}\n"
-        )
+            system.detail(_("Temp. : {values}").format(values=temp_str))
+        system.row(_("RAM"), _progress_bar(stats["mem_percent"]))
+        system.detail(f"({_bytes_to_human(stats['mem_used'])} / {_bytes_to_human(stats['mem_total'])})")
+        system.row(_("Disque"), _progress_bar(stats["disk_percent"]))
+        system.detail(f"({_bytes_to_human(stats['disk_used'])} / {_bytes_to_human(stats['disk_total'])})")
+        system.render_into(content)
 
         uptime_sec = stats["uptime_seconds"]
         days, rem = divmod(int(uptime_sec), 86400)
         hours, rem = divmod(rem, 3600)
         minutes = rem // 60
-        content.append(f"  Uptime: {days}j {hours}h {minutes}m\n\n")
+        content.append("\n")
+        # Bloc separe des barres : un libelle long ici ne decale jamais les barres CPU/RAM/Disque.
+        AlignedBlock() \
+            .row(_("Swap"), f"{stats['swap_percent']:5.1f}% "
+                            f"({_bytes_to_human(stats['swap_used'])} / {_bytes_to_human(stats['swap_total'])})") \
+            .row(_("Charge"), f"{stats['load_1']:.2f} {stats['load_5']:.2f} {stats['load_15']:.2f}") \
+            .row(_("Processus"), str(stats["num_processes"])) \
+            .row(_("Uptime"), _("{days} j {hours} h {minutes} min").format(days=days, hours=hours, minutes=minutes)) \
+            .render_into(content)
 
-        content.append("── RESEAU ───────────────────\n", style="bold")
-        content.append(
-            f"  Debit : ↓{_bytes_to_human(stats['net_bytes_recv'])}  ↑{_bytes_to_human(stats['net_bytes_sent'])}\n"
-        )
-        content.append(f"  TCP etablies : {stats['tcp_established']}\n")
-        content.append(f"  IP sortante  : {stats['outbound_ip']}\n")
-        content.append(f"  Passerelle   : {stats.get('gateway') or 'N/A'}\n")
+        content.append("\n" + section_title(_("RÉSEAU")), style="bold")
         users = stats.get("user_names") or []
-        content.append(f"  Utilisateurs : {', '.join(users) if users else 'aucun'}\n")
+        AlignedBlock() \
+            .row(_("Débit"), f"↓{_bytes_to_human(stats['net_bytes_recv'])}  ↑{_bytes_to_human(stats['net_bytes_sent'])}") \
+            .row(_("TCP établies"), str(stats["tcp_established"])) \
+            .row(_("IP sortante"), str(stats["outbound_ip"])) \
+            .row(_("Passerelle"), str(stats.get("gateway") or _("N/D"))) \
+            .row(_("Utilisateurs"), ", ".join(users) if users else _("aucun")) \
+            .render_into(content)
         return content

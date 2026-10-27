@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
 from omega_serv.domain.persistence.backup import BackupRequest
@@ -83,7 +84,7 @@ def create_backup(
 ) -> BackupResult:
     sources = _collect_sources(request, config, project_root, config_file)
     if not sources:
-        return BackupResult(False, "Aucun composant selectionne pour la sauvegarde.")
+        return BackupResult(False, _("Aucun composant sélectionné pour la sauvegarde."))
 
     now = clock.now()
     snapshot_id = create_snapshot_id(now)
@@ -92,7 +93,7 @@ def create_backup(
     try:
         archive_path = archive_store.create_archive(archive_name, sources, base_path=project_root)
     except ArchiveStoreError as exc:
-        return BackupResult(False, f"Echec de la sauvegarde : {exc}")
+        return BackupResult(False, _("Échec de la sauvegarde : {exc}").format(exc=exc))
 
     metadata = SnapshotMetadata(
         snapshot_id=snapshot_id,
@@ -104,4 +105,4 @@ def create_backup(
         file_size_bytes=archive_path.stat().st_size,
     )
     metadata_store.save(metadata)
-    return BackupResult(True, f"Sauvegarde creee : {archive_name}.", metadata)
+    return BackupResult(True, _("Sauvegarde créée : {archive_name}.").format(archive_name=archive_name), metadata)

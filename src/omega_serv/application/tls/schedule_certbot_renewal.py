@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.renewal_schedule import (
     build_renewal_cron_line,
     build_renewal_service_unit,
@@ -73,19 +74,19 @@ def check_renewal_schedule_status(
         enabled = service_manager.is_enabled(timer_name)
         if active or enabled:
             return RenewalScheduleStatus(
-                "systemd", True, f"Timer systemd {timer_name} : actif={active}, active au demarrage={enabled}.",
+                "systemd", True, _("Timer systemd {timer_name} : actif={active}, activé au demarrage={enabled}.").format(timer_name=timer_name, active=active, enabled=enabled),
             )
-        return RenewalScheduleStatus("systemd", False, f"Timer systemd {timer_name} non installe (ou inactif).")
+        return RenewalScheduleStatus("systemd", False, _("Timer systemd {timer_name} non installé (ou inactif).").format(timer_name=timer_name))
 
     result = process_runner.run(["crontab", "-l"], timeout=_TIMEOUT_SECONDS)
     if result.returncode == _CRONTAB_MISSING_RETURNCODE:
-        return RenewalScheduleStatus("none", False, "Aucun mecanisme detecte (ni systemd, ni crontab disponible).")
+        return RenewalScheduleStatus("none", False, _("Aucun mécanisme détecté (ni systemd, ni crontab disponible)."))
     if result.returncode == _CRONTAB_TIMEOUT_RETURNCODE:
-        return RenewalScheduleStatus("none", False, f"Impossible de verifier crontab : {result.stderr.strip()}")
+        return RenewalScheduleStatus("none", False, _("Impossible de vérifier crontab : {value}").format(value=result.stderr.strip()))
     marker = renewal_cron_marker(service_name)
     if any(line.rstrip().endswith(marker) for line in result.stdout.splitlines()):
-        return RenewalScheduleStatus("cron", True, "Ligne crontab deja installee pour cette instance.")
-    return RenewalScheduleStatus("cron", False, "Aucune ligne crontab trouvee pour cette instance.")
+        return RenewalScheduleStatus("cron", True, _("Ligne crontab déjà installée pour cette instance."))
+    return RenewalScheduleStatus("cron", False, _("Aucune ligne crontab trouvée pour cette instance."))
 
 
 def schedule_certbot_renewal(
@@ -135,8 +136,7 @@ def _schedule_via_systemd(
     service_manager.start(timer_name)
     return ScheduleRenewalResult(
         "systemd", True,
-        f"Timer systemd installe et actif : {timer_name} (renouvellement deux fois par jour). "
-        f"Unites : {service_unit_path}, {timer_unit_path}.",
+        _("Timer systemd installé et actif : {timer_name} (renouvellement deux fois par jour). Unités : {service_unit_path}, {timer_unit_path}.").format(timer_name=timer_name, service_unit_path=service_unit_path, timer_unit_path=timer_unit_path),
     )
 
 
@@ -150,13 +150,13 @@ def _schedule_via_cron_or_manual(
     if list_result.returncode == _CRONTAB_MISSING_RETURNCODE:
         return ScheduleRenewalResult("manual", False, render_manual_renewal_instructions(cron_line=new_line))
     if list_result.returncode == _CRONTAB_TIMEOUT_RETURNCODE:
-        return ScheduleRenewalResult("error", False, f"Impossible de lire la crontab : {list_result.stderr.strip()}")
+        return ScheduleRenewalResult("error", False, _("Impossible de lire la crontab : {value}").format(value=list_result.stderr.strip()))
 
     existing = list_result.stdout if list_result.returncode == 0 else ""
     updated_crontab = replace_marked_cron_line(existing, service_name, new_line)
     write_result = process_runner.run(["crontab", "-"], input_text=updated_crontab, timeout=_TIMEOUT_SECONDS)
     if write_result.returncode != 0:
         return ScheduleRenewalResult(
-            "error", False, f"Echec de l'ecriture de la crontab : {(write_result.stderr or write_result.stdout).strip()}",
+            "error", False, _("Échec de l'écriture de la crontab : {value}").format(value=(write_result.stderr or write_result.stdout).strip()),
         )
-    return ScheduleRenewalResult("cron", True, f"Ligne crontab installee (deux fois par jour) : {new_line}")
+    return ScheduleRenewalResult("cron", True, _("Ligne crontab installée (deux fois par jour) : {new_line}").format(new_line=new_line))

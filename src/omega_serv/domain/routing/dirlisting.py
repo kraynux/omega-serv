@@ -38,6 +38,7 @@ from typing import Any
 
 from omega_lib.theme.policies import DEFAULT_EXPORT_THEME, EXPORT_PALETTES
 
+from omega_serv.core.i18n import N_, P_, page_html_dir, page_html_lang
 from omega_serv.domain.config.entities import SecurityConfig
 from omega_serv.domain.routing.dirlisting_sort import (
     DirEntryInfo,
@@ -160,7 +161,8 @@ def _format_mtime(mtime: float | None) -> str:
     return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
-_SIZE_UNITS = ("o", "Ko", "Mo", "Go", "To", "Po")
+_SIZE_UNITS = (N_("o"), N_("Ko"), N_("Mo"), N_("Go"), N_("To"), N_("Po"))
+"""Page servie aux visiteurs (D19) : unites traduites a l'affichage avec P_()."""
 
 
 def _format_size(size: int | None) -> str:
@@ -173,9 +175,10 @@ def _format_size(size: int | None) -> str:
     while value >= 1024 and unit_index < len(_SIZE_UNITS) - 1:
         value /= 1024
         unit_index += 1
+    unit = html.escape(P_(_SIZE_UNITS[unit_index]))
     if unit_index == 0:
-        return f"{int(value)} {_SIZE_UNITS[unit_index]}"
-    return f"{value:.1f} {_SIZE_UNITS[unit_index]}"
+        return f"{int(value)} {unit}"
+    return f"{value:.1f} {unit}"
 
 
 def _header_link(label: str, key: SortKey, sort: DirlistingSort) -> str:
@@ -225,16 +228,16 @@ def render_directory_listing_html(
 
     criteria_item = (
         f'<li class="omega-listing-header">'
-        f'{_header_link("NOM", "name", sort)}'
-        f'{_header_link("DERNIÈRE MODIFICATION", "mtime", sort)}'
-        f'{_header_link("TAILLE", "size", sort)}'
+        f'{_header_link(html.escape(P_("NOM")), "name", sort)}'
+        f'{_header_link(html.escape(P_("DERNIÈRE MODIFICATION")), "mtime", sort)}'
+        f'{_header_link(html.escape(P_("TAILLE")), "size", sort)}'
         "</li>"
     )
     parent_path = _parent_url_path(url_path)
     parent_item = (
         f'<li class="omega-dir omega-parent"><a class="omega-listing-name" href="{html.escape(parent_path)}">'
         f'<img class="omega-listing-icon" src="{ICON_URL_PREFIX}{DIRECTORY_ICON}" alt="">'
-        ".. (dossier parent)</a>"
+        f"{html.escape(P_('.. (dossier parent)'))}</a>"
         '<span class="omega-listing-mtime"></span><span class="omega-listing-size"></span></li>'
         if parent_path is not None else ""
     )
@@ -242,6 +245,7 @@ def render_directory_listing_html(
         _render_entry_item(name, entry_info.get(name, DirEntryInfo()), url_path) for name in visible
     )
     title = html.escape(url_path)
+    index_title = html.escape(P_("Index de {path}")).replace("{path}", title)
 
     show_readme = settings.show_readme and readme_content is not None
     header_html = _rendered_side_content(header_content if settings.show_header else None, settings.encode_header)
@@ -258,19 +262,19 @@ def render_directory_listing_html(
         else (
             '<div class="omega-listing-footer-wrap">'
             '<hr class="omega-listing-footer-rule">'
-            '<p class="omega-listing-footer">Propuls&eacute; par '
+            f'<p class="omega-listing-footer">{html.escape(P_("Propulsé par"))} '
             '<a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></p>'
             "</div>"
         )
     )
 
     return (
-        "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"utf-8\">"
-        f"<title>Index de {title}</title>"
+        f"<!DOCTYPE html><html lang=\"{page_html_lang()}\" dir=\"{page_html_dir()}\"><head><meta charset=\"utf-8\">"
+        f"<title>{index_title}</title>"
         f'<link rel="stylesheet" href="{base_css_href}">{external_css_link}'
         "</head><body><div class=\"omega-listing\">"
         f"{header_html}"
-        f'<h1 class="omega-listing-title">Index de {title}</h1>'
+        f'<h1 class="omega-listing-title">{index_title}</h1>'
         f"<div class=\"omega-listing-box\"><ul>{items}</ul></div>"
         f"{readme_html}"
         "</div>"

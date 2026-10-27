@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.logging.upload_log_format import format_upload_log_line
@@ -50,11 +51,11 @@ def handle_upload(
     content_type_header = request.header("content-type", "") or ""
     boundary = extract_boundary(content_type_header)
     if boundary is None:
-        return _error_response(400, "Content-Type multipart/form-data avec boundary attendu.")
+        return _error_response(400, _("Content-Type multipart/form-data avec boundary attendu."))
 
     file_part = next((p for p in parse_multipart(body, boundary) if p.filename), None)
     if file_part is None:
-        return _error_response(400, "aucun fichier trouve dans le corps multipart.")
+        return _error_response(400, _("aucun fichier trouvé dans le corps multipart."))
 
     upload_request = UploadRequest(
         zone_prefix=zone.path_prefix,
@@ -75,7 +76,7 @@ def handle_upload(
 
     current_count, current_total = storage.count_and_size(rule.storage_path)
     if rule.policy.max_files_per_zone is not None and current_count >= rule.policy.max_files_per_zone:
-        quota_error = "quota de nombre de fichiers atteint pour cette zone"
+        quota_error = _("quota de nombre de fichiers atteint pour cette zone")
         _log(UploadResult(
             accepted=False, zone=zone.path_prefix, source_ip=upload_request.source_ip,
             filename_original=upload_request.filename, stored_filename=None, stored_path=None,
@@ -84,7 +85,7 @@ def handle_upload(
         return _error_response(507, quota_error)
 
     if rule.policy.max_total_bytes_per_zone is not None and current_total + upload_request.size > rule.policy.max_total_bytes_per_zone:
-        quota_error = "quota de volume total atteint pour cette zone"
+        quota_error = _("quota de volume total atteint pour cette zone")
         _log(UploadResult(
             accepted=False, zone=zone.path_prefix, source_ip=upload_request.source_ip,
             filename_original=upload_request.filename, stored_filename=None, stored_path=None,

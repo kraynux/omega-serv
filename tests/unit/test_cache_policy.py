@@ -2,6 +2,7 @@ import unittest
 
 from omega_serv.domain.routing.cache_policy import (
     DEFAULT_CACHE_CONTROL,
+    DEFAULT_EXTENSION_CACHE,
     CachePolicy,
     parse_cache_policy,
     resolve_cache_control,
@@ -36,6 +37,23 @@ class TestResolveCacheControl(unittest.TestCase):
         self.assertEqual(resolve_cache_control("/admin/x", "x", policy), "no-store")
         self.assertEqual(resolve_cache_control("/app.js", "app.js", policy), "public, max-age=31536000")
 
+
+    def test_default_extension_rules_apply_until_the_config_has_its_own(self):
+        """Decision utilisateur 2026-10-26 (etude performance, point 3) : Cache-Control par
+        defaut pour images/medias/polices/CSS/JS, toujours modifiable."""
+        policy = parse_cache_policy({})
+        self.assertEqual(resolve_cache_control("/omega-serv/screenshots/1.png", "1.png", policy), "max-age=86400")
+        self.assertEqual(resolve_cache_control("/assets/site.css", "site.css", policy), "max-age=3600")
+        self.assertEqual(resolve_cache_control("/index.html", "index.html", policy), DEFAULT_CACHE_CONTROL)
+        self.assertTrue(all("public" not in value for value in DEFAULT_EXTENSION_CACHE.values()))
+
+    def test_an_explicit_table_replaces_the_defaults_even_empty(self):
+        self.assertEqual(
+            resolve_cache_control("/a.png", "a.png", parse_cache_policy({"extensions": {}})), DEFAULT_CACHE_CONTROL,
+        )
+        own = parse_cache_policy({"extensions": {".png": "no-store"}})
+        self.assertEqual(resolve_cache_control("/a.png", "a.png", own), "no-store")
+        self.assertEqual(resolve_cache_control("/a.css", "a.css", own), DEFAULT_CACHE_CONTROL)
 
 if __name__ == "__main__":
     unittest.main()

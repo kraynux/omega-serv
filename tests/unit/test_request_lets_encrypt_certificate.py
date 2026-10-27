@@ -122,7 +122,7 @@ class TestRequestLetsEncryptCertificate(unittest.TestCase):
         runner = _FakeProcessRunner()  # side_effect absent : aucun fichier ecrit
         _runner, result = self._request(runner=runner)
         self.assertFalse(result.success)
-        self.assertIn("import echoue", result.message)
+        self.assertIn("import échoué", result.message)
 
     def test_staging_defaults_to_true(self):
         runner, _result = self._request()

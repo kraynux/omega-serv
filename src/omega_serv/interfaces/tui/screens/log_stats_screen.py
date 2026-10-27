@@ -12,15 +12,16 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _PERIODS: tuple[tuple[str, str], ...] = (
-    ("24h", "24 heures"),
-    ("7d", "7 jours"),
-    ("30d", "30 jours"),
+    ("24h", _("24 heures")),
+    ("7d", _("7 jours")),
+    ("30d", _("30 jours")),
 )
 _BAR_WIDTH = 40
 
@@ -34,14 +35,14 @@ class LogStatsScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("STATISTIQUES DU LOG D'ACCES", classes="omega-title")
+            yield Static(_("STATISTIQUES DU LOG D'ACCÈS"), classes="omega-title")
             yield Static("", id="stats-error", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 for period_id, label in _PERIODS:
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=f"period-{period_id}")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield Static("", id="stats-summary")
             yield Static("", id="stats-hourly")
         yield Footer()
@@ -62,7 +63,7 @@ class LogStatsScreen(OmegaScreen):
         error_widget = self.query_one("#stats-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return None
         error_widget.update("")
         return self._container.project_root / load_result.config.logs.access
@@ -77,17 +78,14 @@ class LogStatsScreen(OmegaScreen):
         top_lines = "\n".join(
             f"  {ip_stat.ip:<18} {ip_stat.count:>8}  (vu la derniere fois : {ip_stat.last_seen.isoformat()})"
             for ip_stat in summary.top_ips
-        ) or "  (aucune requete sur cette periode)"
+        ) or _("  (aucune requête sur cette période)")
 
         status_lines = "\n".join(
             f"  {code} : {count}" for code, count in sorted(summary.status_code_counts.items())
-        ) or "  (aucun code de statut sur cette periode)"
+        ) or _("  (aucun code de statut sur cette période)")
 
         self.query_one("#stats-summary", Static).update(
-            f"Periode : {summary.period_label} ({summary.start.isoformat()} -> {summary.end.isoformat()})\n"
-            f"Total requetes : {summary.total_requests}\n\n"
-            f"Repartition par code de statut :\n{status_lines}\n\n"
-            f"Top IPs :\n{top_lines}"
+            _("Période : {period_label} ({value} -> {value2})\nTotal requêtes : {total_requests}\n\nRépartition par code de statut :\n{status_lines}\n\nTop IPs :\n{top_lines}").format(period_label=summary.period_label, value=summary.start.isoformat(), value2=summary.end.isoformat(), total_requests=summary.total_requests, status_lines=status_lines, top_lines=top_lines)
         )
 
         max_count = max(summary.hourly_counts) or 1
@@ -95,4 +93,4 @@ class LogStatsScreen(OmegaScreen):
             f"  {hour:>2}h  {'#' * int((count / max_count) * _BAR_WIDTH):<{_BAR_WIDTH}}  {count}"
             for hour, count in enumerate(summary.hourly_counts)
         )
-        self.query_one("#stats-hourly", Static).update(f"Repartition horaire (UTC) :\n{hourly_lines}")
+        self.query_one("#stats-hourly", Static).update(_("Répartition horaire (UTC) :\n{hourly_lines}").format(hourly_lines=hourly_lines))

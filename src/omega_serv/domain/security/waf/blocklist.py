@@ -8,6 +8,7 @@ import ipaddress
 from datetime import datetime, timezone
 from typing import Any
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.entities import BlocklistEntry
 
 SUPPORTED_BLOCKLIST_VERSIONS = frozenset({1})
@@ -46,11 +47,11 @@ def validate_blocklist_entry(entry: BlocklistEntry) -> str | None:
     try:
         ipaddress.ip_network(entry.network, strict=False)
     except ValueError:
-        return f"network invalide (attendu une IP ou un CIDR) : {entry.network!r}"
+        return _("network invalide (attendu une IP ou un CIDR) : {network!r}").format(network=entry.network)
     if not entry.reason:
-        return "reason ne peut pas etre vide"
+        return _("reason ne peut pas être vide")
     if entry.source not in ("manual", "auto"):
-        return f"source invalide : {entry.source!r}"
+        return _("source invalide : {source!r}").format(source=entry.source)
     return None
 
 

@@ -16,6 +16,8 @@ from textual.containers import Center, Middle
 from textual.screen import Screen
 from textual.widgets import Static
 
+from omega_serv.core.i18n import _
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -30,13 +32,13 @@ class InstanceSwitchSplashScreen(Screen[None]):
     def compose(self) -> ComposeResult:
         with Middle(classes="omega-splash-middle"):
             with Center():
-                yield Static("BASCULEMENT D'INSTANCE", classes="omega-title")
+                yield Static(_("BASCULEMENT D'INSTANCE"), classes="omega-title")
             with Center():
-                yield Static(f"Depuis : {self._source_name}", classes="omega-hint")
+                yield Static(_("Depuis : {source_name}").format(source_name=self._source_name), classes="omega-hint")
             with Center():
-                yield Static(f"Vers   : {self._current_name}  ({self._current_path})", classes="omega-hint")
+                yield Static(_("Vers   : {current_name}  ({current_path})").format(current_name=self._current_name, current_path=self._current_path), classes="omega-hint")
             with Center():
-                yield Static("Appuyez sur une touche pour continuer...", classes="omega-splash-prompt")
+                yield Static(_("Cliquez ou appuyez sur une touche pour continuer..."), classes="omega-splash-prompt")
 
     def on_key(self, event: events.Key) -> None:
         event.stop()

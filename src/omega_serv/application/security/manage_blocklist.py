@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.blocklist import validate_blocklist_entry
 from omega_serv.domain.security.waf.entities import BlocklistEntry
 from omega_serv.ports.blocklist_port import BlocklistPort
@@ -30,8 +31,8 @@ def add_blocklist_entry(
     if duration_seconds is None and not confirm_permanent:
         return ManageBlocklistResult(
             False,
-            "Bannissement permanent refuse sans confirmation explicite "
-            "(passer --duration-seconds, ou --confirm-permanent pour un bannissement sans expiration).",
+            _("Bannissement permanent refusé sans confirmation explicite "
+            "(passer --duration-seconds, ou --confirm-permanent pour un bannissement sans expiration)."),
         )
 
     expires_at = None if duration_seconds is None else (now + timedelta(seconds=duration_seconds)).isoformat()
@@ -42,11 +43,11 @@ def add_blocklist_entry(
         return ManageBlocklistResult(False, error)
 
     blocklist_port.add_entry(entry)
-    return ManageBlocklistResult(True, f"Entree ajoutee : {network} ({'permanent' if expires_at is None else f'expire {expires_at}'})")
+    return ManageBlocklistResult(True, _("Entrée ajoutée : {network} ({value})").format(network=network, value=_('permanent') if expires_at is None else f'_(expire ){expires_at}'))
 
 
 def remove_blocklist_entry(blocklist_port: BlocklistPort, network: str) -> ManageBlocklistResult:
     removed = blocklist_port.remove_entry(network)
     if not removed:
-        return ManageBlocklistResult(False, f"Aucune entree pour {network}")
-    return ManageBlocklistResult(True, f"Entree retiree : {network}")
+        return ManageBlocklistResult(False, _("Aucune entrée pour {network}").format(network=network))
+    return ManageBlocklistResult(True, _("Entrée retirée : {network}").format(network=network))

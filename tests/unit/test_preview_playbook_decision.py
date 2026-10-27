@@ -49,6 +49,13 @@ class _FakeIncidentRepository:
         self._open_incident: Incident | None = None
         self.create_called = False
 
+    def find_open_id_for(self, subject_id):
+
+        incident = self.find_open_for(subject_id)
+
+        return None if incident is None else incident.incident_id
+
+
     def find_open_for(self, subject_id):
         return self._open_incident
 

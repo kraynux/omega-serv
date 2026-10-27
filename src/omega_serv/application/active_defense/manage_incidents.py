@@ -23,13 +23,23 @@ def create_or_update_incident(
     observation: ThreatObservation,
     score: int,
     incident_score_threshold: int,
+    return_incident: bool = True,
 ) -> tuple[Incident | None, IncidentOpened | None]:
     """Retourne (None, None) si le score reste sous le seuil - jamais
     d'incident cree/mis a jour pour une menace encore "suspicious"
     (plan §"Domaine metier" : les observations detaillees ne sont
-    persistees qu'a partir du moment ou une enquete est justifiee)."""
-    existing = incident_repository.find_open_for(subject_id)
-    transition = decide_incident_transition(existing, score, incident_score_threshold=incident_score_threshold)
+    persistees qu'a partir du moment ou une enquete est justifiee).
+
+    Aucune lecture sous le seuil (la decision ne depend alors que du score), et seulement
+    l'identifiant de l'incident ouvert au-dessus : l'historique complet n'est recharge qu'avec
+    `return_incident=True`. Le serveur passe False - mesure du 2026-10-26 : recharger tout
+    l'historique a chaque observation d'un attaquant persistant coutait O(n²)."""
+    if score < incident_score_threshold:
+        return None, None
+    existing_id = incident_repository.find_open_id_for(subject_id)
+    transition = decide_incident_transition(
+        existing_id is not None, score, incident_score_threshold=incident_score_threshold,
+    )
     if transition == "no_change":
         return None, None
 
@@ -40,14 +50,16 @@ def create_or_update_incident(
         incident_repository.create(incident_id, subject_id, now)
         opened_event = IncidentOpened(incident_id=incident_id, subject_id=subject_id, occurred_at=now)
     else:
-        assert existing is not None
-        incident_id = existing.incident_id
+        assert existing_id is not None
+        incident_id = existing_id
 
     incident_repository.add_observation(incident_id, observation)
     incident_repository.add_event(
         incident_id, IncidentEvent(occurred_at=now, kind=observation.kind, detail=observation.detail),
     )
 
+    if not return_incident:
+        return None, opened_event
     incident = incident_repository.get(incident_id)
     assert incident is not None
     return incident, opened_event

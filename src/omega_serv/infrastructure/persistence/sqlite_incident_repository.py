@@ -45,6 +45,10 @@ def _load_observations(connection: sqlite3.Connection, incident_id: str) -> tupl
 
 def _row_to_incident(connection: sqlite3.Connection, row: tuple[Any, ...]) -> Incident:
     incident_id, subject_id, status, opened_at, closed_at = row
+    omitted = connection.execute(
+        "SELECT omitted_observations, omitted_events FROM incident_history_omissions WHERE incident_id = ?",
+        (incident_id,),
+    ).fetchone() or (0, 0)
     return Incident(
         incident_id=incident_id,
         subject_id=subject_id,
@@ -53,6 +57,8 @@ def _row_to_incident(connection: sqlite3.Connection, row: tuple[Any, ...]) -> In
         closed_at=datetime.fromisoformat(closed_at) if closed_at else None,
         observations=_load_observations(connection, incident_id),
         events=_load_events(connection, incident_id),
+        omitted_observations=omitted[0],
+        omitted_events=omitted[1],
     )
 
 
@@ -67,6 +73,12 @@ class SqliteIncidentRepository:
             (subject_id,),
         ).fetchone()
         return None if row is None else _row_to_incident(self._connection, row)
+
+    def find_open_id_for(self, subject_id: str) -> str | None:
+        row = self._connection.execute(
+            "SELECT incident_id FROM incidents WHERE subject_id = ? AND status = 'open' LIMIT 1", (subject_id,),
+        ).fetchone()
+        return None if row is None else str(row[0])
 
     def get(self, incident_id: str) -> Incident | None:
         row = self._connection.execute(
@@ -108,6 +120,33 @@ class SqliteIncidentRepository:
             ),
         )
         self._connection.commit()
+
+    def prune_history(self, keep_first: int, keep_last: int) -> int:
+        """Garde, par incident, les `keep_first` premiers et `keep_last` derniers elements de chaque
+        historique (observations, evenements) ; supprime ceux du milieu et les compte dans
+        `incident_history_omissions`. Retourne le nombre de lignes supprimees."""
+        removed_total = 0
+        # noms de table et de colonne : constantes ci-dessous, jamais une donnee externe
+        for table, column in (("incident_observations", "omitted_observations"), ("incident_events", "omitted_events")):
+            oversized = self._connection.execute(
+                f"SELECT incident_id FROM {table} GROUP BY incident_id HAVING COUNT(*) > ?",
+                (keep_first + keep_last,),
+            ).fetchall()
+            for (incident_id,) in oversized:
+                removed = self._connection.execute(
+                    f"DELETE FROM {table} WHERE incident_id = ? "
+                    f"AND id NOT IN (SELECT id FROM {table} WHERE incident_id = ? ORDER BY id ASC LIMIT ?) "
+                    f"AND id NOT IN (SELECT id FROM {table} WHERE incident_id = ? ORDER BY id DESC LIMIT ?)",
+                    (incident_id, incident_id, keep_first, incident_id, keep_last),
+                ).rowcount
+                self._connection.execute(
+                    f"INSERT INTO incident_history_omissions (incident_id, {column}) VALUES (?, ?) "
+                    f"ON CONFLICT(incident_id) DO UPDATE SET {column} = {column} + excluded.{column}",
+                    (incident_id, removed),
+                )
+                removed_total += removed
+        self._connection.commit()
+        return removed_total
 
     def list_recent(self, filters: IncidentFilters) -> list[Incident]:
         clauses: list[str] = []

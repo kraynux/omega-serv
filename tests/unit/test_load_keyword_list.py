@@ -75,7 +75,7 @@ class TestLoadKeywordList(_LoadCase):
         self.assertEqual(definition.escalation_threshold, 0, "pas de recidive en Observation")
         self.assertEqual(definition.label, "Chemins sensibles - bloquer")
         self.assertEqual(waf.rule_paths, ("secure/waf/rules/a.json",), "les packs JSON sont conserves")
-        self.assertTrue(any("reputation activee" in m for m in result.messages))
+        self.assertTrue(any("réputation activée" in m for m in result.messages))
 
     def test_reputation_already_enabled_reports_nothing(self):
         config = self._config(reputation={"enabled": True, "auto_block": True})
@@ -92,7 +92,7 @@ class TestLoadKeywordList(_LoadCase):
         first = self._load(self._hostile_request())
         second = self._load(self._hostile_request(), first.config)
         self.assertFalse(second.loaded)
-        self.assertIn("deja chargee", second.error)
+        self.assertIn("déjà chargée", second.error)
 
     def test_invalid_list_refused_and_config_untouched(self):
         (self.root / KEYWORDS_DIR / "perso.txt").write_text("/ok\n/robots.txt\n")
@@ -129,7 +129,7 @@ class TestLoadKeywordList(_LoadCase):
     def test_disabled_waf_is_reported(self):
         result = self._load(self._hostile_request(), self._config(waf_enabled=False))
         self.assertTrue(result.loaded)
-        self.assertTrue(any("WAF desactive" in m for m in result.messages))
+        self.assertTrue(any("WAF désactivé" in m for m in result.messages))
 
 
 class TestUpdateAndRemove(_LoadCase):

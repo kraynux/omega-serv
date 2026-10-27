@@ -22,7 +22,9 @@ from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 
 from omega_serv.application.config.load_config import load_config
 from omega_serv.core.capability_registry import CapabilityRegistry
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._export_worker import run_html_export
 from omega_serv.interfaces.tui.screens.capability_detail_screen import CapabilityDetailScreen
 from omega_serv.interfaces.tui.widgets.capabilities_table import CapabilitiesTable
 
@@ -44,22 +46,22 @@ class CapabilitiesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("REGISTRE DES CAPACITES", classes="omega-title")
+            yield Static(_("REGISTRE DES CAPACITÉS"), classes="omega-title")
             yield Static("", id="scan-error", classes="omega-hint")
             yield CapabilitiesTable(id="capabilities-table")
-            yield Static("Theme d'export HTML", classes="omega-subtitle")
+            yield Static(_("Thème d'export HTML"), classes="omega-subtitle")
             yield Select(
                 [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, id="export-theme-select",
             )
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh", variant="primary")
+                    yield Button(_("Rafraîchir"), id="refresh", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Exporter JSON", id="export-json")
+                    yield Button(_("Exporter JSON"), id="export-json")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Exporter HTML", id="export-html")
+                    yield Button(_("Exporter HTML"), id="export-html")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -69,7 +71,7 @@ class CapabilitiesScreen(OmegaScreen):
         error_widget = self.query_one("#scan-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
         config = load_result.config
 
@@ -79,7 +81,7 @@ class CapabilitiesScreen(OmegaScreen):
             socket_relative = fastcgi_option.settings.get("socket_path", "var/run/php-fpm.sock")
             fastcgi_socket = self._container.project_root / socket_relative
 
-        error_widget.update("Analyse en cours...")
+        error_widget.update(_("Analyse en cours..."))
         self.query_one("#refresh", Button).disabled = True
         self.run_worker(lambda: self._scan_in_thread(config, fastcgi_socket), thread=True, exclusive=True)
 
@@ -127,14 +129,16 @@ class CapabilitiesScreen(OmegaScreen):
 
     def _export_html(self) -> None:
         theme_name = str(self.query_one("#export-theme-select", Select).value)
-        content = self._container.export_capabilities_html(self._registry.list_all(), theme_name)
-        if content is None:
-            self.query_one("#scan-error", Static).update("Export HTML indisponible dans cet environnement.")
-            return
-        export_path = self._exports_dir() / f"capabilities-export.{_export_timestamp()}.html"
-        self._write_export(export_path, content)
+        items = self._registry.list_all()
+        run_html_export(
+            self, self._container,
+            lambda: self._container.export_capabilities_html(items, theme_name),
+            lambda content: self._write_export(
+                self._exports_dir() / f"capabilities-export.{_export_timestamp()}.html", content),
+            lambda reason: self.query_one("#scan-error", Static).update(reason),
+        )
 
     def _write_export(self, export_path: Path, content: str) -> None:
         self._container.filesystem.make_directory(export_path.parent)
         self._container.filesystem.write_text(export_path, content)
-        self.app.notify(f"Export ecrit : {export_path}")
+        self.app.notify(_("Export écrit : {export_path}").format(export_path=export_path))

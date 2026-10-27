@@ -1,4 +1,4 @@
-"""Sert le CSS des pages d'erreur par defaut (401/403/404/451) comme
+"""Sert le CSS des pages d'erreur par defaut (401/403/404/429/451) comme
 fichier EXTERNE reserve (retour utilisateur 2026-10-12 : "le css ne
 s'applique pas sur le profil hardene") - meme patron que
 `serve_dirlisting_css.py`/`serve_icon.py` (chemin reserve, verifie tout
@@ -14,18 +14,21 @@ dirlisting) - `domain/http/error_pages.py::error_pages_css()` ne fait
 aucune I/O."""
 from __future__ import annotations
 
-from omega_serv.domain.http.error_pages import ERROR_CSS_URL_PREFIX, error_pages_css
+from omega_serv.domain.http.error_pages import (
+    ERROR_CSS_FILENAME,
+    ERROR_CSS_URL_PREFIX,
+    error_pages_css,
+)
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus
 
 _ALLOWED_METHODS = ("GET", "HEAD")
 _CACHE_CONTROL = "public, max-age=86400"
-_CSS_FILENAME = "error-pages.css"
 
 
 def handle_error_css_request(request: HttpRequest) -> HttpResponse:
-    if request.path[len(ERROR_CSS_URL_PREFIX):] != _CSS_FILENAME:
+    if request.path[len(ERROR_CSS_URL_PREFIX):] != ERROR_CSS_FILENAME:
         return HttpResponse.empty(HttpStatus.NOT_FOUND)
 
     if request.method not in _ALLOWED_METHODS:

@@ -23,6 +23,7 @@ from omega_serv.infrastructure.config.json_settings_store import JsonSettingsSto
 from omega_serv.infrastructure.config.profile_repository import FileProfileRepository
 from omega_serv.infrastructure.filesystem.local_file_access import LocalFileAccess
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
+from omega_serv.infrastructure.i18n.gettext_language_catalog import GettextLanguageCatalog
 from omega_serv.infrastructure.instances.json_instance_registry import JsonInstanceRegistry
 from omega_serv.infrastructure.logging.file_line_logger import FileLineLogger
 from omega_serv.infrastructure.waf.keyword_reference_store import PackagedKeywordReferences
@@ -33,6 +34,7 @@ from omega_serv.ports.file_access_port import FileAccessPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.instance_registry_port import InstanceRegistryPort
 from omega_serv.ports.keyword_reference_port import KeywordReferencePort
+from omega_serv.ports.language_catalog_port import LanguageCatalogPort
 from omega_serv.ports.live_tail_port import LiveTailPort
 from omega_serv.ports.log_favorite_repository_port import LogFavoriteRepositoryPort
 from omega_serv.ports.log_library_repository_port import LogLibraryRepositoryPort
@@ -57,6 +59,7 @@ if TYPE_CHECKING:
     from omega_serv.domain.logging.stats import LogStatsSummary
     from omega_serv.domain.persistence.backup import BackupRequest
     from omega_serv.domain.persistence.snapshots import SnapshotMetadata
+    from omega_serv.domain.security.active_defense.config import IoCConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
     from omega_serv.domain.security.audit.entities import AuditResult
     from omega_serv.domain.security.waf.config import MagnetConfig
@@ -66,7 +69,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
-    from omega_serv.ports.process_runner_port import ProcessRunnerPort
+    from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
     from omega_serv.ports.users_repository_port import UsersRepositoryPort
 
 
@@ -111,7 +114,7 @@ class DependencyContainer:
         active_defense_collaborators_factory: Callable[
             [OmegaServConfig, Path], ActiveDefenseCollaborators | None
         ] | None = None,
-        ioc_export_runner: Callable[[Incident, str, Path, FilesystemPort], ExportResult | None] | None = None,
+        ioc_export_runner: Callable[[Incident, str, Path, FilesystemPort, IoCConfig], ExportResult | None] | None = None,
         incident_report_export_runner: Callable[[Incident, Path, FilesystemPort], ExportResult] | None = None,
         certificate_tool_factory: Callable[[], CertificateToolPort] | None = None,
         acme_client_factory: Callable[[], ProcessRunnerPort] | None = None,
@@ -120,16 +123,19 @@ class DependencyContainer:
         export_capabilities_html_fn: Callable[[Sequence[Capability], str], str] | None = None,
         export_log_archives_html_fn: Callable[[Sequence[dict], str], str] | None = None,
         export_guide_html_fn: Callable[[Sequence[dict], Sequence[dict], str], str] | None = None,
+        export_in_language_runner: Callable[[list[str], str], ProcessResult] | None = None,
         serve_foreground_runner: Callable[[Path, DependencyContainer], Awaitable[int]] | None = None,
         create_instance_runner: Callable[
             [Path, str, Path, str, int, str, FilesystemPort, InstanceRegistryPort, ClockPort,
              Callable[[int, int, str], None] | None],
             str | None,
         ] | None = None,
+        stale_service_checker: Callable[[str], bool] | None = None,
         systemd_unit_dir: Path = Path("/etc/systemd/system"),
         instance_registry_path: Path = INSTANCE_REGISTRY_PATH,
     ):
         self._service_manager_factory = service_manager_factory
+        self._stale_service_checker = stale_service_checker
         self._config_check_runner = config_check_runner
         self._audit_runner = audit_runner
         self._simulate_request_runner = simulate_request_runner
@@ -148,6 +154,8 @@ class DependencyContainer:
         self._export_capabilities_html_fn = export_capabilities_html_fn
         self._export_log_archives_html_fn = export_log_archives_html_fn
         self._export_guide_html_fn = export_guide_html_fn
+        self._export_in_language_runner = export_in_language_runner
+        self._last_export_error: str | None = None
         self._serve_foreground_runner = serve_foreground_runner
         self._project_root = project_root
         self._systemd_unit_dir = systemd_unit_dir
@@ -156,6 +164,7 @@ class DependencyContainer:
         # DETAILLE_SENSITIVE_PATHS.md §3.7) - port dedie, voir file_access_port.py.
         self._file_access: FileAccessPort = LocalFileAccess()
         self._keyword_references: KeywordReferencePort = PackagedKeywordReferences()
+        self._language_catalog: LanguageCatalogPort = GettextLanguageCatalog()
         self._configuration: ConfigurationPort = JsonConfigRepository(
             self._filesystem,
             backups_dir=project_root / "var" / "backups",
@@ -190,6 +199,10 @@ class DependencyContainer:
     @property
     def keyword_references(self) -> KeywordReferencePort:
         return self._keyword_references
+
+    @property
+    def language_catalog(self) -> LanguageCatalogPort:
+        return self._language_catalog
 
     @property
     def configuration(self) -> ConfigurationPort:
@@ -281,6 +294,13 @@ class DependencyContainer:
         return self._blocklist_port_factory
 
     @property
+    def stale_service_checker(self) -> Callable[[str], bool] | None:
+        """`checker(service_name)` : True si le service actif a demarre avant la
+        derniere mise a jour du code installe (application/services/
+        check_stale_service.py) - injecte depuis __main__ (subprocess)."""
+        return self._stale_service_checker
+
+    @property
     def magnet_compat_check_runner(
         self,
     ) -> Callable[[MagnetConfig, Path, FilesystemPort], Awaitable[MagnetCompatibilityCheck]] | None:
@@ -293,12 +313,35 @@ class DependencyContainer:
         return self._active_defense_collaborators_factory
 
     @property
-    def ioc_export_runner(self) -> Callable[[Incident, str, Path, FilesystemPort], ExportResult | None] | None:
+    def ioc_export_runner(self) -> Callable[[Incident, str, Path, FilesystemPort, IoCConfig], ExportResult | None] | None:
         return self._ioc_export_runner
 
     @property
     def incident_report_export_runner(self) -> Callable[[Incident, Path, FilesystemPort], ExportResult] | None:
-        return self._incident_report_export_runner
+        """Rapport Markdown dans la langue des exports (Options) : processus enfant si elle
+        differe de l'interface ; en cas d'echec, rapport dans la langue de l'interface (jamais
+        perdu) et `last_export_error` renseigne pour le signaler."""
+        base = self._incident_report_export_runner
+        if base is None:
+            return None
+
+        from omega_serv.domain.security.active_defense.entities import ExportResult
+
+        def run(incident: Incident, export_dir: Path, filesystem: FilesystemPort) -> ExportResult:
+            self._last_export_error = None
+            code = self._export_language_override()
+            if code is None or self._export_in_language_runner is None:
+                return base(incident, export_dir, filesystem)
+            result = self._export_in_language_runner(["_export-report", incident.incident_id], code)
+            lines = result.stdout.strip().splitlines()
+            if result.ok and lines:
+                path = Path(lines[-1])
+                size = filesystem.file_size(path) if filesystem.is_file(path) else 0
+                return ExportResult(path=path, export_format="markdown", bytes_written=size)
+            self._last_export_error = self._export_error_message(code, result)
+            return base(incident, export_dir, filesystem)
+
+        return run
 
     @property
     def certificate_tool_factory(self) -> Callable[[], CertificateToolPort] | None:
@@ -396,20 +439,67 @@ class DependencyContainer:
         path = self._project_root / "var" / "run" / "log_rotation_automations.json"
         return RotationAutomationStore(path)
 
-    def export_capabilities_html(self, capabilities: Sequence[Capability], theme_name: str) -> str | None:
-        if self._export_capabilities_html_fn is None:
+    @property
+    def last_export_error(self) -> str | None:
+        """Raison du dernier export qui n'a pas pu etre produit dans la langue des exports."""
+        return self._last_export_error
+
+    @property
+    def export_language_name(self) -> str | None:
+        """Nom natif de la langue des exports si elle differe de l'interface (export par
+        processus enfant, quelques secondes), sinon None."""
+        from omega_lib.i18n.policies import language_for
+
+        code = self._export_language_override()
+        return None if code is None else language_for(code).native_name
+
+    def _export_language_override(self) -> str | None:
+        from omega_serv.application.terminal.select_language import export_language_override
+        from omega_serv.core.i18n import STATE
+
+        return export_language_override(self._settings_store, STATE.language.code)
+
+    def _export_error_message(self, code: str, result: ProcessResult) -> str:
+        from omega_lib.i18n.policies import language_for
+
+        from omega_serv.core.i18n import _
+
+        if result.returncode == 3:  # EXPORT_CHILD_INCIDENT_NOT_FOUND (__main__.py)
+            detail = _("Incident introuvable.")
+        else:
+            detail = (result.stderr.strip().splitlines() or [str(result.returncode)])[-1]
+        return _("Export dans la langue « {name} » impossible : {error}").format(
+            name=language_for(code).native_name, error=detail)
+
+    def _render_html_export(
+        self, kind: str, theme_name: str, render_here: Callable[[], str] | None,
+    ) -> str | None:
+        self._last_export_error = None
+        code = self._export_language_override()
+        if code is None:
+            return None if render_here is None else render_here()
+        if self._export_in_language_runner is None:
             return None
-        return self._export_capabilities_html_fn(capabilities, theme_name)
+        result = self._export_in_language_runner(["_export-html", kind, theme_name], code)
+        if not result.ok:
+            self._last_export_error = self._export_error_message(code, result)
+            return None
+        return result.stdout
+
+    def export_capabilities_html(self, capabilities: Sequence[Capability], theme_name: str) -> str | None:
+        fn = self._export_capabilities_html_fn
+        return self._render_html_export(
+            "capabilities", theme_name, None if fn is None else (lambda: fn(capabilities, theme_name)))
 
     def export_log_archives_html(self, archives: Sequence[dict], theme_name: str) -> str | None:
-        if self._export_log_archives_html_fn is None:
-            return None
-        return self._export_log_archives_html_fn(archives, theme_name)
+        fn = self._export_log_archives_html_fn
+        return self._render_html_export(
+            "log-archives", theme_name, None if fn is None else (lambda: fn(archives, theme_name)))
 
     def export_guide_html(self, screen_guides: Sequence[dict], faq_entries: Sequence[dict], theme_name: str) -> str | None:
-        if self._export_guide_html_fn is None:
-            return None
-        return self._export_guide_html_fn(screen_guides, faq_entries, theme_name)
+        fn = self._export_guide_html_fn
+        return self._render_html_export(
+            "guide", theme_name, None if fn is None else (lambda: fn(screen_guides, faq_entries, theme_name)))
 
     @property
     def serve_foreground_runner(self) -> Callable[[Path, DependencyContainer], Awaitable[int]] | None:

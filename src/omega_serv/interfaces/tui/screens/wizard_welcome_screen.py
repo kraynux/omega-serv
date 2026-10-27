@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.wizard_capabilities_screen import WizardCapabilitiesScreen
 from omega_serv.interfaces.tui.screens.wizard_state import WizardState
@@ -27,20 +28,20 @@ class WizardWelcomeScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ASSISTANT PREMIER LANCEMENT", classes="omega-title")
+            yield Static(_("ASSISTANT PREMIER LANCEMENT"), classes="omega-title")
             yield Static(
-                "OMEGA-SERV sert des fichiers statiques et peut, sur option, activer "
+                _("OMEGA-SERV sert des fichiers statiques et peut, sur option, activer "
                 "un pare-feu applicatif (WAF), TLS, l'authentification et FastCGI/PHP-FPM.\n\n"
-                "Aucun module de securite n'est active par defaut : cet assistant vous "
-                "guide, etape par etape, jusqu'a une configuration ecrite et prete a "
-                "servir. Rien n'est ecrit sur disque avant l'etape de resume final.",
+                "Aucun module de sécurité n'est activé par défaut : cet assistant vous "
+                "guide, étape par étape, jusqu'à une configuration écrite et prête à "
+                "servir. Rien n'est écrit sur disque avant l'étape de résumé final."),
                 classes="omega-hint",
             )
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Commencer", id="next", variant="primary")
+                    yield Button(_("Commencer"), id="next", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

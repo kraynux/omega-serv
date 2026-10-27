@@ -70,7 +70,7 @@ class TestExplainPath(unittest.TestCase):
     _TEXT = "/.env\n/api\n!/api/v1\n"
 
     def test_detected(self):
-        self.assertIn("DETECTE par la ligne 1", explain_path(self._TEXT, "any_segment", "/blog/.env"))
+        self.assertIn("DÉTECTÉ par la ligne 1", explain_path(self._TEXT, "any_segment", "/blog/.env"))
 
     def test_exception_wins(self):
         self.assertIn("l'emporte sur la ligne 2", explain_path(self._TEXT, "root", "/api/v1/users"))
@@ -79,7 +79,7 @@ class TestExplainPath(unittest.TestCase):
         self.assertIn("aucune ligne", explain_path(self._TEXT, "root", "/index.html"))
 
     def test_encoded_value_normalized(self):
-        self.assertIn("DETECTE", explain_path(self._TEXT, "any_segment", "/%2e%65nv"))
+        self.assertIn("DÉTECTÉ", explain_path(self._TEXT, "any_segment", "/%2e%65nv"))
 
     def test_errors_block_the_test(self):
         self.assertIn("corrigez", explain_path("admin\n", "root", "/admin"))

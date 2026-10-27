@@ -14,6 +14,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.apply_profile import plan_profile_application
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.wizard_base_config_screen import WizardBaseConfigScreen
@@ -33,20 +34,20 @@ class WizardProfileScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ETAPE 3/8 : CHOIX DU PROFIL DE BASE", classes="omega-title")
+            yield Static(_("ÉTAPE 3/8 : CHOIX DU PROFIL DE BASE"), classes="omega-title")
             yield DataTable(id="profiles-table")
-            yield Static("Selectionnez un profil pour voir son detail.", id="profile-detail", classes="omega-hint")
+            yield Static(_("Sélectionnez un profil pour voir son détail."), id="profile-detail", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Suivant", id="next", variant="primary", disabled=True)
+                    yield Button(_("Suivant"), id="next", variant="primary", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Precedent", id="back")
+                    yield Button(_("Précédent"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#profiles-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Nom")
+        table.add_columns(_("Nom"))
         for name in sorted(self._container.profiles.list_profile_names()):
             table.add_row(name, key=name)
 
@@ -56,10 +57,10 @@ class WizardProfileScreen(OmegaScreen):
         try:
             profile = self._container.profiles.load_profile(name)
         except (ProfileNotFoundError, ProfileLoadError) as exc:
-            self.query_one("#profile-detail", Static).update(f"Erreur : {exc}")
+            self.query_one("#profile-detail", Static).update(_("Erreur : {exc}").format(exc=exc))
             self.query_one("#next", Button).disabled = True
             return
-        self.query_one("#profile-detail", Static).update(f"[b]{profile.name}[/b]\n{profile.description}")
+        self.query_one("#profile-detail", Static).update(_("[b]{name}[/b]\n{description}").format(name=profile.name, description=_(profile.description)))
         self.query_one("#next", Button).disabled = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

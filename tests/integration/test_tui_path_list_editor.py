@@ -239,7 +239,7 @@ class TestSaveAndClose(_EditorCase):
             await pilot.click("#editor-save")
             await pilot.pause()
             self.assertEqual(self.list_file().read_text(), "/ok\n")
-            self.assertTrue(any("refuse" in m for m in self.notifications(pilot)))
+            self.assertTrue(any("refusé" in m for m in self.notifications(pilot)))
 
     async def test_valid_save_writes_0644_and_reports_unloaded_list(self):
         async with self.app().run_test(size=_SIZE) as pilot:
@@ -251,7 +251,7 @@ class TestSaveAndClose(_EditorCase):
             self.assertEqual(self.list_file().read_text(), "/.env\n")
             self.assertEqual(stat.S_IMODE(self.list_file().stat().st_mode), 0o644)
             self.assertFalse(editor.has_unsaved_changes)
-            self.assertTrue(any("pas encore chargee" in m for m in self.notifications(pilot)))
+            self.assertTrue(any("pas encore chargée" in m for m in self.notifications(pilot)))
 
     async def test_loaded_list_with_check_error_is_not_reloaded(self):
         self.save_config({"waf": {"enabled": True, "rules": {"keyword_lists": [{
@@ -266,7 +266,7 @@ class TestSaveAndClose(_EditorCase):
             await pilot.click("#editor-save")
             await pilot.pause()
             self.assertEqual(self.list_file().read_text(), "/.env\n/.git/\n", "la sauvegarde reste acquise")
-            self.assertTrue(any("Rechargement NON effectue" in m for m in self.notifications(pilot)))
+            self.assertTrue(any("Rechargement NON effectué" in m for m in self.notifications(pilot)))
 
     async def test_external_modification_refused(self):
         self.list_file().write_text("/a\n")
@@ -278,7 +278,7 @@ class TestSaveAndClose(_EditorCase):
             await pilot.click("#editor-save")
             await pilot.pause()
             self.assertEqual(self.list_file().read_text(), "/modifie ailleurs\n")
-            self.assertTrue(any("modifie en dehors" in m for m in self.notifications(pilot)))
+            self.assertTrue(any("modifié en dehors" in m for m in self.notifications(pilot)))
 
     async def test_close_with_changes_asks_confirmation(self):
         self.list_file().write_text("/a\n")
@@ -306,7 +306,7 @@ class TestSaveAndClose(_EditorCase):
             await pilot.press("ctrl+q")
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)
-            self.assertIn("non enregistrees", str(pilot.app.screen._message))
+            self.assertIn("non enregistrées", str(pilot.app.screen._message))
 
     async def test_read_only_directory(self):
         self.list_file().write_text("/a\n")
@@ -325,7 +325,7 @@ class TestTools(_EditorCase):
         async with self.app().run_test(size=_SIZE) as pilot:
             await pilot.pause()
             editor = self.editor(pilot)
-            for value, expected in (("/blog/.env", "DETECTE par la ligne 1"), ("/api/v1/users", "AUTORISE"),
+            for value, expected in (("/blog/.env", "DÉTECTÉ par la ligne 1"), ("/api/v1/users", "AUTORISÉ"),
                                     ("/index.html", "aucune ligne")):
                 with self.subTest(value=value):
                     editor.query_one("#test-input").value = value
@@ -359,7 +359,7 @@ class TestTools(_EditorCase):
             first = dialog._news[0]
             await pilot.click("#news-add")
             await pilot.pause()
-            self.assertIn(f"#Ajouts depuis la reference\n{first}\n", editor.text_area.text)
+            self.assertIn(f"#Ajouts depuis la référence\n{first}\n", editor.text_area.text)
             self.assertNotIn(dialog._news[1], editor.text_area.text)
 
     async def test_check_logs_then_add_directory_exception(self):

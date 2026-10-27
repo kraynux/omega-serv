@@ -47,6 +47,17 @@ class TestSystemdServiceManager(unittest.TestCase):
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("omega-serv"))
 
+    def test_main_pid_of_a_running_service(self):
+        runner = _FakeProcessRunner({
+            ("systemctl", "show", "-p", "MainPID", "--value", "omega-serv"): ProcessResult(0, "4242\n", ""),
+        })
+        self.assertEqual(SystemdServiceManager(runner).main_pid("omega-serv"), 4242)
+
+    def test_main_pid_of_a_stopped_or_unknown_service_is_none(self):
+        for result in (ProcessResult(0, "0\n", ""), ProcessResult(1, "", "no such unit"), ProcessResult(0, "\n", "")):
+            runner = _FakeProcessRunner({("systemctl", "show", "-p", "MainPID", "--value", "omega-serv"): result})
+            self.assertIsNone(SystemdServiceManager(runner).main_pid("omega-serv"))
+
     def test_control_timeout_always_exceeds_unit_stop_timeout(self):
         """Regression (retour utilisateur 2026-10-13, Archcraft) : 'PID
         obsolete' apres un arret/redemarrage reel via le TUI, cause par

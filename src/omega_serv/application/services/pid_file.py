@@ -9,7 +9,6 @@ from pathlib import Path
 
 from omega_serv.ports.filesystem_port import FilesystemPort
 
-
 _SHARED_RUN_DIR_MODE = 0o770
 """Retour utilisateur reel (2026-09-27, boucle de crash systemd -
 `PermissionError` sur var/run/omega-serv.pid.tmp, ~65 tentatives de

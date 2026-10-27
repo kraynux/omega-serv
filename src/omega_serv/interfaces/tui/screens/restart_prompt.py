@@ -37,6 +37,7 @@ from omega_serv.application.services.manage_service import restart_service
 from omega_serv.application.services.resolve_current_service_name import (
     resolve_current_service_name,
 )
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._service_reload import reload_service_if_active
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 
@@ -62,8 +63,8 @@ def notify_restart_required(screen: OmegaScreen, container: DependencyContainer,
     )
     screen.app.push_screen(
         ConfirmScreen(
-            title="REDEMARRAGE REQUIS",
-            message=f"{reason}\n\nRedemarrer le service {service_name!r} maintenant ?",
+            title=_("REDÉMARRAGE REQUIS"),
+            message=_("{reason}\n\nRedémarrer le service {service_name!r} maintenant ?").format(reason=reason, service_name=service_name),
         ),
         lambda confirmed: _restart_if_confirmed(screen, manager, service_name, confirmed),
     )
@@ -74,7 +75,7 @@ def _restart_if_confirmed(
 ) -> None:
     if not confirmed:
         screen.app.notify(
-            "Redemarrage non effectue - pensez a le faire manuellement (ecran SERVICE) des que possible.",
+            _("Redémarrage non effectué - pensez à le faire manuellement (écran SERVICE) dès que possible."),
             severity="warning", timeout=10,
         )
         return
@@ -100,7 +101,7 @@ def notify_reload_required(screen: OmegaScreen, container: DependencyContainer, 
         screen.app.notify(reload_message)
         return
     screen.app.notify(
-        "Rechargez le serveur en cours (ecran SERVICE -> Recharger) ou redemarrez-le pour appliquer "
-        "ce changement - rien n'est repris automatiquement par un processus deja lance.",
+        _("Rechargez le serveur en cours (écran SERVICE -> Recharger) ou redémarrez-le pour appliquer "
+        "ce changement - rien n'est repris automatiquement par un processus déjà lancé."),
         severity="warning", timeout=10,
     )

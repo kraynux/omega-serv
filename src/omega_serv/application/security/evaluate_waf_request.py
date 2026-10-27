@@ -31,8 +31,10 @@ from __future__ import annotations
 import asyncio
 import sys
 from concurrent.futures import Executor
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
+from omega_serv.domain.http.error_pages import ERROR_CSS_PATH
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.security.waf.blocklist import validate_blocklist_entry
 from omega_serv.domain.security.waf.combine_decisions import (
@@ -46,6 +48,10 @@ from omega_serv.domain.security.waf.entities import (
     WafDecision,
 )
 from omega_serv.domain.security.waf.exclusions import is_extension_excluded, matches_any_prefix
+from omega_serv.domain.security.waf.rate_limit_policy import (
+    is_trusted_rate_limit_source,
+    select_rate_limit,
+)
 from omega_serv.domain.security.waf.reputation import evaluate_escalation, is_exempt_from_auto_block
 from omega_serv.ports.blocklist_port import BlocklistPort
 from omega_serv.ports.rate_limit_port import RateLimitPort
@@ -63,28 +69,48 @@ async def evaluate_waf_request(
     magnet_port: WafPort | None = None,
     magnet_executor: Executor | None = None,
 ) -> WafDecision:
+    if request.method in ("GET", "HEAD") and request.path == ERROR_CSS_PATH:
+        # Feuille de style FIXE des pages d'erreur par defaut (decision
+        # utilisateur 2026-10-26, retour n° 3) : servie meme a une IP bloquee
+        # ou limitee, sinon sa page 403/451 s'affiche sans style - et chaque
+        # rejet inutile gonflait le compteur d'omega-jail. Contenu interne
+        # sans aucune entree utilisateur (serve_error_css.py) : rien a inspecter.
+        return WafDecision(action="allow", status_code=None, score=0, log_level="debug")
+
     blocked_entry = blocklist_port.is_blocked(request.remote_ip)
     if blocked_entry is not None:
         return WafDecision(
             action="block",
             status_code=403,
             score=0,
-            blocked_reason=f"IP bloquee : {blocked_entry.reason}",
+            blocked_reason=f"IP bloquée : {blocked_entry.reason}",
             log_level="warning",
         )
 
     if waf_config.rate_limit.enabled:
-        policy = waf_config.rate_limit.global_
-        result = rate_limit_port.check(request.remote_ip, policy.requests, policy.window_seconds)
-        if not result.allowed:
-            return WafDecision(
-                action="block",
-                status_code=policy.response_status,
-                score=0,
-                blocked_reason="rate limit global depasse",
-                log_level="warning",
-                retry_after_seconds=result.retry_after_seconds,
-            )
+        # Regles de debit par dossier / IP-reseau (OMEGA-SERV_ETUDE_RATE_LIMIT_
+        # EXCLUSIONS.md, D1-D4) : la regle retenue REMPLACE la limite globale,
+        # avec son propre compteur ; `requests == 0` = illimite. Toujours APRES
+        # la blocklist, toujours AVANT l'inspection (jamais coupee par une regle
+        # de debit).
+        selected = select_rate_limit(request.path, request.remote_ip, waf_config.rate_limit)
+        if selected.requests > 0:
+            result = rate_limit_port.check(selected.key, selected.requests, selected.window_seconds)
+            if not result.allowed:
+                return WafDecision(
+                    action="block",
+                    status_code=waf_config.rate_limit.global_.response_status,
+                    score=0,
+                    blocked_reason=f"{selected.label} dépassé",
+                    log_level="warning",
+                    retry_after_seconds=result.retry_after_seconds,
+                    # D4 : source sure -> journalise "throttle", jamais compte
+                    # par la jail fail2ban `omega-serv-waf-block`.
+                    throttle_only=is_trusted_rate_limit_source(
+                        request.remote_ip, waf_config.reputation.never_auto_block,
+                        waf_config.rate_limit.source_policies,
+                    ),
+                )
 
     excluded = matches_any_prefix(request.path, waf_config.exclusions.path_prefixes) or is_extension_excluded(
         request.path, waf_config.exclusions.extensions
@@ -96,7 +122,7 @@ async def evaluate_waf_request(
 
     if magnet_port is not None and waf_config.magnet.enabled:
         magnet_decision = await _inspect_with_magnet(request, waf_config, magnet_port, magnet_executor)
-        decision = combine_decisions(decision, magnet_decision)
+        decision = combine_decisions(decision, _magnet_volume_policy(request, waf_config, magnet_decision))
 
     if decision.findings and waf_config.reputation.enabled:
         _apply_reputation(request.remote_ip, decision, waf_config, reputation_tracker, blocklist_port)
@@ -146,7 +172,7 @@ def _apply_reputation(
         escalation = evaluate_escalation(hit_count, definition.escalation_threshold)
         if escalation.should_escalate:
             escalations.append((
-                f"recidive {list_id} : {escalation.reason}",
+                f"récidive {list_id} : {escalation.reason}",
                 definition.auto_block_duration_seconds or reputation.auto_block_duration_seconds,
             ))
 
@@ -158,6 +184,30 @@ def _apply_reputation(
     ):
         reason, duration_seconds = max(escalations, key=lambda item: item[1])
         _auto_block(ip, reason, duration_seconds, blocklist_port)
+
+
+def _magnet_volume_policy(request: HttpRequest, waf_config: WafConfig, magnet: WafDecision) -> WafDecision | None:
+    """Rejet de volume renvoye par magnet (`volume_only`, decisions utilisateur
+    2026-10-26) :
+    - 429 sur une requete couverte par une regle de debit native explicite
+      (dossier ou IP/reseau, rate limit natif actif) : le natif fait foi, le
+      429 de magnet est ignore (ses signatures 403/451 restent appliquees) ;
+    - sinon, meme journalisation que le rate limit natif : source sure ->
+      "throttle" (jamais compte par omega-jail), IP publique -> "block"."""
+    if not magnet.volume_only:
+        return magnet
+    rate_limit = waf_config.rate_limit
+    if (
+        magnet.status_code == 429
+        and rate_limit.enabled
+        and select_rate_limit(request.path, request.remote_ip, rate_limit).scope != "global"
+    ):
+        return None
+    if is_trusted_rate_limit_source(
+        request.remote_ip, waf_config.reputation.never_auto_block, rate_limit.source_policies,
+    ):
+        return replace(magnet, throttle_only=True)
+    return magnet
 
 
 async def _inspect_with_magnet(

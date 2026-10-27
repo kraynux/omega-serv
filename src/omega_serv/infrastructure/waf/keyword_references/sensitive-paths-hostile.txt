@@ -1,17 +1,17 @@
-# omega-serv - liste de reference : sensitive-paths-hostile
-# 298 chemins sans usage legitime connu (secrets, sauvegardes, VCS, consoles...).
-# Reglages conseilles : gravite Elevee (6, bloque des le 1er acces), recherche n'importe ou dans le chemin, recidive 2 acces en 10 min -> ban 24 h. 1er chargement conseille en Observation.
-# Fichier de REFERENCE (lecture seule, remplace a chaque mise a jour d'omega-serv).
-# Il n'est jamais charge tel quel : l'assistant WAF Custom en cree une copie
+# omega-serv - liste de référence : sensitive-paths-hostile
+# 298 chemins sans usage légitime connu (secrets, sauvegardes, VCS, consoles...).
+# Réglages conseillés : gravité Élevée (6, bloque dès le 1er accès), recherche n'importe où dans le chemin, récidive 2 accès en 10 min -> ban 24 h. 1er chargement conseillé en Observation.
+# Fichier de RÉFÉRENCE (lecture seule, remplacé à chaque mise à jour d'omega-serv).
+# Il n'est jamais chargé tel quel : l'assistant WAF Custom en crée une copie
 # locale modifiable dans secure/waf/rules/keywords/ au premier chargement.
-# Genere depuis le fichier maitre ~/DEV/JAIL/sensitive-path.txt - ne pas editer ici.
+# Généré depuis le fichier maître ~/DEV/JAIL/sensitive-path.txt - ne pas éditer ici.
 #
-# Syntaxe (une entree par ligne, '#' = commentaire) :
+# Syntaxe (une entrée par ligne, '#' = commentaire) :
 #   /admin    -> /admin et /admin/xxx, jamais /administrator
 #   /.git/    -> tout ce qui est sous /.git/
 #   /*.bak    -> tout fichier dont le nom finit par .bak
 #   !/api/v1  -> exception : ce chemin n'est jamais compte par cette liste
-#               (prioritaire sur les entrees, quel que soit l'ordre des lignes)
+#               (prioritaire sur les entrées, quel que soit l'ordre des lignes)
 
 #Fichiers de configuration et secrets
 /.env

@@ -13,6 +13,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.redirect import (
     RedirectRule,
@@ -38,28 +39,28 @@ class RedirectsScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("REDIRECTIONS", classes="omega-title")
+            yield Static(_("REDIRECTIONS"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'redirects' se fait dans le menu Options.",
+                _("L'activation de l'option 'redirects' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="redirects-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#redirects-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe URL", "Destination", "Code")
+        table.add_columns(_("Préfixe URL"), _("Destination"), _("Code"))
         self._refresh_table()
 
     def _rules(self) -> list[RedirectRule]:
@@ -92,11 +93,11 @@ class RedirectsScreen(OmegaScreen):
         if event.button.id == "add":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UNE REDIRECTION",
+                    title=_("AJOUTER UNE REDIRECTION"),
                     fields=[
-                        ("url_prefix", "Prefixe URL (ex: /old/)", ""),
-                        ("destination", "Destination (ex: /new/)", ""),
-                        ("status_code", "Code (301/302/307/308)", "302"),
+                        ("url_prefix", _("Préfixe URL (ex: /old/)"), ""),
+                        ("destination", _("Destination (ex: /new/)"), ""),
+                        ("status_code", _("Code (301/302/307/308)"), "302"),
                     ],
                 ),
                 self._add_rule,
@@ -106,11 +107,11 @@ class RedirectsScreen(OmegaScreen):
             rule = self._rules()[self._selected_index]
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="MODIFIER LA REDIRECTION",
+                    title=_("MODIFIER LA REDIRECTION"),
                     fields=[
-                        ("url_prefix", "Prefixe URL", rule.url_prefix),
-                        ("destination", "Destination", rule.destination),
-                        ("status_code", "Code (301/302/307/308)", str(rule.status_code)),
+                        ("url_prefix", _("Préfixe URL"), rule.url_prefix),
+                        ("destination", _("Destination"), rule.destination),
+                        ("status_code", _("Code (301/302/307/308)"), str(rule.status_code)),
                     ],
                 ),
                 self._edit_rule,
@@ -118,7 +119,7 @@ class RedirectsScreen(OmegaScreen):
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REDIRECTION", message="Confirmer la suppression de cette redirection ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA REDIRECTION"), message=_("Confirmer la suppression de cette redirection ?")),
                 self._delete_rule,
             )
 
@@ -127,7 +128,7 @@ class RedirectsScreen(OmegaScreen):
         try:
             status_code = int(status_text)
         except ValueError:
-            self.query_one("#form-error", Static).update(f"Code invalide (nombre attendu) : {status_text!r}")
+            self.query_one("#form-error", Static).update(_("Code invalide (nombre attendu) : {status_text!r}").format(status_text=status_text))
             return None
         return RedirectRule(url_prefix=values["url_prefix"], destination=values["destination"], status_code=status_code)
 
@@ -139,7 +140,7 @@ class RedirectsScreen(OmegaScreen):
             return
         error = validate_redirect_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules.append(rule)
@@ -153,7 +154,7 @@ class RedirectsScreen(OmegaScreen):
             return
         error = validate_redirect_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules[self._selected_index] = rule
@@ -169,7 +170,7 @@ class RedirectsScreen(OmegaScreen):
     def _save_rules(self, rules: list[RedirectRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("redirects")
         enabled = existing.enabled if existing is not None else False
@@ -184,4 +185,4 @@ class RedirectsScreen(OmegaScreen):
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
         notify_zone_prefix_overlaps(self, self._container, "redirects")
-        notify_reload_required(self, self._container, "Liste des redirections mise a jour.")
+        notify_reload_required(self, self._container, _("Liste des redirections mise à jour."))

@@ -8,6 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.registry import ALL_FAQ_ENTRIES
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -16,20 +17,20 @@ class FaqScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("FAQ", classes="omega-title")
+            yield Static(_("FAQ"), classes="omega-title")
             if not ALL_FAQ_ENTRIES:
-                yield Static("Aucune question repertoriee pour l'instant.", classes="omega-hint")
+                yield Static(_("Aucune question répertoriée pour l'instant."), classes="omega-hint")
             sorted_entries = sorted(ALL_FAQ_ENTRIES, key=lambda e: e.category)
             for category, entries in groupby(sorted_entries, key=lambda e: e.category):
                 yield Static("")
                 yield Static(category.upper(), classes="omega-subtitle")
                 for entry in entries:
                     yield Static("")
-                    yield Static(f"Q. {entry.question}")
-                    yield Static(f"R. {entry.answer}")
+                    yield Static(_("Q. {question}").format(question=entry.question))
+                    yield Static(_("R. {answer}").format(answer=entry.answer))
             yield Static("")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

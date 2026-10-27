@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class RotationPlan:
@@ -59,7 +61,7 @@ def plan_rotation(
     return RotationPlan(
         log_path=log_path,
         should_rotate=True,
-        reason=f"Taille actuelle ({file_size_bytes} octets) >= seuil ({max_size_bytes} octets)",
+        reason=_("Taille actuelle ({file_size_bytes} octets) >= seuil ({max_size_bytes} octets)").format(file_size_bytes=file_size_bytes, max_size_bytes=max_size_bytes),
         archive_name=generate_archive_name(log_path, now),
         rotations_to_delete=tuple(compute_rotations_to_delete(existing_rotations, keep)),
     )

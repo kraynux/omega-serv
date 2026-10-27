@@ -10,12 +10,20 @@ incident resterait ouvert indefiniment meme apres retour a `normal`."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from omega_serv.application.active_defense.manage_incidents import close_incident
 from omega_serv.application.active_defense.observe_threat import purge_expired_threat_states
 from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
 from omega_serv.domain.security.active_defense.entities import IncidentFilters
-from omega_serv.domain.security.active_defense.policies import decide_incident_closure
+from omega_serv.domain.security.active_defense.policies import (
+    AUDIT_MAX_ROWS,
+    AUDIT_RETENTION_DAYS,
+    INCIDENT_HISTORY_KEEP_FIRST,
+    INCIDENT_HISTORY_KEEP_LAST,
+    MAX_TRACKED_SUBJECTS,
+    decide_incident_closure,
+)
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
 from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
@@ -40,6 +48,9 @@ def sweep_active_defense(
     la duree de silence exigee avant fermeture)."""
     purged = purge_expired_threat_states(threat_state_repository, clock)
     now = clock.now()
+    threat_state_repository.cap_tracked_subjects(MAX_TRACKED_SUBJECTS)
+    threat_state_repository.prune_audit_log(now - timedelta(days=AUDIT_RETENTION_DAYS), AUDIT_MAX_ROWS)
+    incident_repository.prune_history(INCIDENT_HISTORY_KEEP_FIRST, INCIDENT_HISTORY_KEEP_LAST)
     closed_ids: list[str] = []
     for incident in incident_repository.list_recent(IncidentFilters(status="open")):
         state = threat_state_repository.get(incident.subject_id)

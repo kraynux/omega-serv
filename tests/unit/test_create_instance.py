@@ -151,8 +151,8 @@ class TestCreateInstanceOrchestration(unittest.TestCase):
         (self.parent_dir / "existing").mkdir()
         steps, error = self._create(_FakeProcessRunner(), name="existing")
         self.assertIsNotNone(error)
-        self.assertIn("existe deja", error)
-        self.assertEqual(steps, [(1, 6, "Validation des parametres")])
+        self.assertIn("existe déjà", error)
+        self.assertEqual(steps, [(1, 6, "Validation des paramètres")])
 
     def test_copies_vendor_directory_when_present_in_source(self):
         (self.source_root / "vendor" / "omega-lib").mkdir(parents=True)

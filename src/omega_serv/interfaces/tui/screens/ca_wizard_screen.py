@@ -23,6 +23,7 @@ from omega_serv.application.tls.generate_certificate_signing_request import (
 from omega_serv.application.tls.sign_certificate_signing_request import (
     sign_certificate_signing_request,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import VALID_KEY_TYPES, CaParams, CsrParams, KeyType
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -48,22 +49,22 @@ class CaWizardScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("ASSISTANT CA LOCALE", classes="omega-title")
+            yield Static(_("ASSISTANT CA LOCALE"), classes="omega-title")
             yield Static(
-                "Enchaine generer la CA -> generer une CSR pour ce serveur -> "
-                "signer la CSR avec la CA. Chaque etape demande confirmation.",
+                _("Enchaîne générer la CA -> générer une CSR pour ce serveur -> "
+                "signer la CSR avec la CA. Chaque étape demande confirmation."),
                 classes="omega-hint",
             )
             yield Static("", id="wizard-log")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("1. Generer la CA", id="step-ca", variant="primary")
+                    yield Button(_("1. Générer la CA"), id="step-ca", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("2. Generer la CSR", id="step-csr")
+                    yield Button(_("2. Générer la CSR"), id="step-csr")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("3. Signer la CSR", id="step-sign")
+                    yield Button(_("3. Signer la CSR"), id="step-sign")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def _ca_dir(self) -> Path:
@@ -80,18 +81,18 @@ class CaWizardScreen(OmegaScreen):
         if event.button.id == "step-ca":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="ETAPE 1 : GENERER LA CA",
+                    title=_("ÉTAPE 1 : GÉNÉRER LA CA"),
                     fields=[
-                        ("cn", "Nom commun (CN)", "OMEGA-SERV Root CA"),
-                        ("org", "Organisation", "OMEGA-SERV"),
-                        ("ou", "Unite organisationnelle", ""),
-                        ("city", "Ville", ""),
-                        ("region", "Region", ""),
-                        ("country", "Pays", ""),
-                        ("days", "Validite en jours", "3650"),
-                        ("key_type", f"Type de cle ({'/'.join(sorted(VALID_KEY_TYPES))})", "rsa4096"),
-                        ("password", "Passphrase de la cle CA (obligatoire)", ""),
-                        ("password_confirm", "Confirmer la passphrase", ""),
+                        ("cn", _("Nom commun (CN)"), _("OMEGA-SERV Root CA")),
+                        ("org", _("Organisation"), "OMEGA-SERV"),
+                        ("ou", _("Unité organisationnelle"), ""),
+                        ("city", _("Ville"), ""),
+                        ("region", _("Région"), ""),
+                        ("country", _("Pays"), ""),
+                        ("days", _("Validité en jours"), "3650"),
+                        ("key_type", _("Type de clé ({value})").format(value='/'.join(sorted(VALID_KEY_TYPES))), "rsa4096"),
+                        ("password", _("Passphrase de la clé CA (obligatoire)"), ""),
+                        ("password_confirm", _("Confirmer la passphrase"), ""),
                     ],
                     password_fields=frozenset({"password", "password_confirm"}),
                 ),
@@ -101,17 +102,17 @@ class CaWizardScreen(OmegaScreen):
         if event.button.id == "step-csr":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="ETAPE 2 : GENERER LA CSR DU SERVEUR",
+                    title=_("ÉTAPE 2 : GÉNÉRER LA CSR DU SERVEUR"),
                     fields=[
-                        ("cn", "Nom commun (CN, ex: nom d'hote du serveur)", ""),
-                        ("san_dns", "SAN DNS (separes par des virgules)", ""),
-                        ("san_ip", "SAN IP (separees par des virgules)", ""),
-                        ("org", "Organisation", "OMEGA-SERV"),
-                        ("ou", "Unite organisationnelle", ""),
-                        ("city", "Ville", ""),
-                        ("region", "Region", ""),
-                        ("country", "Pays", ""),
-                        ("key_type", f"Type de cle ({'/'.join(sorted(VALID_KEY_TYPES))})", "rsa2048"),
+                        ("cn", _("Nom commun (CN, ex: nom d'hôte du serveur)"), ""),
+                        ("san_dns", _("SAN DNS (séparés par des virgules)"), ""),
+                        ("san_ip", _("SAN IP (séparées par des virgules)"), ""),
+                        ("org", _("Organisation"), "OMEGA-SERV"),
+                        ("ou", _("Unité organisationnelle"), ""),
+                        ("city", _("Ville"), ""),
+                        ("region", _("Région"), ""),
+                        ("country", _("Pays"), ""),
+                        ("key_type", _("Type de clé ({value})").format(value='/'.join(sorted(VALID_KEY_TYPES))), "rsa2048"),
                     ],
                 ),
                 self._do_generate_csr,
@@ -120,11 +121,11 @@ class CaWizardScreen(OmegaScreen):
         if event.button.id == "step-sign":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="ETAPE 3 : SIGNER LA CSR",
+                    title=_("ÉTAPE 3 : SIGNER LA CSR"),
                     fields=[
-                        ("csr_path", "Chemin de la CSR a signer", self._csr_path),
-                        ("password", "Passphrase de la cle CA", ""),
-                        ("days", "Validite du certificat signe en jours", "365"),
+                        ("csr_path", _("Chemin de la CSR à signer"), self._csr_path),
+                        ("password", _("Passphrase de la clé CA"), ""),
+                        ("days", _("Validité du certificat signé en jours"), "365"),
                     ],
                     password_fields=frozenset({"password"}),
                 ),
@@ -135,23 +136,23 @@ class CaWizardScreen(OmegaScreen):
         if values is None:
             return
         if values["password"] != values["password_confirm"]:
-            self._append_log("Erreur : les deux saisies de passphrase ne correspondent pas.")
+            self._append_log(_("Erreur : les deux saisies de passphrase ne correspondent pas."))
             return
         if not values["password"]:
-            self._append_log("Erreur : la passphrase de la cle CA est obligatoire.")
+            self._append_log(_("Erreur : la passphrase de la clé CA est obligatoire."))
             return
         key_type_text = values["key_type"].strip()
         if key_type_text not in VALID_KEY_TYPES:
-            self._append_log(f"Erreur : type de cle invalide : {key_type_text!r}")
+            self._append_log(_("Erreur : type de clé invalide : {key_type_text!r}").format(key_type_text=key_type_text))
             return
         try:
             days = int(values["days"])
         except ValueError:
-            self._append_log(f"Erreur : validite invalide : {values['days']!r}")
+            self._append_log(_("Erreur : validité invalide : {days!r}").format(days=values['days']))
             return
         factory = self._container.certificate_tool_factory
         if factory is None:
-            self._append_log("Generation indisponible dans cet environnement.")
+            self._append_log(_("Génération indisponible dans cet environnement."))
             return
 
         params = CaParams(
@@ -161,7 +162,7 @@ class CaWizardScreen(OmegaScreen):
         )
         ca_dir = self._ca_dir()
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
-        self._append_log("Generation de la CA en cours...")
+        self._append_log(_("Génération de la CA en cours..."))
         self.query_one("#step-ca", Button).disabled = True
         self.run_worker(
             lambda: self._generate_ca_in_thread(params, ca_dir, backups_dir, factory),
@@ -184,24 +185,24 @@ class CaWizardScreen(OmegaScreen):
     def _finish_generate_ca(self, result: GenerateCaResult | None, error: str | None, ca_dir: Path) -> None:
         self.query_one("#step-ca", Button).disabled = False
         if error is not None:
-            self._append_log(f"Erreur : {error}")
+            self._append_log(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction : error XOR result
         self._append_log(result.message)
         if result.success:
-            self._append_log(f"Importez {ca_dir / 'root-ca.pem'} dans le magasin de confiance des clients (doc TLS §7.4).")
+            self._append_log(_("Importez {value} dans le magasin de confiance des clients (doc TLS §7.4).").format(value=ca_dir / _('root-ca.pem')))
 
     def _do_generate_csr(self, values: dict[str, str] | None) -> None:
         if values is None:
             return
         key_type_text = values["key_type"].strip()
         if key_type_text not in VALID_KEY_TYPES:
-            self._append_log(f"Erreur : type de cle invalide : {key_type_text!r}")
+            self._append_log(_("Erreur : type de clé invalide : {key_type_text!r}").format(key_type_text=key_type_text))
             return
         factory = self._container.certificate_tool_factory
         load_result = load_config(self._container.configuration, self._container.config_file)
         if factory is None or not load_result.success or load_result.config is None:
-            self._append_log("Generation indisponible (configuration ou outil manquant).")
+            self._append_log(_("Génération indisponible (configuration ou outil manquant)."))
             return
 
         params = CsrParams(
@@ -215,7 +216,7 @@ class CaWizardScreen(OmegaScreen):
         key_path = self._container.project_root / load_result.config.tls.private_key_path
         csr_path = key_path.with_suffix(".csr")
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
-        self._append_log("Generation de la CSR en cours...")
+        self._append_log(_("Génération de la CSR en cours..."))
         self.query_one("#step-csr", Button).disabled = True
         self.run_worker(
             lambda: self._generate_csr_in_thread(params, key_path, csr_path, backups_dir, factory),
@@ -238,7 +239,7 @@ class CaWizardScreen(OmegaScreen):
     def _finish_generate_csr(self, result: GenerateCsrResult | None, error: str | None, csr_path: Path) -> None:
         self.query_one("#step-csr", Button).disabled = False
         if error is not None:
-            self._append_log(f"Erreur : {error}")
+            self._append_log(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction : error XOR result
         self._append_log(result.message)
@@ -251,12 +252,12 @@ class CaWizardScreen(OmegaScreen):
         try:
             days = int(values["days"])
         except ValueError:
-            self._append_log(f"Erreur : validite invalide : {values['days']!r}")
+            self._append_log(_("Erreur : validité invalide : {days!r}").format(days=values['days']))
             return
         factory = self._container.certificate_tool_factory
         load_result = load_config(self._container.configuration, self._container.config_file)
         if factory is None or not load_result.success or load_result.config is None:
-            self._append_log("Signature indisponible (configuration ou outil manquant).")
+            self._append_log(_("Signature indisponible (configuration ou outil manquant)."))
             return
 
         ca_dir = self._ca_dir()
@@ -265,7 +266,7 @@ class CaWizardScreen(OmegaScreen):
         fullchain_path = self._container.project_root / chain_relative
         backups_dir = self._container.project_root / "var" / "backups" / "certificates"
         tls_enabled = load_result.config.tls.enabled
-        self._append_log("Signature de la CSR en cours...")
+        self._append_log(_("Signature de la CSR en cours..."))
         self.query_one("#step-sign", Button).disabled = True
         self.run_worker(
             lambda: self._sign_csr_in_thread(
@@ -296,16 +297,16 @@ class CaWizardScreen(OmegaScreen):
     ) -> None:
         self.query_one("#step-sign", Button).disabled = False
         if error is not None:
-            self._append_log(f"Erreur : {error}")
+            self._append_log(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction : error XOR result
         self._append_log(result.message)
         if result.success:
             self._append_log(
-                f"Importez {ca_dir / 'root-ca.pem'} dans le magasin de confiance des clients (doc TLS §7.4)."
+                _("Importez {value} dans le magasin de confiance des clients (doc TLS §7.4).").format(value=ca_dir / _('root-ca.pem'))
             )
             if tls_enabled:
                 self._append_log(
-                    "TLS est actif : REDEMARRAGE COMPLET necessaire pour que le serveur serve "
-                    "ce nouveau certificat (le contexte SSL en memoire ne se recharge jamais tout seul)."
+                    _("TLS est actif : REDÉMARRAGE COMPLET nécessaire pour que le serveur serve "
+                    "ce nouveau certificat (le contexte SSL en mémoire ne se recharge jamais tout seul).")
                 )

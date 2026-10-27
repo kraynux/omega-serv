@@ -31,6 +31,7 @@ from omega_serv.application.security.load_keyword_list import (
 from omega_serv.application.services.resolve_current_service_name import (
     resolve_current_service_account,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.keyword_list import tokens_from_text
 from omega_serv.domain.security.waf.rule_validation import parse_rule_pack, validate_rule_pack
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -48,6 +49,7 @@ from omega_serv.interfaces.tui.screens.waf_custom_rule_wizard_screen import (
 from omega_serv.interfaces.tui.screens.waf_keyword_list_settings_screen import (
     KeywordListSettingsScreen,
 )
+from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -71,34 +73,32 @@ class WafCustomRuleScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("WAF - REGLES ET LISTES CUSTOM", classes="omega-title")
+            yield Static(_("WAF - RÈGLES ET LISTES CUSTOM"), classes="omega-title")
             yield Static(
-                f"Regles : ecrites dans {_CUSTOM_PACK_RELATIVE_PATH}, ajoutees automatiquement aux packs "
-                "references (rule_paths). Listes : fichiers de secure/waf/rules/keywords/, chargees "
-                "explicitement par l'assistant (Ajouter -> CHARGER une liste). Colonne Type = la difference.",
+                _("Règles : écrites dans {CUSTOM_PACK_RELATIVE_PATH}, ajoutées automatiquement aux packs référencés (rule_paths). Listes : fichiers de secure/waf/rules/keywords/, chargées explicitement par l'assistant (Ajouter -> CHARGER une liste). Colonne Type = la différence.").format(CUSTOM_PACK_RELATIVE_PATH=_CUSTOM_PACK_RELATIVE_PATH),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="custom-rules-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add-rule", variant="primary")
+                    yield Button(_("Ajouter"), id="add-rule", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="list-settings", disabled=True)
+                    yield Button(_("Modifier"), id="list-settings", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Editer la liste", id="edit-list", disabled=True)
+                    yield Button(_("Éditer la liste"), id="edit-list", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Activer/Desactiver", id="toggle-enabled", disabled=True)
+                    yield Button(_("Activer/Desactiver"), id="toggle-enabled", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete-rule", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete-rule", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#custom-rules-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Type", "ID", "Nom / description", "Portee", "Detail", "Gravite", "Actif")
+        table.add_columns(_("Type"), _("ID"), _("Nom / description"), _("Portée"), _("Détail"), _("Gravité"), _("Actif"))
         self._refresh()
 
     def _pack_path(self) -> Path:
@@ -122,16 +122,16 @@ class WafCustomRuleScreen(OmegaScreen):
         pack = self._load_pack()
         for index, rule in enumerate(pack.get("rules", [])):
             table.add_row(
-                "Regle", rule.get("id", "?"), rule.get("description", ""), ", ".join(rule.get("scope", [])),
+                _("Règle"), rule.get("id", "?"), rule.get("description", ""), ", ".join(rule.get("scope", [])),
                 rule.get("pattern", ""), str(rule.get("weight", 1)),
-                "oui" if rule.get("enabled", True) else "non",
+                to_text(rule.get("enabled", True)),
                 key=f"rule:{index}",
             )
         for entry in self._list_entries():
             table.add_row(
-                "Liste", str(entry.get("id")), str(entry.get("label") or entry.get("id")),
+                _("Liste"), str(entry.get("id")), str(entry.get("label") or entry.get("id")),
                 self._list_scope_text(entry), self._list_detail(entry), self._list_gravity_text(entry),
-                "oui" if entry.get("enabled", True) else "non",
+                to_text(entry.get("enabled", True)),
                 key=f"list:{entry.get('id')}",
             )
 
@@ -149,7 +149,7 @@ class WafCustomRuleScreen(OmegaScreen):
     @staticmethod
     def _list_scope_text(entry: dict[str, Any]) -> str:
         if entry.get("match") == "path":
-            return "chemins (debut)" if entry.get("anchor") == "root" else "chemins (partout)"
+            return _("chemins (début)") if entry.get("anchor") == "root" else _("chemins (partout)")
         return ", ".join(entry.get("scope", []))
 
     def _list_detail(self, entry: dict[str, Any]) -> str:
@@ -160,16 +160,16 @@ class WafCustomRuleScreen(OmegaScreen):
             self._container.file_access, self._container.project_root, relative, self._service_account(),
         )
         if status.location_error is not None:
-            return "⚠ emplacement refuse"
+            return _("⚠ emplacement refusé")
         if not status.exists:
-            return "⚠ fichier absent"
+            return _("⚠ fichier absent")
         if status.service_check == "unreadable":
-            return "⚠ illisible par le service"
+            return _("⚠ illisible par le service")
         try:
             text = self._container.filesystem.read_text(self._container.project_root / relative)
         except OSError:
-            return "⚠ fichier illisible"
-        return f"{len(tokens_from_text(text))} entrees"
+            return _("⚠ fichier illisible")
+        return _("{count} entrées").format(count=len(tokens_from_text(text)))
 
     @staticmethod
     def _list_gravity_text(entry: dict[str, Any]) -> str:
@@ -180,8 +180,8 @@ class WafCustomRuleScreen(OmegaScreen):
             return label
         window = int(entry.get("escalation_window_seconds", 600)) // 60
         duration = entry.get("auto_block_duration_seconds")
-        ban = f" -> ban {int(duration) // 3600} h" if duration else ""
-        return f"{label}, {threshold} en {window} min{ban}"
+        ban = _(" -> ban {value} h").format(value=int(duration) // 3600) if duration else ""
+        return _("{label}, {threshold} en {window} min{ban}").format(label=label, threshold=threshold, window=window, ban=ban)
 
     def _service_account(self) -> str | None:
         return resolve_current_service_account(
@@ -192,7 +192,7 @@ class WafCustomRuleScreen(OmegaScreen):
     def _update_buttons(self) -> None:
         kind = self._selected[0] if self._selected else None
         self.query_one("#delete-rule", Button).disabled = kind is None
-        self.query_one("#delete-rule", Button).label = "Retirer" if kind == "list" else "Supprimer"
+        self.query_one("#delete-rule", Button).label = _("Retirer") if kind == "list" else _("Supprimer")
         self.query_one("#toggle-enabled", Button).disabled = kind is None
         self.query_one("#edit-list", Button).disabled = kind != "list"
         self.query_one("#list-settings", Button).disabled = kind != "list"
@@ -212,7 +212,7 @@ class WafCustomRuleScreen(OmegaScreen):
             return
         if event.button.id == "delete-rule" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA REGLE", message="Confirmer la suppression de cette regle custom ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA RÈGLE"), message=_("Confirmer la suppression de cette règle custom ?")),
                 self._delete_rule,
             )
             return
@@ -229,9 +229,8 @@ class WafCustomRuleScreen(OmegaScreen):
         elif event.button.id == "delete-rule":
             self.app.push_screen(
                 ConfirmScreen(
-                    title="RETIRER LA LISTE",
-                    message=f"La liste {key!r} ne sera plus chargee par le WAF. Son fichier est CONSERVE "
-                    "(toujours disponible dans l'assistant).",
+                    title=_("RETIRER LA LISTE"),
+                    message=_("La liste {key!r} ne sera plus chargée par le WAF. Son fichier est CONSERVÉ (toujours disponible dans l'assistant).").format(key=key),
                 ),
                 lambda confirmed: self._remove_list(key) if confirmed else None,
             )
@@ -266,9 +265,9 @@ class WafCustomRuleScreen(OmegaScreen):
             project_root=self._container.project_root, config_check=self._container.config_check_runner,
         )
         if not result.loaded or result.config is None:
-            self.query_one("#form-error", Static).update(f"Modification refusee : {result.error}")
+            self.query_one("#form-error", Static).update(_("Modification refusée : {error}").format(error=result.error))
             return
-        self._save_config_and_reload(result.config, f"Liste {list_id!r} mise a jour.", result.messages)
+        self._save_config_and_reload(result.config, _("Liste {list_id!r} mise à jour.").format(list_id=list_id), result.messages)
 
     def _remove_list(self, list_id: str) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
@@ -276,7 +275,7 @@ class WafCustomRuleScreen(OmegaScreen):
             return
         self._save_config_and_reload(
             remove_keyword_list_entry(load_result.config, list_id),
-            f"Liste {list_id!r} retiree du WAF (fichier conserve).",
+            _("Liste {list_id!r} retirée du WAF (fichier conservé).").format(list_id=list_id),
         )
 
     def _open_list_editor(self, list_id: str) -> None:
@@ -289,7 +288,7 @@ class WafCustomRuleScreen(OmegaScreen):
             PathListEditorScreen(
                 container=self._container, relative_path=relative,
                 anchor=str(entry.get("anchor", "any_segment")),
-                title=f"EDITION - {entry.get('label') or list_id}",
+                title=_("ÉDITION - {value}").format(value=entry.get('label') or list_id),
                 reference_name=name if name in self._container.keyword_references.names() else None,
                 match=str(entry.get("match", "substring")),
             ),
@@ -305,7 +304,7 @@ class WafCustomRuleScreen(OmegaScreen):
         pack["rules"] = rules
         self._container.filesystem.write_text(self._pack_path(), json.dumps(pack, indent=2, ensure_ascii=False))
         self._refresh()
-        self.app.notify(f"Regle {rules[index].get('id')!r} {'activee' if rules[index]['enabled'] else 'desactivee'}.")
+        self.app.notify(_("Règle {value!r} {value2}.").format(value=rules[index].get('id'), value2=_('activée') if rules[index]['enabled'] else _('désactivée')))
         reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
@@ -327,7 +326,7 @@ class WafCustomRuleScreen(OmegaScreen):
         try:
             weight = int(values["weight"].strip())
         except ValueError:
-            error_widget.update(f"Poids invalide (entier attendu) : {values['weight']!r}")
+            error_widget.update(_("Poids invalide (entier attendu) : {weight!r}").format(weight=values['weight']))
             return
         scope = [s.strip() for s in values["scope"].split(",") if s.strip()]
         pack = self._load_pack()
@@ -337,19 +336,19 @@ class WafCustomRuleScreen(OmegaScreen):
             "scope": scope,
             "pattern": values["pattern"],
             "weight": weight,
-            "case_insensitive": values["case_insensitive"].strip().lower() in ("oui", "true", "1", "o", "y"),
-            "enabled": values["enabled"].strip().lower() in ("oui", "true", "1", "o", "y"),
+            "case_insensitive": is_yes(values["case_insensitive"]),
+            "enabled": is_yes(values["enabled"]),
         }
         pack["rules"] = [*pack.get("rules", []), rule]
 
         try:
             parsed = parse_rule_pack(pack)
         except (KeyError, TypeError) as exc:
-            error_widget.update(f"Regle invalide : {exc}")
+            error_widget.update(_("Règle invalide : {exc}").format(exc=exc))
             return
         errors = validate_rule_pack(parsed)
         if errors:
-            error_widget.update("Erreur :\n" + "\n".join(f"  - {e}" for e in errors))
+            error_widget.update(_("Erreur :\n") + "\n".join(f"  - {e}" for e in errors))
             return
 
         self._container.filesystem.make_directory(self._pack_path().parent)
@@ -357,7 +356,7 @@ class WafCustomRuleScreen(OmegaScreen):
         self._ensure_pack_referenced()
         error_widget.update("")
         self._refresh()
-        self.app.notify(f"Regle {rule['id']!r} ajoutee et pack custom reference dans rule_paths.")
+        self.app.notify(_("Règle {id!r} ajoutée et pack custom référence dans rule_paths.").format(id=rule['id']))
         reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
@@ -369,7 +368,7 @@ class WafCustomRuleScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Configuration illisible : liste non chargee.")
+            error_widget.update(_("Configuration illisible : liste non chargée."))
             return
         result = load_keyword_list_into_config(
             load_result.config, request,
@@ -382,12 +381,12 @@ class WafCustomRuleScreen(OmegaScreen):
             config_check=self._container.config_check_runner,
         )
         if not result.loaded or result.config is None:
-            error_widget.update(f"Liste non chargee : {result.error}")
+            error_widget.update(_("Liste non chargée : {error}").format(error=result.error))
             return
         self._container.configuration.save(self._container.config_file, result.config)
         error_widget.update("")
         self._refresh()
-        self.app.notify(f"Liste {result.list_id!r} chargee dans le WAF.")
+        self.app.notify(_("Liste {list_id!r} chargée dans le WAF.").format(list_id=result.list_id))
         for message in result.messages:
             self.app.notify(message, timeout=10)
         reload_message = reload_service_after_waf_change(self, self._container)
@@ -403,7 +402,7 @@ class WafCustomRuleScreen(OmegaScreen):
         pack["rules"] = rules
         self._container.filesystem.write_text(self._pack_path(), json.dumps(pack, indent=2, ensure_ascii=False))
         self._refresh()
-        self.app.notify("Regle custom supprimee.")
+        self.app.notify(_("Règle custom supprimée."))
         reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)

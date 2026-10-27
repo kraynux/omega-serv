@@ -20,6 +20,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.rules import detect_conflicts
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -35,13 +36,13 @@ class ConfigCheckScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("VERIFIER LA CONFIGURATION", classes="omega-title")
+            yield Static(_("VÉRIFIER LA CONFIGURATION"), classes="omega-title")
             yield Static("", id="check-result")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Verifier", id="check", variant="primary")
+                    yield Button(_("Vérifier"), id="check", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -59,48 +60,48 @@ class ConfigCheckScreen(OmegaScreen):
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
             result_widget.update(
-                "Erreur de configuration :\n" + "\n".join(f"  - {e}" for e in load_result.errors)
+                _("Erreur de configuration :\n") + "\n".join(f"  - {e}" for e in load_result.errors)
             )
             if notify:
-                self.app.notify("Configuration invalide.", severity="error")
+                self.app.notify(_("Configuration invalide."), severity="error")
             return
         assert load_result.config is not None
 
         runner = self._container.config_check_runner
         if runner is None:
-            result_widget.update(f"{self._container.config_file} : structure valide (verification d'environnement indisponible).")
+            result_widget.update(_("{config_file} : structure valide (vérification d'environnement indisponible).").format(config_file=self._container.config_file))
             if notify:
-                self.app.notify("Structure valide (verification d'environnement indisponible).")
+                self.app.notify(_("Structure valide (vérification d'environnement indisponible)."))
             return
 
         env_errors = runner(load_result.config, self._container.filesystem, self._container.project_root, False, False)
         if env_errors:
-            result_widget.update("Erreur d'environnement :\n" + "\n".join(f"  - {e}" for e in env_errors))
+            result_widget.update(_("Erreur d'environnement :\n") + "\n".join(f"  - {e}" for e in env_errors))
             if notify:
-                self.app.notify(f"Verification terminee : {len(env_errors)} erreur(s) d'environnement.", severity="error")
+                self.app.notify(_("Vérification terminée : {count} erreur(s) d'environnement.").format(count=len(env_errors)), severity="error")
             return
 
         conflicts = detect_conflicts(load_result.config)
         conflict_errors = [c.message for c in conflicts if c.severity == "error"]
         conflict_warnings = [c.message for c in conflicts if c.severity == "warning"]
         if conflict_errors:
-            result_widget.update("Erreur de conflit de configuration :\n" + "\n".join(f"  - {e}" for e in conflict_errors))
+            result_widget.update(_("Erreur de conflit de configuration :\n") + "\n".join(f"  - {e}" for e in conflict_errors))
             if notify:
-                self.app.notify(f"Verification terminee : {len(conflict_errors)} conflit(s) bloquant(s).", severity="error")
+                self.app.notify(_("Vérification terminée : {count} conflit(s) bloquant(s).").format(count=len(conflict_errors)), severity="error")
             return
 
         if conflict_warnings:
             result_widget.update(
-                f"{self._container.config_file} : configuration valide, avec avertissement(s) :\n"
+                _("{config_file} : configuration valide, avec avertissement(s) :\n").format(config_file=self._container.config_file)
                 + "\n".join(f"  - {w}" for w in conflict_warnings)
             )
             if notify:
                 self.app.notify(
-                    f"Verification terminee : configuration valide, {len(conflict_warnings)} avertissement(s).",
+                    _("Vérification terminée : configuration valide, {count} avertissement(s).").format(count=len(conflict_warnings)),
                     severity="warning",
                 )
             return
 
-        result_widget.update(f"{self._container.config_file} : configuration valide.")
+        result_widget.update(_("{config_file} : configuration valide.").format(config_file=self._container.config_file))
         if notify:
-            self.app.notify("Verification terminee : configuration valide.")
+            self.app.notify(_("Vérification terminée : configuration valide."))

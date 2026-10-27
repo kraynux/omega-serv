@@ -6,10 +6,12 @@ ce module se limite a ce que Phase 0 exige reellement : verifier que la
 version de Python est compatible avant d'aller plus loin."""
 from __future__ import annotations
 
+import math
 import os
 import platform
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 MIN_PYTHON_VERSION = (3, 10)
 
@@ -40,6 +42,92 @@ def running_as_root() -> bool:
     n'existe pas hors POSIX - retourne False dans ce cas plutot que de
     lever, ce projet ne cible que des serveurs POSIX de toute facon."""
     return hasattr(os, "getuid") and os.getuid() == 0
+
+
+@dataclass(frozen=True)
+class CpuInfo:
+    """Processeur vu par CE processus (mode « boost », OMEGA-SERV_ETUDE_MODE_BOOST.md). Un
+    nombre de workers doit correspondre a la machine ou omega-serv est installe."""
+    logical: int  # threads logiques exposes par le noyau (hyperthreading compris)
+    physical: int  # coeurs physiques
+    affinity: int  # CPU que ce processus a le droit d'utiliser (conteneur, taskset...)
+    quota: float | None  # quota cgroup v2 (cpu.max, ex. CPUQuota= de systemd), None = aucun
+    load_1min: float | None
+    detected: bool  # False : detection impossible, valeurs de repli (1)
+
+    @property
+    def available(self) -> int:
+        """CPU reellement utilisables : affinite, plafonnee par le quota (arrondi superieur)."""
+        if self.quota is None:
+            return self.affinity
+        return max(1, min(self.affinity, math.ceil(self.quota)))
+
+    @property
+    def recommended_workers(self) -> int:
+        """Valeur « auto » : un worker par coeur physique, jamais plus que les CPU disponibles."""
+        return max(1, min(self.physical, self.available))
+
+
+def _cgroup_cpu_quota() -> float | None:
+    """Plus petit quota `cpu.max` du cgroup du processus et de ses parents (cgroup v2)."""
+    try:
+        line = next(
+            entry for entry in Path("/proc/self/cgroup").read_text(encoding="utf-8").splitlines()
+            if entry.startswith("0::")
+        )
+    except (OSError, StopIteration):
+        return None
+    relative = line[3:].strip("/")
+    parts = relative.split("/") if relative else []
+    quotas: list[float] = []
+    for depth in range(len(parts), -1, -1):
+        path = Path("/sys/fs/cgroup", *parts[:depth], "cpu.max")
+        try:
+            limit, period = path.read_text(encoding="utf-8").split()[:2]
+        except (OSError, ValueError):
+            continue
+        if limit != "max" and int(period) > 0:
+            quotas.append(int(limit) / int(period))
+    return min(quotas) if quotas else None
+
+
+def _physical_cores() -> int | None:
+    """Coeurs physiques lus dans /sys (couples boitier/coeur distincts) - sans psutil, confine
+    a infrastructure/probe/system_stats.py et traite comme facultatif. None si illisible."""
+    cores: set[tuple[str, str]] = set()
+    for topology in Path("/sys/devices/system/cpu").glob("cpu[0-9]*/topology"):
+        try:
+            package = (topology / "physical_package_id").read_text(encoding="utf-8").strip()
+            core = (topology / "core_id").read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        cores.add((package, core))
+    return len(cores) or None
+
+
+def cpu_info() -> CpuInfo:
+    """Jamais une exception : toute valeur introuvable retombe sur 1 (`detected=False` si
+    meme le nombre de CPU logiques est inconnu)."""
+    logical_raw = os.cpu_count()
+    logical = max(1, logical_raw or 1)
+    physical = _physical_cores() or logical
+    try:
+        affinity = max(1, len(os.sched_getaffinity(0)))
+    except (AttributeError, OSError):
+        affinity = logical
+    try:
+        load_1min: float | None = os.getloadavg()[0]
+    except (AttributeError, OSError):
+        load_1min = None
+    return CpuInfo(
+        logical=logical, physical=max(1, min(physical, logical)), affinity=affinity,
+        quota=_cgroup_cpu_quota(), load_1min=load_1min, detected=logical_raw is not None,
+    )
+
+
+def available_cpu_cores() -> int:
+    """CPU reellement utilisables (affinite + quota cgroup) - voir CpuInfo.available."""
+    return cpu_info().available
 
 
 def is_missing_live_group(group_name: str) -> bool:

@@ -25,6 +25,7 @@ from textual.containers import Center, Container, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.export_log_archives_screen import ExportLogArchivesScreen
 from omega_serv.interfaces.tui.screens.log_favorites_screen import LogFavoritesScreen
@@ -39,16 +40,16 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _LIBRARY_ITEMS: tuple[tuple[str, str], ...] = (
-    ("library", "Bibliotheque"),
-    ("favorites", "Favoris"),
-    ("view-logs", "Voir les logs"),
-    ("process-ip", "Voir et traiter IP"),
+    ("library", _("Bibliothèque")),
+    ("favorites", _("Favoris")),
+    ("view-logs", _("Voir les logs")),
+    ("process-ip", _("Voir et traiter IP")),
 )
 _MAINTENANCE_ITEMS: tuple[tuple[str, str], ...] = (
-    ("rotation", "Rotate / archivage"),
-    ("restore", "Restaurer une archive"),
-    ("purge", "Purger les archives"),
-    ("export", "Exporter"),
+    ("rotation", _("Rotate / archivage")),
+    ("restore", _("Restaurer une archive")),
+    ("purge", _("Purger les archives")),
+    ("export", _("Exporter")),
 )
 
 
@@ -61,20 +62,20 @@ class LogsMenuScreen(OmegaScreen):
         yield Header()
         with Vertical(classes="omega-panel"):
             with Center():
-                yield Static("GESTION DES LOGS", classes="omega-title")
+                yield Static(_("GESTION DES LOGS"), classes="omega-title")
             with Center(), Horizontal(classes="omega-panel-row"):
                 with Vertical(classes="omega-home-menu") as library_menu:
                     for item_id, label in _LIBRARY_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(label, id=item_id)
-                    library_menu.border_title = "BIBLIOTHEQUE"
+                    library_menu.border_title = _("BIBLIOTHÈQUE")
                 with Vertical(classes="omega-home-menu") as maintenance_menu:
                     for item_id, label in _MAINTENANCE_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(label, id=item_id)
-                    maintenance_menu.border_title = "MAINTENANCE"
+                    maintenance_menu.border_title = _("MAINTENANCE")
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

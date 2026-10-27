@@ -13,6 +13,7 @@ from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
 from omega_serv.application.tls.revoke_certificate import revoke_certificate
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
@@ -34,27 +35,27 @@ class RevokeCertificateScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("REVOQUER UN CERTIFICAT", classes="omega-title")
+            yield Static(_("RÉVOQUER UN CERTIFICAT"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
-            yield Static("Certificat a revoquer", classes="omega-subtitle")
+            yield Static(_("Certificat à révoquer"), classes="omega-subtitle")
             yield Input(id="cert-input")
-            yield Static("Cle de la CA (root-ca.key)", classes="omega-subtitle")
+            yield Static(_("Clé de la CA (root-ca.key)"), classes="omega-subtitle")
             yield Input(
                 value=str(Path("secure") / "certificates" / "ca" / "root-ca.key"),
                 id="ca-key-input",
             )
-            yield Static("Certificat de la CA (root-ca.pem)", classes="omega-subtitle")
+            yield Static(_("Certificat de la CA (root-ca.pem)"), classes="omega-subtitle")
             yield Input(
                 value=str(Path("secure") / "certificates" / "ca" / "root-ca.pem"),
                 id="ca-cert-input",
             )
-            yield Static("Passphrase de la cle CA", classes="omega-subtitle")
+            yield Static(_("Passphrase de la clé CA"), classes="omega-subtitle")
             yield Input(password=True, id="password-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Revoquer", id="revoke", variant="error")
+                    yield Button(_("Révoquer"), id="revoke", variant="error")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -64,8 +65,8 @@ class RevokeCertificateScreen(OmegaScreen):
         if event.button.id == "revoke":
             self.app.push_screen(
                 ConfirmScreen(
-                    title="REVOQUER LE CERTIFICAT",
-                    message="Cette action est irreversible pour ce certificat. Confirmer la revocation ?",
+                    title=_("RÉVOQUER LE CERTIFICAT"),
+                    message=_("Cette action est irréversible pour ce certificat. Confirmer la révocation ?"),
                 ),
                 self._revoke_if_confirmed,
             )
@@ -76,7 +77,7 @@ class RevokeCertificateScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         factory = self._container.certificate_tool_factory
         if factory is None:
-            error_widget.update("Revocation indisponible dans cet environnement.")
+            error_widget.update(_("Révocation indisponible dans cet environnement."))
             return
 
         cert_path = self._container.project_root / self.query_one("#cert-input", Input).value.strip()
@@ -84,7 +85,7 @@ class RevokeCertificateScreen(OmegaScreen):
         ca_cert_path = self._container.project_root / self.query_one("#ca-cert-input", Input).value.strip()
         password = self.query_one("#password-input", Input).value
 
-        error_widget.update("Revocation en cours...")
+        error_widget.update(_("Révocation en cours..."))
         self.query_one("#revoke", Button).disabled = True
         self.run_worker(
             lambda: self._revoke_in_thread(cert_path, ca_key_path, ca_cert_path, password, factory),
@@ -110,11 +111,11 @@ class RevokeCertificateScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
 
         if error is not None:
-            error_widget.update(f"Erreur : {error}")
+            error_widget.update(_("Erreur : {error}").format(error=error))
             return
         assert result is not None  # garanti par construction : error XOR result
         if not result.success:
-            error_widget.update(f"Erreur : {result.message}")
+            error_widget.update(_("Erreur : {message}").format(message=result.message))
             return
         error_widget.update("")
         load_result = load_config(self._container.configuration, self._container.config_file)
@@ -125,9 +126,7 @@ class RevokeCertificateScreen(OmegaScreen):
         if active_cert_matches:
             notify_restart_required(
                 self, self._container,
-                f"{result.message} Ce certificat est celui actuellement utilise par le serveur "
-                "(TLS actif) : un REDEMARRAGE COMPLET est necessaire, sinon il continue d'etre "
-                "presente aux clients malgre la revocation.",
+                _("{message} Ce certificat est celui actuellement utilisé par le serveur (TLS actif) : un REDÉMARRAGE COMPLET est nécessaire, sinon il continue d'être présenté aux clients malgré la révocation.").format(message=result.message),
             )
         else:
             self.app.notify(result.message)

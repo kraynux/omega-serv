@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import threading
 from pathlib import Path
 
@@ -92,6 +93,23 @@ class LocalFilesystem:
 
     def resolve_real_path(self, path: Path) -> Path:
         return path.resolve()
+
+    def resolve_real_path_under(self, real_root: Path, segments: tuple[str, ...]) -> Path:
+        # Chaines plutot que Path : chemin chaud, execute a chaque requete.
+        current = str(real_root)
+        for index, segment in enumerate(segments):
+            current = os.path.join(current, segment)
+            try:
+                mode = os.lstat(current).st_mode
+            except FileNotFoundError:
+                # Plus rien n'existe en dessous : aucun lien a suivre (meme resultat
+                # que Path.resolve(), non strict, sur une fin de chemin absente).
+                return Path(os.path.join(current, *segments[index + 1:]))
+            except OSError:
+                return real_root.joinpath(*segments).resolve()
+            if stat.S_ISLNK(mode):
+                return real_root.joinpath(*segments).resolve()
+        return Path(current)
 
     def list_json_files(self, directory: Path) -> list[Path]:
         if not directory.is_dir():

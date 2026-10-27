@@ -97,7 +97,7 @@ class TestInstallSystemdService(unittest.TestCase):
         result = install_systemd_service(self.filesystem, self._params(), self.unit_path, manager)
         self.assertTrue(result.success)
         self.assertEqual(manager.create_user_calls, [("omega-serv", "omega-serv")])
-        self.assertIn("compte systeme", result.message)
+        self.assertIn("compte système", result.message)
 
     def test_install_does_not_crash_without_create_system_user(self):
         manager = _FakeServiceManager()  # n'implemente pas create_system_user

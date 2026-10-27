@@ -106,7 +106,7 @@ class TestValidateKeywordListDefinitions(unittest.TestCase):
             KeywordListDefinition(id="X", scope=("referer",), file="b.txt"),
         )
         errors = validate_keyword_list_definitions(definitions)
-        self.assertTrue(any("duplique" in e for e in errors))
+        self.assertTrue(any("dupliqué" in e for e in errors))
 
 
 class TestBuildRulePackFromKeywordList(unittest.TestCase):

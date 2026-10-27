@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import CsrParams
 from omega_serv.domain.security.tls.validation import validate_csr_params
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
@@ -44,4 +45,4 @@ def generate_certificate_signing_request(
     filesystem.set_file_mode(key_path, 0o600)
     filesystem.set_file_mode(csr_path, 0o644)
 
-    return GenerateCsrResult(True, f"CSR generee : {csr_path} (cle : {key_path}, mode 0600)")
+    return GenerateCsrResult(True, _("CSR générée : {csr_path} (clé : {key_path}, mode 0600)").format(csr_path=csr_path, key_path=key_path))

@@ -33,6 +33,7 @@ from omega_serv.application.logs.remote_sources import (
     remove_remote_source,
     save_remote_source,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.domain.logs.remote_source import RemoteLogSource, safe_cache_filename
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -56,43 +57,43 @@ class RemoteLogSourcesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("SOURCES DISTANTES (SSH)", classes="omega-title")
+            yield Static(_("SOURCES DISTANTES (SSH)"), classes="omega-title")
             yield Static(
-                "Recupere, sur demande, UNE COPIE du log d'un serveur du reseau local via scp - "
-                "ce n'est jamais une consultation en direct, mais un instantane fige au moment du "
-                "clic. Chaque nouvelle 'Recuperation maintenant' remplace la copie precedente par "
-                "une plus recente (la Bibliotheque affiche la date de cette derniere recuperation, "
-                "colonne 'Modifie'). Aucun mot de passe n'est jamais demande ni stocke : une "
-                "eventuelle cle privee n'est referencee que par son chemin - l'authentification "
-                "reste entierement geree par votre propre configuration SSH.",
+                _("Récupère, sur demande, UNE COPIE du log d'un serveur du réseau local via scp - "
+                "ce n'est jamais une consultation en direct, mais un instantané figé au moment du "
+                "clic. Chaque nouvelle 'Récupération maintenant' remplace la copie précédente par "
+                "une plus récente (la Bibliothèque affiche la date de cette dernière récupération, "
+                "colonne 'Modifié'). Aucun mot de passe n'est jamais demandé ni stocké : une "
+                "éventuelle clé privée n'est référencée que par son chemin - l'authentification "
+                "reste entièrement gérée par votre propre configuration SSH."),
                 classes="omega-hint",
             )
             yield Static("", id="sources-error", classes="omega-hint")
             yield DataTable(id="sources-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Recuperer maintenant", id="fetch", variant="primary", disabled=True)
+                    yield Button(_("Récupérer maintenant"), id="fetch", variant="primary", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
 
-            yield Static("Ajouter une source", classes="omega-subtitle")
-            yield Input(placeholder="Label", id="label-input")
-            yield Input(placeholder="Hote (ex: backend1 ou 192.168.1.10)", id="host-input")
-            yield Input(placeholder="Chemin distant (ex: /var/log/nginx/access.log)", id="remote-path-input")
-            yield Input(placeholder="Utilisateur (optionnel)", id="user-input")
-            yield Input(placeholder="Port (optionnel)", id="port-input")
-            yield Input(placeholder="Chemin de la cle privee (optionnel)", id="identity-input")
+            yield Static(_("Ajouter une source"), classes="omega-subtitle")
+            yield Input(placeholder=_("Label"), id="label-input")
+            yield Input(placeholder=_("Hôte (ex: backend1 ou 192.168.1.10)"), id="host-input")
+            yield Input(placeholder=_("Chemin distant (ex: /var/log/nginx/access.log)"), id="remote-path-input")
+            yield Input(placeholder=_("Utilisateur (optionnel)"), id="user-input")
+            yield Input(placeholder=_("Port (optionnel)"), id="port-input")
+            yield Input(placeholder=_("Chemin de la clé privée (optionnel)"), id="identity-input")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Enregistrer", id="save")
+                yield Button(_("Enregistrer"), id="save")
 
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#sources-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Label", "Hote", "Chemin distant", "Utilisateur", "Port", "Cle")
+        table.add_columns(_("Label"), _("Hôte"), _("Chemin distant"), _("Utilisateur"), _("Port"), _("Clé"))
         self._refresh()
 
     def _refresh(self) -> None:
@@ -130,7 +131,7 @@ class RemoteLogSourcesScreen(OmegaScreen):
         port: int | None = None
         if port_raw:
             if not port_raw.isdigit():
-                error_widget.update(f"Port invalide : {port_raw!r}.")
+                error_widget.update(_("Port invalide : {port_raw!r}.").format(port_raw=port_raw))
                 return
             port = int(port_raw)
 
@@ -158,7 +159,7 @@ class RemoteLogSourcesScreen(OmegaScreen):
             return
         label = self._selected_label
         self.app.push_screen(
-            ConfirmScreen(title="SUPPRIMER CETTE SOURCE ?", message=label),
+            ConfirmScreen(title=_("SUPPRIMER CETTE SOURCE ?"), message=label),
             lambda confirmed: self._delete_if_confirmed(confirmed, label),
         )
 
@@ -177,7 +178,7 @@ class RemoteLogSourcesScreen(OmegaScreen):
             return
         runner_factory = self._container.remote_log_fetch_runner_factory
         if runner_factory is None:
-            error_widget.update("Recuperation distante indisponible dans cet environnement.")
+            error_widget.update(_("Récupération distante indisponible dans cet environnement."))
             return
         source = next(
             (s for s in list_remote_sources(self._container.build_remote_log_source_repository())
@@ -188,7 +189,7 @@ class RemoteLogSourcesScreen(OmegaScreen):
             return
         local_dest = self._container.project_root / "var" / "log" / "remote" / safe_cache_filename(source.label)
 
-        error_widget.update("Recuperation en cours...")
+        error_widget.update(_("Récupération en cours..."))
         self.query_one("#fetch", Button).disabled = True
         self.run_worker(
             lambda: self._fetch_in_thread(source, local_dest, runner_factory), thread=True, exclusive=True,
@@ -210,6 +211,6 @@ class RemoteLogSourcesScreen(OmegaScreen):
         error_widget = self.query_one("#sources-error", Static)
         if result.success:
             error_widget.update("")
-            self.app.notify(result.message + " Ajoute a la Bibliotheque.")
+            self.app.notify(result.message + _(" Ajouté à la Bibliothèque."))
         else:
             error_widget.update(result.message)

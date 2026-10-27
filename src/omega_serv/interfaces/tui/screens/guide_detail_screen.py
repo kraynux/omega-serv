@@ -9,6 +9,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import ScreenGuide
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -23,32 +24,32 @@ class GuideDetailScreen(OmegaScreen):
         yield Header()
         with VerticalScroll(classes="omega-panel"):
             yield Static(guide.title.upper(), classes="omega-title")
-            yield Static(f"Parcours : {guide.acces}", classes="omega-hint")
+            yield Static(_("Parcours : {acces}").format(acces=guide.acces), classes="omega-hint")
             yield Static("")
-            yield Static("DEFINITION", classes="omega-subtitle")
+            yield Static(_("DÉFINITION"), classes="omega-subtitle")
             yield Static(guide.definition)
             if guide.fields:
                 yield Static("")
-                yield Static("CHAMPS", classes="omega-subtitle")
+                yield Static(_("CHAMPS"), classes="omega-subtitle")
                 for guide_field in guide.fields:
                     yield Static("")
                     yield Static(guide_field.label, classes="omega-subtitle")
-                    yield Static(f"Definition : {guide_field.definition}")
-                    yield Static(f"Utilisation : {guide_field.utilisation}")
-                    yield Static(f"Action : {guide_field.action}")
-                    yield Static(f"Reaction : {guide_field.reaction}")
+                    yield Static(_("Définition : {definition}").format(definition=guide_field.definition))
+                    yield Static(_("Utilisation : {utilisation}").format(utilisation=guide_field.utilisation))
+                    yield Static(_("Action : {action}").format(action=guide_field.action))
+                    yield Static(_("Réaction : {reaction}").format(reaction=guide_field.reaction))
             if guide.consequences:
                 yield Static("")
-                yield Static("CONSEQUENCES", classes="omega-subtitle")
+                yield Static(_("CONSÉQUENCES"), classes="omega-subtitle")
                 yield Static(guide.consequences)
             if guide.points_de_vigilance:
                 yield Static("")
-                yield Static("POINTS DE VIGILANCE", classes="omega-subtitle")
+                yield Static(_("POINTS DE VIGILANCE"), classes="omega-subtitle")
                 for point in guide.points_de_vigilance:
-                    yield Static(f"- {point}")
+                    yield Static(_("- {point}").format(point=point))
             yield Static("")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

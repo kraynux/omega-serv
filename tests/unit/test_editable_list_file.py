@@ -197,7 +197,7 @@ class TestSaveListFile(_RealProject):
         self._file().write_text("/modifie ailleurs, plus long\n")
         result = self._save("/y\n", expected=stale)
         self.assertFalse(result.saved)
-        self.assertIn("modifie en dehors", result.refused_reason)
+        self.assertIn("modifié en dehors", result.refused_reason)
         self.assertEqual(self._file().read_text(), "/modifie ailleurs, plus long\n")
 
     def test_read_only_directory_refused(self):

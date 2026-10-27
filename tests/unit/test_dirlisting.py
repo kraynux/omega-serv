@@ -175,7 +175,7 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
 
     def test_footer_shown_by_default(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
-        self.assertIn('Propuls&eacute; par <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a>', html_out)
+        self.assertIn('Propulsé par <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a>', html_out)
         self.assertIn('<hr class="omega-listing-footer-rule">', html_out)
 
     def test_footer_hidden_when_user_readme_is_shown(self):
@@ -183,7 +183,7 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
             "/downloads/", [], SecurityConfig(), DirlistingSettings(show_readme=True),
             readme_content="lisez-moi",
         )
-        self.assertNotIn("Propuls&eacute; par OMEGA-SERV", html_out)
+        self.assertNotIn("Propulsé par OMEGA-SERV", html_out)
 
     def test_footer_lives_outside_the_listing_container(self):
         html_out = render_directory_listing_html("/downloads/", [], SecurityConfig())
@@ -245,7 +245,7 @@ class TestRenderDirectoryListingHtml(unittest.TestCase):
             "/downloads/", [], SecurityConfig(), DirlistingSettings(show_readme=True),
             readme_content=None,
         )
-        self.assertIn('Propuls&eacute; par <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a>', html_out)
+        self.assertIn('Propulsé par <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a>', html_out)
 
     def test_from_dict_uses_defaults_for_missing_keys(self):
         settings = DirlistingSettings.from_dict({})

@@ -30,6 +30,7 @@ from omega_serv.application.security.editable_list_file import (
     inspect_list_file,
     save_list_file,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.security.waf.config import with_reputation_enabled_for_lists
@@ -116,7 +117,7 @@ def load_keyword_list_into_config(
     config_check: ConfigCheck | None,
 ) -> ListLoadResult:
     if not _SAFE_FILE_NAME.fullmatch(request.file_name):
-        return ListLoadResult(False, error=f"nom de fichier refuse : {request.file_name!r} (lettres, chiffres, '-', .txt)")
+        return ListLoadResult(False, error=_("nom de fichier refusé : {file_name!r} (lettres, chiffres, '-', .txt)").format(file_name=request.file_name))
     relative = f"{KEYWORDS_DIR}/{request.file_name}"
     path = project_root / relative
     messages: list[str] = []
@@ -128,9 +129,9 @@ def load_keyword_list_into_config(
             file_access, project_root, relative, reference_text or template, service_account, None,
         )
         if not created.saved:
-            return ListLoadResult(False, error=f"creation du fichier impossible : {created.refused_reason}")
+            return ListLoadResult(False, error=_("création du fichier impossible : {refused_reason}").format(refused_reason=created.refused_reason))
         messages.append(
-            f"Copie locale creee depuis la reference : {relative}" if reference_text else f"Fichier cree : {relative}"
+            _("Copie locale créée depuis la référence : {relative}").format(relative=relative) if reference_text else _("Fichier créé : {relative}").format(relative=relative)
         )
         status = created.status
     else:
@@ -143,17 +144,16 @@ def load_keyword_list_into_config(
         if errors:
             first = errors[0]
             return ListLoadResult(
-                False, error=f"la liste contient {len(errors)} erreur(s), ligne {first.line} : {first.message} "
-                "- corrigez-la dans l'editeur",
+                False, error=_("la liste contient {count} erreur(s), ligne {line} : {message} - corrigez-la dans l'éditeur").format(count=len(errors), line=first.line, message=first.message),
             )
     if status.service_check == "unreadable":
         return ListLoadResult(
-            False, error=f"{status.service_message()} - utilisez 'Corriger les droits' dans l'editeur",
+            False, error=_("{value} - utilisez 'Corriger les droits' dans l'éditeur").format(value=status.service_message()),
         )
 
     lists = _keyword_lists(config)
     if any(item.get("file") == relative for item in lists):
-        return ListLoadResult(False, error=f"{relative} est deja chargee (modifiez-la depuis l'ecran Custom)")
+        return ListLoadResult(False, error=_("{relative} est déjà chargée (modifiez-la depuis l'écran Custom)").format(relative=relative))
     list_id = _unique_id(request.file_name.removesuffix(".txt"), {str(item.get("id")) for item in lists})
     entry: dict[str, Any] = {
         "id": list_id, "label": request.label or list_id, "file": relative, "scope": list(request.scope),
@@ -183,11 +183,11 @@ def load_keyword_list_into_config(
         if relevant:
             return ListLoadResult(False, error=relevant[0])
 
-    messages.extend(f"Active : {change}" for change in reputation_changes)
+    messages.extend(_("Activé : {change}").format(change=change) for change in reputation_changes)
     if not waf_option.enabled:
-        messages.append("WAF desactive : la liste s'appliquera des que le WAF sera active (WAF -> Modules).")
+        messages.append(_("WAF désactivé : la liste s'appliquera dès que le WAF sera activé (WAF -> Modules)."))
     if request.observe_only:
-        messages.append("Mode Observation : alertes journalisees, aucun blocage ni ban tant que la gravite n'est pas changee.")
+        messages.append(_("Mode Observation : alertes journalisées, aucun blocage ni ban tant que la gravité n'est pas changée."))
     return ListLoadResult(True, list_id=list_id, messages=tuple(messages), config=new_config)
 
 
@@ -209,7 +209,7 @@ def update_keyword_list_entry(
     lists = _keyword_lists(config)
     index = next((i for i, item in enumerate(lists) if item.get("id") == list_id), None)
     if index is None:
-        return ListLoadResult(False, error=f"liste {list_id!r} introuvable dans la configuration")
+        return ListLoadResult(False, error=_("liste {list_id!r} introuvable dans la configuration").format(list_id=list_id))
     entry = {**lists[index], **changes}
     if entry.get("observe_only"):
         entry["escalation_threshold"] = 0
@@ -233,7 +233,7 @@ def update_keyword_list_entry(
                     if f"keyword_lists[{list_id!r}]" in e]
         if relevant:
             return ListLoadResult(False, error=relevant[0])
-    messages = tuple(f"Active : {change}" for change in reputation_changes)
+    messages = tuple(_("Activé : {change}").format(change=change) for change in reputation_changes)
     return ListLoadResult(True, list_id=list_id, messages=messages, config=new_config)
 
 

@@ -13,6 +13,7 @@ en Phase 3, une fois le profil/option engine lui-meme existant.
 """
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
 from omega_serv.domain.routing.access_rule import parse_access_rules, validate_access_rule
@@ -53,6 +54,11 @@ def is_safe_relative_path(value: str) -> bool:
     return ".." not in segments
 
 
+MAX_WORKERS = 64
+"""Borne de surete du mode « boost » ; la vraie limite est le nombre de coeurs de la machine
+(core/platform_info.available_cpu_cores), appliquee a l'ecran et au demarrage."""
+
+
 def validate_config(config: OmegaServConfig) -> list[str]:
     """Valide la structure d'une configuration deja chargee.
 
@@ -63,8 +69,7 @@ def validate_config(config: OmegaServConfig) -> list[str]:
 
     if config.version not in SUPPORTED_CONFIG_VERSIONS:
         errors.append(
-            f"version de configuration non supportee : {config.version} "
-            f"(supportees : {sorted(SUPPORTED_CONFIG_VERSIONS)})"
+            _("version de configuration non supportée : {version} (supportées : {value})").format(version=config.version, value=sorted(SUPPORTED_CONFIG_VERSIONS))
         )
 
     for field_name, path_value in (
@@ -77,13 +82,13 @@ def validate_config(config: OmegaServConfig) -> list[str]:
         ("paths.waf_script", config.paths.waf_script),
     ):
         if not is_safe_relative_path(path_value):
-            errors.append(f"{field_name} doit etre un chemin relatif au projet, sans '..' : {path_value!r}")
+            errors.append(_("{field_name} doit être un chemin relatif au projet, sans '..' : {path_value!r}").format(field_name=field_name, path_value=path_value))
 
     if not (1 <= config.server.port <= 65535):
-        errors.append(f"server.port hors plage 1-65535 : {config.server.port}")
+        errors.append(_("server.port hors plage 1-65535 : {port}").format(port=config.server.port))
 
     if not config.server.bind:
-        errors.append("server.bind ne peut pas etre vide")
+        errors.append(_("server.bind ne peut pas être vide"))
 
     for field_name, limit_value in (
         ("server.max_connections", config.server.max_connections),
@@ -98,65 +103,67 @@ def validate_config(config: OmegaServConfig) -> list[str]:
         ("server.shutdown_grace_period_seconds", config.server.shutdown_grace_period_seconds),
     ):
         if limit_value <= 0:
-            errors.append(f"{field_name} doit etre strictement positif : {limit_value}")
+            errors.append(_("{field_name} doit être strictement positif : {limit_value}").format(field_name=field_name, limit_value=limit_value))
+
+    if not 0 <= config.server.workers <= MAX_WORKERS:
+        errors.append(
+            _("server.workers doit être compris entre 0 (automatique) et {maximum} : {workers}").format(
+                maximum=MAX_WORKERS, workers=config.server.workers,
+            )
+        )
 
     unknown_methods = set(config.security.allowed_methods) - _KNOWN_HTTP_METHOD_TOKENS
     if unknown_methods:
-        errors.append(f"security.allowed_methods contient des methodes inconnues : {sorted(unknown_methods)}")
+        errors.append(_("security.allowed_methods contient des méthodes inconnues : {value}").format(value=sorted(unknown_methods)))
 
     if config.security.csp_mode not in _VALID_CSP_MODES:
         errors.append(
-            f"security.csp_mode invalide : {config.security.csp_mode!r} "
-            f"(attendu : {sorted(_VALID_CSP_MODES)})"
+            _("security.csp_mode invalide : {csp_mode!r} (attendu : {value})").format(csp_mode=config.security.csp_mode, value=sorted(_VALID_CSP_MODES))
         )
 
     if config.security.coep_mode not in _VALID_COEP_MODES:
         errors.append(
-            f"security.coep_mode invalide : {config.security.coep_mode!r} "
-            f"(attendu : {sorted(_VALID_COEP_MODES)})"
+            _("security.coep_mode invalide : {coep_mode!r} (attendu : {value})").format(coep_mode=config.security.coep_mode, value=sorted(_VALID_COEP_MODES))
         )
 
     for zone in config.security.csp_zones:
         if not zone.path_prefix.startswith("/"):
-            errors.append(f"security.csp_zones : path_prefix doit commencer par '/' : {zone.path_prefix!r}")
+            errors.append(_("security.csp_zones : path_prefix doit commencer par '/' : {path_prefix!r}").format(path_prefix=zone.path_prefix))
         if not zone.data.strip():
-            errors.append(f"security.csp_zones : policy ne peut pas etre vide (zone {zone.path_prefix!r})")
+            errors.append(_("security.csp_zones : policy ne peut pas être vide (zone {path_prefix!r})").format(path_prefix=zone.path_prefix))
 
     unknown_options = set(config.options.keys()) - KNOWN_OPTION_NAMES
     if unknown_options:
-        errors.append(f"options inconnues (verifier l'orthographe ou le perimetre V1) : {sorted(unknown_options)}")
+        errors.append(_("options inconnues (vérifier l'orthographe ou le périmètre V1) : {value}").format(value=sorted(unknown_options)))
 
     if config.logs.rotation.max_bytes <= 0:
-        errors.append("logs.rotation.max_bytes doit etre strictement positif")
+        errors.append(_("logs.rotation.max_bytes doit être strictement positif"))
     if config.logs.rotation.keep <= 0:
-        errors.append("logs.rotation.keep doit etre strictement positif")
+        errors.append(_("logs.rotation.keep doit être strictement positif"))
 
     aliases_option = config.options.get("aliases")
     if aliases_option is not None and aliases_option.enabled:
         for alias_rule in parse_alias_rules(aliases_option.settings.get("list", [])):
             reason = validate_alias_rule(alias_rule)
             if reason is not None:
-                errors.append(f"options.aliases : {reason}")
+                errors.append(_("options.aliases : {reason}").format(reason=reason))
 
     redirects_option = config.options.get("redirects")
     if redirects_option is not None and redirects_option.enabled:
         for redirect_rule in parse_redirect_rules(redirects_option.settings.get("list", [])):
             reason = validate_redirect_rule(redirect_rule)
             if reason is not None:
-                errors.append(f"options.redirects : {reason}")
+                errors.append(_("options.redirects : {reason}").format(reason=reason))
 
     upload_option = config.options.get("upload")
     if upload_option is not None and upload_option.enabled:
         for upload_rule in parse_upload_zone_rules(upload_option.settings.get("zones", [])):
             reason = validate_upload_zone_rule(upload_rule)
             if reason is not None:
-                errors.append(f"options.upload : {reason}")
+                errors.append(_("options.upload : {reason}").format(reason=reason))
             elif upload_rule.policy.max_file_size_bytes > config.server.max_request_size:
                 errors.append(
-                    f"options.upload zone {upload_rule.url_prefix!r} : policy.max_file_size_bytes "
-                    f"({upload_rule.policy.max_file_size_bytes}) depasse server.max_request_size "
-                    f"({config.server.max_request_size}) - la zone serait inutilisable pour "
-                    "tout fichier proche de sa propre limite (plan corrige §9)"
+                    _("options.upload zone {url_prefix!r} : policy.max_file_size_bytes ({max_file_size_bytes}) dépasse server.max_request_size ({max_request_size}) - la zone serait inutilisable pour tout fichier proche de sa propre limite (plan corrigé §9)").format(url_prefix=upload_rule.url_prefix, max_file_size_bytes=upload_rule.policy.max_file_size_bytes, max_request_size=config.server.max_request_size)
                 )
 
     access_control_option = config.options.get("access_control")
@@ -164,7 +171,7 @@ def validate_config(config: OmegaServConfig) -> list[str]:
         for access_rule in parse_access_rules(access_control_option.settings.get("list", [])):
             reason = validate_access_rule(access_rule)
             if reason is not None:
-                errors.append(f"options.access_control : {reason}")
+                errors.append(_("options.access_control : {reason}").format(reason=reason))
 
     production_upstreams: set[tuple[str, int]] = set()
     reverse_proxy_option = config.options.get("reverse_proxy")
@@ -172,38 +179,34 @@ def validate_config(config: OmegaServConfig) -> list[str]:
         for proxy_zone in parse_proxy_zones(reverse_proxy_option.settings.get("zones", [])):
             reason = validate_proxy_zone(proxy_zone)
             if reason is not None:
-                errors.append(f"options.reverse_proxy : {reason}")
+                errors.append(_("options.reverse_proxy : {reason}").format(reason=reason))
                 continue
             for upstream in proxy_zone.upstreams:
                 production_upstreams.add((upstream.host, upstream.port))
                 if upstream.host in ("127.0.0.1", "localhost", config.server.bind) and upstream.port == config.server.port:
                     errors.append(
-                        f"options.reverse_proxy zone {proxy_zone.url_prefix!r} : l'upstream "
-                        f"({upstream.host}:{upstream.port}) pointe vers ce serveur lui-meme - boucle de proxy"
+                        _("options.reverse_proxy zone {url_prefix!r} : l'upstream ({host}:{port}) pointe vers ce serveur lui-même - boucle de proxy").format(url_prefix=proxy_zone.url_prefix, host=upstream.host, port=upstream.port)
                     )
 
     active_defense_option = config.options.get("active_defense")
     if active_defense_option is not None and active_defense_option.enabled:
         active_defense_config = parse_active_defense_config(active_defense_option.settings)
-        errors.extend(f"options.active_defense : {e}" for e in validate_active_defense_config(active_defense_config))
+        errors.extend(_("options.active_defense : {e}").format(e=e) for e in validate_active_defense_config(active_defense_config))
         for zone_name, decoy_zone in active_defense_config.deception.decoy_zones.items():
             for upstream in decoy_zone.upstreams:
                 if (upstream.host, upstream.port) in production_upstreams:
                     errors.append(
-                        f"options.active_defense.deception.decoy_zones.{zone_name} : l'upstream "
-                        f"({upstream.host}:{upstream.port}) est deja utilise par une zone "
-                        "options.reverse_proxy de production - un leurre ne doit jamais partager "
-                        "son backend avec la production (plan §\"Routage vers les leurres\")"
+                        _("options.active_defense.deception.decoy_zones.{zone_name} : l'upstream ({host}:{port}) est déjà utilisé par une zone options.reverse_proxy de production - un leurre ne doit jamais partager son backend avec la production (plan §\"Routage vers les leurres\")").format(zone_name=zone_name, host=upstream.host, port=upstream.port)
                     )
 
     errors.extend(
-        f"tls : {e}"
+        _("tls : {e}").format(e=e)
         for e in validate_tls_config_structure(
             config.tls.enabled, config.tls.mode, config.tls.min_version, config.tls.max_version,
             config.tls.certificate_path, config.tls.private_key_path,
         )
     )
     if config.security.hsts_enabled and not config.tls.enabled:
-        errors.append("security.hsts_enabled actif alors que tls.enabled est desactive (doc TLS §13)")
+        errors.append(_("security.hsts_enabled actif alors que tls.enabled est désactivé (doc TLS §13)"))
 
     return errors

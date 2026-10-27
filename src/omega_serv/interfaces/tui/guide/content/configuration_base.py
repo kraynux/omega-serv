@@ -4,383 +4,410 @@ Phase 0 - ecrans pilotes), Securite generique et Controle d'acces
 plan, boucle la couverture a 64/64)."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.model import FieldGuide, ScreenGuide
 
 SERVER_CONFIG_MENU_SCREEN = ScreenGuide(
     screen_class_name="ServerConfigMenuScreen",
-    title="Configuration detaillee (menu)",
-    acces="Accueil -> Configuration detaillee",
+    title=_("Configuration détaillée (menu)"),
+    acces=_("Accueil -> Configuration détaillée"),
     definition=(
-        "Sous-menu regroupant tous les ecrans de configuration du serveur et des options "
-        "superposables, plus deux raccourcis (Voir options actives, Verifier la configuration)."
+        _("Sous-menu regroupant tous les écrans de configuration du serveur et des options "
+        "superposables, plus deux raccourcis (Voir options actives, Vérifier la configuration).")
     ),
     fields=(),
-    consequences="Aucune - purement navigation.",
+    consequences=_("Aucune - purement navigation."),
 )
 
 BASE_CONFIG_SCREEN = ScreenGuide(
     screen_class_name="BaseConfigScreen",
-    title="Configuration de base",
-    acces="Accueil -> Configuration detaillee -> Configuration de base",
+    title=_("Configuration de base"),
+    acces=_("Accueil -> Configuration détaillée -> Configuration de base"),
     definition=(
-        "Reglages fondamentaux du serveur : adresse d'ecoute, port, nom de serveur "
-        "annonce, fichiers d'index cherches dans un repertoire sans nom de fichier explicite."
+        _("Réglages fondamentaux du serveur : adresse d'écoute, port, nom de serveur "
+        "annoncé, fichiers d'index cherches dans un répertoire sans nom de fichier explicite.")
     ),
     fields=(
         FieldGuide(
-            label="Adresse d'ecoute (bind)",
-            definition="Adresse IP sur laquelle le serveur accepte les connexions.",
+            label=_("Adresse d'écoute (bind)"),
+            definition=_("Adresse IP sur laquelle le serveur accepte les connexions."),
             utilisation=(
-                "Une adresse IP valide - '127.0.0.1' (local uniquement) ou '0.0.0.0' "
-                "(toutes les interfaces reseau). Valeur par defaut : 127.0.0.1."
+                _("Une adresse IP valide - '127.0.0.1' (local uniquement) ou '0.0.0.0' "
+                "(toutes les interfaces réseau). Valeur par défaut : 127.0.0.1.")
             ),
-            action="Enregistre dans server.bind apres validation structurelle de la configuration.",
+            action=_("Enregistre dans server.bind après validation structurelle de la configuration."),
             reaction=(
-                "Necessite un REDEMARRAGE COMPLET - le socket d'ecoute n'est jamais retouche "
-                "par un simple rechargement. Un bouton 'Redemarrer maintenant' est propose "
-                "apres l'enregistrement si un service est detecte."
+                _("Nécessite un REDÉMARRAGE COMPLET - le socket d'écoute n'est jamais retouché "
+                "par un simple rechargement. Un bouton 'Redémarrer maintenant' est proposé "
+                "après l'enregistrement si un service est détecté.")
             ),
         ),
         FieldGuide(
-            label="Port (port)",
-            definition="Port TCP d'ecoute.",
+            label=_("Port (port)"),
+            definition=_("Port TCP d'écoute."),
             utilisation=(
-                "Un entier de port valide (1-65535 ; 0 signifie 'port libre choisi par le "
-                "systeme', surtout utile pour des tests). Valeur par defaut : 8080."
+                _("Un entier de port valide (1-65535 ; 0 signifie 'port libre choisi par le "
+                "système', surtout utile pour des tests). Valeur par défaut : 8080.")
             ),
-            action="Enregistre dans server.port apres validation.",
-            reaction="Necessite un REDEMARRAGE COMPLET, meme raison que l'adresse d'ecoute.",
+            action=_("Enregistre dans server.port après validation."),
+            reaction=_("Nécessite un REDÉMARRAGE COMPLET, même raison que l'adresse d'écoute."),
         ),
         FieldGuide(
-            label="Nom de serveur (server_name)",
-            definition="Nom de serveur utilise en interne (transmis notamment a FastCGI).",
-            utilisation="Chaine libre, optionnelle. Vide par defaut.",
-            action="Enregistre dans server.server_name.",
+            label=_("Nom de serveur (server_name)"),
+            definition=_("Nom de serveur utilisé en interne (transmis notamment à FastCGI)."),
+            utilisation=_("Chaîne libre, optionnelle. Vide par défaut."),
+            action=_("Enregistre dans server.server_name."),
             reaction=(
-                "Se recharge a chaud (pas de redemarrage complet necessaire) - mais reste sans "
+                _("Se recharge à chaud (pas de redémarrage complet nécessaire) - mais reste sans "
                 "effet tant qu'un rechargement du service en cours n'a pas eu lieu (automatique "
-                "si un service actif existe, sinon a faire manuellement depuis l'ecran SERVICE)."
+                "si un service actif existe, sinon à faire manuellement depuis l'écran SERVICE).")
             ),
         ),
         FieldGuide(
-            label="Fichiers d'index (index_files)",
+            label=_("Fichiers d'index (index_files)"),
             definition=(
-                "Noms de fichiers cherches, dans l'ordre, quand une URL pointe vers un "
-                "repertoire sans fichier explicite."
+                _("Noms de fichiers cherches, dans l'ordre, quand une URL pointe vers un "
+                "répertoire sans fichier explicite.")
             ),
-            utilisation="Liste separee par des virgules. Valeur par defaut : index.html.",
-            action="Enregistre dans server.index_files.",
-            reaction="Meme reaction que le nom de serveur - rechargement necessaire, jamais un redemarrage complet.",
+            utilisation=_("Liste séparée par des virgules. Valeur par défaut : index.html."),
+            action=_("Enregistre dans server.index_files."),
+            reaction=_("Même réaction que le nom de serveur - rechargement nécessaire, jamais un redémarrage complet."),
         ),
     ),
     consequences=(
-        "bind/port exigent toujours un redemarrage complet. server_name/index_files se "
-        "rechargent a chaud mais necessitent quand meme un rechargement du service deja lance "
-        "pour etre pris en compte."
+        _("bind/port exigent toujours un redémarrage complet. server_name/index_files se "
+        "rechargent à chaud mais nécessitent quand même un rechargement du service déjà lancé "
+        "pour être pris en compte.")
     ),
     points_de_vigilance=(
         (
-            "Changer bind/port pendant qu'un service systemd est deja actif ne prend jamais "
-            "effet tant qu'un redemarrage complet n'a pas eu lieu - toutes les connexions en "
-            "cours sont alors coupees, contrairement a un simple rechargement."
+            _("Changer bind/port pendant qu'un service systemd est déjà actif ne prend jamais "
+            "effet tant qu'un redémarrage complet n'a pas eu lieu - toutes les connexions en "
+            "cours sont alors coupées, contrairement à un simple rechargement.")
         ),
     ),
 )
 
 LIMITS_SCREEN = ScreenGuide(
     screen_class_name="LimitsScreen",
-    title="Resistance et limites",
-    acces="Accueil -> Configuration detaillee -> Resistance et limites",
+    title=_("Résistance et limites"),
+    acces=_("Accueil -> Configuration détaillée -> Résistance et limites"),
     definition=(
-        "Dix reglages numeriques anti-abus : bornes de taille/nombre/delai appliquees a "
-        "chaque connexion et requete."
+        _("Dix réglages numériques anti-abus : bornes de taille/nombre/delai appliquées à "
+        "chaque connexion et requête.")
     ),
     fields=(
         FieldGuide(
-            label="Connexions simultanees max (max_connections)",
-            definition="Nombre maximal de connexions ouvertes en meme temps.",
-            utilisation="Entier positif. Valeur par defaut : 256.",
-            action="Enregistre dans server.max_connections.",
-            reaction="Se recharge a chaud (rechargement du service necessaire, automatique si actif).",
+            label=_("Connexions simultanées max (max_connections)"),
+            definition=_("Nombre maximal de connexions ouvertes en même temps."),
+            utilisation=_("Entier positif. Valeur par défaut : 256."),
+            action=_("Enregistre dans server.max_connections."),
+            reaction=_("Se recharge à chaud (rechargement du service nécessaire, automatique si actif)."),
         ),
         FieldGuide(
-            label="Taille max de requete (max_request_size)",
-            definition="Taille maximale acceptee pour le corps d'une requete, en octets.",
-            utilisation="Entier positif, en octets. Valeur par defaut : 10 485 760 (10 Mio).",
-            action="Enregistre dans server.max_request_size.",
-            reaction="Se recharge a chaud.",
+            label=_("Taille max de requête (max_request_size)"),
+            definition=_("Taille maximale acceptée pour le corps d'une requête, en octets."),
+            utilisation=_("Entier positif, en octets. Valeur par défaut : 10 485 760 (10 Mio)."),
+            action=_("Enregistre dans server.max_request_size."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Taille max des en-tetes (max_header_size)",
+            label=_("Taille max des en-têtes (max_header_size)"),
             definition=(
-                "Taille cumulee maximale des en-tetes HTTP d'une requete, en octets - "
-                "protection contre les en-tetes surdimensionnes (HTTP smuggling, saturation memoire)."
+                _("Taille cumulée maximale des en-têtes HTTP d'une requête, en octets - "
+                "protection contre les en-têtes surdimensionnés (HTTP smuggling, saturation mémoire).")
             ),
-            utilisation="Entier positif, en octets. Valeur par defaut : 16 384.",
-            action="Enregistre dans server.max_header_size.",
-            reaction="Se recharge a chaud.",
+            utilisation=_("Entier positif, en octets. Valeur par défaut : 16 384."),
+            action=_("Enregistre dans server.max_header_size."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Taille max de la ligne de requete (max_request_line_size)",
-            definition="Taille maximale de la premiere ligne HTTP (methode + chemin + version), en octets.",
-            utilisation="Entier positif, en octets. Valeur par defaut : 8 192.",
-            action="Enregistre dans server.max_request_line_size.",
-            reaction="Se recharge a chaud.",
+            label=_("Taille max de la ligne de requête (max_request_line_size)"),
+            definition=_("Taille maximale de la première ligne HTTP (méthode + chemin + version), en octets."),
+            utilisation=_("Entier positif, en octets. Valeur par défaut : 8 192."),
+            action=_("Enregistre dans server.max_request_line_size."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Delai de lecture (read_timeout_seconds)",
-            definition="Delai maximal, en secondes, pour recevoir une requete complete avant coupure.",
-            utilisation="Entier positif, en secondes. Valeur par defaut : 10.",
-            action="Enregistre dans server.read_timeout_seconds.",
-            reaction="Se recharge a chaud.",
+            label=_("Délai de lecture (read_timeout_seconds)"),
+            definition=_("Délai maximal, en secondes, pour recevoir une requête complète avant coupure."),
+            utilisation=_("Entier positif, en secondes. Valeur par défaut : 10."),
+            action=_("Enregistre dans server.read_timeout_seconds."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Delai d'ecriture (write_timeout_seconds)",
-            definition="Delai maximal, en secondes, pour envoyer la reponse avant coupure.",
-            utilisation="Entier positif, en secondes. Valeur par defaut : 15.",
-            action="Enregistre dans server.write_timeout_seconds.",
-            reaction="Se recharge a chaud.",
+            label=_("Délai d'écriture (write_timeout_seconds)"),
+            definition=_("Délai maximal, en secondes, pour envoyer la réponse avant coupure."),
+            utilisation=_("Entier positif, en secondes. Valeur par défaut : 15."),
+            action=_("Enregistre dans server.write_timeout_seconds."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Delai keep-alive (keepalive_timeout_seconds)",
-            definition="Delai d'inactivite, en secondes, avant fermeture d'une connexion gardee ouverte.",
-            utilisation="Entier positif, en secondes. Valeur par defaut : 5.",
-            action="Enregistre dans server.keepalive_timeout_seconds.",
-            reaction="Se recharge a chaud.",
+            label=_("Délai keep-alive (keepalive_timeout_seconds)"),
+            definition=_("Délai d'inactivité, en secondes, avant fermeture d'une connexion gardée ouverte."),
+            utilisation=_("Entier positif, en secondes. Valeur par défaut : 5."),
+            action=_("Enregistre dans server.keepalive_timeout_seconds."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Requetes max en keep-alive (max_keepalive_requests)",
-            definition="Nombre maximal de requetes traitees sur une meme connexion gardee ouverte.",
-            utilisation="Entier positif. Valeur par defaut : 30.",
-            action="Enregistre dans server.max_keepalive_requests.",
-            reaction="Se recharge a chaud.",
-        ),
-        FieldGuide(
-            label="File d'attente d'ecoute (listen_backlog)",
+            label=_("Requêtes max en keep-alive (max_keepalive_requests)"),
             definition=(
-                "Taille de la file d'attente de connexions en attente d'acceptation par le "
-                "systeme d'exploitation (parametre backlog du socket d'ecoute)."
+                _("Nombre maximal de requêtes traitées sur une même connexion gardée ouverte. "
+                "Une fois atteint, la connexion est simplement fermée et le navigateur en ouvre "
+                "une nouvelle : aucune erreur, aucun bannissement. Sans rapport avec la limite de "
+                "débit du WAF (Active Sécurité -> Exclusions et débit), qui compte les requêtes "
+                "par IP toutes connexions confondues.")
             ),
-            utilisation="Entier positif. Valeur par defaut : 128.",
-            action="Enregistre dans server.listen_backlog.",
+            utilisation=_("Entier positif. Valeur par défaut : 30."),
+            action=_("Enregistre dans server.max_keepalive_requests."),
+            reaction=_("Se recharge à chaud."),
+        ),
+        FieldGuide(
+            label=_("File d'attente d'écoute (listen_backlog)"),
+            definition=(
+                _("Taille de la file d'attente de connexions en attente d'acceptation par le "
+                "système d'exploitation (paramètre backlog du socket d'écoute).")
+            ),
+            utilisation=_("Entier positif. Valeur par défaut : 128."),
+            action=_("Enregistre dans server.listen_backlog."),
             reaction=(
-                "Necessite un REDEMARRAGE COMPLET - fixe au moment de la creation du socket "
-                "d'ecoute, comme bind/port, jamais retouche par un simple rechargement."
+                _("Nécessite un REDÉMARRAGE COMPLET - fixé au moment de la création du socket "
+                "d'écoute, comme bind/port, jamais retouché par un simple rechargement.")
             ),
         ),
         FieldGuide(
-            label="Delai de grace a l'arret (shutdown_grace_period_seconds)",
-            definition="Delai, en secondes, laisse aux connexions actives pour se terminer lors d'un arret.",
-            utilisation="Entier positif, en secondes. Valeur par defaut : 10.",
-            action="Enregistre dans server.shutdown_grace_period_seconds.",
-            reaction="Se recharge a chaud.",
+            label=_("Délai de grâce à l'arrêt (shutdown_grace_period_seconds)"),
+            definition=_("Délai, en secondes, laissé aux connexions actives pour se terminer lors d'un arrêt."),
+            utilisation=_("Entier positif, en secondes. Valeur par défaut : 10."),
+            action=_("Enregistre dans server.shutdown_grace_period_seconds."),
+            reaction=_("Se recharge à chaud."),
+        ),
+        FieldGuide(
+            label=_("Nombre de workers - mode boost (workers)"),
+            definition=(
+                _("Nombre de processus serveur qui se partagent le port. Un processus Python n'utilise "
+                "qu'un cœur : plusieurs workers servent davantage de requêtes en parallèle. Les compteurs de "
+                "sécurité (rate limit, récidive) sont partagés entre workers et restent exacts ; un "
+                "script magnet garde ses propres compteurs dans chaque worker.")
+            ),
+            utilisation=(
+                _("1 = un seul processus (par défaut, fonctionnement classique) ; 0 = automatique (un par "
+                "cœur physique) ; sinon un nombre jusqu'aux CPU disponibles de cette machine, affichés "
+                "sous le champ et dans le registre des capacités. Le nombre doit correspondre à la machine "
+                "où omega-serv est installé : une valeur plus grande est refusée.")
+            ),
+            action=_("Enregistre dans server.workers."),
+            reaction=(
+                _("Redémarrage complet nécessaire. Si la configuration est recopiée sur une machine plus "
+                "petite, le serveur se limite à ses CPU disponibles et l'écrit dans le journal.")
+            ),
         ),
     ),
     consequences=(
-        "Neuf champs sur dix se rechargent a chaud (rechargement du service necessaire, "
-        "automatique si actif). Seul listen_backlog exige un redemarrage complet."
+        _("Neuf champs sur onze se rechargent à chaud (rechargement du service nécessaire, "
+        "automatique si actif). listen_backlog et le nombre de workers exigent un redémarrage complet.")
     ),
     points_de_vigilance=(
         (
-            "Un listen_backlog trop bas sous forte charge fait echouer des connexions "
-            "entrantes avant meme qu'elles atteignent OMEGA-SERV (comportement du systeme "
-            "d'exploitation) - ne descendre sous 128 qu'en connaissance de cause."
+            _("Un listen_backlog trop bas sous forte charge fait échouer des connexions "
+            "entrantes avant même qu'elles atteignent OMEGA-SERV (comportement du système "
+            "d'exploitation) - ne descendre sous 128 qu'en connaissance de cause.")
         ),
     ),
 )
 
 SECURITY_SCREEN = ScreenGuide(
     screen_class_name="SecurityScreen",
-    title="Securite generique",
-    acces="Accueil -> Configuration detaillee -> Securite generique",
+    title=_("Sécurité générique"),
+    acces=_("Accueil -> Configuration détaillée -> Sécurité générique"),
     definition=(
-        "Regles de securite generiques appliquees a toutes les requetes : methodes autorisees, "
-        "fichiers caches, en-tetes de securite, CSP, HSTS."
+        _("Règles de sécurité génériques appliquées à toutes les requêtes : méthodes autorisées, "
+        "fichiers cachés, en-têtes de sécurité, CSP, HSTS.")
     ),
     fields=(
         FieldGuide(
-            label="Methodes autorisees",
-            definition="Liste blanche des methodes HTTP acceptees - tout le reste est refuse par defaut.",
-            utilisation="Liste separee par des virgules, ex: GET, HEAD. Valeur par defaut : GET, HEAD.",
-            action="Enregistre dans security.allowed_methods.",
-            reaction="Se recharge a chaud (rechargement du service necessaire, automatique si actif).",
+            label=_("Méthodes autorisées"),
+            definition=_("Liste blanche des méthodes HTTP acceptées - tout le reste est refusé par défaut."),
+            utilisation=_("Liste séparée par des virgules, ex: GET, HEAD. Valeur par défaut : GET, HEAD."),
+            action=_("Enregistre dans security.allowed_methods."),
+            reaction=_("Se recharge à chaud (rechargement du service nécessaire, automatique si actif)."),
         ),
         FieldGuide(
-            label="Refuser les fichiers caches (oui/non)",
+            label=_("Refuser les fichiers cachés (oui/non)"),
             definition=(
-                "Masque tout fichier ou dossier dont un segment de chemin commence par un point "
-                "(dotfile) - a la fois en acces direct et dans le directory listing."
+                _("Masque tout fichier ou dossier dont un segment de chemin commence par un point "
+                "(dotfile) - à la fois en accès direct et dans le directory listing.")
             ),
-            utilisation="oui ou non (accepte aussi true/1/o/y). Valeur par defaut : oui.",
-            action="Enregistre dans security.deny_hidden_files.",
-            reaction="Se recharge a chaud.",
+            utilisation=_("oui ou non (accepte aussi true/1/o/y). Valeur par défaut : oui."),
+            action=_("Enregistre dans security.deny_hidden_files."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Mode CSP",
-            definition="Mode d'application de la Content-Security-Policy envoyee dans les reponses.",
-            utilisation="enforce (bloque) ou report-only (signale sans bloquer). Valeur par defaut : enforce.",
-            action="Enregistre dans security.csp_mode.",
-            reaction="Se recharge a chaud.",
+            label=_("Mode CSP"),
+            definition=_("Mode d'application de la Content-Security-Policy envoyée dans les réponses."),
+            utilisation=_("enforce (bloque) ou report-only (signale sans bloquer). Valeur par défaut : enforce."),
+            action=_("Enregistre dans security.csp_mode."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Cross-Origin-Embedder-Policy",
+            label=_("Cross-Origin-Embedder-Policy"),
             definition=(
-                "Isolation cross-origin - 'require-corp'/'credentialless' peuvent bloquer des "
+                _("Isolation cross-origin - 'require-corp'/'credentialless' peuvent bloquer des "
                 "ressources cross-origin (polices, images, iframes tiers) que ce serveur "
-                "generique ne connait pas a l'avance, contrairement a COOP/CORP (toujours actifs, "
-                "sans ce risque)."
+                "générique ne connaît pas à l'avance, contrairement à COOP/CORP (toujours actifs, "
+                "sans ce risque).")
             ),
             utilisation=(
-                "unsafe-none (permissif, par defaut partout y compris hardened), require-corp ou "
-                "credentialless - a activer uniquement en connaissance du contenu reellement servi."
+                _("unsafe-none (permissif, par défaut partout y compris hardened), require-corp ou "
+                "credentialless - à activer uniquement en connaissance du contenu réellement servi.")
             ),
-            action="Enregistre dans security.coep_mode.",
-            reaction="Se recharge a chaud - toujours emis explicitement, meme en unsafe-none (jamais un en-tete absent).",
+            action=_("Enregistre dans security.coep_mode."),
+            reaction=_("Se recharge à chaud - toujours émis explicitement, même en unsafe-none (jamais un en-tête absent)."),
         ),
         FieldGuide(
-            label="En-tetes de securite actifs (oui/non)",
-            definition="Active l'envoi des en-tetes de securite standard (CSP, X-Content-Type-Options...).",
-            utilisation="oui ou non. Valeur par defaut : oui.",
-            action="Enregistre dans security.security_headers_enabled.",
-            reaction="Se recharge a chaud.",
+            label=_("En-têtes de sécurité actifs (oui/non)"),
+            definition=_("Active l'envoi des en-têtes de sécurité standard (CSP, X-Content-Type-Options...)."),
+            utilisation=_("oui ou non. Valeur par défaut : oui."),
+            action=_("Enregistre dans security.security_headers_enabled."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="Zones CSP (Ajouter une zone / Retirer)",
+            label=_("Zones CSP (Ajouter une zone / Retirer)"),
             definition=(
-                "Exceptions EXPLICITES a la CSP globale, par prefixe de chemin - ex. 'unsafe-inline' "
-                "uniquement sous /un-dossier/ qui en a reellement besoin, sans jamais relacher la "
-                "CSP du reste du site."
+                _("Exceptions EXPLICITES à la CSP globale, par préfixe de chemin - ex. 'unsafe-inline' "
+                "uniquement sous /un-dossier/ qui en a réellement besoin, sans jamais relâcher la "
+                "CSP du reste du site.")
             ),
             utilisation=(
-                "Prefixe (ex: /public-widgets/) + politique CSP COMPLETE pour ce prefixe (remplace "
-                "entierement le defaut pour ces chemins, jamais une fusion de directives)."
+                _("Préfixe (ex: /public-widgets/) + politique CSP COMPLÈTE pour ce préfixe (remplace "
+                "entièrement le défaut pour ces chemins, jamais une fusion de directives).")
             ),
-            action="Enregistre immediatement dans security.csp_zones, sans passer par Enregistrer.",
+            action=_("Enregistre immédiatement dans security.csp_zones, sans passer par Enregistrer."),
             reaction=(
-                "Rechargement automatique immediat si un service actif existe. Une exception comme "
+                _("Rechargement automatique immédiat si un service actif existe. Une exception comme "
                 "'unsafe-inline' reste TOUJOURS visible dans 'omega-serv audit security' (CSP-001/"
-                "CSP-002), meme deliberee - jamais silencieuse."
+                "CSP-002), même délibérée - jamais silencieuse.")
             ),
         ),
         FieldGuide(
-            label="HSTS actif (oui/non)",
-            definition="Active l'en-tete Strict-Transport-Security (force HTTPS pour les visites futures).",
-            utilisation="oui ou non. Valeur par defaut : non. N'a de sens que si TLS est reellement actif.",
-            action="Enregistre dans security.hsts_enabled.",
-            reaction="Se recharge a chaud.",
+            label=_("HSTS actif (oui/non)"),
+            definition=_("Active l'en-tête Strict-Transport-Security (force HTTPS pour les visites futures)."),
+            utilisation=_("oui ou non. Valeur par défaut : non. N'a de sens que si TLS est réellement actif."),
+            action=_("Enregistre dans security.hsts_enabled."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="HSTS max-age",
-            definition="Duree, en secondes, pendant laquelle un navigateur retient l'obligation HTTPS.",
-            utilisation="Entier positif, en secondes. Valeur par defaut : 31 536 000 (un an).",
-            action="Enregistre dans security.hsts_max_age.",
-            reaction="Se recharge a chaud.",
+            label=_("HSTS max-age"),
+            definition=_("Durée, en secondes, pendant laquelle un navigateur retient l'obligation HTTPS."),
+            utilisation=_("Entier positif, en secondes. Valeur par défaut : 31 536 000 (un an)."),
+            action=_("Enregistre dans security.hsts_max_age."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="HSTS includeSubDomains (oui/non)",
-            definition="Etend l'obligation HTTPS a tous les sous-domaines.",
-            utilisation="oui ou non. Valeur par defaut : oui.",
-            action="Enregistre dans security.hsts_include_subdomains.",
-            reaction="Se recharge a chaud.",
+            label=_("HSTS includeSubDomains (oui/non)"),
+            definition=_("Étend l'obligation HTTPS à tous les sous-domaines."),
+            utilisation=_("oui ou non. Valeur par défaut : oui."),
+            action=_("Enregistre dans security.hsts_include_subdomains."),
+            reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label="HSTS preload (oui/non)",
-            definition="Signale l'eligibilite a la liste de prechargement HSTS des navigateurs.",
-            utilisation="oui ou non. Valeur par defaut : non.",
-            action="Enregistre dans security.hsts_preload.",
-            reaction="Se recharge a chaud.",
+            label=_("HSTS preload (oui/non)"),
+            definition=_("Signale l'éligibilité à la liste de prechargement HSTS des navigateurs."),
+            utilisation=_("oui ou non. Valeur par défaut : non."),
+            action=_("Enregistre dans security.hsts_preload."),
+            reaction=_("Se recharge à chaud."),
         ),
     ),
-    consequences="Tous les champs de cet ecran se rechargent a chaud - aucun n'exige de redemarrage complet.",
+    consequences=_("Tous les champs de cet écran se rechargent à chaud - aucun n'exige de redémarrage complet."),
     points_de_vigilance=(
         (
-            "Activer HSTS sans que TLS soit reellement actif n'a aucun effet utile - le navigateur "
-            "ignore cet en-tete recu en HTTP simple."
+            _("Activer HSTS sans que TLS soit réellement actif n'a aucun effet utile - le navigateur "
+            "ignore cet en-tête reçu en HTTP simple.")
         ),
     ),
 )
 
 CSP_ZONE_WIZARD_SCREEN = ScreenGuide(
     screen_class_name="CspZoneWizardScreen",
-    title="Securite generique - Assistant zone CSP",
-    acces="Securite generique -> Ajouter une zone",
+    title=_("Sécurité générique - Assistant zone CSP"),
+    acces=_("Sécurité générique -> Ajouter une zone"),
     definition=(
-        "Construit la politique CSP d'une zone directive par directive, chacune pre-remplie avec "
-        "sa valeur ACTUELLE (la politique globale) - une zone remplace ENTIEREMENT la politique "
-        "par defaut pour son prefixe, jamais un simple ajout, d'ou le pre-remplissage pour eviter "
-        "de perdre des directives sans le vouloir."
+        _("Construit la politique CSP d'une zone directive par directive, chacune pré-remplie avec "
+        "sa valeur ACTUELLE (la politique globale) - une zone remplace ENTIÈREMENT la politique "
+        "par défaut pour son préfixe, jamais un simple ajout, d'où le pré-remplissage pour éviter "
+        "de perdre des directives sans le vouloir.")
     ),
     fields=(
         FieldGuide(
-            label="Prefixe",
-            definition="Chemin URL auquel s'applique cette politique de remplacement.",
-            utilisation="Doit commencer par '/', ex: /public-widgets/.",
-            action="Utilise au clic sur Valider.",
-            reaction="Aucun effet avant Valider.",
+            label=_("Préfixe"),
+            definition=_("Chemin URL auquel s'applique cette politique de remplacement."),
+            utilisation=_("Doit commencer par '/', ex: /public-widgets/."),
+            action=_("Utilisé au clic sur Valider."),
+            reaction=_("Aucun effet avant Valider."),
         ),
         FieldGuide(
-            label="Directives (une par ligne, ex. style-src, script-src...)",
-            definition="Chaque champ controle une famille de ressources - l'indice sous chaque champ explique precisement laquelle.",
-            utilisation="Pre-rempli avec la valeur actuelle - modifier uniquement ce qui doit changer, vider pour omettre la directive dans la zone.",
-            action="Reassemblees en une seule politique au clic sur Valider.",
-            reaction="Une valeur contenant unsafe-inline/unsafe-eval/'*' declenche une confirmation explicite supplementaire avant d'enregistrer.",
+            label=_("Directives (une par ligne, ex. style-src, script-src...)"),
+            definition=_("Chaque champ contrôle une famille de ressources - l'indice sous chaque champ explique précisément laquelle."),
+            utilisation=_("Pré-rempli avec la valeur actuelle - modifier uniquement ce qui doit changer, vider pour omettre la directive dans la zone."),
+            action=_("Reassemblees en une seule politique au clic sur Valider."),
+            reaction=_("Une valeur contenant unsafe-inline/unsafe-eval/'*' déclenche une confirmation explicite supplémentaire avant d'enregistrer."),
         ),
     ),
     consequences=(
-        "La zone creee reste visible dans 'omega-serv audit security' (CSP-001/CSP-002 scannent "
-        "aussi les zones) si elle contient une relache - jamais silencieuse, meme deliberee."
+        _("La zone créée reste visible dans 'omega-serv audit security' (CSP-001/CSP-002 scannent "
+        "aussi les zones) si elle contient une relâche - jamais silencieuse, même délibérée.")
     ),
 )
 
 ACCESS_CONTROL_SCREEN = ScreenGuide(
     screen_class_name="AccessControlScreen",
-    title="Controle d'acces",
-    acces="Accueil -> Configuration detaillee -> Controle d'acces",
+    title=_("Contrôle d'accès"),
+    acces=_("Accueil -> Configuration détaillée -> Contrôle d'accès"),
     definition=(
-        "CRUD de regles allow/deny par prefixe d'URL, avec filtre optionnel par extension - permet "
-        "par exemple de bloquer des extensions sensibles partout SAUF dans une zone precise."
+        _("CRUD de règles allow/deny par préfixe d'URL, avec filtre optionnel par extension - permet "
+        "par exemple de bloquer des extensions sensibles partout SAUF dans une zone précise.")
     ),
     fields=(
         FieldGuide(
-            label="Prefixe URL",
-            definition="Le prefixe de chemin auquel s'applique la regle.",
-            utilisation="Doit commencer par '/', ex: /private/. Le plus long prefixe correspondant gagne.",
-            action="Ajoute/modifie une regle via Ajouter/Modifier.",
-            reaction="Aucun effet sans rechargement du service (automatique si actif).",
+            label=_("Préfixe URL"),
+            definition=_("Le préfixe de chemin auquel s'applique la règle."),
+            utilisation=_("Doit commencer par '/', ex: /private/. Le plus long préfixe correspondant gagne."),
+            action=_("Ajoute/modifie une règle via Ajouter/Modifier."),
+            reaction=_("Aucun effet sans rechargement du service (automatique si actif)."),
         ),
         FieldGuide(
-            label="Verdict",
-            definition="Ce que decide la regle pour les chemins qu'elle couvre.",
-            utilisation="allow ou deny.",
-            action="Ajoute/modifie une regle.",
-            reaction="Aucun effet sans rechargement du service.",
+            label=_("Verdict"),
+            definition=_("Ce que décide la règle pour les chemins qu'elle couvre."),
+            utilisation=_("allow ou deny."),
+            action=_("Ajoute/modifie une règle."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
         FieldGuide(
-            label="Extensions",
+            label=_("Extensions"),
             definition=(
-                "Restreint la regle aux chemins se terminant par l'une de ces extensions - vide "
-                "signifie 'toutes', la regle s'applique alors a tout chemin sous ce prefixe."
+                _("Restreint la règle aux chemins se terminant par l'une de ces extensions - vide "
+                "signifie 'toutes', la règle s'applique alors à tout chemin sous ce préfixe.")
             ),
-            utilisation="Liste separee par des virgules, ex: .key, .pem. Vide par defaut (toutes).",
-            action="Ajoute/modifie une regle.",
-            reaction="Aucun effet sans rechargement du service.",
+            utilisation=_("Liste séparée par des virgules, ex: .key, .pem. Vide par défaut (toutes)."),
+            action=_("Ajoute/modifie une règle."),
+            reaction=_("Aucun effet sans rechargement du service."),
         ),
     ),
     consequences=(
-        "L'option access_control doit etre activee (ecran Options) pour que ces regles soient "
-        "reellement appliquees. Toutes les modifications se rechargent a chaud."
+        _("L'option access_control doit être activée (écran Options) pour que ces règles soient "
+        "réellement appliquées. Toutes les modifications se rechargent à chaud.")
     ),
     points_de_vigilance=(
         (
-            "Le plus long prefixe correspondant gagne : une regle 'allow' plus specifique leve "
-            "le 'deny' d'un prefixe parent (ex: deny /private/, allow /private/.assets/). Une "
-            "regle 'allow' explicite leve aussi les regles generiques dotfiles/motifs de l'ecran "
-            "Securite generique sur ce chemin precis."
+            _("Le plus long préfixe correspondant gagne : une règle 'allow' plus spécifique lève "
+            "le 'deny' d'un préfixe parent (ex: deny /private/, allow /private/.assets/). Une "
+            "règle 'allow' explicite lève aussi les règles génériques dotfiles/motifs de l'écran "
+            "Sécurité générique sur ce chemin précis.")
         ),
         (
-            "Pour bloquer une extension sensible PARTOUT sauf dans une zone : une regle deny sur "
-            "'/' avec l'extension visee, puis une regle allow (sans extension) sur le prefixe a "
-            "excepter - le prefixe le plus specifique l'emporte."
+            _("Pour bloquer une extension sensible PARTOUT sauf dans une zone : une règle deny sur "
+            "'/' avec l'extension visée, puis une règle allow (sans extension) sur le préfixe à "
+            "excepter - le préfixe le plus spécifique l'emporte.")
         ),
     ),
 )

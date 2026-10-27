@@ -254,7 +254,7 @@ class TestTuiWizard(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, WizardCheckScreen)
             self.assertTrue(pilot.app.screen.query_one("#next", Button).disabled)
-            self.assertIn("auto-signe", str(pilot.app.screen.query_one("#check-result").content))
+            self.assertIn("auto-signé", str(pilot.app.screen.query_one("#check-result").content))
 
             pilot.app.screen.query_one("#confirm-self-signed", Checkbox).value = True
             pilot.app.screen.query_one("#check", Button).press()

@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from omega_serv.application.config.validate_config import validate_config_environment
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.config.validation import validate_config
 from omega_serv.domain.security.audit.entities import AuditFinding, AuditResult, Severity
@@ -38,9 +39,9 @@ def run_audit(
 
     for message in validate_config(config):
         findings.append(AuditFinding(
-            rule_id="CORE-STRUCT", rule_name="Configuration structurellement invalide",
+            rule_id="CORE-STRUCT", rule_name=_("Configuration structurellement invalide"),
             severity=Severity.CRITICAL, category="core", message=message,
-            recommendation="Corriger la configuration (voir `omega-serv config check`).",
+            recommendation=_("Corriger la configuration (voir `omega-serv config check`)."),
         ))
 
     for message in validate_config_environment(
@@ -48,9 +49,9 @@ def run_audit(
         self_signed_public_bind_confirmed, auth_without_tls_confirmed,
     ):
         findings.append(AuditFinding(
-            rule_id="CORE-ENV", rule_name="Porte d'environnement bloquante violee",
+            rule_id="CORE-ENV", rule_name=_("Porte d'environnement bloquante violée"),
             severity=Severity.CRITICAL, category="core", message=message,
-            recommendation="Corriger avant de demarrer le serveur (voir `omega-serv config check`).",
+            recommendation=_("Corriger avant de démarrer le serveur (voir `omega-serv config check`)."),
         ))
 
     for rule in PURE_RULES:

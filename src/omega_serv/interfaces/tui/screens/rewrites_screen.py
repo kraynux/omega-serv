@@ -15,6 +15,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.rewrite import RewriteRule, parse_rewrite_rules
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -28,9 +29,9 @@ if TYPE_CHECKING:
 
 def _validate_rewrite_rule(rule: RewriteRule) -> str | None:
     if not rule.match_prefix.startswith("/"):
-        return f"match_prefix doit commencer par '/' : {rule.match_prefix!r}"
+        return _("match_prefix doit commencer par '/' : {match_prefix!r}").format(match_prefix=rule.match_prefix)
     if not rule.replacement_prefix:
-        return "replacement_prefix ne peut pas etre vide"
+        return _("replacement_prefix ne peut pas être vide")
     return None
 
 
@@ -43,28 +44,28 @@ class RewritesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("REWRITES", classes="omega-title")
+            yield Static(_("REWRITES"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'rewrites' se fait dans le menu Options.",
+                _("L'activation de l'option 'rewrites' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="rewrites-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#rewrites-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe recherche", "Prefixe remplacement")
+        table.add_columns(_("Préfixe recherche"), _("Préfixe remplacement"))
         self._refresh_table()
 
     def _rules(self) -> list[RewriteRule]:
@@ -97,10 +98,10 @@ class RewritesScreen(OmegaScreen):
         if event.button.id == "add":
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="AJOUTER UN REWRITE",
+                    title=_("AJOUTER UN REWRITE"),
                     fields=[
-                        ("match_prefix", "Prefixe recherche (ex: /old/)", ""),
-                        ("replacement_prefix", "Prefixe remplacement (ex: /new/)", ""),
+                        ("match_prefix", _("Préfixe recherche (ex: /old/)"), ""),
+                        ("replacement_prefix", _("Préfixe remplacement (ex: /new/)"), ""),
                     ],
                 ),
                 self._add_rule,
@@ -110,10 +111,10 @@ class RewritesScreen(OmegaScreen):
             rule = self._rules()[self._selected_index]
             self.app.push_screen(
                 DynamicFormScreen(
-                    title="MODIFIER LE REWRITE",
+                    title=_("MODIFIER LE REWRITE"),
                     fields=[
-                        ("match_prefix", "Prefixe recherche", rule.match_prefix),
-                        ("replacement_prefix", "Prefixe remplacement", rule.replacement_prefix),
+                        ("match_prefix", _("Préfixe recherche"), rule.match_prefix),
+                        ("replacement_prefix", _("Préfixe remplacement"), rule.replacement_prefix),
                     ],
                 ),
                 self._edit_rule,
@@ -121,7 +122,7 @@ class RewritesScreen(OmegaScreen):
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LE REWRITE", message="Confirmer la suppression de ce rewrite ?"),
+                ConfirmScreen(title=_("SUPPRIMER LE REWRITE"), message=_("Confirmer la suppression de ce rewrite ?")),
                 self._delete_rule,
             )
 
@@ -131,7 +132,7 @@ class RewritesScreen(OmegaScreen):
         rule = RewriteRule(match_prefix=values["match_prefix"], replacement_prefix=values["replacement_prefix"])
         error = _validate_rewrite_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules.append(rule)
@@ -143,7 +144,7 @@ class RewritesScreen(OmegaScreen):
         rule = RewriteRule(match_prefix=values["match_prefix"], replacement_prefix=values["replacement_prefix"])
         error = _validate_rewrite_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
         rules[self._selected_index] = rule
@@ -159,7 +160,7 @@ class RewritesScreen(OmegaScreen):
     def _save_rules(self, rules: list[RewriteRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("rewrites")
         enabled = existing.enabled if existing is not None else False
@@ -173,4 +174,4 @@ class RewritesScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
-        notify_reload_required(self, self._container, "Liste des rewrites mise a jour.")
+        notify_reload_required(self, self._container, _("Liste des rewrites mise à jour."))

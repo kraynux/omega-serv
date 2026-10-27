@@ -16,7 +16,9 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._export_worker import run_html_export
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -35,27 +37,27 @@ class ExportLogArchivesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("EXPORTER LA LISTE DES ARCHIVES", classes="omega-title")
+            yield Static(_("EXPORTER LA LISTE DES ARCHIVES"), classes="omega-title")
             yield Static("", id="export-error", classes="omega-hint")
             yield DataTable(id="archives-table")
-            yield Static("Theme d'export HTML", classes="omega-subtitle")
+            yield Static(_("Thème d'export HTML"), classes="omega-subtitle")
             yield Select(
                 [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, id="export-theme-select",
             )
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh", variant="primary")
+                    yield Button(_("Rafraîchir"), id="refresh", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Exporter JSON", id="export-json")
+                    yield Button(_("Exporter JSON"), id="export-json")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Exporter HTML", id="export-html")
+                    yield Button(_("Exporter HTML"), id="export-html")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#archives-table", DataTable)
-        table.add_columns("Archive", "Taille (octets)", "Modifiee le")
+        table.add_columns(_("Archive"), _("Taille (octets)"), _("Modifiée le"))
         self._refresh()
 
     def _archive_base_dir(self) -> Path:
@@ -98,14 +100,16 @@ class ExportLogArchivesScreen(OmegaScreen):
 
     def _export_html(self) -> None:
         theme_name = str(self.query_one("#export-theme-select", Select).value)
-        content = self._container.export_log_archives_html(self._infos, theme_name)
-        if content is None:
-            self.query_one("#export-error", Static).update("Export HTML indisponible dans cet environnement.")
-            return
-        export_path = self._exports_dir() / f"log-archives-export.{_export_timestamp()}.html"
-        self._write_export(export_path, content)
+        items = self._infos
+        run_html_export(
+            self, self._container,
+            lambda: self._container.export_log_archives_html(items, theme_name),
+            lambda content: self._write_export(
+                self._exports_dir() / f"log-archives-export.{_export_timestamp()}.html", content),
+            lambda reason: self.query_one("#export-error", Static).update(reason),
+        )
 
     def _write_export(self, export_path: Path, content: str) -> None:
         self._container.filesystem.make_directory(export_path.parent)
         self._container.filesystem.write_text(export_path, content)
-        self.app.notify(f"Export ecrit : {export_path}")
+        self.app.notify(_("Export écrit : {export_path}").format(export_path=export_path))

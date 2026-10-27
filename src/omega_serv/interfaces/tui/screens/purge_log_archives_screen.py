@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 
@@ -29,20 +30,20 @@ class PurgeLogArchivesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("PURGER LES ARCHIVES DE LOGS", classes="omega-title")
+            yield Static(_("PURGER LES ARCHIVES DE LOGS"), classes="omega-title")
             yield Static("", id="purge-error", classes="omega-hint")
             yield DataTable(id="archives-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="purge", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="purge", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#archives-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Archive", "Taille (octets)", "Modifiee le")
+        table.add_columns(_("Archive"), _("Taille (octets)"), _("Modifiée le"))
         self._refresh()
 
     def _archive_base_dir(self) -> Path:
@@ -69,8 +70,8 @@ class PurgeLogArchivesScreen(OmegaScreen):
         if event.button.id == "purge" and self._selected_name is not None:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="SUPPRIMER L'ARCHIVE",
-                    message=f"Supprimer definitivement {self._selected_name} ?",
+                    title=_("SUPPRIMER L'ARCHIVE"),
+                    message=_("Supprimer définitivement {selected_name} ?").format(selected_name=self._selected_name),
                 ),
                 self._purge_if_confirmed,
             )
@@ -82,8 +83,8 @@ class PurgeLogArchivesScreen(OmegaScreen):
         deleted = self._archive_store.delete_archive(archive_path)
         error_widget = self.query_one("#purge-error", Static)
         if not deleted:
-            error_widget.update(f"Archive introuvable : {self._selected_name}")
+            error_widget.update(_("Archive introuvable : {selected_name}").format(selected_name=self._selected_name))
         else:
             error_widget.update("")
-            self.app.notify(f"Archive supprimee : {self._selected_name}")
+            self.app.notify(_("Archive supprimée : {selected_name}").format(selected_name=self._selected_name))
         self._refresh()

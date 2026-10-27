@@ -5,6 +5,7 @@ seul module autorise a importer `sqlite3` reellement) - n'a besoin de
 convention que ssl.SSLContext dans asyncio_server.py."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -45,25 +46,70 @@ class SqliteThreatStateRepository:
         return None if row is None else _row_to_state(row)
 
     def save(self, state: ThreatState) -> None:
-        self._connection.execute(
+        self.save_many((state,))
+
+    def save_many(self, states: Sequence[ThreatState]) -> None:
+        """`executemany` : la boucle sur les lignes se fait dans SQLite (C), pas en Python -
+        l'ecriture differee d'Active Defense partage le GIL avec la boucle qui sert les visiteurs
+        (mesure du 2026-10-26)."""
+        if not states:
+            return
+        self._connection.executemany(
             "INSERT INTO threat_states (subject_id, score, level, updated_at, expires_at, active_actions) "
             "VALUES (?, ?, ?, ?, ?, ?) "
             "ON CONFLICT(subject_id) DO UPDATE SET "
             "score=excluded.score, level=excluded.level, updated_at=excluded.updated_at, "
             "expires_at=excluded.expires_at, active_actions=excluded.active_actions",
-            (
-                state.subject_id, state.score, state.level, state.updated_at.isoformat(),
-                state.expires_at.isoformat(), ",".join(state.active_actions),
-            ),
+            [
+                (s.subject_id, s.score, s.level, s.updated_at.isoformat(), s.expires_at.isoformat(), ",".join(s.active_actions))
+                for s in states
+            ],
         )
-        self._connection.execute(
+        self._connection.executemany(
             "INSERT INTO active_defense_audit_log (occurred_at, subject_id, kind, detail) VALUES (?, ?, ?, ?)",
-            (
-                state.updated_at.isoformat(), state.subject_id, "threat_state_saved",
-                f"score={state.score} level={state.level}",
-            ),
+            [
+                (s.updated_at.isoformat(), s.subject_id, "threat_state_saved", f"score={s.score} level={s.level}")
+                for s in states
+            ],
         )
         self._connection.commit()
+
+    def prune_audit_log(self, older_than: datetime, max_rows: int) -> int:
+        """Decision utilisateur 2026-10-26 : le journal d'audit n'etait jamais purge, un attaquant
+        changeant d'adresse a chaque requete pouvait remplir le disque (une ligne par ecriture
+        d'etat). Duree ET plafond : la duree garde un historique utile, le plafond ferme le trou
+        meme sous une attaque massive (on garde toujours les lignes les plus recentes)."""
+        removed = self._connection.execute(
+            "DELETE FROM active_defense_audit_log WHERE occurred_at < ?", (older_than.isoformat(),),
+        ).rowcount
+        removed += self._connection.execute(
+            "DELETE FROM active_defense_audit_log WHERE id <= "
+            "(SELECT id FROM active_defense_audit_log ORDER BY id DESC LIMIT 1 OFFSET ?)",
+            (max_rows,),
+        ).rowcount
+        self._connection.commit()
+        return removed
+
+    def cap_tracked_subjects(self, max_subjects: int) -> int:
+        """Plafond des sources suivies (MAX_TRACKED_SUBJECTS) : sources « normal » les plus
+        anciennes d'abord, puis, seulement s'il n'en reste plus, les plus anciennes tous niveaux."""
+        (count,) = self._connection.execute("SELECT COUNT(*) FROM threat_states").fetchone()
+        excess = count - max_subjects
+        if excess <= 0:
+            return 0
+        removed = self._connection.execute(
+            "DELETE FROM threat_states WHERE subject_id IN "
+            "(SELECT subject_id FROM threat_states WHERE level = 'normal' ORDER BY updated_at LIMIT ?)",
+            (excess,),
+        ).rowcount
+        if removed < excess:
+            removed += self._connection.execute(
+                "DELETE FROM threat_states WHERE subject_id IN "
+                "(SELECT subject_id FROM threat_states ORDER BY updated_at LIMIT ?)",
+                (excess - removed,),
+            ).rowcount
+        self._connection.commit()
+        return removed
 
     def expire_before(self, instant: datetime) -> int:
         cursor = self._connection.execute("DELETE FROM threat_states WHERE expires_at < ?", (instant.isoformat(),))

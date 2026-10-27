@@ -14,7 +14,10 @@ une page d'erreur (rendue a chaque requete, potentiellement sous
 charge) n'a pas besoin d'un moteur de template pour un contenu aussi
 simple.
 
-`_CURATED_PAGES` (401/403/404/451, retour utilisateur 2026-09-19) :
+`_CURATED_PAGES` (401/403/404/451, retour utilisateur 2026-09-19 ; 429
+ajoutee le 2026-10-26 depuis le modele ~/DEV/SERV/errors/429.html - la
+page generique, avec son <style> inline, restait sans aucun style sous
+la CSP du profil durci) :
 modeles fournis directement en constantes - jamais lues depuis un
 fichier (aucune I/O ici, meme regle que le reste du module). Les autres
 codes gardent la page generique minimaliste ci-dessous.
@@ -36,9 +39,12 @@ from __future__ import annotations
 
 from html import escape
 
+from omega_serv.core.i18n import N_, P_, page_html_dir, page_html_lang
 from omega_serv.domain.http.status_codes import reason_phrase_for
 
 ERROR_CSS_URL_PREFIX = "/.omega-serv-error-css/"
+ERROR_CSS_FILENAME = "error-pages.css"
+ERROR_CSS_PATH = ERROR_CSS_URL_PREFIX + ERROR_CSS_FILENAME
 """Chemin URL reserve, meme statut que `dirlisting.CSS_URL_PREFIX` - vit
 ici pour que ce module et `application/server/serve_error_css.py` (qui
 genere la reponse reelle) partagent exactement la meme valeur sans
@@ -124,6 +130,15 @@ _ERROR_PAGES_CSS = (
     ".theme-cyan .warning { background: rgba(0, 212, 255, 0.08); border-left-color: #00d4ff; color: #9098a5; }\n"
     ".theme-cyan a { color: #00d4ff; }\n"
     ".theme-cyan a:hover { color: #00d4ff; }\n"
+    "\n"
+    "/* Variante jaune (429) */\n"
+    ".container.theme-yellow { border-color: rgba(255, 255, 0, 0.8); }\n"
+    ".theme-yellow .code { color: #e5de00; text-shadow: 0 0 10px rgba(255, 170, 68, 0.3); }\n"
+    ".theme-yellow .title { color: #e5de00; }\n"
+    ".theme-yellow .msg { color: #e5de00; }\n"
+    ".theme-yellow .warning { background: rgba(255, 170, 68, 0.1); border-left-color: #e5de00; color: #e5de00; }\n"
+    ".theme-yellow a { color: #e5de00; }\n"
+    ".theme-yellow a:hover { color: #e5de00; }\n"
 )
 
 
@@ -131,132 +146,226 @@ def error_pages_css() -> str:
     return _ERROR_PAGES_CSS
 
 
-_CURATED_PAGES: dict[int, bytes] = {
+_CURATED_TEMPLATES: dict[int, tuple[str, tuple[str, ...]]] = {
     401: (
+        (
         "<!DOCTYPE html>\n"
-        "<html lang=\"fr\">\n"
+        '<html lang="{lang}" dir="{dir}">\n'
         "<head>\n"
-        "    <meta charset=\"UTF-8\">\n"
-        "    <title>401 - Non autorisé</title>\n"
-        "    \t<link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\" />\n"
-        "\t<link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n"
-        "\t<link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n"
-        "\t<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n"
-        "\t<meta name=\"apple-mobile-web-app-title\" content=\"Omega\" />\n"
-        "    <link rel=\"stylesheet\" href=\"/.omega-serv-error-css/error-pages.css\">\n"
+        '    <meta charset="UTF-8">\n'
+        "    <title>{t0}</title>\n"
+        '    \t<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />\n'
+        '\t<link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
+        '\t<link rel="shortcut icon" href="/favicon.ico" />\n'
+        '\t<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
+        '\t<meta name="apple-mobile-web-app-title" content="Omega" />\n'
+        '    <link rel="stylesheet" href="/.omega-serv-error-css/error-pages.css">\n'
         "</head>\n"
         "<body>\n"
-        "    <div class=\"container\">\n"
-        "        <div class=\"code\">401</div>\n"
-        "        <div class=\"title\">⛔ Non autorisé</div>\n"
-        "        <div class=\"msg\">Authentification requise pour accéder à cette ressource.</div>\n"
-        "        <div class=\"warning\">\n"
-        "             ✕ Identifiants invalides ou manquants.<br>\n"
-        "            Veuillez vérifier vos informations d'accès.\n"
+        '    <div class="container">\n'
+        '        <div class="code">401</div>\n'
+        '        <div class="title">{t1}</div>\n'
+        '        <div class="msg">{t2}</div>\n'
+        '        <div class="warning">\n'
+        "             {t3}<br>\n"
+        "            {t4}\n"
         "        </div>\n"
         "        <hr>\n"
-        "         <a href=\"/\">← Retour à l'index</a>\n"
-        "        <div class=\"footer\">  ⚡ propulsé par <a href=\"https://github.com/kraynux/omega-serv\">OMEGA-SERV</a></div>\n"
+        '         <a href="/">{t5}</a>\n'
+        '        <div class="footer">  {t6} <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></div>\n'
         "    </div>\n"
         "</body>\n"
         "</html>\n"
-    ).encode(),
+        ),
+        (
+            N_('401 - Non autorisé'),
+            N_('⛔ Non autorisé'),
+            N_('Authentification requise pour accéder à cette ressource.'),
+            N_('✕ Identifiants invalides ou manquants.'),
+            N_("Veuillez vérifier vos informations d'accès."),
+            N_("← Retour à l'index"),
+            N_('⚡ propulsé par'),
+        ),
+    ),
     403: (
+        (
         "<!DOCTYPE html>\n"
-        "<html lang=\"fr\">\n"
+        '<html lang="{lang}" dir="{dir}">\n'
         "<head>\n"
-        "    <meta charset=\"UTF-8\">\n"
-        "    <title>403 - Accès interdit</title>\n"
-        "    \t<link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\" />\n"
-        "\t<link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n"
-        "\t<link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n"
-        "\t<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n"
-        "\t<meta name=\"apple-mobile-web-app-title\" content=\"Omega\" />\n"
-        "    <link rel=\"stylesheet\" href=\"/.omega-serv-error-css/error-pages.css\">\n"
+        '    <meta charset="UTF-8">\n'
+        "    <title>{t0}</title>\n"
+        '    \t<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />\n'
+        '\t<link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
+        '\t<link rel="shortcut icon" href="/favicon.ico" />\n'
+        '\t<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
+        '\t<meta name="apple-mobile-web-app-title" content="Omega" />\n'
+        '    <link rel="stylesheet" href="/.omega-serv-error-css/error-pages.css">\n'
         "</head>\n"
         "<body>\n"
-        "    <div class=\"container theme-orange\">\n"
-        "        <div class=\"code\">403</div>\n"
-        "        <div class=\"title\">⛔ Accès interdit</div>\n"
-        "        <div class=\"msg\">Vous n'avez pas les droits nécessaires pour accéder à cette ressource.</div>\n"
-        "        <div class=\"warning\">\n"
-        "             \t        Permission refusée.<br>\n"
-        "            Vérifiez vos droits d'accès ou contactez l'administrateur.\n"
+        '    <div class="container theme-orange">\n'
+        '        <div class="code">403</div>\n'
+        '        <div class="title">{t1}</div>\n'
+        '        <div class="msg">{t2}</div>\n'
+        '        <div class="warning">\n'
+        "             \t        {t3}<br>\n"
+        "            {t4}\n"
         "        </div>\n"
         "        <hr>\n"
-        "        <a href=\"/\">← Retour à l'index</a>\n"
-        "        <div class=\"footer\">  ⚡ propulsé par <a href=\"https://github.com/kraynux/omega-serv\">OMEGA-SERV</a></div>\n"
+        '        <a href="/">{t5}</a>\n'
+        '        <div class="footer">  {t6} <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></div>\n'
         "    </div>\n"
         "</body>\n"
         "</html>\n"
-    ).encode(),
+        ),
+        (
+            N_('403 - Accès interdit'),
+            N_('⛔ Accès interdit'),
+            N_("Vous n'avez pas les droits nécessaires pour accéder à cette ressource."),
+            N_('Permission refusée.'),
+            N_("Vérifiez vos droits d'accès ou contactez l'administrateur."),
+            N_("← Retour à l'index"),
+            N_('⚡ propulsé par'),
+        ),
+    ),
     404: (
+        (
         "<!DOCTYPE html>\n"
-        "<html lang=\"fr\">\n"
+        '<html lang="{lang}" dir="{dir}">\n'
         "<head>\n"
-        "    <meta charset=\"UTF-8\">\n"
-        "    <title>404 - Page non trouvée</title>\n"
-        "    \t<link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\" />\n"
-        "\t<link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n"
-        "\t<link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n"
-        "\t<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n"
-        "\t<meta name=\"apple-mobile-web-app-title\" content=\"Omega\" />\n"
-        "    <link rel=\"stylesheet\" href=\"/.omega-serv-error-css/error-pages.css\">\n"
+        '    <meta charset="UTF-8">\n'
+        "    <title>{t0}</title>\n"
+        '    \t<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />\n'
+        '\t<link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
+        '\t<link rel="shortcut icon" href="/favicon.ico" />\n'
+        '\t<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
+        '\t<meta name="apple-mobile-web-app-title" content="Omega" />\n'
+        '    <link rel="stylesheet" href="/.omega-serv-error-css/error-pages.css">\n'
         "</head>\n"
         "<body>\n"
-        "    <div class=\"container theme-cyan\">\n"
-        "        <div class=\"code\">404</div>\n"
-        "        <div class=\"title\">✖   Page non trouvée</div>\n"
-        "        <div class=\"msg\">La ressource demandée n'existe pas ou a été déplacée</div>\n"
-        "        <div class=\"warning\">\n"
-        "            Verifier l'adresse url dans la barre d'adresse.<br>\n"
+        '    <div class="container theme-cyan">\n'
+        '        <div class="code">404</div>\n'
+        '        <div class="title">{t1}</div>\n'
+        '        <div class="msg">{t2}</div>\n'
+        '        <div class="warning">\n'
+        "            {t3}<br>\n"
         "\n"
         "        </div>\n"
         "        <hr>\n"
-        "        <a href=\"/\">← Retour à l'index</a>\n"
-        "        <div class=\"footer\">  ⚡ propulsé par <a href=\"https://github.com/kraynux/omega-serv\">OMEGA-SERV</a></div>\n"
+        '        <a href="/">{t4}</a>\n'
+        '        <div class="footer">  {t5} <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></div>\n'
         "    </div>\n"
         "</body>\n"
         "</html>\n"
-    ).encode(),
-    451: (
+        ),
+        (
+            N_('404 - Page non trouvée'),
+            N_('✖   Page non trouvée'),
+            N_("La ressource demandée n'existe pas ou a été déplacée"),
+            N_("Vérifier l'adresse url dans la barre d'adresse."),
+            N_("← Retour à l'index"),
+            N_('⚡ propulsé par'),
+        ),
+    ),
+    429: (
+        (
         "<!DOCTYPE html>\n"
-        "<html lang=\"fr\">\n"
+        '<html lang="{lang}" dir="{dir}">\n'
         "<head>\n"
-        "    <meta charset=\"UTF-8\">\n"
-        "    <link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\" />\n"
-        "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n"
-        "<link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n"
-        "<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n"
-        "<meta name=\"apple-mobile-web-app-title\" content=\"Omega\" />\n"
-        "    <title>451 - Accès interdit</title>\n"
-        "    <link rel=\"stylesheet\" href=\"/.omega-serv-error-css/error-pages.css\">\n"
+        '    <meta charset="UTF-8">\n'
+        "    <title>{t0}</title>\n"
+        '    \t<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />\n'
+        '\t<link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
+        '\t<link rel="shortcut icon" href="/favicon.ico" />\n'
+        '\t<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
+        '\t<meta name="apple-mobile-web-app-title" content="Omega" />\n'
+        '    <link rel="stylesheet" href="/.omega-serv-error-css/error-pages.css">\n'
         "</head>\n"
         "<body>\n"
-        "    <div class=\"container\">\n"
-        "        <div class=\"code\">451</div>\n"
-        "\n"
-        "        <div class=\"title\">🕱 Votre IP a été bannie</div>\n"
-        "        <p class=\"msg\">Durée entre 1 minute et 1 année selon le type de requete que vous avez effectué !</p>\n"
-        "\n"
-        "        <p class=\"warning\">● Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur du site</p> <hr>\n"
-        "        <p class=\"msg\"><a href=\"https://www.google.com\">← Retourner sur Google en attendant :-) </a></p>\n"
-        "        <div class=\"footer\">⚡ propulsé par <a href=\"https://github.com/kraynux/omega-serv\">OMEGA-SERV</a></div>\n"
+        '    <div class="container theme-yellow">\n'
+        '        <div class="code">429</div>\n'
+        '        <div class="title">{t1}</div>\n'
+        '        <div class="msg">{t2}</div>\n'
+        '        <div class="warning">\n'
+        "             \t        {t3}<br>\n"
+        "            {t4}\n"
+        "        </div>\n"
+        "        <hr>\n"
+        '        <a href="/">{t5}</a>\n'
+        '        <div class="footer">  {t6} <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></div>\n'
         "    </div>\n"
         "</body>\n"
         "</html>\n"
-    ).encode(),
+        ),
+        (
+            N_('429 - Limite de requêtes'),
+            N_('⛔ Accès limité'),
+            N_('Le serveur a détecté un nombre élevé de requêtes.'),
+            N_('Blocage temporaire.'),
+            N_('Attendez un peu avant de recharger ou de naviguer.'),
+            N_("← Retour à l'index"),
+            N_('⚡ propulsé par'),
+        ),
+    ),
+    451: (
+        (
+        "<!DOCTYPE html>\n"
+        '<html lang="{lang}" dir="{dir}">\n'
+        "<head>\n"
+        '    <meta charset="UTF-8">\n'
+        '    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />\n'
+        '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />\n'
+        '<link rel="shortcut icon" href="/favicon.ico" />\n'
+        '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />\n'
+        '<meta name="apple-mobile-web-app-title" content="Omega" />\n'
+        "    <title>{t0}</title>\n"
+        '    <link rel="stylesheet" href="/.omega-serv-error-css/error-pages.css">\n'
+        "</head>\n"
+        "<body>\n"
+        '    <div class="container">\n'
+        '        <div class="code">451</div>\n'
+        "\n"
+        '        <div class="title">{t1}</div>\n'
+        '        <p class="msg">{t2}</p>\n'
+        "\n"
+        '        <p class="warning">{t3}</p> <hr>\n'
+        '        <p class="msg"><a href="https://www.google.com">{t4}</a></p>\n'
+        '        <div class="footer">{t5} <a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></div>\n'
+        "    </div>\n"
+        "</body>\n"
+        "</html>\n"
+        ),
+        (
+            N_('451 - Accès interdit'),
+            N_('🕱 Votre IP a été bannie'),
+            N_('Durée entre 1 minute et 1 année selon le type de requête que vous avez effectué !'),
+            N_("● Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur du site"),
+            N_('← Retourner sur Google en attendant :-) '),
+            N_('⚡ propulsé par'),
+        ),
+    ),
 }
 
 
+def _curated_page(status: int) -> bytes | None:
+    """Pages integrees, construites a chaque appel dans la langue des pages visiteurs (D19) :
+    textes passes par P_() et echappes pour le HTML (une traduction contenant < ou & ne casse
+    jamais la page), attribut lang= dans la meme langue."""
+    entry = _CURATED_TEMPLATES.get(status)
+    if entry is None:
+        return None
+    template, texts = entry
+    values = {f"t{i}": escape(P_(text), quote=False) for i, text in enumerate(texts)}
+    return template.format(lang=page_html_lang(), dir=page_html_dir(), **values).encode()
+
+
 def render_default_error_page(status: int) -> bytes:
-    curated = _CURATED_PAGES.get(status)
+    curated = _curated_page(status)
     if curated is not None:
         return curated
-    reason = reason_phrase_for(status) or "Erreur"
+    reason = reason_phrase_for(status) or P_("Erreur")
     title = escape(f"{status} {reason}")
     return (
-        "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\">"
+        f"<!doctype html><html lang=\"{page_html_lang()}\" dir=\"{page_html_dir()}\"><head><meta charset=\"utf-8\">"
         f"<title>{title}</title>"
         "<style>"
         "body{font-family:ui-monospace,Consolas,monospace;background:#0a0e1a;"

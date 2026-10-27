@@ -17,6 +17,7 @@ import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.http.headers import HttpHeaders
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.security.waf.config import MagnetConfig, WafConfig
@@ -75,5 +76,5 @@ async def check_magnet_compatibility(
             timeout=_COMPAT_CHECK_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
-        dry_run_error = "delai depasse (le script bloque trop longtemps sur une requete de test)"
+        dry_run_error = _("délai dépassé (le script bloque trop longtemps sur une requête de test)")
     return MagnetCompatibilityCheck(unsupported_members=adapter.unsupported_members, dry_run_error=dry_run_error)

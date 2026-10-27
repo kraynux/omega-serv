@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import socket
 import time
 import uuid
 from collections.abc import Mapping
@@ -17,7 +18,7 @@ from concurrent.futures import Executor
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import ssl
@@ -79,8 +80,8 @@ from omega_serv.domain.security.active_defense.entities import (
 from omega_serv.domain.security.active_defense.policies import (
     build_playbook,
     compute_slowdown_delay_ms,
-    hash_payload,
     is_source_marked,
+    user_agent_fingerprint,
     validate_playbook_action,
 )
 from omega_serv.domain.security.active_defense.value_objects import AttackClass
@@ -100,6 +101,10 @@ from omega_serv.infrastructure.server.http_parser import (
     read_and_discard_body,
     read_request_head,
 )
+from omega_serv.ports.active_defense_writer_port import (
+    ActiveDefenseRepositories,
+    ActiveDefenseWriterPort,
+)
 from omega_serv.ports.blocklist_port import BlocklistPort
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.deception_assignment_repository_port import DeceptionAssignmentRepositoryPort
@@ -115,6 +120,9 @@ from omega_serv.ports.rate_limit_port import RateLimitPort
 from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
 from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
 from omega_serv.ports.waf_port import WafPort
+
+ACTIVE_DEFENSE_STOP_TIMEOUT_SECONDS = 2.0
+"""A l'arret, temps maximal laisse au fil d'ecriture d'Active Defense pour vider sa file."""
 
 
 class AsyncioHttpServer:
@@ -156,6 +164,7 @@ class AsyncioHttpServer:
         active_defense_enriched_log_path: Path | None = None,
         decoy_proxy_client: HttpProxyClientPort | None = None,
         clock: ClockPort | None = None,
+        active_defense_writer: ActiveDefenseWriterPort | None = None,
     ):
         self._config = config
         self._path_resolver = path_resolver
@@ -192,6 +201,8 @@ class AsyncioHttpServer:
         self._delay_scheduler = delay_scheduler
         self._active_defense_enriched_log_path = active_defense_enriched_log_path
         self._decoy_proxy_client = decoy_proxy_client
+        self._active_defense_writer = active_defense_writer
+        self._active_defense_guard_failing = False
         self._decoy_load_balancer = ProxyLoadBalancerState()
         self._decoy_health_state = ProxyHealthState()
         self._active_defense_playbook: DefensePlaybook | None = (
@@ -199,6 +210,9 @@ class AsyncioHttpServer:
         )
         self._clock = clock or SystemClock()
         self._server: asyncio.Server | None = None
+        self._stopped = asyncio.Event()
+        # Mode « boost » : compteurs de securite partages entre workers (pose par build_server).
+        self.shared_counters: Any = None
         self._active_connections: set[asyncio.Task] = set()
         self._access_control_rules_cache: list[AccessRule] = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache: list[ProxyZone] = self._parse_websocket_proxy_zones()
@@ -217,28 +231,53 @@ class AsyncioHttpServer:
         rechargement, qui remettait sinon toutes les recidives a zero)."""
         return self._reputation_tracker
 
-    async def start(self) -> None:
+    async def start(self, listen_socket: socket.socket | None = None) -> None:
+        """`listen_socket` : port deja ouvert par le processus principal du mode « boost »,
+        partage par tous les workers (le noyau repartit les connexions entre eux)."""
+        if self._active_defense_writer is not None:
+            # Fil d'ecriture demarre ICI (dans le worker, apres le fork du mode boost : un fil
+            # ne survit jamais a un fork) - OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6.
+            self._active_defense_writer.set_error_reporter(lambda message: self._log_error(message, request_id=None))
+            self._active_defense_writer.start()
         server_config = self._config.server
-        self._server = await asyncio.start_server(
-            self._handle_connection_tracked,
-            host=server_config.bind,
-            port=server_config.port,
-            backlog=server_config.listen_backlog,
-            limit=RAW_LINE_BUFFER_LIMIT,
-            ssl=self._ssl_context,
-        )
+        if listen_socket is not None:
+            self._server = await asyncio.start_server(
+                self._handle_connection_tracked,
+                sock=listen_socket,
+                limit=RAW_LINE_BUFFER_LIMIT,
+                ssl=self._ssl_context,
+            )
+        else:
+            self._server = await asyncio.start_server(
+                self._handle_connection_tracked,
+                host=server_config.bind,
+                port=server_config.port,
+                backlog=server_config.listen_backlog,
+                limit=RAW_LINE_BUFFER_LIMIT,
+                ssl=self._ssl_context,
+            )
         self._start_proxy_load_pollers()
 
     async def serve_forever(self) -> None:
+        """Attend l'arret (shutdown()/close()). N'utilise jamais
+        `asyncio.Server.serve_forever()` : depuis Python 3.13, son annulation
+        - declenchee par `Server.close()` dans shutdown() - appelle
+        `close_clients()` et coupe net toutes les connexions en cours, avant
+        meme le delai de grace (drainage devenu inoperant sans aucun message,
+        trouve par test_sigterm_drains_in_flight_request). Le serveur ecoute
+        deja depuis start() (`start_server` demarre l'ecoute d'office)."""
         assert self._server is not None
-        async with self._server:
-            await self._server.serve_forever()
+        await self._stopped.wait()
 
     async def close(self) -> None:
+        self._stopped.set()
         await self._stop_proxy_load_pollers()
         if self._server is not None:
             self._server.close()
             await self._server.wait_closed()
+        if self._active_defense_writer is not None:
+            # Ecrit ce qui peut l'etre en 2 s au plus : l'arret n'attend jamais une base bloquee.
+            await asyncio.to_thread(self._active_defense_writer.stop, ACTIVE_DEFENSE_STOP_TIMEOUT_SECONDS)
         if self._magnet_executor is not None:
             # wait=False : un script magnet bloque (lot E, limite connue
             # - voir evaluate_waf_request.py::_inspect_with_magnet) ne
@@ -312,11 +351,13 @@ class AsyncioHttpServer:
             self._server.close()
 
         if not self._active_connections:
+            self._stopped.set()
             return 0
 
         _, pending = await asyncio.wait(self._active_connections, timeout=grace_period_seconds)
         for task in pending:
             task.cancel()
+        self._stopped.set()
         if pending:
             self._log_error(
                 f"arret force de {len(pending)} connexion(s) encore actives apres le delai de grace de {grace_period_seconds}s",
@@ -497,7 +538,7 @@ class AsyncioHttpServer:
                         status = HttpStatus.UNAUTHORIZED if auth_decision.outcome == "unauthenticated" else HttpStatus.FORBIDDEN
                         response = HttpResponse.empty(status)
                         if auth_decision.outcome == "unauthenticated":
-                            response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protegee"))
+                            response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protégée"))
                         apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
                         await self._write_response(writer, response, keep_alive=False)
                         self._log_access(request, response, start_time)
@@ -574,12 +615,43 @@ class AsyncioHttpServer:
 
         headers = dict(response.headers)
         headers.setdefault("Connection", "keep-alive" if keep_alive else "close")
-        headers.setdefault("Content-Length", str(len(response.body)))
+        if int(response.status) == HttpStatus.NOT_MODIFIED:
+            # 304 : jamais de corps ; un Content-Length annoncerait a tort une
+            # representation de 0 octet (RFC 9110 §15.4.5).
+            headers.pop("Content-Length", None)
+            response.body = b""
+        else:
+            headers.setdefault("Content-Length", str(response.content_length))
 
         status_line = f"HTTP/1.1 {int(response.status)} {reason_phrase_for(response.status)}\r\n"
         header_lines = "".join(f"{name}: {value}\r\n" for name, value in headers.items())
-        writer.write((status_line + header_lines + "\r\n").encode("latin-1") + response.body)
+        head = (status_line + header_lines + "\r\n").encode("latin-1")
+        if response.body_file is None:
+            writer.write(head + response.body)
+            await writer.drain()
+            return
+        writer.write(head)
         await writer.drain()
+        await self._send_file_body(writer, response)
+
+    async def _send_file_body(self, writer: asyncio.StreamWriter, response: HttpResponse) -> None:
+        """Copie par le noyau (`sendfile`) en HTTP ; a travers TLS, asyncio bascule
+        seul sur un envoi par blocs lus hors de la boucle - dans les deux cas,
+        jamais le fichier entier en memoire. En-tetes deja partis : un fichier
+        disparu ou illisible entre-temps ne peut plus devenir une page d'erreur,
+        la connexion est fermee (le client voit une reponse tronquee, jamais un
+        contenu faux)."""
+        assert response.body_file is not None
+        try:
+            with open(response.body_file, "rb") as handle:  # noqa: ASYNC230 - ouverture seule, la lecture se fait par blocs
+                await asyncio.get_running_loop().sendfile(
+                    writer.transport, handle, response.body_file_offset, response.body_file_length,
+                )
+        except (ConnectionResetError, BrokenPipeError):
+            raise
+        except OSError as e:
+            self._log_error(f"envoi interrompu de {response.body_file} : {e}", request_id=None)
+            raise ConnectionResetError(str(e)) from e
 
     def _parse_access_control_rules(self) -> list[AccessRule]:
         option = self._config.options.get("access_control")
@@ -683,7 +755,7 @@ class AsyncioHttpServer:
             request_target=request.raw_path,
             http_version="HTTP/1.1",
             status_code=int(response.status),
-            response_size=len(response.body),
+            response_size=response.content_length,
             referer=request.header("referer"),
             user_agent=request.header("user-agent"),
             request_id=request.request_id,
@@ -713,7 +785,7 @@ class AsyncioHttpServer:
 
     def _active_defense_subject_id(self, request: HttpRequest) -> str:
         user_agent = request.header("user-agent") or ""
-        return f"{request.remote_ip}:{hash_payload(user_agent.encode('utf-8'))}"
+        return f"{request.remote_ip}:{user_agent_fingerprint(user_agent)}"
 
     def _observe_active_defense_threat(self, request: HttpRequest, decision: WafDecision) -> ThreatState | None:
         """Appelee UNIQUEMENT quand le WAF a deja produit une decision
@@ -728,6 +800,29 @@ class AsyncioHttpServer:
         war_mode est inactif."""
         if self._active_defense_config is None or not self._active_defense_config.war_mode.enabled:
             return None
+        try:
+            state = self._observe_active_defense_threat_unguarded(request, decision)
+        except Exception as error:  # noqa: BLE001 - Active Defense ne doit JAMAIS faire echouer une requete
+            # Mesure du 2026-10-26 (S5) : une erreur SQLite non rattrapee ici coupait la connexion
+            # sans reponse. Desormais la requete suit la decision du WAF seule ; une ligne par serie.
+            if not self._active_defense_guard_failing:
+                self._active_defense_guard_failing = True
+                self._log_error(
+                    f"Active Defense : observation ignorée ({error!r}) - la requête suit la décision du WAF",
+                    request_id=request.request_id,
+                )
+            return None
+        self._active_defense_guard_failing = False
+        return state
+
+    def flush_active_defense(self, timeout: float = 5.0) -> bool:
+        """Attend que les ecritures differees deja deposees soient en base (tests, outils)."""
+        if self._active_defense_writer is None:
+            return True
+        return self._active_defense_writer.flush(timeout)
+
+    def _observe_active_defense_threat_unguarded(self, request: HttpRequest, decision: WafDecision) -> ThreatState:
+        assert self._active_defense_config is not None
         assert self._threat_state_repository is not None
         assert self._active_defense_playbook is not None
         playbook = self._active_defense_playbook
@@ -736,15 +831,27 @@ class AsyncioHttpServer:
             self._threat_state_repository, self._clock, self._active_defense_config,
             subject_id=subject_id, waf_decision=decision,
         )
-        if (
-            observation is not None
-            and self._incident_repository is not None
-            and validate_playbook_action("create_incident", playbook)
-        ):
-            create_or_update_incident(
-                self._incident_repository, self._clock, subject_id=subject_id, observation=observation,
-                score=state.score, incident_score_threshold=self._active_defense_config.war_mode.thresholds.incident_score,
-            )
+        threshold = self._active_defense_config.war_mode.thresholds.incident_score
+        # Sous le seuil, create_or_update_incident ne fait rien par definition : aucun travail a
+        # deposer (sous un botnet, c'est le cas de presque toutes les observations).
+        if observation is not None and state.score >= threshold and validate_playbook_action("create_incident", playbook):
+            if self._active_defense_writer is not None:
+                # Les incidents ne changent pas la reponse : ecrits entierement par le fil
+                # d'ecriture (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6).
+                clock, score, seen = self._clock, state.score, observation
+
+                def record_incident(repositories: ActiveDefenseRepositories) -> None:
+                    create_or_update_incident(
+                        repositories.incidents, clock, subject_id=subject_id, observation=seen,
+                        score=score, incident_score_threshold=threshold, return_incident=False,
+                    )
+
+                self._active_defense_writer.submit(record_incident)
+            elif self._incident_repository is not None:
+                create_or_update_incident(
+                    self._incident_repository, self._clock, subject_id=subject_id, observation=observation,
+                    score=state.score, incident_score_threshold=threshold,
+                )
         if (
             observation is not None
             and state.level in ("hostile", "contained")

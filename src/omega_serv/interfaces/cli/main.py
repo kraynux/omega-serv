@@ -32,6 +32,7 @@ from omega_serv.application.active_defense.queries import (
     get_threat_state,
     list_incidents,
     list_threat_states,
+    omitted_history_notice,
 )
 from omega_serv.application.active_defense.sweep_active_defense import sweep_active_defense
 from omega_serv.application.auth.manage_users import add_user, change_password, remove_user
@@ -73,6 +74,7 @@ from omega_serv.application.services.manage_service import (
     stop_service,
 )
 from omega_serv.application.services.pid_file import remove_pid_file, write_pid_file
+from omega_serv.application.terminal.select_language import install_interface_language
 from omega_serv.application.tls.generate_ca_certificate import generate_ca_certificate
 from omega_serv.application.tls.generate_certificate_signing_request import (
     generate_certificate_signing_request,
@@ -88,8 +90,10 @@ from omega_serv.application.tls.sign_certificate_signing_request import (
     sign_certificate_signing_request,
 )
 from omega_serv.bootstrap.container import DependencyContainer
+from omega_serv.bootstrap.early_language import is_server_process
 from omega_serv.bootstrap.paths import CONFIG_FILE
-from omega_serv.core.platform_info import running_as_root
+from omega_serv.core.i18n import _
+from omega_serv.core.platform_info import cpu_info, running_as_root
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
 from omega_serv.domain.persistence.backup import BackupRequest
@@ -107,8 +111,7 @@ from omega_serv.domain.security.waf.config import parse_waf_config
 from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.systemd_unit import SystemdUnitParams
-from omega_serv.infrastructure.exporters.csv_ioc_exporter import CsvIoCExporter
-from omega_serv.infrastructure.exporters.json_ioc_exporter import JsonIoCExporter
+from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
 from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
     MarkdownIncidentReportExporter,
 )
@@ -120,16 +123,27 @@ from omega_serv.infrastructure.services.openrc_service_manager import OpenRCServ
 from omega_serv.infrastructure.services.runit_service_manager import RunitServiceManager
 from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
 from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
-from omega_serv.ports.ioc_exporter_port import IoCExporterPort
+from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+from omega_serv.interfaces.cli.serve_workers import (
+    WorkerContext,
+    effective_worker_count,
+    open_listen_socket,
+    run_workers,
+)
 from omega_serv.ports.service_manager_port import ServiceManagerPort
 
 
-def _print_errors(errors: list[str], prefix: str = "Erreur") -> None:
+def _print_errors(errors: list[str], prefix: str = _("Erreur")) -> None:
     for error in errors:
-        print(f"{prefix} : {error}", file=sys.stderr)
+        print(_("{prefix} : {error}").format(prefix=prefix, error=error), file=sys.stderr)
 
 
-async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, container: DependencyContainer) -> int:
+async def run_server_until_stopped(
+    config: OmegaServConfig,
+    config_path: Path,
+    container: DependencyContainer,
+    worker: WorkerContext | None = None,
+) -> int:
     """Coeur bloquant partage entre `cmd_serve` (CLI) et le bouton
     "Lancer maintenant" de l'assistant premier lancement
     (interfaces/tui/screens/wizard_service_screen.py, retour utilisateur
@@ -143,10 +157,13 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
     loop`, verifie empiriquement en testant ce bouton avant d'ecrire ce
     commentaire."""
     pid_path = container.project_root / "var" / "run" / "omega-serv.pid"
-    server = build_server(config, container.project_root, container.filesystem, container.logger, container.clock)
+    server = build_server(
+        config, container.project_root, container.filesystem, container.logger, container.clock,
+        shared_counters=worker.shared_counters if worker else None,
+    )
 
     try:
-        await server.start()
+        await server.start(worker.listen_socket if worker else None)
     except PermissionError:
         print(
             f"Erreur : liaison sur {config.server.bind}:{config.server.port} refusee "
@@ -160,12 +177,21 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
         print(f"Erreur au demarrage du serveur : {e}", file=sys.stderr)
         return 1
 
-    write_pid_file(container.filesystem, pid_path, os.getpid())
-    print(f"OMEGA-SERV a l'ecoute sur {config.server.bind}:{config.server.port}")
+    if worker is None:
+        # Mode « boost » : le fichier PID et ce message sont ceux du processus principal.
+        write_pid_file(container.filesystem, pid_path, os.getpid())
+        print(f"OMEGA-SERV a l'ecoute sur {config.server.bind}:{config.server.port}")
+    else:
+        print(f"Worker {worker.index} pret (PID {os.getpid()})")
 
     stop_event = asyncio.Event()
+    stopping = False
 
     async def _graceful_stop() -> None:
+        nonlocal stopping
+        if stopping:  # SIGTERM recu deux fois (systemd + processus principal) : un seul arret
+            return
+        stopping = True
         print("Arret demande - drainage des connexions en cours...")
         forced = await server.shutdown(config.server.shutdown_grace_period_seconds)
         if forced:
@@ -176,7 +202,7 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
         print("Rechargement demande (SIGHUP) - regles WAF et zones Auth uniquement, bind/port/TLS inchanges...")
         reload_result = load_config(container.configuration, config_path)
         if not reload_result.success:
-            _print_errors(reload_result.errors, "Erreur de rechargement")
+            _print_errors(reload_result.errors, _("Erreur de rechargement"))
             return
         reloaded_config = reload_result.config
         assert reloaded_config is not None
@@ -205,7 +231,8 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
         except asyncio.CancelledError:
             pass
     finally:
-        remove_pid_file(container.filesystem, pid_path)
+        if worker is None:
+            remove_pid_file(container.filesystem, pid_path)
         loop.remove_signal_handler(signal.SIGTERM)
         loop.remove_signal_handler(signal.SIGINT)
         loop.remove_signal_handler(signal.SIGHUP)
@@ -213,7 +240,20 @@ async def run_server_until_stopped(config: OmegaServConfig, config_path: Path, c
     return 0
 
 
+def _line_buffered_output() -> None:
+    """Sous un gestionnaire de service, stdout n'est pas un terminal : Python le
+    met en tampon par blocs et les messages du serveur ("a l'ecoute",
+    "Rechargement demande/termine"...) n'arrivaient dans journalctl qu'a
+    l'arret, tous dates de l'heure d'arret (constate sur craftdark le
+    2026-10-26). Une ligne = une ecriture, quel que soit le gestionnaire."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(line_buffering=True)
+
+
 def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
+    _line_buffered_output()
     if running_as_root():
         print("Erreur : OMEGA-SERV refuse de demarrer en tant que root (voir plan de developpement §6).", file=sys.stderr)
         return 1
@@ -230,18 +270,62 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         auth_without_tls_confirmed=args.confirm_auth_without_tls,
     )
     if env_errors:
-        _print_errors(env_errors, "Erreur d'environnement")
+        _print_errors(env_errors, _("Erreur d'environnement"))
         return 1
 
+    config = result.config
+    cpu = cpu_info()
+    worker_count, capped = effective_worker_count(config.server.workers, cpu.available, cpu.recommended_workers)
+    if capped:
+        print(capped, file=sys.stderr)
+    if worker_count > 1:
+        return _serve_with_workers(config, args.config, container, worker_count)
+
     async def _run() -> int:
-        config = result.config
-        assert config is not None
         return await run_server_until_stopped(config, args.config, container)
 
     try:
         return asyncio.run(_run())
     except KeyboardInterrupt:
         return 0
+
+
+def _serve_with_workers(config: OmegaServConfig, config_path: Path, container: DependencyContainer, worker_count: int) -> int:
+    """Mode « boost » (OMEGA-SERV_ETUDE_MODE_BOOST.md) : port et compteurs partages crees ici,
+    dans le processus principal, AVANT le lancement des workers (interfaces/cli/serve_workers.py)."""
+    try:
+        listen_socket = open_listen_socket(config.server.bind, config.server.port, config.server.listen_backlog)
+    except PermissionError:
+        print(
+            f"Erreur : liaison sur {config.server.bind}:{config.server.port} refusee "
+            "(privileges insuffisants pour un port < 1024).",
+            file=sys.stderr,
+        )
+        return 1
+    except OSError as e:
+        print(f"Erreur au demarrage du serveur : {e}", file=sys.stderr)
+        return 1
+    counters = SharedCounters.create(f"omega_serv_{config.server.port}")
+    pid_path = container.project_root / "var" / "run" / "omega-serv.pid"
+    write_pid_file(container.filesystem, pid_path, os.getpid())
+    print(f"OMEGA-SERV a l'ecoute sur {config.server.bind}:{config.server.port}")
+
+    def run_worker(worker: WorkerContext) -> int:
+        return asyncio.run(run_server_until_stopped(config, config_path, container, worker))
+
+    def read_configured_workers() -> int | None:
+        reloaded = load_config(container.configuration, config_path)
+        return reloaded.config.server.workers if reloaded.success and reloaded.config else None
+
+    try:
+        return run_workers(
+            worker_count, listen_socket, counters, run_worker,
+            config.server.shutdown_grace_period_seconds, read_configured_workers,
+        )
+    finally:
+        counters.destroy()
+        listen_socket.close()
+        remove_pid_file(container.filesystem, pid_path)
 
 
 def cmd_config_init(args: argparse.Namespace, container: DependencyContainer) -> int:
@@ -253,7 +337,7 @@ def cmd_config_init(args: argparse.Namespace, container: DependencyContainer) ->
 def cmd_config_check(args: argparse.Namespace, container: DependencyContainer) -> int:
     result = load_config(container.configuration, args.config)
     if not result.success:
-        _print_errors(result.errors, "Erreur de configuration")
+        _print_errors(result.errors, _("Erreur de configuration"))
         return 1
     assert result.config is not None
 
@@ -263,10 +347,10 @@ def cmd_config_check(args: argparse.Namespace, container: DependencyContainer) -
         auth_without_tls_confirmed=args.confirm_auth_without_tls,
     )
     if env_errors:
-        _print_errors(env_errors, "Erreur d'environnement")
+        _print_errors(env_errors, _("Erreur d'environnement"))
         return 1
 
-    print(f"{args.config} : configuration valide.")
+    print(_("{config} : configuration valide.").format(config=args.config))
     return 0
 
 
@@ -283,7 +367,7 @@ def cmd_config_show(args: argparse.Namespace, container: DependencyContainer) ->
 def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) -> int:
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
-        _print_errors(result.errors, "Erreur de configuration")
+        _print_errors(result.errors, _("Erreur de configuration"))
         return 1
 
     request = BackupRequest(
@@ -295,8 +379,8 @@ def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) 
     )
     if (request.include_auth_zones or request.include_certificates) and not args.confirm_secrets:
         print(
-            "Cette sauvegarde inclurait des secrets reels (hash de mot de passe et/ou "
-            "cle privee TLS) jamais chiffres par defaut - ajoutez --confirm-secrets pour confirmer.",
+            _("Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou "
+            "clé privée TLS) jamais chiffres par défaut - ajoutez --confirm-secrets pour confirmer."),
             file=sys.stderr,
         )
         return 1
@@ -315,13 +399,12 @@ def cmd_config_restore(args: argparse.Namespace, container: DependencyContainer)
 def cmd_config_list_backups(args: argparse.Namespace, container: DependencyContainer) -> int:
     backups = container.list_backups()
     if not backups:
-        print("Aucune sauvegarde.")
+        print(_("Aucune sauvegarde."))
         return 0
     for metadata in backups:
         size_kb = (metadata.file_size_bytes or 0) / 1024
         print(
-            f"{metadata.snapshot_id}  {metadata.created_at.isoformat()}  "
-            f"{metadata.scope:<20}  {size_kb:.1f} Ko  {metadata.status.value}  {metadata.description}"
+            _("{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} Ko  {value2}  {description}").format(snapshot_id=metadata.snapshot_id, value=metadata.created_at.isoformat(), scope=metadata.scope, size_kb=size_kb, value2=metadata.status.value, description=metadata.description)
         )
     return 0
 
@@ -336,10 +419,10 @@ def cmd_profile_show(args: argparse.Namespace, container: DependencyContainer) -
     try:
         profile = container.profiles.load_profile(args.name)
     except (ProfileNotFoundError, ProfileLoadError) as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
-    print(f"Profil : {profile.name}")
-    print(profile.description)
+    print(_("Profil : {name}").format(name=profile.name))
+    print(_(profile.description))
     print(json.dumps(profile.values, indent=2, ensure_ascii=False))
     return 0
 
@@ -354,37 +437,37 @@ def cmd_profile_apply(args: argparse.Namespace, container: DependencyContainer) 
     try:
         profile = container.profiles.load_profile(args.name)
     except (ProfileNotFoundError, ProfileLoadError) as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     plan = plan_profile_application(load_result.config, profile)
 
-    print(f"Profil de base choisi : {profile.name}")
+    print(_("Profil de base choisi : {name}").format(name=profile.name))
     if not plan.changes:
-        print("Aucune modification.")
+        print(_("Aucune modification."))
     else:
-        print("Modifications :")
+        print(_("Modifications :"))
         for change in plan.changes:
             print(str(change))
 
     if plan.conflicts:
-        print("\nConflits detectes :")
+        print(_("\nConflits détectés :"))
         for conflict in plan.conflicts:
-            print(f"  [{conflict.severity.upper()}] {conflict.message}")
+            print(_("  [{value}] {message}").format(value=conflict.severity.upper(), message=conflict.message))
 
     if plan.validation_errors:
-        _print_errors(plan.validation_errors, "Erreur de validation")
+        _print_errors(plan.validation_errors, _("Erreur de validation"))
 
     if args.dry_run:
-        print("\n(--dry-run : aucune ecriture effectuee)")
+        print(_("\n(--dry-run : aucune écriture effectuée)"))
         return 1 if plan.has_blocking_issues else 0
 
     if plan.has_blocking_issues and not args.force:
-        print("\nApplication refusee (problemes bloquants, voir ci-dessus). Utiliser --force pour outrepasser.", file=sys.stderr)
+        print(_("\nApplication refusée (problèmes bloquants, voir ci-dessus). Utiliser --force pour outrepasser."), file=sys.stderr)
         return 1
 
     container.configuration.save(args.config, plan.new_config)
-    print(f"\nConfiguration mise a jour dans {args.config} (profil '{profile.name}' applique).")
+    print(_("\nConfiguration mise à jour dans {config} (profil '{name}' appliqué).").format(config=args.config, name=profile.name))
     return 0
 
 
@@ -395,8 +478,8 @@ def cmd_option_list(args: argparse.Namespace, container: DependencyContainer) ->
         return 1
     assert result.config is not None
     for name, option in sorted(result.config.options.items()):
-        state = "actif" if option.enabled else "inactif"
-        print(f"{name} : {state}")
+        state = _("actif") if option.enabled else _("inactif")
+        print(_("{name} : {state}").format(name=name, state=state))
     return 0
 
 
@@ -441,18 +524,18 @@ def cmd_simulate_request(args: argparse.Namespace, container: DependencyContaine
         fastcgi_client,
     ))
 
-    print(f"Methode          : {report.method}")
-    print(f"Chemin demande   : {report.raw_path}")
-    print(f"Chemin normalise : {report.normalized_path}")
-    print(f"Methode autorisee: {report.method_allowed}")
-    print(f"Refuse (regles)  : {report.denied_by_access_policy}")
-    print(f"Fichier existe   : {report.file_exists}")
-    print(f"Statut reponse   : {report.response_status}")
+    print(_("Méthode          : {method}").format(method=report.method))
+    print(_("Chemin demandé   : {raw_path}").format(raw_path=report.raw_path))
+    print(_("Chemin normalisé : {normalized_path}").format(normalized_path=report.normalized_path))
+    print(_("Méthode autorisée: {method_allowed}").format(method_allowed=report.method_allowed))
+    print(_("Refusé (règles)  : {denied_by_access_policy}").format(denied_by_access_policy=report.denied_by_access_policy))
+    print(_("Fichier existe   : {file_exists}").format(file_exists=report.file_exists))
+    print(_("Statut réponse   : {response_status}").format(response_status=report.response_status))
     if report.rejection_reason:
-        print(f"Motif de refus   : {report.rejection_reason}")
-    print("En-tetes attendus :")
+        print(_("Motif de refus   : {rejection_reason}").format(rejection_reason=report.rejection_reason))
+    print(_("En-têtes attendus :"))
     for name, value in report.response_headers.items():
-        print(f"  {name}: {value}")
+        print(_("  {name}: {value}").format(name=name, value=value))
     return 0
 
 
@@ -488,7 +571,7 @@ def cmd_waf_test(args: argparse.Namespace, container: DependencyContainer) -> in
 
     waf = build_waf_collaborators(load_result.config, container.project_root, container.filesystem, container.clock, force=True)
     if waf is None:
-        print("Erreur : options.waf absent de la configuration (executer 'omega-serv config init' ou ajouter la section waf).", file=sys.stderr)
+        print(_("Erreur : options.waf absent de la configuration (exécuter 'omega-serv config init' ou ajouter la section waf)."), file=sys.stderr)
         return 1
 
     report = asyncio.run(
@@ -497,31 +580,29 @@ def cmd_waf_test(args: argparse.Namespace, container: DependencyContainer) -> in
     decision = report.decision
 
     if report.native_decision is not None:
-        print(f"Decision native : {report.native_decision.action.upper()} (score {report.native_decision.score})")
+        print(_("Décision native : {value} (score {score})").format(value=report.native_decision.action.upper(), score=report.native_decision.score))
     if report.magnet_decision is not None:
-        print(f"Decision magnet : {report.magnet_decision.action.upper()} (score {report.magnet_decision.score})")
+        print(_("Décision magnet : {value} (score {score})").format(value=report.magnet_decision.action.upper(), score=report.magnet_decision.score))
     if report.magnet_error:
-        print(f"ATTENTION - le script magnet a leve une erreur sur cette requete : {report.magnet_error}")
+        print(_("ATTENTION - le script magnet a levé une erreur sur cette requête : {magnet_error}").format(magnet_error=report.magnet_error))
     if report.magnet_unsupported_members:
         print(
-            "ATTENTION - le script magnet reference lighty."
-            f"{{{', '.join(sorted(report.magnet_unsupported_members))}}}, non supporte par ce pont "
-            "(toujours nil - le script peut se comporter differemment qu'en Lighttpd reel)"
+            _("ATTENTION - le script magnet référence lighty.{{{value}}}, non supporte par ce pont (toujours nil - le script peut se comporter différemment qu'en Lighttpd réel)").format(value=', '.join(sorted(report.magnet_unsupported_members)))
         )
     if waf.config.magnet.on_error == "fail-closed" and (report.magnet_error or report.magnet_unsupported_members):
         print(
-            "ATTENTION - options.waf.magnet.on_error='fail-closed' combine a une incompatibilite detectee : "
-            "toute requete future qui declenche la meme erreur sera BLOQUEE (y compris du trafic legitime). "
-            "Passer a 'ignore', ou corriger le script, avant d'activer ce script en production."
+            _("ATTENTION - options.waf.magnet.on_error='fail-closed' combiné à une incompatibilité détectée : "
+            "toute requête future qui déclenche la même erreur sera BLOQUÉE (y compris du trafic légitime). "
+            "Passer à 'ignore', ou corriger le script, avant d'activer ce script en production.")
         )
-    print(f"Decision finale : {decision.action.upper()}")
-    print(f"Statut : {decision.status_code if decision.status_code is not None else '-'}")
-    print(f"Score : {decision.score}")
-    print(f"Regles : {', '.join(f'{f.rule_id} ({f.pack})' for f in decision.findings) or '-'}")
-    print(f"Politique de zone : {report.zone_id}")
-    print(f"Mode : {report.mode}")
+    print(_("Décision finale : {value}").format(value=decision.action.upper()))
+    print(_("Statut : {value}").format(value=decision.status_code if decision.status_code is not None else '-'))
+    print(_("Score : {score}").format(score=decision.score))
+    print(_("Règles : {value}").format(value=', '.join(f'{f.rule_id} ({f.pack})' for f in decision.findings) or '-'))
+    print(_("Politique de zone : {zone_id}").format(zone_id=report.zone_id))
+    print(_("Mode : {mode}").format(mode=report.mode))
     if decision.blocked_reason:
-        print(f"Motif : {decision.blocked_reason}")
+        print(_("Motif : {blocked_reason}").format(blocked_reason=decision.blocked_reason))
     return 0
 
 
@@ -535,11 +616,11 @@ def cmd_blocklist_list(args: argparse.Namespace, container: DependencyContainer)
     blocklist_port = build_blocklist_port(load_result.config, container.project_root, container.filesystem, container.clock)
     entries = blocklist_port.list_entries()
     if not entries:
-        print("Aucune entree.")
+        print(_("Aucune entrée."))
         return 0
     for entry in entries:
-        expiry = entry.expires_at or "permanent"
-        print(f"{entry.network}\t{entry.source}\t{expiry}\t{entry.reason}")
+        expiry = entry.expires_at or _("permanent")
+        print(_("{network}\t{source}\t{expiry}\t{reason}").format(network=entry.network, source=entry.source, expiry=expiry, reason=entry.reason))
     return 0
 
 
@@ -589,15 +670,15 @@ def _require_active_defense(
     try:
         active_defense = build_active_defense_collaborators(load_result.config, container.project_root)
     except OSError as exc:
-        print(f"Erreur d'acces a la base Active Defense : {exc}.", file=sys.stderr)
+        print(_("Erreur d'accès à la base Active Defense : {exc}.").format(exc=exc), file=sys.stderr)
         print(
-            "Si l'appartenance a un groupe systeme a change recemment, une nouvelle "
-            "session (deconnexion/reconnexion) peut etre necessaire.",
+            _("Si l'appartenance à un groupe système a changé récemment, une nouvelle "
+            "session (deconnexion/reconnexion) peut être nécessaire."),
             file=sys.stderr,
         )
         return None
     if active_defense is None:
-        print("Erreur : options.active_defense absent ou desactive de la configuration.", file=sys.stderr)
+        print(_("Erreur : options.active_defense absent ou désactivé de la configuration."), file=sys.stderr)
         return None
     return active_defense
 
@@ -612,16 +693,16 @@ def cmd_active_defense_status(args: argparse.Namespace, container: DependencyCon
     try:
         active_defense = build_active_defense_collaborators(load_result.config, container.project_root)
     except OSError as exc:
-        print(f"Erreur d'acces a la base Active Defense : {exc}.", file=sys.stderr)
+        print(_("Erreur d'accès à la base Active Defense : {exc}.").format(exc=exc), file=sys.stderr)
         return 1
     if active_defense is None:
-        print("Active Defense : desactive (options.active_defense.enabled = false ou absent).")
+        print(_("Active Defense : désactivé (options.active_defense.enabled = false ou absent)."))
         return 0
-    print(f"Active Defense : active (mode={active_defense.config.mode})")
-    print(f"Mode guerre : {'active' if active_defense.config.war_mode.enabled else 'inactif'}")
-    print(f"Deception : {'active' if active_defense.config.deception.enabled else 'inactive'}")
+    print(_("Active Defense : activé (mode={mode})").format(mode=active_defense.config.mode))
+    print(_("Mode guerre : {value}").format(value=_('activé') if active_defense.config.war_mode.enabled else _('inactif')))
+    print(_("Deception : {value}").format(value=_('activé') if active_defense.config.deception.enabled else _('inactive')))
     tracked = active_defense.threat_state_repository.list_all()
-    print(f"Sources suivies : {len(tracked)}")
+    print(_("Sources suivies : {count}").format(count=len(tracked)))
     return 0
 
 
@@ -632,10 +713,10 @@ def cmd_threats_list(args: argparse.Namespace, container: DependencyContainer) -
 
     states = list_threat_states(active_defense.threat_state_repository, level=args.level)
     if not states:
-        print("Aucune menace suivie.")
+        print(_("Aucune menace suivie."))
         return 0
     for state in states:
-        print(f"{state.subject_id}\t{state.score}\t{state.level}\t{state.updated_at.isoformat()}\t{state.expires_at.isoformat()}")
+        print(_("{subject_id}\t{score}\t{level}\t{value}\t{value2}").format(subject_id=state.subject_id, score=state.score, level=state.level, value=state.updated_at.isoformat(), value2=state.expires_at.isoformat()))
     return 0
 
 
@@ -646,14 +727,14 @@ def cmd_threats_show(args: argparse.Namespace, container: DependencyContainer) -
 
     state = get_threat_state(active_defense.threat_state_repository, args.subject_id)
     if state is None:
-        print(f"Aucune menace suivie pour {args.subject_id!r}.", file=sys.stderr)
+        print(_("Aucune menace suivie pour {subject_id!r}.").format(subject_id=args.subject_id), file=sys.stderr)
         return 1
-    print(f"Source : {state.subject_id}")
-    print(f"Score : {state.score}")
-    print(f"Niveau : {state.level}")
-    print(f"Mise a jour : {state.updated_at.isoformat()}")
-    print(f"Expiration : {state.expires_at.isoformat()}")
-    print(f"Actions actives : {', '.join(state.active_actions) or '-'}")
+    print(_("Source : {subject_id}").format(subject_id=state.subject_id))
+    print(_("Score : {score}").format(score=state.score))
+    print(_("Niveau : {level}").format(level=state.level))
+    print(_("Mise à jour : {value}").format(value=state.updated_at.isoformat()))
+    print(_("Expiration : {value}").format(value=state.expires_at.isoformat()))
+    print(_("Actions actives : {value}").format(value=', '.join(state.active_actions) or '-'))
     return 0
 
 
@@ -668,11 +749,11 @@ def cmd_incidents_list(args: argparse.Namespace, container: DependencyContainer)
     filters = IncidentFilters(status=args.status, since=since)
     incidents = list_incidents(active_defense.incident_repository, filters)
     if not incidents:
-        print("Aucun incident.")
+        print(_("Aucun incident."))
         return 0
     for incident in incidents:
         closed = incident.closed_at.isoformat() if incident.closed_at else "-"
-        print(f"{incident.incident_id}\t{incident.subject_id}\t{incident.status}\t{incident.opened_at.isoformat()}\t{closed}")
+        print(_("{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}").format(incident_id=incident.incident_id, subject_id=incident.subject_id, status=incident.status, value=incident.opened_at.isoformat(), closed=closed))
     return 0
 
 
@@ -683,16 +764,18 @@ def cmd_incidents_show(args: argparse.Namespace, container: DependencyContainer)
 
     incident = active_defense.incident_repository.get(args.incident_id)
     if incident is None:
-        print(f"Incident introuvable : {args.incident_id!r}.", file=sys.stderr)
+        print(_("Incident introuvable : {incident_id!r}.").format(incident_id=args.incident_id), file=sys.stderr)
         return 1
-    print(f"Incident : {incident.incident_id}")
-    print(f"Source : {incident.subject_id}")
-    print(f"Statut : {incident.status}")
-    print(f"Ouvert le : {incident.opened_at.isoformat()}")
-    print(f"Ferme le : {incident.closed_at.isoformat() if incident.closed_at else '-'}")
-    print("Chronologie :")
+    print(_("Incident : {incident_id}").format(incident_id=incident.incident_id))
+    print(_("Source : {subject_id}").format(subject_id=incident.subject_id))
+    print(_("Statut : {status}").format(status=incident.status))
+    print(_("Ouvert le : {value}").format(value=incident.opened_at.isoformat()))
+    print(_("Fermé le : {value}").format(value=incident.closed_at.isoformat() if incident.closed_at else '-'))
+    print(_("Chronologie :"))
     for event in get_incident_timeline(active_defense.incident_repository, args.incident_id):
-        print(f"  {event.occurred_at.isoformat()}\t{event.kind}\t{event.detail}")
+        print(_("  {value}\t{kind}\t{detail}").format(value=event.occurred_at.isoformat(), kind=event.kind, detail=event.detail))
+    if incident.omitted_events:
+        print("  " + omitted_history_notice(incident.omitted_events))
     return 0
 
 
@@ -703,15 +786,12 @@ def cmd_incidents_close(args: argparse.Namespace, container: DependencyContainer
 
     closed = close_incident(active_defense.incident_repository, container.clock, args.incident_id)
     if closed is None:
-        print(f"Incident introuvable ou deja ferme : {args.incident_id!r}.", file=sys.stderr)
+        print(_("Incident introuvable ou déjà fermé : {incident_id!r}.").format(incident_id=args.incident_id), file=sys.stderr)
         return 1
-    print(f"Incident {closed.incident_id!r} ferme.")
+    print(_("Incident {incident_id!r} fermé.").format(incident_id=closed.incident_id))
     if active_defense.config.ioc.auto_export_on_close:
         export_dir = container.project_root / active_defense.config.storage.export_dir
-        exporters: dict[str, IoCExporterPort] = {
-            "json": JsonIoCExporter(container.filesystem, export_dir),
-            "csv": CsvIoCExporter(container.filesystem, export_dir),
-        }
+        exporters = build_ioc_exporters(container.filesystem, export_dir, active_defense.config.ioc)
         for export_format in active_defense.config.ioc.formats:
             if export_format in exporters:
                 result = exporters[export_format].export(closed)
@@ -719,7 +799,7 @@ def cmd_incidents_close(args: argparse.Namespace, container: DependencyContainer
                 result = MarkdownIncidentReportExporter(container.filesystem, export_dir).render(closed)
             else:
                 continue
-            print(f"Auto-export ({export_format}) : {result.path}")
+            print(_("Auto-export ({export_format}) : {path}").format(export_format=export_format, path=result.path))
     return 0
 
 
@@ -730,21 +810,18 @@ def cmd_incidents_export_ioc(args: argparse.Namespace, container: DependencyCont
 
     incident = active_defense.incident_repository.get(args.incident_id)
     if incident is None:
-        print(f"Incident introuvable : {args.incident_id!r}.", file=sys.stderr)
+        print(_("Incident introuvable : {incident_id!r}.").format(incident_id=args.incident_id), file=sys.stderr)
         return 1
 
     export_dir = container.project_root / active_defense.config.storage.export_dir
-    exporters: dict[str, IoCExporterPort] = {
-        "json": JsonIoCExporter(container.filesystem, export_dir),
-        "csv": CsvIoCExporter(container.filesystem, export_dir),
-    }
+    exporters = build_ioc_exporters(container.filesystem, export_dir, active_defense.config.ioc)
     for export_format in (f.strip() for f in args.format.split(",")):
         exporter = exporters.get(export_format)
         if exporter is None:
-            print(f"Format d'export inconnu : {export_format!r} (json ou csv).", file=sys.stderr)
+            print(_("Format d'export inconnu : {export_format!r} (json, csv, stix ou misp).").format(export_format=export_format), file=sys.stderr)
             return 1
         result = exporter.export(incident)
-        print(f"Exporte : {result.path}")
+        print(_("Exporté : {path}").format(path=result.path))
     return 0
 
 
@@ -755,12 +832,12 @@ def cmd_incidents_generate_report(args: argparse.Namespace, container: Dependenc
 
     incident = active_defense.incident_repository.get(args.incident_id)
     if incident is None:
-        print(f"Incident introuvable : {args.incident_id!r}.", file=sys.stderr)
+        print(_("Incident introuvable : {incident_id!r}.").format(incident_id=args.incident_id), file=sys.stderr)
         return 1
 
     export_dir = container.project_root / active_defense.config.storage.export_dir
     result = MarkdownIncidentReportExporter(container.filesystem, export_dir).render(incident)
-    print(f"Rapport genere : {result.path}")
+    print(_("Rapport généré : {path}").format(path=result.path))
     return 0
 
 
@@ -771,14 +848,13 @@ def cmd_deception_list(args: argparse.Namespace, container: DependencyContainer)
 
     assignments = active_defense.deception_assignment_repository.list_active()
     if not assignments:
-        print("Aucune affectation de leurre.")
+        print(_("Aucune affectation de leurre."))
         return 0
     now = container.clock.now()
     for assignment in assignments:
-        status = "active" if is_assignment_active(assignment, now) else "expiree"
+        status = _("active") if is_assignment_active(assignment, now) else _("expirée")
         print(
-            f"{assignment.subject_id}\t{assignment.profile_name}\t{status}\t"
-            f"{assignment.assigned_at.isoformat()}\t{assignment.expires_at.isoformat()}"
+            _("{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}").format(subject_id=assignment.subject_id, profile_name=assignment.profile_name, status=status, value=assignment.assigned_at.isoformat(), value2=assignment.expires_at.isoformat())
         )
     return 0
 
@@ -789,7 +865,7 @@ def cmd_deception_release(args: argparse.Namespace, container: DependencyContain
         return 1
 
     release_deception(active_defense.deception_assignment_repository, args.subject_id)
-    print(f"Affectation de leurre liberee pour {args.subject_id!r} (si elle existait).")
+    print(_("Affectation de leurre libérée pour {subject_id!r} (si elle existait).").format(subject_id=args.subject_id))
     return 0
 
 
@@ -803,8 +879,7 @@ def cmd_active_defense_simulate(args: argparse.Namespace, container: DependencyC
         return 1
     if args.attack_class not in KNOWN_ATTACK_CLASSES:
         print(
-            f"Classe d'attaque inconnue : {args.attack_class!r} "
-            f"(valeurs possibles : {', '.join(sorted(KNOWN_ATTACK_CLASSES))}).",
+            _("Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value}).").format(attack_class=args.attack_class, value=', '.join(sorted(KNOWN_ATTACK_CLASSES))),
             file=sys.stderr,
         )
         return 1
@@ -814,11 +889,11 @@ def cmd_active_defense_simulate(args: argparse.Namespace, container: DependencyC
         active_defense.deception_assignment_repository, container.clock, active_defense.config,
         subject_id=subject_id, attack_class=cast("AttackClass", args.attack_class), score_delta=args.score,
     )
-    print(f"Source (simulee) : {preview.subject_id}  (chemin observe : {args.path})")
-    print(f"Score : {preview.previous_score} -> {preview.projected_score}")
-    print(f"Niveau : {preview.previous_level} -> {preview.projected_level}")
+    print(_("Source (simulée) : {subject_id}  (chemin observé : {path})").format(subject_id=preview.subject_id, path=args.path))
+    print(_("Score : {previous_score} -> {projected_score}").format(previous_score=preview.previous_score, projected_score=preview.projected_score))
+    print(_("Niveau : {previous_level} -> {projected_level}").format(previous_level=preview.previous_level, projected_level=preview.projected_level))
     for line in preview.explanation:
-        print(f"  - {line}")
+        print(_("  - {line}").format(line=line))
     return 0
 
 
@@ -835,10 +910,10 @@ def cmd_active_defense_purge(args: argparse.Namespace, container: DependencyCont
         active_defense.threat_state_repository, active_defense.incident_repository,
         container.clock, active_defense.config,
     )
-    print(f"Etats de menace purges : {result.purged_threat_states}")
-    print(f"Incidents fermes automatiquement : {len(result.closed_incidents)}")
+    print(_("États de menace purgés : {purged_threat_states}").format(purged_threat_states=result.purged_threat_states))
+    print(_("Incidents fermés automatiquement : {count}").format(count=len(result.closed_incidents)))
     for incident_id in result.closed_incidents:
-        print(f"  - {incident_id}")
+        print(_("  - {incident_id}").format(incident_id=incident_id))
     return 0
 
 
@@ -870,7 +945,7 @@ def cmd_certs_generate_self_signed(args: argparse.Namespace, container: Dependen
     try:
         result = generate_self_signed_certificate(params, key_path, cert_path, tool, container.filesystem, container.clock, backups_dir)
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
@@ -880,7 +955,7 @@ def cmd_certs_generate_self_signed(args: argparse.Namespace, container: Dependen
 def cmd_certs_generate_ca(args: argparse.Namespace, container: DependencyContainer) -> int:
     password = _resolve_ca_password(args)
     if password is None:
-        print("Erreur : les deux saisies de passphrase ne correspondent pas.", file=sys.stderr)
+        print(_("Erreur : les deux saisies de passphrase ne correspondent pas."), file=sys.stderr)
         return 1
 
     params = CaParams(
@@ -898,12 +973,12 @@ def cmd_certs_generate_ca(args: argparse.Namespace, container: DependencyContain
             tool, container.filesystem, container.clock, backups_dir,
         )
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
     if result.success:
-        print(f"Importez {ca_dir / 'root-ca.pem'} dans le magasin de confiance des clients (doc TLS §7.4).")
+        print(_("Importez {value} dans le magasin de confiance des clients (doc TLS §7.4).").format(value=ca_dir / _('root-ca.pem')))
     return 0 if result.success else 1
 
 
@@ -935,12 +1010,12 @@ def cmd_certs_import(args: argparse.Namespace, container: DependencyContainer) -
             source_chain_path=Path(args.chain) if args.chain else None,
         )
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
     if result.success:
-        print("Redemarrage requis pour que le nouveau certificat soit pris en compte (`omega-serv service restart`).")
+        print(_("Redémarrage requis pour que le nouveau certificat soit pris en compte (`omega-serv service restart`)."))
     return 0 if result.success else 1
 
 
@@ -960,7 +1035,7 @@ def cmd_certs_generate_csr(args: argparse.Namespace, container: DependencyContai
             params, key_path, csr_path, tool, container.filesystem, container.clock, backups_dir,
         )
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
@@ -981,7 +1056,7 @@ def cmd_certs_sign_csr(args: argparse.Namespace, container: DependencyContainer)
             out_fullchain_path=Path(args.fullchain_out) if args.fullchain_out else None,
         )
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
@@ -999,7 +1074,7 @@ def cmd_certs_revoke(args: argparse.Namespace, container: DependencyContainer) -
             ca_dir / "index.txt", tool, container.filesystem,
         )
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     print(result.message)
@@ -1008,30 +1083,30 @@ def cmd_certs_revoke(args: argparse.Namespace, container: DependencyContainer) -
 
 def _print_certificate_report(report: CertificateReport) -> None:
     info = report.info
-    print(f"Sujet : {info.subject}")
-    print(f"Emetteur : {info.issuer}")
-    print(f"Debut de validite : {info.not_before.isoformat()}")
-    print(f"Fin de validite : {info.not_after.isoformat()}")
-    print(f"Jours restants : {report.days_remaining}")
-    print(f"Type de cle : {info.key_type} ({info.key_bits} bits)" if info.key_bits else f"Type de cle : {info.key_type}")
-    print(f"Algorithme de signature : {info.signature_algorithm}")
+    print(_("Sujet : {subject}").format(subject=info.subject))
+    print(_("Émetteur : {issuer}").format(issuer=info.issuer))
+    print(_("Début de validité : {value}").format(value=info.not_before.isoformat()))
+    print(_("Fin de validité : {value}").format(value=info.not_after.isoformat()))
+    print(_("Jours restants : {days_remaining}").format(days_remaining=report.days_remaining))
+    print(_("Type de clé : {key_type} ({key_bits} bits)").format(key_type=info.key_type, key_bits=info.key_bits) if info.key_bits else _("Type de clé : {key_type}").format(key_type=info.key_type))
+    print(_("Algorithme de signature : {signature_algorithm}").format(signature_algorithm=info.signature_algorithm))
     if info.san_dns or info.san_ip:
-        print("SAN :")
+        print(_("SAN :"))
         for dns in info.san_dns:
-            print(f"  - DNS:{dns}")
+            print(_("  - DNS:{dns}").format(dns=dns))
         for ip in info.san_ip:
-            print(f"  - IP:{ip}")
+            print(_("  - IP:{ip}").format(ip=ip))
     print()
-    print(f"[{'ERREUR' if report.is_expired else 'OK'}] Certificat {'expire' if report.is_expired else 'non expire'}")
+    print(_("[{value}] Certificat {value2}").format(value=_('ERREUR') if report.is_expired else _('OK'), value2=_('expiré') if report.is_expired else _('non expiré')))
     if report.key_matches is not None:
-        print(f"[{'OK' if report.key_matches else 'ERREUR'}] Cle privee {'correspondante' if report.key_matches else 'NE correspond PAS'}")
+        print(_("[{value}] Clé privée {value2}").format(value=_('OK') if report.key_matches else _('ERREUR'), value2=_('correspondante') if report.key_matches else _('NE correspond PAS')))
     if report.key_mode is not None:
         strict = not (report.key_mode & 0o077)
-        print(f"[{'OK' if strict else 'ERREUR'}] Permissions cle privee : {oct(report.key_mode)}")
+        print(_("[{value}] Permissions clé privée : {value2}").format(value=_('OK') if strict else _('ERREUR'), value2=oct(report.key_mode)))
     if info.is_self_signed:
-        print("[AVERTISSEMENT] Certificat auto-signe, non approuve par defaut par les navigateurs")
+        print(_("[AVERTISSEMENT] Certificat auto-signé, non approuvé par défaut par les navigateurs"))
     if report.expiring_soon and not report.is_expired:
-        print(f"[AVERTISSEMENT] Certificat bientot expire ({report.days_remaining} jours restants)")
+        print(_("[AVERTISSEMENT] Certificat bientôt expiré ({days_remaining} jours restants)").format(days_remaining=report.days_remaining))
 
 
 def _cmd_certs_inspect(args: argparse.Namespace, container: DependencyContainer, warn_days: int = 30) -> int:
@@ -1048,7 +1123,7 @@ def _cmd_certs_inspect(args: argparse.Namespace, container: DependencyContainer,
     try:
         report = inspect_certificate_report(cert_path, key_path, tool, container.filesystem, container.clock, warn_days)
     except CertificateToolError as e:
-        print(f"Erreur : {e}", file=sys.stderr)
+        print(_("Erreur : {e}").format(e=e), file=sys.stderr)
         return 1
 
     _print_certificate_report(report)
@@ -1084,7 +1159,7 @@ def cmd_config_enable_tls(args: argparse.Namespace, container: DependencyContain
     new_config = OmegaServConfig.from_dict(data)
 
     container.configuration.save(args.config, new_config)
-    print(f"TLS active (mode {args.mode}) dans {args.config}.")
+    print(_("TLS activé (mode {mode}) dans {config}.").format(mode=args.mode, config=args.config))
     return 0
 
 
@@ -1100,7 +1175,7 @@ def cmd_config_disable_tls(args: argparse.Namespace, container: DependencyContai
     new_config = OmegaServConfig.from_dict(data)
 
     container.configuration.save(args.config, new_config)
-    print(f"TLS desactive dans {args.config}.")
+    print(_("TLS désactivé dans {config}.").format(config=args.config))
     return 0
 
 
@@ -1112,7 +1187,7 @@ def _resolve_password(args: argparse.Namespace) -> str:
     dans l'historique du shell."""
     if args.password:
         return str(args.password)
-    return getpass.getpass("Mot de passe : ")
+    return getpass.getpass(_("Mot de passe : "))
 
 
 def _resolve_ca_password(args: argparse.Namespace) -> str | None:
@@ -1124,8 +1199,8 @@ def _resolve_ca_password(args: argparse.Namespace) -> str | None:
     nouvelle tentative silencieuse)."""
     if args.password:
         return str(args.password)
-    first = getpass.getpass("Passphrase de la CA : ")
-    second = getpass.getpass("Confirmer la passphrase : ")
+    first = getpass.getpass(_("Passphrase de la CA : "))
+    second = getpass.getpass(_("Confirmer la passphrase : "))
     if first != second:
         return None
     return first
@@ -1210,13 +1285,13 @@ def cmd_auth_list(args: argparse.Namespace, container: DependencyContainer) -> i
     users = build_users_repository(load_result.config, container.project_root, container.filesystem).load()
     zones = build_auth_zones_repository(load_result.config, container.project_root, container.filesystem).load()
 
-    print("Utilisateurs :")
+    print(_("Utilisateurs :"))
     for user in users:
-        print(f"  - {user.username}")
-    print("Zones protegees :")
+        print(_("  - {username}").format(username=user.username))
+    print(_("Zones protégées :"))
     for zone in zones:
-        methods = ", ".join(zone.allow_methods) or "toutes"
-        print(f"  - {zone.path_prefix} (realm={zone.realm!r}, utilisateurs={list(zone.allowed_users)}, methodes={methods})")
+        methods = ", ".join(zone.allow_methods) or _("toutes")
+        print(_("  - {path_prefix} (realm={realm!r}, utilisateurs={value}, methodes={methods})").format(path_prefix=zone.path_prefix, realm=zone.realm, value=list(zone.allowed_users), methods=methods))
     return 0
 
 
@@ -1231,11 +1306,11 @@ def cmd_auth_check_permissions(args: argparse.Namespace, container: DependencyCo
     for label, relative_path in (("users.json", load_result.config.paths.auth_file), ("zones.json", load_result.config.paths.auth_zones)):
         path = container.project_root / relative_path
         if not container.filesystem.exists(path):
-            print(f"[INFO] {label} absent ({path})")
+            print(_("[INFO] {label} absent ({path})").format(label=label, path=path))
             continue
         mode = container.filesystem.file_mode(path)
         strict = not (mode & 0o077)
-        print(f"[{'OK' if strict else 'AVERTISSEMENT'}] {label} permissions : {oct(mode)}")
+        print(_("[{value}] {label} permissions : {value2}").format(value=_('OK') if strict else _('AVERTISSEMENT'), label=label, value2=oct(mode)))
         if not strict:
             ok = False
     return 0 if ok else 1
@@ -1253,7 +1328,7 @@ def _build_service_manager(manager_type: str) -> ServiceManagerPort:
 def _detect_or_fail() -> ServiceManagerPort | None:
     manager_type = detect_service_manager_type()
     if manager_type is None:
-        print("Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce systeme.", file=sys.stderr)
+        print(_("Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce système."), file=sys.stderr)
         return None
     return _build_service_manager(manager_type)
 
@@ -1264,12 +1339,12 @@ def cmd_service_status(args: argparse.Namespace, container: DependencyContainer)
         return 1
     result = get_service_status(manager, args.service_name)
     if isinstance(result, ServiceStatus):
-        print(f"Service : {result.service_name}")
-        print(f"Actif   : {result.active}")
-        print(f"Active au demarrage : {result.enabled}")
-        print(f"Etat    : {result.state} ({result.sub_state})")
+        print(_("Service : {service_name}").format(service_name=result.service_name))
+        print(_("Actif   : {active}").format(active=result.active))
+        print(_("Activé au démarrage : {enabled}").format(enabled=result.enabled))
+        print(_("État    : {state} ({sub_state})").format(state=result.state, sub_state=result.sub_state))
         if result.description:
-            print(f"Description : {result.description}")
+            print(_("Description : {description}").format(description=result.description))
         return 0
     print(result.message, file=sys.stderr)
     return 1
@@ -1323,8 +1398,7 @@ def cmd_service_install(args: argparse.Namespace, container: DependencyContainer
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
         print(
-            f"Erreur : generation d'unite non supportee pour {manager_type or 'aucun gestionnaire detecte'} "
-            "(seul systemd est supporte en V1, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5).",
+            _("Erreur : génération d'unité non supportée pour {value} (seul systemd est supporte en V1, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5).").format(value=manager_type or _('aucun gestionnaire détecté')),
             file=sys.stderr,
         )
         return 1
@@ -1350,7 +1424,7 @@ def cmd_service_install(args: argparse.Namespace, container: DependencyContainer
 def cmd_service_uninstall(args: argparse.Namespace, container: DependencyContainer) -> int:
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
-        print(f"Erreur : desinstallation d'unite non supportee pour {manager_type or 'aucun gestionnaire detecte'}.", file=sys.stderr)
+        print(_("Erreur : désinstallation d'unité non supportée pour {value}.").format(value=manager_type or _('aucun gestionnaire détecté')), file=sys.stderr)
         return 1
 
     manager = SystemdServiceManager(SubprocessRunner())
@@ -1361,26 +1435,26 @@ def cmd_service_uninstall(args: argparse.Namespace, container: DependencyContain
 
 
 _SEVERITY_LABELS = {
-    Severity.CRITICAL: "CRITICAL", Severity.HIGH: "HIGH", Severity.MEDIUM: "MEDIUM",
-    Severity.LOW: "LOW", Severity.INFO: "INFO",
+    Severity.CRITICAL: _("CRITICAL"), Severity.HIGH: _("HIGH"), Severity.MEDIUM: _("MEDIUM"),
+    Severity.LOW: _("LOW"), Severity.INFO: _("INFO"),
 }
 
 
 def _print_audit_findings(findings: list[AuditFinding]) -> None:
     if not findings:
-        print("Aucun probleme detecte.")
+        print(_("Aucun problème détecté."))
         return
     for finding in findings:
         label = _SEVERITY_LABELS[finding.severity]
-        print(f"[{label}] {finding.rule_id} {finding.rule_name}")
+        print(_("[{label}] {rule_id} {rule_name}").format(label=label, rule_id=finding.rule_id, rule_name=finding.rule_name))
         print(f"    {finding.message}")
-        print(f"    -> {finding.recommendation}")
+        print(_("    -> {recommendation}").format(recommendation=finding.recommendation))
 
 
 def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer) -> int:
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
-        _print_errors(load_result.errors, "Erreur de configuration")
+        _print_errors(load_result.errors, _("Erreur de configuration"))
         return 3
     assert load_result.config is not None
 
@@ -1404,9 +1478,8 @@ def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer)
     else:
         _print_audit_findings(displayed)
         summary = result.summary
-        print(f"Resume : {summary['critical']} critical, {summary['high']} high, "
-              f"{summary['medium']} medium, {summary['low']} low, {summary['info']} info")
-        print("Etat : securise" if result.is_secure else "Etat : NON SECURISE")
+        print(_("Résumé : {critical} critical, {high} high, {medium} medium, {low} low, {info} info").format(critical=summary['critical'], high=summary['high'], medium=summary['medium'], low=summary['low'], info=summary['info']))
+        print(_("État : sécurisé") if result.is_secure else _("État : NON SÉCURISÉ"))
 
     return result.exit_code
 
@@ -1701,9 +1774,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
+    effective_argv = sys.argv[1:] if argv is None else argv
     container = DependencyContainer()
+    if not is_server_process(effective_argv):
+        # Avant build_parser() : l'aide (--help) des commandes suivra la langue choisie.
+        install_interface_language(
+            settings_store=container.settings_store, catalog=container.language_catalog, environ=os.environ,
+            terminal_family=container.terminal_detector.detect().family,
+        )
+    parser = build_parser()
+    args = parser.parse_args(effective_argv)
     return cast(int, args.func(args, container))
 
 

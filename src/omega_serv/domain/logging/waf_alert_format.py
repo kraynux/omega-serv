@@ -69,7 +69,7 @@ def format_waf_alert_line(entry: WafAlertEntry, logging_config: WafLoggingConfig
         "method": sanitize_log_field(entry.method, 16),
         "path": sanitize_log_field(entry.path, logging_config.max_path_chars),
         "user_agent": sanitize_log_field(entry.user_agent, logging_config.max_user_agent_chars) if entry.user_agent else None,
-        "action": entry.decision.action,
+        "action": "throttle" if entry.decision.throttle_only else entry.decision.action,
         "status_code": entry.decision.status_code,
         "score": entry.decision.score,
         "rules": [f.rule_id for f in entry.decision.findings],

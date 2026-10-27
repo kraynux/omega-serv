@@ -161,7 +161,7 @@ class TestReputationEnabledOnListLoad(unittest.TestCase):
     def test_keeps_other_reputation_settings_and_does_not_mutate_input(self):
         original = {"reputation": {"enabled": True, "suspicious_threshold": 7}}
         settings, changes = with_reputation_enabled_for_lists(original)
-        self.assertEqual(changes, ("auto-ban active (blocklist temporaire, reponse 451)",))
+        self.assertEqual(changes, ("auto-ban activé (blocklist temporaire, réponse 451)",))
         self.assertEqual(settings["reputation"]["suspicious_threshold"], 7)
         self.assertNotIn("auto_block", original["reputation"])
 

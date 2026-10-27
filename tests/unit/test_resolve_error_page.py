@@ -19,12 +19,12 @@ class TestResolveErrorPageBody(unittest.TestCase):
     def test_no_custom_dir_returns_default_page(self):
         body = resolve_error_page_body(404, None, self.filesystem)
         self.assertIn(b"404", body)
-        self.assertIn(b"Not Found", body)
+        self.assertIn("Page non trouvée".encode(), body)
 
     def test_custom_dir_without_matching_file_falls_back_to_default(self):
         body = resolve_error_page_body(404, self.custom_dir, self.filesystem)
         self.assertIn(b"404", body)
-        self.assertIn(b"Not Found", body)
+        self.assertIn("Page non trouvée".encode(), body)
 
     def test_custom_dir_with_matching_file_returns_its_content(self):
         (self.custom_dir / "404.html").write_text("<html>404 sur mesure</html>")

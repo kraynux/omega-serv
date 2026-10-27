@@ -226,7 +226,7 @@ class TestCliActiveDefense(unittest.TestCase):
         with contextlib.redirect_stdout(stdout):
             result = cmd_active_defense_status(self._ns(), self.container)
         self.assertEqual(result, 0)
-        self.assertIn("desactive", stdout.getvalue())
+        self.assertIn("désactivé", stdout.getvalue())
 
     def test_status_reports_enabled_after_option_enable(self):
         cmd_config_init(self._ns(force=False), self.container)
@@ -235,7 +235,7 @@ class TestCliActiveDefense(unittest.TestCase):
         with contextlib.redirect_stdout(stdout):
             result = cmd_active_defense_status(self._ns(), self.container)
         self.assertEqual(result, 0)
-        self.assertIn("Active Defense : active", stdout.getvalue())
+        self.assertIn("Active Defense : activé", stdout.getvalue())
         self.assertIn("Sources suivies : 0", stdout.getvalue())
 
     def test_threats_list_fails_cleanly_when_disabled(self):
@@ -411,8 +411,8 @@ class TestCliActiveDefense(unittest.TestCase):
         with contextlib.redirect_stdout(stdout):
             result = cmd_active_defense_purge(self._ns(), self.container)
         self.assertEqual(result, 0)
-        self.assertIn("Etats de menace purges : 0", stdout.getvalue())
-        self.assertIn("Incidents fermes automatiquement : 0", stdout.getvalue())
+        self.assertIn("États de menace purgés : 0", stdout.getvalue())
+        self.assertIn("Incidents fermés automatiquement : 0", stdout.getvalue())
 
 
 @unittest.skipIf(shutil.which("openssl") is None, "openssl introuvable sur ce systeme")

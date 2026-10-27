@@ -16,6 +16,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.fastcgi_zone import (
     FastCgiConfig,
@@ -30,18 +31,18 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _FIELDS: tuple[tuple[str, str], ...] = (
-    ("url_prefix", "Prefixe URL (url_prefix, ex: /app/)"),
-    ("script_root", "Racine d'execution (script_root, relatif au projet)"),
-    ("socket_path", "Socket PHP-FPM (socket_path)"),
-    ("connect_timeout_seconds", "Delai de connexion en secondes"),
-    ("read_timeout_seconds", "Delai de lecture en secondes"),
-    ("allowed_extensions", "Extensions autorisees (separees par des virgules)"),
-    ("index_files", "Fichiers d'index (separes par des virgules)"),
+    ("url_prefix", _("Préfixe URL (url_prefix, ex: /app/)")),
+    ("script_root", _("Racine d'exécution (script_root, relatif au projet)")),
+    ("socket_path", _("Socket PHP-FPM (socket_path)")),
+    ("connect_timeout_seconds", _("Délai de connexion en secondes")),
+    ("read_timeout_seconds", _("Délai de lecture en secondes")),
+    ("allowed_extensions", _("Extensions autorisées (séparées par des virgules)")),
+    ("index_files", _("Fichiers d'index (séparés par des virgules)")),
     (
         "allowed_scripts",
         (
-            "Liste blanche de scripts (chemins relatifs a script_root, separes par des "
-            "virgules, ex: index.php, api/router.php - vide = tout .php sous script_root reste executable)"
+            _("Liste blanche de scripts (chemins relatifs à script_root, séparés par des "
+            "virgules, ex: index.php, api/router.php - vide = tout .php sous script_root reste exécutable)")
         ),
     ),
 )
@@ -55,9 +56,9 @@ class FastCgiScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("FASTCGI / PHP-FPM", classes="omega-title")
+            yield Static(_("FASTCGI / PHP-FPM"), classes="omega-title")
             yield Static(
-                "L'activation de l'option 'fastcgi' se fait dans le menu Options.",
+                _("L'activation de l'option 'fastcgi' se fait dans le menu Options."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
@@ -66,15 +67,15 @@ class FastCgiScreen(OmegaScreen):
                 yield Input(id=f"field-{field_name}")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="save", variant="primary")
+                    yield Button(_("Enregistrer"), id="save", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         result = load_config(self._container.configuration, self._container.config_file)
         if not result.success or result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration."))
             return
         option = result.config.options.get("fastcgi")
         config = FastCgiConfig() if option is None else parse_fastcgi_config(option.settings)
@@ -98,14 +99,14 @@ class FastCgiScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration - impossible d'enregistrer.")
+            error_widget.update(_("Erreur de configuration - impossible d'enregistrer."))
             return
 
         try:
             connect_timeout = float(self.query_one("#field-connect_timeout_seconds", Input).value.strip())
             read_timeout = float(self.query_one("#field-read_timeout_seconds", Input).value.strip())
         except ValueError:
-            error_widget.update("Delais invalides (nombre attendu).")
+            error_widget.update(_("Délais invalides (nombre attendu)."))
             return
 
         config = FastCgiConfig(
@@ -131,10 +132,10 @@ class FastCgiScreen(OmegaScreen):
             script_root = (self._container.project_root / config.script_root).resolve()
             if script_root == webroot or webroot in script_root.parents:
                 errors.append(
-                    f"script_root ({script_root}) est a l'interieur de webroot ({webroot}) - interdit structurellement"
+                    _("script_root ({script_root}) est à l'intérieur de webroot ({webroot}) - interdit structurellement").format(script_root=script_root, webroot=webroot)
                 )
         if errors:
-            error_widget.update("Erreur :\n" + "\n".join(f"  - {e}" for e in errors))
+            error_widget.update(_("Erreur :\n") + "\n".join(f"  - {e}" for e in errors))
             return
 
         existing = load_result.config.options.get("fastcgi")
@@ -145,7 +146,7 @@ class FastCgiScreen(OmegaScreen):
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
         notify_zone_prefix_overlaps(self, self._container, "fastcgi")
-        notify_reload_required(self, self._container, "Configuration FastCGI enregistree.")
+        notify_reload_required(self, self._container, _("Configuration FastCGI enregistrée."))
 
 
 def _settings_from_config(config: FastCgiConfig) -> dict:

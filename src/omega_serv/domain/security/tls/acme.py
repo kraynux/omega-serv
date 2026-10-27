@@ -19,6 +19,8 @@ from __future__ import annotations
 import shlex
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class CertbotRequestParams:
@@ -39,11 +41,11 @@ class CertbotRequestParams:
 def validate_certbot_request_params(params: CertbotRequestParams) -> list[str]:
     errors: list[str] = []
     if not params.domain:
-        errors.append("le domaine ne peut pas etre vide")
+        errors.append(_("le domaine ne peut pas être vide"))
     if not params.webroot_path:
-        errors.append("le chemin du webroot ne peut pas etre vide")
+        errors.append(_("le chemin du webroot ne peut pas être vide"))
     if not params.deploy_hook_path:
-        errors.append("le chemin du script de hook ne peut pas etre vide")
+        errors.append(_("le chemin du script de hook ne peut pas être vide"))
     return errors
 
 

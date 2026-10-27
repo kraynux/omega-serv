@@ -25,6 +25,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.security.waf.config import (
     MagnetConfig,
@@ -33,6 +34,7 @@ from omega_serv.domain.security.waf.config import (
 )
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens._service_reload import reload_service_after_waf_change
+from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -49,29 +51,29 @@ class WafMagnetScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("WAF - MAGNET (IMPORT D'UN WAF EXTERNE)", classes="omega-title")
+            yield Static(_("WAF - MAGNET (IMPORT D'UN WAF EXTERNE)"), classes="omega-title")
             yield Static(
-                "Importe un script WAF mod_magnet Lighttpd EXISTANT (ecrit pour un autre site), "
-                "sans le reecrire. Reste toujours un renfort additif : il ne peut jamais lever un "
-                "blocage deja decide par le WAF natif. Seuls les chemins personnels du script (fichiers "
+                _("Importe un script WAF mod_magnet Lighttpd EXISTANT (écrit pour un autre site), "
+                "sans le réécrire. Reste toujours un renfort additif : il ne peut jamais lever un "
+                "blocage déjà décidé par le WAF natif. Seuls les chemins personnels du script (fichiers "
                 "de log/blocage) se dissocient via les champs ci-dessous - toute la logique du script "
-                "reste inchangee.",
+                "reste inchangée."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
 
-            yield Static("Actif (oui/non)", classes="omega-subtitle")
-            yield Input(value="non", id="enabled-input")
-            yield Static("Script (chemin relatif au projet)", classes="omega-subtitle")
+            yield Static(_("Actif (oui/non)"), classes="omega-subtitle")
+            yield Input(value=to_text(False), id="enabled-input")
+            yield Static(_("Script (chemin relatif au projet)"), classes="omega-subtitle")
             yield Static(self._available_scripts_hint(), id="available-scripts-hint", classes="omega-hint")
             yield Input(placeholder="secure/waf/scripts/waf.lua", id="script-input")
-            yield Static("Delai maximum par appel (ms)", classes="omega-subtitle")
+            yield Static(_("Délai maximum par appel (ms)"), classes="omega-subtitle")
             yield Input(value="50", id="timeout-input")
-            yield Static("Comportement en cas d'erreur du script (ignore/fail-closed)", classes="omega-subtitle")
+            yield Static(_("Comportement en cas d'erreur du script (ignore/fail-closed)"), classes="omega-subtitle")
             yield Input(value="ignore", id="on-error-input")
 
             yield Static(
-                "Chemins personnels dissocies (vide = le script garde son propre chemin en dur)",
+                _("Chemins personnels dissociés (vide = le script garde son propre chemin en dur)"),
                 classes="omega-subtitle",
             )
             yield Input(placeholder="blocklist_file", id="path-blocklist-file-input")
@@ -82,11 +84,11 @@ class WafMagnetScreen(OmegaScreen):
 
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Verifier la compatibilite", id="check-compat")
+                    yield Button(_("Vérifier la compatibilité"), id="check-compat")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Enregistrer", id="save", variant="primary")
+                    yield Button(_("Enregistrer"), id="save", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield Static("", id="compat-result", classes="omega-hint")
         yield Footer()
 
@@ -100,21 +102,21 @@ class WafMagnetScreen(OmegaScreen):
     def _available_scripts_hint(self) -> str:
         scripts_dir = self._container.project_root.joinpath(*_SCRIPTS_SUBDIR)
         if not self._container.filesystem.is_dir(scripts_dir):
-            return "Aucun script trouve sous secure/waf/scripts/."
+            return _("Aucun script trouvé sous secure/waf/scripts/.")
         scripts = sorted(name for name in self._container.filesystem.list_directory_entries(scripts_dir) if name.endswith(".lua"))
         if not scripts:
-            return "Aucun script .lua trouve sous secure/waf/scripts/."
+            return _("Aucun script .lua trouvé sous secure/waf/scripts/.")
         listed = ", ".join(f"secure/waf/scripts/{name}" for name in scripts)
-        return f"Scripts disponibles sur disque : {listed}"
+        return _("Scripts disponibles sur disque : {listed}").format(listed=listed)
 
     def _refresh(self) -> None:
         config = self._config()
         if config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration."))
             return
         settings = config.options["waf"].settings if "waf" in config.options else {}
         magnet = parse_waf_config(settings).magnet
-        self.query_one("#enabled-input", Input).value = "oui" if magnet.enabled else "non"
+        self.query_one("#enabled-input", Input).value = to_text(magnet.enabled)
         self.query_one("#script-input", Input).value = magnet.script
         self.query_one("#timeout-input", Input).value = str(magnet.timeout_ms)
         self.query_one("#on-error-input", Input).value = magnet.on_error
@@ -136,7 +138,7 @@ class WafMagnetScreen(OmegaScreen):
 
     def _magnet_config_from_form(self) -> MagnetConfig:
         return MagnetConfig(
-            enabled=self.query_one("#enabled-input", Input).value.strip().lower() in ("oui", "true", "1", "o", "y"),
+            enabled=is_yes(self.query_one("#enabled-input", Input).value),
             script=self.query_one("#script-input", Input).value.strip(),
             timeout_ms=int(self.query_one("#timeout-input", Input).value.strip() or "50"),
             on_error=self.query_one("#on-error-input", Input).value.strip(),  # type: ignore[arg-type]
@@ -153,22 +155,22 @@ class WafMagnetScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration - impossible d'enregistrer.")
+            error_widget.update(_("Erreur de configuration - impossible d'enregistrer."))
             return
 
         try:
             magnet = self._magnet_config_from_form()
         except ValueError:
-            error_widget.update("Delai (ms) invalide : un nombre entier est attendu.")
+            error_widget.update(_("Délai (ms) invalide : un nombre entier est attendu."))
             return
         if magnet.on_error not in ("ignore", "fail-closed"):
-            error_widget.update(f"Valeur invalide : {magnet.on_error!r} (attendu : ignore, fail-closed)")
+            error_widget.update(_("Valeur invalide : {on_error!r} (attendu : ignore, fail-closed)").format(on_error=magnet.on_error))
             return
         if magnet.timeout_ms <= 0:
-            error_widget.update("Le delai (ms) doit etre strictement positif.")
+            error_widget.update(_("Le délai (ms) doit être strictement positif."))
             return
         if magnet.enabled and not magnet.script:
-            error_widget.update("Un chemin de script est requis pour activer le magnet.")
+            error_widget.update(_("Un chemin de script est requis pour activer le magnet."))
             return
 
         existing = load_result.config.options.get("waf")
@@ -192,7 +194,7 @@ class WafMagnetScreen(OmegaScreen):
         new_config = replace(load_result.config, options=new_options)
         self._container.configuration.save(self._container.config_file, new_config)
         error_widget.update("")
-        self.app.notify("Reglages magnet enregistres.")
+        self.app.notify(_("Réglages magnet enregistrés."))
         reload_message = reload_service_after_waf_change(self, self._container)
         if reload_message is not None:
             self.app.notify(reload_message)
@@ -205,53 +207,43 @@ class WafMagnetScreen(OmegaScreen):
         try:
             magnet = self._magnet_config_from_form()
         except ValueError:
-            result_widget.update("Delai (ms) invalide : un nombre entier est attendu.")
+            result_widget.update(_("Délai (ms) invalide : un nombre entier est attendu."))
             return
         if not magnet.script:
-            result_widget.update("Renseignez d'abord un chemin de script.")
+            result_widget.update(_("Renseignez d'abord un chemin de script."))
             return
 
         runner = self._container.magnet_compat_check_runner
         if runner is None:
-            result_widget.update("Verification indisponible dans cet environnement.")
+            result_widget.update(_("Vérification indisponible dans cet environnement."))
             return
-        result_widget.update("Verification en cours...")
+        result_widget.update(_("Vérification en cours..."))
         check = await runner(magnet, self._container.project_root, self._container.filesystem)
 
         if check.dependency_missing:
             result_widget.update(
-                "Dependance 'lupa' absente - installer l'extra optionnel avec "
-                "`pip install -e \".[magnet]\"`."
+                _("Dépendance 'lupa' absente - installer l'extra optionnel avec "
+                "`pip install -e \".[magnet]\"`.")
             )
             return
         if check.construction_error:
-            result_widget.update(f"ERREUR : {check.construction_error}")
+            result_widget.update(_("ERREUR : {construction_error}").format(construction_error=check.construction_error))
             return
 
         lines: list[str] = []
         if check.unsupported_members:
             lines.append(
-                "ℹ️ INFORMATION (n'empeche jamais l'enregistrement/l'activation) - ce script "
-                "reference lighty."
-                f"{{{', '.join(sorted(check.unsupported_members))}}}, que ce pont ne branche pas "
-                "(restera toujours `nil` ici, jamais une erreur en soi). Si le script verifie deja "
-                "la presence de ce membre avant de l'utiliser (ex. "
-                "`type(lighty.X) == \"function\"`, un repli vers une ancienne API), ce code ne "
-                "s'execute tout simplement jamais sous omega-serv et n'a aucun effet reel - "
-                "regardez le code autour de cette reference pour en juger. Le resultat de la "
-                "requete de test ci-dessous reste le signal le plus fiable : une incompatibilite "
-                "reelle s'y traduit par une erreur, pas seulement par cet avertissement."
+                _("ℹ️ INFORMATION (n'empêche jamais l'enregistrement/l'activation) - ce script référence lighty.{{{value}}}, que ce pont ne branche pas (restera toujours `nil` ici, jamais une erreur en soi). Si le script vérifie déjà la présence de ce membre avant de l'utiliser (ex. `type(lighty.X) == \"function\"`, un repli vers une ancienne API), ce code ne s'exécute tout simplement jamais sous omega-serv et n'a aucun effet réel - regardez le code autour de cette référence pour en juger. Le résultat de la requête de test ci-dessous reste le signal le plus fiable : une incompatibilité réelle s'y traduit par une erreur, pas seulement par cet avertissement.").format(value=', '.join(sorted(check.unsupported_members)))
             )
         if check.dry_run_error:
             lines.append(
-                "⚠️ PROBLEME REEL DETECTE - le script a leve une erreur sur une requete de test "
-                f"benigne : {check.dry_run_error}"
+                _("⚠️ PROBLÈME RÉEL DÉTECTÉ - le script a levé une erreur sur une requête de test bénigne : {dry_run_error}").format(dry_run_error=check.dry_run_error)
             )
         if magnet.on_error == "fail-closed" and (check.unsupported_members or check.dry_run_error):
             lines.append(
-                "⚠️ ATTENTION - on_error='fail-closed' combine a une incompatibilite detectee : toute "
-                "requete future qui declenche la meme erreur sera BLOQUEE (y compris du trafic legitime)."
+                _("⚠️ ATTENTION - on_error='fail-closed' combiné à une incompatibilité détectée : toute "
+                "requête future qui déclenche la même erreur sera BLOQUÉE (y compris du trafic légitime).")
             )
         if not lines:
-            lines.append("Compatibilite OK : scan statique propre, requete de test sans erreur.")
+            lines.append(_("Compatibilité OK : scan statique propre, requête de test sans erreur."))
         result_widget.update("\n".join(lines))

@@ -15,6 +15,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.logs.library import list_library
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.domain.logs.viewer_type import ViewerType, allowed_viewers
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -36,25 +37,25 @@ class LogViewScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("VOIR LES LOGS", classes="omega-title")
+            yield Static(_("VOIR LES LOGS"), classes="omega-title")
             yield Static(
-                "Logs references dans la Bibliotheque uniquement - importez-en "
-                "d'autres depuis l'ecran Bibliotheque.",
+                _("Logs référencés dans la Bibliothèque uniquement - importez-en "
+                "d'autres depuis l'écran Bibliothèque."),
                 classes="omega-hint",
             )
             yield Static("", id="view-error", classes="omega-hint")
             yield LogLibraryTable(id="library-table")
-            yield Static("Numeros ci-dessus, separes par des virgules (ex: 1,3)", classes="omega-subtitle")
-            yield Input(placeholder="ex: 1,3", id="selection-input")
+            yield Static(_("Numéros ci-dessus, séparés par des virgules (ex: 1,3)"), classes="omega-subtitle")
+            yield Input(placeholder=_("ex: 1,3"), id="selection-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Voir (simple)", id="view-simple", variant="primary")
+                    yield Button(_("Voir (simple)"), id="view-simple", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Voir (classique)", id="view-classic")
+                    yield Button(_("Voir (classique)"), id="view-classic")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Voir (lnav)", id="view-lnav")
+                    yield Button(_("Voir (lnav)"), id="view-lnav")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -79,13 +80,13 @@ class LogViewScreen(OmegaScreen):
         error_widget = self.query_one("#view-error", Static)
         raw = self.query_one("#selection-input", Input).value.strip()
         if not raw:
-            error_widget.update("Saisissez au moins un numero de ligne.")
+            error_widget.update(_("Saisissez au moins un numéro de ligne."))
             return None
         paths: list[str] = []
         for token in raw.split(","):
             token = token.strip()
             if not token.isdigit() or not (1 <= int(token) <= len(self._entries)):
-                error_widget.update(f"Numero invalide : {token!r}.")
+                error_widget.update(_("Numéro invalide : {token!r}.").format(token=token))
                 return None
             paths.append(self._entries[int(token) - 1].path)
         error_widget.update("")
@@ -98,7 +99,7 @@ class LogViewScreen(OmegaScreen):
         allowed = allowed_viewers(len(paths))
         if viewer not in allowed:
             self.query_one("#view-error", Static).update(
-                f"{len(paths)} log(s) selectionne(s) : seul {allowed[-1].value} est compatible."
+                _("{count} log(s) sélectionné(s) : seul {value} est compatible.").format(count=len(paths), value=allowed[-1].value)
             )
             return
 

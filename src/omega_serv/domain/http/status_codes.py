@@ -13,8 +13,10 @@ from enum import IntEnum
 
 class HttpStatus(IntEnum):
     OK = 200
+    PARTIAL_CONTENT = 206
     MOVED_PERMANENTLY = 301
     FOUND = 302
+    NOT_MODIFIED = 304
     TEMPORARY_REDIRECT = 307
     PERMANENT_REDIRECT = 308
     BAD_REQUEST = 400
@@ -26,6 +28,7 @@ class HttpStatus(IntEnum):
     EXPECTATION_FAILED = 417
     PAYLOAD_TOO_LARGE = 413
     URI_TOO_LONG = 414
+    RANGE_NOT_SATISFIABLE = 416
     TOO_MANY_REQUESTS = 429
     REQUEST_HEADER_FIELDS_TOO_LARGE = 431
     UNAVAILABLE_FOR_LEGAL_REASONS = 451
@@ -40,6 +43,8 @@ class HttpStatus(IntEnum):
 
 _REASON_PHRASES: dict[HttpStatus, str] = {
     HttpStatus.OK: "OK",
+    HttpStatus.PARTIAL_CONTENT: "Partial Content",
+    HttpStatus.NOT_MODIFIED: "Not Modified",
     HttpStatus.MOVED_PERMANENTLY: "Moved Permanently",
     HttpStatus.FOUND: "Found",
     HttpStatus.TEMPORARY_REDIRECT: "Temporary Redirect",
@@ -53,6 +58,7 @@ _REASON_PHRASES: dict[HttpStatus, str] = {
     HttpStatus.EXPECTATION_FAILED: "Expectation Failed",
     HttpStatus.PAYLOAD_TOO_LARGE: "Payload Too Large",
     HttpStatus.URI_TOO_LONG: "URI Too Long",
+    HttpStatus.RANGE_NOT_SATISFIABLE: "Range Not Satisfiable",
     HttpStatus.TOO_MANY_REQUESTS: "Too Many Requests",
     HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE: "Request Header Fields Too Large",
     HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS: "Unavailable For Legal Reasons",

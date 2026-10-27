@@ -9,7 +9,9 @@ moment (jamais pour une requete "allow")."""
 import asyncio
 import http.client
 import json
+import sqlite3
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from typing import ClassVar
@@ -88,6 +90,8 @@ class _ActiveDefenseServerTestCase(unittest.IsolatedAsyncioTestCase):
         return await asyncio.to_thread(self._request_sync, method, path, headers)
 
     def _load_threat_states(self, database_relative_path: str):
+        # ecriture differee (fil d'ecriture) : attendre qu'elle soit en base avant de relire
+        self.assertTrue(self.server.flush_active_defense())
         connection = open_active_defense_connection(self.root / database_relative_path)
         try:
             return SqliteThreatStateRepository(connection).list_all()
@@ -95,6 +99,8 @@ class _ActiveDefenseServerTestCase(unittest.IsolatedAsyncioTestCase):
             connection.close()
 
     def _load_incidents(self, database_relative_path: str):
+        # ecriture differee (fil d'ecriture) : attendre qu'elle soit en base avant de relire
+        self.assertTrue(self.server.flush_active_defense())
         connection = open_active_defense_connection(self.root / database_relative_path)
         try:
             return SqliteIncidentRepository(connection).list_recent(IncidentFilters())
@@ -450,6 +456,36 @@ class TestActiveDefenseNiveau2ProxyWiring(_ActiveDefenseServerTestCase):
         status, _ = await self._request("GET", "/dashboard")
         self.assertEqual(status, 404)  # comportement normal, jamais de leurre disponible
 
+
+
+class TestActiveDefenseLockedDatabase(_ActiveDefenseServerTestCase):
+    """Scenario S5 (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.5) : un autre programme
+    (purge, sauvegarde) verrouille la base. Avant le correctif : 5 s de gel du serveur, puis
+    connexions coupees sans reponse et rien dans error.log."""
+
+    async def test_locked_database_neither_freezes_nor_drops_requests(self):
+        await self._start(active_defense_settings={"war_mode": {"enabled": True}}, waf_mode="log-only")
+        database = self.root / "var/lib/active-defense.sqlite3"
+        lock = sqlite3.connect(database, timeout=5)
+        lock.execute("BEGIN EXCLUSIVE")
+        try:
+            for _ in range(5):
+                started = time.perf_counter()
+                status, _ = await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+                self.assertEqual(status, 200)  # log-only : la requete suspecte est servie
+                self.assertLess(time.perf_counter() - started, 1.0, "le serveur a attendu le verrou")
+            status, _ = await self._request("GET", "/index.html")
+            self.assertEqual(status, 200)
+            await asyncio.sleep(0.3)
+        finally:
+            lock.rollback()
+            lock.close()
+        states = self._load_threat_states("var/lib/active-defense.sqlite3")
+        self.assertEqual(len(states), 1, "les observations faites pendant le verrou sont ecrites ensuite")
+        self.assertGreater(states[0].score, 0)
+        error_log = (self.root / "var/log/error.log").read_text(encoding="utf-8")
+        self.assertIn("écriture en base impossible", error_log)
+        self.assertIn("écriture en base rétablie", error_log)
 
 if __name__ == "__main__":
     unittest.main()

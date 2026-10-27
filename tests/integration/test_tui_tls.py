@@ -169,7 +169,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             await self._wait_for_generate_to_finish(pilot)
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_generate_self_signed_no_restart_warning_when_tls_disabled(self):
         container = self._container()
@@ -186,7 +186,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             await self._wait_for_generate_to_finish(pilot)
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertFalse(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertFalse(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_ca_wizard_full_flow_and_revoke(self):
         container = self._container()
@@ -207,7 +207,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await self._wait_for_button_reenabled(pilot, "step-ca")
             log = str(pilot.app.screen.query_one("#wizard-log").content)
-            self.assertIn("CA locale generee", log)
+            self.assertIn("CA locale générée", log)
             self.assertIn("Importez", log)
 
             ca_key = self.root / "secure" / "certificates" / "ca" / "root-ca.key"
@@ -219,7 +219,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-san_dns", Input).value = "server.local"
             pilot.app.screen.query_one("#confirm", Button).press()
             await self._wait_for_button_reenabled(pilot, "step-csr")
-            self.assertIn("CSR generee", str(pilot.app.screen.query_one("#wizard-log").content))
+            self.assertIn("CSR générée", str(pilot.app.screen.query_one("#wizard-log").content))
 
             pilot.app.screen.query_one("#step-sign", Button).press()
             await pilot.pause()
@@ -229,8 +229,8 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await self._wait_for_button_reenabled(pilot, "step-sign")
             final_log = str(pilot.app.screen.query_one("#wizard-log").content)
-            self.assertIn("Certificat signe par la CA locale", final_log)
-            self.assertIn("chaine complete", final_log)
+            self.assertIn("Certificat signé par la CA locale", final_log)
+            self.assertIn("chaîne complète", final_log)
 
             signed_cert = self.root / "secure" / "certificates" / "server" / "server.pem"
             self.assertTrue(signed_cert.exists())
@@ -306,7 +306,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await self._wait_for_button_reenabled(pilot, "step-sign")
             log = str(pilot.app.screen.query_one("#wizard-log").content)
-            self.assertIn("REDEMARRAGE COMPLET", log)
+            self.assertIn("REDÉMARRAGE COMPLET", log)
 
     async def test_revoke_warns_restart_when_revoking_the_active_certificate(self):
         container = self._container()
@@ -356,7 +356,7 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             await self._wait_for_button_reenabled(pilot, "revoke")
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
     async def test_toggle_enable_and_disable(self):
         container = self._container()
@@ -368,21 +368,21 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#toggle", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, TlsToggleScreen)
-            self.assertIn("desactive", str(pilot.app.screen.query_one("#status-text").content))
+            self.assertIn("désactivé", str(pilot.app.screen.query_one("#status-text").content))
 
             pilot.app.screen.query_one("#mode-input", Input).value = "direct"
             pilot.app.screen.query_one("#enable", Button).press()
             await pilot.pause()
-            self.assertIn("active", str(pilot.app.screen.query_one("#status-text").content))
+            self.assertIn("activé", str(pilot.app.screen.query_one("#status-text").content))
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("REDEMARRAGE COMPLET" in m for m in messages))
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m for m in messages))
 
             pilot.app.screen.query_one("#disable", Button).press()
             await pilot.pause()
-            self.assertIn("desactive", str(pilot.app.screen.query_one("#status-text").content))
+            self.assertIn("désactivé", str(pilot.app.screen.query_one("#status-text").content))
             messages_after_disable = [str(n.message) for n in pilot.app._notifications]
             self.assertGreaterEqual(
-                sum("REDEMARRAGE COMPLET" in m for m in messages_after_disable), 2,
+                sum("REDÉMARRAGE COMPLET" in m for m in messages_after_disable), 2,
             )
 
     async def test_toggle_rejects_invalid_mode(self):

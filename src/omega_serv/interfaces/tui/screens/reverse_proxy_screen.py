@@ -82,6 +82,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.proxy_zone import (
     PROXY_LOAD_BALANCING_STRATEGIES,
@@ -101,6 +102,7 @@ from omega_serv.interfaces.tui.screens.reverse_proxy_upstream_status_screen impo
 )
 from omega_serv.interfaces.tui.screens.routing_rule_editor_screen import RoutingRuleEditorScreen
 from omega_serv.interfaces.tui.screens.upstream_editor_screen import UpstreamEditorScreen
+from omega_serv.interfaces.tui.yes_no import is_no, is_yes, to_text
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -115,10 +117,10 @@ class ReverseProxyScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("REVERSE PROXY SORTANT", classes="omega-title")
+            yield Static(_("REVERSE PROXY SORTANT"), classes="omega-title")
             yield Static(
-                "Cette fonction permet à Omega-Serv de se comporter lui-même comme un reverse "
-                "proxy : au lieu de servir des fichiers, il redirige les requêtes reçues vers un "
+                _("Cette fonction permet à Omega-Serv de se comporter lui-même comme un reverse "
+                "proxy : au lieu de servir des fichiers, il redirigé les requêtes reçues vers un "
                 "ou plusieurs serveurs backend que vous indiquez, puis renvoie leur réponse au "
                 "client. Avant de créer une zone, l'option doit d'abord être activée depuis le "
                 "menu Options — sa toute première activation exige un redémarrage complet du "
@@ -146,28 +148,28 @@ class ReverseProxyScreen(OmegaScreen):
                 "selon un en-tête de la requête, la prise en charge du WebSocket, et un cache des "
                 "réponses (à configurer et consulter depuis l'écran « Cache du reverse proxy »). "
                 "Comme pour le reste des zones du projet, c'est le préfixe le plus long qui "
-                "correspond qui l'emporte toujours.",
+                "correspond qui l'emporte toujours."),
                 classes="omega-hint",
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="proxy-zones-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="add", variant="primary")
+                    yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Modifier", id="edit", disabled=True)
+                    yield Button(_("Modifier"), id="edit", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Supprimer", id="delete", variant="error", disabled=True)
+                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Etat en direct", id="live-status", disabled=True)
+                    yield Button(_("État en direct"), id="live-status", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#proxy-zones-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Prefixe URL", "Strategie", "Upstreams", "Preserve Host", "Verifie TLS", "WebSocket", "Sticky")
+        table.add_columns(_("Préfixe URL"), _("Stratégie"), _("Upstreams"), _("Préserve Host"), _("Vérifie TLS"), "WebSocket", _("Sticky"))
         self._refresh_table()
 
     def _zones(self) -> list[ProxyZone]:
@@ -192,10 +194,10 @@ class ReverseProxyScreen(OmegaScreen):
         for index, zone in enumerate(self._zones()):
             table.add_row(
                 zone.url_prefix, zone.load_balancing, self._format_upstreams(zone.upstreams),
-                "Oui" if zone.preserve_host_header else "Non",
-                "Oui" if zone.verify_upstream_tls else "Non",
-                "Oui" if zone.websocket_enabled else "Non",
-                "Oui" if zone.sticky_session_enabled else "Non", key=str(index),
+                _("Oui") if zone.preserve_host_header else _("Non"),
+                _("Oui") if zone.verify_upstream_tls else _("Non"),
+                _("Oui") if zone.websocket_enabled else _("Non"),
+                _("Oui") if zone.sticky_session_enabled else _("Non"), key=str(index),
             )
         self._selected_index = None
         self.query_one("#edit", Button).disabled = True
@@ -211,89 +213,89 @@ class ReverseProxyScreen(OmegaScreen):
     def _fields_for(self, zone: ProxyZone | None) -> list[tuple[str, str, str]]:
         z = zone or ProxyZone(url_prefix="")
         return [
-            ("url_prefix", "Prefixe URL (ex: /api/)", z.url_prefix),
+            ("url_prefix", _("Préfixe URL (ex: /api/)"), z.url_prefix),
             (
                 "load_balancing",
-                f"Strategie de repartition ({', '.join(PROXY_LOAD_BALANCING_STRATEGIES)})",
+                _("Stratégie de répartition ({value})").format(value=', '.join(PROXY_LOAD_BALANCING_STRATEGIES)),
                 z.load_balancing,
             ),
-            ("connect_timeout_seconds", "Delai de connexion (secondes)", str(z.connect_timeout_seconds)),
-            ("read_timeout_seconds", "Delai de lecture (secondes)", str(z.read_timeout_seconds)),
-            ("preserve_host_header", "Preserver le Host: du client (oui/non)", "oui" if z.preserve_host_header else "non"),
+            ("connect_timeout_seconds", _("Délai de connexion (secondes)"), str(z.connect_timeout_seconds)),
+            ("read_timeout_seconds", _("Délai de lecture (secondes)"), str(z.read_timeout_seconds)),
+            ("preserve_host_header", _("Préserver le Host: du client (oui/non)"), to_text(z.preserve_host_header)),
             (
                 "verify_upstream_tls",
-                "Verifier le certificat des upstreams HTTPS (oui/non - non = DANGEREUX, MITM possible)",
-                "oui" if z.verify_upstream_tls else "non",
+                _("Vérifier le certificat des upstreams HTTPS (oui/non - non = DANGEREUX, MITM possible)"),
+                to_text(z.verify_upstream_tls),
             ),
             (
                 "websocket_enabled",
-                "Autoriser Upgrade: websocket sur cette zone (oui/non)",
-                "oui" if z.websocket_enabled else "non",
+                _("Autoriser Upgrade: websocket sur cette zone (oui/non)"),
+                to_text(z.websocket_enabled),
             ),
             (
                 "sticky_session_enabled",
-                "Affinite de session par cookie (oui/non)",
-                "oui" if z.sticky_session_enabled else "non",
+                _("Affinité de session par cookie (oui/non)"),
+                to_text(z.sticky_session_enabled),
             ),
-            ("sticky_cookie_name", "Nom du cookie sticky (sans effet si affinite desactivee)", z.sticky_cookie_name),
+            ("sticky_cookie_name", _("Nom du cookie sticky (sans effet si affinité désactivée)"), z.sticky_cookie_name),
             (
                 "sticky_cookie_max_age_seconds",
-                "Duree de vie du cookie sticky (secondes, sans effet si affinite desactivee)",
+                _("Durée de vie du cookie sticky (secondes, sans effet si affinité désactivée)"),
                 str(z.sticky_cookie_max_age_seconds),
             ),
             (
                 "unhealthy_after",
-                "Nombre d'echecs consecutifs avant de marquer un backend hors service (entier >= 1)",
+                _("Nombre d'échecs consécutifs avant de marquer un backend hors service (entier >= 1)"),
                 str(z.unhealthy_after),
             ),
             (
                 "healthy_after",
-                "Nombre de succes consecutifs avant de le remettre en service (entier >= 1)",
+                _("Nombre de succès consécutifs avant de le remettre en service (entier >= 1)"),
                 str(z.healthy_after),
             ),
             (
                 "load_poll_interval_seconds",
-                "Periode entre deux sondes de charge (secondes, sans effet si aucun backend n'a load_source != none)",
+                _("Période entre deux sondes de charge (secondes, sans effet si aucun backend n'a load_source != none)"),
                 str(z.load_poll_interval_seconds),
             ),
             (
                 "load_poll_timeout_seconds",
-                "Timeout d'une sonde de charge (secondes, reste COURT - §19.1)",
+                _("Timeout d'une sonde de charge (secondes, reste COURT - §19.1)"),
                 str(z.load_poll_timeout_seconds),
             ),
             (
                 "load_smoothing_samples",
-                "Nombre d'echantillons lisses par moyenne glissante (entier >= 1)",
+                _("Nombre d'échantillons lisses par moyenne glissante (entier >= 1)"),
                 str(z.load_smoothing_samples),
             ),
             (
                 "load_sample_max_age_seconds",
-                "Age maximal d'un echantillon de charge avant d'etre considere perime (secondes)",
+                _("Âge maximal d'un échantillon de charge avant d'être considéré périmé (secondes)"),
                 str(z.load_sample_max_age_seconds),
             ),
             (
                 "cache_enabled",
-                ("Mettre en cache les reponses de cette zone (oui/non - §21, DISTINCT de la "
-                 "politique Cache-Control du fallback fichier statique)"),
-                "oui" if z.cache_enabled else "non",
+                (_("Mettre en cache les réponses de cette zone (oui/non - §21, DISTINCT de la "
+                 "politique Cache-Control du fallback fichier statique)")),
+                to_text(z.cache_enabled),
             ),
             (
                 "cache_default_ttl_seconds",
-                ("Duree de vie par defaut d'une entree (secondes, utilisee si le backend ne "
-                 "pose pas de Cache-Control exploitable)"),
+                (_("Durée de vie par défaut d'une entrée (secondes, utilisée si le backend ne "
+                 "pose pas de Cache-Control exploitable)")),
                 str(z.cache_default_ttl_seconds),
             ),
             (
                 "cache_respect_upstream_headers",
-                ("Respecter Cache-Control du backend (oui/non - non = DANGEREUX, met en cache "
-                 "meme un no-store)"),
-                "oui" if z.cache_respect_upstream_headers else "non",
+                (_("Respecter Cache-Control du backend (oui/non - non = DANGEREUX, met en cache "
+                 "même un no-store)")),
+                to_text(z.cache_respect_upstream_headers),
             ),
             (
                 "cache_allow_set_cookie",
-                ("Mettre en cache meme une reponse avec Set-Cookie (oui/non - non = defaut sur, "
-                 "RISQUE de resservir le cookie d'un client a un autre)"),
-                "oui" if z.cache_allow_set_cookie else "non",
+                (_("Mettre en cache même une réponse avec Set-Cookie (oui/non - non = défaut sur, "
+                 "RISQUE de resservir le cookie d'un client à un autre)")),
+                to_text(z.cache_allow_set_cookie),
             ),
         ]
 
@@ -303,20 +305,20 @@ class ReverseProxyScreen(OmegaScreen):
             return
         if event.button.id == "add":
             self.app.push_screen(
-                DynamicFormScreen(title="AJOUTER UNE ZONE PROXY (1/2 : parametres)", fields=self._fields_for(None)),
+                DynamicFormScreen(title=_("AJOUTER UNE ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(None)),
                 lambda values: self._zone_fields_confirmed(values, existing_zone=None),
             )
             return
         if event.button.id == "edit" and self._selected_index is not None:
             zone = self._zones()[self._selected_index]
             self.app.push_screen(
-                DynamicFormScreen(title="MODIFIER LA ZONE PROXY (1/2 : parametres)", fields=self._fields_for(zone)),
+                DynamicFormScreen(title=_("MODIFIER LA ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(zone)),
                 lambda values: self._zone_fields_confirmed(values, existing_zone=zone),
             )
             return
         if event.button.id == "delete" and self._selected_index is not None:
             self.app.push_screen(
-                ConfirmScreen(title="SUPPRIMER LA ZONE", message="Confirmer la suppression de cette zone proxy ?"),
+                ConfirmScreen(title=_("SUPPRIMER LA ZONE"), message=_("Confirmer la suppression de cette zone proxy ?")),
                 self._delete_zone,
             )
             return
@@ -341,18 +343,18 @@ class ReverseProxyScreen(OmegaScreen):
             load_sample_max_age = float(values["load_sample_max_age_seconds"].strip())
             cache_default_ttl = float(values["cache_default_ttl_seconds"].strip())
         except ValueError:
-            self.query_one("#form-error", Static).update("Delais/duree/seuils invalides (nombres attendus).")
+            self.query_one("#form-error", Static).update(_("Delais/duree/seuils invalides (nombres attendus)."))
             return None
         return ProxyZone(
             url_prefix=values["url_prefix"].strip(),
             upstreams=(),
             connect_timeout_seconds=connect_timeout,
             read_timeout_seconds=read_timeout,
-            preserve_host_header=values["preserve_host_header"].strip().lower() in ("oui", "yes", "true"),
-            verify_upstream_tls=values["verify_upstream_tls"].strip().lower() not in ("non", "no", "false"),
-            websocket_enabled=values["websocket_enabled"].strip().lower() in ("oui", "yes", "true"),
+            preserve_host_header=is_yes(values["preserve_host_header"]),
+            verify_upstream_tls=not is_no(values["verify_upstream_tls"]),
+            websocket_enabled=is_yes(values["websocket_enabled"]),
             load_balancing=values["load_balancing"].strip(),
-            sticky_session_enabled=values["sticky_session_enabled"].strip().lower() in ("oui", "yes", "true"),
+            sticky_session_enabled=is_yes(values["sticky_session_enabled"]),
             sticky_cookie_name=values["sticky_cookie_name"].strip(),
             sticky_cookie_max_age_seconds=sticky_max_age,
             routing_rules=(),
@@ -362,10 +364,10 @@ class ReverseProxyScreen(OmegaScreen):
             load_poll_timeout_seconds=load_poll_timeout,
             load_smoothing_samples=load_smoothing_samples,
             load_sample_max_age_seconds=load_sample_max_age,
-            cache_enabled=values["cache_enabled"].strip().lower() in ("oui", "yes", "true"),
+            cache_enabled=is_yes(values["cache_enabled"]),
             cache_default_ttl_seconds=cache_default_ttl,
-            cache_respect_upstream_headers=values["cache_respect_upstream_headers"].strip().lower() not in ("non", "no", "false"),
-            cache_allow_set_cookie=values["cache_allow_set_cookie"].strip().lower() in ("oui", "yes", "true"),
+            cache_respect_upstream_headers=not is_no(values["cache_respect_upstream_headers"]),
+            cache_allow_set_cookie=is_yes(values["cache_allow_set_cookie"]),
         )
 
     def _zone_fields_confirmed(self, values: dict[str, str] | None, *, existing_zone: ProxyZone | None) -> None:
@@ -400,7 +402,7 @@ class ReverseProxyScreen(OmegaScreen):
         zone = replace(zone_with_upstreams, routing_rules=tuple(rules))
         error = validate_proxy_zone(zone)
         if error is not None:
-            self.query_one("#form-error", Static).update(f"Erreur : {error}")
+            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
         zones = self._zones()
         if existing_zone is None:
@@ -421,7 +423,7 @@ class ReverseProxyScreen(OmegaScreen):
     def _save_zones(self, zones: list[ProxyZone]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration - impossible d'enregistrer.")
+            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("reverse_proxy")
         enabled = existing.enabled if existing is not None else False
@@ -471,4 +473,4 @@ class ReverseProxyScreen(OmegaScreen):
         self.query_one("#form-error", Static).update("")
         self._refresh_table()
         notify_zone_prefix_overlaps(self, self._container, "reverse_proxy")
-        notify_reload_required(self, self._container, "Zones de reverse proxy mises a jour.")
+        notify_reload_required(self, self._container, _("Zones de reverse proxy mises à jour."))

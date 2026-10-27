@@ -8,6 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from omega_serv.core.i18n import _
+
 
 @dataclass(frozen=True)
 class UploadPolicy:
@@ -56,23 +58,23 @@ def validate_upload_zone_rule(rule: UploadZoneRule) -> str | None:
     application/config/validate_config.py (meme separation que
     validate_fastcgi_config_structure vs _validate_fastcgi_environment)."""
     if not rule.url_prefix.startswith("/"):
-        return f"url_prefix doit commencer par '/' : {rule.url_prefix!r}"
+        return _("url_prefix doit commencer par '/' : {url_prefix!r}").format(url_prefix=rule.url_prefix)
 
     if not rule.storage_path:
-        return "storage_path ne peut pas etre vide"
+        return _("storage_path ne peut pas être vide")
     if rule.storage_path.startswith("/"):
-        return f"storage_path doit etre relatif a la racine du projet : {rule.storage_path!r}"
+        return _("storage_path doit être relatif à la racine du projet : {storage_path!r}").format(storage_path=rule.storage_path)
     if "\x00" in rule.storage_path:
-        return "storage_path contient un caractere NUL"
+        return _("storage_path contient un caractère NUL")
     segments = rule.storage_path.replace("\\", "/").split("/")
     if ".." in segments:
-        return f"storage_path ne peut pas remonter au-dessus de la racine ('..') : {rule.storage_path!r}"
+        return _("storage_path ne peut pas remonter au-dessus de la racine ('..') : {storage_path!r}").format(storage_path=rule.storage_path)
 
     if rule.policy.max_file_size_bytes <= 0:
-        return "policy.max_file_size_bytes doit etre strictement positif"
+        return _("policy.max_file_size_bytes doit être strictement positif")
     if rule.policy.max_files_per_zone is not None and rule.policy.max_files_per_zone <= 0:
-        return "policy.max_files_per_zone doit etre strictement positif s'il est defini"
+        return _("policy.max_files_per_zone doit être strictement positif s'il est défini")
     if rule.policy.max_total_bytes_per_zone is not None and rule.policy.max_total_bytes_per_zone <= 0:
-        return "policy.max_total_bytes_per_zone doit etre strictement positif s'il est defini"
+        return _("policy.max_total_bytes_per_zone doit être strictement positif s'il est défini")
 
     return None

@@ -10,6 +10,7 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
 from omega_serv.domain.persistence.snapshots import SnapshotStatus
 from omega_serv.infrastructure.persistence.backup_metadata_store import BackupMetadataStore
@@ -30,16 +31,16 @@ def restore_backup(
 ) -> RestoreResult:
     metadata = metadata_store.load(snapshot_id)
     if metadata is None:
-        return RestoreResult(False, f"Sauvegarde introuvable : {snapshot_id}")
+        return RestoreResult(False, _("Sauvegarde introuvable : {snapshot_id}").format(snapshot_id=snapshot_id))
     if metadata.file_path is None:
-        return RestoreResult(False, f"Sauvegarde invalide (chemin d'archive manquant) : {snapshot_id}")
+        return RestoreResult(False, _("Sauvegarde invalide (chemin d'archive manquant) : {snapshot_id}").format(snapshot_id=snapshot_id))
 
     archive_path = Path(metadata.file_path)
     try:
         archive_store.extract_archive(archive_path, project_root)
     except ArchiveStoreError as exc:
         metadata_store.save(dataclasses.replace(metadata, status=SnapshotStatus.FAILED, error_message=str(exc)))
-        return RestoreResult(False, f"Echec de restauration : {exc}")
+        return RestoreResult(False, _("Échec de restauration : {exc}").format(exc=exc))
 
     metadata_store.save(dataclasses.replace(metadata, status=SnapshotStatus.RESTORED, error_message=None))
-    return RestoreResult(True, f"Sauvegarde restauree : {snapshot_id}.")
+    return RestoreResult(True, _("Sauvegarde restaurée : {snapshot_id}.").format(snapshot_id=snapshot_id))

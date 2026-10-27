@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.ports.certificate_tool_port import CertificateToolPort
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -33,11 +34,11 @@ def sign_certificate_signing_request(
     backups_dir: Path,
     out_fullchain_path: Path | None = None,
 ) -> SignCsrResult:
-    for label, path in (("CSR", csr_path), ("cle de CA", ca_key_path), ("certificat de CA", ca_cert_path)):
+    for label, path in (("CSR", csr_path), (_("clé de CA"), ca_key_path), (_("certificat de CA"), ca_cert_path)):
         if not filesystem.exists(path):
-            return SignCsrResult(False, f"{label} introuvable : {path}")
+            return SignCsrResult(False, _("{label} introuvable : {path}").format(label=label, path=path))
     if validity_days <= 0:
-        return SignCsrResult(False, "validity_days doit etre strictement positif")
+        return SignCsrResult(False, _("validity_days doit être strictement positif"))
 
     if filesystem.exists(out_cert_path):
         backup_dir = backups_dir / clock.now().strftime("%Y%m%d-%H%M%S")
@@ -48,10 +49,10 @@ def sign_certificate_signing_request(
     )
     filesystem.set_file_mode(out_cert_path, 0o644)
 
-    message = f"Certificat signe par la CA locale : {out_cert_path}"
+    message = _("Certificat signé par la CA locale : {out_cert_path}").format(out_cert_path=out_cert_path)
     if out_fullchain_path is not None:
         tool.build_fullchain(out_cert_path, ca_cert_path, out_fullchain_path)
         filesystem.set_file_mode(out_fullchain_path, 0o644)
-        message += f" (chaine complete : {out_fullchain_path})"
+        message += _(" (chaîne complète : {out_fullchain_path})").format(out_fullchain_path=out_fullchain_path)
 
     return SignCsrResult(True, message)

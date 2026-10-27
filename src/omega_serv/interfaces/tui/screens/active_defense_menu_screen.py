@@ -16,7 +16,11 @@ plus sa place a cote d'alias/redirections/TLS.
 reecrire (voir waf_magnet_screen.py) - assez different des 3 autres
 (etat/reglages passifs/test) et du formulaire "Custom" (ecrit une regle
 DANS le moteur natif) pour justifier son propre ecran plutot que d'etre
-ajoute a Modules."""
+ajoute a Modules.
+
+"Exclusions et debit" (OMEGA-SERV_ETUDE_RATE_LIMIT_EXCLUSIONS.md, lot 3)
+juste sous Modules : regles de debit par dossier/IP-reseau et exclusions
+d'inspection (waf_rate_limit_screen.py)."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -26,6 +30,7 @@ from textual.containers import Center, Container, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.core.platform_info import is_missing_live_group
 from omega_serv.domain.services.systemd_unit import DEFAULT_SYSTEM_GROUP
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -42,6 +47,7 @@ from omega_serv.interfaces.tui.screens.threats_screen import ThreatsScreen
 from omega_serv.interfaces.tui.screens.waf_custom_rule_screen import WafCustomRuleScreen
 from omega_serv.interfaces.tui.screens.waf_magnet_screen import WafMagnetScreen
 from omega_serv.interfaces.tui.screens.waf_modules_screen import WafModulesScreen
+from omega_serv.interfaces.tui.screens.waf_rate_limit_screen import WafRateLimitScreen
 from omega_serv.interfaces.tui.screens.waf_status_screen import WafStatusScreen
 from omega_serv.interfaces.tui.screens.waf_test_screen import WafTestScreen
 
@@ -49,20 +55,21 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _ACTIVE_DEFENSE_ITEMS: tuple[tuple[str, str], ...] = (
-    ("status", "Etat"),
-    ("settings", "Reglages"),
-    ("threats", "Menaces"),
-    ("incidents", "Incidents"),
-    ("deception", "Deception"),
-    ("simulate", "Simuler"),
+    ("status", _("État")),
+    ("settings", _("Réglages")),
+    ("threats", _("Menaces")),
+    ("incidents", _("Incidents")),
+    ("deception", _("Deception")),
+    ("simulate", _("Simuler")),
 )
 
 _WAF_ITEMS: tuple[tuple[str, str], ...] = (
-    ("waf-status", "Etat"),
-    ("waf-modules", "Modules"),
-    ("waf-test", "Tester"),
-    ("waf-custom", "Custom"),
-    ("waf-magnet", "Magnet"),
+    ("waf-status", _("État")),
+    ("waf-modules", _("Modules")),
+    ("waf-rate-limit", _("Exclusions et débit")),
+    ("waf-test", _("Tester")),
+    ("waf-custom", _("Custom")),
+    ("waf-magnet", _("Magnet")),
 )
 
 
@@ -75,15 +82,13 @@ class ActiveDefenseMenuScreen(OmegaScreen):
         yield Header()
         with Vertical(classes="omega-panel"):
             with Center():
-                yield Static("ACTIVE SECURITE", classes="omega-title")
+                yield Static(_("ACTIVE SÉCURITÉ"), classes="omega-title")
             if is_missing_live_group(DEFAULT_SYSTEM_GROUP):
                 with Center():
                     yield Static(
-                        f"Le service systeme dedie ({DEFAULT_SYSTEM_GROUP!r}) est installe, mais cette "
-                        "session n'a pas encore pris en compte votre appartenance a ce groupe - "
-                        "deconnectez-vous/reconnectez-vous (ou 'newgrp " + DEFAULT_SYSTEM_GROUP + "') "
-                        "avant d'utiliser les sous-ecrans ci-dessous, sinon ils resteront en erreur "
-                        "d'acces.",
+                        _("Le service système dédié ({DEFAULT_SYSTEM_GROUP!r}) est installé, mais cette session n'a pas encore pris en compte votre appartenance à ce groupe - deconnectez-vous/reconnectez-vous (ou 'newgrp ").format(DEFAULT_SYSTEM_GROUP=DEFAULT_SYSTEM_GROUP) + DEFAULT_SYSTEM_GROUP + _("') "
+                        "avant d'utiliser les sous-écrans ci-dessous, sinon ils resteront en erreur "
+                        "d'accès."),
                         id="group-mismatch-hint",
                         classes="omega-hint",
                     )
@@ -92,14 +97,14 @@ class ActiveDefenseMenuScreen(OmegaScreen):
                     for item_id, label in _ACTIVE_DEFENSE_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(label, id=item_id)
-                    active_defense_menu.border_title = "ACTIVE DEFENSE"
+                    active_defense_menu.border_title = _("ACTIVE DEFENSE")
                 with Vertical(classes="omega-home-menu") as waf_menu:
                     for item_id, label in _WAF_ITEMS:
                         with Container(classes="omega-btn-frame"):
                             yield Button(label, id=item_id)
-                    waf_menu.border_title = "WAF"
+                    waf_menu.border_title = _("WAF")
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -127,6 +132,8 @@ class ActiveDefenseMenuScreen(OmegaScreen):
             return WafStatusScreen(container=self._container)
         if item_id == "waf-modules":
             return WafModulesScreen(container=self._container)
+        if item_id == "waf-rate-limit":
+            return WafRateLimitScreen(container=self._container)
         if item_id == "waf-test":
             return WafTestScreen(container=self._container)
         if item_id == "waf-custom":

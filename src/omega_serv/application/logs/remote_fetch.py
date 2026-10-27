@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.remote_source import RemoteLogSource, build_scp_command
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 
@@ -30,6 +31,6 @@ def fetch_remote_log(
     local_dest.parent.mkdir(parents=True, exist_ok=True)
     result = process_runner.run(build_scp_command(source, local_dest), timeout=timeout)
     if result.ok:
-        return RemoteFetchResult(success=True, message=f"Recupere dans {local_dest}.")
-    detail = result.stderr.strip() or f"code de retour {result.returncode}"
-    return RemoteFetchResult(success=False, message=f"Echec de la recuperation : {detail}")
+        return RemoteFetchResult(success=True, message=_("Récupéré dans {local_dest}.").format(local_dest=local_dest))
+    detail = result.stderr.strip() or _("code de retour {returncode}").format(returncode=result.returncode)
+    return RemoteFetchResult(success=False, message=_("Échec de la récupération : {detail}").format(detail=detail))

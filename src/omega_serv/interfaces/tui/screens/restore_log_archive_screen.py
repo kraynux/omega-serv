@@ -9,6 +9,7 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
@@ -27,20 +28,20 @@ class RestoreLogArchiveScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("RESTAURER UNE ARCHIVE DE LOG", classes="omega-title")
+            yield Static(_("RESTAURER UNE ARCHIVE DE LOG"), classes="omega-title")
             yield Static("", id="restore-error", classes="omega-hint")
             yield DataTable(id="archives-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Restaurer", id="restore", variant="primary", disabled=True)
+                    yield Button(_("Restaurer"), id="restore", variant="primary", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#archives-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Archive", "Taille (octets)", "Modifiee le")
+        table.add_columns(_("Archive"), _("Taille (octets)"), _("Modifiée le"))
         self._refresh()
 
     def _archive_base_dir(self) -> Path:
@@ -76,7 +77,7 @@ class RestoreLogArchiveScreen(OmegaScreen):
         try:
             self._archive_store.extract_archive(archive_path, dest_dir)
         except ArchiveStoreError as exc:
-            error_widget.update(f"Erreur : {exc}")
+            error_widget.update(_("Erreur : {exc}").format(exc=exc))
             return
         error_widget.update("")
-        self.app.notify(f"Archive restauree dans {dest_dir}")
+        self.app.notify(_("Archive restaurée dans {dest_dir}").format(dest_dir=dest_dir))

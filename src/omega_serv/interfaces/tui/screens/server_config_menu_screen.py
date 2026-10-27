@@ -18,6 +18,7 @@ from textual.containers import Center, Container, Grid, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.access_control_screen import AccessControlScreen
 from omega_serv.interfaces.tui.screens.aliases_screen import AliasesScreen
@@ -42,27 +43,27 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("base", "Configuration de base"),
-    ("limits", "Resistance et limites"),
-    ("security", "Securite generique"),
-    ("access-control", "Controle d'acces"),
-    ("aliases", "Alias"),
-    ("redirects", "Redirections"),
-    ("rewrites", "Rewrites"),
-    ("fastcgi", "FastCGI / PHP-FPM"),
-    ("dirlisting", "Directory listing"),
-    ("auth", "Authentification"),
-    ("cache", "Cache"),
-    ("error-pages", "Pages d'erreur"),
-    ("trusted-proxy", "Proxies de confiance"),
-    ("reverse-proxy", "Reverse Proxy"),
-    ("reverse-proxy-cache", "Cache du reverse proxy"),
+    ("base", _("Configuration de base")),
+    ("limits", _("Résistance et limites")),
+    ("security", _("Sécurité générique")),
+    ("access-control", _("Contrôle d'accès")),
+    ("aliases", _("Alias")),
+    ("redirects", _("Redirections")),
+    ("rewrites", _("Rewrites")),
+    ("fastcgi", _("FastCGI / PHP-FPM")),
+    ("dirlisting", _("Directory listing")),
+    ("auth", _("Authentification")),
+    ("cache", _("Cache")),
+    ("error-pages", _("Pages d'erreur")),
+    ("trusted-proxy", _("Proxies de confiance")),
+    ("reverse-proxy", _("Reverse Proxy")),
+    ("reverse-proxy-cache", _("Cache du reverse proxy")),
     ("tls", "TLS"),
 )
 
 _STATUS_MENU_ITEMS: tuple[tuple[str, str], ...] = (
-    ("options", "Voir options actives"),
-    ("config-check", "Verifier la configuration"),
+    ("options", _("Voir options actives")),
+    ("config-check", _("Vérifier la configuration")),
 )
 
 
@@ -75,19 +76,19 @@ class ServerConfigMenuScreen(OmegaScreen):
         yield Header()
         with Vertical(classes="omega-panel"):
             with Center():
-                yield Static("CONFIGURATION DETAILLEE DU SERVEUR", classes="omega-title")
+                yield Static(_("CONFIGURATION DÉTAILLÉE DU SERVEUR"), classes="omega-title")
             with Center(), Grid(classes="omega-home-menu omega-home-menu-2col") as menu:
                 for item_id, label in _MENU_ITEMS:
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
-                menu.border_title = "SOUS-ECRANS"
+                menu.border_title = _("SOUS-ÉCRANS")
             with Center(), Grid(classes="omega-home-menu omega-home-menu-2col") as status_menu:
                 for item_id, label in _STATUS_MENU_ITEMS:
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
-                status_menu.border_title = "OPTIONS ET VERIFICATION"
+                status_menu.border_title = _("OPTIONS ET VÉRIFICATION")
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

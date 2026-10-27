@@ -19,6 +19,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.instances.uninstall_instance import uninstall_instance
 from omega_serv.application.services.manage_service import get_service_status
+from omega_serv.core.i18n import _
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.interfaces.tui.pending_instance_switch import PendingInstanceSwitch
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -45,20 +46,20 @@ class InstancesScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("INSTANCES", classes="omega-title")
+            yield Static(_("INSTANCES"), classes="omega-title")
             yield Static("", id="current-instance-hint", classes="omega-hint")
             yield DataTable(id="instances-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Rafraichir", id="refresh")
+                    yield Button(_("Rafraîchir"), id="refresh")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Creer une nouvelle instance", id="create", variant="primary")
+                    yield Button(_("Créer une nouvelle instance"), id="create", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Piloter cette instance", id="switch-to", disabled=True)
+                    yield Button(_("Piloter cette instance"), id="switch-to", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Desinstaller cette instance", id="uninstall-instance", variant="error", disabled=True)
+                    yield Button(_("Désinstaller cette instance"), id="uninstall-instance", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -66,9 +67,9 @@ class InstancesScreen(OmegaScreen):
         self._manager = factory() if factory is not None else None
         table = self.query_one("#instances-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Nom", "Chemin", "Bind:Port", "Service", "Statut")
+        table.add_columns(_("Nom"), _("Chemin"), _("Bind:Port"), _("Service"), _("Statut"))
         self.query_one("#current-instance-hint", Static).update(
-            f"Instance actuelle (celle qui heberge cette interface) : {self._container.project_root}"
+            _("Instance actuelle (celle qui héberge cette interface) : {project_root}").format(project_root=self._container.project_root)
         )
         self._refresh_table()
 
@@ -83,18 +84,18 @@ class InstancesScreen(OmegaScreen):
 
     def _status_text(self, entry: InstanceEntry) -> str:
         if self._manager is None:
-            return "gestionnaire indisponible"
+            return _("gestionnaire indisponible")
         result = get_service_status(self._manager, entry.service_name)
         if isinstance(result, ServiceStatus):
-            return "actif" if result.is_running else "arrete"
-        return "unite introuvable"
+            return _("actif") if result.is_running else _("arrêté")
+        return _("unité introuvable")
 
     def _refresh_table(self) -> None:
         table = self.query_one("#instances-table", DataTable)
         table.clear()
         current_path = self._container.filesystem.resolve_real_path(self._container.project_root)
         for index, entry in enumerate(self._container.instance_registry.load()):
-            name = f"{entry.name} (courante)" if entry.path == current_path else entry.name
+            name = _("{name} (courante)").format(name=entry.name) if entry.path == current_path else entry.name
             table.add_row(
                 name, str(entry.path), f"{entry.bind}:{entry.port}", entry.service_name,
                 self._status_text(entry), key=str(index),
@@ -121,13 +122,13 @@ class InstancesScreen(OmegaScreen):
 
     def _open_create_form(self) -> None:
         fields = [
-            ("name", "Nom de l'instance (ex: test)", ""),
-            ("parent_dir", "Repertoire parent (FRERE de celui-ci, jamais dedans)", str(self._container.project_root.parent)),
-            ("bind", "Adresse d'ecoute (server.bind)", "127.0.0.1"),
-            ("port", "Port (server.port)", str(self._suggest_free_port())),
+            ("name", _("Nom de l'instance (ex: test)"), ""),
+            ("parent_dir", _("Répertoire parent (FRÈRE de celui-ci, jamais dedans)"), str(self._container.project_root.parent)),
+            ("bind", _("Adresse d'écoute (server.bind)"), "127.0.0.1"),
+            ("port", _("Port (server.port)"), str(self._suggest_free_port())),
         ]
         self.app.push_screen(
-            DynamicFormScreen(title="CREER UNE INSTANCE", fields=fields), self._create_form_submitted,
+            DynamicFormScreen(title=_("CRÉER UNE INSTANCE"), fields=fields), self._create_form_submitted,
         )
 
     def _create_form_submitted(self, values: dict[str, str] | None) -> None:
@@ -135,12 +136,12 @@ class InstancesScreen(OmegaScreen):
             return
         name = values["name"].strip()
         if not name:
-            self.app.notify("Le nom d'instance ne peut pas etre vide.", severity="error")
+            self.app.notify(_("Le nom d'instance ne peut pas être vide."), severity="error")
             return
         try:
             port = int(values["port"].strip())
         except ValueError:
-            self.app.notify(f"Port invalide : {values['port']!r}", severity="error")
+            self.app.notify(_("Port invalide : {port!r}").format(port=values['port']), severity="error")
             return
         bind = values["bind"].strip() or "127.0.0.1"
         parent_dir = Path(values["parent_dir"].strip())
@@ -161,10 +162,9 @@ class InstancesScreen(OmegaScreen):
         entry = self._container.instance_registry.load()[self._selected_index]
         self.app.push_screen(
             ConfirmScreen(
-                title="BASCULER VERS CETTE INSTANCE",
+                title=_("BASCULER VERS CETTE INSTANCE"),
                 message=(
-                    f"L'application va s'arreter puis redemarrer, pointee sur l'instance {entry.name!r} "
-                    f"({entry.path}). Continuer ?"
+                    _("L'application va s'arrêter puis redémarrer, pointée sur l'instance {name!r} ({path}). Continuer ?").format(name=entry.name, path=entry.path)
                 ),
             ),
             lambda confirmed: self._switch_if_confirmed(confirmed, entry.name, entry.path),
@@ -176,8 +176,7 @@ class InstancesScreen(OmegaScreen):
         python_executable = target_path / ".venv" / "bin" / "python"
         if not self._container.filesystem.exists(python_executable):
             self.app.notify(
-                f"Environnement virtuel introuvable pour {target_name!r} ({python_executable}) - "
-                "bascule annulee.",
+                _("Environnement virtuel introuvable pour {target_name!r} ({python_executable}) - bascule annulée.").format(target_name=target_name, python_executable=python_executable),
                 severity="error",
                 timeout=10,
             )
@@ -198,12 +197,9 @@ class InstancesScreen(OmegaScreen):
         entry = self._container.instance_registry.load()[self._selected_index]
         self.app.push_screen(
             ConfirmScreen(
-                title="DESINSTALLER CETTE INSTANCE",
+                title=_("DÉSINSTALLER CETTE INSTANCE"),
                 message=(
-                    f"L'unite systemd de {entry.name!r} sera arretee et retiree (si installee), "
-                    "le compte systeme dedie sera retire s'il n'est plus utilise par aucune autre "
-                    f"instance, et l'entree sera retiree du registre. Le repertoire {entry.path} "
-                    "sera CONSERVE sauf confirmation explicite a l'etape suivante. Continuer ?"
+                    _("L'unité systemd de {name!r} sera arrêtée et retirée (si installée), le compte système dédié sera retiré s'il n'est plus utilisé par aucune autre instance, et l'entrée sera retirée du registre. Le répertoire {path} sera CONSERVÉ sauf confirmation explicite à l'étape suivante. Continuer ?").format(name=entry.name, path=entry.path)
                 ),
             ),
             lambda confirmed: self._ask_directory_deletion(confirmed, entry),
@@ -214,12 +210,9 @@ class InstancesScreen(OmegaScreen):
             return
         self.app.push_screen(
             ConfirmScreen(
-                title="SUPPRIMER AUSSI LE REPERTOIRE ?",
+                title=_("SUPPRIMER AUSSI LE RÉPERTOIRE ?"),
                 message=(
-                    f"Supprimer DEFINITIVEMENT {entry.path} (code, configuration, donnees, "
-                    "journaux) ? Action IRREVERSIBLE. Repondez Annuler pour conserver le "
-                    "repertoire sur disque (l'instance est quand meme retiree du service et du "
-                    "registre)."
+                    _("Supprimer DÉFINITIVEMENT {path} (code, configuration, données, journaux) ? Action IRRÉVERSIBLE. Répondez Annuler pour conserver le répertoire sur disque (l'instance est quand même retirée du service et du registre).").format(path=entry.path)
                 ),
             ),
             lambda delete_directory: self._perform_uninstall(entry, bool(delete_directory)),

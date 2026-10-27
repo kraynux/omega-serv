@@ -25,6 +25,7 @@ from omega_serv.application.security.load_keyword_list import (
     ListLoadRequest,
     sanitize_list_file_name,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.keyword_list import tokens_from_text
 from omega_serv.domain.security.waf.rule_validation import (
     build_keyword_pattern,
@@ -45,70 +46,70 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _DETECTION_TYPES: tuple[tuple[str, str], ...] = (
-    ("Un chemin precis visite (ex: /admin)", "path_exact"),
-    ("Un mot-cle dans l'adresse ou les parametres", "keyword_url"),
-    ("Un mot-cle envoye dans un formulaire (POST)", "keyword_body"),
-    ("Un outil de scan connu (User-Agent)", "user_agent"),
-    ("Avance : j'ecris moi-meme une expression reguliere", "advanced"),
+    (_("Un chemin précis visite (ex: /admin)"), "path_exact"),
+    (_("Un mot-clé dans l'adresse ou les paramètres"), "keyword_url"),
+    (_("Un mot-clé envoyé dans un formulaire (POST)"), "keyword_body"),
+    (_("Un outil de scan connu (User-Agent)"), "user_agent"),
+    (_("Avance : j'écris moi-même une expression régulière"), "advanced"),
 )
 
 _TYPE_HINTS: dict[str, str] = {
     "path_exact": (
-        "Tapez le chemin SANS le '/' de tete. Exemple : 'admin' detecte /admin et /admin/xxx, "
-        "mais jamais /administrator."
+        _("Tapez le chemin SANS le '/' de tête. Exemple : 'admin' détecte /admin et /admin/xxx, "
+        "mais jamais /administrator.")
     ),
     "keyword_url": (
-        "Tapez le mot recherche tel quel. Exemple : 'union select' - detecte ce mot n'importe ou "
-        "dans l'adresse ou les parametres de la requete."
+        _("Tapez le mot recherche tel quel. Exemple : 'union select' - détecte ce mot n'importe où "
+        "dans l'adresse ou les paramètres de la requête.")
     ),
     "keyword_body": (
-        "Tapez le mot recherche tel quel. Detecte ce mot dans les donnees envoyees par un "
-        "formulaire (methode POST)."
+        _("Tapez le mot recherche tel quel. Détecte ce mot dans les données envoyées par un "
+        "formulaire (méthode POST).")
     ),
     "user_agent": (
-        "Tapez le nom de l'outil recherche tel quel. Exemple : 'sqlmap' - detecte les requetes "
-        "envoyees par cet outil."
+        _("Tapez le nom de l'outil recherche tel quel. Exemple : 'sqlmap' - détecte les requêtes "
+        "envoyées par cet outil.")
     ),
     "advanced": (
-        "Ecrivez vous-meme le motif (expression reguliere Python) et la portee "
-        "(path, query, body, headers, user_agent, referer - separes par des virgules)."
+        _("Écrivez vous-même le motif (expression régulière Python) et la portée "
+        "(path, query, body, headers, user_agent, referer - séparés par des virgules).")
     ),
 }
 
 # Chargement d'une LISTE (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md lot 6) -
 # action explicite et distincte des 5 types "une regle" ci-dessus (A5).
 _LIST_TYPES: tuple[tuple[str, str], ...] = (
-    ("CHARGER une liste de chemins (fichier)", "list_path"),
-    ("CHARGER une liste de mots-cles (fichier)", "list_keyword"),
+    (_("CHARGER une liste de chemins (fichier)"), "list_path"),
+    (_("CHARGER une liste de mots-clés (fichier)"), "list_keyword"),
 )
 _LIST_TYPE_HINTS: dict[str, str] = {
     "list_path": (
-        "Un chemin par ligne, '#' = commentaire. /admin -> /admin et /admin/xxx (jamais /administrator) ; "
+        _("Un chemin par ligne, '#' = commentaire. /admin -> /admin et /admin/xxx (jamais /administrator) ; "
         "/.git/ -> tout ce qui est sous /.git/ ; /*.bak -> fichiers finissant par .bak ; "
-        "!/api/v1 -> exception, toujours prioritaire. Rien n'est actif avant d'avoir clique sur Charger."
+        "!/api/v1 -> exception, toujours prioritaire. Rien n'est actif avant d'avoir clique sur Charger.")
     ),
     "list_keyword": (
-        "Un mot-cle par ligne, recherche n'importe ou dans la partie choisie de la requete (casse ignoree). "
-        "Ecrivez le texte tel quel, jamais une expression reguliere."
+        _("Un mot-clé par ligne, recherche n'importe où dans la partie choisie de la requête (casse ignorée). "
+        "Écrivez le texte tel quel, jamais une expression régulière.")
     ),
 }
 # Reglages proposes pour les references livrees (plan §3.3/§3.12, Q9).
 _REFERENCE_PRESETS: dict[str, dict[str, str]] = {
     "sensitive-paths-hostile.txt": {
         "anchor": "any_segment", "weight": "6", "count": "2", "window": "600", "duration": "86400",
-        "label": "Chemins sensibles - bloquer",
+        "label": _("Chemins sensibles - bloquer"),
     },
     "sensitive-paths-probe.txt": {
         "anchor": "root", "weight": "3", "count": "5", "window": "600", "duration": "3600",
-        "label": "Chemins sensibles - surveiller",
+        "label": _("Chemins sensibles - surveiller"),
     },
 }
 
 _SEVERITY_LEVELS: tuple[tuple[str, str], ...] = (
-    ("Faible", "1"),
-    ("Moyen", "3"),
-    ("Eleve", "6"),
-    ("Critique", "9"),
+    (_("Faible"), "1"),
+    (_("Moyen"), "3"),
+    (_("Élevé"), "6"),
+    (_("Critique"), "9"),
 )
 
 
@@ -128,56 +129,56 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
 
     def compose(self) -> ComposeResult:
         with Center(), VerticalScroll(classes="omega-dynamic-form-box"):
-            yield Static("AJOUTER UNE REGLE - ASSISTANT", classes="omega-title")
+            yield Static(_("AJOUTER UNE RÈGLE - ASSISTANT"), classes="omega-title")
             yield Static(
-                "Une regle repere un texte dans une partie de la requete (le chemin visite, "
-                "un parametre, le logiciel utilise...). Choisissez ci-dessous ce que vous voulez "
-                "detecter - aucune connaissance des expressions regulieres n'est necessaire, sauf "
-                "en mode Avance.",
+                _("Une règle repère un texte dans une partie de la requête (le chemin visite, "
+                "un paramètre, le logiciel utilise...). Choisissez ci-dessous ce que vous voulez "
+                "détecter - aucune connaissance des expressions régulières n'est nécessaire, sauf "
+                "en mode Avance."),
                 classes="omega-hint",
             )
-            yield Static("Que voulez-vous detecter ?", classes="omega-subtitle")
+            yield Static(_("Que voulez-vous détecter ?"), classes="omega-subtitle")
             yield Select(self._detection_types, value="path_exact", allow_blank=False, id="detection-type-select")
             yield Static(_TYPE_HINTS["path_exact"], id="type-hint", classes="omega-hint")
 
-            yield Static("Valeur a detecter (mode simple)", id="value-label", classes="omega-subtitle")
-            yield Input(placeholder="ex: admin", id="value-input")
+            yield Static(_("Valeur à détecter (mode simple)"), id="value-label", classes="omega-subtitle")
+            yield Input(placeholder=_("ex: admin"), id="value-input")
 
             with Container(id="advanced-fields"):
-                yield Static("Portee (path, query, body, headers, user_agent, referer - separes par des virgules)", classes="omega-subtitle")
+                yield Static(_("Portée (path, query, body, headers, user_agent, referer - séparés par des virgules)"), classes="omega-subtitle")
                 yield Input(value="path", id="scope-input")
-                yield Static("Motif (expression reguliere Python)", classes="omega-subtitle")
+                yield Static(_("Motif (expression régulière Python)"), classes="omega-subtitle")
                 yield Input(id="pattern-input")
 
             with Container(id="list-fields"):
-                yield Static("Fichier de liste", classes="omega-subtitle")
+                yield Static(_("Fichier de liste"), classes="omega-subtitle")
                 yield Select(self._file_options(), allow_blank=False, id="list-file-select")
-                yield Input(placeholder="nom du nouveau fichier (ex: mes-chemins)", id="list-new-name")
-                yield Static("Ou chercher", id="list-anchor-label", classes="omega-subtitle")
+                yield Input(placeholder=_("nom du nouveau fichier (ex: mes-chemins)"), id="list-new-name")
+                yield Static(_("Où chercher"), id="list-anchor-label", classes="omega-subtitle")
                 yield Select(ANCHORS, value="any_segment", allow_blank=False, id="list-anchor")
-                yield Static("Dans quelle partie de la requete", id="list-scope-label", classes="omega-subtitle")
+                yield Static(_("Dans quelle partie de la requête"), id="list-scope-label", classes="omega-subtitle")
                 yield Select(KEYWORD_SCOPES, value="path,query", allow_blank=False, id="list-scope")
-                yield Static("Gravite", classes="omega-subtitle")
+                yield Static(_("Gravité"), classes="omega-subtitle")
                 yield Select(GRAVITY_LEVELS, value="observe", allow_blank=False, id="list-gravity")
-                yield Static("Recidive : bannir apres ... acces en ... pendant ...", classes="omega-subtitle")
+                yield Static(_("Récidive : bannir après ... accès en ... pendant ..."), classes="omega-subtitle")
                 yield Select(RECIDIVE_COUNTS, value="0", allow_blank=False, id="list-recidive-count")
                 yield Select(RECIDIVE_WINDOWS, value="600", allow_blank=False, id="list-recidive-window")
                 yield Select(BAN_DURATIONS, value="3600", allow_blank=False, id="list-recidive-duration")
-                yield Static("Nom affiche", classes="omega-subtitle")
-                yield Input(placeholder="ex: Chemins sensibles - bloquer", id="list-label")
+                yield Static(_("Nom affiché"), classes="omega-subtitle")
+                yield Input(placeholder=_("ex: Chemins sensibles - bloquer"), id="list-label")
                 with Horizontal(classes="omega-confirm-buttons"), Container(classes="omega-btn-frame"):
-                    yield Button("Ouvrir l'editeur", id="list-open-editor")
+                    yield Button(_("Ouvrir l'éditeur"), id="list-open-editor")
 
-            yield Static("Description (facultatif)", id="description-label", classes="omega-subtitle")
+            yield Static(_("Description (facultatif)"), id="description-label", classes="omega-subtitle")
             yield Input(id="description-input")
-            yield Static("Gravite", id="severity-label", classes="omega-subtitle")
+            yield Static(_("Gravité"), id="severity-label", classes="omega-subtitle")
             yield Select(_SEVERITY_LEVELS, value="3", allow_blank=False, id="severity-select")
 
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="confirm", variant="primary")
+                    yield Button(_("Ajouter"), id="confirm", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Annuler", id="cancel")
+                    yield Button(_("Annuler"), id="cancel")
 
     def on_mount(self) -> None:
         self._apply_mode("path_exact")
@@ -187,7 +188,7 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
         """Fichiers .txt locaux (jamais les .example), references livrees pas
         encore copiees, puis "Nouveau fichier..."."""
         if self._container is None:
-            return [("Nouveau fichier...", NEW_FILE)]
+            return [(_("Nouveau fichier..."), NEW_FILE)]
         keywords_dir = self._container.project_root / KEYWORDS_DIR
         filesystem = self._container.filesystem
         local: list[str] = []
@@ -196,12 +197,12 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
         options: list[tuple[str, str]] = []
         for name in local:
             count = len(tokens_from_text(filesystem.read_text(keywords_dir / name)))
-            options.append((f"{name} ({count} entrees)", f"local:{name}"))
+            options.append((_("{name} ({count} entrées)").format(name=name, count=count), f"local:{name}"))
         for name in self._container.keyword_references.names():
             if name not in local:
                 text = self._container.keyword_references.read(name) or ""
-                options.append((f"{name} (reference livree, {len(tokens_from_text(text))} entrees)", f"ref:{name}"))
-        options.append(("Nouveau fichier...", NEW_FILE))
+                options.append((_("{name} (référence livrée, {count} entrées)").format(name=name, count=len(tokens_from_text(text))), f"ref:{name}"))
+        options.append((_("Nouveau fichier..."), NEW_FILE))
         return options
 
     def _selected_file(self) -> tuple[str | None, str | None]:
@@ -266,7 +267,7 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
             self.query_one("#list-scope", Select).display = not path_mode
             self._apply_file_presets()
             self._apply_recidive_state()
-        self.query_one("#confirm", Button).label = "Charger" if is_list else "Ajouter"
+        self.query_one("#confirm", Button).label = _("Charger") if is_list else _("Ajouter")
 
     # ---- actions -------------------------------------------------------------
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -286,14 +287,14 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
             return
         name, reference = self._selected_file()
         if name is None:
-            self.app.notify("Donnez d'abord un nom au nouveau fichier.", severity="warning")
+            self.app.notify(_("Donnez d'abord un nom au nouveau fichier."), severity="warning")
             return
         list_path = str(self.query_one("#detection-type-select", Select).value) == "list_path"
         self.app.push_screen(
             PathListEditorScreen(
                 container=self._container, relative_path=f"{KEYWORDS_DIR}/{name}",
                 anchor=str(self.query_one("#list-anchor", Select).value) if list_path else "any_segment",
-                title=f"EDITION - {name}", reference_name=reference,
+                title=_("ÉDITION - {name}").format(name=name), reference_name=reference,
                 match="path" if list_path else "substring",
             ),
             self._after_editor,
@@ -316,7 +317,7 @@ class WafCustomRuleWizardScreen(ModalScreen[dict[str, Any] | None]):
     def _build_list_request(self, detection_type: str) -> ListLoadRequest | None:
         name, reference = self._selected_file()
         if name is None:
-            self.app.notify("Nom de fichier manquant ou invalide (lettres, chiffres, '-').", severity="error")
+            self.app.notify(_("Nom de fichier manquant ou invalide (lettres, chiffres, '-')."), severity="error")
             return None
         gravity = str(self.query_one("#list-gravity", Select).value)
         observe = gravity == "observe"

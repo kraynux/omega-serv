@@ -10,6 +10,7 @@ plus-long-prefixe-gagne) - jamais une logique de correspondance
 reinventee pour ce seul besoin."""
 from __future__ import annotations
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 
 DEFAULT_CSP_POLICY = (
@@ -52,16 +53,16 @@ def csp_policy_for_path(path: str | None, zones: tuple[Zone[str], ...]) -> str:
 # valeur actuelle - le meme esprit que l'assistant de regle WAF
 # personnalisee (langage clair plutot qu'un champ brut a completer).
 KNOWN_CSP_DIRECTIVES: tuple[tuple[str, str], ...] = (
-    ("default-src", "Source par defaut pour tout type de contenu non couvert par une autre directive ci-dessous."),
-    ("base-uri", "URL valides pour la balise <base> - restreindre a 'self' evite un detournement de chemins relatifs."),
-    ("form-action", "Destination autorisee pour la soumission d'un formulaire - 'self' empeche l'exfiltration vers un domaine externe."),
-    ("frame-ancestors", "Qui peut vous afficher dans une <iframe> - 'none' empeche le clickjacking."),
-    ("img-src", "Origines autorisees pour les images."),
-    ("style-src", "Origines/mecanismes autorises pour le CSS - 'unsafe-inline' autorise tout style inline, y compris injecte."),
-    ("script-src", "Origines/mecanismes autorises pour le JavaScript - 'unsafe-inline'/'unsafe-eval' sont les relaches les plus risquees."),
-    ("font-src", "Origines autorisees pour les polices."),
-    ("connect-src", "Destinations autorisees pour fetch/XHR/WebSocket - restreint l'exfiltration de donnees."),
-    ("object-src", "Autorise <object>/<embed>/<applet> - 'none' recommande (vecteur historique Flash/plugins)."),
+    ("default-src", _("Source par défaut pour tout type de contenu non couvert par une autre directive ci-dessous.")),
+    ("base-uri", _("URL valides pour la balise <base> - restreindre à 'self' évite un détournement de chemins relatifs.")),
+    ("form-action", _("Destination autorisée pour la soumission d'un formulaire - 'self' empêche l'exfiltration vers un domaine externe.")),
+    ("frame-ancestors", _("Qui peut vous afficher dans une <iframe> - 'none' empêche le clickjacking.")),
+    ("img-src", _("Origines autorisées pour les images.")),
+    ("style-src", _("Origines/mecanismes autorisés pour le CSS - 'unsafe-inline' autorise tout style inline, y compris injecté.")),
+    ("script-src", _("Origines/mecanismes autorisés pour le JavaScript - 'unsafe-inline'/'unsafe-eval' sont les relâches les plus risquées.")),
+    ("font-src", _("Origines autorisées pour les polices.")),
+    ("connect-src", _("Destinations autorisées pour fetch/XHR/WebSocket - restreint l'exfiltration de données.")),
+    ("object-src", _("Autorise <object>/<embed>/<applet> - 'none' recommandé (vecteur historique Flash/plugins).")),
 )
 _KNOWN_DIRECTIVE_NAMES = frozenset(name for name, _hint in KNOWN_CSP_DIRECTIVES)
 

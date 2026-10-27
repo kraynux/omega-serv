@@ -27,6 +27,7 @@ from textual.timer import Timer
 from textual.widgets import Button, DataTable, Header, Input, Static
 from textual.widgets.text_area import Selection
 
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen, show_contextual_help
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.widgets.raw_text_area import RawTextArea
@@ -57,14 +58,14 @@ class EditorAnalysis:
 
 
 _EDIT_BUTTONS: tuple[tuple[str, str], ...] = (
-    ("edit-undo", "Annuler la modif"),
-    ("edit-redo", "Retablir"),
-    ("edit-cut", "Couper"),
-    ("edit-copy", "Copier"),
-    ("edit-paste", "Coller"),
-    ("edit-select-line", "Selectionner la ligne"),
-    ("edit-select-all", "Tout selectionner"),
-    ("edit-delete-line", "Supprimer la ligne"),
+    ("edit-undo", _("Annuler la modif")),
+    ("edit-redo", _("Rétablir")),
+    ("edit-cut", _("Couper")),
+    ("edit-copy", _("Copier")),
+    ("edit-paste", _("Coller")),
+    ("edit-select-line", _("Sélectionner la ligne")),
+    ("edit-select-all", _("Tout sélectionner")),
+    ("edit-delete-line", _("Supprimer la ligne")),
 )
 _WRITE_BUTTONS = frozenset({"edit-undo", "edit-redo", "edit-cut", "edit-paste", "edit-delete-line", "editor-save"})
 
@@ -109,7 +110,7 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
 
     # ---- points d'extension (sous-classes) --------------------------------
     def analyze(self, text: str) -> EditorAnalysis:
-        return EditorAnalysis(summary=f"{len(text.splitlines())} ligne(s)")
+        return EditorAnalysis(summary=_("{count} ligne(s)").format(count=len(text.splitlines())))
 
     def supports_test(self) -> bool:
         return False
@@ -125,7 +126,7 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
 
     def save(self, text: str) -> tuple[bool, str]:
         """(enregistre ?, message a afficher). Le texte n'a aucune erreur."""
-        return False, "enregistrement non disponible"
+        return False, _("enregistrement non disponible")
 
     def status_text(self) -> str:
         return ""
@@ -144,15 +145,15 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
                 for button_id, label in _EDIT_BUTTONS:
                     yield MouseButton(label, id=button_id)
             with Horizontal(classes="omega-actions editor-row"):
-                yield Static("Rechercher")
-                yield Input(placeholder="texte a chercher", id="search-input")
-                yield MouseButton("Precedent", id="search-prev")
-                yield MouseButton("Suivant", id="search-next")
+                yield Static(_("Rechercher"))
+                yield Input(placeholder=_("texte à chercher"), id="search-input")
+                yield MouseButton(_("Précédent"), id="search-prev")
+                yield MouseButton(_("Suivant"), id="search-next")
             if self.supports_test():
                 with Horizontal(classes="omega-actions editor-row"):
-                    yield Static("Tester")
+                    yield Static(_("Tester"))
                     yield Input(placeholder="/chemin/a/tester", id="test-input")
-                    yield MouseButton("Tester", id="test-run")
+                    yield MouseButton(_("Tester"), id="test-run")
                     yield Static("", id="test-result")
             if self.extra_tools():
                 with Horizontal(classes="omega-actions editor-row"):
@@ -161,15 +162,15 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
             yield DataTable(id="editor-diagnostics")
             yield Static("", id="editor-status", classes="omega-hint")
             with Horizontal(classes="omega-actions editor-row"):
-                yield MouseButton("Enregistrer et appliquer", id="editor-save", variant="primary")
-                yield MouseButton("Fermer", id="editor-close")
-                yield MouseButton("Aide", id="editor-help")
+                yield MouseButton(_("Enregistrer et appliquer"), id="editor-save", variant="primary")
+                yield MouseButton(_("Fermer"), id="editor-close")
+                yield MouseButton(_("Aide"), id="editor-help")
 
     def on_mount(self) -> None:
         table = self.query_one("#editor-diagnostics", DataTable)
         table.can_focus = False
         table.cursor_type = "row"
-        table.add_columns("Ligne", "Type", "Message")
+        table.add_columns(_("Ligne"), _("Type"), _("Message"))
         if self._read_only_reason is not None:
             for button_id in _WRITE_BUTTONS:
                 self.query_one(f"#{button_id}", Button).disabled = True
@@ -193,11 +194,11 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
     def refresh_status(self) -> None:
         parts = []
         if self._read_only_reason is not None:
-            parts.append(f"LECTURE SEULE : {self._read_only_reason}")
+            parts.append(_("LECTURE SEULE : {read_only_reason}").format(read_only_reason=self._read_only_reason))
         elif self.is_mounted and self.has_unsaved_changes:
-            parts.append("modifie (non enregistre)")
+            parts.append(_("modifié (non enregistré)"))
         else:
-            parts.append("enregistre")
+            parts.append(_("enregistré"))
         extra = self.status_text()
         if extra:
             parts.append(extra)
@@ -221,7 +222,7 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
         for index, diagnostic in enumerate(self._analysis.diagnostics):
             table.add_row(
                 str(diagnostic.line) if diagnostic.line else "-",
-                "erreur" if diagnostic.severity == "error" else "avertissement",
+                _("erreur") if diagnostic.severity == "error" else _("avertissement"),
                 diagnostic.message,
                 key=str(index),
             )
@@ -290,7 +291,7 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
             if found == -1:
                 found = haystack.rfind(target)
         if found == -1:
-            self.notify_message(f"'{needle}' introuvable")
+            self.notify_message(_("'{needle}' introuvable").format(needle=needle))
             return
         self.text_area.selection = Selection(
             offset_to_location(text, found), offset_to_location(text, found + len(needle)),
@@ -303,7 +304,7 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
         self._run_analysis()
         if self._analysis.error_count:
             self.notify_message(
-                f"Enregistrement refuse : {self._analysis.error_count} erreur(s) a corriger (voir la liste).",
+                _("Enregistrement refusé : {error_count} erreur(s) à corriger (voir la liste).").format(error_count=self._analysis.error_count),
                 error=True,
             )
             return
@@ -317,8 +318,8 @@ class TextFileEditorScreen(OmegaScreen, inherit_bindings=False):
             return
         self.app.push_screen(
             ConfirmScreen(
-                title="FERMER SANS ENREGISTRER ?",
-                message="Les modifications non enregistrees seront perdues.",
+                title=_("FERMER SANS ENREGISTRER ?"),
+                message=_("Les modifications non enregistrées seront perdues."),
             ),
             self._close_if_confirmed,
         )

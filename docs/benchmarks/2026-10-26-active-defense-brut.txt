@@ -1,0 +1,572 @@
+# Active Defense - charge et resilience, 2026-10-26 (tools/bench/active_defense_load.py)
+# Machine : Intel Core i5 M480 (2 coeurs, 4 threads), serveur sur threads 0,2, clients sur 1,3, Python 3.14.7
+# Campagne 1 : S1, S2, S4 x3 (S5 de cette campagne interrompu : outil bloque par un pipe stderr non lu, voir etude)
+##### repetition 1 21:10:15 charge 1.81 1.22 0.81
+## S1
+scenario S1  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit   1126 req/s p50   6.5 p95   11.9 p99   14.8 max    37.9 ms [200:22541] coupees 0
+    PSS 28->27 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit   1155 req/s p50   6.5 p95   10.8 p99   13.3 max    44.1 ms [200:23117] coupees 0
+    PSS 27->28 Mo
+    base 0.18 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-recidivistes
+scenario S2  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    510 req/s p50  12.6 p95   28.6 p99   36.6 max    50.9 ms [200:10211] coupees 0
+    hostile    432 req/s p50  21.0 p95   34.5 p99   43.7 max    69.4 ms [403:8656] coupees 0
+    PSS 28->27 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    893 req/s p50   6.9 p95   21.9 p99   32.1 max    49.6 ms [200:18189] coupees 0
+    hostile    123 req/s p50  24.3 p95  440.9 p99  474.6 max   495.3 ms [403:2512] coupees 0
+    PSS 27->28 Mo
+    base 5.12 Mo, 1000 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    325 req/s p50  16.5 p95   48.8 p99   64.8 max    89.8 ms [200:6506] coupees 0
+    hostile    527 req/s p50  28.8 p95   49.3 p99   62.9 max    96.1 ms [403:10560] coupees 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    279 req/s p50  16.0 p95   60.0 p99   76.8 max   112.1 ms [200:5579] coupees 0
+    hostile    444 req/s p50  34.9 p95   59.6 p99   75.8 max   113.2 ms [403:8896] coupees 0
+    PSS 27->30 Mo
+    base 8.87 Mo, 8896 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    674 req/s p50  10.7 p95   18.6 p99   28.2 max    46.6 ms [200:13495] coupees 0
+    hostile    484 req/s p50  22.2 p95   47.6 p99   69.9 max   109.3 ms [403:9696] coupees 0
+    PSS 42->46 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    619 req/s p50  10.0 p95   32.5 p99   50.8 max   179.2 ms [200:12399] coupees 0
+    hostile    396 req/s p50  27.7 p95   61.6 p99   95.1 max   178.8 ms [403:7936] coupees 0
+    PSS 44->54 Mo
+    base 8.41 Mo, 7936 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+##### repetition 2 21:13:29 charge 4.62 2.46 1.36
+## S1
+scenario S1  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit   1078 req/s p50   6.6 p95   10.9 p99   12.8 max    35.0 ms [200:21576] coupees 0
+    PSS 28->27 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit   1072 req/s p50   6.7 p95   11.3 p99   14.2 max    32.6 ms [200:21451] coupees 0
+    PSS 27->28 Mo
+    base 0.18 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-recidivistes
+scenario S2  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    486 req/s p50  13.4 p95   29.9 p99   38.0 max    51.4 ms [200:9730] coupees 0
+    hostile    415 req/s p50  22.2 p95   35.6 p99   44.3 max    68.6 ms [403:8304] coupees 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    851 req/s p50   7.0 p95   26.4 p99   35.3 max    53.4 ms [200:17316] coupees 0
+    hostile    123 req/s p50  28.0 p95  431.3 p99  474.1 max   497.8 ms [403:2496] coupees 0
+    PSS 27->28 Mo
+    base 5.12 Mo, 1000 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    327 req/s p50  15.8 p95   48.1 p99   62.5 max    75.0 ms [200:6551] coupees 0
+    hostile    533 req/s p50  29.0 p95   49.2 p99   63.1 max    80.4 ms [403:10688] coupees 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    265 req/s p50  17.7 p95   66.3 p99   82.5 max   111.9 ms [200:5321] coupees 0
+    hostile    426 req/s p50  36.6 p95   64.9 p99   83.2 max   127.1 ms [403:8544] coupees 0
+    PSS 27->30 Mo
+    base 8.73 Mo, 8544 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    668 req/s p50   8.0 p95   33.9 p99   45.4 max   116.4 ms [200:13388] coupees 0
+    hostile    537 req/s p50  18.8 p95   42.0 p99   57.7 max   128.0 ms [403:10752] coupees 0
+    PSS 42->47 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    554 req/s p50  10.6 p95   36.3 p99   64.0 max   260.4 ms [200:11104] coupees 0
+    hostile    347 req/s p50  30.5 p95   77.5 p99  129.1 max   269.0 ms [403:6944] coupees 0
+    PSS 44->50 Mo
+    base 7.81 Mo, 6944 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+##### repetition 3 21:16:42 charge 2.98 2.37 1.52
+## S1
+scenario S1  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    894 req/s p50   7.7 p95   14.0 p99   18.6 max    39.8 ms [200:17905] coupees 0
+    PSS 28->27 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    960 req/s p50   7.0 p95   13.6 p99   19.3 max    48.2 ms [200:19220] coupees 0
+    PSS 27->28 Mo
+    base 0.18 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-recidivistes
+scenario S2  workers 1  duree 20.0s  sources hostiles 1000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    439 req/s p50  15.4 p95   34.4 p99   44.3 max   106.0 ms [200:8800] coupees 0
+    hostile    375 req/s p50  24.2 p95   40.6 p99   52.7 max   110.0 ms [403:7504] coupees 0
+    PSS 28->27 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    802 req/s p50   7.4 p95   26.6 p99   35.5 max    49.2 ms [200:16172] coupees 0
+    hostile    123 req/s p50  28.0 p95  434.1 p99  479.8 max   509.9 ms [403:2480] coupees 0
+    PSS 27->28 Mo
+    base 5.1 Mo, 1000 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    296 req/s p50  18.4 p95   58.6 p99   71.6 max   138.9 ms [200:5933] coupees 0
+    hostile    473 req/s p50  31.5 p95   59.4 p99   87.4 max   156.4 ms [403:9472] coupees 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    258 req/s p50  18.7 p95   71.4 p99   88.2 max   104.0 ms [200:5169] coupees 0
+    hostile    418 req/s p50  37.0 p95   69.0 p99   82.4 max   116.0 ms [403:8384] coupees 0
+    PSS 27->30 Mo
+    base 8.57 Mo, 8384 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    642 req/s p50   8.3 p95   35.3 p99   49.5 max   108.2 ms [200:12869] coupees 0
+    hostile    500 req/s p50  19.6 p95   48.1 p99   71.6 max   111.9 ms [403:10016] coupees 0
+    PSS 42->47 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+Active Defense active     
+    legit    566 req/s p50   8.2 p95   47.6 p99   65.7 max   182.1 ms [200:11360] coupees 0
+    hostile    397 req/s p50  27.2 p95   60.7 p99   88.8 max   176.0 ms [403:7968] coupees 0
+    PSS 44->50 Mo
+    base 8.44 Mo, 7968 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+scenario S5  workers 1  duree 30.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+/usr/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 3 leaked semaphore objects to clean up at shutdown: {'/mp-vwvcoh0q', '/mp-2qpfo9ul', '/mp-k_00mjd1'}
+  warnings.warn(
+
+# Campagne 2 : S5 x2 et S3 (outil corrige)
+## S5-verrou rep 1 22:06:57
+scenario S5  workers 1  duree 30.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    254 req/s p50  14.9 p95   58.5 p99   71.5 max  5062.1 ms [200:7644] coupees 1 sans reponse 0
+    hostile    344 req/s p50  27.2 p95   49.6 p99   64.3 max   100.6 ms [403:10337] coupees 1599 sans reponse 0
+    PSS 28->32 Mo
+    base 9.66 Mo, 10337 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 1599 exceptions non gerees, 1599 « database is locked »
+## S5-verrou rep 2 22:07:31
+scenario S5  workers 1  duree 30.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    205 req/s p50  16.2 p95   60.4 p99   81.3 max  5041.4 ms [200:6165] coupees 3 sans reponse 0
+    hostile    303 req/s p50  29.2 p95   56.2 p99   72.8 max   112.4 ms [403:9086] coupees 1538 sans reponse 0
+    PSS 28->31 Mo
+    base 8.95 Mo, 9086 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 1538 exceptions non gerees, 1538 « database is locked »
+## S3-long 22:08:05
+scenario S3  workers 1  duree 300.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    275 req/s p50  18.6 p95   66.0 p99   85.2 max   137.8 ms [200:82505] coupees 0 sans reponse 0
+    hostile    416 req/s p50  33.9 p95   64.5 p99   82.4 max   137.0 ms [403:124800] coupees 0 sans reponse 0
+    PSS 28->30 Mo
+    base 62.88 Mo, 100000 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+FIN 22:13:10
+
+# Campagne 3 (APRES correctif ecriture differee, 2026-10-26) : S2-botnet x3, S4-botnet x3, S5 x2, S3 (state_ttl 60 s)
+##### repetition 1 22:32:12 charge 1.58 1.55 1.35
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    308 req/s p50  18.2 p95   53.3 p99   68.9 max   102.4 ms [200:6179] coupees 0 sans reponse 0
+    hostile    479 req/s p50  29.8 p95   51.4 p99   65.2 max    87.8 ms [403:9600] coupees 0 sans reponse 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    251 req/s p50  18.6 p95   69.3 p99   89.9 max   114.5 ms [200:5028] coupees 0 sans reponse 0
+    hostile    414 req/s p50  37.0 p95   66.7 p99   86.6 max   110.7 ms [403:8288] coupees 0 sans reponse 0
+    PSS 28->30 Mo
+    base 8.57 Mo, 8288 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    509 req/s p50  11.2 p95   41.4 p99   63.8 max   122.2 ms [200:10190] coupees 0 sans reponse 0
+    hostile    439 req/s p50  21.6 p95   59.3 p99   84.8 max   123.3 ms [403:8800] coupees 0 sans reponse 0
+    PSS 41->47 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    550 req/s p50   9.7 p95   40.8 p99   64.4 max   123.3 ms [200:11008] coupees 0 sans reponse 0
+    hostile    387 req/s p50  26.9 p95   63.8 p99   82.9 max   118.3 ms [403:7744] coupees 0 sans reponse 0
+    PSS 46->52 Mo
+    base 8.31 Mo, 7744 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 1 « database is locked »
+##### repetition 2 22:33:49 charge 3.52 2.08 1.55
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    328 req/s p50  17.6 p95   50.8 p99   65.0 max    79.7 ms [200:6573] coupees 0 sans reponse 0
+    hostile    496 req/s p50  27.6 p95   50.9 p99   65.5 max    87.7 ms [403:9952] coupees 0 sans reponse 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    255 req/s p50  18.8 p95   68.5 p99   89.2 max   127.4 ms [200:5107] coupees 0 sans reponse 0
+    hostile    412 req/s p50  36.4 p95   65.7 p99   84.5 max   121.3 ms [403:8256] coupees 0 sans reponse 0
+    PSS 28->30 Mo
+    base 8.49 Mo, 8256 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    636 req/s p50  10.6 p95   22.8 p99   34.3 max    68.4 ms [200:12735] coupees 0 sans reponse 0
+    hostile    468 req/s p50  23.1 p95   50.8 p99   72.8 max   106.1 ms [403:9376] coupees 0 sans reponse 0
+    PSS 42->46 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    537 req/s p50  10.1 p95   41.1 p99   64.5 max   118.3 ms [200:10749] coupees 0 sans reponse 0
+    hostile    388 req/s p50  26.5 p95   63.6 p99   86.2 max   118.7 ms [403:7776] coupees 0 sans reponse 0
+    PSS 44->50 Mo
+    base 8.36 Mo, 7776 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+##### repetition 3 22:35:27 charge 4.27 2.71 1.83
+## S2-botnet
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    313 req/s p50  18.5 p95   54.7 p99   72.2 max   112.8 ms [200:6269] coupees 0 sans reponse 0
+    hostile    473 req/s p50  28.7 p95   55.4 p99   75.4 max   111.3 ms [403:9480] coupees 0 sans reponse 0
+    PSS 28->28 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    256 req/s p50  19.3 p95   67.5 p99   94.9 max   112.3 ms [200:5116] coupees 0 sans reponse 0
+    hostile    414 req/s p50  35.8 p95   64.2 p99   86.2 max   121.1 ms [403:8288] coupees 0 sans reponse 0
+    PSS 28->30 Mo
+    base 8.57 Mo, 8288 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+## S4-botnet
+scenario S4  workers 2  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    619 req/s p50  10.7 p95   23.4 p99   34.9 max    63.0 ms [200:12386] coupees 0 sans reponse 0
+    hostile    457 req/s p50  24.0 p95   55.2 p99   75.1 max   107.4 ms [403:9152] coupees 0 sans reponse 0
+    PSS 42->46 Mo
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    510 req/s p50   9.1 p95   49.4 p99   73.3 max   132.9 ms [200:10229] coupees 0 sans reponse 0
+    hostile    386 req/s p50  26.7 p95   63.3 p99   95.6 max   144.0 ms [403:7744] coupees 0 sans reponse 0
+    PSS 44->51 Mo
+    base 8.24 Mo, 7744 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 1 « database is locked »
+## S5-verrou rep 1 22:37:04
+scenario S5  workers 1  duree 30.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    251 req/s p50  19.8 p95   67.8 p99   92.9 max   111.5 ms [200:7551] coupees 0 sans reponse 0
+    hostile    399 req/s p50  38.3 p95   68.5 p99   88.1 max   117.4 ms [403:12000] coupees 0 sans reponse 0
+    PSS 28->39 Mo
+    base 9.83 Mo, 10626 sujets, 0 incidents
+    error.log 2 lignes (locked 1, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+## S5-verrou rep 2 22:37:38
+scenario S5  workers 1  duree 30.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    248 req/s p50  20.6 p95   70.3 p99   95.7 max   189.0 ms [200:7440] coupees 0 sans reponse 0
+    hostile    400 req/s p50  37.4 p95   70.9 p99  101.9 max   229.1 ms [403:12000] coupees 0 sans reponse 0
+    PSS 28->40 Mo
+    base 10.26 Mo, 11444 sujets, 0 incidents
+    error.log 2 lignes (locked 1, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+## S3-long-ttl60 22:38:12
+scenario S3  workers 1  duree 300.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense active     
+    legit    252 req/s p50  19.1 p95   68.2 p99   89.5 max   149.1 ms [200:75536] coupees 0 sans reponse 0
+    hostile    409 req/s p50  36.9 p95   66.0 p99   86.4 max   159.0 ms [403:122720] coupees 0 sans reponse 0
+    PSS 28->30 Mo
+    base 46.76 Mo, 25216 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+FIN 22:43:17
+
+# Campagne 4 (validation groupee : lots de 200, fenetre 50 ms, executemany) : S2-botnet x5 entrelace
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    274 req/s p50  20.6 p95   62.5 p99   76.5 max   105.9 ms [200:5481] coupees 0 sans reponse 0
+    hostile    425 req/s p50  32.6 p95   62.1 p99   76.8 max    87.6 ms [403:8512] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.25}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    254 req/s p50  20.6 p95   68.0 p99   88.2 max   123.1 ms [200:5089] coupees 0 sans reponse 0
+    hostile    401 req/s p50  37.4 p95   67.8 p99   89.0 max   130.6 ms [403:8032] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.37, 'ecrivain': 1.52}
+    base 8.08 Mo, 8032 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    275 req/s p50  19.6 p95   65.9 p99   91.9 max   139.1 ms [200:5510] coupees 0 sans reponse 0
+    hostile    412 req/s p50  32.6 p95   67.1 p99  108.0 max   216.6 ms [403:8256] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.09}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    257 req/s p50  19.9 p95   69.5 p99   86.7 max    99.6 ms [200:5152] coupees 0 sans reponse 0
+    hostile    395 req/s p50  37.7 p95   68.3 p99   85.8 max   116.2 ms [403:7936] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.31, 'ecrivain': 1.5}
+    base 8.07 Mo, 7936 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    293 req/s p50  19.3 p95   59.0 p99   77.5 max   101.0 ms [200:5866] coupees 0 sans reponse 0
+    hostile    455 req/s p50  30.9 p95   59.1 p99   74.7 max   114.8 ms [403:9120] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.36}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    263 req/s p50  19.1 p95   65.9 p99   84.6 max   103.3 ms [200:5273] coupees 0 sans reponse 0
+    hostile    410 req/s p50  37.1 p95   64.2 p99   79.3 max   103.1 ms [403:8224] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.5, 'ecrivain': 1.61}
+    base 8.1 Mo, 8224 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    293 req/s p50  18.6 p95   56.2 p99   73.1 max   142.0 ms [200:5867] coupees 0 sans reponse 0
+    hostile    441 req/s p50  30.8 p95   56.7 p99   75.1 max   148.5 ms [403:8832] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.26}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    261 req/s p50  19.6 p95   68.6 p99   88.0 max   105.7 ms [200:5233] coupees 0 sans reponse 0
+    hostile    403 req/s p50  36.7 p95   66.8 p99   84.4 max   116.1 ms [403:8096] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.5, 'ecrivain': 1.56}
+    base 8.09 Mo, 8096 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    297 req/s p50  19.4 p95   56.6 p99   71.4 max   102.2 ms [200:5941] coupees 0 sans reponse 0
+    hostile    449 req/s p50  30.5 p95   56.4 p99   71.6 max   102.4 ms [403:8992] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.36}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    242 req/s p50  21.2 p95   69.8 p99   89.3 max   115.6 ms [200:4862] coupees 0 sans reponse 0
+    hostile    392 req/s p50  38.8 p95   67.1 p99   84.9 max   120.4 ms [403:7872] coupees 0 sans reponse 0
+    PSS 28->30 Mo ; CPU par fil (s) {'boucle': 20.28, 'ecrivain': 1.51}
+    base 8.0 Mo, 7872 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+
+# Campagne 5 (incidents sans travail sous le seuil, plafonds, empreinte UA memorisee) : S2-botnet x5
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    212 req/s p50  26.8 p95   90.9 p99  140.1 max   214.4 ms [200:4255] coupees 0 sans reponse 0
+    hostile    323 req/s p50  39.2 p95   99.4 p99  149.8 max   211.9 ms [403:6464] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 18.49}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    223 req/s p50  23.9 p95   84.7 p99  117.5 max   178.7 ms [200:4469] coupees 0 sans reponse 0
+    hostile    353 req/s p50  39.9 p95   89.1 p99  122.1 max   226.6 ms [403:7072] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.15, 'ecrivain': 0.72}
+    base 7.71 Mo, 7072 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    264 req/s p50  21.2 p95   66.1 p99   84.5 max   115.7 ms [200:5283] coupees 0 sans reponse 0
+    hostile    395 req/s p50  34.0 p95   66.5 p99   84.8 max   125.6 ms [403:7904] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.59}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    205 req/s p50  26.2 p95   97.3 p99  125.9 max   150.0 ms [200:4111] coupees 0 sans reponse 0
+    hostile    316 req/s p50  44.5 p95   99.1 p99  124.7 max   160.1 ms [403:6336] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 19.61, 'ecrivain': 0.66}
+    base 7.53 Mo, 6336 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    243 req/s p50  23.7 p95   73.1 p99  101.4 max   177.1 ms [200:4857] coupees 0 sans reponse 0
+    hostile    368 req/s p50  35.0 p95   77.0 p99  108.4 max   204.2 ms [403:7360] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 19.6}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    240 req/s p50  22.0 p95   76.6 p99  100.6 max   173.6 ms [200:4814] coupees 0 sans reponse 0
+    hostile    372 req/s p50  39.6 p95   77.8 p99  116.7 max   207.8 ms [403:7456] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.34, 'ecrivain': 0.79}
+    base 7.83 Mo, 7456 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    260 req/s p50  21.5 p95   69.4 p99  100.5 max   163.7 ms [200:5206] coupees 0 sans reponse 0
+    hostile    388 req/s p50  34.4 p95   73.2 p99  101.2 max   170.6 ms [403:7776] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 19.84}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    213 req/s p50  24.8 p95   89.2 p99  107.0 max   123.0 ms [200:4261] coupees 0 sans reponse 0
+    hostile    335 req/s p50  43.4 p95   87.1 p99  109.5 max   159.1 ms [403:6720] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.04, 'ecrivain': 0.66}
+    base 7.58 Mo, 6720 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    277 req/s p50  20.6 p95   63.9 p99   77.7 max    99.8 ms [200:5557] coupees 0 sans reponse 0
+    hostile    431 req/s p50  32.1 p95   61.7 p99   77.7 max   115.4 ms [403:8640] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.8}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    231 req/s p50  22.9 p95   82.2 p99  104.9 max   199.8 ms [200:4615] coupees 0 sans reponse 0
+    hostile    369 req/s p50  40.2 p95   81.5 p99  110.4 max   241.4 ms [403:7392] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 19.99, 'ecrivain': 0.76}
+    base 7.85 Mo, 7392 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+
+# Experience : ecrivain neutralise (copie du code dans le scratchpad, travaux jetes) : S2-botnet x3
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    296 req/s p50  19.1 p95   59.1 p99   82.0 max   147.6 ms [200:5923] coupees 0 sans reponse 0
+    hostile    450 req/s p50  30.0 p95   60.0 p99   85.2 max   149.5 ms [403:9024] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 19.85}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    283 req/s p50  18.9 p95   60.7 p99   78.8 max   112.5 ms [200:5675] coupees 0 sans reponse 0
+    hostile    443 req/s p50  33.3 p95   57.7 p99   73.3 max   108.0 ms [403:8896] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.83, 'ecrivain': 0.0}
+    base 0.19 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    306 req/s p50  18.0 p95   56.2 p99   75.1 max   139.8 ms [200:6132] coupees 0 sans reponse 0
+    hostile    461 req/s p50  30.4 p95   56.6 p99   74.7 max   132.7 ms [403:9248] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.43}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    278 req/s p50  18.9 p95   62.9 p99   77.6 max   118.5 ms [200:5580] coupees 0 sans reponse 0
+    hostile    428 req/s p50  33.7 p95   62.7 p99   78.5 max   125.1 ms [403:8576] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.85, 'ecrivain': 0.0}
+    base 0.19 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    302 req/s p50  18.5 p95   56.6 p99   69.2 max   127.5 ms [200:6049] coupees 0 sans reponse 0
+    hostile    458 req/s p50  30.4 p95   55.6 p99   68.3 max    81.6 ms [403:9184] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.41}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    271 req/s p50  19.7 p95   66.8 p99   80.2 max   146.3 ms [200:5416] coupees 0 sans reponse 0
+    hostile    412 req/s p50  34.8 p95   64.9 p99   78.7 max   146.6 ms [403:8256] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.69, 'ecrivain': 0.0}
+    base 0.19 Mo, 0 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+
+# Campagne 6 (code final) : S2-botnet x5
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    310 req/s p50  18.4 p95   55.3 p99   68.1 max   104.8 ms [200:6212] coupees 0 sans reponse 0
+    hostile    475 req/s p50  29.1 p95   56.5 p99   72.3 max   108.0 ms [403:9504] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.05}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    246 req/s p50  21.6 p95   72.6 p99   87.6 max   142.5 ms [200:4929] coupees 0 sans reponse 0
+    hostile    386 req/s p50  38.8 p95   71.4 p99   96.6 max   181.9 ms [403:7744] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.2, 'ecrivain': 0.82}
+    base 7.97 Mo, 7744 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    285 req/s p50  19.7 p95   63.3 p99   77.9 max   118.0 ms [200:5699] coupees 0 sans reponse 0
+    hostile    439 req/s p50  31.6 p95   62.1 p99   81.1 max   117.0 ms [403:8800] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.58}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    240 req/s p50  23.1 p95   73.7 p99   88.9 max   110.5 ms [200:4820] coupees 0 sans reponse 0
+    hostile    385 req/s p50  38.9 p95   70.7 p99   91.5 max   125.6 ms [403:7712] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.24, 'ecrivain': 0.82}
+    base 7.9 Mo, 7712 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    280 req/s p50  20.2 p95   61.6 p99   80.0 max   156.0 ms [200:5611] coupees 0 sans reponse 0
+    hostile    428 req/s p50  31.9 p95   61.5 p99   80.8 max   151.7 ms [403:8576] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.25}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    237 req/s p50  22.9 p95   77.7 p99  110.2 max   169.7 ms [200:4755] coupees 0 sans reponse 0
+    hostile    368 req/s p50  38.9 p95   77.1 p99  112.7 max   188.6 ms [403:7392] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 19.86, 'ecrivain': 0.78}
+    base 7.84 Mo, 7392 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    280 req/s p50  19.6 p95   63.6 p99   79.5 max   105.2 ms [200:5599] coupees 0 sans reponse 0
+    hostile    427 req/s p50  32.7 p95   61.6 p99   77.3 max   103.7 ms [403:8544] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.3}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    218 req/s p50  24.3 p95   83.8 p99  114.3 max   158.3 ms [200:4368] coupees 0 sans reponse 0
+    hostile    346 req/s p50  42.9 p95   84.5 p99  109.0 max   152.0 ms [403:6944] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 19.99, 'ecrivain': 0.72}
+    base 7.65 Mo, 6944 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+scenario S2  workers 1  duree 20.0s  sources hostiles 100000  (serveur sur 0,2, clients sur 1,3)
+Active Defense desactive  
+    legit    271 req/s p50  20.2 p95   63.2 p99   80.1 max   130.5 ms [200:5418] coupees 0 sans reponse 0
+    hostile    425 req/s p50  33.1 p95   62.0 p99   83.7 max   154.5 ms [403:8512] coupees 0 sans reponse 0
+    PSS 28->28 Mo ; CPU par fil (s) {'boucle': 20.32}
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »
+Active Defense active     
+    legit    264 req/s p50  20.3 p95   63.6 p99   78.7 max   104.9 ms [200:5297] coupees 0 sans reponse 0
+    hostile    413 req/s p50  36.7 p95   63.3 p99   77.4 max   107.2 ms [403:8288] coupees 0 sans reponse 0
+    PSS 28->31 Mo ; CPU par fil (s) {'boucle': 20.52, 'ecrivain': 0.94}
+    base 8.13 Mo, 8288 sujets, 0 incidents
+    error.log 0 lignes (locked 0, traceback 0)
+    stderr : 0 exceptions non gerees, 0 « database is locked »

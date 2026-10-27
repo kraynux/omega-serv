@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from omega_serv.core.exceptions import OmegaServError
+from omega_serv.core.i18n import _
 
 
 class ConfigError(OmegaServError):
@@ -25,7 +26,7 @@ class ConfigValidationError(ConfigError):
 class ProfileNotFoundError(ConfigError):
     def __init__(self, name: str):
         self.name = name
-        super().__init__(f"Profil introuvable : {name}")
+        super().__init__(_("Profil introuvable : {name}").format(name=name))
 
 
 class ProfileLoadError(ConfigError):

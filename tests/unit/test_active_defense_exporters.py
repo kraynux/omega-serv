@@ -115,10 +115,16 @@ class TestMarkdownIncidentReportExporter(unittest.TestCase):
         self.assertIn("## Indicateurs de compromission (IoC)", content)
         self.assertIn("waf_decision", content)
 
+    def test_render_mentions_events_omitted_by_history_pruning(self):
+        from dataclasses import replace
+        content = render_incident_report_markdown(replace(_incident(), omitted_events=5))
+        self.assertIn("5 événement(s) intermédiaire(s) omis", content)
+        self.assertNotIn("intermédiaire", render_incident_report_markdown(_incident()))
+
     def test_render_function_lists_no_events_explicitly(self):
         empty_incident = Incident(incident_id="i2", subject_id="s2", status="open", opened_at=_NOW)
         content = render_incident_report_markdown(empty_incident)
-        self.assertIn("Aucun evenement enregistre", content)
+        self.assertIn("Aucun événement enregistré", content)
         self.assertIn("Aucun IoC extrait", content)
 
     def test_writes_a_real_sha256_checksum_sidecar(self):

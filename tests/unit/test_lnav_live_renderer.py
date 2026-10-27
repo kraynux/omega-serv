@@ -34,6 +34,11 @@ class TestPadLineAndMoveTo(unittest.TestCase):
     def test_pad_line_truncates_long_text(self):
         self.assertEqual(pad_line("hello world", 5), "hello")
 
+    def test_pad_line_counts_wide_characters_as_two_columns(self):
+        # Chinois (lot 8 i18n) : 2 colonnes par caractere, jamais 1.
+        self.assertEqual(pad_line("日志", 6), "日志  ")
+        self.assertEqual(pad_line("日志文件", 5), "日志 ")
+
     def test_move_to_default_column(self):
         self.assertEqual(move_to(3), "\x1b[3;1H")
 

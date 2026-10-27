@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import subprocess
 
+from omega_serv.core.i18n import _
 from omega_serv.ports.process_runner_port import ProcessResult
 
 
@@ -26,7 +27,7 @@ class SubprocessRunner:
                 check=False,
             )
         except FileNotFoundError:
-            return ProcessResult(returncode=127, stdout="", stderr=f"{args[0]} : commande introuvable")
+            return ProcessResult(returncode=127, stdout="", stderr=_("{value} : commande introuvable").format(value=args[0]))
         except subprocess.TimeoutExpired:
             # 124 : convention deja utilisee par la commande coreutils `timeout(1)`
             # (jamais une exception qui remonterait brute jusqu'a l'appelant - le
@@ -34,7 +35,7 @@ class SubprocessRunner:
             return ProcessResult(
                 returncode=124,
                 stdout="",
-                stderr=f"{args[0]} : delai depasse ({timeout:.0f}s) - processus bloque, interrompu",
+                stderr=_("{value} : délai dépassé ({timeout:.0f}s) - processus bloqué, interrompu").format(value=args[0], timeout=timeout),
             )
         return ProcessResult(returncode=result.returncode, stdout=result.stdout, stderr=result.stderr)
 

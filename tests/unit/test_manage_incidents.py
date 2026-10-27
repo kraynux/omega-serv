@@ -21,6 +21,13 @@ class _FakeIncidentRepository:
     def __init__(self):
         self._incidents: dict[str, Incident] = {}
 
+    def find_open_id_for(self, subject_id):
+
+        incident = self.find_open_for(subject_id)
+
+        return None if incident is None else incident.incident_id
+
+
     def find_open_for(self, subject_id):
         for incident in self._incidents.values():
             if incident.subject_id == subject_id and incident.status == "open":
@@ -142,6 +149,19 @@ class TestCloseIncident(unittest.TestCase):
         close_incident(repository, _FixedClock(now=_NOW + timedelta(hours=1)), "i1")
         self.assertIsNone(close_incident(repository, _FixedClock(now=_NOW + timedelta(hours=2)), "i1"))
 
+
+
+class TestCreateOrUpdateIncidentReadsNothingBelowThreshold(unittest.TestCase):
+    def test_no_repository_call_under_the_threshold(self):
+        class _Untouchable:
+            def __getattr__(self, name):
+                raise AssertionError(f"lecture inutile : {name}")
+
+        result = create_or_update_incident(
+            _Untouchable(), _FixedClock(), subject_id="s", observation=_observation(), score=10,
+            incident_score_threshold=70,
+        )
+        self.assertEqual(result, (None, None))
 
 if __name__ == "__main__":
     unittest.main()

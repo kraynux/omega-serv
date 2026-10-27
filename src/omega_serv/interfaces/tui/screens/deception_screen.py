@@ -11,6 +11,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.active_defense.manage_deception import release_deception
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.policies import is_assignment_active
 from omega_serv.interfaces.tui.screens._active_defense_collaborators_cache import (
     ActiveDefenseCollaboratorsCacheMixin,
@@ -32,20 +33,20 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("DECEPTION", classes="omega-title")
+            yield Static(_("DECEPTION"), classes="omega-title")
             yield Static("", id="deception-error", classes="omega-hint")
             yield DataTable(id="deception-table")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Liberer", id="release", variant="error", disabled=True)
+                    yield Button(_("Libérer"), id="release", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#deception-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Source", "Profil", "Etat", "Affecte le", "Expire le")
+        table.add_columns(_("Source"), _("Profil"), _("État"), _("Affecté le"), _("Expire le"))
         self._refresh()
 
     def _refresh(self) -> None:
@@ -61,7 +62,7 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         error_widget.update("")
         now = self._container.clock.now()
         for assignment in active_defense.deception_assignment_repository.list_active():
-            status = "active" if is_assignment_active(assignment, now) else "expiree"
+            status = _("active") if is_assignment_active(assignment, now) else _("expirée")
             table.add_row(
                 assignment.subject_id, assignment.profile_name, status,
                 assignment.assigned_at.isoformat(), assignment.expires_at.isoformat(),
@@ -79,8 +80,8 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         if event.button.id == "release" and self._selected_subject_id is not None:
             self.app.push_screen(
                 ConfirmScreen(
-                    title="LIBERER L'AFFECTATION",
-                    message=f"Confirmer la liberation du leurre pour {self._selected_subject_id!r} ?",
+                    title=_("LIBÉRER L'AFFECTATION"),
+                    message=_("Confirmer la libération du leurre pour {selected_subject_id!r} ?").format(selected_subject_id=self._selected_subject_id),
                 ),
                 self._release,
             )
@@ -92,5 +93,5 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         if active_defense is None:
             return
         release_deception(active_defense.deception_assignment_repository, self._selected_subject_id)
-        self.app.notify(f"Affectation de leurre liberee pour {self._selected_subject_id!r}.")
+        self.app.notify(_("Affectation de leurre libérée pour {selected_subject_id!r}.").format(selected_subject_id=self._selected_subject_id))
         self._refresh()

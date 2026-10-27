@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.entities import KeywordListDefinition
 from omega_serv.domain.security.waf.exceptions import WafRuleLoadError
 from omega_serv.domain.security.waf.keyword_list import (
@@ -21,11 +22,11 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 
 def load_keyword_list(filesystem: FilesystemPort, definition: KeywordListDefinition, path: Path) -> CompiledRulePack:
     if not filesystem.exists(path):
-        raise WafRuleLoadError(f"Fichier de liste de mots-clefs introuvable : {path}")
+        raise WafRuleLoadError(_("Fichier de liste de mots-clefs introuvable : {path}").format(path=path))
     try:
         raw = filesystem.read_text(path)
     except OSError as e:
-        raise WafRuleLoadError(f"Impossible de lire {path} : {e}") from e
+        raise WafRuleLoadError(_("Impossible de lire {path} : {e}").format(path=path, e=e)) from e
     if definition.match == "path":
         # Meme severite bloquante qu'un pack JSON invalide : une liste de
         # chemins en erreur (syntaxe, chemin vital touche) n'est JAMAIS
@@ -35,8 +36,8 @@ def load_keyword_list(filesystem: FilesystemPort, definition: KeywordListDefinit
         errors = analyze_path_list_text(raw, definition.anchor).errors
         if errors:
             details = " ; ".join(f"ligne {e.line} : {e.message}" for e in errors[:5])
-            more = f" (+{len(errors) - 5} autre(s))" if len(errors) > 5 else ""
-            raise WafRuleLoadError(f"Liste de chemins invalide {path} : {details}{more}")
+            more = _(" (+{value} autre(s))").format(value=len(errors) - 5) if len(errors) > 5 else ""
+            raise WafRuleLoadError(_("Liste de chemins invalide {path} : {details}{more}").format(path=path, details=details, more=more))
     tokens = tokens_from_text(raw)
     pack = build_rule_pack_from_keyword_list(definition, tokens)
     return compile_rule_pack(pack)

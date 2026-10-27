@@ -113,6 +113,9 @@ class Incident:
     closed_at: datetime | None = None
     observations: tuple[ThreatObservation, ...] = field(default_factory=tuple)
     events: tuple[IncidentEvent, ...] = field(default_factory=tuple)
+    omitted_observations: int = 0
+    omitted_events: int = 0
+    """Elements du milieu de l'historique supprimes par l'elagage (INCIDENT_HISTORY_KEEP_*)."""
 
 
 @dataclass(frozen=True)
@@ -145,7 +148,7 @@ class ExportResult:
     """Retour des exporters IoC/rapport - chemin reel + metadonnees,
     jamais le contenu lui-meme (deja ecrit sur disque par l'exporter)."""
     path: Path
-    export_format: Literal["json", "csv", "markdown"]
+    export_format: Literal["json", "csv", "markdown", "stix", "misp"]
     bytes_written: int
 
 

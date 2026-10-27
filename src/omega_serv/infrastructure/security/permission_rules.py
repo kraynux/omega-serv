@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.security.audit.entities import AuditFinding, Severity
 from omega_serv.ports.filesystem_port import FilesystemPort
@@ -38,12 +39,12 @@ def _check_auth_file_permissions(config: OmegaServConfig, project_root: Path, fi
     mode = filesystem.file_mode(users_path)
     if mode & 0o077:
         return [AuditFinding(
-            rule_id="PERM-002", rule_name="Fichier de comptes Auth lisible/inscriptible au-dela du proprietaire",
+            rule_id="PERM-002", rule_name=_("Fichier de comptes Auth lisible/inscriptible au-delà du propriétaire"),
             severity=Severity.CRITICAL, category="permissions",
-            message=f"{users_path} : permissions {oct(mode)}",
+            message=_("{users_path} : permissions {value}").format(users_path=users_path, value=oct(mode)),
             recommendation=(
-                "chmod 600 sur ce fichier (deja fait automatiquement par "
-                "JsonUsersRepository.save() - verifier qu'il n'a pas ete edite/copie manuellement depuis)."
+                _("chmod 600 sur ce fichier (déjà fait automatiquement par "
+                "JsonUsersRepository.save() - vérifier qu'il n'a pas été edite/copie manuellement depuis).")
             ),
             details={"path": str(users_path), "mode": oct(mode)},
         )]
@@ -67,10 +68,10 @@ def _check_sensitive_files_under_webroot(config: OmegaServConfig, project_root: 
     found = _scan_sensitive(filesystem, webroot)
     if found:
         return [AuditFinding(
-            rule_id="PERM-003", rule_name="Fichiers sensibles detectes sous webroot",
+            rule_id="PERM-003", rule_name=_("Fichiers sensibles détectés sous webroot"),
             severity=Severity.CRITICAL, category="permissions",
-            message=f"{len(found)} fichier(s) sensible(s) sous {webroot}",
-            recommendation="Deplacer ces fichiers hors webroot (ex. secure/).",
+            message=_("{count} fichier(s) sensible(s) sous {webroot}").format(count=len(found), webroot=webroot),
+            recommendation=_("Déplacer ces fichiers hors webroot (ex. secure/)."),
             details={"webroot": str(webroot), "files": found[:_MAX_SENSITIVE_FILES_REPORTED]},
         )]
     return []

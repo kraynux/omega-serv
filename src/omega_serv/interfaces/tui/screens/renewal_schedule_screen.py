@@ -23,6 +23,7 @@ from omega_serv.application.tls.schedule_certbot_renewal import (
     check_renewal_schedule_status,
     schedule_certbot_renewal,
 )
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
@@ -38,18 +39,18 @@ class RenewalScheduleScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(classes="omega-panel"):
-            yield Static("RENOUVELLEMENT AUTOMATIQUE (CERTBOT)", classes="omega-title")
+            yield Static(_("RENOUVELLEMENT AUTOMATIQUE (CERTBOT)"), classes="omega-title")
             yield Static(
-                "Concerne uniquement CETTE instance (secure/certificates/letsencrypt/) - "
-                "une autre instance sans TLS n'a besoin de rien ici.",
+                _("Concerne uniquement CETTE instance (secure/certificates/letsencrypt/) - "
+                "une autre instance sans TLS n'a besoin de rien ici."),
                 classes="omega-hint",
             )
             yield Static("", id="status-text")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Configurer maintenant", id="configure", variant="primary")
+                    yield Button(_("Configurer maintenant"), id="configure", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -79,7 +80,7 @@ class RenewalScheduleScreen(OmegaScreen):
         status_widget = self.query_one("#status-text", Static)
         acme_factory = self._container.acme_client_factory
         if acme_factory is None:
-            status_widget.update("Verification indisponible dans cet environnement.")
+            status_widget.update(_("Vérification indisponible dans cet environnement."))
             return
         status = check_renewal_schedule_status(self._service_name(), self._manager(), acme_factory())
         status_widget.update(status.detail)
@@ -88,7 +89,7 @@ class RenewalScheduleScreen(OmegaScreen):
         status_widget = self.query_one("#status-text", Static)
         acme_factory = self._container.acme_client_factory
         if acme_factory is None:
-            status_widget.update("Configuration indisponible dans cet environnement.")
+            status_widget.update(_("Configuration indisponible dans cet environnement."))
             return
 
         manager = self._manager()

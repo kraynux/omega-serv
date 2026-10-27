@@ -11,6 +11,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.active_defense.queries import list_threat_states
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._active_defense_collaborators_cache import (
     ActiveDefenseCollaboratorsCacheMixin,
 )
@@ -29,18 +30,18 @@ class ThreatsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("MENACES SUIVIES", classes="omega-title")
+            yield Static(_("MENACES SUIVIES"), classes="omega-title")
             yield Static("", id="threats-error", classes="omega-hint")
             yield DataTable(id="threats-table")
             yield Static("", id="threat-detail", classes="omega-hint")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#threats-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Source", "Score", "Niveau", "Mise a jour", "Expiration")
+        table.add_columns(_("Source"), _("Score"), _("Niveau"), _("Mise à jour"), _("Expiration"))
         self._refresh()
 
     def _refresh(self) -> None:
@@ -64,8 +65,7 @@ class ThreatsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         row = table.get_row(event.row_key)
         subject_id, score, level, updated_at, expires_at = row
         self.query_one("#threat-detail", Static).update(
-            f"Source : {subject_id}\nScore : {score}\nNiveau : {level}\n"
-            f"Mise a jour : {updated_at}\nExpiration : {expires_at}"
+            _("Source : {subject_id}\nScore : {score}\nNiveau : {level}\nMise à jour : {updated_at}\nExpiration : {expires_at}").format(subject_id=subject_id, score=score, level=level, updated_at=updated_at, expires_at=expires_at)
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

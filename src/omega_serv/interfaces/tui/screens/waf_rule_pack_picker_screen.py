@@ -18,6 +18,8 @@ from textual.containers import Center, Container, Horizontal, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Select, Static
 
+from omega_serv.core.i18n import _
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -28,7 +30,7 @@ _MAX_RULES_LISTED = 8
 
 
 class WafRulePackPickerScreen(ModalScreen[str | None]):
-    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", "Annuler", show=True)]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", _("Annuler"), show=True)]
 
     def __init__(
         self, *, filesystem: FilesystemPort, project_root: Path, existing_paths: list[str],
@@ -50,21 +52,21 @@ class WafRulePackPickerScreen(ModalScreen[str | None]):
 
     def compose(self) -> ComposeResult:
         with Center(), VerticalScroll(classes="omega-dynamic-form-box"):
-            yield Static("AJOUTER UN PACK DE REGLES", classes="omega-title")
+            yield Static(_("AJOUTER UN PACK DE RÈGLES"), classes="omega-title")
             if self._options:
                 yield Select(self._options, value=self._options[0][1], allow_blank=False, id="pack-select")
             else:
                 yield Static(
-                    "Aucun pack disponible (deja tous ajoutes, ou secure/waf/rules/ vide/absent).",
+                    _("Aucun pack disponible (déjà tous ajoutés, ou secure/waf/rules/ vide/absent)."),
                     id="no-packs-hint",
                     classes="omega-hint",
                 )
             yield Static("", id="pack-description", classes="omega-hint")
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Ajouter", id="confirm", variant="primary", disabled=not self._options)
+                    yield Button(_("Ajouter"), id="confirm", variant="primary", disabled=not self._options)
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Annuler", id="cancel")
+                    yield Button(_("Annuler"), id="cancel")
 
     def on_mount(self) -> None:
         if self._options:
@@ -82,15 +84,18 @@ class WafRulePackPickerScreen(ModalScreen[str | None]):
             raw = self._filesystem.read_text(self._project_root / relative_path)
             data = json.loads(raw)
         except (OSError, ValueError) as exc:
-            return f"Impossible de lire ce pack : {exc}"
+            return _("Impossible de lire ce pack : {exc}").format(exc=exc)
         pack_name = data.get("pack", relative_path)
-        enabled = "actif" if data.get("enabled", True) else "inactif"
+        enabled = _("actif") if data.get("enabled", True) else _("inactif")
         rules = data.get("rules", [])
-        lines = [f"Pack {pack_name!r} ({enabled} par defaut, {len(rules)} regle(s)) :"]
+        lines = [_("Pack {pack_name!r} ({enabled} par défaut, {count} règle(s)) :").format(pack_name=pack_name, enabled=enabled, count=len(rules))]
         for rule in rules[:_MAX_RULES_LISTED]:
-            lines.append(f"  - {rule.get('id', '?')} : {rule.get('description', '')}")
+            # Pack livre : description traduite si le catalogue la connait (tools/i18n_catalog.py
+            # extract) ; regle ecrite par l'utilisateur : son texte tel quel.
+            description = rule.get("description", "")
+            lines.append(f"  - {rule.get('id', '?')} : {_(description) if description else ''}")
         if len(rules) > _MAX_RULES_LISTED:
-            lines.append(f"  ... et {len(rules) - _MAX_RULES_LISTED} de plus")
+            lines.append(_("  ... et {value} de plus").format(value=len(rules) - _MAX_RULES_LISTED))
         return "\n".join(lines)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

@@ -18,6 +18,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 
@@ -25,9 +26,9 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _KNOWN_LOGS: tuple[tuple[str, str], ...] = (
-    ("Access log", "access"),
-    ("Error log", "error"),
-    ("WAF alerts log", "waf_alerts"),
+    (_("Access log"), "access"),
+    (_("Error log"), "error"),
+    (_("WAF alerts log"), "waf_alerts"),
 )
 
 _MODE_ROTATE = "rotate"
@@ -36,18 +37,18 @@ _MODE_SCHEDULE = "schedule"
 _MODE_MANAGE = "manage"
 
 _MODE_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("Tourner un log si necessaire (seuil de taille)", _MODE_ROTATE),
-    ("Creer une sauvegarde maintenant (inconditionnel)", _MODE_BACKUP),
-    ("Configurer une automatisation de sauvegarde", _MODE_SCHEDULE),
-    ("Gerer les automatisations en cours", _MODE_MANAGE),
+    (_("Tourner un log si nécessaire (seuil de taille)"), _MODE_ROTATE),
+    (_("Créer une sauvegarde maintenant (inconditionnel)"), _MODE_BACKUP),
+    (_("Configurer une automatisation de sauvegarde"), _MODE_SCHEDULE),
+    (_("Gérer les automatisations en cours"), _MODE_MANAGE),
 )
 
 _FREQ_OPTIONS: dict[str, tuple[int, str]] = {
-    "weekly": (7, "Toutes les semaines"),
-    "monthly": (30, "Tous les mois"),
-    "quarterly": (90, "Tous les trimestres"),
-    "semiannual": (180, "Tous les semestres"),
-    "yearly": (364, "Tous les ans"),
+    "weekly": (7, _("Toutes les semaines")),
+    "monthly": (30, _("Tous les mois")),
+    "quarterly": (90, _("Tous les trimestres")),
+    "semiannual": (180, _("Tous les semestres")),
+    "yearly": (364, _("Tous les ans")),
 }
 
 
@@ -60,37 +61,37 @@ class LogRotationScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("ROTATION / ARCHIVAGE DES LOGS", classes="omega-title")
+            yield Static(_("ROTATION / ARCHIVAGE DES LOGS"), classes="omega-title")
             yield Static("", id="rotation-result", classes="omega-hint")
 
-            yield Static("Action", classes="omega-subtitle")
+            yield Static(_("Action"), classes="omega-subtitle")
             yield Select(_MODE_OPTIONS, value=_MODE_ROTATE, id="mode-select")
 
-            yield Static("Log cible", id="log-label", classes="omega-subtitle")
+            yield Static(_("Log cible"), id="log-label", classes="omega-subtitle")
             yield Select(_KNOWN_LOGS, value="access", id="log-select")
 
-            yield Static("Frequence", id="freq-label", classes="omega-subtitle")
+            yield Static(_("Fréquence"), id="freq-label", classes="omega-subtitle")
             yield Select(
-                [(label, key) for key, (_, label) in _FREQ_OPTIONS.items()],
+                [(label, key) for key, (_ignored, label) in _FREQ_OPTIONS.items()],
                 value="weekly", id="freq-select",
             )
 
-            yield Static("Automatisations planifiees", id="manage-label", classes="omega-subtitle")
+            yield Static(_("Automatisations planifiées"), id="manage-label", classes="omega-subtitle")
             yield DataTable(id="automations-table")
 
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame", id="launch-frame"):
-                    yield Button("Valider", id="launch", variant="primary")
+                    yield Button(_("Valider"), id="launch", variant="primary")
                 with Container(classes="omega-btn-frame", id="delete-automation-frame"):
-                    yield Button("Supprimer la selection", id="delete-automation", variant="error")
+                    yield Button(_("Supprimer la sélection"), id="delete-automation", variant="error")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         table = self.query_one("#automations-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns("Log", "Frequence", "Creee le")
+        table.add_columns(_("Log"), _("Fréquence"), _("Créée le"))
         self._apply_mode(_MODE_ROTATE)
 
     def on_select_changed(self, event: Select.Changed) -> None:
@@ -151,12 +152,12 @@ class LogRotationScreen(OmegaScreen):
     def _resolve_log_path(self, result_widget: Static) -> tuple[str, Path] | None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            result_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            result_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return None
         log_id = str(self.query_one("#log-select", Select).value)
         relative_path = getattr(load_result.config.logs, log_id, None)
         if relative_path is None:
-            result_widget.update(f"Log inconnu : {log_id!r}")
+            result_widget.update(_("Log inconnu : {log_id!r}").format(log_id=log_id))
             return None
         return log_id, self._container.project_root / relative_path
 
@@ -171,7 +172,7 @@ class LogRotationScreen(OmegaScreen):
         assert load_result.config is not None
         rotation = load_result.config.logs.rotation
         if not rotation.enabled:
-            result_widget.update("La rotation est desactivee dans la configuration (logs.rotation.enabled=false).")
+            result_widget.update(_("La rotation est désactivée dans la configuration (logs.rotation.enabled=false)."))
             return
 
         result = self._container.rotate_log_if_needed(log_path, rotation.max_bytes, rotation.keep, self._archive_base_dir())
@@ -207,17 +208,17 @@ class LogRotationScreen(OmegaScreen):
             "interval_label": interval_label,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-        result_widget.update(f"Automatisation enregistree pour {log_id!r} ({interval_label}).")
+        result_widget.update(_("Automatisation enregistrée pour {log_id!r} ({interval_label}).").format(log_id=log_id, interval_label=interval_label))
 
     def _delete_selected_automation(self) -> None:
         result_widget = self.query_one("#rotation-result", Static)
         if self._selected_automation_index is None:
-            result_widget.update("Selectionnez d'abord une ligne.")
+            result_widget.update(_("Sélectionnez d'abord une ligne."))
             return
         self.app.push_screen(
             ConfirmScreen(
-                title="SUPPRIMER L'AUTOMATISATION",
-                message="Supprimer definitivement cette automatisation de rotation ?",
+                title=_("SUPPRIMER L'AUTOMATISATION"),
+                message=_("Supprimer définitivement cette automatisation de rotation ?"),
             ),
             self._delete_if_confirmed,
         )
@@ -228,5 +229,5 @@ class LogRotationScreen(OmegaScreen):
             return
         store = self._container.build_rotation_automation_store()
         deleted = store.delete(self._selected_automation_index)
-        result_widget.update("Automatisation supprimee." if deleted else "Automatisation introuvable.")
+        result_widget.update(_("Automatisation supprimée.") if deleted else _("Automatisation introuvable."))
         self._refresh_automations_table()

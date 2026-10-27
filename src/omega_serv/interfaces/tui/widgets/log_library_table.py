@@ -8,6 +8,7 @@ from typing import Any
 
 from textual.widgets import DataTable
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 
 
@@ -28,7 +29,7 @@ class LogLibraryTable(DataTable):
         self.cursor_type = "row"
 
     def on_mount(self) -> None:
-        self.add_columns("Chemin", "Service", "Acces", "Taille", "Modifie", "Etat")
+        self.add_columns(_("Chemin"), _("Service"), _("Accès"), _("Taille"), _("Modifié"), _("État"))
 
     def load(self, log_files: list[LogFile]) -> None:
         """Remplace le contenu de la table par `log_files`. Pas de `key=`
@@ -41,5 +42,5 @@ class LogLibraryTable(DataTable):
         for log_file in log_files:
             size = f"{log_file.size_bytes} o" if log_file.size_bytes is not None else "?"
             modified = log_file.modified_at.strftime("%Y-%m-%d %H:%M") if log_file.modified_at else "-"
-            state = "SUSPECT (vide)" if log_file.is_stale else ("ABSENT" if not log_file.exists else "OK")
+            state = _("SUSPECT (vide)") if log_file.is_stale else (_("ABSENT") if not log_file.exists else "OK")
             self.add_row(log_file.path, log_file.service_id or "-", log_file.access, size, modified, state)

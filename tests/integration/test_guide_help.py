@@ -92,6 +92,21 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, GuideDetailScreen)
             self.assertIn("MAGNET", str(pilot.app.screen.query_one(".omega-title").content))
 
+    async def test_contextual_help_opens_the_waf_rate_limit_fiche(self):
+        container = self._container()
+        generate_default_config(container.configuration, container.filesystem, container.config_file)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            pilot.app.screen.query_one("#active-defense", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#waf-rate-limit", Button).press()
+            await pilot.pause()
+            await pilot.press("f1")
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, GuideDetailScreen)
+            self.assertIn("EXCLUSIONS ET DÉBIT", str(pilot.app.screen.query_one(".omega-title").content))
+
     async def test_contextual_help_works_on_home_screen(self):
         container = self._container()
         generate_default_config(container.configuration, container.filesystem, container.config_file)
@@ -170,14 +185,14 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             table = pilot.app.screen.query_one("#guide-menu-table", DataTable)
             undocumented_row = next(
-                i for i in range(table.row_count) if table.get_row_at(i)[2] == "A venir"
+                i for i in range(table.row_count) if table.get_row_at(i)[2] == "À venir"
             )
             table.move_cursor(row=undocumented_row)
             table.action_select_cursor()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, GuideMenuScreen)
             messages = [str(n.message) for n in pilot.app._notifications]
-            self.assertTrue(any("pas encore documente" in m for m in messages))
+            self.assertTrue(any("pas encore documenté" in m for m in messages))
 
     async def test_faq_screen_opens_from_guide_menu_and_lists_entries(self):
         container = self._container()

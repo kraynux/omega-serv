@@ -5,6 +5,7 @@ cloisonnement par instance est deja garanti par des fichiers separes
 (voir "Ports applicatifs" du plan)."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Protocol
 
@@ -16,6 +17,20 @@ class ThreatStateRepositoryPort(Protocol):
         ...
 
     def save(self, state: ThreatState) -> None:
+        ...
+
+    def save_many(self, states: Sequence[ThreatState]) -> None:
+        """Comme `save()` pour chaque etat, dans l'ordre (le dernier d'un meme sujet gagne), en
+        une seule passe : l'ecriture differee groupe ainsi les etats d'un lot."""
+        ...
+
+    def prune_audit_log(self, older_than: datetime, max_rows: int) -> int:
+        """Supprime les lignes d'audit anterieures a `older_than`, puis les plus anciennes au-dela
+        de `max_rows`. Retourne le nombre de lignes supprimees."""
+        ...
+
+    def cap_tracked_subjects(self, max_subjects: int) -> int:
+        """Au-dela de `max_subjects`, supprime les sources « normal » les plus anciennes d'abord."""
         ...
 
     def expire_before(self, instant: datetime) -> int:

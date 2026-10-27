@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.auth.entities import AuthZone
 from omega_serv.domain.security.auth.zones import validate_auth_zone
 from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
@@ -21,17 +22,17 @@ def add_zone(zones_repo: AuthZonesRepositoryPort, zone: AuthZone) -> ManageZones
 
     existing = zones_repo.load()
     if any(z.path_prefix == zone.path_prefix for z in existing):
-        return ManageZonesResult(False, f"une zone existe deja pour {zone.path_prefix!r}")
+        return ManageZonesResult(False, _("une zone existe déjà pour {path_prefix!r}").format(path_prefix=zone.path_prefix))
 
     zones_repo.save(existing + (zone,))
-    return ManageZonesResult(True, f"Zone {zone.path_prefix!r} creee.")
+    return ManageZonesResult(True, _("Zone {path_prefix!r} créée.").format(path_prefix=zone.path_prefix))
 
 
 def remove_zone(zones_repo: AuthZonesRepositoryPort, path_prefix: str) -> ManageZonesResult:
     existing = zones_repo.load()
     remaining = tuple(z for z in existing if z.path_prefix != path_prefix)
     if len(remaining) == len(existing):
-        return ManageZonesResult(False, f"zone introuvable : {path_prefix!r}")
+        return ManageZonesResult(False, _("zone introuvable : {path_prefix!r}").format(path_prefix=path_prefix))
 
     zones_repo.save(remaining)
-    return ManageZonesResult(True, f"Zone {path_prefix!r} retiree.")
+    return ManageZonesResult(True, _("Zone {path_prefix!r} retirée.").format(path_prefix=path_prefix))

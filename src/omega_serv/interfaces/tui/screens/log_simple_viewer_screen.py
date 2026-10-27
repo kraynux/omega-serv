@@ -27,6 +27,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.timer import Timer
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logs.analytics import compute_stats
 from omega_serv.domain.logs.models import LogEntry
 from omega_serv.domain.logs.parser import parse_log_line
@@ -58,17 +59,17 @@ class LogSimpleViewerScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static(f"VOIR LES LOGS - SIMPLE - {self._path}", classes="omega-title")
+            yield Static(_("VOIR LES LOGS - SIMPLE - {path}").format(path=self._path), classes="omega-title")
             with Horizontal():
                 yield Static(id="stats-box", classes="omega-dash-box")
                 yield DataTable(id="entries-table")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button("Retour", id="back")
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#entries-table", DataTable).add_columns(
-            "Heure", "Niveau", "Source", "IP", "Service", "Code", "Timeout", "Message"
+            _("Heure"), _("Niveau"), _("Source"), _("IP"), _("Service"), _("Code"), _("Timeout"), _("Message")
         )
         self._load_initial()
         self._render_stats()
@@ -115,7 +116,7 @@ class LogSimpleViewerScreen(OmegaScreen):
         try:
             new_lines = self._tail_reader.read_new_lines()
         except OSError as exc:
-            self.app.notify(f"Suivi interrompu : {exc}", severity="error")
+            self.app.notify(_("Suivi interrompu : {exc}").format(exc=exc), severity="error")
             self._stop()
             return
 
@@ -133,27 +134,27 @@ class LogSimpleViewerScreen(OmegaScreen):
     def _render_stats(self) -> None:
         stats = compute_stats(self._buffer, top_n=5)
         content = Text()
-        content.append("-- APERCU --------------\n", style="bold")
-        content.append(f" Lignes tampon : {len(self._buffer)}\n")
-        content.append(f" IPs uniques   : {stats.unique_ips}\n")
-        content.append(f" Taux d'erreur : {stats.error_rate():.1f}%\n\n")
+        content.append(_("-- APERÇU --------------\n"), style="bold")
+        content.append(_(" Lignes tampon : {count}\n").format(count=len(self._buffer)))
+        content.append(_(" IPs uniques   : {unique_ips}\n").format(unique_ips=stats.unique_ips))
+        content.append(_(" Taux d'erreur : {value:.1f}%\n\n").format(value=stats.error_rate()))
 
         statuses = [e.http_status for e in self._buffer if e.http_status is not None]
         if statuses:
             # N'apparait que si au moins une ligne du tampon est reconnue comme
             # un access log Combined/Common - jamais affiche (vide/inutile) pour
             # un tampon auth.log/syslog/....
-            content.append("-- STATUTS HTTP ---------\n", style="bold")
+            content.append(_("-- STATUTS HTTP ---------\n"), style="bold")
             s2xx = sum(1 for s in statuses if 200 <= s < 300)
             s3xx = sum(1 for s in statuses if 300 <= s < 400)
             s4xx = sum(1 for s in statuses if 400 <= s < 500)
             s5xx = sum(1 for s in statuses if 500 <= s < 600)
-            content.append(f" 2xx succes    : {s2xx}\n", style="green")
-            content.append(f" 3xx redirect  : {s3xx}\n", style="cyan")
-            content.append(f" 4xx client    : {s4xx}\n", style="yellow")
-            content.append(f" 5xx serveur   : {s5xx}\n\n", style="red")
+            content.append(_(" 2xx succès    : {s2xx}\n").format(s2xx=s2xx), style="green")
+            content.append(_(" 3xx redirect  : {s3xx}\n").format(s3xx=s3xx), style="cyan")
+            content.append(_(" 4xx client    : {s4xx}\n").format(s4xx=s4xx), style="yellow")
+            content.append(_(" 5xx serveur   : {s5xx}\n\n").format(s5xx=s5xx), style="red")
 
-        content.append("-- TOP IP ---------------\n", style="bold")
+        content.append(_("-- TOP IP ---------------\n"), style="bold")
         for top_ip in stats.top_ips[:5]:
             content.append(f" {top_ip.ip:<15} {top_ip.count}\n")
         self.query_one("#stats-box", Static).update(content)

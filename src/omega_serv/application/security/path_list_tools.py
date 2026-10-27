@@ -18,6 +18,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.logging.access_log_parser import parse_combined_log_line
 from omega_serv.domain.security.waf.keyword_list import (
     analyze_path_list_text,
@@ -124,10 +125,10 @@ def explain_path(text: str, anchor: str, value: str) -> str:
     URL borne + NFKC), meme priorite (exception > entree)."""
     analysis = analyze_path_list_text(text, anchor)
     if analysis.errors:
-        return "corrigez d'abord les erreurs de la liste"
+        return _("corrigez d'abord les erreurs de la liste")
     path = decode_bounded_for_inspection(value.split("?", 1)[0], _DECODE_DEPTH)
     if not path.startswith("/"):
-        return "un chemin commence par '/'"
+        return _("un chemin commence par '/'")
     exceptions = set(analysis.exceptions)
     entries = set(analysis.entries)
     first_exception: tuple[int, str] | None = None
@@ -144,9 +145,9 @@ def explain_path(text: str, anchor: str, value: str) -> str:
             elif not is_exception and first_entry is None:
                 first_entry = (number, line)
     if first_exception is not None and first_entry is not None:
-        return f"AUTORISE : l'exception ligne {first_exception[0]} ({first_exception[1]}) l'emporte sur la ligne {first_entry[0]}"
+        return _("AUTORISÉ : l'exception ligne {value} ({value2}) l'emporte sur la ligne {value3}").format(value=first_exception[0], value2=first_exception[1], value3=first_entry[0])
     if first_exception is not None:
-        return f"AUTORISE : exception ligne {first_exception[0]} ({first_exception[1]})"
+        return _("AUTORISÉ : exception ligne {value} ({value2})").format(value=first_exception[0], value2=first_exception[1])
     if first_entry is not None:
-        return f"DETECTE par la ligne {first_entry[0]} ({first_entry[1]})"
-    return "aucune ligne de la liste ne correspond"
+        return _("DÉTECTÉ par la ligne {value} ({value2})").format(value=first_entry[0], value2=first_entry[1])
+    return _("aucune ligne de la liste ne correspond")

@@ -15,6 +15,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.config.validation import is_safe_relative_path
 from omega_serv.domain.security.waf.entities import (
     _VALID_SCOPES,
@@ -53,18 +54,18 @@ _EXCEPTION_PREFIX = "!"
 
 # Aide de syntaxe affichee en tete de chaque liste de chemins (references
 # livrees, nouveau fichier cree par l'assistant) - source unique.
-PATH_LIST_SYNTAX_HELP = """# Syntaxe (une entree par ligne, '#' = commentaire) :
+PATH_LIST_SYNTAX_HELP = _("""# Syntaxe (une entrée par ligne, '#' = commentaire) :
 #   /admin    -> /admin et /admin/xxx, jamais /administrator
 #   /.git/    -> tout ce qui est sous /.git/
 #   /*.bak    -> tout fichier dont le nom finit par .bak
 #   !/api/v1  -> exception : ce chemin n'est jamais compte par cette liste
-#               (prioritaire sur les entrees, quel que soit l'ordre des lignes)"""
+#               (prioritaire sur les entrées, quel que soit l'ordre des lignes)""")
 
-NEW_PATH_LIST_TEMPLATE = "# Liste de chemins personnelle (omega-serv)\n#\n" + PATH_LIST_SYNTAX_HELP + "\n"
+NEW_PATH_LIST_TEMPLATE = _("# Liste de chemins personnelle (omega-serv)\n#\n") + PATH_LIST_SYNTAX_HELP + "\n"
 NEW_KEYWORD_LIST_TEMPLATE = (
-    "# Liste de mots-clefs personnelle (omega-serv)\n"
-    "# Un mot-clef par ligne, recherche n'importe ou dans la partie choisie de la requete\n"
-    "# (casse ignoree). '#' = commentaire. Ecrivez le texte tel quel, jamais une regex.\n"
+    _("# Liste de mots-clefs personnelle (omega-serv)\n"
+    "# Un mot-clef par ligne, recherche n'importe où dans la partie choisie de la requête\n"
+    "# (casse ignorée). '#' = commentaire. Écrivez le texte tel quel, jamais une regex.\n")
 )
 
 
@@ -144,13 +145,13 @@ class PathListAnalysis:
 
 def _token_syntax_error(token: str) -> str | None:
     if not token.startswith("/"):
-        return "doit commencer par '/' (ou '!/' pour une exception)"
+        return _("doit commencer par '/' (ou '!/' pour une exception)")
     if any(ch.isspace() for ch in token):
-        return "ne doit pas contenir d'espace"
+        return _("ne doit pas contenir d'espace")
     if "*" in token and not _SUFFIX_TOKEN.fullmatch(token):
-        return "le joker '*' n'est accepte que sous la forme '/*.extension' (ex: /*.bak)"
+        return _("le joker '*' n'est accepté que sous la forme '/*.extension' (ex: /*.bak)")
     if not build_path_segment_pattern(token) and not _SUFFIX_TOKEN.fullmatch(token):
-        return "entree vide : '/' seul matcherait tous les chemins"
+        return _("entrée vide : '/' seul matcherait tous les chemins")
     return None
 
 
@@ -183,7 +184,7 @@ def analyze_path_list_text(text: str, anchor: str) -> PathListAnalysis:
         key = line.lower()
         if key in first_seen:
             diagnostics.append(KeywordListDiagnostic(
-                line_number, "warning", f"'{line}' : doublon de la ligne {first_seen[key]}",
+                line_number, "warning", _("'{line}' : doublon de la ligne {value}").format(line=line, value=first_seen[key]),
             ))
             continue
         first_seen[key] = line_number
@@ -196,7 +197,7 @@ def analyze_path_list_text(text: str, anchor: str) -> PathListAnalysis:
         blocked_vital = [vital for vital in VITAL_PATHS if compiled.search(vital)]
         if blocked_vital:
             diagnostics.append(KeywordListDiagnostic(
-                line_number, "error", f"'{line}' : bloquerait le chemin vital {blocked_vital[0]}",
+                line_number, "error", _("'{line}' : bloquerait le chemin vital {value}").format(line=line, value=blocked_vital[0]),
             ))
             continue
         entries.append(token)
@@ -204,7 +205,7 @@ def analyze_path_list_text(text: str, anchor: str) -> PathListAnalysis:
     if len(entries) > RECOMMENDED_MAX_ENTRIES:
         diagnostics.append(KeywordListDiagnostic(
             0, "warning",
-            f"{len(entries)} entrees : au-dela de {RECOMMENDED_MAX_ENTRIES}, scinder la liste par categorie est recommande",
+            _("{count} entrées : au-delà de {RECOMMENDED_MAX_ENTRIES}, scinder la liste par catégorie est recommandé").format(count=len(entries), RECOMMENDED_MAX_ENTRIES=RECOMMENDED_MAX_ENTRIES),
         ))
     return PathListAnalysis(entries=tuple(entries), exceptions=tuple(exceptions), diagnostics=tuple(diagnostics))
 
@@ -283,37 +284,34 @@ def validate_keyword_list_definition(definition: KeywordListDefinition) -> list[
     meme repartition que RulePack/rule_validation.py)."""
     errors: list[str] = []
     if not definition.id:
-        errors.append("keyword_lists : 'id' ne peut pas etre vide")
+        errors.append(_("keyword_lists : 'id' ne peut pas être vide"))
     if not definition.scope:
-        errors.append(f"keyword_lists[{definition.id!r}] : 'scope' ne peut pas etre vide")
+        errors.append(_("keyword_lists[{id!r}] : 'scope' ne peut pas être vide").format(id=definition.id))
     unknown_scopes = set(definition.scope) - _VALID_SCOPES
     if unknown_scopes:
-        errors.append(f"keyword_lists[{definition.id!r}] : scope inconnu : {sorted(unknown_scopes)}")
+        errors.append(_("keyword_lists[{id!r}] : scope inconnu : {value}").format(id=definition.id, value=sorted(unknown_scopes)))
     if not is_safe_relative_path(definition.file):
         errors.append(
-            f"keyword_lists[{definition.id!r}] : 'file' doit etre un chemin relatif au projet, "
-            f"sans '..' : {definition.file!r}"
+            _("keyword_lists[{id!r}] : 'file' doit être un chemin relatif au projet, sans '..' : {file!r}").format(id=definition.id, file=definition.file)
         )
     if definition.weight < 0:
-        errors.append(f"keyword_lists[{definition.id!r}] : 'weight' doit etre >= 0")
+        errors.append(_("keyword_lists[{id!r}] : 'weight' doit être >= 0").format(id=definition.id))
     if definition.match not in _VALID_MATCH_MODES:
         errors.append(
-            f"keyword_lists[{definition.id!r}] : 'match' inconnu : {definition.match!r} "
-            f"(attendu : {sorted(_VALID_MATCH_MODES)})"
+            _("keyword_lists[{id!r}] : 'match' inconnu : {match!r} (attendu : {value})").format(id=definition.id, match=definition.match, value=sorted(_VALID_MATCH_MODES))
         )
     if definition.anchor not in _VALID_ANCHORS:
         errors.append(
-            f"keyword_lists[{definition.id!r}] : 'anchor' inconnu : {definition.anchor!r} "
-            f"(attendu : {sorted(_VALID_ANCHORS)})"
+            _("keyword_lists[{id!r}] : 'anchor' inconnu : {anchor!r} (attendu : {value})").format(id=definition.id, anchor=definition.anchor, value=sorted(_VALID_ANCHORS))
         )
     if definition.match == "path" and tuple(definition.scope) != ("path",):
-        errors.append(f"keyword_lists[{definition.id!r}] : match='path' exige scope=['path'] uniquement")
+        errors.append(_("keyword_lists[{id!r}] : match='path' exige scope=['path'] uniquement").format(id=definition.id))
     if definition.escalation_threshold < 0:
-        errors.append(f"keyword_lists[{definition.id!r}] : 'escalation_threshold' doit etre >= 0")
+        errors.append(_("keyword_lists[{id!r}] : 'escalation_threshold' doit être >= 0").format(id=definition.id))
     if definition.escalation_window_seconds <= 0:
-        errors.append(f"keyword_lists[{definition.id!r}] : 'escalation_window_seconds' doit etre > 0")
+        errors.append(_("keyword_lists[{id!r}] : 'escalation_window_seconds' doit être > 0").format(id=definition.id))
     if definition.auto_block_duration_seconds is not None and definition.auto_block_duration_seconds <= 0:
-        errors.append(f"keyword_lists[{definition.id!r}] : 'auto_block_duration_seconds' doit etre > 0")
+        errors.append(_("keyword_lists[{id!r}] : 'auto_block_duration_seconds' doit être > 0").format(id=definition.id))
     return errors
 
 
@@ -324,7 +322,7 @@ def validate_keyword_list_definitions(definitions: tuple[KeywordListDefinition, 
     ids = [d.id for d in definitions]
     duplicates = {i for i in ids if ids.count(i) > 1}
     if duplicates:
-        errors.append(f"keyword_lists : id duplique(s) : {sorted(duplicates)}")
+        errors.append(_("keyword_lists : id dupliqué(s) : {value}").format(value=sorted(duplicates)))
     return errors
 
 
@@ -348,13 +346,13 @@ def build_rule_pack_from_keyword_list(definition: KeywordListDefinition, tokens:
         rule_pattern = compile_path_list_pattern(entries, definition.anchor)
         if exceptions:
             exclude_pattern = compile_path_list_pattern(exceptions, definition.anchor)
-        description = f"Liste de chemins ({len(entries)} entree(s), {len(exceptions)} exception(s))"
+        description = _("Liste de chemins ({count} entrée(s), {count2} exception(s))").format(count=len(entries), count2=len(exceptions))
     else:
         if not tokens:
             rule_pattern = r"(?!)"  # liste vide = ne matche jamais, jamais une erreur de compilation
         else:
             rule_pattern = compile_keyword_pattern(tokens)
-        description = f"Liste de mots-clefs ({len(tokens)} entree(s))"
+        description = _("Liste de mots-clefs ({count} entrée(s))").format(count=len(tokens))
     return RulePack(
         version=1,
         pack=definition.id,

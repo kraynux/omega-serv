@@ -10,6 +10,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_restart_required
 
@@ -27,22 +28,22 @@ class TlsToggleScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-form-panel"):
-            yield Static("ACTIVER / DESACTIVER TLS", classes="omega-title")
+            yield Static(_("ACTIVER / DÉSACTIVER TLS"), classes="omega-title")
             yield Static("", id="form-error", classes="omega-hint")
             yield Static("", id="status-text", classes="omega-hint")
-            yield Static(f"Mode ({'/'.join(_VALID_MODES)})", classes="omega-subtitle")
+            yield Static(_("Mode ({value})").format(value='/'.join(_VALID_MODES)), classes="omega-subtitle")
             yield Input(id="mode-input")
-            yield Static("Chemin du certificat (optionnel, garde la valeur actuelle si vide)", classes="omega-subtitle")
+            yield Static(_("Chemin du certificat (optionnel, garde la valeur actuelle si vide)"), classes="omega-subtitle")
             yield Input(id="cert-input")
-            yield Static("Chemin de la cle privee (optionnel)", classes="omega-subtitle")
+            yield Static(_("Chemin de la clé privée (optionnel)"), classes="omega-subtitle")
             yield Input(id="key-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Activer TLS", id="enable", variant="primary")
+                    yield Button(_("Activer TLS"), id="enable", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Desactiver TLS", id="disable", variant="error")
+                    yield Button(_("Désactiver TLS"), id="disable", variant="error")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -52,10 +53,10 @@ class TlsToggleScreen(OmegaScreen):
         result = load_config(self._container.configuration, self._container.config_file)
         status_widget = self.query_one("#status-text", Static)
         if not result.success or result.config is None:
-            status_widget.update("Erreur de configuration.")
+            status_widget.update(_("Erreur de configuration."))
             return
         tls = result.config.tls
-        status_widget.update(f"Etat actuel : {'active' if tls.enabled else 'desactive'} (mode {tls.mode})")
+        status_widget.update(_("État actuel : {value} (mode {mode})").format(value=_('activé') if tls.enabled else _('désactivé'), mode=tls.mode))
         self.query_one("#mode-input", Input).value = tls.mode
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -71,12 +72,12 @@ class TlsToggleScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            error_widget.update("Erreur de configuration : " + "; ".join(load_result.errors))
+            error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
 
         mode = self.query_one("#mode-input", Input).value.strip()
         if mode not in _VALID_MODES:
-            error_widget.update(f"Mode invalide : {mode!r} (attendu : {'/'.join(_VALID_MODES)})")
+            error_widget.update(_("Mode invalide : {mode!r} (attendu : {value})").format(mode=mode, value='/'.join(_VALID_MODES)))
             return
 
         cert = self.query_one("#cert-input", Input).value.strip()
@@ -93,15 +94,14 @@ class TlsToggleScreen(OmegaScreen):
         error_widget.update("")
         notify_restart_required(
             self, self._container,
-            f"TLS active (mode {mode}) - necessite un REDEMARRAGE COMPLET pour prendre effet "
-            "(jamais un simple rechargement).",
+            _("TLS activé (mode {mode}) - nécessite un REDÉMARRAGE COMPLET pour prendre effet (jamais un simple rechargement).").format(mode=mode),
         )
         self._refresh_status()
 
     def _disable(self) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update("Erreur de configuration : " + "; ".join(load_result.errors))
+            self.query_one("#form-error", Static).update(_("Erreur de configuration : ") + "; ".join(load_result.errors))
             return
         new_tls = replace(load_result.config.tls, enabled=False)
         new_config = replace(load_result.config, tls=new_tls)
@@ -109,7 +109,7 @@ class TlsToggleScreen(OmegaScreen):
         self.query_one("#form-error", Static).update("")
         notify_restart_required(
             self, self._container,
-            "TLS desactive - necessite un REDEMARRAGE COMPLET pour prendre effet "
-            "(jamais un simple rechargement).",
+            _("TLS désactivé - nécessite un REDÉMARRAGE COMPLET pour prendre effet "
+            "(jamais un simple rechargement)."),
         )
         self._refresh_status()

@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 
 if TYPE_CHECKING:
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
@@ -38,22 +39,20 @@ class ActiveDefenseCollaboratorsCacheMixin:
         self._active_defense_checked = True
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
-            self._active_defense_error = "Configuration introuvable ou invalide : " + "; ".join(load_result.errors)
+            self._active_defense_error = _("Configuration introuvable ou invalide : ") + "; ".join(load_result.errors)
             return None
         assert load_result.config is not None
         factory = self._container.active_defense_collaborators_factory
         if factory is None:
-            self._active_defense_error = "Active Defense indisponible dans cet environnement."
+            self._active_defense_error = _("Active Defense indisponible dans cet environnement.")
             return None
         try:
             self._active_defense = factory(load_result.config, self._container.project_root)
         except OSError as exc:
             self._active_defense_error = (
-                f"Erreur d'acces a la base Active Defense : {exc}. Si l'appartenance a un groupe "
-                "systeme a change recemment (ex. compte de service dedie proprietaire de var/lib/), "
-                "une NOUVELLE session (deconnexion/reconnexion) peut etre necessaire."
+                _("Erreur d'accès à la base Active Defense : {exc}. Si l'appartenance à un groupe système a changé récemment (ex. compte de service dédié propriétaire de var/lib/), une NOUVELLE session (deconnexion/reconnexion) peut être nécessaire.").format(exc=exc)
             )
             return None
         if self._active_defense is None:
-            self._active_defense_error = "options.active_defense absent ou desactive de la configuration."
+            self._active_defense_error = _("options.active_defense absent ou désactivé de la configuration.")
         return self._active_defense

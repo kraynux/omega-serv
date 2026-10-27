@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.tls.entities import (
     VALID_KEY_TYPES,
     CaParams,
@@ -35,29 +36,29 @@ def validate_tls_config_structure(
     exigent des faits lus sur le disque reel."""
     errors: list[str] = []
     if mode not in _VALID_TLS_MODES:
-        errors.append(f"tls.mode invalide : {mode!r} (attendu : {_VALID_TLS_MODES})")
+        errors.append(_("tls.mode invalide : {mode!r} (attendu : {VALID_TLS_MODES})").format(mode=mode, VALID_TLS_MODES=_VALID_TLS_MODES))
     if min_version not in _VALID_TLS_VERSIONS or max_version not in _VALID_TLS_VERSIONS:
-        errors.append(f"tls.protocols min/max_version invalide (attendu : {_VALID_TLS_VERSIONS})")
+        errors.append(_("tls.protocols min/max_version invalide (attendu : {VALID_TLS_VERSIONS})").format(VALID_TLS_VERSIONS=_VALID_TLS_VERSIONS))
     elif _VALID_TLS_VERSIONS.index(min_version) > _VALID_TLS_VERSIONS.index(max_version):
-        errors.append(f"tls.protocols.min_version ({min_version}) ne peut pas etre superieur a max_version ({max_version})")
+        errors.append(_("tls.protocols.min_version ({min_version}) ne peut pas être supérieur à max_version ({max_version})").format(min_version=min_version, max_version=max_version))
     if enabled and mode == "direct":
         if not certificate_path:
-            errors.append("tls.certificate.certificate_path ne peut pas etre vide quand tls est actif en mode direct")
+            errors.append(_("tls.certificate.certificate_path ne peut pas être vide quand tls est actif en mode direct"))
         if not private_key_path:
-            errors.append("tls.certificate.private_key_path ne peut pas etre vide quand tls est actif en mode direct")
+            errors.append(_("tls.certificate.private_key_path ne peut pas être vide quand tls est actif en mode direct"))
     return errors
 
 
 def validate_self_signed_params(params: SelfSignedCertParams) -> list[str]:
     errors: list[str] = []
     if not params.common_name:
-        errors.append("common_name (CN) ne peut pas etre vide")
+        errors.append(_("common_name (CN) ne peut pas être vide"))
     if not params.san_dns and not params.san_ip:
-        errors.append("au moins un SAN (DNS ou IP) est requis - le CN seul n'est plus suffisant (doc TLS §6.2)")
+        errors.append(_("au moins un SAN (DNS ou IP) est requis - le CN seul n'est plus suffisant (doc TLS §6.2)"))
     if params.validity_days <= 0:
-        errors.append("validity_days doit etre strictement positif")
+        errors.append(_("validity_days doit être strictement positif"))
     if params.key_type not in VALID_KEY_TYPES:
-        errors.append(f"key_type invalide : {params.key_type!r} (attendu : {sorted(VALID_KEY_TYPES)})")
+        errors.append(_("key_type invalide : {key_type!r} (attendu : {value})").format(key_type=params.key_type, value=sorted(VALID_KEY_TYPES)))
     return errors
 
 
@@ -68,24 +69,24 @@ def validate_ca_params(params: CaParams) -> list[str]:
     sensible", la proteger par passphrase n'est pas une simple option)."""
     errors: list[str] = []
     if not params.common_name:
-        errors.append("common_name (CN) ne peut pas etre vide")
+        errors.append(_("common_name (CN) ne peut pas être vide"))
     if not params.key_password:
-        errors.append("key_password est obligatoire pour une CA locale (doc TLS §7.2/§7.3)")
+        errors.append(_("key_password est obligatoire pour une CA locale (doc TLS §7.2/§7.3)"))
     if params.validity_days <= 0:
-        errors.append("validity_days doit etre strictement positif")
+        errors.append(_("validity_days doit être strictement positif"))
     if params.key_type not in VALID_KEY_TYPES:
-        errors.append(f"key_type invalide : {params.key_type!r} (attendu : {sorted(VALID_KEY_TYPES)})")
+        errors.append(_("key_type invalide : {key_type!r} (attendu : {value})").format(key_type=params.key_type, value=sorted(VALID_KEY_TYPES)))
     return errors
 
 
 def validate_csr_params(params: CsrParams) -> list[str]:
     errors: list[str] = []
     if not params.common_name:
-        errors.append("common_name (CN) ne peut pas etre vide")
+        errors.append(_("common_name (CN) ne peut pas être vide"))
     if not params.san_dns and not params.san_ip:
-        errors.append("au moins un SAN (DNS ou IP) est requis - le CN seul n'est plus suffisant (doc TLS §6.2)")
+        errors.append(_("au moins un SAN (DNS ou IP) est requis - le CN seul n'est plus suffisant (doc TLS §6.2)"))
     if params.key_type not in VALID_KEY_TYPES:
-        errors.append(f"key_type invalide : {params.key_type!r} (attendu : {sorted(VALID_KEY_TYPES)})")
+        errors.append(_("key_type invalide : {key_type!r} (attendu : {value})").format(key_type=params.key_type, value=sorted(VALID_KEY_TYPES)))
     return errors
 
 
@@ -115,20 +116,19 @@ def validate_tls_startup(facts: TlsStartupFacts) -> list[str]:
     errors: list[str] = []
 
     if facts.hsts_enabled and not facts.tls_enabled:
-        errors.append("security.hsts_enabled actif alors que tls.enabled est desactive (doc TLS §13)")
+        errors.append(_("security.hsts_enabled actif alors que tls.enabled est désactivé (doc TLS §13)"))
 
     if not facts.tls_enabled or facts.tls_mode != "direct":
         return errors
 
     if facts.private_key_mode is not None and facts.private_key_mode & 0o077:
         errors.append(
-            f"cle privee TLS lisible par le groupe ou les autres (mode {oct(facts.private_key_mode)}, "
-            "attendu 0600 ou plus strict - doc TLS §4.1/§21)"
+            _("clé privée TLS lisible par le groupe ou les autres (mode {value}, attendu 0600 ou plus strict - doc TLS §4.1/§21)").format(value=oct(facts.private_key_mode))
         )
 
     if facts.certificate_info is not None:
         if facts.certificate_info.is_expired(facts.now):
-            errors.append(f"certificat TLS expire depuis le {facts.certificate_info.not_after.isoformat()}")
+            errors.append(_("certificat TLS expiré depuis le {value}").format(value=facts.certificate_info.not_after.isoformat()))
 
         if (
             facts.certificate_info.is_self_signed
@@ -136,12 +136,11 @@ def validate_tls_startup(facts: TlsStartupFacts) -> list[str]:
             and not facts.self_signed_public_bind_confirmed
         ):
             errors.append(
-                f"certificat auto-signe avec bind public ({facts.bind_host}) sans confirmation explicite "
-                "(doc TLS §6.1/§21 - reserver l'auto-signe au local/interne, ou confirmer explicitement)"
+                _("certificat auto-signé avec bind public ({bind_host}) sans confirmation explicite (doc TLS §6.1/§21 - réserver l'auto-signé au local/interne, ou confirmer explicitement)").format(bind_host=facts.bind_host)
             )
 
     if facts.keys_match is False:
-        errors.append("la cle privee TLS ne correspond pas au certificat configure")
+        errors.append(_("la clé privée TLS ne correspond pas au certificat configuré"))
 
     return errors
 
@@ -171,13 +170,13 @@ class CertificateImportFacts:
 def validate_certificate_import(facts: CertificateImportFacts) -> list[str]:
     errors: list[str] = []
     if not facts.source_key_exists:
-        errors.append("la cle privee source est introuvable")
+        errors.append(_("la clé privée source est introuvable"))
     if not facts.source_cert_exists:
-        errors.append("le certificat source est introuvable")
+        errors.append(_("le certificat source est introuvable"))
     if facts.source_chain_path_given and not facts.source_chain_exists:
-        errors.append("le fichier de chaine intermediaire indique est introuvable")
+        errors.append(_("le fichier de chaîne intermédiaire indique est introuvable"))
     if facts.keys_match is False:
-        errors.append("la cle privee et le certificat fournis ne correspondent pas")
+        errors.append(_("la clé privée et le certificat fournis ne correspondent pas"))
     if facts.certificate_info is not None and facts.certificate_info.is_expired(facts.now):
-        errors.append(f"le certificat fourni est deja expire depuis le {facts.certificate_info.not_after.isoformat()}")
+        errors.append(_("le certificat fourni est déjà expiré depuis le {value}").format(value=facts.certificate_info.not_after.isoformat()))
     return errors

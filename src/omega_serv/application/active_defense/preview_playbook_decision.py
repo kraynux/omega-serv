@@ -11,6 +11,7 @@ inclut sans impact sur l'etat persiste)."""
 from __future__ import annotations
 
 from omega_serv.application.active_defense.manage_deception import profiles_from_config
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
 from omega_serv.domain.security.active_defense.entities import PlaybookPreview
 from omega_serv.domain.security.active_defense.policies import (
@@ -58,24 +59,24 @@ def preview_playbook_decision(
     )
     playbook = build_playbook(config.war_mode)
     explanation: list[str] = [
-        f"Score projete : {previous_score} -> {projected_score} (delta={score_delta:+d}).",
-        f"Niveau projete : {previous_level} -> {projected_level}.",
+        _("Score projeté : {previous_score} -> {projected_score} (delta={score_delta:+d}).").format(previous_score=previous_score, projected_score=projected_score, score_delta=score_delta),
+        _("Niveau projeté : {previous_level} -> {projected_level}.").format(previous_level=previous_level, projected_level=projected_level),
     ]
 
     would_escalate = projected_level != previous_level
     if not config.war_mode.enabled:
-        explanation.append("war_mode desactive : aucune action ne se declencherait reellement.")
+        explanation.append(_("war_mode désactivé : aucune action ne se déclencherait réellement."))
 
     would_create_incident = False
     if config.war_mode.enabled and validate_playbook_action("create_incident", playbook):
-        existing = incident_repository.find_open_for(subject_id)
+        has_open_incident = incident_repository.find_open_id_for(subject_id) is not None
         transition = decide_incident_transition(
-            existing, projected_score, incident_score_threshold=thresholds.incident_score,
+            has_open_incident, projected_score, incident_score_threshold=thresholds.incident_score,
         )
         would_create_incident = transition != "no_change"
-        explanation.append(f"Incident : {transition}.")
+        explanation.append(_("Incident : {transition}.").format(transition=transition))
     else:
-        explanation.append("Incident : action 'create_incident' absente du playbook ou war_mode desactive.")
+        explanation.append(_("Incident : action 'create_incident' absente du playbook ou war_mode désactivé."))
 
     would_assign_deception = False
     selected_decoy_profile: str | None = None
@@ -86,25 +87,25 @@ def preview_playbook_decision(
         and projected_level in ("hostile", "contained")
     ):
         if deception_assignment_repository.get(subject_id) is not None:
-            explanation.append("Deception : une affectation existe deja pour cette source.")
+            explanation.append(_("Deception : une affectation existe déjà pour cette source."))
         else:
             profile = select_decoy_profile(attack_class, profiles_from_config(config.deception))
             if profile is not None:
                 would_assign_deception = True
                 selected_decoy_profile = profile.name
-                explanation.append(f"Deception : leurre {profile.name!r} serait affecte.")
+                explanation.append(_("Deception : leurre {name!r} serait affecté.").format(name=profile.name))
             else:
-                explanation.append(f"Deception : aucun profil actif ne correspond a {attack_class!r}.")
+                explanation.append(_("Deception : aucun profil actif ne correspond à {attack_class!r}.").format(attack_class=attack_class))
     else:
-        explanation.append("Deception : conditions non reunies (niveau, deception ou playbook).")
+        explanation.append(_("Deception : conditions non réunies (niveau, deception ou playbook)."))
 
     marked = is_source_marked(projected_level)
     would_enrich_log = (
         config.war_mode.enabled and marked and validate_playbook_action("enrich_log", playbook)
     )
     explanation.append(
-        "Journalisation enrichie : "
-        + ("declenchee." if would_enrich_log else "non declenchee (source non marquee ou action absente).")
+        _("Journalisation enrichie : ")
+        + ("declenchee." if would_enrich_log else _("non déclenchée (source non marquée ou action absente)."))
     )
 
     would_delay = (
@@ -118,16 +119,15 @@ def preview_playbook_decision(
     )
     if would_delay:
         explanation.append(
-            f"Ralentissement : entre {config.war_mode.slowdown.minimum_ms} et "
-            f"{config.war_mode.slowdown.maximum_ms} ms."
+            _("Ralentissement : entre {minimum_ms} et {maximum_ms} ms.").format(minimum_ms=config.war_mode.slowdown.minimum_ms, maximum_ms=config.war_mode.slowdown.maximum_ms)
         )
     else:
-        explanation.append("Ralentissement : non declenche (source non marquee, action absente ou desactive).")
+        explanation.append(_("Ralentissement : non déclenché (source non marquée, action absente ou désactivé)."))
 
     would_rate_limit = config.war_mode.enabled and marked and validate_playbook_action("rate_limit", playbook)
     explanation.append(
-        "Limitation de debit : "
-        + ("appliquee." if would_rate_limit else "non appliquee (source non marquee ou action absente).")
+        _("Limitation de débit : ")
+        + ("appliquee." if would_rate_limit else _("non appliquée (source non marquée ou action absente)."))
     )
 
     return PlaybookPreview(

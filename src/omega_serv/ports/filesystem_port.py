@@ -104,6 +104,15 @@ class FilesystemPort(Protocol):
         l'etape 6/7 de la resolution de chemin sure (spec §11.2)."""
         ...
 
+    def resolve_real_path_under(self, real_root: Path, segments: tuple[str, ...]) -> Path:
+        """Meme resultat que `resolve_real_path(real_root / *segments)`, pour une
+        racine DEJA canonique : seuls les segments sous la racine sont examines,
+        et le moindre lien symbolique parmi eux renvoie a la resolution complete
+        (OMEGA-SERV_ETUDE_PERFORMANCE.md, priorite 3 : realpath revisitait chaque
+        dossier depuis /, a chaque requete). `segments` : deja normalises, sans
+        `.`, `..` ni segment vide (domain/security/path_policy.py)."""
+        ...
+
     def list_json_files(self, directory: Path) -> list[Path]:
         """Liste les fichiers .json d'un dossier, tries par nom (dossier
         absent -> liste vide) - utilise pour enumerer les profils

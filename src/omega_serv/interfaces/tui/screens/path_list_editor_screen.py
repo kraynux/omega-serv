@@ -31,6 +31,7 @@ from omega_serv.application.security.path_list_tools import (
 from omega_serv.application.services.resolve_current_service_name import (
     resolve_current_service_account,
 )
+from omega_serv.core.i18n import _
 from omega_serv.domain.security.waf.keyword_list import (
     NEW_KEYWORD_LIST_TEMPLATE,
     NEW_PATH_LIST_TEMPLATE,
@@ -88,7 +89,7 @@ class PathListEditorScreen(TextFileEditorScreen):
         self._opened_text = text
         self._fingerprint = container.file_access.fingerprint(self._path) if self._status.location_error is None else None
         read_only = self._status.location_error or (
-            None if self._status.writable else "fichier ou dossier non modifiable par votre compte (jamais via sudo)"
+            None if self._status.writable else _("fichier ou dossier non modifiable par votre compte (jamais via sudo)")
         )
         super().__init__(title=title, text=text, read_only_reason=read_only)
 
@@ -108,11 +109,10 @@ class PathListEditorScreen(TextFileEditorScreen):
     # ---- points d'extension --------------------------------------------------
     def analyze(self, text: str) -> EditorAnalysis:
         if self._match != "path":
-            return EditorAnalysis(summary=f"{len(tokens_from_text(text))} mot(s)-clef(s)")
+            return EditorAnalysis(summary=_("{count} mot(s)-clef(s)").format(count=len(tokens_from_text(text))))
         analysis = analyze_path_list_text(text, self._anchor)
         summary = (
-            f"{len(analysis.entries)} entree(s) · {len(analysis.exceptions)} exception(s) · "
-            f"{len(analysis.errors)} erreur(s) · {len(analysis.warnings)} avertissement(s)"
+            _("{count} entrée(s) · {count2} exception(s) · {count3} erreur(s) · {count4} avertissement(s)").format(count=len(analysis.entries), count2=len(analysis.exceptions), count3=len(analysis.errors), count4=len(analysis.warnings))
         )
         return EditorAnalysis(
             summary=summary,
@@ -126,16 +126,16 @@ class PathListEditorScreen(TextFileEditorScreen):
         return explain_path(text, self._anchor, value)
 
     def extra_tools(self) -> tuple[tuple[str, str], ...]:
-        tools = [("tool-check-logs", "Verifier contre mes logs")] if self._match == "path" else []
+        tools = [("tool-check-logs", _("Vérifier contre mes logs"))] if self._match == "path" else []
         if self._reference_text is not None and self._match == "path":
-            tools.append(("tool-reference-news", "Nouveautes de la reference"))
-        tools.append(("tool-fix-rights", "Corriger les droits"))
+            tools.append(("tool-reference-news", _("Nouveautés de la référence")))
+        tools.append(("tool-fix-rights", _("Corriger les droits")))
         return tuple(tools)
 
     def status_text(self) -> str:
         message = self._status.service_message()
         if self._status.service_check == "unreadable":
-            return f"ATTENTION : {message} - le serveur ne pourra pas charger cette liste (bouton Corriger les droits)"
+            return _("ATTENTION : {message} - le serveur ne pourra pas charger cette liste (bouton Corriger les droits)").format(message=message)
         return message
 
     def handle_extra_tool(self, tool_id: str) -> None:
@@ -156,18 +156,18 @@ class PathListEditorScreen(TextFileEditorScreen):
         )
         self._status = result.status
         if not result.saved:
-            return False, f"Enregistrement refuse : {result.refused_reason}"
+            return False, _("Enregistrement refusé : {refused_reason}").format(refused_reason=result.refused_reason)
         if markers:
             self.append_lines(markers)  # visible et annulable dans l'editeur, comme sur disque
         self._fingerprint = self._container.file_access.fingerprint(self._path)
         self._opened_text = final_text
         self.mark_saved(self.text_area.text)
 
-        messages = ["Liste enregistree."]
+        messages = [_("Liste enregistrée.")]
         if result.outcome is not None and not result.outcome.group_preserved:
-            messages.append("Groupe d'origine du fichier non conserve (vous n'en etes pas membre).")
+            messages.append(_("Groupe d'origine du fichier non conservé (vous n'en êtes pas membre)."))
         if self._status.service_check == "unreadable":
-            messages.append(f"ATTENTION : {self._status.service_message()} (bouton Corriger les droits).")
+            messages.append(_("ATTENTION : {value} (bouton Corriger les droits).").format(value=self._status.service_message()))
             return True, " ".join(messages)
         messages.append(self._apply_to_server())
         return True, " ".join(m for m in messages if m)
@@ -182,19 +182,19 @@ class PathListEditorScreen(TextFileEditorScreen):
         ET passe la validation d'environnement (§3.8)."""
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            return "Configuration illisible : aucun rechargement tente."
+            return _("Configuration illisible : aucun rechargement tenté.")
         config = load_result.config
         waf_option = config.options.get("waf")
         list_ids = self._referencing_list_ids(waf_option.settings) if waf_option is not None else []
         if not list_ids:
-            return "Cette liste n'est pas encore chargee dans le WAF (assistant WAF Custom)."
+            return _("Cette liste n'est pas encore chargée dans le WAF (assistant WAF Custom).")
         runner = self._container.config_check_runner
         if runner is not None:
             errors = runner(config, self._container.filesystem, self._container.project_root, False, False)
             relevant = [e for e in errors if any(f"keyword_lists[{list_id!r}]" in e for list_id in list_ids)]
             if relevant:
-                return f"Rechargement NON effectue : {relevant[0]}"
-        notify_reload_required(self, self._container, f"Liste {', '.join(list_ids)} enregistree.")
+                return _("Rechargement NON effectué : {value}").format(value=relevant[0])
+        notify_reload_required(self, self._container, _("Liste {value} enregistrée.").format(value=', '.join(list_ids)))
         return ""
 
     # ---- outils --------------------------------------------------------------
@@ -202,18 +202,17 @@ class PathListEditorScreen(TextFileEditorScreen):
         self._status = self._inspect()
         self.refresh_status()
         if self._status.service_check != "unreadable":
-            self.notify_message(f"Rien a corriger : {self._status.service_message()}.")
+            self.notify_message(_("Rien à corriger : {value}.").format(value=self._status.service_message()))
             return
         if not self._status.fixes:
             blocked = ", ".join(node.path for node in self._status.not_fixable)
             self.notify_message(
-                f"Correction impossible depuis votre compte (elements qui ne vous appartiennent pas : {blocked}). "
-                "Demandez a l'administrateur de la machine.", error=True,
+                _("Correction impossible depuis votre compte (éléments qui ne vous appartiennent pas : {blocked}). Demandez à l'administrateur de la machine.").format(blocked=blocked), error=True,
             )
             return
         details = "\n".join(f"{fix.path} : {fix.current_mode:o} -> {fix.new_mode:o}" for fix in self._status.fixes)
         self.app.push_screen(
-            ConfirmScreen(title="CORRIGER LES DROITS", message=f"Appliquer ces changements de droits ?\n{details}"),
+            ConfirmScreen(title=_("CORRIGER LES DROITS"), message=_("Appliquer ces changements de droits ?\n{details}").format(details=details)),
             self._apply_fixes_if_confirmed,
         )
 
@@ -223,21 +222,21 @@ class PathListEditorScreen(TextFileEditorScreen):
         apply_read_fixes(self._container.file_access, self._status.fixes)
         self._status = self._inspect()
         self.refresh_status()
-        self.notify_message(f"Droits corriges : {self._status.service_message()}.")
+        self.notify_message(_("Droits corrigés : {value}.").format(value=self._status.service_message()))
 
     def _check_logs(self) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.notify_message("Configuration illisible : journal d'acces introuvable.", error=True)
+            self.notify_message(_("Configuration illisible : journal d'accès introuvable."), error=True)
             return
         access_log = self._container.project_root / load_result.config.logs.access
         lines = self._container.file_access.read_tail_lines(access_log, ACCESS_LOG_TAIL_BYTES)
         if not lines:
-            self.notify_message(f"Journal d'acces vide ou absent : {access_log}")
+            self.notify_message(_("Journal d'accès vide ou absent : {access_log}").format(access_log=access_log))
             return
         hits = replay_successful_paths(self.text_area.text, self._anchor, lines)
         if not hits:
-            self.notify_message(f"Aucune ligne n'a touche de requete reussie ({len(lines)} lignes de journal analysees).")
+            self.notify_message(_("Aucune ligne n'a touché de requête réussie ({count} lignes de journal analysées).").format(count=len(lines)))
             return
         self.app.push_screen(LogHitsScreen(hits, len(lines)), self._apply_log_hit_action)
 
@@ -256,11 +255,11 @@ class PathListEditorScreen(TextFileEditorScreen):
             return
         news = reference_news(self.text_area.text, self._reference_text)
         if not news:
-            self.notify_message("Aucune nouveaute : votre liste contient deja toute la reference.")
+            self.notify_message(_("Aucune nouveauté : votre liste contient déjà toute la référence."))
             return
         self.app.push_screen(ReferenceNewsScreen(news), self._add_reference_news)
 
     def _add_reference_news(self, chosen: list[str] | None) -> None:
         if chosen:
-            self.append_lines(["#Ajouts depuis la reference", *chosen])
+            self.append_lines([_("#Ajouts depuis la référence"), *chosen])
         self.text_area.focus()

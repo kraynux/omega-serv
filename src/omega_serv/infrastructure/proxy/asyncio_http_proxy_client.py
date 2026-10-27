@@ -64,7 +64,7 @@ async def _read_status_and_headers(
 ) -> tuple[int, list[tuple[str, str]]]:
     status_line = await asyncio.wait_for(reader.readline(), timeout=read_timeout)
     if not status_line:
-        raise HttpProxyConnectionError(f"upstream a ferme la connexion sans reponse ({host}:{port})")
+        raise HttpProxyConnectionError(f"upstream a fermé la connexion sans réponse ({host}:{port})")
     status_code = _parse_status_line(status_line)
 
     response_headers: list[tuple[str, str]] = []
@@ -88,7 +88,7 @@ async def _open_connection(
             timeout=connect_timeout,
         )
     except (OSError, asyncio.TimeoutError) as e:
-        raise HttpProxyConnectionError(f"connexion a l'upstream impossible ({host}:{port}) : {e}") from e
+        raise HttpProxyConnectionError(f"connexion à l'upstream impossible ({host}:{port}) : {e}") from e
 
 
 async def _close_quietly(writer: asyncio.StreamWriter) -> None:

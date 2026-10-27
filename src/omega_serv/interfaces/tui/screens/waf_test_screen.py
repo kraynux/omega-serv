@@ -12,6 +12,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
@@ -27,7 +28,7 @@ class WafTestScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static("WAF - TESTER UNE REGLE", classes="omega-title")
+            yield Static(_("WAF - TESTER UNE RÈGLE"), classes="omega-title")
             yield Input(value="GET", id="test-method-input")
             yield Input(value="/", id="test-path-input")
             yield Input(placeholder="query", id="test-query-input")
@@ -35,9 +36,9 @@ class WafTestScreen(OmegaScreen):
             yield Input(value="127.0.0.1", id="test-remote-ip-input")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Tester", id="test", variant="primary")
+                    yield Button(_("Tester"), id="test", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button("Retour", id="back")
+                    yield Button(_("Retour"), id="back")
             yield Static("", id="test-result", classes="omega-hint")
         yield Footer()
 
@@ -56,11 +57,11 @@ class WafTestScreen(OmegaScreen):
         result_widget = self.query_one("#test-result", Static)
         runner = self._container.waf_test_runner
         if runner is None:
-            result_widget.update("Test indisponible dans cet environnement.")
+            result_widget.update(_("Test indisponible dans cet environnement."))
             return
         config = self._config()
         if config is None:
-            result_widget.update("Erreur de configuration.")
+            result_widget.update(_("Erreur de configuration."))
             return
         report = await runner(
             self.query_one("#test-method-input", Input).value.strip() or "GET",
@@ -74,24 +75,23 @@ class WafTestScreen(OmegaScreen):
             self._container.clock,
         )
         if report is None:
-            result_widget.update("WAF indisponible (option 'waf' absente de la configuration).")
+            result_widget.update(_("WAF indisponible (option 'waf' absente de la configuration)."))
             return
         decision = report.decision
         lines = [
-            f"Decision : {decision.action.upper()}",
-            f"Statut : {decision.status_code if decision.status_code is not None else '-'}",
-            f"Score : {decision.score}",
-            f"Regles : {', '.join(f.rule_id for f in decision.findings) or '-'}",
-            f"Politique de zone : {report.zone_id}",
-            f"Mode : {report.mode}",
+            _("Décision : {value}").format(value=decision.action.upper()),
+            _("Statut : {value}").format(value=decision.status_code if decision.status_code is not None else '-'),
+            _("Score : {score}").format(score=decision.score),
+            _("Règles : {value}").format(value=', '.join(f.rule_id for f in decision.findings) or '-'),
+            _("Politique de zone : {zone_id}").format(zone_id=report.zone_id),
+            _("Mode : {mode}").format(mode=report.mode),
         ]
         if decision.blocked_reason:
-            lines.append(f"Motif : {decision.blocked_reason}")
+            lines.append(_("Motif : {blocked_reason}").format(blocked_reason=decision.blocked_reason))
         if report.magnet_error:
-            lines.append(f"ATTENTION script magnet en erreur : {report.magnet_error}")
+            lines.append(_("ATTENTION script magnet en erreur : {magnet_error}").format(magnet_error=report.magnet_error))
         if report.magnet_unsupported_members:
             lines.append(
-                "ATTENTION lighty." + f"{{{', '.join(sorted(report.magnet_unsupported_members))}}}"
-                " non supporte par ce pont"
+                _("ATTENTION lighty.") + _("{{{value}}} non supporte par ce pont").format(value=', '.join(sorted(report.magnet_unsupported_members)))
             )
         result_widget.update("\n".join(lines))
