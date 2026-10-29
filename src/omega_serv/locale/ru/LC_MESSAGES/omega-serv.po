@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 07:37+0100\n"
+"POT-Creation-Date: 2026-10-27 19:42+0100\n"
 "PO-Revision-Date: 2026-10-22 01:30+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Русский\n"
@@ -704,11 +704,28 @@ msgstr "включена при загрузке"
 msgid "désactivé au démarrage"
 msgstr "отключена при загрузке"
 
-#: src/omega_serv/application/terminal/exceptions.py:14
+#: src/omega_serv/application/terminal/clear_directory.py:41
+msgid "dossier système ou personnel"
+msgstr "системный или личный каталог"
+
+#: src/omega_serv/application/terminal/clear_directory.py:43
+msgid "contient l'installation d'omega-serv"
+msgstr "содержит установку omega-serv"
+
+#: src/omega_serv/application/terminal/clear_directory.py:45
+msgid "ce n'est pas un dossier"
+msgstr "это не каталог"
+
+#: src/omega_serv/application/terminal/exceptions.py:17
+#, python-brace-format
+msgid "Dossier refusé ({reason}) : {path}"
+msgstr "Каталог отклонён ({reason}): {path}"
+
+#: src/omega_serv/application/terminal/exceptions.py:23
 msgid "thème inconnu : {theme_name!r}"
 msgstr "неизвестная тема: {theme_name!r}"
 
-#: src/omega_serv/application/terminal/exceptions.py:20
+#: src/omega_serv/application/terminal/exceptions.py:29
 msgid "langue inconnue : {language_code!r}"
 msgstr "неизвестный язык: {language_code!r}"
 
@@ -3462,7 +3479,7 @@ msgstr "Сменить активную тему"
 
 #: src/omega_serv/interfaces/tui/app.py:243
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:173
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
 msgid "Thème"
 msgstr "Тема"
 
@@ -4905,7 +4922,7 @@ msgid "Effet immédiat, aucun redémarrage nécessaire."
 msgstr "Немедленный эффект, перезапуск не нужен."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:180
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Profil de rendu"
 msgstr "Режим отображения"
 
@@ -4962,7 +4979,7 @@ msgid "Effet immédiat sur les prochains exports/captures."
 msgstr "Немедленный эффект на следующие экспорты/снимки."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:214
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:105
 msgid "Langue des exports"
 msgstr "Язык экспорта"
 
@@ -10154,7 +10171,7 @@ msgstr "options.active_defense отсутствует или отключён в
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/server_config_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/service_screen.py:116
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:127
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:54
@@ -14271,87 +14288,94 @@ msgstr "Заново применяет совместные права на var
 msgid "OMEGA-SERV web server"
 msgstr "OMEGA-SERV web server"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 msgid "en test"
 msgstr "тестируется"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 #, python-brace-format
 msgid "{label} ({value})"
 msgstr "{label} ({value})"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:78
 msgid "RÉGLAGES"
 msgstr "НАСТРОЙКИ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:84
 msgid "Profil de rendu (redémarrage requis)"
 msgstr "Режим отображения (нужен перезапуск)"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:87
 msgid "Automatique"
 msgstr "Автоматически"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:98
 msgid "Export"
 msgstr "Экспорт"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:107
 msgid "Comme l'interface"
 msgstr "Как интерфейс"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:109
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:113
 msgid "Captures d'écran"
 msgstr "Снимки экрана"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:119
 msgid "Purge"
 msgstr "Очистка"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:122
 msgid "Supprimer les exports"
 msgstr "Удалить экспорты"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:124
 msgid "Supprimer les screenshots"
 msgstr "Удалить снимки"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:178
 msgid "REDÉMARRER L'INTERFACE ?"
 msgstr "ПЕРЕЗАПУСТИТЬ ИНТЕРФЕЙС?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:176
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:180
 #, python-brace-format
 msgid "La langue « {name} » sera appliquée après le redémarrage de l'interface. Le serveur (service) n'est pas concerne et continue de tourner."
 msgstr "Язык « {name} » будет применён после перезапуска интерфейса. Сервер (служба) не затрагивается и продолжает работать."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Appliqué au prochain démarrage."
 msgstr "Будет применено при следующем запуске."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:211
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:213
 msgid "SUPPRIMER LES EXPORTS ?"
 msgstr "УДАЛИТЬ ЭКСПОРТЫ?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:212
-msgid "Tous les fichiers du dossier d'export seront définitivement supprimés."
-msgstr "Все файлы в каталоге экспорта будут безвозвратно удалены."
-
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:219
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:216
 msgid "SUPPRIMER LES SCREENSHOTS ?"
 msgstr "УДАЛИТЬ СНИМКИ?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:220
-msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
-msgstr "Все файлы в каталоге снимков экрана будут безвозвратно удалены."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:230
+#, python-brace-format
+msgid ""
+"Tout le contenu de ce dossier sera définitivement supprimé :\n"
+"{directory}"
+msgstr ""
+"Всё содержимое этого каталога будет безвозвратно удалено:\n"
+"{directory}"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:229
-msgid "Exports supprimés."
-msgstr "Экспорты удалены."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:239
+msgid "Suppression en cours..."
+msgstr "Удаление..."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:235
-msgid "Screenshots supprimés."
-msgstr "Снимки удалены."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:253
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s) : {directory}"
+msgstr "Удалено элементов: {removed} — {directory}"
+
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:258
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}"
+msgstr "Удалено элементов: {removed}, не удалось удалить: {failed} — {names}"
 
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:32
 msgid "SIMULER UNE REQUÊTE"
@@ -15844,6 +15868,15 @@ msgstr "Файлы конфигурации WordPress"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "Общее зондирование плагинов/тем WordPress"
+
+#~ msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
+#~ msgstr "Все файлы в каталоге снимков экрана будут безвозвратно удалены."
+
+#~ msgid "Exports supprimés."
+#~ msgstr "Экспорты удалены."
+
+#~ msgid "Screenshots supprimés."
+#~ msgstr "Снимки удалены."
 
 #~ msgid "Formats : json, csv, markdown. Politique de partage : local_only ou manual_export."
 #~ msgstr "Форматы: json, csv, markdown. Политика обмена: local_only или manual_export."

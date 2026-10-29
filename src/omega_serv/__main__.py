@@ -418,7 +418,7 @@ def _run_with_text_direction(app) -> None:  # type: ignore[no-untyped-def]
     from omega_lib.i18n.policies import text_direction
 
     from omega_serv.core.i18n import STATE
-    from omega_serv.interfaces.tui.terminal_bidi import (
+    from omega_lib.i18n.terminal_bidi import (
         ENTER_EXPLICIT_MODE,
         LEAVE_EXPLICIT_MODE,
         install_visual_reordering,
@@ -456,7 +456,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Hindi (plan i18n, lots 10-11) : Rich compte les voyelles devanagari espacantes pour 0
     # colonne, le terminal pour 1 - aligne avant tout rendu, sans effet sur les autres langues.
-    from omega_serv.infrastructure.i18n.terminal_cell_widths import (
+    from omega_lib.i18n.terminal_cell_widths import (
         align_spacing_marks_with_terminal,
     )
 

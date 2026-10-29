@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from omega_serv.domain.security.waf.blocklist import (
-    find_matching_entry,
+    BlocklistIndex,
     parse_blocklist,
     purge_expired,
     serialize_blocklist,
@@ -50,6 +50,10 @@ class JsonBlocklistStore:
         self._cache: list[BlocklistEntry] | None = None
         self._cache_mtime: float | None = None
         self._last_reported_error: str | None = None
+        # Index de recherche de la DERNIERE liste lue (voir is_blocked) ; reconstruit
+        # seulement quand la liste change, jamais a chaque requete.
+        self._index = BlocklistIndex([])
+        self._index_source: list[BlocklistEntry] | None = None
 
     def _report_read_error(self, error: OSError) -> None:
         """Une seule ligne par erreur DISTINCTE (jamais une par requete)."""
@@ -104,7 +108,14 @@ class JsonBlocklistStore:
         self._cache_mtime = self._fs.file_mtime(self._path)
 
     def is_blocked(self, ip: str) -> BlocklistEntry | None:
-        return find_matching_entry(ip, self._load(), self._clock.now())
+        entries = self._load()
+        # Liste illisible : `_load` renvoie une COPIE de la derniere liste valide -
+        # l'index de cette liste reste valable, inutile de le reconstruire.
+        source = self._cache if self._cache is not None else entries
+        if source is not self._index_source:
+            self._index = BlocklistIndex(source)
+            self._index_source = source
+        return self._index.find(ip, self._clock.now())
 
     def list_entries(self) -> tuple[BlocklistEntry, ...]:
         return tuple(self._load())

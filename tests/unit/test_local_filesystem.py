@@ -72,5 +72,46 @@ class TestAtomicWriteText(unittest.TestCase):
         self.assertEqual(leftovers, [])
 
 
+
+class TestPathInfo(unittest.TestCase):
+    """path_info (OMEGA-SERV_ANALYSE_OPTIMISATION.md §3) doit dire exactement ce
+    que disent is_file / is_dir / file_size / file_mtime, en un seul stat()."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.filesystem = LocalFilesystem()
+        (self.root / "page.html").write_text("abc")
+        (self.root / "dossier").mkdir()
+        (self.root / "lien.html").symlink_to(self.root / "page.html")
+        (self.root / "lien-casse").symlink_to(self.root / "absent")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_same_answers_as_the_separate_calls(self):
+        for name in ("page.html", "dossier", "lien.html", "lien-casse", "absent", "page.html/sous", "nul\0"):
+            path = self.root / name
+            info = self.filesystem.path_info(path)
+            is_file, is_dir = self.filesystem.is_file(path), self.filesystem.is_dir(path)
+            if info is None:
+                self.assertFalse(is_file or is_dir, name)
+                continue
+            self.assertEqual((info.is_file, info.is_dir), (is_file, is_dir), name)
+            self.assertEqual(info.size, self.filesystem.file_size(path), name)
+            self.assertEqual(info.mtime, self.filesystem.file_mtime(path), name)
+
+    def test_missing_or_invalid_paths_give_none(self):
+        self.assertIsNone(self.filesystem.path_info(self.root / "absent"))
+        self.assertIsNone(self.filesystem.path_info(self.root / "page.html" / "sous"))  # ENOTDIR
+        self.assertIsNone(self.filesystem.path_info(self.root / "lien-casse"))
+        self.assertIsNone(self.filesystem.path_info(self.root / "nul\0"))  # ValueError
+
+    def test_symlink_is_followed_like_is_file(self):
+        info = self.filesystem.path_info(self.root / "lien.html")
+        self.assertTrue(info.is_file)
+        self.assertEqual(info.size, 3)
+
+
 if __name__ == "__main__":
     unittest.main()

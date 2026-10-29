@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 07:37+0100\n"
+"POT-Creation-Date: 2026-10-27 19:42+0100\n"
 "PO-Revision-Date: 2026-10-23 23:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: ไทย\n"
@@ -705,11 +705,28 @@ msgstr "เปิดใช้งานเมื่อบูตแล้ว"
 msgid "désactivé au démarrage"
 msgstr "ปิดใช้งานเมื่อบูตแล้ว"
 
-#: src/omega_serv/application/terminal/exceptions.py:14
+#: src/omega_serv/application/terminal/clear_directory.py:41
+msgid "dossier système ou personnel"
+msgstr "โฟลเดอร์ระบบหรือโฟลเดอร์ส่วนตัว"
+
+#: src/omega_serv/application/terminal/clear_directory.py:43
+msgid "contient l'installation d'omega-serv"
+msgstr "มีการติดตั้ง omega-serv อยู่"
+
+#: src/omega_serv/application/terminal/clear_directory.py:45
+msgid "ce n'est pas un dossier"
+msgstr "ไม่ใช่โฟลเดอร์"
+
+#: src/omega_serv/application/terminal/exceptions.py:17
+#, python-brace-format
+msgid "Dossier refusé ({reason}) : {path}"
+msgstr "ปฏิเสธโฟลเดอร์ ({reason}): {path}"
+
+#: src/omega_serv/application/terminal/exceptions.py:23
 msgid "thème inconnu : {theme_name!r}"
 msgstr "ไม่รู้จักธีม: {theme_name!r}"
 
-#: src/omega_serv/application/terminal/exceptions.py:20
+#: src/omega_serv/application/terminal/exceptions.py:29
 msgid "langue inconnue : {language_code!r}"
 msgstr "ไม่รู้จักภาษา: {language_code!r}"
 
@@ -3463,7 +3480,7 @@ msgstr "เปลี่ยนธีมที่ใช้งาน"
 
 #: src/omega_serv/interfaces/tui/app.py:243
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:173
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
 msgid "Thème"
 msgstr "ธีม"
 
@@ -4906,7 +4923,7 @@ msgid "Effet immédiat, aucun redémarrage nécessaire."
 msgstr "มีผลทันที ไม่ต้องรีสตาร์ท"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:180
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Profil de rendu"
 msgstr "โปรไฟล์การแสดงผล"
 
@@ -4963,7 +4980,7 @@ msgid "Effet immédiat sur les prochains exports/captures."
 msgstr "มีผลทันทีกับการส่งออก/ภาพหน้าจอครั้งถัดไป"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:214
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:105
 msgid "Langue des exports"
 msgstr "ภาษาของการส่งออก"
 
@@ -10155,7 +10172,7 @@ msgstr "ไม่มี options.active_defense ในการตั้งค่
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/server_config_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/service_screen.py:116
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:127
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:54
@@ -14272,87 +14289,94 @@ msgstr "ใช้การแชร์สิทธิ์บน var/ และ se
 msgid "OMEGA-SERV web server"
 msgstr "OMEGA-SERV web server"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 msgid "en test"
 msgstr "กำลังทดสอบ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 #, python-brace-format
 msgid "{label} ({value})"
 msgstr "{label} ({value})"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:78
 msgid "RÉGLAGES"
 msgstr "การตั้งค่า"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:84
 msgid "Profil de rendu (redémarrage requis)"
 msgstr "โปรไฟล์การแสดงผล (ต้องรีสตาร์ท)"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:87
 msgid "Automatique"
 msgstr "อัตโนมัติ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:98
 msgid "Export"
 msgstr "ส่งออก"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:107
 msgid "Comme l'interface"
 msgstr "เหมือนอินเทอร์เฟซ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:109
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:113
 msgid "Captures d'écran"
 msgstr "ภาพหน้าจอ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:119
 msgid "Purge"
 msgstr "การล้าง"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:122
 msgid "Supprimer les exports"
 msgstr "ลบไฟล์ส่งออก"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:124
 msgid "Supprimer les screenshots"
 msgstr "ลบภาพหน้าจอ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:178
 msgid "REDÉMARRER L'INTERFACE ?"
 msgstr "รีสตาร์ทอินเทอร์เฟซ?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:176
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:180
 #, python-brace-format
 msgid "La langue « {name} » sera appliquée après le redémarrage de l'interface. Le serveur (service) n'est pas concerne et continue de tourner."
 msgstr "ภาษา « {name} » จะใช้หลังรีสตาร์ทอินเทอร์เฟซ ไม่เกี่ยวกับเซิร์ฟเวอร์ (บริการ) ซึ่งยังทำงานต่อ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Appliqué au prochain démarrage."
 msgstr "จะใช้เมื่อเริ่มครั้งถัดไป"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:211
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:213
 msgid "SUPPRIMER LES EXPORTS ?"
 msgstr "ลบไฟล์ส่งออก?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:212
-msgid "Tous les fichiers du dossier d'export seront définitivement supprimés."
-msgstr "ไฟล์ทั้งหมดในโฟลเดอร์ส่งออกจะถูกลบอย่างถาวร"
-
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:219
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:216
 msgid "SUPPRIMER LES SCREENSHOTS ?"
 msgstr "ลบภาพหน้าจอ?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:220
-msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
-msgstr "ไฟล์ทั้งหมดในโฟลเดอร์ภาพหน้าจอจะถูกลบอย่างถาวร"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:230
+#, python-brace-format
+msgid ""
+"Tout le contenu de ce dossier sera définitivement supprimé :\n"
+"{directory}"
+msgstr ""
+"เนื้อหาทั้งหมดในโฟลเดอร์นี้จะถูกลบอย่างถาวร:\n"
+"{directory}"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:229
-msgid "Exports supprimés."
-msgstr "ลบไฟล์ส่งออกแล้ว"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:239
+msgid "Suppression en cours..."
+msgstr "กำลังลบ..."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:235
-msgid "Screenshots supprimés."
-msgstr "ลบภาพหน้าจอแล้ว"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:253
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s) : {directory}"
+msgstr "ลบแล้ว {removed} รายการ: {directory}"
+
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:258
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}"
+msgstr "ลบแล้ว {removed} รายการ, ลบไม่ได้ {failed} รายการ: {names}"
 
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:32
 msgid "SIMULER UNE REQUÊTE"
@@ -15845,6 +15869,15 @@ msgstr "ไฟล์การตั้งค่า WordPress"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "การสำรวจปลั๊กอิน/ธีม WordPress ทั่วไป"
+
+#~ msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
+#~ msgstr "ไฟล์ทั้งหมดในโฟลเดอร์ภาพหน้าจอจะถูกลบอย่างถาวร"
+
+#~ msgid "Exports supprimés."
+#~ msgstr "ลบไฟล์ส่งออกแล้ว"
+
+#~ msgid "Screenshots supprimés."
+#~ msgstr "ลบภาพหน้าจอแล้ว"
 
 #~ msgid "Formats : json, csv, markdown. Politique de partage : local_only ou manual_export."
 #~ msgstr "รูปแบบ: json, csv, markdown นโยบายการแบ่งปัน: local_only หรือ manual_export"

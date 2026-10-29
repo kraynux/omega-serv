@@ -5,8 +5,19 @@ domain/ et application/ ne connaissent jamais pathlib.Path ni les
 appels systeme reels directement (charte §2.3)."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+
+@dataclass(frozen=True)
+class PathInfo:
+    """Ce qu'un seul `stat()` dit d'un chemin (liens suivis) : type, taille, date."""
+
+    is_file: bool
+    is_dir: bool
+    size: int
+    mtime: float
 
 
 class FilesystemPort(Protocol):
@@ -37,6 +48,14 @@ class FilesystemPort(Protocol):
         """Taille en octets, sans lire le contenu - necessaire pour
         repondre a une requete HEAD sans charger le fichier entier en
         memoire."""
+        ...
+
+    def path_info(self, path: Path) -> PathInfo | None:
+        """Type, taille et date en UN appel systeme, ou None si le chemin
+        n'existe pas ou ne peut pas etre examine - meme regle que `is_file()` /
+        `is_dir()`, qui repondent alors False. Chemin chaud du service statique
+        (OMEGA-SERV_ANALYSE_OPTIMISATION.md §3) : 4 `stat()` du meme fichier par
+        requete (is_dir, is_file, file_size, file_mtime) remplaces par un seul."""
         ...
 
     def file_mtime(self, path: Path) -> float:

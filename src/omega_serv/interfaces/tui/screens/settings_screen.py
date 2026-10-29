@@ -12,6 +12,7 @@ des options superposables du serveur), un ecran totalement different,
 accessible uniquement depuis Configuration detaillee."""
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from omega_lib.i18n.models import LanguageStatus
@@ -22,9 +23,12 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Select, Static
 
-from omega_serv.application.terminal.clear_exports import clear_exports
-from omega_serv.application.terminal.clear_screenshots import clear_screenshots
-from omega_serv.application.terminal.exceptions import UnknownLanguageError, UnknownThemeError
+from omega_serv.application.terminal.clear_directory import ClearResult, clear_directory
+from omega_serv.application.terminal.exceptions import (
+    UnknownLanguageError,
+    UnknownThemeError,
+    UnsafeDirectoryError,
+)
 from omega_serv.application.terminal.select_language import (
     EXPORT_LANGUAGE_KEY,
     available_languages,
@@ -206,30 +210,52 @@ class SettingsScreen(OmegaScreen):
         if event.button.id == "back":
             self.dismiss()
         elif event.button.id == "clear-exports":
-            self.app.push_screen(
-                ConfirmScreen(
-                    title=_("SUPPRIMER LES EXPORTS ?"),
-                    message=_("Tous les fichiers du dossier d'export seront définitivement supprimés."),
-                ),
-                self._clear_exports_if_confirmed,
-            )
+            self._confirm_clear(_EXPORTS_DIR_KEY, self._container.default_exports_dir, _("SUPPRIMER LES EXPORTS ?"))
         elif event.button.id == "clear-screenshots":
-            self.app.push_screen(
-                ConfirmScreen(
-                    title=_("SUPPRIMER LES SCREENSHOTS ?"),
-                    message=_("Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."),
-                ),
-                self._clear_screenshots_if_confirmed,
-            )
+            self._confirm_clear(_SCREENSHOTS_DIR_KEY, self._container.default_screenshots_dir,
+                                _("SUPPRIMER LES SCREENSHOTS ?"))
 
-    def _clear_exports_if_confirmed(self, confirmed: bool | None) -> None:
+    def _configured_dir(self, key: str, default: Path) -> Path:
+        """Dossier reellement utilise (meme regle que les ecrans d'export et la capture d'ecran :
+        le champ de Reglages s'il est rempli, sinon le dossier par defaut). Correctif
+        2026-10-27 : la purge videait toujours le dossier par defaut."""
+        override = (self._container.settings_store.get(key, "") or "").strip()
+        return Path(override).expanduser() if override else default
+
+    def _confirm_clear(self, key: str, default: Path, title: str) -> None:
+        directory = self._configured_dir(key, default)
+        self.app.push_screen(
+            ConfirmScreen(
+                title=title,
+                message=_("Tout le contenu de ce dossier sera définitivement supprimé :\n{directory}").format(
+                    directory=directory),
+            ),
+            lambda confirmed: self._clear_if_confirmed(directory, confirmed),
+        )
+
+    def _clear_if_confirmed(self, directory: Path, confirmed: bool | None) -> None:
         if not confirmed:
             return
-        clear_exports(self._container.default_exports_dir)
-        self.app.notify(_("Exports supprimés."))
+        self.app.notify(_("Suppression en cours..."), timeout=3)
+        # Dans un thread : un gros dossier ne fige jamais l'interface pendant la suppression.
+        self.run_worker(lambda: self._clear_in_thread(directory), thread=True, exclusive=True)
 
-    def _clear_screenshots_if_confirmed(self, confirmed: bool | None) -> None:
-        if not confirmed:
+    def _clear_in_thread(self, directory: Path) -> None:
+        try:
+            result = clear_directory(directory, self._container.project_root)
+        except (UnsafeDirectoryError, OSError) as exc:
+            self.app.call_from_thread(self.app.notify, str(exc), severity="error", timeout=10)
             return
-        clear_screenshots(self._container.default_screenshots_dir)
-        self.app.notify(_("Screenshots supprimés."))
+        self.app.call_from_thread(self._on_cleared, result)
+
+    def _on_cleared(self, result: ClearResult) -> None:
+        if not result.failed:
+            self.app.notify(_("{removed} élément(s) supprimé(s) : {directory}").format(
+                removed=result.removed, directory=result.directory))
+            return
+        shown = ", ".join(result.failed[:3]) + (" ..." if len(result.failed) > 3 else "")
+        self.app.notify(
+            _("{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}").format(
+                removed=result.removed, failed=len(result.failed), names=shown),
+            severity="warning", timeout=15,
+        )

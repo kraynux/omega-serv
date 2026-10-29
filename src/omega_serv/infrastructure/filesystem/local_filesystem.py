@@ -9,6 +9,8 @@ import stat
 import threading
 from pathlib import Path
 
+from omega_serv.ports.filesystem_port import PathInfo
+
 
 class LocalFilesystem:
     """Implementation reelle de ports.filesystem_port.FilesystemPort."""
@@ -36,6 +38,20 @@ class LocalFilesystem:
 
     def file_mtime(self, path: Path) -> float:
         return path.stat().st_mtime
+
+    def path_info(self, path: Path) -> PathInfo | None:
+        # Memes erreurs ignorees que Path.is_file() / is_dir() (os.path.isfile) :
+        # chemin absent, composant qui n'est pas un dossier, droits, nom invalide.
+        try:
+            result = os.stat(path)
+        except (OSError, ValueError):
+            return None
+        return PathInfo(
+            is_file=stat.S_ISREG(result.st_mode),
+            is_dir=stat.S_ISDIR(result.st_mode),
+            size=result.st_size,
+            mtime=result.st_mtime,
+        )
 
     def write_text(self, path: Path, content: str) -> None:
         path.write_text(content, encoding="utf-8")

@@ -246,5 +246,47 @@ class TestServeStaticFile(unittest.TestCase):
         self.assertNotIn("Cache-Control", response.headers)
 
 
+
+class TestOneStatPerServedFile(unittest.TestCase):
+    """OMEGA-SERV_ANALYSE_OPTIMISATION.md §3 : le fichier servi n'est examine
+    qu'une fois (path_info), plus par is_dir + is_file + file_size + file_mtime."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.webroot = Path(self._tmp.name) / "webroot"
+        (self.webroot / "docs").mkdir(parents=True)
+        (self.webroot / "page.html").write_text("<html>ok</html>")
+        (self.webroot / "docs" / "index.html").write_text("index")
+        self.filesystem = LocalFilesystem()
+        self.resolver = SafePathResolver(self.filesystem, self.webroot)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _serve(self, path):
+        return serve_static_file(
+            _make_request("GET", path), self.resolver, self.filesystem, SecurityConfig(), index_files=("index.html",),
+        )
+
+    def test_file_examined_once_with_the_old_calls_unused(self):
+        from unittest.mock import patch
+        with patch.object(LocalFilesystem, "path_info", autospec=True, side_effect=LocalFilesystem.path_info) as info, \
+                patch.object(LocalFilesystem, "is_file", side_effect=AssertionError("is_file")), \
+                patch.object(LocalFilesystem, "is_dir", side_effect=AssertionError("is_dir")), \
+                patch.object(LocalFilesystem, "file_size", side_effect=AssertionError("file_size")), \
+                patch.object(LocalFilesystem, "file_mtime", side_effect=AssertionError("file_mtime")):
+            response = self._serve("/page.html")
+            self.assertEqual(response.status, HttpStatus.OK)
+            self.assertEqual(response.body, b"<html>ok</html>")
+            examined = [call.args[1].name for call in info.call_args_list]
+        # page.html, puis page.html.br et page.html.gz (pre-compresses, absents)
+        self.assertEqual(examined.count("page.html"), 1)
+
+    def test_directory_index_and_missing_file(self):
+        response = self._serve("/docs/")
+        self.assertEqual(response.status, HttpStatus.OK)
+        self.assertEqual(response.body, b"index")
+        self.assertEqual(self._serve("/absent.html").status, HttpStatus.NOT_FOUND)
+
 if __name__ == "__main__":
     unittest.main()

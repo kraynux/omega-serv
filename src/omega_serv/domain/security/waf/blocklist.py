@@ -84,6 +84,76 @@ def find_matching_entry(ip: str, entries: list[BlocklistEntry], now: datetime) -
     return None
 
 
+class BlocklistIndex:
+    """Meme resultat que `find_matching_entry` (premiere entree non expiree,
+    dans l'ordre du fichier, dont le reseau contient l'IP), sans rien reparser
+    a chaque requete (OMEGA-SERV_ANALYSE_OPTIMISATION.md §1) : chaque reseau et
+    chaque date ne sont analyses qu'une fois, a la construction. Une IP seule
+    (/32, /128 - tous les bans automatiques) est trouvee directement dans une
+    table ; seuls les vrais reseaux sont parcourus.
+
+    Mesure (2026-10-29, 1 processus, WAF actif) : `find_matching_entry` coutait
+    ~16 us par entree et par requete - 100 entrees (plafond des bans automatiques)
+    = 1,6 ms par requete, debit -65 % pour TOUT le trafic, au moment ou une
+    attaque remplit la liste. Avec l'index, le cout ne depend plus du nombre de
+    bans d'IP seules.
+
+    Une date d'expiration illisible leve `ValueError` au moment ou l'entree est
+    examinee, exactement comme `_is_expired` - jamais une entree ignoree en
+    silence ni une erreur a la construction."""
+
+    def __init__(self, entries: list[BlocklistEntry]):
+        self._exact: dict[ipaddress.IPv4Address | ipaddress.IPv6Address, list[tuple[int, BlocklistEntry, object]]] = {}
+        self._networks: list[tuple[int, ipaddress.IPv4Network | ipaddress.IPv6Network, BlocklistEntry, object]] = []
+        for position, entry in enumerate(entries):
+            try:
+                network = ipaddress.ip_network(entry.network, strict=False)
+            except ValueError:
+                continue
+            expiry = _parsed_expiry(entry.expires_at)
+            if network.num_addresses == 1:
+                self._exact.setdefault(network.network_address, []).append((position, entry, expiry))
+            else:
+                self._networks.append((position, network, entry, expiry))
+
+    def find(self, ip: str, now: datetime) -> BlocklistEntry | None:
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            return None
+        best_position: int | None = None
+        best: BlocklistEntry | None = None
+        for position, entry, expiry in self._exact.get(addr, ()):
+            if not _expired_at(expiry, now):
+                best_position, best = position, entry
+                break
+        for position, network, entry, expiry in self._networks:
+            if best_position is not None and position > best_position:
+                break
+            if addr in network and not _expired_at(expiry, now):
+                return entry
+        return best
+
+
+def _parsed_expiry(expires_at: str | None) -> object:
+    """None (jamais), la date, ou l'erreur a relever quand l'entree sera examinee."""
+    if expires_at is None:
+        return None
+    try:
+        expires = datetime.fromisoformat(expires_at)
+    except ValueError as e:
+        return e
+    return expires if expires.tzinfo is not None else expires.replace(tzinfo=timezone.utc)
+
+
+def _expired_at(expiry: object, now: datetime) -> bool:
+    if expiry is None:
+        return False
+    if isinstance(expiry, ValueError):
+        raise expiry
+    return now >= expiry  # type: ignore[operator]
+
+
 def purge_expired(entries: list[BlocklistEntry], now: datetime) -> tuple[list[BlocklistEntry], int]:
     kept = [e for e in entries if not _is_expired(e, now)]
     return kept, len(entries) - len(kept)

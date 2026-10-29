@@ -8,6 +8,15 @@ from omega_serv.core.exceptions import OmegaServError
 from omega_serv.core.i18n import _
 
 
+class UnsafeDirectoryError(OmegaServError):
+    """Dossier qu'on refuse de vider (application/terminal/clear_directory.py)."""
+
+    def __init__(self, path: str, reason: str):
+        self.path = path
+        self.reason = reason
+        super().__init__(_("Dossier refusé ({reason}) : {path}").format(reason=reason, path=path))
+
+
 class UnknownThemeError(OmegaServError):
     def __init__(self, theme_name: str):
         self.theme_name = theme_name

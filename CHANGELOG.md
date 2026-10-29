@@ -13,6 +13,29 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## Non publié
+
+### Corrigé
+
+- **Blocklist : le serveur ralentissait à mesure que la liste se remplissait** (sécurité,
+  robustesse sous attaque). Chaque requête réanalysait toutes les entrées de la blocklist
+  (réseau et date d'expiration), entrées expirées comprises : ~16 µs par entrée et par requête.
+  Avec 100 entrées (le plafond des bannissements automatiques), le débit tombait de ~1 000 à
+  ~330 requêtes par seconde pour **tout** le trafic — au moment même où une attaque remplit la
+  liste. Les entrées sont désormais analysées une seule fois, quand la liste change ; une IP
+  seule (tous les bannissements automatiques) est trouvée directement. Mesuré : 100 entrées →
+  944 à 988 requêtes par seconde, le même niveau qu'avec une liste vide. **Aucun changement de
+  comportement** : la même entrée bloque la même IP, dans le même ordre, avec les mêmes
+  expirations (vérifié sur 3 000 listes aléatoires contre l'ancienne recherche).
+
+### Modifié
+
+- Fichiers statiques : le fichier demandé n'est plus examiné qu'une fois (un seul appel système
+  au lieu de quatre pour son type, sa taille et sa date), de même que ses variantes `.br` / `.gz`.
+  Environ 20 µs de moins par requête (~2 %). Aucun changement de comportement.
+
+Aucun texte affiché modifié : rien à reporter dans les traductions.
+
 ## version 2.0.0 : Publié
 
 

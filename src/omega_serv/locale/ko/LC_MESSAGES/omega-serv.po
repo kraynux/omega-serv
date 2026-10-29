@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 07:37+0100\n"
+"POT-Creation-Date: 2026-10-27 19:42+0100\n"
 "PO-Revision-Date: 2026-10-23 23:55+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 한국어\n"
@@ -705,11 +705,28 @@ msgstr "부팅 시 활성화됨"
 msgid "désactivé au démarrage"
 msgstr "부팅 시 비활성화됨"
 
-#: src/omega_serv/application/terminal/exceptions.py:14
+#: src/omega_serv/application/terminal/clear_directory.py:41
+msgid "dossier système ou personnel"
+msgstr "시스템 또는 개인 폴더"
+
+#: src/omega_serv/application/terminal/clear_directory.py:43
+msgid "contient l'installation d'omega-serv"
+msgstr "omega-serv 설치 위치를 포함함"
+
+#: src/omega_serv/application/terminal/clear_directory.py:45
+msgid "ce n'est pas un dossier"
+msgstr "폴더가 아닙니다"
+
+#: src/omega_serv/application/terminal/exceptions.py:17
+#, python-brace-format
+msgid "Dossier refusé ({reason}) : {path}"
+msgstr "폴더 거부됨 ({reason}): {path}"
+
+#: src/omega_serv/application/terminal/exceptions.py:23
 msgid "thème inconnu : {theme_name!r}"
 msgstr "알 수 없는 테마: {theme_name!r}"
 
-#: src/omega_serv/application/terminal/exceptions.py:20
+#: src/omega_serv/application/terminal/exceptions.py:29
 msgid "langue inconnue : {language_code!r}"
 msgstr "알 수 없는 언어: {language_code!r}"
 
@@ -3463,7 +3480,7 @@ msgstr "현재 테마 변경"
 
 #: src/omega_serv/interfaces/tui/app.py:243
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:173
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
 msgid "Thème"
 msgstr "테마"
 
@@ -4906,7 +4923,7 @@ msgid "Effet immédiat, aucun redémarrage nécessaire."
 msgstr "즉시 반영되며 재시작이 필요 없습니다."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:180
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Profil de rendu"
 msgstr "렌더링 프로필"
 
@@ -4963,7 +4980,7 @@ msgid "Effet immédiat sur les prochains exports/captures."
 msgstr "다음 내보내기/스크린샷부터 즉시 반영."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:214
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:105
 msgid "Langue des exports"
 msgstr "내보내기 언어"
 
@@ -10155,7 +10172,7 @@ msgstr "설정에 options.active_defense가 없거나 비활성화되어 있습�
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/server_config_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/service_screen.py:116
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:127
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:54
@@ -14272,87 +14289,94 @@ msgstr "전용 시스템 계정({DEFAULT_SYSTEM_GROUP})을 위해 var/와 secure
 msgid "OMEGA-SERV web server"
 msgstr "OMEGA-SERV web server"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 msgid "en test"
 msgstr "테스트 중"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 #, python-brace-format
 msgid "{label} ({value})"
 msgstr "{label} ({value})"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:78
 msgid "RÉGLAGES"
 msgstr "설정"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:84
 msgid "Profil de rendu (redémarrage requis)"
 msgstr "렌더링 프로필(재시작 필요)"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:87
 msgid "Automatique"
 msgstr "자동"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:98
 msgid "Export"
 msgstr "내보내기"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:107
 msgid "Comme l'interface"
 msgstr "인터페이스와 같음"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:109
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:113
 msgid "Captures d'écran"
 msgstr "스크린샷"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:119
 msgid "Purge"
 msgstr "정리"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:122
 msgid "Supprimer les exports"
 msgstr "내보내기 삭제"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:124
 msgid "Supprimer les screenshots"
 msgstr "스크린샷 삭제"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:178
 msgid "REDÉMARRER L'INTERFACE ?"
 msgstr "인터페이스를 재시작하시겠습니까?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:176
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:180
 #, python-brace-format
 msgid "La langue « {name} » sera appliquée après le redémarrage de l'interface. Le serveur (service) n'est pas concerne et continue de tourner."
 msgstr "언어 « {name} »은(는) 인터페이스를 재시작한 뒤 적용됩니다. 서버(서비스)에는 영향이 없으며 계속 실행됩니다."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Appliqué au prochain démarrage."
 msgstr "다음 시작 시 적용됩니다."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:211
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:213
 msgid "SUPPRIMER LES EXPORTS ?"
 msgstr "내보내기를 삭제하시겠습니까?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:212
-msgid "Tous les fichiers du dossier d'export seront définitivement supprimés."
-msgstr "내보내기 폴더의 모든 파일이 영구 삭제됩니다."
-
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:219
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:216
 msgid "SUPPRIMER LES SCREENSHOTS ?"
 msgstr "스크린샷을 삭제하시겠습니까?"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:220
-msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
-msgstr "스크린샷 폴더의 모든 파일이 영구 삭제됩니다."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:230
+#, python-brace-format
+msgid ""
+"Tout le contenu de ce dossier sera définitivement supprimé :\n"
+"{directory}"
+msgstr ""
+"이 폴더의 모든 내용이 영구 삭제됩니다:\n"
+"{directory}"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:229
-msgid "Exports supprimés."
-msgstr "내보내기를 삭제했습니다."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:239
+msgid "Suppression en cours..."
+msgstr "삭제 중..."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:235
-msgid "Screenshots supprimés."
-msgstr "스크린샷을 삭제했습니다."
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:253
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s) : {directory}"
+msgstr "{removed}개 항목 삭제됨: {directory}"
+
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:258
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}"
+msgstr "{removed}개 항목 삭제됨, {failed}개 삭제 불가: {names}"
 
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:32
 msgid "SIMULER UNE REQUÊTE"
@@ -15845,6 +15869,15 @@ msgstr "WordPress 설정 파일"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "일반적인 WordPress 플러그인/테마 탐색"
+
+#~ msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
+#~ msgstr "스크린샷 폴더의 모든 파일이 영구 삭제됩니다."
+
+#~ msgid "Exports supprimés."
+#~ msgstr "내보내기를 삭제했습니다."
+
+#~ msgid "Screenshots supprimés."
+#~ msgstr "스크린샷을 삭제했습니다."
 
 #~ msgid "Formats : json, csv, markdown. Politique de partage : local_only ou manual_export."
 #~ msgstr "형식: json, csv, markdown. 공유 정책: local_only 또는 manual_export."

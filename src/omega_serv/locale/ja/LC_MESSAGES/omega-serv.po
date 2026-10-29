@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 07:37+0100\n"
+"POT-Creation-Date: 2026-10-27 19:42+0100\n"
 "PO-Revision-Date: 2026-10-23 23:50+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 日本語\n"
@@ -705,11 +705,28 @@ msgstr "起動時に有効化しました"
 msgid "désactivé au démarrage"
 msgstr "起動時に無効化しました"
 
-#: src/omega_serv/application/terminal/exceptions.py:14
+#: src/omega_serv/application/terminal/clear_directory.py:41
+msgid "dossier système ou personnel"
+msgstr "システムまたは個人のフォルダー"
+
+#: src/omega_serv/application/terminal/clear_directory.py:43
+msgid "contient l'installation d'omega-serv"
+msgstr "omega-serv のインストール先を含んでいます"
+
+#: src/omega_serv/application/terminal/clear_directory.py:45
+msgid "ce n'est pas un dossier"
+msgstr "フォルダーではありません"
+
+#: src/omega_serv/application/terminal/exceptions.py:17
+#, python-brace-format
+msgid "Dossier refusé ({reason}) : {path}"
+msgstr "フォルダーを拒否しました（{reason}）: {path}"
+
+#: src/omega_serv/application/terminal/exceptions.py:23
 msgid "thème inconnu : {theme_name!r}"
 msgstr "不明なテーマ：{theme_name!r}"
 
-#: src/omega_serv/application/terminal/exceptions.py:20
+#: src/omega_serv/application/terminal/exceptions.py:29
 msgid "langue inconnue : {language_code!r}"
 msgstr "不明な言語：{language_code!r}"
 
@@ -3463,7 +3480,7 @@ msgstr "現在のテーマを変更"
 
 #: src/omega_serv/interfaces/tui/app.py:243
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:173
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
 msgid "Thème"
 msgstr "テーマ"
 
@@ -4906,7 +4923,7 @@ msgid "Effet immédiat, aucun redémarrage nécessaire."
 msgstr "即時に反映され、再起動は不要です。"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:180
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Profil de rendu"
 msgstr "描画プロファイル"
 
@@ -4963,7 +4980,7 @@ msgid "Effet immédiat sur les prochains exports/captures."
 msgstr "次回以降のエクスポート/スクリーンショットに即時反映。"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:214
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:105
 msgid "Langue des exports"
 msgstr "エクスポートの言語"
 
@@ -10155,7 +10172,7 @@ msgstr "設定に options.active_defense がないか、無効になっていま
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/server_config_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/service_screen.py:116
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:127
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:54
@@ -14272,87 +14289,94 @@ msgstr "専用のシステムアカウント（{DEFAULT_SYSTEM_GROUP}）向け�
 msgid "OMEGA-SERV web server"
 msgstr "OMEGA-SERV web server"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 msgid "en test"
 msgstr "テスト中"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 #, python-brace-format
 msgid "{label} ({value})"
 msgstr "{label}（{value}）"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:78
 msgid "RÉGLAGES"
 msgstr "設定"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:84
 msgid "Profil de rendu (redémarrage requis)"
 msgstr "描画プロファイル（再起動が必要）"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:87
 msgid "Automatique"
 msgstr "自動"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:98
 msgid "Export"
 msgstr "エクスポート"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:107
 msgid "Comme l'interface"
 msgstr "インターフェースと同じ"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:109
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:113
 msgid "Captures d'écran"
 msgstr "スクリーンショット"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:119
 msgid "Purge"
 msgstr "削除"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:122
 msgid "Supprimer les exports"
 msgstr "エクスポートを削除"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:124
 msgid "Supprimer les screenshots"
 msgstr "スクリーンショットを削除"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:178
 msgid "REDÉMARRER L'INTERFACE ?"
 msgstr "インターフェースを再起動しますか？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:176
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:180
 #, python-brace-format
 msgid "La langue « {name} » sera appliquée après le redémarrage de l'interface. Le serveur (service) n'est pas concerne et continue de tourner."
 msgstr "言語「{name}」はインターフェースの再起動後に適用されます。サーバー（サービス）には影響せず、動作し続けます。"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Appliqué au prochain démarrage."
 msgstr "次回の起動時に適用されます。"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:211
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:213
 msgid "SUPPRIMER LES EXPORTS ?"
 msgstr "エクスポートを削除しますか？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:212
-msgid "Tous les fichiers du dossier d'export seront définitivement supprimés."
-msgstr "エクスポート用フォルダーのファイルはすべて完全に削除されます。"
-
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:219
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:216
 msgid "SUPPRIMER LES SCREENSHOTS ?"
 msgstr "スクリーンショットを削除しますか？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:220
-msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
-msgstr "スクリーンショット用フォルダーのファイルはすべて完全に削除されます。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:230
+#, python-brace-format
+msgid ""
+"Tout le contenu de ce dossier sera définitivement supprimé :\n"
+"{directory}"
+msgstr ""
+"このフォルダーの内容はすべて完全に削除されます:\n"
+"{directory}"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:229
-msgid "Exports supprimés."
-msgstr "エクスポートを削除しました。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:239
+msgid "Suppression en cours..."
+msgstr "削除中..."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:235
-msgid "Screenshots supprimés."
-msgstr "スクリーンショットを削除しました。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:253
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s) : {directory}"
+msgstr "{removed} 件を削除しました: {directory}"
+
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:258
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}"
+msgstr "{removed} 件を削除、{failed} 件は削除できませんでした: {names}"
 
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:32
 msgid "SIMULER UNE REQUÊTE"
@@ -15845,6 +15869,15 @@ msgstr "WordPress の設定ファイル"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "WordPress のプラグイン/テーマの汎用的な探索"
+
+#~ msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
+#~ msgstr "スクリーンショット用フォルダーのファイルはすべて完全に削除されます。"
+
+#~ msgid "Exports supprimés."
+#~ msgstr "エクスポートを削除しました。"
+
+#~ msgid "Screenshots supprimés."
+#~ msgstr "スクリーンショットを削除しました。"
 
 #~ msgid "Formats : json, csv, markdown. Politique de partage : local_only ou manual_export."
 #~ msgstr "形式：json、csv、markdown。共有ポリシー：local_only または manual_export。"

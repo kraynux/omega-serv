@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 07:37+0100\n"
+"POT-Creation-Date: 2026-10-27 19:42+0100\n"
 "PO-Revision-Date: 2026-10-22 12:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 简体中文\n"
@@ -704,11 +704,28 @@ msgstr "已设为开机启动"
 msgid "désactivé au démarrage"
 msgstr "已取消开机启动"
 
-#: src/omega_serv/application/terminal/exceptions.py:14
+#: src/omega_serv/application/terminal/clear_directory.py:41
+msgid "dossier système ou personnel"
+msgstr "系统目录或个人目录"
+
+#: src/omega_serv/application/terminal/clear_directory.py:43
+msgid "contient l'installation d'omega-serv"
+msgstr "包含 omega-serv 的安装"
+
+#: src/omega_serv/application/terminal/clear_directory.py:45
+msgid "ce n'est pas un dossier"
+msgstr "不是目录"
+
+#: src/omega_serv/application/terminal/exceptions.py:17
+#, python-brace-format
+msgid "Dossier refusé ({reason}) : {path}"
+msgstr "目录被拒绝（{reason}）：{path}"
+
+#: src/omega_serv/application/terminal/exceptions.py:23
 msgid "thème inconnu : {theme_name!r}"
 msgstr "未知主题：{theme_name!r}"
 
-#: src/omega_serv/application/terminal/exceptions.py:20
+#: src/omega_serv/application/terminal/exceptions.py:29
 msgid "langue inconnue : {language_code!r}"
 msgstr "未知语言：{language_code!r}"
 
@@ -3462,7 +3479,7 @@ msgstr "更改当前主题"
 
 #: src/omega_serv/interfaces/tui/app.py:243
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:173
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
 msgid "Thème"
 msgstr "主题"
 
@@ -4905,7 +4922,7 @@ msgid "Effet immédiat, aucun redémarrage nécessaire."
 msgstr "立即生效，无需重启。"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:180
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Profil de rendu"
 msgstr "渲染配置"
 
@@ -4962,7 +4979,7 @@ msgid "Effet immédiat sur les prochains exports/captures."
 msgstr "对之后的导出/截图立即生效。"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:214
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:105
 msgid "Langue des exports"
 msgstr "导出语言"
 
@@ -10154,7 +10171,7 @@ msgstr "配置中缺少 options.active_defense 或已禁用。"
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/server_config_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/service_screen.py:116
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:127
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:54
@@ -14271,87 +14288,94 @@ msgstr "为专用系统账户（{DEFAULT_SYSTEM_GROUP}）重新应用 var/ 和 s
 msgid "OMEGA-SERV web server"
 msgstr "OMEGA-SERV web server"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 msgid "en test"
 msgstr "测试中"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:64
 #, python-brace-format
 msgid "{label} ({value})"
 msgstr "{label}（{value}）"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:78
 msgid "RÉGLAGES"
 msgstr "设置"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:84
 msgid "Profil de rendu (redémarrage requis)"
 msgstr "渲染配置（需要重启）"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:87
 msgid "Automatique"
 msgstr "自动"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:98
 msgid "Export"
 msgstr "导出"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:107
 msgid "Comme l'interface"
 msgstr "与界面相同"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:109
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:113
 msgid "Captures d'écran"
 msgstr "截图"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:119
 msgid "Purge"
 msgstr "清除"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:122
 msgid "Supprimer les exports"
 msgstr "删除导出文件"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:124
 msgid "Supprimer les screenshots"
 msgstr "删除截图"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:178
 msgid "REDÉMARRER L'INTERFACE ?"
 msgstr "重启界面？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:176
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:180
 #, python-brace-format
 msgid "La langue « {name} » sera appliquée après le redémarrage de l'interface. Le serveur (service) n'est pas concerne et continue de tourner."
 msgstr "语言“{name}”将在界面重启后应用。服务器（服务）不受影响，会继续运行。"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:203
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:207
 msgid "Appliqué au prochain démarrage."
 msgstr "将在下次启动时应用。"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:211
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:213
 msgid "SUPPRIMER LES EXPORTS ?"
 msgstr "删除导出文件？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:212
-msgid "Tous les fichiers du dossier d'export seront définitivement supprimés."
-msgstr "导出目录中的所有文件都将被永久删除。"
-
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:219
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:216
 msgid "SUPPRIMER LES SCREENSHOTS ?"
 msgstr "删除截图？"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:220
-msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
-msgstr "截图目录中的所有文件都将被永久删除。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:230
+#, python-brace-format
+msgid ""
+"Tout le contenu de ce dossier sera définitivement supprimé :\n"
+"{directory}"
+msgstr ""
+"此目录中的所有内容都将被永久删除：\n"
+"{directory}"
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:229
-msgid "Exports supprimés."
-msgstr "导出文件已删除。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:239
+msgid "Suppression en cours..."
+msgstr "正在删除..."
 
-#: src/omega_serv/interfaces/tui/screens/settings_screen.py:235
-msgid "Screenshots supprimés."
-msgstr "截图已删除。"
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:253
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s) : {directory}"
+msgstr "已删除 {removed} 项：{directory}"
+
+#: src/omega_serv/interfaces/tui/screens/settings_screen.py:258
+#, python-brace-format
+msgid "{removed} élément(s) supprimé(s), {failed} impossible(s) à supprimer : {names}"
+msgstr "已删除 {removed} 项，{failed} 项无法删除：{names}"
 
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:32
 msgid "SIMULER UNE REQUÊTE"
@@ -15844,6 +15868,15 @@ msgstr "WordPress 配置文件"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "通用 WordPress 插件/主题探测"
+
+#~ msgid "Tous les fichiers du dossier de captures d'écran seront définitivement supprimés."
+#~ msgstr "截图目录中的所有文件都将被永久删除。"
+
+#~ msgid "Exports supprimés."
+#~ msgstr "导出文件已删除。"
+
+#~ msgid "Screenshots supprimés."
+#~ msgstr "截图已删除。"
 
 #~ msgid "Formats : json, csv, markdown. Politique de partage : local_only ou manual_export."
 #~ msgstr "格式：json、csv、markdown。共享策略：local_only 或 manual_export。"

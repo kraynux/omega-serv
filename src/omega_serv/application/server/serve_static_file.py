@@ -60,11 +60,16 @@ def serve_static_file(
     target_path = resolved.absolute_path
     assert target_path is not None  # garanti par resolved.ok
 
-    if filesystem.is_dir(target_path):
+    # Un seul stat() par chemin examine (OMEGA-SERV_ANALYSE_OPTIMISATION.md §3) : type,
+    # taille et date viennent du meme appel, au lieu de is_dir + is_file + file_size +
+    # file_mtime.
+    info = filesystem.path_info(target_path)
+    if info is not None and info.is_dir:
         for index_name in index_files:
             candidate = target_path / index_name
-            if filesystem.is_file(candidate):
-                target_path = candidate
+            candidate_info = filesystem.path_info(candidate)
+            if candidate_info is not None and candidate_info.is_file:
+                target_path, info = candidate, candidate_info
                 break
         else:
             if resolve_zone(effective_display_path, list(dirlisting_zones)) is not None:
@@ -73,7 +78,7 @@ def serve_static_file(
                 )
             return HttpResponse.empty(HttpStatus.NOT_FOUND)
 
-    if not filesystem.is_file(target_path):
+    if info is None or not info.is_file:
         return HttpResponse.empty(HttpStatus.NOT_FOUND)
 
     response = HttpResponse.empty(HttpStatus.OK)
@@ -83,8 +88,8 @@ def serve_static_file(
             "Cache-Control", resolve_cache_control(effective_display_path, target_path.name, cache_policy)
         )
 
-    size = filesystem.file_size(target_path)
-    mtime = filesystem.file_mtime(target_path)
+    size = info.size
+    mtime = info.mtime
     etag = make_etag(size, mtime)
     if is_compressible(target_path.name):
         # Etude performance, priorite 5 : version pre-compressee a cote de l'original.
@@ -137,14 +142,14 @@ def _precompressed_variant(
     ignore) et au moins aussi recent que lui (jamais une version perimee)."""
     for encoding, suffix in preferred_encodings(request.header("accept-encoding")):
         candidate = original.with_name(original.name + suffix)
-        if not filesystem.is_file(candidate):
+        info = filesystem.path_info(candidate)
+        if info is None or not info.is_file:
             continue
         if filesystem.resolve_real_path(candidate).parent != original.parent:
             continue
-        candidate_mtime = filesystem.file_mtime(candidate)
-        if candidate_mtime < original_mtime:
+        if info.mtime < original_mtime:
             continue
-        return encoding, candidate, filesystem.file_size(candidate), candidate_mtime
+        return encoding, candidate, info.size, info.mtime
     return None
 
 

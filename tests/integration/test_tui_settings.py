@@ -119,7 +119,49 @@ class TestTuiSettings(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
         self.assertFalse((container.default_exports_dir / "leftover.json").exists())
+
+    async def test_clear_exports_empties_configured_folder_not_default(self):
+        """Correctif 2026-10-27 : la purge videait le dossier PAR DEFAUT meme quand un autre
+        dossier etait configure."""
+        container = self._container()
+        container.default_exports_dir.mkdir(parents=True)
+        (container.default_exports_dir / "garder.json").write_text("{}")
+        custom = self.root / "mes-exports"
+        custom.mkdir()
+        (custom / "vieux.html").write_text("x")
+        container.settings_store.set("exports_dir_override", str(custom))
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_settings(pilot)
+            pilot.app.screen.query_one("#clear-exports", Button).press()
+            await pilot.pause()
+            self.assertIn(str(custom), str(pilot.app.screen._message))
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+        self.assertEqual(list(custom.iterdir()), [])
+        self.assertTrue((container.default_exports_dir / "garder.json").exists())
+
+    async def test_clear_refuses_system_folder(self):
+        container = self._container()
+        container.settings_store.set("exports_dir_override", "/etc")
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_settings(pilot)
+            pilot.app.screen.query_one("#clear-exports", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            messages = [n.message for n in pilot.app._notifications]
+        self.assertTrue(any("Dossier refusé" in m for m in messages), messages)
 
     async def test_clear_screenshots_cancelled_keeps_files(self):
         container = self._container()

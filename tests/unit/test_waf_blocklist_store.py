@@ -130,6 +130,18 @@ class TestJsonBlocklistStoreCache(unittest.TestCase):
 
         self.assertIsNone(self.store.is_blocked("203.0.113.25"))
 
+    def test_index_rebuilt_only_when_the_list_changes(self):
+        from omega_serv.infrastructure.waf import blocklist_store
+        entry = BlocklistEntry(network="203.0.113.25/32", reason="test", created_at=self.now.isoformat())
+        self.store.add_entry(entry)
+        with patch.object(blocklist_store, "BlocklistIndex", wraps=blocklist_store.BlocklistIndex) as spy:
+            for _ in range(10):
+                self.assertIsNotNone(self.store.is_blocked("203.0.113.25"))
+            self.assertEqual(spy.call_count, 1)
+            self.store.add_entry(BlocklistEntry(network="198.51.100.0/24", reason="test", created_at=self.now.isoformat()))
+            self.assertIsNotNone(self.store.is_blocked("198.51.100.4"))
+            self.assertEqual(spy.call_count, 2)
+
     def test_missing_file_clears_a_previously_warm_cache(self):
         entry = BlocklistEntry(network="203.0.113.25/32", reason="test", created_at=self.now.isoformat())
         self.store.add_entry(entry)
