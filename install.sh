@@ -25,9 +25,9 @@ warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 err()  { echo -e "${RED}❌ $1${NC}"; }
 tip()  { echo -e "${WHITE}💡 $1${NC}"; }
 
-echo -e "${WHITE}    ░▒▓█████████████████████████████████████████████▓▒░${NC}"
+echo -e "${WHITE}    ░▒▓████████████████████████████████████████████▓▒░${NC}"
 echo -e "${WHITE}    ░▒▓ Ω M E G A - SERV — I N S T A L L A T I O N ▓▒░${NC}"
-echo -e "${WHITE}    ░▒▓█████████████████████████████████████████████▓▒░${NC}"
+echo -e "${WHITE}    ░▒▓████████████████████████████████████████████▓▒░${NC}"
 echo ""
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
