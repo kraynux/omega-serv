@@ -67,10 +67,10 @@ Omega-serv **verweigert den Start als root**. In keinem mitgelieferten Profil, a
 
 ### Download
 
-Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Aktualisieren Sie eine bestehende Installation?** Der folgende Befehl **überspringt das Entpacken stillschweigend**, wenn `omega-serv/` bereits existiert (er nimmt an, es handle sich um eine abgebrochene Erstinstallation, nicht um ein Update) — Sie würden die Abhängigkeiten dann auf dem **alten, unveränderten Code** neu installieren, ohne die geringste Fehlermeldung. Verwenden Sie stattdessen den Abschnitt [Aktualisierung](#aktualisierung) weiter unten.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Hier bereits entpackt, Schritt übersprungen." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Hier bereits entpackt, Schritt übersprungen." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ Wenn `omega-serv/` bereits existiert (frühere Installation), **starten Sie `tar
 
 ```bash
 # Aus dem ÜBERGEORDNETEN Ordner von omega-serv/ (niemals von innen)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

@@ -67,10 +67,10 @@ Omega-serv **odmawia uruchomienia jako root**. Żaden moduł bezpieczeństwa (WA
 
 ### Pobieranie
 
-Archiwum najnowszej wersji i sumy kontrolne SHA-256 każdej wersji: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archiwum najnowszej wersji i sumy kontrolne SHA-256 każdej wersji: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Aktualizujesz istniejącą instalację?** Poniższe polecenie **po cichu pomija rozpakowanie**, jeśli `omega-serv/` już istnieje (zakłada, że to przerwana pierwsza instalacja, a nie aktualizacja) — przeinstalowałbyś wtedy zależności na **starym, niezmienionym kodzie**, bez najmniejszego komunikatu o błędzie. Zamiast tego użyj sekcji [Aktualizacja](#aktualizacja) poniżej.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Już tu rozpakowane, krok pominięty." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Już tu rozpakowane, krok pominięty." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ Jeśli `omega-serv/` już istnieje (poprzednia instalacja), **nigdy nie uruchami
 
 ```bash
 # Z katalogu NADRZĘDNEGO względem omega-serv/ (nigdy z wnętrza)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

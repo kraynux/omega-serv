@@ -67,10 +67,10 @@ Omega-serv **weigert te starten als root**. In geen enkel meegeleverd profiel, o
 
 ### Downloaden
 
-Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Werkt u een bestaande installatie bij?** De onderstaande opdracht **slaat het uitpakken stilzwijgend over** als `omega-serv/` al bestaat (hij gaat ervan uit dat het om een onderbroken eerste installatie gaat, niet om een update) — u zou dan de afhankelijkheden opnieuw installeren op de **oude, ongewijzigde code**, zonder ook maar één foutmelding. Gebruik in plaats daarvan het onderdeel [Bijwerken](#bijwerken) hieronder.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ Als `omega-serv/` al bestaat (eerdere installatie), **start `tar` dan nooit vanu
 
 ```bash
 # Vanuit de BOVENLIGGENDE map van omega-serv/ (nooit van binnenuit)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

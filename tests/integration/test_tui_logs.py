@@ -347,6 +347,70 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             paths, _title, _menu_label = self.lnav_calls[0]
             self.assertEqual(set(paths), {self.access_log, error_log})
 
+    async def test_view_logs_click_without_typing_opens_highlighted_log(self):
+        """Retour utilisateur 2026-10-31 : plus de numéro à compter, la ligne surlignée suffit."""
+        self.access_log.write_text("line1\n")
+        error_log = self.root / "var" / "log" / "error.log"
+        error_log.write_text("line1\n")
+        container = self._container()
+        self._generate_config(container)
+        self._add_to_library(container, self.access_log)
+        self._add_to_library(container, error_log)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_view_logs(pilot)
+            table = pilot.app.screen.query_one("#library-table", DataTable)
+            self.assertEqual(str(table.get_row_at(1)[0]), "2")
+            table.move_cursor(row=1)
+            await pilot.pause()
+            pilot.app.screen.query_one("#view-simple", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, LogSimpleViewerScreen)
+            self.assertEqual(pilot.app.screen._path, str(error_log))
+
+    async def test_view_logs_enter_toggles_numbers_in_selection_field(self):
+        container = self._container()
+        self._generate_config(container)
+        self._add_to_library(container, self.access_log)
+        self._add_to_library(container, self.root / "var" / "log" / "error.log")
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_view_logs(pilot)
+            table = pilot.app.screen.query_one("#library-table", DataTable)
+            field = pilot.app.screen.query_one("#selection-input", Input)
+            table.focus()
+            table.move_cursor(row=0)
+            await pilot.press("enter")
+            self.assertEqual(field.value, "1")
+            table.move_cursor(row=1)
+            await pilot.press("enter")
+            self.assertEqual(field.value, "1,2")
+            table.move_cursor(row=0)
+            await pilot.press("enter")
+            self.assertEqual(field.value, "2")
+
+    async def _assert_enter_toggles_number(self, opener) -> None:
+        container = self._container()
+        self._generate_config(container)
+        self._add_to_library(container, self.access_log)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await opener(pilot)
+            table = pilot.app.screen.query_one("#library-table", DataTable)
+            table.focus()
+            table.move_cursor(row=0)
+            await pilot.press("enter")
+            self.assertEqual(pilot.app.screen.query_one("#selection-input", Input).value, "1")
+
+    async def test_process_ip_enter_toggles_number(self):
+        await self._assert_enter_toggles_number(self._open_process_ip)
+
+    async def test_favorites_enter_toggles_number(self):
+        await self._assert_enter_toggles_number(self._open_favorites)
+
     async def test_view_logs_back_button_returns_to_logs_menu(self):
         container = self._container()
         self._generate_config(container)

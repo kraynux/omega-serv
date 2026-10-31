@@ -67,10 +67,10 @@ Omega-serv **拒绝以 root 身份启动**。在任何内置配置档案中（�
 
 ### 下载
 
-最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **您是在更新现有安装吗？** 如果 `omega-serv/` 已经存在，下面的命令会**静默跳过解压**（它认为这是一次中断的首次安装，而不是更新）—— 这样您就会在**旧的、未改变的代码**上重新安装依赖，而且没有任何错误提示。请改用下方的 [更新](#更新) 一节。
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ chmod +x install.sh
 
 ```bash
 # 在 omega-serv/ 的上级目录中执行（切勿在其内部）
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

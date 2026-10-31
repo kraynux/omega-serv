@@ -68,10 +68,10 @@ Omega-serv는 **root로 시작하기를 거부합니다**. 제공되는 어떤 �
 
 ### 다운로드
 
-최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **기존 설치를 업데이트하시나요?** 아래 명령은 `omega-serv/`가 이미 있으면 **압축 해제를 조용히 건너뜁니다**(업데이트가 아니라 중단된 첫 설치로 간주하기 때문) — 그러면 **바뀌지 않은 예전 코드** 위에 의존성을 다시 설치하게 되며, 오류 메시지는 전혀 나오지 않습니다. 대신 아래의 [업데이트](#업데이트) 절을 사용하십시오.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ 여기에는 이미 압축이 풀려 있습니다. 이 단계를 건너뜁니다." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ 여기에는 이미 압축이 풀려 있습니다. 이 단계를 건너뜁니다." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/의 상위 폴더에서 실행(절대 안에서 실행하지 않음)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

@@ -25,6 +25,11 @@ from omega_serv.core.i18n import _
 from omega_serv.domain.logs.library import LogFile
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
+from omega_serv.interfaces.tui.widgets.log_library_table import (
+    SELECTION_HINT,
+    selection_or_cursor,
+    toggle_selection_number,
+)
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -50,6 +55,7 @@ class ProcessIpScreen(OmegaScreen):
             yield DataTable(id="library-table")
             yield Static(_("Logs à analyser (numéros ci-dessus, séparés par des virgules)"), classes="omega-subtitle")
             yield Input(placeholder=_("ex: 1,2"), id="selection-input")
+            yield Static(_(SELECTION_HINT), classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 for period_id, _period in _PERIODS:
                     with Container(classes="omega-btn-frame"):
@@ -73,6 +79,10 @@ class ProcessIpScreen(OmegaScreen):
             table.add_row(str(idx), entry.path)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if event.data_table.id == "library-table":
+            field = self.query_one("#selection-input", Input)
+            field.value = toggle_selection_number(field.value, event.cursor_row + 1)
+            return
         if event.data_table.id != "top-ips-table":
             return
         self._selected_ip = str(event.row_key.value)
@@ -92,7 +102,10 @@ class ProcessIpScreen(OmegaScreen):
 
     def _selected_paths(self) -> list[str] | None:
         error_widget = self.query_one("#ip-error", Static)
-        raw = self.query_one("#selection-input", Input).value.strip()
+        table = self.query_one("#library-table", DataTable)
+        raw = selection_or_cursor(
+            self.query_one("#selection-input", Input).value, table.cursor_row, len(self._entries)
+        )
         if not raw:
             error_widget.update(_("Saisissez au moins un numéro de ligne."))
             return None

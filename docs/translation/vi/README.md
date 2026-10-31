@@ -68,10 +68,10 @@ Omega-serv **từ chối khởi động với quyền root**. Không mô-đun b�
 
 ### Tải xuống
 
-Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Bạn đang cập nhật một bản cài đặt có sẵn?** Lệnh bên dưới **lặng lẽ bỏ qua bước giải nén** nếu `omega-serv/` đã tồn tại (nó cho rằng đó là một lần cài đặt đầu tiên bị gián đoạn, không phải một bản cập nhật) — khi đó bạn sẽ cài lại các phụ thuộc trên **mã cũ không thay đổi**, mà không có bất kỳ thông báo lỗi nào. Hãy dùng mục [Cập nhật](#cập-nhật) bên dưới thay thế.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Đã giải nén ở đây, bỏ qua bước này." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Đã giải nén ở đây, bỏ qua bước này." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ Nếu `omega-serv/` đã tồn tại (bản cài đặt trước), **đừng bao
 
 ```bash
 # Từ thư mục CHA của omega-serv/ (không bao giờ từ bên trong)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

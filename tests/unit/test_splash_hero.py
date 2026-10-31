@@ -27,7 +27,7 @@ class TestIsBorderRun(unittest.TestCase):
         self.assertFalse(_is_border_run(line, 11, 12))
 
     def test_wide_run_not_touching_edges_is_border(self):
-        line = "▄████▒V2.00▒████▄"
+        line = "▄████▒V2.01▒████▄"
         self.assertTrue(_is_border_run(line, 1, 5))
         self.assertTrue(_is_border_run(line, 12, 16))
 
@@ -38,7 +38,7 @@ class TestIsBorderRun(unittest.TestCase):
 
 class TestLightUp(unittest.TestCase):
     def test_head_badge_has_no_accent(self):
-        line = "▄████▒V2.00▒████▄"
+        line = "▄████▒V2.01▒████▄"
         self.assertNotIn("$accent", _light_up(line))
 
     def test_foot_line_has_no_accent(self):

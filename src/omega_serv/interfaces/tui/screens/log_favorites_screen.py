@@ -20,6 +20,11 @@ from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.lnav_screen import LnavScreen
 from omega_serv.interfaces.tui.screens.log_simple_viewer_screen import LogSimpleViewerScreen
 from omega_serv.interfaces.tui.screens.log_viewer_screen import LogViewerScreen
+from omega_serv.interfaces.tui.widgets.log_library_table import (
+    SELECTION_HINT,
+    selection_or_cursor,
+    toggle_selection_number,
+)
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -48,6 +53,7 @@ class LogFavoritesScreen(OmegaScreen):
             yield Static(_("Créer un favori (depuis la Bibliothèque)"), classes="omega-subtitle")
             yield DataTable(id="library-table")
             yield Input(placeholder=_("Numéros séparés par des virgules (ex: 1,3)"), id="selection-input")
+            yield Static(_(SELECTION_HINT), classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 yield Input(placeholder=_("Nom du favori"), id="name-input")
                 yield Select[str](
@@ -80,6 +86,12 @@ class LogFavoritesScreen(OmegaScreen):
         table.clear()
         for idx, entry in enumerate(self._library_entries, start=1):
             table.add_row(str(idx), entry.path)
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if event.data_table.id != "library-table":
+            return
+        field = self.query_one("#selection-input", Input)
+        field.value = toggle_selection_number(field.value, event.cursor_row + 1)
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.data_table.id == "favorites-table":
@@ -140,7 +152,11 @@ class LogFavoritesScreen(OmegaScreen):
 
     def _save(self) -> None:
         error_widget = self.query_one("#favorites-error", Static)
-        raw_selection = self.query_one("#selection-input", Input).value.strip()
+        raw_selection = selection_or_cursor(
+            self.query_one("#selection-input", Input).value,
+            self.query_one("#library-table", DataTable).cursor_row,
+            len(self._library_entries),
+        )
         name = self.query_one("#name-input", Input).value.strip()
         viewer_value = self.query_one("#viewer-select", Select).value
 

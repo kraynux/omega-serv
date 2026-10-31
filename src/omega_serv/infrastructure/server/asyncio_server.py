@@ -88,6 +88,7 @@ from omega_serv.domain.security.active_defense.value_objects import AttackClass
 from omega_serv.domain.security.auth.authorize import authorize_request
 from omega_serv.domain.security.auth.basic_auth import build_www_authenticate_header
 from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
+from omega_serv.domain.security.csp import allow_inline_styles_by_hash, csp_header_name
 from omega_serv.domain.security.security_headers import apply_security_headers
 from omega_serv.domain.security.trusted_proxy import normalize_ip, resolve_client_ip
 from omega_serv.domain.security.waf.config import WafConfig
@@ -612,6 +613,11 @@ class AsyncioHttpServer:
                 int(response.status), self._error_page_custom_dir(), self._filesystem
             )
             response.headers.setdefault("Content-Type", "text/html; charset=utf-8")
+            for csp_header in (csp_header_name("enforce"), csp_header_name("report-only")):
+                if csp_header in response.headers:
+                    response.headers[csp_header] = allow_inline_styles_by_hash(
+                        response.headers[csp_header], response.body
+                    )
 
         headers = dict(response.headers)
         headers.setdefault("Connection", "keep-alive" if keep_alive else "close")

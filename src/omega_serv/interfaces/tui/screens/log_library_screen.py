@@ -77,7 +77,7 @@ class LogLibraryScreen(OmegaScreen):
         if event.data_table.id != "log-list":
             return
         row = event.data_table.get_row_at(event.cursor_row)
-        self._selected_path = str(row[0]) if row else None
+        self._selected_path = str(row[1]) if row else None
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id

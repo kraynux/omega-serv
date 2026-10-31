@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 19:42+0100\n"
+"POT-Creation-Date: 2026-10-31 13:52+0100\n"
 "PO-Revision-Date: 2026-10-21 23:30+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Español\n"
@@ -388,7 +388,7 @@ msgid "Au moins un log est requis."
 msgstr "Se necesita al menos un log."
 
 #: src/omega_serv/application/logs/favorites.py:36
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:117
 #, python-brace-format
 msgid "{count} log(s) sélectionné(s) : seul {value} est compatible."
 msgstr "{count} log(s) seleccionado(s): solo {value} es compatible."
@@ -1583,43 +1583,43 @@ msgstr "realm no puede estar vacío"
 msgid "la zone {path_prefix!r} n'a aucun allowed_users - personne ne pourrait jamais y accéder"
 msgstr "la zona {path_prefix!r} no tiene allowed_users - nadie podría acceder nunca"
 
-#: src/omega_serv/domain/security/csp.py:56
+#: src/omega_serv/domain/security/csp.py:60
 msgid "Source par défaut pour tout type de contenu non couvert par une autre directive ci-dessous."
 msgstr "Fuente por defecto para cualquier tipo de contenido no cubierto por otra directiva de abajo."
 
-#: src/omega_serv/domain/security/csp.py:57
+#: src/omega_serv/domain/security/csp.py:61
 msgid "URL valides pour la balise <base> - restreindre à 'self' évite un détournement de chemins relatifs."
 msgstr "URL válidas para la etiqueta <base> - restringir a 'self' evita el secuestro de rutas relativas."
 
-#: src/omega_serv/domain/security/csp.py:58
+#: src/omega_serv/domain/security/csp.py:62
 msgid "Destination autorisée pour la soumission d'un formulaire - 'self' empêche l'exfiltration vers un domaine externe."
 msgstr "Destino permitido para el envío de un formulario - 'self' impide la exfiltración hacia un dominio externo."
 
-#: src/omega_serv/domain/security/csp.py:59
+#: src/omega_serv/domain/security/csp.py:63
 msgid "Qui peut vous afficher dans une <iframe> - 'none' empêche le clickjacking."
 msgstr "Quién puede mostrarle en un <iframe> - 'none' impide el clickjacking."
 
-#: src/omega_serv/domain/security/csp.py:60
+#: src/omega_serv/domain/security/csp.py:64
 msgid "Origines autorisées pour les images."
 msgstr "Orígenes permitidos para las imágenes."
 
-#: src/omega_serv/domain/security/csp.py:61
+#: src/omega_serv/domain/security/csp.py:65
 msgid "Origines/mecanismes autorisés pour le CSS - 'unsafe-inline' autorise tout style inline, y compris injecté."
 msgstr "Orígenes/mecanismos permitidos para el CSS - 'unsafe-inline' permite cualquier estilo inline, incluso inyectado."
 
-#: src/omega_serv/domain/security/csp.py:62
+#: src/omega_serv/domain/security/csp.py:66
 msgid "Origines/mecanismes autorisés pour le JavaScript - 'unsafe-inline'/'unsafe-eval' sont les relâches les plus risquées."
 msgstr "Orígenes/mecanismos permitidos para el JavaScript - 'unsafe-inline'/'unsafe-eval' son las relajaciones más arriesgadas."
 
-#: src/omega_serv/domain/security/csp.py:63
+#: src/omega_serv/domain/security/csp.py:67
 msgid "Origines autorisées pour les polices."
 msgstr "Orígenes permitidos para las fuentes."
 
-#: src/omega_serv/domain/security/csp.py:64
+#: src/omega_serv/domain/security/csp.py:68
 msgid "Destinations autorisées pour fetch/XHR/WebSocket - restreint l'exfiltration de données."
 msgstr "Destinos permitidos para fetch/XHR/WebSocket - limita la exfiltración de datos."
 
-#: src/omega_serv/domain/security/csp.py:65
+#: src/omega_serv/domain/security/csp.py:69
 msgid "Autorise <object>/<embed>/<applet> - 'none' recommandé (vecteur historique Flash/plugins)."
 msgstr "Permite <object>/<embed>/<applet> - se recomienda 'none' (vector histórico Flash/plugins)."
 
@@ -4861,7 +4861,7 @@ msgstr "Requiere SIEMPRE un REINICIO COMPLETO por prudencia - una restauración 
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/dirlisting_screen.py:92
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:46
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:77
@@ -5544,7 +5544,7 @@ msgid "Combinaisons nommées (un ou plusieurs logs de la Bibliothèque + un view
 msgstr "Combinaciones con nombre (uno o varios logs de la Biblioteca + un visor) para un lanzamiento directo."
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:71
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:49
 msgid "Lancer"
 msgstr "Lanzar"
 
@@ -5981,7 +5981,7 @@ msgid "Relit et reanalyse les logs sélectionnés."
 msgstr "Relee y vuelve a analizar los logs seleccionados."
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:330
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:66
 msgid "Retirer cette IP des logs analyses"
 msgstr "Quitar esta IP de los logs analizados"
 
@@ -8765,8 +8765,8 @@ msgstr "Ningún efecto (solo lectura, ninguna petición de red)."
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:197
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:67
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:73
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:35
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
 msgid "Chemin"
@@ -10146,16 +10146,16 @@ msgstr "options.active_defense ausente o desactivado en la configuración."
 #: src/omega_serv/interfaces/tui/screens/lets_encrypt_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/lnav_screen.py:130
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:66
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:53
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:62
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:57
@@ -10299,7 +10299,7 @@ msgstr "6 h"
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "7 jours"
 msgstr "7 días"
 
@@ -10638,7 +10638,7 @@ msgstr "Archivo de registro enriquecido (log_path)"
 #: src/omega_serv/interfaces/tui/screens/error_pages_screen.py:81
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:61
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:87
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:76
 #: src/omega_serv/interfaces/tui/screens/waf_keyword_list_settings_screen.py:63
@@ -10666,7 +10666,7 @@ msgstr "Aislamiento"
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:176
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:47
 #: src/omega_serv/interfaces/tui/screens/wizard_profile_screen.py:50
 msgid "Nom"
@@ -12600,42 +12600,42 @@ msgstr "Archivo(s) no encontrado(s), ignorado(s): "
 msgid "Aucun fichier valide sélectionné."
 msgstr "Ningún archivo válido seleccionado."
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:38
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:43
 msgid "FAVORIS"
 msgstr "FAVORITOS"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:53
 msgid "Créer un favori (depuis la Bibliothèque)"
 msgstr "Crear un favorito (desde la Biblioteca)"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:50
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:55
 msgid "Numéros séparés par des virgules (ex: 1,3)"
 msgstr "Números separados por comas (ej.: 1,3)"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:58
 msgid "Nom du favori"
 msgstr "Nombre del favorito"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Logs"
 msgstr "Logs"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Viewer"
 msgstr "Visor"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:103
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:125
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:137
 msgid "Sélectionnez un favori."
 msgstr "Seleccione un favorito."
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:129
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:141
 msgid "SUPPRIMER CE FAVORI ?"
 msgstr "¿ELIMINAR ESTE FAVORITO?"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:153
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:89
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:169
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:104
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:116
 msgid "Numéro invalide : {token!r}."
 msgstr "Número no válido: {token!r}."
 
@@ -12773,7 +12773,7 @@ msgid "Heure"
 msgstr "Hora"
 
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:72
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "IP"
 msgstr "IP"
 
@@ -12852,12 +12852,12 @@ msgid "-- TOP IP ---------------\n"
 msgstr "-- TOP IP ---------------\n"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "24 heures"
 msgstr "24 horas"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 días"
 
@@ -12903,36 +12903,36 @@ msgstr ""
 "Reparto horario (UTC):\n"
 "{hourly_lines}"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:40
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:45
 msgid "VOIR LES LOGS"
 msgstr "VER LOS LOGS"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:42
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:47
 msgid "Logs référencés dans la Bibliothèque uniquement - importez-en d'autres depuis l'écran Bibliothèque."
 msgstr "Solo logs referenciados en la Biblioteca - importe otros desde la pantalla Biblioteca."
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:53
 msgid "Numéros ci-dessus, séparés par des virgules (ex: 1,3)"
 msgstr "Números de arriba, separados por comas (ej.: 1,3)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
 msgid "ex: 1,3"
 msgstr "ej.: 1,3"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
 msgid "Voir (simple)"
 msgstr "Ver (simple)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:60
 msgid "Voir (classique)"
 msgstr "Ver (clásico)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:56
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:62
 msgid "Voir (lnav)"
 msgstr "Ver (lnav)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:83
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:97
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:98
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:110
 msgid "Saisissez au moins un numéro de ligne."
 msgstr "Escriba al menos un número de fila."
 
@@ -13188,40 +13188,40 @@ msgstr "Ninguna novedad: su lista ya contiene toda la referencia."
 msgid "#Ajouts depuis la référence"
 msgstr "#Añadidos desde la referencia"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "Tout"
 msgstr "Todo"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:54
 msgid "VOIR ET TRAITER IP"
 msgstr "VER Y TRATAR IP"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:51
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:56
 msgid "Logs à analyser (numéros ci-dessus, séparés par des virgules)"
 msgstr "Logs a analizar (números de arriba, separados por comas)"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:57
 msgid "ex: 1,2"
 msgstr "ej.: 1,2"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "Occurrences"
 msgstr "Apariciones"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:136
 msgid "Aucune IP trouvée dans les log(s) sélectionné(s) pour cette période."
 msgstr "Ninguna IP encontrada en los log(s) seleccionado(s) para este periodo."
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:131
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:144
 msgid "RETIRER CETTE IP ?"
 msgstr "¿QUITAR ESTA IP?"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:132
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:145
 #, python-brace-format
 msgid "Retirer toutes les lignes contenant {ip} de {count} fichier(s)."
 msgstr "Quitar todas las líneas que contienen {ip} de {count} archivo(s)."
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:143
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:156
 #, python-brace-format
 msgid "{total} occurrence(s) de {ip} retirée(s) au total."
 msgstr "{total} aparición(es) de {ip} quitada(s) en total."
@@ -15586,6 +15586,10 @@ msgstr "AUSENTE"
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:45
 msgid "SUSPECT (vide)"
 msgstr "SOSPECHOSO (vacío)"
+
+#: src/omega_serv/interfaces/tui/widgets/log_library_table.py:50
+msgid "Clic : choisir un log. Double-clic ou Entrée : ajouter ou retirer son numéro dans le champ (plusieurs logs). Le champ, s'il est rempli, a priorité."
+msgstr "Clic: elegir un log. Doble clic o Intro: añadir o quitar su número en el campo (varios logs). Si el campo está relleno, tiene prioridad."
 
 #: src/omega_serv/interfaces/tui/widgets/splash_hero.py:129
 msgid "│  LINUX WEB-SERVER   │"

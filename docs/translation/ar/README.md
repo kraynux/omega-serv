@@ -68,10 +68,10 @@
 
 ### التنزيل
 
-أرشيف أحدث إصدار وبصمات SHA-256 لكل إصدار: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+أرشيف أحدث إصدار وبصمات SHA-256 لكل إصدار: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **هل تحدّث تثبيتًا موجودًا؟** الأمر أدناه **يتخطى الاستخراج بصمت** إذا كان `omega-serv/` موجودًا بالفعل (فهو يفترض أنه تثبيت أول متقطع، لا تحديث) — وعندها ستعيد تثبيت الاعتماديات على **الشيفرة القديمة دون تغيير**، دون أي رسالة خطأ. استخدم قسم [التحديث](#التحديث) أدناه بدلًا من ذلك.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ مستخرج هنا مسبقًا، تم تخطي هذه الخطوة." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ مستخرج هنا مسبقًا، تم تخطي هذه الخطوة." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ chmod +x install.sh
 
 ```bash
 # من المجلد الأب لـ omega-serv/ (وليس من داخله أبدًا)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

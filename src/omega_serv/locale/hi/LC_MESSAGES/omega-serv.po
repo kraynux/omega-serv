@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 19:42+0100\n"
+"POT-Creation-Date: 2026-10-31 13:52+0100\n"
 "PO-Revision-Date: 2026-10-22 18:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: हिन्दी\n"
@@ -389,7 +389,7 @@ msgid "Au moins un log est requis."
 msgstr "कम से कम एक लॉग आवश्यक है।"
 
 #: src/omega_serv/application/logs/favorites.py:36
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:117
 #, python-brace-format
 msgid "{count} log(s) sélectionné(s) : seul {value} est compatible."
 msgstr "{count} लॉग चुने गए: केवल {value} संगत है।"
@@ -1584,43 +1584,43 @@ msgstr "realm खाली नहीं हो सकता"
 msgid "la zone {path_prefix!r} n'a aucun allowed_users - personne ne pourrait jamais y accéder"
 msgstr "ज़ोन {path_prefix!r} में कोई allowed_users नहीं है - कोई भी कभी इसे एक्सेस नहीं कर पाएगा"
 
-#: src/omega_serv/domain/security/csp.py:56
+#: src/omega_serv/domain/security/csp.py:60
 msgid "Source par défaut pour tout type de contenu non couvert par une autre directive ci-dessous."
 msgstr "नीचे किसी अन्य निर्देश द्वारा कवर न किए गए हर प्रकार की सामग्री का डिफ़ॉल्ट स्रोत।"
 
-#: src/omega_serv/domain/security/csp.py:57
+#: src/omega_serv/domain/security/csp.py:61
 msgid "URL valides pour la balise <base> - restreindre à 'self' évite un détournement de chemins relatifs."
 msgstr "<base> टैग के लिए मान्य URL - 'self' तक सीमित करने से सापेक्ष पाथ का दुरुपयोग रुकता है।"
 
-#: src/omega_serv/domain/security/csp.py:58
+#: src/omega_serv/domain/security/csp.py:62
 msgid "Destination autorisée pour la soumission d'un formulaire - 'self' empêche l'exfiltration vers un domaine externe."
 msgstr "फ़ॉर्म सबमिट करने का अनुमत गंतव्य - 'self' बाहरी डोमेन पर डेटा भेजे जाने से रोकता है।"
 
-#: src/omega_serv/domain/security/csp.py:59
+#: src/omega_serv/domain/security/csp.py:63
 msgid "Qui peut vous afficher dans une <iframe> - 'none' empêche le clickjacking."
 msgstr "कौन आपको <iframe> में दिखा सकता है - 'none' क्लिकजैकिंग रोकता है।"
 
-#: src/omega_serv/domain/security/csp.py:60
+#: src/omega_serv/domain/security/csp.py:64
 msgid "Origines autorisées pour les images."
 msgstr "इमेज के लिए अनुमत origins।"
 
-#: src/omega_serv/domain/security/csp.py:61
+#: src/omega_serv/domain/security/csp.py:65
 msgid "Origines/mecanismes autorisés pour le CSS - 'unsafe-inline' autorise tout style inline, y compris injecté."
 msgstr "CSS के लिए अनुमत origins/तंत्र - 'unsafe-inline' हर inline स्टाइल की अनुमति देता है, इंजेक्ट की गई भी।"
 
-#: src/omega_serv/domain/security/csp.py:62
+#: src/omega_serv/domain/security/csp.py:66
 msgid "Origines/mecanismes autorisés pour le JavaScript - 'unsafe-inline'/'unsafe-eval' sont les relâches les plus risquées."
 msgstr "JavaScript के लिए अनुमत origins/तंत्र - 'unsafe-inline'/'unsafe-eval' सबसे जोखिम भरी ढील हैं।"
 
-#: src/omega_serv/domain/security/csp.py:63
+#: src/omega_serv/domain/security/csp.py:67
 msgid "Origines autorisées pour les polices."
 msgstr "फ़ॉन्ट के लिए अनुमत origins।"
 
-#: src/omega_serv/domain/security/csp.py:64
+#: src/omega_serv/domain/security/csp.py:68
 msgid "Destinations autorisées pour fetch/XHR/WebSocket - restreint l'exfiltration de données."
 msgstr "fetch/XHR/WebSocket के लिए अनुमत गंतव्य - डेटा बाहर भेजे जाने को सीमित करता है।"
 
-#: src/omega_serv/domain/security/csp.py:65
+#: src/omega_serv/domain/security/csp.py:69
 msgid "Autorise <object>/<embed>/<applet> - 'none' recommandé (vecteur historique Flash/plugins)."
 msgstr "<object>/<embed>/<applet> की अनुमति देता है - 'none' अनुशंसित (Flash/प्लगइन का पुराना हमला मार्ग)।"
 
@@ -4862,7 +4862,7 @@ msgstr "सावधानी के तौर पर हमेशा पूर�
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/dirlisting_screen.py:92
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:46
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:77
@@ -5545,7 +5545,7 @@ msgid "Combinaisons nommées (un ou plusieurs logs de la Bibliothèque + un view
 msgstr "सीधे शुरू करने के लिए नामित संयोजन (लाइब्रेरी के एक या अधिक लॉग + एक viewer)।"
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:71
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:49
 msgid "Lancer"
 msgstr "शुरू करें"
 
@@ -5982,7 +5982,7 @@ msgid "Relit et reanalyse les logs sélectionnés."
 msgstr "चुने गए लॉग फिर से पढ़ता और विश्लेषित करता है।"
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:330
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:66
 msgid "Retirer cette IP des logs analyses"
 msgstr "इस IP को विश्लेषित लॉग से हटाएँ"
 
@@ -8766,8 +8766,8 @@ msgstr "कोई प्रभाव नहीं (केवल पढ़ना,
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:197
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:67
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:73
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:35
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
 msgid "Chemin"
@@ -10147,16 +10147,16 @@ msgstr "कॉन्फ़िगरेशन में options.active_defense �
 #: src/omega_serv/interfaces/tui/screens/lets_encrypt_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/lnav_screen.py:130
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:66
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:53
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:62
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:57
@@ -10300,7 +10300,7 @@ msgstr "6 घंटे"
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "7 jours"
 msgstr "7 दिन"
 
@@ -10639,7 +10639,7 @@ msgstr "विस्तृत लॉग फ़ाइल (log_path)"
 #: src/omega_serv/interfaces/tui/screens/error_pages_screen.py:81
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:61
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:87
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:76
 #: src/omega_serv/interfaces/tui/screens/waf_keyword_list_settings_screen.py:63
@@ -10667,7 +10667,7 @@ msgstr "अलगाव"
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:176
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:47
 #: src/omega_serv/interfaces/tui/screens/wizard_profile_screen.py:50
 msgid "Nom"
@@ -12601,42 +12601,42 @@ msgstr "फ़ाइल(ें) नहीं मिलीं, अनदेखी
 msgid "Aucun fichier valide sélectionné."
 msgstr "कोई मान्य फ़ाइल नहीं चुनी गई।"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:38
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:43
 msgid "FAVORIS"
 msgstr "पसंदीदा"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:53
 msgid "Créer un favori (depuis la Bibliothèque)"
 msgstr "पसंदीदा बनाएँ (लाइब्रेरी से)"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:50
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:55
 msgid "Numéros séparés par des virgules (ex: 1,3)"
 msgstr "कॉमा से अलग संख्याएँ (उदा.: 1,3)"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:58
 msgid "Nom du favori"
 msgstr "पसंदीदा का नाम"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Logs"
 msgstr "लॉग"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Viewer"
 msgstr "Viewer"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:103
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:125
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:137
 msgid "Sélectionnez un favori."
 msgstr "एक पसंदीदा चुनें।"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:129
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:141
 msgid "SUPPRIMER CE FAVORI ?"
 msgstr "यह पसंदीदा हटाएँ?"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:153
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:89
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:169
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:104
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:116
 msgid "Numéro invalide : {token!r}."
 msgstr "अमान्य संख्या: {token!r}।"
 
@@ -12774,7 +12774,7 @@ msgid "Heure"
 msgstr "समय"
 
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:72
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "IP"
 msgstr "IP"
 
@@ -12853,12 +12853,12 @@ msgid "-- TOP IP ---------------\n"
 msgstr "-- शीर्ष IP --------------\n"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "24 heures"
 msgstr "24 घंटे"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 दिन"
 
@@ -12904,36 +12904,36 @@ msgstr ""
 "घंटेवार वितरण (UTC):\n"
 "{hourly_lines}"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:40
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:45
 msgid "VOIR LES LOGS"
 msgstr "लॉग देखें"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:42
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:47
 msgid "Logs référencés dans la Bibliothèque uniquement - importez-en d'autres depuis l'écran Bibliothèque."
 msgstr "केवल लाइब्रेरी में संदर्भित लॉग - अन्य लॉग लाइब्रेरी स्क्रीन से इम्पोर्ट करें।"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:53
 msgid "Numéros ci-dessus, séparés par des virgules (ex: 1,3)"
 msgstr "ऊपर की संख्याएँ, कॉमा से अलग (उदा.: 1,3)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
 msgid "ex: 1,3"
 msgstr "उदा.: 1,3"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
 msgid "Voir (simple)"
 msgstr "देखें (सरल)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:60
 msgid "Voir (classique)"
 msgstr "देखें (क्लासिक)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:56
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:62
 msgid "Voir (lnav)"
 msgstr "देखें (lnav)"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:83
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:97
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:98
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:110
 msgid "Saisissez au moins un numéro de ligne."
 msgstr "कम से कम एक पंक्ति संख्या दर्ज करें।"
 
@@ -13189,40 +13189,40 @@ msgstr "कुछ नया नहीं: आपकी सूची में �
 msgid "#Ajouts depuis la référence"
 msgstr "#संदर्भ सूची से जोड़े गए"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "Tout"
 msgstr "सभी"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:54
 msgid "VOIR ET TRAITER IP"
 msgstr "IP देखें और संसाधित करें"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:51
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:56
 msgid "Logs à analyser (numéros ci-dessus, séparés par des virgules)"
 msgstr "विश्लेषण के लिए लॉग (ऊपर की संख्याएँ, कॉमा से अलग)"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:57
 msgid "ex: 1,2"
 msgstr "उदा.: 1,2"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "Occurrences"
 msgstr "घटनाएँ"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:136
 msgid "Aucune IP trouvée dans les log(s) sélectionné(s) pour cette période."
 msgstr "इस अवधि में चुने गए लॉग में कोई IP नहीं मिला।"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:131
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:144
 msgid "RETIRER CETTE IP ?"
 msgstr "यह IP हटाएँ?"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:132
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:145
 #, python-brace-format
 msgid "Retirer toutes les lignes contenant {ip} de {count} fichier(s)."
 msgstr "{count} फ़ाइलों से {ip} वाली सभी पंक्तियाँ हटाएँ।"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:143
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:156
 #, python-brace-format
 msgid "{total} occurrence(s) de {ip} retirée(s) au total."
 msgstr "कुल {ip} की {total} घटनाएँ हटाई गईं।"
@@ -15587,6 +15587,10 @@ msgstr "अनुपस्थित"
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:45
 msgid "SUSPECT (vide)"
 msgstr "संदिग्ध (खाली)"
+
+#: src/omega_serv/interfaces/tui/widgets/log_library_table.py:50
+msgid "Clic : choisir un log. Double-clic ou Entrée : ajouter ou retirer son numéro dans le champ (plusieurs logs). Le champ, s'il est rempli, a priorité."
+msgstr "क्लिक: एक लॉग चुनें। डबल-क्लिक या Enter: फ़ील्ड में उसका नंबर जोड़ें या हटाएँ (कई लॉग)। फ़ील्ड भरा हो तो उसे प्राथमिकता मिलती है।"
 
 #: src/omega_serv/interfaces/tui/widgets/splash_hero.py:129
 msgid "│  LINUX WEB-SERVER   │"

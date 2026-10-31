@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Button, Footer, Header, Input, Static
+from textual.widgets import Button, DataTable, Footer, Header, Input, Static
 
 from omega_serv.application.logs.library import list_library
 from omega_serv.core.i18n import _
@@ -22,7 +22,12 @@ from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.lnav_screen import LnavScreen
 from omega_serv.interfaces.tui.screens.log_simple_viewer_screen import LogSimpleViewerScreen
 from omega_serv.interfaces.tui.screens.log_viewer_screen import LogViewerScreen
-from omega_serv.interfaces.tui.widgets.log_library_table import LogLibraryTable
+from omega_serv.interfaces.tui.widgets.log_library_table import (
+    SELECTION_HINT,
+    LogLibraryTable,
+    selection_or_cursor,
+    toggle_selection_number,
+)
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
@@ -47,6 +52,7 @@ class LogViewScreen(OmegaScreen):
             yield LogLibraryTable(id="library-table")
             yield Static(_("Numéros ci-dessus, séparés par des virgules (ex: 1,3)"), classes="omega-subtitle")
             yield Input(placeholder=_("ex: 1,3"), id="selection-input")
+            yield Static(_(SELECTION_HINT), classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Voir (simple)"), id="view-simple", variant="primary")
@@ -65,6 +71,12 @@ class LogViewScreen(OmegaScreen):
         self._entries = list_library(self._container.build_log_library_repository())
         self.query_one("#library-table", LogLibraryTable).load(self._entries)
 
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        if event.data_table.id != "library-table":
+            return
+        field = self.query_one("#selection-input", Input)
+        field.value = toggle_selection_number(field.value, event.cursor_row + 1)
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
         if button_id == "back":
@@ -78,7 +90,10 @@ class LogViewScreen(OmegaScreen):
 
     def _selected_paths(self) -> list[str] | None:
         error_widget = self.query_one("#view-error", Static)
-        raw = self.query_one("#selection-input", Input).value.strip()
+        table = self.query_one("#library-table", LogLibraryTable)
+        raw = selection_or_cursor(
+            self.query_one("#selection-input", Input).value, table.cursor_row, len(self._entries)
+        )
         if not raw:
             error_widget.update(_("Saisissez au moins un numéro de ligne."))
             return None

@@ -68,10 +68,10 @@ Omega-serv **root के रूप में शुरू होने से �
 
 ### डाउनलोड
 
-नवीनतम संस्करण का आर्काइव और हर संस्करण के SHA-256 फ़िंगरप्रिंट: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+नवीनतम संस्करण का आर्काइव और हर संस्करण के SHA-256 फ़िंगरप्रिंट: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **क्या आप किसी मौजूदा इंस्टॉलेशन को अपडेट कर रहे हैं?** नीचे दी गई कमांड, यदि `omega-serv/` पहले से मौजूद है, तो **चुपचाप एक्सट्रैक्शन छोड़ देती है** (वह इसे अपडेट नहीं, बल्कि बीच में रुका हुआ पहला इंस्टॉलेशन मानती है) — तब आप **बिना बदले पुराने कोड** पर ही डिपेंडेंसी दोबारा इंस्टॉल कर देंगे, बिना किसी त्रुटि संदेश के। इसके बजाय नीचे दिए गए [अपडेट](#अपडेट) अनुभाग का उपयोग करें।
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ यहाँ पहले से एक्सट्रैक्ट है, यह चरण छोड़ा गया।" || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ यहाँ पहले से एक्सट्रैक्ट है, यह चरण छोड़ा गया।" || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/ के PARENT फ़ोल्डर से (कभी उसके अंदर से नहीं)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

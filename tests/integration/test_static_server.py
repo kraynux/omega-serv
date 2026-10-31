@@ -5,6 +5,8 @@ qui fait tourner le serveur pendant le test - un appel bloquant direct
 sur la meme boucle causerait un blocage mutuel (le serveur ne pourrait
 jamais traiter la connexion pendant que le test attend une reponse)."""
 import asyncio
+import base64
+import hashlib
 import http.client
 import tempfile
 import unittest
@@ -117,6 +119,31 @@ class TestStaticServerIntegration(unittest.IsolatedAsyncioTestCase):
         status, _, data = await self._request("GET", "/nope.html")
         self.assertEqual(status, 404)
         self.assertEqual(data, b"<html>404 sur mesure</html>")
+
+    async def test_custom_error_page_inline_style_allowed_by_hash_only(self):
+        """Retour utilisateur 2026-10-31 : le <style> d'une page de .errors/ etait bloque par la
+        CSP - empreinte sha256 ajoutee a style-src de la seule reponse d'erreur."""
+        errors_dir = self.root / "webroot" / ".errors"
+        errors_dir.mkdir()
+        (errors_dir / "404.html").write_text("<html><style>body{color:red}</style>404</html>")
+
+        new_options = dict(self.config.options)
+        new_options["error_pages"] = Option(name="error_pages", enabled=True, settings={"custom_dir": "webroot/.errors"})
+        self.config = replace(self.config, options=new_options)
+        await self.server.close()
+        self.server = build_server(self.config, self.root, self.filesystem, self.logger)
+        await self.server.start()
+        self.port = self.server.sockets[0].getsockname()[1]
+
+        status, headers, _ = await self._request("GET", "/nope.html")
+        self.assertEqual(status, 404)
+        expected = "'sha256-" + base64.b64encode(hashlib.sha256(b"body{color:red}").digest()).decode() + "'"
+        self.assertIn(f"style-src 'self' {expected}", headers["Content-Security-Policy"])
+        self.assertNotIn("unsafe-inline", headers["Content-Security-Policy"])
+
+        status, headers, _ = await self._request("GET", "/index.html")
+        self.assertEqual(status, 200)
+        self.assertNotIn("sha256-", headers["Content-Security-Policy"])
 
     async def test_access_control_denies_prefix_but_allows_more_specific_child(self):
         private_dir = self.root / "webroot" / "private"

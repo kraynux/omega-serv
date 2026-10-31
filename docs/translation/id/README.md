@@ -68,10 +68,10 @@ Omega-serv **menolak berjalan sebagai root**. Tidak ada modul keamanan (WAF, TLS
 
 ### Unduhan
 
-Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Anda memperbarui instalasi yang sudah ada?** Perintah di bawah **diam-diam melewati ekstraksi** jika `omega-serv/` sudah ada (ia menganggap ini instalasi pertama yang terputus, bukan pembaruan) — Anda akan memasang ulang dependensi di atas **kode lama yang tidak berubah**, tanpa pesan galat sedikit pun. Gunakan bagian [Pembaruan](#pembaruan) di bawah sebagai gantinya.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ Jika `omega-serv/` sudah ada (instalasi sebelumnya), **jangan pernah menjalankan
 
 ```bash
 # Dari folder INDUK omega-serv/ (jangan pernah dari dalamnya)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

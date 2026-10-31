@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 19:42+0100\n"
+"POT-Creation-Date: 2026-10-31 13:52+0100\n"
 "PO-Revision-Date: 2026-10-23 23:50+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 日本語\n"
@@ -389,7 +389,7 @@ msgid "Au moins un log est requis."
 msgstr "ログが少なくとも 1 つ必要です。"
 
 #: src/omega_serv/application/logs/favorites.py:36
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:117
 #, python-brace-format
 msgid "{count} log(s) sélectionné(s) : seul {value} est compatible."
 msgstr "{count} 件のログを選択：互換性があるのは {value} のみです。"
@@ -1584,43 +1584,43 @@ msgstr "realm は空にできません"
 msgid "la zone {path_prefix!r} n'a aucun allowed_users - personne ne pourrait jamais y accéder"
 msgstr "ゾーン {path_prefix!r} に allowed_users がありません - 誰もアクセスできません"
 
-#: src/omega_serv/domain/security/csp.py:56
+#: src/omega_serv/domain/security/csp.py:60
 msgid "Source par défaut pour tout type de contenu non couvert par une autre directive ci-dessous."
 msgstr "以下の他のディレクティブで扱われないすべての種類のコンテンツの既定ソース。"
 
-#: src/omega_serv/domain/security/csp.py:57
+#: src/omega_serv/domain/security/csp.py:61
 msgid "URL valides pour la balise <base> - restreindre à 'self' évite un détournement de chemins relatifs."
 msgstr "<base> タグに有効な URL - 'self' に制限すると相対パスの乗っ取りを防げます。"
 
-#: src/omega_serv/domain/security/csp.py:58
+#: src/omega_serv/domain/security/csp.py:62
 msgid "Destination autorisée pour la soumission d'un formulaire - 'self' empêche l'exfiltration vers un domaine externe."
 msgstr "フォーム送信の許可先 - 'self' は外部ドメインへの流出を防ぎます。"
 
-#: src/omega_serv/domain/security/csp.py:59
+#: src/omega_serv/domain/security/csp.py:63
 msgid "Qui peut vous afficher dans une <iframe> - 'none' empêche le clickjacking."
 msgstr "<iframe> で表示できる相手 - 'none' はクリックジャッキングを防ぎます。"
 
-#: src/omega_serv/domain/security/csp.py:60
+#: src/omega_serv/domain/security/csp.py:64
 msgid "Origines autorisées pour les images."
 msgstr "画像に許可するオリジン。"
 
-#: src/omega_serv/domain/security/csp.py:61
+#: src/omega_serv/domain/security/csp.py:65
 msgid "Origines/mecanismes autorisés pour le CSS - 'unsafe-inline' autorise tout style inline, y compris injecté."
 msgstr "CSS に許可するオリジン/仕組み - 'unsafe-inline' は注入されたものも含むすべてのインラインスタイルを許可します。"
 
-#: src/omega_serv/domain/security/csp.py:62
+#: src/omega_serv/domain/security/csp.py:66
 msgid "Origines/mecanismes autorisés pour le JavaScript - 'unsafe-inline'/'unsafe-eval' sont les relâches les plus risquées."
 msgstr "JavaScript に許可するオリジン/仕組み - 'unsafe-inline'/'unsafe-eval' は最も危険な緩和です。"
 
-#: src/omega_serv/domain/security/csp.py:63
+#: src/omega_serv/domain/security/csp.py:67
 msgid "Origines autorisées pour les polices."
 msgstr "フォントに許可するオリジン。"
 
-#: src/omega_serv/domain/security/csp.py:64
+#: src/omega_serv/domain/security/csp.py:68
 msgid "Destinations autorisées pour fetch/XHR/WebSocket - restreint l'exfiltration de données."
 msgstr "fetch/XHR/WebSocket の許可先 - データの流出を制限します。"
 
-#: src/omega_serv/domain/security/csp.py:65
+#: src/omega_serv/domain/security/csp.py:69
 msgid "Autorise <object>/<embed>/<applet> - 'none' recommandé (vecteur historique Flash/plugins)."
 msgstr "<object>/<embed>/<applet> を許可 - 'none' を推奨（Flash/プラグインの古い攻撃経路）。"
 
@@ -4862,7 +4862,7 @@ msgstr "安全のため常に完全再起動が必要 - 復元はどんなファ
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/dirlisting_screen.py:92
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:46
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:77
@@ -5545,7 +5545,7 @@ msgid "Combinaisons nommées (un ou plusieurs logs de la Bibliothèque + un view
 msgstr "すぐに開くための名前付きの組み合わせ（ライブラリの 1 つ以上のログ + ビューアー）。"
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:71
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:49
 msgid "Lancer"
 msgstr "起動"
 
@@ -5982,7 +5982,7 @@ msgid "Relit et reanalyse les logs sélectionnés."
 msgstr "選択したログを読み直して再分析します。"
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:330
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:66
 msgid "Retirer cette IP des logs analyses"
 msgstr "分析したログからこの IP を外す"
 
@@ -8766,8 +8766,8 @@ msgstr "影響なし（読み取り専用、ネットワークリクエストな
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:197
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:67
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:73
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:35
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
 msgid "Chemin"
@@ -10147,16 +10147,16 @@ msgstr "設定に options.active_defense がないか、無効になっていま
 #: src/omega_serv/interfaces/tui/screens/lets_encrypt_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/lnav_screen.py:130
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:60
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:66
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:53
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:45
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:62
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:57
@@ -10300,7 +10300,7 @@ msgstr "6 時間"
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "7 jours"
 msgstr "7 日"
 
@@ -10639,7 +10639,7 @@ msgstr "詳細ログファイル（log_path）"
 #: src/omega_serv/interfaces/tui/screens/error_pages_screen.py:81
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:61
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:63
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:87
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:76
 #: src/omega_serv/interfaces/tui/screens/waf_keyword_list_settings_screen.py:63
@@ -10667,7 +10667,7 @@ msgstr "Isolation"
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:176
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:47
 #: src/omega_serv/interfaces/tui/screens/wizard_profile_screen.py:50
 msgid "Nom"
@@ -12601,42 +12601,42 @@ msgstr "ファイルが見つからないため無視しました： "
 msgid "Aucun fichier valide sélectionné."
 msgstr "有効なファイルが選択されていません。"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:38
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:43
 msgid "FAVORIS"
 msgstr "お気に入り"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:53
 msgid "Créer un favori (depuis la Bibliothèque)"
 msgstr "お気に入りを作成（ライブラリから）"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:50
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:55
 msgid "Numéros séparés par des virgules (ex: 1,3)"
 msgstr "カンマ区切りの番号（例：1,3）"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:58
 msgid "Nom du favori"
 msgstr "お気に入りの名前"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Logs"
 msgstr "ログ"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:71
 msgid "Viewer"
 msgstr "ビューアー"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:103
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:125
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:137
 msgid "Sélectionnez un favori."
 msgstr "お気に入りを選択してください。"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:129
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:141
 msgid "SUPPRIMER CE FAVORI ?"
 msgstr "このお気に入りを削除しますか？"
 
-#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:153
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:89
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:103
+#: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:169
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:104
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:116
 msgid "Numéro invalide : {token!r}."
 msgstr "番号が無効です：{token!r}。"
 
@@ -12774,7 +12774,7 @@ msgid "Heure"
 msgstr "時刻"
 
 #: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:72
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "IP"
 msgstr "IP"
 
@@ -12853,12 +12853,12 @@ msgid "-- TOP IP ---------------\n"
 msgstr "-- TOP IP ---------------\n"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "24 heures"
 msgstr "24 時間"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 日"
 
@@ -12904,36 +12904,36 @@ msgstr ""
 "時間帯別の内訳（UTC）：\n"
 "{hourly_lines}"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:40
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:45
 msgid "VOIR LES LOGS"
 msgstr "ログを表示"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:42
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:47
 msgid "Logs référencés dans la Bibliothèque uniquement - importez-en d'autres depuis l'écran Bibliothèque."
 msgstr "ライブラリに登録されたログのみ - 他のログはライブラリ画面からインポートしてください。"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:48
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:53
 msgid "Numéros ci-dessus, séparés par des virgules (ex: 1,3)"
 msgstr "上の番号、カンマ区切り（例：1,3）"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
 msgid "ex: 1,3"
 msgstr "例：1,3"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:58
 msgid "Voir (simple)"
 msgstr "表示（シンプル）"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:54
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:60
 msgid "Voir (classique)"
 msgstr "表示（クラシック）"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:56
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:62
 msgid "Voir (lnav)"
 msgstr "表示（lnav）"
 
-#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:83
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:97
+#: src/omega_serv/interfaces/tui/screens/log_view_screen.py:98
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:110
 msgid "Saisissez au moins un numéro de ligne."
 msgstr "行番号を少なくとも 1 つ入力してください。"
 
@@ -13189,40 +13189,40 @@ msgstr "新着はありません：あなたのリストにはリファレンス
 msgid "#Ajouts depuis la référence"
 msgstr "#リファレンスから追加"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:35
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "Tout"
 msgstr "すべて"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:54
 msgid "VOIR ET TRAITER IP"
 msgstr "IP の表示と処理"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:51
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:56
 msgid "Logs à analyser (numéros ci-dessus, séparés par des virgules)"
 msgstr "分析するログ（上の番号、カンマ区切り）"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:57
 msgid "ex: 1,2"
 msgstr "例：1,2"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:69
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "Occurrences"
 msgstr "出現回数"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:123
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:136
 msgid "Aucune IP trouvée dans les log(s) sélectionné(s) pour cette période."
 msgstr "選択したログには、この期間の IP が見つかりません。"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:131
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:144
 msgid "RETIRER CETTE IP ?"
 msgstr "この IP を外しますか？"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:132
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:145
 #, python-brace-format
 msgid "Retirer toutes les lignes contenant {ip} de {count} fichier(s)."
 msgstr "{count} 件のファイルから {ip} を含む行をすべて外します。"
 
-#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:143
+#: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:156
 #, python-brace-format
 msgid "{total} occurrence(s) de {ip} retirée(s) au total."
 msgstr "{ip} の出現を合計 {total} 件外しました。"
@@ -15587,6 +15587,10 @@ msgstr "ABSENT"
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:45
 msgid "SUSPECT (vide)"
 msgstr "SUSPECT（空）"
+
+#: src/omega_serv/interfaces/tui/widgets/log_library_table.py:50
+msgid "Clic : choisir un log. Double-clic ou Entrée : ajouter ou retirer son numéro dans le champ (plusieurs logs). Le champ, s'il est rempli, a priorité."
+msgstr "クリック：ログを選択。ダブルクリックまたは Enter：欄にその番号を追加・削除（複数のログ）。欄に入力がある場合はそちらが優先されます。"
 
 #: src/omega_serv/interfaces/tui/widgets/splash_hero.py:129
 msgid "│  LINUX WEB-SERVER   │"

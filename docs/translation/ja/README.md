@@ -68,10 +68,10 @@ Omega-serv は **root として起動することを拒否します**。提供�
 
 ### ダウンロード
 
-最新版のアーカイブと各バージョンの SHA-256 フィンガープリント：[omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+最新版のアーカイブと各バージョンの SHA-256 フィンガープリント：[omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -81,7 +81,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **既存のインストールを更新しますか？** 以下のコマンドは、`omega-serv/` がすでに存在すると **展開を黙ってスキップします**（更新ではなく中断された初回インストールとみなすため）— その場合、**変更されていない古いコード** の上に依存関係を再インストールすることになり、エラーメッセージは一切出ません。代わりに下の [アップデート](#アップデート) を使ってください。
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ ここには展開済みです。この手順をスキップします。" || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ ここには展開済みです。この手順をスキップします。" || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -100,7 +100,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/ の親フォルダーから実行（中からは絶対に実行しない）
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

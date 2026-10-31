@@ -13,9 +13,24 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
-## Non publié
+## version 2.0.1 : Publié
+
+### Ajouté
+
+- **Version 2.0.1** : archive `omega-serv-2.0.1.tar.gz` dans `html/download/`, empreinte ajoutée en
+  tête de `html/download/sha.txt`. Splash « V2.01 ».
 
 ### Corrigé
+
+- **Pages d'erreur personnalisées sans mise en forme sous la CSP** (sécurité, affichage). Les pages
+  du dossier `error_pages.custom_dir` (`webroot/.errors/` par défaut) gardent souvent leur CSS dans
+  un bloc `<style>` de la page : la politique par défaut (`style-src 'self'`) le bloquait, et la page
+  s'affichait brute. Même défaut pour la page d'erreur générique intégrée (codes sans page dédiée).
+  Désormais, pour une réponse d'erreur seulement, l'empreinte SHA-256 de chaque bloc `<style>` de la
+  page est ajoutée à `style-src` (`style-src 'self' 'sha256-…'`). **Jamais `'unsafe-inline'`** : seul
+  le CSS exact du fichier est autorisé, un style injecté ou modifié reste bloqué ; les autres pages
+  du site gardent leur politique inchangée. Rien à configurer. Politique laissée telle quelle si
+  `style-src` vaut `'none'` ou contient déjà `'unsafe-inline'`. Vérifié en production.
 
 - **Blocklist : le serveur ralentissait à mesure que la liste se remplissait** (sécurité,
   robustesse sous attaque). Chaque requête réanalysait toutes les entrées de la blocklist
@@ -30,11 +45,17 @@ signalés explicitement, même mineurs.
 
 ### Modifié
 
+- **Gestion des logs : sélection à la souris** (Voir les logs, Voir et traiter IP, Favoris). Le
+  tableau de la Bibliothèque n'affichait pas les numéros qu'on demandait de saisir : il fallait
+  compter les lignes à la main. Une colonne « # » les affiche désormais (aussi dans l'écran
+  Bibliothèque). Un clic sur un log suffit : champ vide, c'est la ligne surlignée qui est ouverte,
+  comme dans omega-fire. Double-clic ou Entrée sur une ligne ajoute ou retire son numéro dans le
+  champ, pour combiner plusieurs logs (lnav, favori). Un champ rempli reste prioritaire.
 - Fichiers statiques : le fichier demandé n'est plus examiné qu'une fois (un seul appel système
   au lieu de quatre pour son type, sa taille et sa date), de même que ses variantes `.br` / `.gz`.
   Environ 20 µs de moins par requête (~2 %). Aucun changement de comportement.
 
-Aucun texte affiché modifié : rien à reporter dans les traductions.
+Un seul texte affiché ajouté (aide de sélection des logs), traduit dans les 16 langues.
 
 ## version 2.0.0 : Publié
 

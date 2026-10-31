@@ -10,6 +10,10 @@ plus-long-prefixe-gagne) - jamais une logique de correspondance
 reinventee pour ce seul besoin."""
 from __future__ import annotations
 
+import base64
+import hashlib
+import re
+
 from omega_serv.core.i18n import _
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 
@@ -117,3 +121,38 @@ def find_csp_risks(policy: str) -> list[str]:
         if _RISKY_VALUE_TOKENS.intersection(values.split()):
             risky.append(name)
     return risky
+
+
+_INLINE_STYLE_BLOCK = re.compile(rb"<style\b[^>]*>(.*?)</style\s*>", re.IGNORECASE | re.DOTALL)
+
+
+def allow_inline_styles_by_hash(policy: str, html: bytes) -> str:
+    """Exception CSP des pages d'erreur (retour utilisateur 2026-10-31 : "le css s'applique pas,
+    la politique CSP le bloque - il faudrait une exception") : les pages de
+    `error_pages.custom_dir` gardent leur `<style>` inline, bloque par `style-src 'self'`.
+    Chaque bloc `<style>` de CETTE reponse est autorise par son empreinte sha256 - jamais
+    'unsafe-inline' : un style injecte ou modifie ne correspond a aucune empreinte et reste
+    bloque. Seul appelant : infrastructure/server/asyncio_server.py::_write_response, sur le
+    corps d'erreur qu'il vient lui-meme d'injecter (jamais une page servie normalement).
+
+    Politique inchangee si : aucun `<style>` ; `style-src` (ou `default-src` a defaut) absent,
+    donc styles deja libres ; valeur 'none' (choix explicite de l'administrateur) ; ou
+    'unsafe-inline' deja present (une empreinte le desactiverait dans le navigateur)."""
+    blocks = _INLINE_STYLE_BLOCK.findall(html)
+    if not blocks:
+        return policy
+    directives = parse_csp_directives(policy)
+    name = "style-src" if "style-src" in directives else "default-src"
+    sources = directives.get(name)
+    if sources is None:
+        return policy
+    tokens = sources.split()
+    if "'none'" in tokens or "'unsafe-inline'" in tokens:
+        return policy
+    for block in blocks:
+        digest = base64.b64encode(hashlib.sha256(block).digest()).decode("ascii")
+        token = f"'sha256-{digest}'"
+        if token not in tokens:
+            tokens.append(token)
+    directives["style-src"] = " ".join(tokens)
+    return "; ".join(f"{key} {value}".strip() for key, value in directives.items())

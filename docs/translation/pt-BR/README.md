@@ -67,10 +67,10 @@ O Omega-serv **se recusa a iniciar como root**. Nenhum módulo de segurança (WA
 
 ### Download
 
-Arquivo da versão mais recente e somas SHA-256 de cada versão: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Arquivo da versão mais recente e somas SHA-256 de cada versão: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Você está atualizando uma instalação existente?** O comando abaixo **pula silenciosamente a extração** se `omega-serv/` já existir (ele supõe que se trata de uma primeira instalação interrompida, não de uma atualização) — você reinstalaria então as dependências sobre o **código antigo inalterado**, sem a menor mensagem de erro. Use em vez disso a seção [Atualização](#atualização) abaixo.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Já extraído aqui, etapa ignorada." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Já extraído aqui, etapa ignorada." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ Se `omega-serv/` já existir (instalação anterior), **nunca execute `tar` de d
 
 ```bash
 # A partir da pasta PAI de omega-serv/ (nunca de dentro dela)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

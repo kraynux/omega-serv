@@ -67,10 +67,10 @@ Omega-serv **отказывается запускаться от имени roo
 
 ### Загрузка
 
-Архив последней версии и контрольные суммы SHA-256 каждой версии: [omega-serv-2.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Архив последней версии и контрольные суммы SHA-256 каждой версии: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +80,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Вы обновляете существующую установку?** Приведённая ниже команда **молча пропускает распаковку**, если `omega-serv/` уже существует (она считает, что это прерванная первая установка, а не обновление) — тогда вы переустановите зависимости поверх **старого, неизменённого кода**, без единого сообщения об ошибке. Вместо этого используйте раздел [Обновление](#обновление) ниже.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Уже распаковано здесь, шаг пропущен." || tar -xzf omega-serv-2.0.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Уже распаковано здесь, шаг пропущен." || tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -99,7 +99,7 @@ chmod +x install.sh
 
 ```bash
 # Из РОДИТЕЛЬСКОГО каталога omega-serv/ (никогда изнутри)
-tar -xzf omega-serv-2.0.0.tar.gz
+tar -xzf omega-serv-2.0.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```
