@@ -7,8 +7,7 @@
 
 **독립형, 이식 가능, 기본적으로 강화된 HTTP 웹 서버**
 
-> **kraynux**가 **Omega-server**를 위해 개발 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> [kraynux](https://github.com/kraynux)가 [Omega-Server](https://kraynux.snake-mackarel.ts.net)를 위해 개발   
 
 공식 페이지: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ko/) &nbsp; 레퍼런스, 사용법, 도움말 및 FAQ: [전체 가이드](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ko/guide.html)  
 미리 보기: [스크린샷](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; 데모 [데모 서버](https://craftdark.snake-mackarel.ts.net) &nbsp; [웹 서버 비교/테스트](comparatif-serveurs-web.md)  

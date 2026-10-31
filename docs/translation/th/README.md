@@ -7,8 +7,7 @@
 
 **เว็บเซิร์ฟเวอร์ HTTP แบบอิสระ พกพาได้ และเสริมความแข็งแกร่งเป็นค่าเริ่มต้น**
 
-> สร้างโดย **kraynux** สำหรับ **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> สร้างโดย [kraynux](https://github.com/kraynux) สำหรับ [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 หน้าทางการ: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/th/) &nbsp; ข้อมูลอ้างอิง การใช้งาน ความช่วยเหลือ และ FAQ: [คู่มือฉบับสมบูรณ์](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/th/guide.html)  
 ตัวอย่างหน้าจอ: [ภาพหน้าจอ](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; สาธิต [เซิร์ฟเวอร์สาธิต](https://craftdark.snake-mackarel.ts.net) &nbsp; [เปรียบเทียบ/ทดสอบเว็บเซิร์ฟเวอร์](comparatif-serveurs-web.md)  

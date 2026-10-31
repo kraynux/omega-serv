@@ -7,8 +7,7 @@
 
 **Máy chủ web HTTP độc lập, di động và được gia cố mặc định**
 
-> Được xây dựng bởi **kraynux** cho **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> Được xây dựng bởi [kraynux](https://github.com/kraynux) cho [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 Trang chính thức: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/vi/) &nbsp; Tham chiếu, sử dụng, trợ giúp & FAQ: [Hướng dẫn đầy đủ](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/vi/guide.html)  
 Xem trước: [Ảnh chụp màn hình](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Trình diễn [Máy chủ demo](https://craftdark.snake-mackarel.ts.net) &nbsp; [So sánh/Kiểm thử các máy chủ web](comparatif-serveurs-web.md)  

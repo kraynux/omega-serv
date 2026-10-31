@@ -7,8 +7,7 @@
 
 **خادم ويب HTTP مستقل ومحمول ومُحصَّن افتراضيًا**
 
-> طوّره **kraynux** من أجل **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> طوّره [kraynux](https://github.com/kraynux) من أجل [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 الصفحة الرسمية: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ar/) &nbsp; المرجع والاستخدام والمساعدة والأسئلة الشائعة: [الدليل الكامل](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ar/guide.html)  
 معاينة: [لقطات الشاشة](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; عرض توضيحي [خادم العرض](https://craftdark.snake-mackarel.ts.net) &nbsp; [مقارنة/اختبارات خوادم الويب](comparatif-serveurs-web.md)  

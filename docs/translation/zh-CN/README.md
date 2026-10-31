@@ -7,8 +7,7 @@
 
 **独立、可移植、默认加固的 HTTP Web 服务器**
 
-> 由 **kraynux** 为 **Omega-server** 打造 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> 由 [kraynux](https://github.com/kraynux) 为 [Omega-Server](https://kraynux.snake-mackarel.ts.net) 打造   
 
 官方页面：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/) &nbsp; 参考、使用、帮助与常见问题：[完整指南](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/guide.html)  
 预览：[截图](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; 演示 [演示服务器](https://craftdark.snake-mackarel.ts.net) &nbsp; [Web 服务器对比/测试](comparatif-serveurs-web.md)  

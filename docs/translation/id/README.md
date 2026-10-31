@@ -7,8 +7,7 @@
 
 **Server web HTTP mandiri, portabel, dan diperkeras secara bawaan**
 
-> Dibuat oleh **kraynux** untuk **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> Dibuat oleh [kraynux](https://github.com/kraynux) untuk [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 Halaman resmi: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/id/) &nbsp; Referensi, penggunaan, bantuan & FAQ: [Panduan lengkap](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/id/guide.html)  
 Pratinjau: [Tangkapan layar](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstrasi [Server demo](https://craftdark.snake-mackarel.ts.net) &nbsp; [Perbandingan/Pengujian server web](comparatif-serveurs-web.md)  

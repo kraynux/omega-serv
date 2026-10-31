@@ -7,11 +7,10 @@
 
 **Serveur web HTTP autonome, portable et durci par défaut**
 
-> Élaboré par **kraynux** pour **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> Élaboré par [kraynux](https://github.com/kraynux) pour [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 Page officielle : [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/) &nbsp; Référence, utilisation, Aide & FAQ : [Guide complet](https://kraynux.snake-mackarel.ts.net/omega-serv/guide.html)  
-Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Démonstration [Serveur Demo ](https://craftdark.snake-mackarel.ts.net) &nbsp; [Comparatif/Tests des serveurs WEB ](https://kraynux.snake-mackarel.ts.net/omega-serv/comparatif-serveurs-web.html)   
+Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Démonstration [Serveur Demo ](https://craftdark.snake-mackarel.ts.net) &nbsp;— &nbsp;[Comparatif/Tests des serveurs WEB ](https://kraynux.snake-mackarel.ts.net/omega-serv/comparatif-serveurs-web.html)   
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)

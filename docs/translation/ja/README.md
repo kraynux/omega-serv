@@ -7,8 +7,7 @@
 
 **自己完結型・ポータブル・デフォルトで堅牢化された HTTP Web サーバー**
 
-> **kraynux** が **Omega-server** のために開発 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> [kraynux](https://github.com/kraynux) が [Omega-Server](https://kraynux.snake-mackarel.ts.net) のために開発   
 
 公式ページ：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ja/) &nbsp; リファレンス・使い方・ヘルプ・FAQ：[完全ガイド](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ja/guide.html)  
 プレビュー：[スクリーンショット](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; デモ [デモサーバー](https://craftdark.snake-mackarel.ts.net) &nbsp; [Web サーバーの比較・テスト](comparatif-serveurs-web.md)  

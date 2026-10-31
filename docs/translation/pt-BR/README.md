@@ -7,8 +7,7 @@
 
 **Servidor web HTTP autônomo, portátil e reforçado por padrão**
 
-> Desenvolvido por **kraynux** para **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> Desenvolvido por [kraynux](https://github.com/kraynux) para [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 Página oficial: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/pt-BR/) &nbsp; Referência, uso, Ajuda e FAQ: [Guia completo](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/pt-BR/guide.html)  
 Prévia: [Capturas de tela](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstração [Servidor de demonstração](https://craftdark.snake-mackarel.ts.net) &nbsp; [Comparativo/testes de servidores web](comparatif-serveurs-web.md)  

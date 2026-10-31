@@ -7,8 +7,7 @@
 
 **Zelfstandige, draagbare en standaard geharde HTTP-webserver**
 
-> Ontwikkeld door **kraynux** voor **Omega-server** 
-[kraynux.snake-mackarel](https://kraynux.snake-mackarel.ts.net)
+> Ontwikkeld door [kraynux](https://github.com/kraynux) voor [Omega-Server](https://kraynux.snake-mackarel.ts.net)   
 
 Officiële pagina: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/nl/) &nbsp; Referentie, gebruik, Help & FAQ: [Volledige handleiding](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/nl/guide.html)  
 Voorbeeld: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstratie [Demoserver](https://craftdark.snake-mackarel.ts.net) &nbsp; [Vergelijking/tests van webservers](comparatif-serveurs-web.md)  
