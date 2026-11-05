@@ -31,6 +31,13 @@ Aperçu : [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screens
 
 **OMEGA-SERV** est un serveur HTTP/1.1 écrit en Python pur (bibliothèque standard uniquement pour le cœur du serveur), pensé pour servir du contenu statique et, en option, du PHP-FPM, avec un durcissement de protocole actif par défaut et des modules de sécurité (WAF, TLS, authentification) superposables plutôt qu'imposés. Un moteur natif C++ optionnel peut servir les requêtes à la place du moteur Python, avec les mêmes contrôles de sécurité (voir §6b). Outil de la suite `omega-` mais volontairement **hors de la future intégration `omega-suite`** (il agit sur la machine locale qui l'héberge, pas sur des cibles distantes — même famille qu'`omega-fire`) ; structuré en Clean Architecture, `bootstrap/` faisant office de racine de composition.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/assets/A-splash.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/assets/B-menu-principal.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/assets/C-dashboard.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/assets/D-logs.png" width="24%" />
+</p>
+
 ## 1. Vision et périmètre
 
 La priorité affichée est la **solidité/sécurité du cœur HTTP d'abord** — WAF et TLS sont des modules optionnels posés par-dessus, jamais des prérequis. Un serveur qui ne fait qu'une chose (servir des fichiers, éventuellement du PHP) mais la fait correctement, avec un vrai durcissement protocolaire non contournable, plutôt qu'un serveur qui fait beaucoup de choses à moitié.
