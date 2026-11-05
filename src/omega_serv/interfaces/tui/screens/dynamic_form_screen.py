@@ -3,9 +3,13 @@ texte par entree de `fields`, retourne un dict id->valeur saisie au clic
 sur "Valider", None sur "Annuler"/echap. Reutilisee par les ecrans CRUD
 de regles (alias/redirections/rewrites/FastCGI/cache/proxies de
 confiance) - meme forme partout, evite de dupliquer un formulaire quasi
-identique 6 fois."""
+identique 6 fois. `validate` (optionnel) : appele au clic sur "Valider" ;
+s'il renvoie un message, celui-ci s'affiche dans la modale, qui reste
+ouverte avec la saisie intacte (sinon l'utilisateur devait tout
+ressaisir apres chaque erreur)."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import ClassVar
 
 from textual.app import ComposeResult
@@ -30,11 +34,13 @@ class DynamicFormScreen(ModalScreen[dict[str, str] | None]):
         title: str,
         fields: list[tuple[str, str, str]],
         password_fields: frozenset[str] = frozenset(),
+        validate: Callable[[dict[str, str]], str | None] | None = None,
     ) -> None:
         super().__init__()
         self._title = title
         self._fields = fields
         self._password_fields = password_fields
+        self._validate = validate
 
     def compose(self) -> ComposeResult:
         with Center(), VerticalScroll(classes="omega-dynamic-form-box"):
@@ -42,6 +48,7 @@ class DynamicFormScreen(ModalScreen[dict[str, str] | None]):
             for field_id, label, default in self._fields:
                 yield Static(label, classes="omega-subtitle")
                 yield Input(value=default, id=f"df-{field_id}", password=field_id in self._password_fields)
+            yield Static("", id="df-error", classes="omega-hint")
             with Horizontal(classes="omega-confirm-buttons"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Valider"), id="confirm", variant="primary")
@@ -53,6 +60,11 @@ class DynamicFormScreen(ModalScreen[dict[str, str] | None]):
             self.dismiss(None)
             return
         values = {field_id: self.query_one(f"#df-{field_id}", Input).value.strip() for field_id, _label, _default in self._fields}
+        if self._validate is not None:
+            error = self._validate(values)
+            if error:
+                self.query_one("#df-error", Static).update(error)
+                return
         self.dismiss(values)
 
     def action_back(self) -> None:

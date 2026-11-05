@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import psutil
+
 from omega_serv.infrastructure.probe import system_stats
 from omega_serv.infrastructure.probe.system_stats import collect_system_stats
 
@@ -65,3 +67,94 @@ class TestCollectSystemStatsMalformedResolvConf(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestServerStats(unittest.TestCase):
+    def test_own_process_logs_and_free_space(self):
+        import os
+        import tempfile
+        from pathlib import Path
+
+        from omega_serv.infrastructure.probe.system_stats import collect_server_stats
+
+        with tempfile.TemporaryDirectory() as tmp:
+            logs = Path(tmp) / "log"
+            (logs / "remote").mkdir(parents=True)
+            (logs / "access.log").write_bytes(b"x" * 300)
+            (logs / "remote" / "b.log").write_bytes(b"x" * 500)
+            stats = collect_server_stats(os.getpid(), 1, logs, Path(tmp))
+            self.assertTrue(stats["running"])
+            self.assertGreaterEqual(stats["process_count"], 1)
+            self.assertGreater(stats["rss"], 0)
+            self.assertEqual(stats["log_total"], 800)
+            self.assertEqual((stats["log_largest_name"], stats["log_largest_size"]), ("remote/b.log", 500))
+            self.assertGreater(stats["state_total"], 0)
+            stopped = collect_server_stats(None, 1, logs / "absent", Path(tmp))
+            self.assertFalse(stopped["running"])
+            self.assertEqual(stopped["log_total"], 0)
+
+
+class TestNetworkLinks(unittest.TestCase):
+    """Interfaces de l'ecran Etat & Ressources (2026-11-05) : nos propres constantes de chemin
+    (/proc/net/route, /sys/class/net) substituees, psutil jamais mocke."""
+
+    def setUp(self):
+        self._originals = (system_stats._PROC_NET_ROUTE, system_stats._SYS_CLASS_NET)
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        system_stats._PROC_NET_ROUTE, system_stats._SYS_CLASS_NET = self._originals
+        self._tmp.cleanup()
+
+    def test_default_interface_is_the_lowest_metric_default_route(self):
+        route = self.root / "route"
+        route.write_text(
+            "Iface\tDestination\tGateway\tFlags\tRefCnt\tUse\tMetric\tMask\n"
+            "wlp2s0\t00000000\t0101A8C0\t0003\t0\t0\t600\t00000000\n"
+            "enp4s0\t0001A8C0\t00000000\t0001\t0\t0\t100\t00FFFFFF\n"
+            "enp4s0\t00000000\t0101A8C0\t0003\t0\t0\t100\t00000000\n")
+        system_stats._PROC_NET_ROUTE = route
+        self.assertEqual(system_stats._detect_default_interface(), "enp4s0")
+
+    def test_no_route_file_means_unknown(self):
+        system_stats._PROC_NET_ROUTE = self.root / "absent"
+        self.assertEqual(system_stats._detect_default_interface(), "")
+
+    def test_only_physical_cards_with_their_kind(self):
+        names = list(psutil.net_if_stats())
+        system_stats._SYS_CLASS_NET = self.root
+        (self.root / names[0] / "device").mkdir(parents=True)
+        if len(names) > 1:
+            (self.root / names[1] / "device").mkdir(parents=True)
+            (self.root / names[1] / "wireless").mkdir()
+        links = system_stats._physical_links({names[0]: "10.0.0.2"})
+        self.assertEqual([link["name"] for link in links], sorted(names[:2]))
+        by_name = {link["name"]: link for link in links}
+        self.assertEqual(by_name[names[0]]["kind"], "ethernet")
+        self.assertEqual(by_name[names[0]]["ip"], "10.0.0.2")
+        if len(names) > 1:
+            self.assertEqual(by_name[names[1]]["kind"], "wifi")
+
+
+class TestPacketTotals(unittest.TestCase):
+    def setUp(self):
+        self._original = system_stats._PROC_NET_SNMP
+        self._tmp = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        system_stats._PROC_NET_SNMP = self._original
+        self._tmp.cleanup()
+
+    def test_tcp_segments_and_udp_datagrams_in_plus_out(self):
+        snmp = Path(self._tmp.name) / "snmp"
+        snmp.write_text(
+            "Ip: Forwarding DefaultTTL\nIp: 1 64\n"
+            "Tcp: RtoAlgorithm InSegs OutSegs\nTcp: 1 100 50\n"
+            "Udp: InDatagrams NoPorts OutDatagrams\nUdp: 30 0 12\n")
+        system_stats._PROC_NET_SNMP = snmp
+        self.assertEqual(system_stats._read_packet_totals(), (150, 42))
+
+    def test_unreadable_file_means_unknown(self):
+        system_stats._PROC_NET_SNMP = Path(self._tmp.name) / "absent"
+        self.assertIsNone(system_stats._read_packet_totals())

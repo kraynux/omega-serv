@@ -47,7 +47,9 @@ from omega_serv.ports.process_runner_port import ProcessRunnerPort
 TOTAL_STEPS = 6
 
 _FILES_TO_COPY = ("pyproject.toml", "omega-serv.sh", "install.sh", "LICENSE")
-_DIRECTORIES_TO_COPY = ("src", "config/profiles", "vendor")
+# bin/ : moteur natif omega-http-core (plan moteur C++ lot 9) - sans lui, la nouvelle instance tournerait sur
+# le moteur Python (repli affiche) meme avec `server.engine = native`.
+_DIRECTORIES_TO_COPY = ("src", "config/profiles", "vendor", "bin")
 _EMPTY_DIRECTORIES = ("webroot", "secure", "var")
 
 

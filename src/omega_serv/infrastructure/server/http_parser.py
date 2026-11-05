@@ -15,6 +15,7 @@ aucune limite inventee ici.
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass
 
 from omega_serv.domain.http.headers import has_control_characters
@@ -25,10 +26,20 @@ RAW_LINE_BUFFER_LIMIT = 1_048_576
 MAX_HEADER_COUNT = 100
 
 
+_HTTP_VERSION_RE = re.compile(r"HTTP/[0-9]\.[0-9]")
+"""RFC 9112 §2.3 : `HTTP/` chiffre `.` chiffre, chiffres ASCII seulement (jamais `\\d`, qui accepte tous les
+chiffres Unicode)."""
+
+
 class HttpParseError(Exception):
     def __init__(self, status: HttpStatus, reason: str):
         self.status = status
         self.reason = reason
+        # Ce qui a pu etre lu avant l'erreur, pour la ligne d'access.log (plan moteur C++ §14, valide
+        # 2026-11-02) : ligne de requete brute (None si illisible : trop longue, connexion coupee) et
+        # en-tetes deja analyses (IP client via trusted_proxy, Referer, User-Agent).
+        self.request_line: str | None = None
+        self.headers: tuple[tuple[str, str], ...] = ()
         super().__init__(reason)
 
 
@@ -78,6 +89,15 @@ def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
     method, target, http_version = parts
     if not method or not target or not http_version.startswith("HTTP/"):
         raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requête malformée")
+    # Durcissement 2026-11-02 (RFC 9112 §2.3, RFC 9110 §6.2 ; plan moteur C++ §14) : toute version commencant
+    # par « HTTP/ » etait servie (HTTP/9.9, HTTP/abc...). Version mal ecrite -> 400 ; majeure autre que 1 ->
+    # 505 ; 1.2 a 1.9 -> traitee comme 1.1 (plus haute version 1.x prise en charge).
+    if _HTTP_VERSION_RE.fullmatch(http_version) is None:
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "version HTTP malformée")
+    if http_version[5] != "1":
+        raise HttpParseError(HttpStatus.HTTP_VERSION_NOT_SUPPORTED, "version HTTP non supportée")
+    if http_version[7] not in "01":
+        http_version = "HTTP/1.1"
     return method, target, http_version
 
 
@@ -88,6 +108,10 @@ def _parse_header_line(raw_line: bytes) -> tuple[str, str]:
     if ":" not in line:
         raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tête malformé (pas de ':')")
     name, _, value = line.partition(":")
+    if " " in name or "\t" in name:
+        # Durcissement 2026-11-02 (RFC 9112 §5.1, plan moteur C++ §14) : « X-A : 1 » etait accepte (nom
+        # nettoye par strip) - un intermediaire qui lit l'en-tete autrement ouvre la porte au smuggling.
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "en-tête malformé (espace dans le nom)")
     name = name.strip()
     value = value.strip()
     if not name:
@@ -106,24 +130,29 @@ async def read_request_head(
     corps (voir read_and_discard_body). Chaque limite est appliquee
     PENDANT la lecture, jamais seulement verifiee apres coup."""
     raw_request_line = await _read_line_bounded(reader, max_request_line_size, HttpStatus.URI_TOO_LONG)
-    method, target, http_version = _parse_request_line(raw_request_line)
-
     headers: list[tuple[str, str]] = []
-    total_header_bytes = 0
-    while True:
-        raw_line = await _read_line_bounded(reader, max_header_size, HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
-        total_header_bytes += len(raw_line) + 2
-        if total_header_bytes > max_header_size:
-            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "en-têtes trop volumineux au total")
-        if not raw_line:
-            break
-        if len(headers) >= MAX_HEADER_COUNT:
-            raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "trop d'en-têtes")
-        name, value = _parse_header_line(raw_line)
-        headers.append((name, value))
+    try:
+        method, target, http_version = _parse_request_line(raw_request_line)
 
-    _reject_ambiguous_content_length(headers)
-    _reject_unsupported_expect(headers)
+        total_header_bytes = 0
+        while True:
+            raw_line = await _read_line_bounded(reader, max_header_size, HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
+            total_header_bytes += len(raw_line) + 2
+            if total_header_bytes > max_header_size:
+                raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "en-têtes trop volumineux au total")
+            if not raw_line:
+                break
+            if len(headers) >= MAX_HEADER_COUNT:
+                raise HttpParseError(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "trop d'en-têtes")
+            name, value = _parse_header_line(raw_line)
+            headers.append((name, value))
+
+        _reject_ambiguous_content_length(headers)
+        _reject_unsupported_expect(headers)
+    except HttpParseError as e:
+        e.request_line = raw_request_line.decode("latin-1")
+        e.headers = tuple(headers)
+        raise
 
     return ParsedRequestHead(method=method, target=target, http_version=http_version, headers=tuple(headers))
 
@@ -179,12 +208,14 @@ async def read_and_discard_body(
     if content_length_header is None:
         return 0, b""
 
-    try:
-        content_length = int(content_length_header)
-    except ValueError as e:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length invalide") from e
-    if content_length < 0:
-        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length négatif")
+    # Durcissement 2026-11-02 (plan moteur C++ §14) : chiffres ASCII seulement - int() acceptait aussi
+    # "+5", "1_000", " 5" ou des chiffres non ASCII, lus autrement par d'autres serveurs (smuggling).
+    if not (content_length_header.isascii() and content_length_header.isdigit()):
+        unsigned = content_length_header[1:]
+        if content_length_header.startswith("-") and unsigned.isascii() and unsigned.isdigit():
+            raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length négatif")
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "Content-Length invalide")
+    content_length = int(content_length_header)
     if content_length > max_request_size:
         raise HttpParseError(HttpStatus.PAYLOAD_TOO_LARGE, "corps de requête trop volumineux")
 

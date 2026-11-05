@@ -56,26 +56,41 @@ atteindre le tampon du noyau a chaque saut de ligne (aucune perte en cas
 d'arret brutal), et les descripteurs sont de toute facon liberes par
 l'OS a la fin du processus - ajouter un cycle de vie explicite ici
 n'apporterait rien de plus, pour une ressource qui vit aussi longtemps
-que le processus serveur lui-meme."""
+que le processus serveur lui-meme.
+
+Fichier REMPLACE pendant que le serveur tourne (2026-11-01, trouve en preparant RIPOSTE) : la
+rotation tronque en place, mais « Voir et traiter IP » (infrastructure/logging/logs_maintenance.py::
+remove_ip) reecrit le journal par `os.replace` - nouvel inode. Le descripteur garde ouvert visait
+alors l'ancien fichier, supprime : toutes les lignes suivantes partaient dans un fichier que plus
+personne ne voit (fail2ban / omega-jail, lnav, RIPOSTE) jusqu'au redemarrage du serveur. Desormais,
+au plus une fois par `_REOPEN_CHECK_SECONDS` et par chemin, l'inode du chemin est compare a celui du
+descripteur : different ou fichier disparu -> reouverture. Un `stat()` par seconde, jamais par ligne."""
 from __future__ import annotations
 
+import os
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import IO
 
 _SHARED_LOG_FILE_MODE = 0o664
+_REOPEN_CHECK_SECONDS = 1.0
 
 
 class FileLineLogger:
     def __init__(self) -> None:
         self._handles: dict[Path, IO[str]] = {}
+        self._next_check: dict[Path, float] = {}
         self._lock = threading.Lock()
 
     def append_line(self, path: Path, line: str) -> None:
         try:
             with self._lock:
                 handle = self._handles.get(path)
+                if handle is not None and self._was_replaced(path, handle):
+                    handle.close()
+                    handle = None
                 if handle is None:
                     handle = self._open(path)
                     self._handles[path] = handle
@@ -83,6 +98,20 @@ class FileLineLogger:
         except (OSError, ValueError) as exc:
             print(f"Avertissement : echec d'ecriture du journal {path} : {exc}", file=sys.stderr)
             self._handles.pop(path, None)
+
+    def _was_replaced(self, path: Path, handle: IO[str]) -> bool:
+        """Vrai si `path` ne designe plus le fichier ouvert (remplace ou supprime) - verifie au
+        plus une fois par `_REOPEN_CHECK_SECONDS`, sinon toujours Faux."""
+        now = time.monotonic()
+        if now < self._next_check.get(path, 0.0):
+            return False
+        self._next_check[path] = now + _REOPEN_CHECK_SECONDS
+        try:
+            on_disk = os.stat(path)
+        except FileNotFoundError:
+            return True
+        opened = os.fstat(handle.fileno())
+        return (on_disk.st_ino, on_disk.st_dev) != (opened.st_ino, opened.st_dev)
 
     def _open(self, path: Path) -> IO[str]:
         path.parent.mkdir(parents=True, exist_ok=True)

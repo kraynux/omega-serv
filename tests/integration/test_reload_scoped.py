@@ -173,7 +173,7 @@ class TestReloadKeepsRecidiveCounters(_KeywordListServerCase):
         reload_server(self.server, self.config, self.root, self.filesystem)
 
         self.assertEqual(await self._request("/.env"), 403)       # 2/2 apres reload : ban
-        self.assertEqual(await self._request("/index.html"), 403, "IP bannie : le compteur a survecu au reload")
+        self.assertEqual(await self._request("/index.html"), 451, "IP bannie : le compteur a survecu au reload")
         blocklist = json.loads((self.root / "var" / "lib" / "waf" / "blocklist.json").read_text())
         self.assertIn("sensitive-paths-hostile", json.dumps(blocklist))
 

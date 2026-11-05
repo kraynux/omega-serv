@@ -12,13 +12,15 @@
 Página oficial: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/pt-BR/) &nbsp; Referência, uso, Ajuda e FAQ: [Guia completo](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/pt-BR/guide.html)  
 Prévia: [Capturas de tela](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstração [Servidor de demonstração](https://craftdark.snake-mackarel.ts.net) &nbsp; [Comparativo/testes de servidores web](comparatif-serveurs-web.md)  
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Lua](https://img.shields.io/badge/Lua-5.4%2B-2C2D72.svg)](https://www.lua.org/)
+[![HTML](https://img.shields.io/badge/HTML-5-E34F26.svg)](https://developer.mozilla.org/docs/Web/HTML)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
 [![Interface](https://img.shields.io/badge/Interface-CLI%20%2B%20TUI-cyan.svg)](#3-uso)
 [![Textual](https://img.shields.io/badge/Textual-TUI-5A5AFB.svg)](https://textual.textualize.io/)
+[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
 🌐 Documentação, exportações e interface disponíveis em **17 idiomas** — veja [Idiomas da interface](#idiomas-da-interface).  
 **Idiomas:**
@@ -26,7 +28,7 @@ Prévia: [Capturas de tela](https://kraynux.snake-mackarel.ts.net/omega-serv/scr
 
 ---
 
-**OMEGA-SERV** é um servidor HTTP/1.1 escrito em Python puro (apenas a biblioteca padrão no núcleo do servidor), pensado para servir conteúdo estático e, opcionalmente, PHP-FPM, com um endurecimento do protocolo que não pode ser desativado e módulos de segurança (WAF, TLS, autenticação) que se sobrepõem em vez de serem impostos. Sétima ferramenta da suíte `omega-`, mas deliberadamente **fora da futura integração `omega-suite`** (atua sobre a máquina local que o hospeda, não sobre alvos remotos — mesma família do `omega-fire`); estruturado em Clean Architecture, com `bootstrap/` como raiz de composição.
+**OMEGA-SERV** é um servidor HTTP/1.1 escrito em Python puro (apenas a biblioteca padrão no núcleo do servidor), pensado para servir conteúdo estático e, opcionalmente, PHP-FPM, com um endurecimento do protocolo ativo por padrão e módulos de segurança (WAF, TLS, autenticação) que se sobrepõem em vez de serem impostos. Um motor nativo C++ opcional pode servir as requisições no lugar do motor Python, com os mesmos controles de segurança (ver §6b). Sétima ferramenta da suíte `omega-`, mas deliberadamente **fora da futura integração `omega-suite`** (atua sobre a máquina local que o hospeda, não sobre alvos remotos — mesma família do `omega-fire`); estruturado em Clean Architecture, com `bootstrap/` como raiz de composição.
 
 ## 1. Visão e escopo
 
@@ -35,9 +37,9 @@ A prioridade declarada é **a solidez/segurança do núcleo HTTP em primeiro lug
 ### O que o OMEGA-SERV faz
 
 - Serve conteúdo estático (arquivos, listagem de diretório opcional, aliases, redirecionamentos, reescritas, cache) com resolução de caminhos segura (traversal, dupla codificação, links simbólicos). Os arquivos grandes saem em blocos direto do disco, nunca carregados na memória; cada arquivo traz um `ETag` e um `Last-Modified` (recarregar = resposta 304 vazia) e aceita requisições parciais `Range` (retomar um download, vídeo); imagens, mídias, fontes, CSS e JS recebem um `Cache-Control` padrão, ajustável na tela Cache. Arquivos de texto pré-comprimidos: se `site.css.br` ou `site.css.gz` existir ao lado de `site.css` (criados com `brotli -k site.css` ou `gzip -k site.css`) e o navegador os aceitar, eles são enviados no lugar, nunca uma versão mais antiga que o original.
-- Endurece o protocolo HTTP por padrão, sem opção para desativá-lo: métodos permitidos explícitos, validação do cabeçalho `Host`, rejeição da ambiguidade `Content-Length`/`Transfer-Encoding`, cabeçalhos de segurança e CSP básica impossíveis de contornar.
+- Endurece o protocolo HTTP por padrão: análise estrita das requisições, sem opção para desativá-la (rejeição da ambiguidade `Content-Length`/`Transfer-Encoding`), métodos permitidos explícitos, validação do cabeçalho `Host`, cabeçalhos de segurança e CSP básica nas respostas do site e em suas páginas de erro.
 - Opcionalmente: filtragem WAF (assinaturas, limitação de taxa, lista de bloqueio), TLS direto (certificado autoassinado, assinado por uma CA local, ou público via Let's Encrypt/Certbot com renovação automática — veja §9), autenticação HTTP Basic por zona, PHP via FastCGI/PHP-FPM, zonas de upload confinadas.
-- Modo « boost »: vários processos de servidor, no máximo um por CPU disponível na máquina (tela Resistência e limites); os contadores de segurança (limite de taxa, reincidência) são compartilhados entre eles e continuam exatos.
+- Vários processos de servidor, no máximo um por núcleo físico da máquina com o motor Python (tela Resistência e limites); os contadores de segurança (limite de taxa, reincidência) são compartilhados entre eles e continuam exatos.
 - Audita sua própria configuração (`audit security`) e se instala como serviço do sistema (systemd/OpenRC/runit).
 - CLI não interativa programável de ponta a ponta, **e interface interativa (Textual)** que reveste exatamente os mesmos casos de uso — veja §3. Roteiro da interface (`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`, §12) **totalmente entregue**: registro de capacidades, perfis/opções, configuração detalhada (aliases/redirecionamentos/reescritas/FastCGI/listagem de diretório/autenticação/cache/WAF/proxies confiáveis/reverse proxy de saída/TLS), gerenciamento de logs (Biblioteca/Favoritos, 3 visualizadores — simples/clássico/lnav mesclado —, Ver e tratar IP, origens remotas SSH, rotação/backup/automação/restauração/limpeza/exportação), serviço do sistema, multi-instância (registro, criação), verificação/simulação/auditoria, backup/restauração da configuração, assistente de primeira execução, configurações do aplicativo (tema, perfil de renderização, caminhos de exportação/capturas), guia de ajuda contextual (ficha por tela com exemplos concretos, FAQ, exportação HTML, cobertura exaustiva verificada por teste), indicação sistemática de recarga/reinício após cada salvamento, configuração completa do Active Defense sem edição manual de arquivos.
 
@@ -63,13 +65,14 @@ O Omega-serv **se recusa a iniciar como root**. Nenhum módulo de segurança (WA
 
 - Python 3.10+
 - `openssl` (o binário, não uma biblioteca Python) para tudo o que envolve certificados TLS — as demais funções funcionam sem ele.
+- Motor nativo (opcional, fornecido compilado para x86_64): glibc 2.38 ou mais recente e OpenSSL 3, duas bibliotecas do sistema já usadas pelo Python. Se ele não iniciar, o `install.sh` o recompila no local quando cmake, um compilador C++20 e os cabeçalhos do OpenSSL estão presentes; caso contrário, o omega-serv funciona com seu motor Python.
 
 ### Download
 
-Arquivo da versão mais recente e somas SHA-256 de cada versão: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Arquivo da versão mais recente e somas SHA-256 de cada versão: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -79,7 +82,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Você está atualizando uma instalação existente?** O comando abaixo **pula silenciosamente a extração** se `omega-serv/` já existir (ele supõe que se trata de uma primeira instalação interrompida, não de uma atualização) — você reinstalaria então as dependências sobre o **código antigo inalterado**, sem a menor mensagem de erro. Use em vez disso a seção [Atualização](#atualização) abaixo.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Já extraído aqui, etapa ignorada." || tar -xzf omega-serv-2.0.1.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Já extraído aqui, etapa ignorada." || tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -88,9 +91,10 @@ chmod +x install.sh
 `install.sh`:
 
 1. Cria o ambiente virtual `.venv` se ele ainda não existir.
-2. Instala o pacote (`pip install -e .`) — **nenhuma dependência externa** (veja §6).
+2. Instala o pacote (`pip install -e .`) — **nenhuma dependência externa** para o núcleo do servidor (veja §6).
 3. Torna `omega-serv.sh` e `install.sh` executáveis.
-4. Adiciona o alias `serv` a `~/.bashrc` e `~/.zshrc` (sem duplicar se já estiver presente).
+4. Verifica se o motor nativo fornecido inicia na máquina, e o recompila no local se necessário e se possível — sem nunca bloquear a instalação (§6b).
+5. Adiciona o alias `serv` a `~/.bashrc` e `~/.zshrc` (sem duplicar se já estiver presente).
 
 ### Atualização
 
@@ -98,7 +102,7 @@ Se `omega-serv/` já existir (instalação anterior), **nunca execute `tar` de d
 
 ```bash
 # A partir da pasta PAI de omega-serv/ (nunca de dentro dela)
-tar -xzf omega-serv-2.0.1.tar.gz
+tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -128,6 +132,8 @@ A interface funciona em modo degradado se estas ferramentas estiverem ausentes:
 - `lnav` — análise avançada de logs mesclada na tela **Gerenciamento de logs** (§3); mensagem de erro clara e explícita se o executável não for encontrado, nenhuma falha, o restante da tela (ver/acompanhar/rotação/estatísticas) funciona normalmente sem ele.
 - `scp` (pacote `openssh`/`openssh-clients`, quase sempre já presente) — necessário apenas para as **Origens remotas (SSH)** (§13a); sem ele, a recuperação falha com uma mensagem clara, o restante da Biblioteca funciona normalmente.
 - `python-psutil` (pacote do sistema equivalente ao `psutil` do PyPI) — instalado automaticamente por `pip install -e .` em todos os casos (dependência obrigatória do pacote, a tela **Status e recursos** sempre precisa dele), mas pré-instalá-lo pelo gerenciador do sistema evita que o `pip` tenha de compilar sua wheel localmente.
+- `cmake`, um compilador C++20 (`g++`), os cabeçalhos do OpenSSL 3 e o PCRE2 — necessários só se o motor nativo fornecido não iniciar (glibc anterior à 2.38): o `install.sh` então o recompila na própria máquina. Sem PCRE2, com o WAF ativo o motor compilado faz o Python inspecionar cada requisição (mais lento); sem essas ferramentas, o omega-serv mantém seu motor Python.
+- Uma fonte de emoji (Noto Color Emoji) — opcional, para os ícones do visualizador Simples (Gerenciamento de logs); sem ela, alguns ícones aparecem como um quadrado, nada mais é afetado. Uma Nerd Font não contém esses emoji.
 
 ```bash
 # Arch Linux e derivadas
@@ -138,6 +144,16 @@ sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil openssh-clients
+
+# Compilação local do motor nativo (só se glibc < 2.38)
+sudo pacman -S cmake gcc openssl pcre2                     # Arch
+sudo apt install cmake g++ libssl-dev libpcre2-dev         # Debian/Ubuntu
+sudo dnf install cmake gcc-c++ openssl-devel pcre2-devel   # Fedora
+
+# Ícones do visualizador Simples (fonte de emoji, opcional)
+sudo pacman -S noto-fonts-emoji                            # Arch
+sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
+sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
 ## 3. Uso
@@ -185,13 +201,17 @@ Tela de abertura (splash, fecha com uma tecla ou um clique) → menu principal (
 
 Sistema de ajuda integrado, nunca um simples texto estático: cada tela documentada (ficha com definição/campos a preencher com exemplos concretos/ação disparada/reação — recarga, reinício ou nenhuma) é acessível diretamente a partir dela via `F1`; a tecla `a` abre o menu completo (árvore idêntica à navegação real do aplicativo) com acesso à FAQ (armadilhas encontradas no uso real, p. ex. classes de ataque do Active Defense, permissões de serviço compartilhado) e uma exportação HTML autônoma (mantendo o tema ativo) do guia inteiro. Recorre a uma tela de referência genérica enquanto não existir uma ficha específica — cobertura atualmente exaustiva, verificada por teste.
 
+#### Contato e suporte (guia de ajuda)
+
+O guia de ajuda (tecla `a`) oferece uma tela **Contato e suporte**: *Pagar um café* (página do PayPal do desenvolvedor), *Contatar o suporte* (formulário de contato do site, endereço de e-mail exibido) e *Declarar-me usuário (anônimo)*. A declaração é voluntária e desativada por padrão: serve apenas para contar os usuários e, se quiser, o continente ou o país deles (listas fechadas, nunca texto livre). Ela envia uma chave sorteada ao acaso, a versão do omega-serv e o modo escolhido (*uma única vez* ou *todo dia*, este último permitindo contar as instalações ativas); nunca um nome, nome de máquina, conteúdo ou logs. O envio diário roda em um processo separado e nunca deixa o servidor lento. O endereço IP não é registrado nas declarações, mas, como qualquer visita, passa pelos controles de segurança e pelo log do servidor de recepção. Retirada a qualquer momento pela mesma tela ou com `omega-serv declaration withdraw`; `DO_NOT_TRACK=1` interrompe todo envio automático.
+
 #### Menu principal (interface interativa)
 
 - **Assistente de primeira execução** — percurso guiado em 8 etapas (boas-vindas → capacidades em somente leitura → escolha do perfil → bind/porta → TLS opcional → verificação → resumo + gravação → proposta de instalação do serviço); permite gerar uma configuração completa e colocar o servidor em funcionamento sem conhecer a CLI.
 - **Registro de capacidades** — sonda do sistema em somente leitura (sistema de init, porta configurada já ocupada ou não, presença de `openssl`/`logrotate`/`tailscale`/`lnav`, espaço em disco, limite de descritores...), exportação JSON/HTML.
 - **Perfis** — mesmo caso de uso que `profile` na CLI (§5), diff sempre exibido antes da gravação.
 - **Configuração detalhada do servidor** — CRUD completo sobre aliases/redirecionamentos/reescritas/listagem de diretório/proxies confiáveis/reverse proxy de saída/FastCGI/cache/autenticação/controle de acesso/páginas de erro, além do submenu **TLS** (status, geração autoassinada, assistente de CA local, assistente Let's Encrypt/Certbot, renovação automática, revogação, ativar/desativar — veja §9); um segundo quadro, **OPÇÕES E VERIFICAÇÃO**, agrupa os atalhos para **Opções** (`option` CLI, §7) e **Verificar a configuração** (`config check` CLI, §10) — o mesmo percurso de ajustar e depois verificar; essas duas telas não são mais acessíveis diretamente pelo menu principal. O WAF não fica mais ali (veja "Segurança ativa" abaixo): ele expõe sobretudo um estado operacional que muda continuamente, não um simples formulário de configuração estático. Cada salvamento indica sistematicamente o que vem a seguir: recarga a quente automática e silenciosa se houver um serviço ativo (listagem de diretório, acesso, aliases/redirecionamentos/reescritas, cache, páginas de erro, proxies confiáveis, zonas de reverse proxy/FastCGI, usuários/zonas de autenticação), ou confirmação explícita de reinício completo quando a mudança afeta o socket de escuta, o TLS ou o Active Defense — nenhuma tela deixa mais você adivinhando se é preciso reiniciar o servidor.
-- **Segurança ativa** — tela única que agrupa dois blocos lado a lado: **Active Defense** (Status, Ameaças monitoradas com pontuação/nível, Incidentes com cronologia/exportação IoC/relatório, atribuições de Deception, Simular uma decisão em dry-run, **Configurações** — configuração completa sem nunca editar `config/omega-serve.json` à mão, veja §11) e **WAF** (Status, Módulos — modo/pacotes de regras/lista de bloqueio, Testar uma requisição, Custom — criação de regras personalizadas e carregamento de listas de caminhos/palavras-chave editáveis com o mouse (veja §11b), Magnet — importar um script `mod_magnet` externo com verificação de compatibilidade antes da ativação) — veja §11.
+- **Segurança ativa** — tela única que agrupa dois blocos lado a lado: **Active Defense** (Status, Ameaças monitoradas com pontuação/nível, Incidentes com cronologia/exportação IoC/relatório, atribuições de Deception, Simular uma decisão em dry-run, **Configurações** — configuração completa sem nunca editar `config/omega-serve.json` à mão, veja §11) e **WAF** (Status, Módulos — modo/pacotes de regras/lista de bloqueio, Testar uma requisição, Custom — criação de regras personalizadas e carregamento de listas de caminhos/palavras-chave editáveis com o mouse (veja §11b), Magnet — importar um script `mod_magnet` externo com verificação de compatibilidade antes da ativação) — veja §11. **RIPOSTE**: terceiro bloco (WAF → Active Defense → RIPOSTE, a ordem de um ataque) — respostas graduais ao longo do tempo, veja §11d.
 - **Gerenciamento de logs** — menu em duas colunas. Coluna **Biblioteca**: central que referencia todo log a tratar (alimentação manual, um clique adiciona de ofício os logs próprios da instância — access/error/WAF nativo, + script magnet §7 se ativo —, ou uma **origem remota** recuperada via SSH, veja abaixo); **Favoritos** (combinação logs + visualizador salva com um nome, abertura direta); **Ver os logs** com 3 visualizadores à escolha conforme o número de logs selecionados — Simples (tail ao vivo + estatísticas genéricas IP/erros/códigos HTTP em qualquer formato), Clássico (leitura + acompanhamento), `lnav` mesclado (renderização de terminal real dentro da interface, logs magnet incluídos de ofício + caminhos manuais **fixados** para mantê-los entre sessões); **Ver e tratar IP** (top IPs em um ou vários logs à escolha, período 24 h/7 d/30 d/tudo, remoção de um IP). Coluna **Manutenção** (sem alterações): rotação/arquivamento manual ou automático por limite de tamanho, criação imediata de backup, configuração/gerenciamento de automações agendadas (declarativas — veja a nota abaixo), restaurar/limpar um arquivo, exportação da lista.
 - **Serviço** — mesmas ações que `service` na CLI (§12), elevação `sudo` pontual por ação, nunca o aplicativo inteiro executado como root.
 - **Multi-instância** — registro global (`~/.config/omega-serv/instances.json`, fora de qualquer diretório de projeto) das instalações conhecidas na máquina, com o status systemd de cada uma; criação de uma nova instância (cópia da árvore, ambiente virtual e dependências próprios, configuração nova com porta distinta, verificação de não aninhamento e de conflito de porta) diretamente pela interface. Botão praticamente invisível para uma instalação única (o rótulo "Multi-instância" passa a "Instâncias (N)" assim que 2 forem conhecidas); troca completa para outra instância (`os.execv`, confirmação explícita, splash dedicado anunciando a troca no reinício); desinstalação completa de uma instância (remoção da unidade, da conta de sistema dedicada se nenhuma outra instância a usar, e exclusão opcional do diretório, nunca por padrão).
@@ -227,7 +247,7 @@ Apenas preferências da interface — nunca confundidas com `config/omega-serve.
 ./omega-serv.sh option disable waf
 
 # Simular uma requisição sem iniciar o servidor (útil para validar uma regra antes de ativá-la)
-./omega-serv.sh simulate-request GET /index.html
+./omega-serv.sh simulate-request --method GET --url /index.html
 
 # WAF (funciona mesmo com a opção desativada, via --force implícito)
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1
@@ -249,6 +269,12 @@ Apenas preferências da interface — nunca confundidas com `config/omega-serve.
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
+# RIPOSTE (respostas graduais ao longo do tempo, opção "riposte" - veja §11d)
+./omega-serv.sh riposte status
+./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
+./omega-serv.sh riposte actions list
+./omega-serv.sh riposte stop
+
 # Certificados TLS - autoassinado (9a)
 ./omega-serv.sh certs generate-self-signed --cn localhost --san-dns localhost --san-ip 127.0.0.1
 ./omega-serv.sh certs show
@@ -265,7 +291,7 @@ Apenas preferências da interface — nunca confundidas com `config/omega-serve.
 
 # Autenticação HTTP Basic
 ./omega-serv.sh auth add-user --username alice
-./omega-serv.sh auth create-zone --url-prefix /admin/ --allowed-users alice
+./omega-serv.sh auth create-zone --path-prefix /admin/ --realm "Administration" --allowed-users alice
 ./omega-serv.sh auth list
 
 # Auditoria de segurança (nunca bloqueia, informativa)
@@ -350,6 +376,15 @@ src/omega_serv/
 
 Regras verificadas pelo `import-linter` (8 contratos): `domain`/`core` nunca dependem das camadas externas; `interfaces.tui` nunca depende diretamente de `infrastructure`; `textual` confinado a `interfaces.tui`; `subprocess` confinado a `infrastructure/process/subprocess_runner.py` (e `infrastructure/lnav/`, fluxo PTY interativo); `ssl` confinado a `infrastructure/tls/ssl_context_builder.py`; `jinja2` confinado a `infrastructure/exporters/html_exporter.py`; `sqlite3` confinado a `infrastructure/persistence/sqlite_active_defense_connection.py` (único armazenamento relacional do projeto, reservado ao Active Defense — veja §11); `lupa` confinado a `infrastructure/waf/lua_waf_adapter.py` (script WAF complementar « magnet », §7).
 
+## 6b. Motor HTTP e número de processos
+
+Dois motores podem servir as requisições. Com o **motor Python**, o padrão, o interpretador Python trata todas as requisições. O **motor nativo** (C++, `bin/omega-http-core`) lê, analisa e serve as requisições ele mesmo; o servidor Python mantém a configuração, a supervisão e as decisões de segurança.
+
+- **Duas configurações**: o motor (tela **Configuração básica**) e o número de processos (tela **Resistência e limites**). O número de processos é limitado conforme o motor e o processador detectado: com o motor Python, até um por núcleo físico; com o motor nativo, que já usa todos os núcleos, são os processos dos controles de segurança, 1, ou 2 a partir de 4 núcleos físicos. A tela indica o que aumentar traz na máquina e recusa um valor grande demais; o que roda aparece tal qual (“motor nativo, 1 processo”). Mudar de motor ou de número de processos exige um reinício completo. O que a escolha muda, medido: FAQ do guia e [comparativo de servidores web](comparatif-serveurs-web.md).
+- **Mesmas respostas, mesmos logs**: com o motor nativo, o conteúdo estático, os redirecionamentos, as reescritas, os aliases, o cache, as páginas de erro e os cabeçalhos de segurança são servidos pelo nativo; ele mesmo procura as regras do WAF e serve sozinho uma requisição à qual nenhuma corresponde, e qualquer outra requisição (correspondência ou dúvida do WAF, Active Defense, autenticação) passa por um processo Python que aplica exatamente os mesmos controles e grava os mesmos logs de segurança (o RIPOSTE e o omega-jail não veem nenhuma diferença); a listagem de diretórios e as páginas internas são pedidas ao Python; o proxy reverso, o FastCGI, o envio de arquivos e o WebSocket lhe são confiados durante toda a conexão. O TLS direto é tratado pelo nativo com a mesma biblioteca e as mesmas configurações.
+- **Nunca uma mistura**: uma única regra decide o motor efetivo e tudo o exibe (tela **Status e recursos**, `omega-serv engine status`). Se o nativo não puder servir tudo (TLS direto com proxy reverso, FastCGI ou envio de arquivos) ou não iniciar, quem serve é o motor Python, e o motivo é exibido. Na **Configuração básica**, a escolha do nativo fica desativada enquanto uma função ativa a impedir, com o que é preciso mudar para torná-la possível; uma configuração salva em outro lugar que faria perder o nativo pede primeiro uma confirmação.
+- **Se o controle Python não responder**, decide `waf.on_internal_error`: servir sem controle ou recusar (503). Uma zona de autenticação é sempre recusada nesse caso, e um endereço já banido continua recusado (451).
+
 ## 7. Módulos opcionais
 
 Todos desativados por padrão em todos os perfis fornecidos — ativação sempre explícita (`option enable <nome>` ou `config enable-tls`):
@@ -363,6 +398,7 @@ Todos desativados por padrão em todos os perfis fornecidos — ativação sempr
 | Reverse proxy de saída | O Omega-serv atua ele mesmo como proxy para um ou vários backends (sentido inverso de `server.tls.mode = "behind_proxy"`) — balanceamento de carga (round-robin, ponderado, least-connections, ip-hash, least-response-time, carga real), afinidade de sessão e regras de roteamento por cabeçalho, saúde passiva e ativa, cache de respostas (multivariante `Vary`), backpressure, proteção contra loops, API de administração a quente — veja §7a para o detalhamento completo |
 | Upload | Zonas confinadas, cotas por zona, nomes de arquivo gerados no servidor — sem streaming na V1 (limitado por `server.max_request_size`) |
 | `active_defense` | Deception + modo guerra a partir dos sinais WAF já calculados (nunca uma segunda pontuação): iscas estáticas, desaceleração/registro enriquecido/limitação de taxa direcionados, incidentes + exportação IoC — veja §11 |
+| `riposte` | Respostas graduais ao longo do tempo: memória de reincidência por endereço, bans cada vez mais longos (blocklist do WAF, ban de rede pelo omega-jail) ou isca prolongada, revogação e parada de emergência — processo separado, veja §11d |
 
 ### 7a. Reverse proxy de saída — detalhes
 
@@ -377,12 +413,12 @@ O OMEGA-SERV pode atuar ele mesmo como reverse proxy para um ou vários backends
 - **WebSocket** — upgrade permitido por zona, um único upstream fixado durante toda a vida do túnel depois de estabelecido, sem timeout de aplicação.
 - **Administração a quente** — pequena API HTTP local (`/.omega-serv-admin/`, protegida por `trusted_proxy` como a sonda de carga nativa) que permite à TUI ler/forçar o estado DRAINING/MAINTENANCE de um backend e ler a taxa hits/miss do cache **do servidor realmente em execução** (tela dedicada *Status ao vivo dos backends*) — como a TUI e o servidor continuam sendo dois processos separados sem memória compartilhada, esse canal HTTP local é a única ponte entre os dois.
 
-## 8. Endurecimento HTTP (não desativável)
+## 8. Endurecimento HTTP (ativo por padrão)
 
-- Cabeçalho/linha de requisição limitados **durante** a leitura (nunca depois), dobra de cabeçalho obsoleta recusada, `Transfer-Encoding` sempre recusado (nunca adivinhado).
-- `Content-Length` duplicado rejeitado; `Expect: 100-continue` rejeitado de forma limpa (417).
-- Lista branca explícita de métodos (405 + `Allow` caso contrário), cabeçalho `Host` validado (ausente/vazio/duplicado-mesmo-idêntico/caractere de controle → 400).
-- Cabeçalhos de segurança e CSP básica (`enforce`/`report-only`) aplicados a **toda** resposta, inclusive os erros — impossíveis de contornar por uma opção. `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` sempre `same-origin`, sem risco real de quebrar um site. `Cross-Origin-Embedder-Policy` sempre emitido explicitamente (nunca ausente — um scanner externo distingue « não considerado » de « permissivo por escolha »), padrão `unsafe-none` em **todos** os perfis, inclusive `hardened`: ao contrário dos dois anteriores, `require-corp`/`credentialless` podem bloquear recursos cross-origin (fontes, imagens, iframes de terceiros) próprios do site realmente servido — ajustável (`security.coep_mode`). Zonas CSP (`security.csp_zones`): exceções **explícitas** por prefixo de caminho (p. ex. `unsafe-inline` apenas sob `/uma-pasta/` que realmente precisa disso), cada uma substituindo inteiramente a política padrão para seu prefixo — nunca uma mesclagem, nunca um relaxamento global; toda exceção continua visível em `audit security` (CSP-001/CSP-002 também analisam as zonas), mesmo que deliberada. Criação guiada por um assistente diretiva por diretiva (tela **Segurança genérica**), cada campo pré-preenchido com o valor **atual** da política global — para alterar apenas o que deve mudar, em vez de partir de um campo vazio que sacrificaria as outras diretivas sem querer; uma confirmação explícita adicional é pedida se a zona montada relaxar `unsafe-inline`/`unsafe-eval`/uma origem genérica `*`.
+- Análise das requisições, sem opção para desativá-la: cabeçalho/linha de requisição limitados **durante** a leitura (nunca depois), dobra de cabeçalho obsoleta recusada, `Transfer-Encoding` sempre recusado (nunca adivinhado).
+- `Content-Length` duplicado rejeitado; cabeçalho `Expect` (por exemplo `100-continue`) rejeitado de forma limpa (417).
+- Lista branca explícita de métodos (405 + `Allow` caso contrário), cabeçalho `Host` validado (ausente/vazio/duplicado-mesmo-idêntico/caractere de controle → 400); esse controle é ativo por padrão e só se desativa na configuração (`security.require_valid_host`).
+- Cabeçalhos de segurança e CSP básica (`enforce`/`report-only`) aplicados às respostas do site, inclusive às suas páginas de erro (403, 404…), e nunca removidos nem sobrescritos por um módulo. Exceção: as respostas enviadas antes de qualquer tratamento da requisição (requisição malformada ou grande demais, tempo esgotado, `Host` inválido, método recusado, servidor saturado) saem sem esses cabeçalhos — são páginas de erro curtas, sem conteúdo do site. Ativos por padrão, desativáveis só na tela **Segurança genérica** (`security.security_headers_enabled`). `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` sempre `same-origin`, sem risco real de quebrar um site. `Cross-Origin-Embedder-Policy` sempre emitido explicitamente (nunca ausente — um scanner externo distingue « não considerado » de « permissivo por escolha »), padrão `unsafe-none` em **todos** os perfis, inclusive `hardened`: ao contrário dos dois anteriores, `require-corp`/`credentialless` podem bloquear recursos cross-origin (fontes, imagens, iframes de terceiros) próprios do site realmente servido — ajustável (`security.coep_mode`). Zonas CSP (`security.csp_zones`): exceções **explícitas** por prefixo de caminho (p. ex. `unsafe-inline` apenas sob `/uma-pasta/` que realmente precisa disso), cada uma substituindo inteiramente a política padrão para seu prefixo — nunca uma mesclagem, nunca um relaxamento global; toda exceção continua visível em `audit security` (CSP-001/CSP-002 também analisam as zonas), mesmo que deliberada. Criação guiada por um assistente diretiva por diretiva (tela **Segurança genérica**), cada campo pré-preenchido com o valor **atual** da política global — para alterar apenas o que deve mudar, em vez de partir de um campo vazio que sacrificaria as outras diretivas sem querer; uma confirmação explícita adicional é pedida se a zona montada relaxar `unsafe-inline`/`unsafe-eval`/uma origem genérica `*`.
 - Endereços IPv4 mapeados em IPv6 (`::ffff:x.x.x.x`) normalizados antes de qualquer comparação (lista de bloqueio, proxy confiável, limitação de taxa) — caso contrário, um contorno conhecido.
 - Verificado por testes baseados em propriedades (`hypothesis`, milhares de exemplos gerados) contra o parser HTTP e o resolvedor de caminhos, além dos testes unitários/de integração clássicos.
 
@@ -458,13 +494,24 @@ O WAF pode carregar **listas editáveis** em arquivo de texto, um caminho (ou um
 
 ## 11c. Limite de taxa por pasta e por IP/rede (WAF)
 
-O limite de taxa do WAF (balde de fichas, `options.waf.rate_limit`, 60 requisições / 60 s por IP por padrão) pode ser refinado em **Segurança ativa → Exclusões e limite de taxa** (ou à mão, `rate_limit.path_policies` / `rate_limit.source_policies`):
+O limite de taxa do WAF (balde de fichas, `options.waf.rate_limit`, 60 requisições / 60 s por IP por padrão) pode ser refinado em **Segurança ativa → Limitações** (ou à mão, `rate_limit.path_policies` / `rate_limit.source_policies`):
 
 - **Regra por pasta** (`prefix`, `requests`, `window_seconds`): ela **substitui** o limite global para essa pasta, com seu próprio contador (`requests: 0` = ilimitado). O prefixo mais longo vence; `/images` cobre `/images/a.png`, nunca `/images2`. Tipicamente uma página pesada (galeria de imagens) que retorna 429.
 - **Regra por IP/rede** (`network`, `requests`, `window_seconds`, `trusted`): mesmo princípio; a rede mais precisa vence. Prioridade: pasta, depois IP/rede, depois o limite global.
 - **Banimento inalterado para o público**: um excesso de um IP público continua registrado `"action": "block"` em `waf-alerts.log`, portanto pode ser banido pelo omega-jail (3 rejeições em 10 min → 12 h). Uma **fonte segura** — rede `never_auto_block` ou regra marcada `trusted: true` — continua recebendo o 429, mas é registrada `"action": "throttle"`, que a jail nunca conta.
 - **Script magnet**: o próprio limite de taxa dele (resposta 429) nunca conta como detecção, portanto nunca leva ao auto-ban; em uma requisição coberta por uma regra de pasta ou de IP/rede, a regra nativa prevalece e o 429 do magnet é ignorado (as assinaturas de ataque dele continuam aplicadas).
 - Uma regra de taxa **nunca** desativa a inspeção do WAF; inversamente, uma exclusão de inspeção (`exclusions.path_prefixes`) nunca suspende o limite de taxa. Sem `trusted_proxy` ativo, uma regra que cubra `127.0.0.1`/`::1` é ignorada (a mesma salvaguarda de `never_auto_block`).
+
+## 11d. RIPOSTE (respostas graduais ao longo do tempo)
+
+Módulo opcional (`option enable riposte`, desativado por padrão, exige reinício completo): enquanto o Active Defense reage **durante** a requisição, o RIPOSTE age **ao longo do tempo**. Ele se lembra dos endereços que voltam após um silêncio (episódios) e aplica a eles bans cada vez mais longos — níveis de 1 h, 6 h, 24 h e 7 d por padrão, janela de reincidência de 30 d, histórico de 90 d.
+
+- **Processo separado**, iniciado e supervisionado pelo serviço (com um ou vários processos, um por instância): lê os logs do WAF e do Active Defense, nunca uma requisição em andamento. Sem WAF ativo, não vê nenhum ataque.
+- **Políticas**: quando agir (classes de ataque, número de retornos, nível do Active Defense, visitas a iscas) e como (ban local na blocklist do WAF, ban local + ban de rede pelas jails do omega-jail, ou isca do Active Defense prolongada). Cinco cenários prontos para carregar; cada política pode ser medida nos logs reais e simulada antes de ser ativada. Uma política ativa age automaticamente.
+- **Nada desaparece**: cada ação continua visível, em andamento ou concluída, com o motivo. Três níveis de parada: revogar uma ação (com isenção ou « não conta para a reincidência »), desativar uma regra, parada de emergência memorizada.
+- **Salvaguardas**: as mesmas exclusões do WAF (host local, Tailscale, rede local), nunca acima de um ban manual ou mais longo, uma ação por episódio, limite de bans simultâneos.
+- **Ban local e ban de rede**: o ban local é aplicado pelo omega-serv na lista de bloqueio do WAF; o endereço recebe a página 451 “Seu IP foi banido” em todas as suas requisições, durante todo o ban. O ban de rede é confiado ao fail2ban pelos jails do omega-jail (`<service>-riposte-1h/6h/24h/7d`, um conjunto por instância); ele não tem efeito quando as conexões chegam por um proxy local (Tailscale Funnel), onde só o ban local protege.
+- **Interface**: seis telas em Segurança ativa (Estado, Políticas, Ações, Reincidências, Simular, Ajustes) e os mesmos comandos de linha (`riposte …`). Backup: `config backup --include-riposte`.
 
 ## 12. Serviços e operação
 

@@ -10,17 +10,14 @@ import ssl
 from pathlib import Path
 
 from omega_serv.domain.config.entities import TlsConfig
+from omega_serv.domain.security.tls.cipher_suites import MODERN_CIPHER_SUITES
 
 _VERSION_MAP: dict[str, ssl.TLSVersion] = {
     "TLS1.2": ssl.TLSVersion.TLSv1_2,
     "TLS1.3": ssl.TLSVersion.TLSv1_3,
 }
 
-_MODERN_CIPHER_SUITES = (
-    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:"
-    "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305"
-)
+_MODERN_CIPHER_SUITES = MODERN_CIPHER_SUITES  # domain/security/tls/cipher_suites.py (partagee avec le natif)
 
 
 def build_ssl_context(tls_config: TlsConfig, project_root: Path) -> ssl.SSLContext:

@@ -249,3 +249,38 @@ class TestRouteRequest(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRoutingTablesCache(unittest.IsolatedAsyncioTestCase):
+    """Plan moteur C++, lot 0 (2026-11-02) : regles analysees une fois par configuration. Un rechargement remplace
+    l'objet de configuration : les nouvelles regles doivent s'appliquer des la requete suivante."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.project_root = Path(self._tmp.name)
+        (self.project_root / "webroot").mkdir()
+        self.filesystem = LocalFilesystem()
+        self.resolver = SafePathResolver(self.filesystem, self.project_root / "webroot")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _config(self, destination: str) -> OmegaServConfig:
+        return OmegaServConfig.from_dict({
+            "options": {"redirects": {"enabled": True, "list": [
+                {"url_prefix": "/old", "destination": destination, "status_code": 301},
+            ]}},
+        })
+
+    async def test_same_config_reuses_tables_and_new_config_rebuilds_them(self):
+        from omega_serv.application.server.route_request import routing_tables
+
+        first = self._config("/new-1")
+        self.assertIs(routing_tables(first), routing_tables(first))
+        response = await route_request(_make_request("/old"), self.resolver, self.filesystem, first, self.project_root)
+        self.assertEqual(response.headers["Location"], "/new-1")
+        # rechargement : autre objet de configuration -> nouvelles regles immediatement
+        second = self._config("/new-2")
+        response = await route_request(_make_request("/old"), self.resolver, self.filesystem, second, self.project_root)
+        self.assertEqual(response.headers["Location"], "/new-2")
+        self.assertIsNot(routing_tables(first), routing_tables(second))

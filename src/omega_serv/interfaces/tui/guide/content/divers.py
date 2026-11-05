@@ -104,6 +104,24 @@ BACKUP_SCREEN = ScreenGuide(
     definition=_("Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration - le fichier de configuration est toujours inclus, jamais chiffre par défaut."),
     fields=(
         FieldGuide(
+            label=_("Tout sauvegarder (configuration complète)"),
+            definition=_("Coche toutes les cases : de quoi retrouver la configuration entière et ses modules."),
+            utilisation=_("Case à cocher ; les secrets (zones Auth, clés TLS) restent confirmés à la création."),
+            action=_("Pris en compte à la création."),
+            reaction=_("Ce qui est désigné hors du dossier omega-serv (ex. un certificat dans /etc) n'est jamais "
+                       "archivé, et c'est indiqué après la création."),
+        ),
+        FieldGuide(
+            label=_("RIPOSTE, pages d'erreur, préférences, bibliothèque des journaux"),
+            definition=_("Base RIPOSTE ; pages d'erreur personnalisées ; thème, langues et nom du service ; "
+                         "favoris, sources distantes et rotations planifiées des journaux."),
+            utilisation=_("Cases à cocher. Les règles WAF comprennent aussi les listes de mots-clés et les scripts Magnet."),
+            action=_("Pris en compte à la création ; les bases (Active Defense, RIPOSTE) sont copiées de façon "
+                     "cohérente, serveur en marche."),
+            reaction=_("Une sauvegarde qui contient une base n'est jamais restaurée sous un serveur actif : "
+                       "« Arrêter, restaurer, redémarrer » est proposé, et les bases actuelles sont mises de côté."),
+        ),
+        FieldGuide(
             label=_("Inclure les règles WAF"),
             definition=_("Ajoute les règles WAF et la liste de blocage à la sauvegarde."),
             utilisation=_("Case à cocher."),
@@ -239,6 +257,97 @@ SETTINGS_SCREEN = ScreenGuide(
     consequences=_("Ne touche jamais config/omega-serve.json - réglages purement locaux à cette interface."),
 )
 
+CONTACT_SUPPORT_SCREEN = ScreenGuide(
+    screen_class_name="ContactSupportScreen",
+    title=_("Contact et support"),
+    acces=_("Guide d'aide (touche a) -> Contact et support"),
+    definition=_("Payer un café au développeur, se déclarer utilisateur anonyme d'omega-serv, ou contacter le "
+                 "support. Les adresses sont toujours affichées en clair."),
+    fields=(
+        FieldGuide(
+            label=_("Payer un café"),
+            definition=_("Ouvre la page PayPal du développeur (https://paypal.me/kraynux)."),
+            utilisation=_("Aucune saisie."),
+            action=_("Ouvre l'adresse dans votre navigateur, même si l'interface tourne sous sudo."),
+            reaction=_("Sans session graphique (SSH, serveur), un message rappelle l'adresse à ouvrir vous-même."),
+        ),
+        FieldGuide(
+            label=_("Se déclarer utilisateur (anonyme) / Modifier ma déclaration"),
+            definition=_("Ouvre le formulaire de déclaration anonyme."),
+            utilisation=_("Le libellé devient « Modifier ma déclaration » une fois déclaré."),
+            action=_("Ouvre le formulaire Se déclarer utilisateur (anonyme)."),
+            reaction=_("Aucun effet ici - voir la fiche du formulaire."),
+        ),
+        FieldGuide(
+            label=_("Ne plus me déclarer"),
+            definition=_("Retire la déclaration."),
+            utilisation=_("Actif seulement une fois déclaré ; une confirmation est demandée."),
+            action=_("Envoie un retrait : votre entrée est supprimée du compteur, puis la clé est effacée de cette "
+                     "installation et les envois quotidiens s'arrêtent."),
+            reaction=_("Réception injoignable : la clé est quand même effacée ; l'entrée disparaît seule (90 jours "
+                       "en envoi quotidien, 1 an en envoi unique)."),
+        ),
+        FieldGuide(
+            label=_("Contacter le support"),
+            definition=_("Ouvre le formulaire de contact du site (https://kraynux.snake-mackarel.ts.net/contact/). "
+                         "L'adresse kraynux@proton.me est aussi affichée."),
+            utilisation=_("Aucune saisie : omega-serv n'envoie jamais de message lui-même."),
+            action=_("Ouvre l'adresse dans votre navigateur."),
+            reaction=_("Sans session graphique, recopiez l'adresse affichée."),
+        ),
+    ),
+    consequences=_("Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déclaration) ou sur Ne plus "
+                   "me déclarer."),
+)
+
+DECLARATION_SCREEN = ScreenGuide(
+    screen_class_name="DeclarationScreen",
+    title=_("Se déclarer utilisateur (anonyme)"),
+    acces=_("Contact et support -> Se déclarer utilisateur (anonyme)"),
+    definition=_("Déclaration volontaire et anonyme : elle compte les utilisateurs d'omega-serv et, si vous le "
+                 "souhaitez, leur continent ou leur pays. Rien n'est activé par défaut."),
+    fields=(
+        FieldGuide(
+            label=_("Envoi"),
+            definition=_("Une seule fois, ou chaque jour."),
+            utilisation=_("Obligatoire, aucun choix présélectionné : Envoyer reste grisé tant qu'il n'est pas choisi."),
+            action=_("Une seule fois : un envoi maintenant. Chaque jour : le service omega-serv renvoie le même "
+                     "message au plus une fois par 24 h, ce qui permet de compter les installations actives."),
+            reaction=_("L'envoi quotidien tourne dans un processus à part : il ne ralentit jamais le serveur, ni au "
+                       "démarrage ni à l'arrêt. DO_NOT_TRACK=1 dans l'environnement du service le désactive."),
+        ),
+        FieldGuide(
+            label=_("Continent / Pays"),
+            definition=_("Deux listes indépendantes, facultatives, chacune avec « Autre (non référencé) »."),
+            utilisation=_("Laisser « Non précisé » pour ne rien envoyer de ce champ."),
+            action=_("Ajoute le code choisi au message (EU, FR... ou autre)."),
+            reaction=_("Ni ville, ni texte libre."),
+        ),
+        FieldGuide(
+            label=_("Message envoyé"),
+            definition=_("Le message exact, mis à jour à chaque choix."),
+            utilisation=_("Lecture seule."),
+            action=_("Aucune."),
+            reaction=_("Une clé tirée au hasard (32 caractères) est créée au premier envoi, sous "
+                       "var/lib/declaration/ ; elle ne dérive ni de la machine ni de vous."),
+        ),
+        FieldGuide(
+            label=_("Envoyer"),
+            definition=_("Envoie la déclaration en HTTPS vers le site du développeur."),
+            utilisation=_("5 secondes au plus ; l'écran ne se fige pas."),
+            action=_("Succès : retour à Contact et support, état « déclaré »."),
+            reaction=_("Réception injoignable : en « une seule fois », rien n'est enregistré ; en « chaque jour », "
+                       "l'accord est gardé et le service réessaie dans 24 h."),
+        ),
+    ),
+    points_de_vigilance=(
+        _("L'adresse IP n'est pas enregistrée dans les déclarations, mais comme pour toute visite d'un site, elle "
+          "passe par les contrôles de sécurité et le journal technique du serveur de réception."),
+        _("Ligne de commande : omega-serv declaration status | declare --mode unique|quotidien [--continent X] "
+          "[--pays Y] --yes | withdraw."),
+    ),
+)
+
 ALL_DIVERS_GUIDES: tuple[ScreenGuide, ...] = (
     CAPABILITIES_SCREEN,
     CAPABILITY_DETAIL_SCREEN,
@@ -247,4 +356,6 @@ ALL_DIVERS_GUIDES: tuple[ScreenGuide, ...] = (
     AUDIT_SCREEN,
     BACKUP_SCREEN,
     SETTINGS_SCREEN,
+    CONTACT_SUPPORT_SCREEN,
+    DECLARATION_SCREEN,
 )

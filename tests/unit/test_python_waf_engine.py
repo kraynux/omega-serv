@@ -24,6 +24,18 @@ def _sqli_pack():
 
 
 class TestPythonWafEngine(unittest.TestCase):
+    def test_only_scopes_read_by_a_rule_are_built(self):
+        headers_pack = compile_rule_pack(RulePack(
+            version=1, pack="p", enabled=True,
+            rules=(RuleDefinition(id="H1", description="", scope=("headers",), pattern=r"x-evil", weight=5),),
+        ))
+        request = _request(headers=[("X-Evil", "1"), ("User-Agent", "ua")])
+        self.assertNotIn("headers", PythonWafEngine((_sqli_pack(),), parse_waf_config({"mode": "block"}))._build_scope_texts(request))
+        engine = PythonWafEngine((_sqli_pack(), headers_pack), parse_waf_config(
+            {"mode": "block", "inspect": {"headers": True}, "scoring": {"block_threshold": 5}}))
+        self.assertIn("headers", engine._build_scope_texts(request))
+        self.assertEqual(engine.inspect(request).action, "block")
+
     def test_clean_request_is_allowed(self):
         engine = PythonWafEngine((_sqli_pack(),), parse_waf_config({"mode": "block"}))
         decision = engine.inspect(_request(query="q=hello"))

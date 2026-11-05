@@ -48,6 +48,8 @@ from omega_serv.application.security.manage_blocklist import (
 )
 from omega_serv.application.security.run_audit import run_audit
 from omega_serv.application.security.simulate_waf_request import simulate_waf_request
+from omega_serv.application.server.engine_selection import log_reason
+from omega_serv.application.server.engine_status import engine_connector_rows, engine_status_rows
 from omega_serv.application.server.simulate_request import simulate_request
 from omega_serv.application.server.start_server import (
     ActiveDefenseCollaborators,
@@ -124,7 +126,26 @@ from omega_serv.infrastructure.services.runit_service_manager import RunitServic
 from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
 from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
 from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+from omega_serv.interfaces.cli.declaration_commands import (
+    ServeCompanions,
+    add_declaration_parser,
+    build_declaration_scheduler,
+)
+from omega_serv.interfaces.cli.riposte_commands import (
+    build_riposte_supervisor,
+    cmd_riposte_run,
+    cmd_riposte_status,
+)
+from omega_serv.interfaces.cli.riposte_query_commands import register as register_riposte_queries
+from omega_serv.interfaces.cli.serve_native import (
+    NativeSupervisor,
+    current_decision,
+    log_error_line,
+    python_fallback_decision,
+    write_python_engine_state,
+)
 from omega_serv.interfaces.cli.serve_workers import (
+    RiposteChildPort,
     WorkerContext,
     effective_worker_count,
     open_listen_socket,
@@ -143,6 +164,7 @@ async def run_server_until_stopped(
     config_path: Path,
     container: DependencyContainer,
     worker: WorkerContext | None = None,
+    riposte: RiposteChildPort | None = None,
 ) -> int:
     """Coeur bloquant partage entre `cmd_serve` (CLI) et le bouton
     "Lancer maintenant" de l'assistant premier lancement
@@ -200,12 +222,20 @@ async def run_server_until_stopped(
 
     async def _reload() -> None:
         print("Rechargement demande (SIGHUP) - regles WAF et zones Auth uniquement, bind/port/TLS inchanges...")
+        if riposte is not None:
+            riposte.reload()  # RIPOSTE relit sa propre configuration
         reload_result = load_config(container.configuration, config_path)
         if not reload_result.success:
             _print_errors(reload_result.errors, _("Erreur de rechargement"))
             return
         reloaded_config = reload_result.config
         assert reloaded_config is not None
+        if reloaded_config.server.engine != config.server.engine:
+            # Garde-fou §16.5 : le moteur ne change jamais a chaud - dit explicitement, jamais ignore en silence.
+            engine_message = (f"server.engine passe de {config.server.engine!r} a {reloaded_config.server.engine!r} : "
+                              "redemarrage complet necessaire (le reste du rechargement s'applique)")
+            print(engine_message, file=sys.stderr)
+            log_error_line(container, config, engine_message)
         error = try_reload_server(
             server, reloaded_config, container.project_root, container.filesystem, container.clock,
         )
@@ -222,6 +252,17 @@ async def run_server_until_stopped(
     loop.add_signal_handler(signal.SIGINT, lambda: asyncio.ensure_future(_graceful_stop()))
     loop.add_signal_handler(signal.SIGHUP, lambda: asyncio.ensure_future(_reload()))
 
+    async def _supervise_riposte() -> None:
+        assert riposte is not None
+        while True:
+            await asyncio.sleep(1.0)
+            riposte.tick()
+
+    riposte_task: asyncio.Future[None] | None = None
+    if riposte is not None:
+        riposte.start()
+        riposte_task = asyncio.ensure_future(_supervise_riposte())
+
     try:
         serve_task = asyncio.ensure_future(server.serve_forever())
         await stop_event.wait()
@@ -231,6 +272,10 @@ async def run_server_until_stopped(
         except asyncio.CancelledError:
             pass
     finally:
+        if riposte_task is not None:
+            riposte_task.cancel()
+        if riposte is not None:
+            await asyncio.to_thread(riposte.stop)
         if worker is None:
             remove_pid_file(container.filesystem, pid_path)
         loop.remove_signal_handler(signal.SIGTERM)
@@ -274,15 +319,52 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         return 1
 
     config = result.config
+    # Processus accompagnant le serveur : RIPOSTE (None si desactive) et l'envoi quotidien de la
+    # declaration anonyme (ne fait rien sans accord en mode quotidien). Pilotes ensemble.
+    riposte = ServeCompanions(build_riposte_supervisor(config, args.config),
+                              build_declaration_scheduler(container, args.config))
+
+    # Moteur HTTP (plan moteur C++ lot 3, §16.5) : une seule decision, signalee si le moteur demande n'est pas
+    # celui qui tournera.
+    decision = current_decision(config, container)
+    start_failure = ""
+    if decision.fallback:
+        for reason in decision.reasons:
+            message = f"moteur natif demande mais non utilisable : {log_reason(reason)} - moteur Python utilise"
+            print(message, file=sys.stderr)
+            log_error_line(container, config, message)
+    if decision.effective == "native":
+        supervisor = NativeSupervisor(config, args.config, container, decision, riposte)
+        try:
+            start_failure = supervisor.start() or ""
+        except PermissionError:
+            print(
+                f"Erreur : liaison sur {config.server.bind}:{config.server.port} refusee "
+                "(privileges insuffisants pour un port < 1024).",
+                file=sys.stderr,
+            )
+            return 1
+        except OSError as e:
+            print(f"Erreur au demarrage du serveur : {e}", file=sys.stderr)
+            return 1
+        if not start_failure:
+            return supervisor.run()
+        message = f"moteur natif indisponible au demarrage ({start_failure}) - repli sur le moteur Python"
+        print(message, file=sys.stderr)
+        log_error_line(container, config, message)
+        decision = python_fallback_decision(decision, start_failure)
+    write_python_engine_state(container, decision, start_failure)
+
     cpu = cpu_info()
-    worker_count, capped = effective_worker_count(config.server.workers, cpu.available, cpu.recommended_workers)
+    worker_count, capped = effective_worker_count(config.server.workers, "python", cpu.usable_cores)
     if capped:
         print(capped, file=sys.stderr)
+        log_error_line(container, config, capped)
     if worker_count > 1:
-        return _serve_with_workers(config, args.config, container, worker_count)
+        return _serve_with_workers(config, args.config, container, worker_count, riposte)
 
     async def _run() -> int:
-        return await run_server_until_stopped(config, args.config, container)
+        return await run_server_until_stopped(config, args.config, container, riposte=riposte)
 
     try:
         return asyncio.run(_run())
@@ -290,7 +372,10 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         return 0
 
 
-def _serve_with_workers(config: OmegaServConfig, config_path: Path, container: DependencyContainer, worker_count: int) -> int:
+def _serve_with_workers(
+    config: OmegaServConfig, config_path: Path, container: DependencyContainer, worker_count: int,
+    riposte: RiposteChildPort | None = None,
+) -> int:
     """Mode « boost » (OMEGA-SERV_ETUDE_MODE_BOOST.md) : port et compteurs partages crees ici,
     dans le processus principal, AVANT le lancement des workers (interfaces/cli/serve_workers.py)."""
     try:
@@ -320,7 +405,7 @@ def _serve_with_workers(config: OmegaServConfig, config_path: Path, container: D
     try:
         return run_workers(
             worker_count, listen_socket, counters, run_worker,
-            config.server.shutdown_grace_period_seconds, read_configured_workers,
+            config.server.shutdown_grace_period_seconds, read_configured_workers, riposte,
         )
     finally:
         counters.destroy()
@@ -370,13 +455,21 @@ def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) 
         _print_errors(result.errors, _("Erreur de configuration"))
         return 1
 
-    request = BackupRequest(
-        include_waf_rules=args.include_waf,
-        include_auth_zones=args.include_auth,
-        include_certificates=args.include_certificates,
-        include_active_defense=args.include_active_defense,
-        description=args.description,
-    )
+    if getattr(args, "all", False):
+        request = BackupRequest.everything(args.description)  # « Tout sauvegarder » (2026-11-01)
+    else:
+        request = BackupRequest(
+            include_waf_rules=args.include_waf,
+            include_auth_zones=args.include_auth,
+            include_certificates=args.include_certificates,
+            include_active_defense=args.include_active_defense,
+            # getattr : options ajoutees le 2026-11-01, absentes d'un Namespace construit a la main.
+            include_error_pages=getattr(args, "include_error_pages", False),
+            include_preferences=getattr(args, "include_preferences", False),
+            include_logs_library=getattr(args, "include_logs_library", False),
+            include_riposte=getattr(args, "include_riposte", False),
+            description=args.description,
+        )
     if (request.include_auth_zones or request.include_certificates) and not args.confirm_secrets:
         print(
             _("Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou "
@@ -387,12 +480,18 @@ def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) 
 
     backup_result = container.create_backup(request, result.config, args.config)
     print(backup_result.message)
+    for skipped in backup_result.skipped:
+        print("  - " + skipped)
     return 0 if backup_result.success else 1
 
 
 def cmd_config_restore(args: argparse.Namespace, container: DependencyContainer) -> int:
-    restore_result = container.restore_backup(args.snapshot_id)
+    restore_result = container.restore_backup(
+        args.snapshot_id, stop_and_restart=getattr(args, "stop_and_restart", False),
+    )
     print(restore_result.message)
+    if restore_result.needs_service_stop:
+        print(_("Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le redémarrer."))
     return 0 if restore_result.success else 1
 
 
@@ -914,6 +1013,23 @@ def cmd_active_defense_purge(args: argparse.Namespace, container: DependencyCont
     print(_("Incidents fermés automatiquement : {count}").format(count=len(result.closed_incidents)))
     for incident_id in result.closed_incidents:
         print(_("  - {incident_id}").format(incident_id=incident_id))
+    print(_("Incidents fermés depuis plus de 90 jours supprimés : {count}").format(count=result.purged_closed_incidents))
+    if result.closed_incidents and active_defense.config.ioc.auto_export_on_close:
+        from omega_serv.application.active_defense.auto_export import auto_export_closed_incidents
+        from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
+        from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
+            MarkdownIncidentReportExporter,
+        )
+
+        export_dir = container.project_root / active_defense.config.storage.export_dir
+        exporters = build_ioc_exporters(container.filesystem, export_dir, active_defense.config.ioc)
+        written = auto_export_closed_incidents(
+            result.closed_incidents, active_defense.incident_repository, active_defense.config,
+            lambda incident, fmt: exporters[fmt].export(incident) if fmt in exporters else None,
+            lambda incident: MarkdownIncidentReportExporter(container.filesystem, export_dir).render(incident),
+            lambda message: print(_("Export automatique impossible : {message}").format(message=message), file=sys.stderr),
+        )
+        print(_("Exports automatiques écrits : {count}").format(count=written))
     return 0
 
 
@@ -1333,6 +1449,23 @@ def _detect_or_fail() -> ServiceManagerPort | None:
     return _build_service_manager(manager_type)
 
 
+def cmd_engine_status(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Moteur HTTP demande / effectif / raisons (plan moteur C++ §16.5) - memes lignes que l'ecran Etat."""
+    result = load_config(container.configuration, args.config)
+    if not result.success or result.config is None:
+        _print_errors(result.errors)
+        return 1
+    status = container.engine_status(result.config)
+    for label, value, _style in engine_status_rows(status):
+        print(_("{label} : {value}").format(label=label, value=value))
+    connectors = engine_connector_rows(status)
+    if connectors:
+        print(_("Connecteurs (moteur natif) :"))
+        for label, value, _style in connectors:
+            print(_("  {label} : {value}").format(label=label, value=value))
+    return 0
+
+
 def cmd_service_status(args: argparse.Namespace, container: DependencyContainer) -> int:
     manager = _detect_or_fail()
     if manager is None:
@@ -1515,11 +1648,17 @@ def build_parser() -> argparse.ArgumentParser:
     backup_parser.add_argument("--include-auth", action="store_true")
     backup_parser.add_argument("--include-certificates", action="store_true")
     backup_parser.add_argument("--include-active-defense", action="store_true")
+    backup_parser.add_argument("--include-error-pages", action="store_true")
+    backup_parser.add_argument("--include-preferences", action="store_true")
+    backup_parser.add_argument("--include-logs-library", action="store_true")
+    backup_parser.add_argument("--include-riposte", action="store_true")
+    backup_parser.add_argument("--all", action="store_true")
     backup_parser.add_argument("--confirm-secrets", action="store_true")
     backup_parser.add_argument("--description", default="")
     backup_parser.set_defaults(func=cmd_config_backup)
     restore_parser = config_sub.add_parser("restore")
     restore_parser.add_argument("--snapshot-id", required=True)
+    restore_parser.add_argument("--stop-and-restart", action="store_true")
     restore_parser.set_defaults(func=cmd_config_restore)
     config_sub.add_parser("list-backups").set_defaults(func=cmd_config_list_backups)
 
@@ -1585,6 +1724,16 @@ def build_parser() -> argparse.ArgumentParser:
     simulate_ad_parser.add_argument("--score", type=int, default=10)
     simulate_ad_parser.set_defaults(func=cmd_active_defense_simulate)
     active_defense_sub.add_parser("purge").set_defaults(func=cmd_active_defense_purge)
+
+    engine_parser = subparsers.add_parser("engine")
+    engine_sub = engine_parser.add_subparsers(dest="engine_command", required=True)
+    engine_sub.add_parser("status").set_defaults(func=cmd_engine_status)
+
+    riposte_parser = subparsers.add_parser("riposte")
+    riposte_sub = riposte_parser.add_subparsers(dest="riposte_command", required=True)
+    riposte_sub.add_parser("run").set_defaults(func=cmd_riposte_run)
+    riposte_sub.add_parser("status").set_defaults(func=cmd_riposte_status)
+    register_riposte_queries(riposte_sub)
 
     threats_parser = subparsers.add_parser("threats")
     threats_sub = threats_parser.add_subparsers(dest="threats_command", required=True)
@@ -1770,12 +1919,16 @@ def build_parser() -> argparse.ArgumentParser:
     security_parser.add_argument("--confirm-auth-without-tls", action="store_true")
     security_parser.set_defaults(func=cmd_audit_security)
 
+    add_declaration_parser(subparsers)
+
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     effective_argv = sys.argv[1:] if argv is None else argv
-    container = DependencyContainer()
+    from omega_serv.infrastructure.persistence.sqlite_snapshot import snapshot_database
+
+    container = DependencyContainer(database_snapshot_fn=snapshot_database)
     if not is_server_process(effective_argv):
         # Avant build_parser() : l'aide (--help) des commandes suivra la langue choisie.
         install_interface_language(

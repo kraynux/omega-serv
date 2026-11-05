@@ -63,6 +63,15 @@ def _parse_csv(text: str) -> list[str]:
     return [item.strip() for item in text.split(",") if item.strip()]
 
 
+def _validation_message(settings: dict) -> str | None:
+    """Erreurs de validation des reglages Active Defense, au format affiche
+    a l'ecran, ou None s'ils sont valides."""
+    errors = validate_active_defense_config(parse_active_defense_config(settings))
+    if not errors:
+        return None
+    return _("Erreur :\n") + "\n".join(f"  - {e}" for e in errors)
+
+
 class ActiveDefenseSettingsScreen(OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
@@ -293,6 +302,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                                 "(ex: ../../etc/passwd), upload_probe (upload de fichier suspect),\n"
                                 "api_probe (sondage d'endpoints /api/...), unknown (tout le reste).\n"
                                 "Ex : scan,credential_stuffing")
+                                + "\n" + _("Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan.")
                             ),
                             "",
                         ),
@@ -317,6 +327,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                             "",
                         ),
                     ],
+                    validate=self._check_profile,
                 ),
                 self._add_profile,
             )
@@ -358,6 +369,7 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                         ("read_timeout_seconds", _("Délai de lecture (secondes)"), "30"),
                         ("verify_upstream_tls", _("Vérifier le certificat TLS de l'upstream (oui/non)"), to_text(True)),
                     ],
+                    validate=self._check_decoy_zone,
                 ),
                 self._add_decoy_zone,
             )
@@ -368,13 +380,11 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                 self._delete_decoy_zone,
             )
 
-    def _add_profile(self, values: dict[str, str] | None) -> None:
-        if values is None:
-            return
+    def _settings_with_profile(self, values: dict[str, str]) -> tuple[dict | None, str]:
+        """Reglages candidats avec le profil saisi, ou (None, message)."""
         name = values["name"].strip()
         if not name:
-            self.query_one("#form-error", Static).update(_("Le nom du profil ne peut pas être vide."))
-            return
+            return None, _("Le nom du profil ne peut pas être vide.")
         settings = self._settings()
         deception = dict(settings.get("deception", {}))
         profiles = dict(deception.get("profiles", {}))
@@ -386,6 +396,19 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         }
         deception["profiles"] = profiles
         settings["deception"] = deception
+        return settings, ""
+
+    def _check_profile(self, values: dict[str, str]) -> str | None:
+        settings, error = self._settings_with_profile(values)
+        return error if settings is None else _validation_message(settings)
+
+    def _add_profile(self, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
+        settings, error = self._settings_with_profile(values)
+        if settings is None:
+            self.query_one("#form-error", Static).update(error)
+            return
         self._save_settings(settings)
 
     def _delete_profile(self, confirmed: bool | None) -> None:
@@ -399,13 +422,11 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         settings["deception"] = deception
         self._save_settings(settings)
 
-    def _add_decoy_zone(self, values: dict[str, str] | None) -> None:
-        if values is None:
-            return
+    def _settings_with_decoy_zone(self, values: dict[str, str]) -> tuple[dict | None, str]:
+        """Reglages candidats avec la zone saisie, ou (None, message)."""
         name = values["name"].strip()
         if not name:
-            self.query_one("#form-error", Static).update(_("Le nom de la zone ne peut pas être vide."))
-            return
+            return None, _("Le nom de la zone ne peut pas être vide.")
         upstreams: list[dict[str, object]] = []
         for chunk in values["upstreams"].split(","):
             item = chunk.strip()
@@ -418,23 +439,19 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
                 item = item[len("http://"):]
             host, sep, port_text = item.rpartition(":")
             if not sep:
-                self.query_one("#form-error", Static).update(_("Upstream invalide (attendu host:port) : {chunk!r}").format(chunk=chunk))
-                return
+                return None, _("Upstream invalide (attendu host:port) : {chunk!r}").format(chunk=chunk)
             try:
                 port = int(port_text.strip())
             except ValueError:
-                self.query_one("#form-error", Static).update(_("Port invalide : {port_text!r}").format(port_text=port_text))
-                return
+                return None, _("Port invalide : {port_text!r}").format(port_text=port_text)
             upstreams.append({"host": host.strip(), "port": port, "use_tls": use_tls})
         if not upstreams:
-            self.query_one("#form-error", Static).update(_("Au moins un upstream est requis."))
-            return
+            return None, _("Au moins un upstream est requis.")
         try:
             connect_timeout = float(values["connect_timeout_seconds"].strip())
             read_timeout = float(values["read_timeout_seconds"].strip())
         except ValueError:
-            self.query_one("#form-error", Static).update(_("Délais invalides (nombres attendus)."))
-            return
+            return None, _("Délais invalides (nombres attendus).")
 
         settings = self._settings()
         deception = dict(settings.get("deception", {}))
@@ -447,6 +464,19 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
         }
         deception["decoy_zones"] = decoy_zones
         settings["deception"] = deception
+        return settings, ""
+
+    def _check_decoy_zone(self, values: dict[str, str]) -> str | None:
+        settings, error = self._settings_with_decoy_zone(values)
+        return error if settings is None else _validation_message(settings)
+
+    def _add_decoy_zone(self, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
+        settings, error = self._settings_with_decoy_zone(values)
+        if settings is None:
+            self.query_one("#form-error", Static).update(error)
+            return
         self._save_settings(settings)
 
     def _delete_decoy_zone(self, confirmed: bool | None) -> None:
@@ -545,10 +575,9 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             error_widget.update(_("Erreur de configuration - impossible d'enregistrer."))
             return
 
-        candidate = parse_active_defense_config(new_settings)
-        errors = validate_active_defense_config(candidate)
-        if errors:
-            error_widget.update(_("Erreur :\n") + "\n".join(f"  - {e}" for e in errors))
+        error = _validation_message(new_settings)
+        if error:
+            error_widget.update(error)
             return
 
         existing = load_result.config.options.get("active_defense")

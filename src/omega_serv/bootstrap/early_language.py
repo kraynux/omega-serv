@@ -25,16 +25,24 @@ from omega_serv.infrastructure.i18n.gettext_language_catalog import GettextLangu
 
 
 def is_server_process(argv: list[str]) -> bool:
-    """`omega-serv serve` (systemd ou "Lancer maintenant") : D18b, ses messages vont dans
-    journalctl et restent en francais - la langue n'est jamais installee. Premier argument
-    positionnel, `--config X` / `--config=X` ignores."""
+    """`omega-serv serve` (systemd ou "Lancer maintenant"), `omega-serv riposte run` (processus
+    RIPOSTE lance par `serve`) et `omega-serv declaration send-scheduled` (envoi quotidien lance
+    par `serve`) : D18b, leurs messages vont dans journalctl et restent en francais - la langue n'est jamais installee. Arguments positionnels seulement, `--config X` /
+    `--config=X` ignores."""
+    positionals: list[str] = []
     tokens = iter(argv)
     for token in tokens:
         if token == "--config":
             next(tokens, None)
         elif not token.startswith("-"):
-            return token == "serve"
-    return False
+            positionals.append(token)
+            if len(positionals) == 2:
+                break
+    if not positionals:
+        return False
+    if positionals[0] == "serve":
+        return True
+    return positionals[:2] in (["riposte", "run"], ["declaration", "send-scheduled"])
 
 
 EXPORT_CHILD_ENV_VAR = "OMEGA_SERV_EXPORT_CHILD"

@@ -1,3 +1,7 @@
+import contextlib
+import io
+import multiprocessing
+import os
 import tempfile
 import time
 import unittest
@@ -6,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from omega_serv.domain.security.waf.entities import BlocklistEntry
+from omega_serv.infrastructure.filesystem.file_lock import exclusive_file_lock
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
 from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
 
@@ -149,6 +154,135 @@ class TestJsonBlocklistStoreCache(unittest.TestCase):
 
         self.path.unlink()
         self.assertIsNone(self.store.is_blocked("203.0.113.25"))
+
+
+
+def _ban_many(path: str, worker: int, count: int, now_iso: str) -> None:
+    """Processus enfant : ajoute `count` bans distincts, chacun par un lire-modifier-ecrire."""
+    clock = _FakeClock(datetime.fromisoformat(now_iso))
+    store = JsonBlocklistStore(LocalFilesystem(), Path(path), clock)
+    for i in range(count):
+        store.add_entry(BlocklistEntry(
+            network=f"10.{worker}.{i // 250}.{i % 250 + 1}/32", reason="test", created_at=now_iso, source="auto",
+        ))
+
+
+class TestBlocklistStoreWritesBetweenProcesses(unittest.TestCase):
+    """Lot 0 (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md) : verrou entre processus, relecture sous verrou,
+    ajouts/retraits conditionnels."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self._tmp.name) / "blocklist.json"
+        self.now = datetime(2026, 9, 5, tzinfo=timezone.utc)
+        self.clock = _FakeClock(self.now)
+        self.store = JsonBlocklistStore(LocalFilesystem(), self.path, self.clock)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _entry(self, network="203.0.113.25/32", hours=1, source="auto"):
+        expires = None if hours is None else (self.now + timedelta(hours=hours)).isoformat()
+        return BlocklistEntry(network=network, reason=source, created_at=self.now.isoformat(), expires_at=expires, source=source)
+
+    def test_no_ban_lost_when_several_processes_write_at_once(self):
+        workers, per_worker = 4, 40
+        context = multiprocessing.get_context("fork")
+        processes = [
+            context.Process(target=_ban_many, args=(str(self.path), w, per_worker, self.now.isoformat()))
+            for w in range(workers)
+        ]
+        for process in processes:
+            process.start()
+        for process in processes:
+            process.join(60)
+            self.assertEqual(process.exitcode, 0)
+        reader = JsonBlocklistStore(LocalFilesystem(), self.path, self.clock)
+        self.assertEqual(len(reader.list_entries()), workers * per_worker)
+
+    def test_write_rereads_the_file_even_when_the_cached_mtime_looks_current(self):
+        self.store.list_entries()  # cache chauffe (fichier absent)
+        self.store.add_entry(self._entry("203.0.113.1/32"))
+        self.store.list_entries()
+        other = JsonBlocklistStore(LocalFilesystem(), self.path, self.clock)
+        frozen_mtime = os.stat(self.path).st_mtime
+        other.add_entry(self._entry("203.0.113.2/32"))
+        os.utime(self.path, (frozen_mtime, frozen_mtime))  # meme mtime que le cache de self.store
+        self.store.add_entry(self._entry("203.0.113.3/32"))
+        networks = {e.network for e in JsonBlocklistStore(LocalFilesystem(), self.path, self.clock).list_entries()}
+        self.assertEqual(networks, {"203.0.113.1/32", "203.0.113.2/32", "203.0.113.3/32"})
+
+    def test_automatic_add_never_replaces_an_active_manual_ban(self):
+        self.store.add_entry(self._entry(hours=1, source="manual"))
+        self.assertFalse(self.store.add_entry_unless_stronger(self._entry(hours=24, source="auto")))
+        (kept,) = self.store.list_entries()
+        self.assertEqual(kept.source, "manual")
+
+    def test_automatic_add_never_replaces_a_permanent_ban(self):
+        self.store.add_entry(self._entry(hours=None, source="auto"))
+        self.assertFalse(self.store.add_entry_unless_stronger(self._entry(hours=24, source="auto")))
+        (kept,) = self.store.list_entries()
+        self.assertIsNone(kept.expires_at)
+
+    def test_automatic_add_replaces_a_shorter_automatic_ban_and_keeps_a_longer_one(self):
+        self.store.add_entry(self._entry(hours=1))
+        self.assertTrue(self.store.add_entry_unless_stronger(self._entry(hours=6)))
+        self.assertFalse(self.store.add_entry_unless_stronger(self._entry(hours=2)))
+        (kept,) = self.store.list_entries()
+        self.assertEqual(kept.expires_at, (self.now + timedelta(hours=6)).isoformat())
+
+    def test_automatic_add_replaces_an_expired_manual_ban(self):
+        self.store.add_entry(self._entry(hours=-1, source="manual"))
+        self.assertTrue(self.store.add_entry_unless_stronger(self._entry(hours=1)))
+        (kept,) = self.store.list_entries()
+        self.assertEqual(kept.source, "auto")
+
+    def test_manual_add_still_replaces_whatever_is_there(self):
+        self.store.add_entry(self._entry(hours=None, source="manual"))
+        self.store.add_entry(self._entry(hours=1, source="manual"))
+        (kept,) = self.store.list_entries()
+        self.assertIsNotNone(kept.expires_at)
+
+    def test_conditional_remove_only_removes_matching_entries(self):
+        self.store.add_entry(self._entry(source="manual"))
+        self.assertFalse(self.store.remove_entry_if("203.0.113.25/32", lambda e: e.source == "auto"))
+        self.assertEqual(len(self.store.list_entries()), 1)
+        self.assertTrue(self.store.remove_entry_if("203.0.113.25/32", lambda e: e.source == "manual"))
+        self.assertEqual(self.store.list_entries(), ())
+
+    def test_lock_file_is_shared_with_the_group(self):
+        self.store.add_entry(self._entry())
+        lock = self.path.with_name("blocklist.json.lock")
+        self.assertEqual(lock.stat().st_mode & 0o777, 0o664)
+
+    def test_unopenable_lock_file_still_writes_and_warns_once(self):
+        lock = self.path.with_name("blocklist.json.lock")
+        lock.touch()
+        lock.chmod(0)
+        if os.access(lock, os.R_OK):
+            lock.chmod(0o664)
+            self.skipTest("execute en root : un fichier en mode 000 reste lisible")
+        stderr = io.StringIO()
+        try:
+            with contextlib.redirect_stderr(stderr):
+                self.store.add_entry(self._entry("203.0.113.1/32"))
+                self.store.add_entry(self._entry("203.0.113.2/32"))
+        finally:
+            lock.chmod(0o664)
+        self.assertEqual(len(self.store.list_entries()), 2)
+        self.assertEqual(stderr.getvalue().count("sans verrou"), 1)
+
+    def test_lock_held_too_long_by_another_holder_does_not_block_the_write(self):
+        lock = self.path.with_name("blocklist.json.lock")
+        stderr = io.StringIO()
+        with exclusive_file_lock(lock) as held, contextlib.redirect_stderr(stderr):
+            self.assertTrue(held)
+            started = time.monotonic()
+            self.store.add_entry(self._entry())
+            elapsed = time.monotonic() - started
+        self.assertLess(elapsed, 3.0)
+        self.assertEqual(len(self.store.list_entries()), 1)
+        self.assertIn("occupe", stderr.getvalue())
 
 
 if __name__ == "__main__":

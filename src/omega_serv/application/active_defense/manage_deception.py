@@ -3,7 +3,7 @@ resolution de RoutingDecision (plan_active_defense_omega_serv.md,
 Phase 3)."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import cast
 
 from omega_serv.domain.security.active_defense.config import DeceptionConfig
@@ -63,6 +63,35 @@ def assign_deception(
         subject_id=subject_id, profile_name=profile.name, assigned_at=now,
         expires_at=now + timedelta(seconds=config.assignments_ttl_seconds),
     )
+    assignment_repository.save(assignment)
+    return assignment
+
+
+def assign_or_extend_deception(
+    assignment_repository: DeceptionAssignmentRepositoryPort,
+    *,
+    subject_id: str,
+    profile_name: str,
+    until: datetime,
+    now: datetime,
+) -> DeceptionAssignment | None:
+    """Affectation demandee par RIPOSTE (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md §3.6, lot 4) : le profil est
+    choisi par la politique, pas par la classe d'attaque. Une affectation en cours vers le MEME profil
+    est prolongee jusqu'a `until` (jamais raccourcie) ; une affectation en cours vers un AUTRE profil
+    est laissee telle quelle (regle V1 : jamais de changement de profil en cours de route) -> None.
+    Retourne l'affectation ecrite."""
+    current = assignment_repository.get(subject_id)
+    if current is not None and is_assignment_active(current, now):
+        if current.profile_name != profile_name:
+            return None
+        if current.expires_at >= until:
+            return current
+        extended = DeceptionAssignment(
+            subject_id=subject_id, profile_name=profile_name, assigned_at=current.assigned_at, expires_at=until,
+        )
+        assignment_repository.save(extended)
+        return extended
+    assignment = DeceptionAssignment(subject_id=subject_id, profile_name=profile_name, assigned_at=now, expires_at=until)
     assignment_repository.save(assignment)
     return assignment
 

@@ -148,6 +148,27 @@ class SqliteIncidentRepository:
         self._connection.commit()
         return removed_total
 
+    def purge_closed(self, closed_before: datetime, max_closed: int) -> int:
+        old = self._connection.execute(
+            "SELECT incident_id FROM incidents WHERE status = 'closed' AND closed_at < ?", (closed_before.isoformat(),),
+        ).fetchall()
+        excess = self._connection.execute(
+            "SELECT incident_id FROM incidents WHERE status = 'closed' ORDER BY closed_at DESC LIMIT -1 OFFSET ?",
+            (max_closed,),
+        ).fetchall()
+        doomed = sorted({row[0] for row in (*old, *excess)})
+        for start in range(0, len(doomed), 500):
+            chunk = doomed[start:start + 500]
+            marks = ",".join("?" * len(chunk))
+            # noms de table : constantes ci-dessous, jamais une donnee externe
+            for table in ("incident_events", "incident_observations", "indicators", "incident_history_omissions"):
+                self._connection.execute(f"DELETE FROM {table} WHERE incident_id IN ({marks})", chunk)
+            self._connection.execute(
+                f"DELETE FROM incidents WHERE status = 'closed' AND incident_id IN ({marks})", chunk,
+            )
+        self._connection.commit()
+        return len(doomed)
+
     def list_recent(self, filters: IncidentFilters) -> list[Incident]:
         clauses: list[str] = []
         params: list[Any] = []

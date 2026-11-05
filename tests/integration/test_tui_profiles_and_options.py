@@ -107,7 +107,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             await self._reach_home(pilot)
             await self._open_options(pilot)
             table = pilot.app.screen.query_one("#options-table", DataTable)
-            self.assertEqual(table.row_count, 14)
+            self.assertEqual(table.row_count, 15)  # + riposte (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 2)
 
     async def test_enabling_option_persists_and_refreshes_table(self):
         app = OmegaServApp(self.container)
@@ -205,6 +205,22 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             messages = [str(n.message) for n in pilot.app._notifications]
             self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "JAMAIS rechargé" in m for m in messages))
+
+    async def test_enabling_riposte_warns_restart_required(self):
+        """Lot 2 RIPOSTE : le processus est lance (ou non) au demarrage de `serve`."""
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_options(pilot)
+            table = pilot.app.screen.query_one("#options-table", DataTable)
+            row = next(i for i in range(table.row_count) if table.get_row_at(i)[0] == "riposte")
+            table.move_cursor(row=row)
+            table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#enable", Button).press()
+            await pilot.pause()
+            messages = [str(n.message) for n in pilot.app._notifications]
+            self.assertTrue(any("REDÉMARRAGE COMPLET" in m and "processus RIPOSTE" in m for m in messages))
 
     async def test_disabling_active_defense_also_warns_restart_required(self):
         app = OmegaServApp(self.container)

@@ -13,9 +13,9 @@ import random
 import socket
 import time
 import uuid
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from concurrent.futures import Executor
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -41,7 +41,12 @@ from omega_serv.application.server.serve_proxy import serve_proxy
 from omega_serv.application.server.serve_websocket_proxy import serve_websocket_proxy
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.http.headers import HttpHeaders
-from omega_serv.domain.http.request import HttpRequest, split_request_target
+from omega_serv.domain.http.request import (
+    HttpRequest,
+    InvalidAbsoluteTarget,
+    absolute_form_parts,
+    split_request_target,
+)
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus, reason_phrase_for
 from omega_serv.domain.http.websocket import is_websocket_upgrade_request
@@ -53,6 +58,11 @@ from omega_serv.domain.logging.access_log_format import (
 from omega_serv.domain.logging.active_defense_enriched_log_format import (
     EnrichedLogEntry,
     format_enriched_log_line,
+)
+from omega_serv.domain.logging.security_event_format import (
+    SecurityEvent,
+    SecurityEventType,
+    format_security_event_line,
 )
 from omega_serv.domain.logging.waf_alert_format import WafAlertEntry, format_waf_alert_line
 from omega_serv.domain.routing.access_rule import (
@@ -80,6 +90,7 @@ from omega_serv.domain.security.active_defense.entities import (
 from omega_serv.domain.security.active_defense.policies import (
     build_playbook,
     compute_slowdown_delay_ms,
+    is_assignment_active,
     is_source_marked,
     user_agent_fingerprint,
     validate_playbook_action,
@@ -99,6 +110,7 @@ from omega_serv.infrastructure.server.http_parser import (
     RAW_LINE_BUFFER_LIMIT,
     ConnectionClosedCleanly,
     HttpParseError,
+    ParsedRequestHead,
     read_and_discard_body,
     read_request_head,
 )
@@ -124,6 +136,16 @@ from omega_serv.ports.waf_port import WafPort
 
 ACTIVE_DEFENSE_STOP_TIMEOUT_SECONDS = 2.0
 """A l'arret, temps maximal laisse au fil d'ecriture d'Active Defense pour vider sa file."""
+
+
+@dataclass(frozen=True)
+class SecurityOutcome:
+    """Resultat de `AsyncioServer.security_stage` : reponse a envoyer (None = continuer vers le routage)."""
+    response: HttpResponse | None
+    keep_alive_allowed: bool = False
+    # Leurre, decision WAF autre que « autoriser » (journal seul compris) ou refus Auth : la requete n'etait pas
+    # propre (controle 1/N du moteur natif, plan WAF natif lot 4).
+    notable: bool = False
 
 
 class AsyncioHttpServer:
@@ -164,6 +186,7 @@ class AsyncioHttpServer:
         delay_scheduler: DelaySchedulerPort | None = None,
         active_defense_enriched_log_path: Path | None = None,
         decoy_proxy_client: HttpProxyClientPort | None = None,
+        active_defense_security_events_path: Path | None = None,
         clock: ClockPort | None = None,
         active_defense_writer: ActiveDefenseWriterPort | None = None,
     ):
@@ -201,6 +224,7 @@ class AsyncioHttpServer:
         self._decoy_dispatch_port = decoy_dispatch_port
         self._delay_scheduler = delay_scheduler
         self._active_defense_enriched_log_path = active_defense_enriched_log_path
+        self._active_defense_security_events_path = active_defense_security_events_path
         self._decoy_proxy_client = decoy_proxy_client
         self._active_defense_writer = active_defense_writer
         self._active_defense_guard_failing = False
@@ -214,6 +238,9 @@ class AsyncioHttpServer:
         self._stopped = asyncio.Event()
         # Mode « boost » : compteurs de securite partages entre workers (pose par build_server).
         self.shared_counters: Any = None
+        # Moteur natif (plan WAF natif, lot 3) : (adresse, echeance en secondes Unix) d'une source que le natif doit
+        # toujours envoyer ici - pose par le processus de securite ; None avec le moteur Python.
+        self.watch_sink: Callable[[str, float], None] | None = None
         self._active_connections: set[asyncio.Task] = set()
         self._access_control_rules_cache: list[AccessRule] = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache: list[ProxyZone] = self._parse_websocket_proxy_zones()
@@ -383,11 +410,14 @@ class AsyncioHttpServer:
         finally:
             self._active_connections.discard(task)
 
-    async def _handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _handle_connection(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, requests_served: int = 0,
+    ) -> None:
+        """`requests_served` : requetes deja servies sur cette connexion par le moteur natif avant qu'il la confie
+        (plan moteur C++ lot 6) - la limite keep-alive reste celle de la connexion entiere."""
         peername = writer.get_extra_info("peername")
         peer_ip = peername[0] if peername else "unknown"
         server_config = self._config.server
-        requests_served = 0
 
         try:
             while requests_served < server_config.max_keepalive_requests:
@@ -406,36 +436,30 @@ class AsyncioHttpServer:
                 except ConnectionClosedCleanly:
                     break
                 except HttpParseError as e:
-                    await self._write_error_response(writer, e.status)
-                    self._log_error(f"erreur de parsing : {e.reason}", request_id=None)
+                    request_id = uuid.uuid4().hex[:16]
+                    error_response = await self._write_error_response(writer, e.status)
+                    self._log_error(f"erreur de parsing : {e.reason}", request_id=request_id)
+                    self._log_unparsed_access(peer_ip, e, error_response, request_id)
                     break
 
                 request_id = uuid.uuid4().hex[:16]
                 start_time = time.monotonic()
 
-                path, query = split_request_target(head.target)
-                headers = HttpHeaders.from_pairs(list(head.headers))
-                remote_ip = self._resolve_remote_ip(peer_ip, headers)
-                request = HttpRequest(
-                    request_id=request_id,
-                    remote_ip=remote_ip,
-                    peer_ip=peer_ip,
-                    method=head.method,
-                    path=path,
-                    raw_path=head.target,
-                    query=query,
-                    headers=headers,
-                    body=None,
-                    content_length=None,
-                    is_tls=self._ssl_context is not None,
-                )
+                request, absolute_target_valid = self._build_request(head, peer_ip, request_id)
 
                 if self._config.security.require_valid_host:
                     host_error = validate_host_header(head.headers)
                     if host_error is not None:
-                        await self._write_error_response(writer, HttpStatus.BAD_REQUEST)
+                        response = await self._write_error_response(writer, HttpStatus.BAD_REQUEST)
                         self._log_error(f"Host invalide : {host_error}", request_id=request_id)
+                        self._log_access(request, response, start_time)
                         break
+
+                if not absolute_target_valid:
+                    response = await self._write_error_response(writer, HttpStatus.BAD_REQUEST)
+                    self._log_error("cible de requête absolue invalide", request_id=request_id)
+                    self._log_access(request, response, start_time)
+                    break
 
                 if not is_method_allowed(head.method, self._config.security):
                     response = HttpResponse.empty(HttpStatus.METHOD_NOT_ALLOWED)
@@ -467,83 +491,39 @@ class AsyncioHttpServer:
                         timeout=timeout,
                     )
                 except asyncio.TimeoutError:
-                    await self._write_error_response(writer, HttpStatus.REQUEST_TIMEOUT)
+                    response = await self._write_error_response(writer, HttpStatus.REQUEST_TIMEOUT)
                     self._log_error("corps de requete trop lent (timeout)", request_id=request_id)
+                    self._log_access(request, response, start_time)
                     break
                 except HttpParseError as e:
-                    await self._write_error_response(writer, e.status)
+                    response = await self._write_error_response(writer, e.status)
                     self._log_error(f"erreur de corps de requete : {e.reason}", request_id=request_id)
+                    self._log_access(request, response, start_time)
                     break
 
                 if captured_body:
                     request = replace(request, body=captured_body)
 
-                decoy_response = await self._maybe_serve_decoy(request)
-                if decoy_response is not None:
-                    apply_security_headers(decoy_response, self._config.security, self._config.tls.enabled, request.path)
-                    requests_served += 1
-                    keep_alive = (
-                        requests_served < server_config.max_keepalive_requests
-                        and head.http_version == "HTTP/1.1"
-                        and (head.header("connection") or "").lower() != "close"
-                    )
-                    await self._write_response(writer, decoy_response, keep_alive)
-                    self._log_access(request, decoy_response, start_time)
-                    if not keep_alive:
-                        break
-                    continue
-
-                if self._waf_config is not None:
-                    assert self._waf_port is not None
-                    assert self._blocklist_port is not None
-                    assert self._rate_limit_port is not None
-                    assert self._reputation_tracker is not None
-                    waf_start = time.monotonic()
-                    decision = await evaluate_waf_request(
-                        request,
-                        self._waf_config,
-                        self._waf_port,
-                        self._blocklist_port,
-                        self._rate_limit_port,
-                        self._reputation_tracker,
-                        self._magnet_port,
-                        self._magnet_executor,
-                    )
-                    if decision.action != "allow":
-                        self._log_waf_alert(request, decision, (time.monotonic() - waf_start) * 1000)
-                        state = self._observe_active_defense_threat(request, decision)
-                        if state is not None:
-                            war_mode_response = await self._apply_active_defense_war_mode_actions(request, state)
-                            if war_mode_response is not None:
-                                apply_security_headers(
-                                    war_mode_response, self._config.security, self._config.tls.enabled, request.path,
-                                )
-                                await self._write_response(writer, war_mode_response, keep_alive=False)
-                                self._log_access(request, war_mode_response, start_time)
-                                break
-                    if decision.action == "block":
-                        response = HttpResponse.empty(HttpStatus(decision.status_code or 403))
-                        if decision.retry_after_seconds is not None:
-                            response.set_header("Retry-After", str(int(decision.retry_after_seconds)))
-                        apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
-                        await self._write_response(writer, response, keep_alive=False)
-                        self._log_access(request, response, start_time)
-                        break
-
-                if self._auth_zones:
-                    auth_decision = authorize_request(
-                        request.path, request.method, request.header("authorization"),
-                        self._auth_zones, self._users_by_name,
-                    )
-                    if auth_decision.outcome in ("unauthenticated", "forbidden"):
-                        status = HttpStatus.UNAUTHORIZED if auth_decision.outcome == "unauthenticated" else HttpStatus.FORBIDDEN
-                        response = HttpResponse.empty(status)
-                        if auth_decision.outcome == "unauthenticated":
-                            response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protégée"))
-                        apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
-                        await self._write_response(writer, response, keep_alive=False)
-                        self._log_access(request, response, start_time)
-                        break
+                # Leurre, WAF, Active Defense, mode guerre, Auth : la MEME etape que le processus de securite du
+                # moteur natif (plan moteur C++ lot 4) - une seule implementation pour les deux moteurs.
+                outcome = await self.security_stage(request)
+                if outcome.response is not None:
+                    apply_security_headers(outcome.response, self._config.security, self._config.tls.enabled, request.path)
+                    if outcome.keep_alive_allowed:  # leurre : la connexion continue comme pour une requete servie
+                        requests_served += 1
+                        keep_alive = (
+                            requests_served < server_config.max_keepalive_requests
+                            and head.http_version == "HTTP/1.1"
+                            and (head.header("connection") or "").lower() != "close"
+                        )
+                        await self._write_response(writer, outcome.response, keep_alive)
+                        self._log_access(request, outcome.response, start_time)
+                        if not keep_alive:
+                            break
+                        continue
+                    await self._write_response(writer, outcome.response, keep_alive=False)
+                    self._log_access(request, outcome.response, start_time)
+                    break
 
                 if self._proxy_client is not None and is_websocket_upgrade_request(request):
                     proxy_zone = self._match_websocket_proxy_zone(request.path)
@@ -556,23 +536,7 @@ class AsyncioHttpServer:
                         self._log_access(request, HttpResponse.empty(ws_status), start_time)
                         break
 
-                response = await route_request(
-                    request,
-                    self._path_resolver,
-                    self._filesystem,
-                    self._config,
-                    self._project_root,
-                    self._fastcgi_client,
-                    self._logger,
-                    self._proxy_client,
-                    self._proxy_load_balancer,
-                    self._proxy_health_state,
-                    self._proxy_client_ssl_context_verified,
-                    self._proxy_client_ssl_context_unverified,
-                    self._proxy_cache_store,
-                    self._proxy_cache_locks,
-                    self._proxy_cache_metrics,
-                )
+                response = await self.route(request)
                 apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
 
                 requests_served += 1
@@ -595,6 +559,140 @@ class AsyncioHttpServer:
                 await writer.wait_closed()
             except (ConnectionResetError, BrokenPipeError, OSError):
                 pass
+
+    def _build_request(
+        self, head: ParsedRequestHead, peer_ip: str, request_id: str, remote_ip: str | None = None,
+    ) -> tuple[HttpRequest, bool]:
+        """Requete normalisee construite depuis une tete analysee (moteur Python et processus de securite du
+        natif). Le booleen dit si une cible en forme absolue est utilisable (sinon 400, verifie par l'appelant).
+        `remote_ip` : IP cliente deja resolue par le natif (meme regle trusted_proxy, plan lot 8)."""
+        path, query = split_request_target(head.target)
+        header_pairs = list(head.headers)
+        absolute_target_valid = True
+        try:
+            absolute = absolute_form_parts(head.target)
+        except InvalidAbsoluteTarget:
+            absolute, absolute_target_valid = None, False
+        if absolute is not None:
+            # RFC 9112 §3.2.2 : l'hote de la cible remplace l'en-tete Host (valide plus bas tel que recu).
+            absolute_host, origin_target = absolute
+            path, query = split_request_target(origin_target)
+            header_pairs = [(n, v) for n, v in header_pairs if n.lower() != "host"] + [("Host", absolute_host)]
+        headers = HttpHeaders.from_pairs(header_pairs)
+        request = HttpRequest(
+            request_id=request_id,
+            remote_ip=remote_ip if remote_ip is not None else self._resolve_remote_ip(peer_ip, headers),
+            peer_ip=peer_ip,
+            method=head.method,
+            path=path,
+            raw_path=head.target,
+            query=query,
+            headers=headers,
+            body=None,
+            content_length=None,
+            is_tls=self._ssl_context is not None,
+        )
+        return request, absolute_target_valid
+
+    def build_request(
+        self, head: ParsedRequestHead, peer_ip: str, request_id: str, body: bytes | None = None,
+        remote_ip: str | None = None,
+    ) -> HttpRequest:
+        """Processus de securite du moteur natif : la requete telle que le moteur Python l'aurait construite (le
+        natif a deja verifie Host, cible, methode, regles d'acces et lu le corps ; `body` = extrait capture)."""
+        request, _valid = self._build_request(head, peer_ip, request_id, remote_ip)
+        return replace(request, body=body) if body else request
+
+    async def security_stage(self, request: HttpRequest, blocklist_known_clear: bool = False,
+                             native_rate_limit: int | None = None) -> SecurityOutcome:
+        """Leurre, WAF (alerte, Active Defense, mode guerre), Auth - dans cet ordre, comme toujours. Rend la
+        reponse a envoyer (AVANT en-tetes de securite, appliques par l'appelant) ou None pour continuer vers le
+        routage. `keep_alive_allowed` : seul un leurre laisse la connexion ouverte ; tout refus la ferme.
+        `blocklist_known_clear`, `native_rate_limit` : indications du moteur natif (voir evaluate_waf_request)."""
+        decoy_response = await self._maybe_serve_decoy(request)
+        if decoy_response is not None:
+            return SecurityOutcome(decoy_response, keep_alive_allowed=True, notable=True)
+
+        waf_notable = False
+        if self._waf_config is not None:
+            assert self._waf_port is not None
+            assert self._blocklist_port is not None
+            assert self._rate_limit_port is not None
+            assert self._reputation_tracker is not None
+            waf_start = time.monotonic()
+            decision = await evaluate_waf_request(
+                request,
+                self._waf_config,
+                self._waf_port,
+                self._blocklist_port,
+                self._rate_limit_port,
+                self._reputation_tracker,
+                self._magnet_port,
+                self._magnet_executor,
+                blocklist_known_clear=blocklist_known_clear,
+                native_rate_limit=native_rate_limit,
+            )
+            if decision.action != "allow":
+                waf_notable = True
+                self._watch_source(request.remote_ip)
+                self._log_waf_alert(request, decision, (time.monotonic() - waf_start) * 1000)
+                state = self._observe_active_defense_threat(request, decision)
+                if state is not None:
+                    war_mode_response = await self._apply_active_defense_war_mode_actions(request, state)
+                    if war_mode_response is not None:
+                        return SecurityOutcome(war_mode_response, notable=True)
+            if decision.action == "block":
+                response = HttpResponse.empty(HttpStatus(decision.status_code or 403))
+                if decision.retry_after_seconds is not None:
+                    response.set_header("Retry-After", str(int(decision.retry_after_seconds)))
+                return SecurityOutcome(response, notable=True)
+
+        if self._auth_zones:
+            auth_decision = authorize_request(
+                request.path, request.method, request.header("authorization"),
+                self._auth_zones, self._users_by_name,
+            )
+            if auth_decision.outcome in ("unauthenticated", "forbidden"):
+                status = HttpStatus.UNAUTHORIZED if auth_decision.outcome == "unauthenticated" else HttpStatus.FORBIDDEN
+                response = HttpResponse.empty(status)
+                if auth_decision.outcome == "unauthenticated":
+                    response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protégée"))
+                return SecurityOutcome(response, notable=True)
+        return SecurityOutcome(None, notable=waf_notable)
+
+    async def serve_handed_off(self, sock: socket.socket, pending: bytes, requests_served: int) -> None:
+        """Lot 6 : connexion confiee par le moteur natif (reverse proxy, FastCGI, envoi de fichiers, WebSocket).
+        Les octets deja lus par le natif (tete de la requete en cours comprise) sont rejoues d'abord ; la suite
+        est le MEME `_handle_connection` que le moteur Python, jusqu'a la fin de la connexion (journal d'acces
+        compris)."""
+        loop = asyncio.get_running_loop()
+        reader = asyncio.StreamReader(limit=RAW_LINE_BUFFER_LIMIT, loop=loop)
+        reader.feed_data(pending)
+        protocol = asyncio.StreamReaderProtocol(reader, loop=loop)
+        transport, _ = await loop.connect_accepted_socket(lambda: protocol, sock=sock)
+        writer = asyncio.StreamWriter(transport, protocol, reader, loop)
+        await self._handle_connection(reader, writer, requests_served)
+
+    async def route(self, request: HttpRequest) -> HttpResponse:
+        """Routage complet (avant en-tetes de securite) : moteur Python, et routes deleguees par le natif (listing
+        de repertoire, /load, /admin - plan moteur C++ lot 5)."""
+        return await route_request(
+            request,
+            self._path_resolver,
+            self._filesystem,
+            self._config,
+            self._project_root,
+            self._fastcgi_client,
+            self._logger,
+            self._proxy_client,
+            self._proxy_load_balancer,
+            self._proxy_health_state,
+            self._proxy_client_ssl_context_verified,
+            self._proxy_client_ssl_context_unverified,
+            self._proxy_cache_store,
+            self._proxy_cache_locks,
+            self._proxy_cache_metrics,
+        )
 
     def _resolve_remote_ip(self, peer_ip: str, headers: HttpHeaders) -> str:
         settings = self._config.options.get("trusted_proxy")
@@ -746,12 +844,35 @@ class AsyncioHttpServer:
         self._proxy_load_poll_tasks = []
         self._start_proxy_load_pollers()
 
-    async def _write_error_response(self, writer: asyncio.StreamWriter, status: HttpStatus) -> None:
+    async def _write_error_response(self, writer: asyncio.StreamWriter, status: HttpStatus) -> HttpResponse:
         response = HttpResponse.empty(status)
         try:
             await self._write_response(writer, response, keep_alive=False)
         except (ConnectionResetError, BrokenPipeError, OSError):
             pass
+        return response
+
+    def _log_unparsed_access(
+        self, peer_ip: str, error: HttpParseError, response: HttpResponse, request_id: str,
+    ) -> None:
+        """Ligne d'access.log d'une requete refusee pendant l'analyse de sa tete (plan moteur C++ §14, valide
+        2026-11-02 : visible par fail2ban et RIPOSTE). Ligne de requete brute telle que recue (`-` si illisible),
+        IP client resolue avec les en-tetes deja lus - meme regle trusted_proxy qu'une requete complete."""
+        headers = HttpHeaders.from_pairs(list(error.headers))
+        entry = AccessLogEntry(
+            remote_ip=self._resolve_remote_ip(peer_ip, headers),
+            timestamp=datetime.now(timezone.utc),
+            method="",
+            request_target="",
+            http_version="",
+            status_code=int(response.status),
+            response_size=response.content_length,
+            referer=headers.get("referer"),
+            user_agent=headers.get("user-agent"),
+            request_id=request_id,
+            raw_request_line=error.request_line if error.request_line is not None else "-",
+        )
+        self._logger.append_line(self._access_log_path, format_combined_log_line(entry))
 
     def _log_access(self, request: HttpRequest, response: HttpResponse, start_time: float) -> None:
         entry = AccessLogEntry(
@@ -767,6 +888,10 @@ class AsyncioHttpServer:
             request_id=request.request_id,
         )
         self._logger.append_line(self._access_log_path, format_combined_log_line(entry))
+
+    def log_error_line(self, message: str, request_id: str | None) -> None:
+        """Journal d'erreurs, pour le processus de securite du moteur natif (meme format que le serveur)."""
+        self._log_error(message, request_id)
 
     def _log_error(self, message: str, request_id: str | None) -> None:
         line = format_error_log_line(datetime.now(timezone.utc), message, request_id)
@@ -788,6 +913,28 @@ class AsyncioHttpServer:
         )
         line = format_waf_alert_line(entry, self._waf_config.logging)
         self._logger.append_line(self._waf_alert_log_path, line)
+
+    def _watch_source(self, ip: str, until: float | None = None) -> None:
+        """Lot 3 du plan WAF natif : une source qui a un etat Active Defense (decision notable, leurre affecte) ne doit
+        plus etre jugee seule par le natif - toutes ses requetes viennent ici, pendant la duree de cet etat (decision
+        utilisateur 2026-11-04, Q2), ou jusqu'a l'expiration de son leurre si elle est plus lointaine. Seulement
+        quand les leurres sont actifs : sans eux, rien dans l'etat d'une source ne change une requete propre."""
+        config = self._active_defense_config
+        if self.watch_sink is None or config is None or not config.deception.enabled:
+            return
+        horizon = self._clock.now().timestamp() + config.state_ttl_seconds
+        self.watch_sink(ip, max(horizon, until or 0.0))
+
+    def active_deception_sources(self) -> list[tuple[str, float]]:
+        """(adresse, echeance) des affectations de leurre encore actives - processus de securite du natif (lot 3).
+        L'identifiant d'une source est `adresse:empreinte` : l'adresse seule est suivie (sur-ensemble)."""
+        config = self._active_defense_config
+        if config is None or not config.deception.enabled or self._deception_assignment_repository is None:
+            return []
+        now = self._clock.now()
+        return [(assignment.subject_id.rpartition(":")[0], assignment.expires_at.timestamp())
+                for assignment in self._deception_assignment_repository.list_active()
+                if is_assignment_active(assignment, now) and ":" in assignment.subject_id]
 
     def _active_defense_subject_id(self, request: HttpRequest) -> str:
         user_agent = request.header("user-agent") or ""
@@ -833,10 +980,16 @@ class AsyncioHttpServer:
         assert self._active_defense_playbook is not None
         playbook = self._active_defense_playbook
         subject_id = self._active_defense_subject_id(request)
-        state, observation, _escalation = observe_threat(
+        state, observation, escalation = observe_threat(
             self._threat_state_repository, self._clock, self._active_defense_config,
             subject_id=subject_id, waf_decision=decision,
         )
+        if escalation is not None:
+            self._write_security_event(
+                "threat_escalated", subject_id, request.remote_ip, escalation.occurred_at,
+                level=escalation.new_level, previous_level=escalation.previous_level, score=state.score,
+                attack_class=observation.attack_class if observation is not None else None,
+            )
         threshold = self._active_defense_config.war_mode.thresholds.incident_score
         # Sous le seuil, create_or_update_incident ne fait rien par definition : aucun travail a
         # deposer (sous un botnet, c'est le cas de presque toutes les observations).
@@ -844,20 +997,30 @@ class AsyncioHttpServer:
             if self._active_defense_writer is not None:
                 # Les incidents ne changent pas la reponse : ecrits entierement par le fil
                 # d'ecriture (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6).
-                clock, score, seen = self._clock, state.score, observation
+                clock, score, seen, remote_ip = self._clock, state.score, observation, request.remote_ip
 
                 def record_incident(repositories: ActiveDefenseRepositories) -> None:
-                    create_or_update_incident(
+                    _incident, opened = create_or_update_incident(
                         repositories.incidents, clock, subject_id=subject_id, observation=seen,
                         score=score, incident_score_threshold=threshold, return_incident=False,
                     )
+                    if opened is not None:  # fil d'ecriture : append_line est protege par un verrou
+                        self._write_security_event(
+                            "incident_opened", subject_id, remote_ip, opened.occurred_at,
+                            score=score, attack_class=seen.attack_class, incident_id=opened.incident_id,
+                        )
 
                 self._active_defense_writer.submit(record_incident)
             elif self._incident_repository is not None:
-                create_or_update_incident(
+                _incident, opened = create_or_update_incident(
                     self._incident_repository, self._clock, subject_id=subject_id, observation=observation,
                     score=state.score, incident_score_threshold=threshold,
                 )
+                if opened is not None:
+                    self._write_security_event(
+                        "incident_opened", subject_id, request.remote_ip, opened.occurred_at,
+                        score=state.score, attack_class=observation.attack_class, incident_id=opened.incident_id,
+                    )
         if (
             observation is not None
             and state.level in ("hostile", "contained")
@@ -865,10 +1028,16 @@ class AsyncioHttpServer:
             and self._deception_assignment_repository is not None
             and validate_playbook_action("redirect_to_decoy", playbook)
         ):
-            assign_deception(
+            assignment = assign_deception(
                 self._deception_assignment_repository, self._clock, self._active_defense_config.deception,
                 subject_id=subject_id, attack_class=observation.attack_class,
             )
+            if assignment is not None:
+                self._watch_source(request.remote_ip, assignment.expires_at.timestamp())
+                self._write_security_event(
+                    "deception_assigned", subject_id, request.remote_ip, assignment.assigned_at,
+                    level=state.level, attack_class=observation.attack_class, decoy_profile=assignment.profile_name,
+                )
         if (
             observation is not None
             and is_source_marked(state.level)
@@ -877,6 +1046,24 @@ class AsyncioHttpServer:
         ):
             self._write_active_defense_enriched_log(request, state, observation.attack_class)
         return state
+
+    def _write_security_event(
+        self,
+        event_type: SecurityEventType,
+        subject_id: str,
+        remote_ip: str,
+        occurred_at: datetime,
+        **fields: Any,
+    ) -> None:
+        """Une ligne dans `security-events.jsonl` (lot 1 RIPOSTE) - jamais d'exception vers la
+        requete : FileLineLogger avale deja toute OSError (une ligne sur stderr)."""
+        if self._active_defense_security_events_path is None:
+            return
+        event = SecurityEvent(
+            event_id=uuid.uuid4().hex, type=event_type, timestamp=occurred_at,
+            subject_id=subject_id, remote_ip=remote_ip, **fields,
+        )
+        self._logger.append_line(self._active_defense_security_events_path, format_security_event_line(event))
 
     def _write_active_defense_enriched_log(
         self, request: HttpRequest, state: ThreatState, attack_class: AttackClass,
@@ -973,6 +1160,10 @@ class AsyncioHttpServer:
         assert routing_decision.deception_profile_name is not None
         response = self._decoy_dispatch_port.render(routing_decision.deception_profile_name, request)
         if response is not None:
+            self._write_security_event(
+                "decoy_hit", subject_id, request.remote_ip, self._clock.now(),
+                decoy_profile=routing_decision.deception_profile_name,
+            )
             return response
         if self._active_defense_config.deception.fallback == "reject":
             return HttpResponse.empty(HttpStatus.FORBIDDEN)
@@ -993,6 +1184,10 @@ class AsyncioHttpServer:
                 return HttpResponse.empty(HttpStatus.FORBIDDEN)
             return None
         assert self._decoy_proxy_client is not None
+        self._write_security_event(
+            "decoy_hit", self._active_defense_subject_id(request), request.remote_ip, self._clock.now(),
+            decoy_profile=routing_decision.deception_profile_name or routing_decision.reverse_proxy_zone_name,
+        )
         return await serve_proxy(
             request, zone, self._decoy_proxy_client, self._decoy_load_balancer, self._decoy_health_state,
             self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,

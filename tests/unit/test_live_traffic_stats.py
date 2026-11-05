@@ -75,3 +75,35 @@ class TestLiveTrafficBuffer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDashboardAdditions(unittest.TestCase):
+    """Ajouts 2026-11-05 : debits recents, top 5, 403/429, dernieres requetes."""
+
+    def _at(self, ip: str, status: int, path: str, when: datetime) -> ParsedAccessLogEntry:
+        return ParsedAccessLogEntry(ip=ip, timestamp=when, status_code=status, response_size=10, path=path)
+
+    def test_recent_rates_use_line_timestamps(self):
+        now = datetime(2026, 11, 5, 12, 0, tzinfo=timezone.utc)
+        buffer = LiveTrafficBuffer(now - timedelta(minutes=15))
+        buffer.add(self._at("1.1.1.1", 200, "/old", now - timedelta(minutes=10)))
+        for seconds in (200, 100, 30, 10):
+            buffer.add(self._at("1.1.1.1", 200, "/a", now - timedelta(seconds=seconds)))
+        stats = buffer.get_stats(now)
+        self.assertAlmostEqual(stats.rps_1m, 2 / 60)
+        self.assertAlmostEqual(stats.rps_5m, 4 / 300)
+        self.assertEqual(stats.total, 5)
+
+    def test_tops_refusals_and_recent(self):
+        now = datetime(2026, 11, 5, 12, 0, tzinfo=timezone.utc)
+        buffer = LiveTrafficBuffer(now - timedelta(minutes=1))
+        rows = [("1.1.1.1", 200, "/"), ("1.1.1.1", 404, "/.env?x=1"), ("2.2.2.2", 404, "/.env"),
+                ("3.3.3.3", 403, "/admin"), ("3.3.3.3", 429, "/")]
+        for index, (ip, status, path) in enumerate(rows):
+            buffer.add(self._at(ip, status, path, now - timedelta(seconds=10 - index)))
+        stats = buffer.get_stats(now)
+        self.assertEqual(stats.top_ips[:2], (("1.1.1.1", 2), ("3.3.3.3", 2)))
+        self.assertEqual(stats.top_paths[0], ("/", 2))
+        self.assertEqual(stats.top_not_found, (("/.env", 2),))
+        self.assertEqual((stats.forbidden_403, stats.rate_limited_429), (1, 1))
+        self.assertEqual([e.status_code for e in stats.recent], [429, 403, 404, 404, 200])

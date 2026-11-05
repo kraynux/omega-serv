@@ -55,6 +55,14 @@ MACHINE_CONTRACTS = (
     ("Rechargement REFUSE", "journalctl (D18 : messages du serveur en francais)"),
     ("ERREUR auto-ban", "journalctl (D18)"),
     ("ERREUR blocklist illisible", "journalctl (D18)"),
+    ("AVERTISSEMENT blocklist ecrite sans verrou", "journalctl (D18)"),
+    ("RIPOSTE : suivi des journaux", "journalctl (D18) - processus RIPOSTE"),
+    ("Active Defense : export automatique impossible", "journalctl (D18) - entretien des incidents"),
+    ("Active Defense : entretien des incidents en erreur", "journalctl (D18) - entretien des incidents"),
+    ("RIPOSTE : lancement impossible", "journalctl (D18b) - supervision de RIPOSTE par serve"),
+    ("RIPOSTE arrete {", "journalctl (D18b) - supervision de RIPOSTE par serve"),
+    ("RIPOSTE (PID ", "journalctl (D18b) - supervision de RIPOSTE par serve"),
+    ("declaration anonyme : ", "journalctl (D18b) - envoi quotidien de la declaration anonyme par serve"),
 )
 
 UI_TEXT_CALLS = {
@@ -138,7 +146,15 @@ FRENCH_WORDS = {
 }
 # D18 : ce qu'ecrit le PROCESSUS SERVEUR (omega-serv serve, sous systemd -> journalctl)
 # reste en francais, quelle que soit la langue de l'interface.
-SERVER_PROCESS_SCOPES = ("run_server_until_stopped", "cmd_serve", "_run_serve_foreground")
+SERVER_PROCESS_SCOPES = (
+    "run_server_until_stopped", "cmd_serve", "_run_serve_foreground",
+    # Processus RIPOSTE et sa supervision par `serve` (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 2) - D18b.
+    "cmd_riposte_run", "RiposteChildSupervisor",
+    # Lot 4 : cibles des actions et bilan de reconciliation, ecrits par ce meme processus.
+    "_Targets", "_report_reconcile",
+    # Envoi quotidien de la declaration anonyme, lance par `serve` (OMEGA-SERV_ETUDE_TELEMETRIE.md §3b) - D18b.
+    "cmd_declaration_send_scheduled", "DeclarationScheduler",
+)
 SERVER_PROCESS_FILES = ("infrastructure/logging/file_line_logger.py", "application/security/blocklist_location.py")
 BUILD_TOOL_FILES = ("infrastructure/waf/keyword_reference_generator.py",)
 # Formats d'echange normalises (STIX 2.1, MISP) : contenu en anglais et en valeurs du standard,

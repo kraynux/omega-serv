@@ -67,6 +67,15 @@ class WafModulesScreen(OmegaScreen):
             yield Input(id="mode-input")
             yield Static(_("Comportement en cas d'erreur interne (fail-open/fail-closed)"), classes="omega-subtitle")
             yield Input(id="on-internal-error-input")
+            yield Static(_("Contrôle du moteur natif : 1 requête propre sur N vérifiée par Python (0 = jamais)"),
+                         classes="omega-subtitle")
+            yield Input(id="native-check-input")
+            yield Static(
+                _("Avec le moteur natif, une requête sur laquelle aucune règle ne correspond est servie sans passer "
+                  "par Python. Avec N > 0, une sur N lui est quand même soumise ; tout désaccord est écrit dans le "
+                  "journal d'erreurs."),
+                classes="omega-hint",
+            )
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Enregistrer"), id="save-mode", variant="primary")
 
@@ -122,6 +131,7 @@ class WafModulesScreen(OmegaScreen):
         waf_config = parse_waf_config(settings)
         self.query_one("#mode-input", Input).value = waf_config.mode
         self.query_one("#on-internal-error-input", Input).value = waf_config.on_internal_error
+        self.query_one("#native-check-input", Input).value = str(waf_config.native_check_every)
 
         rule_paths_table = self.query_one("#rule-paths-table", DataTable)
         rule_paths_table.clear()
@@ -243,12 +253,17 @@ class WafModulesScreen(OmegaScreen):
         if on_internal_error not in ("fail-open", "fail-closed"):
             error_widget.update(_("Valeur invalide : {on_internal_error!r} (attendu : fail-open, fail-closed)").format(on_internal_error=on_internal_error))
             return
+        check_text = self.query_one("#native-check-input", Input).value.strip() or "0"
+        if not (check_text.isascii() and check_text.isdigit()) or int(check_text) > 1_000_000:
+            error_widget.update(_("Valeur invalide : {value!r} (attendu : un entier de 0 à 1000000)").format(value=check_text))
+            return
 
         existing = load_result.config.options.get("waf")
         enabled = existing.enabled if existing is not None else False
         new_settings = dict(existing.settings) if existing is not None else {}
         new_settings["mode"] = mode
         new_settings["on_internal_error"] = on_internal_error
+        new_settings["native_check_every"] = int(check_text)
         new_options = dict(load_result.config.options)
         new_options["waf"] = Option(name="waf", enabled=enabled, settings=new_settings)
         new_config = replace(load_result.config, options=new_options)

@@ -146,5 +146,36 @@ class TestIncidentHistoryPruning(unittest.TestCase):
         self.repository.close("i1", _NOW)
         self.assertIsNone(self.repository.find_open_id_for("203.0.113.1:abcd"))
 
+    def _count(self, table, incident_id):
+        return self.connection.execute(f"SELECT COUNT(*) FROM {table} WHERE incident_id = ?", (incident_id,)).fetchone()[0]
+
+    def test_purge_closed_removes_old_closed_incidents_with_their_history(self):
+        """2026-11-01 : incidents fermes supprimes 90 j apres fermeture, historique compris ; jamais un ouvert."""
+        for incident_id in ("ancien-ferme", "recent-ferme", "ancien-ouvert"):
+            self.repository.create(incident_id, f"{incident_id}:abcd", _NOW - timedelta(days=200))
+            self.repository.add_observation(incident_id, self._observation(subject_id=f"{incident_id}:abcd"))
+            self.repository.add_event(incident_id, IncidentEvent(occurred_at=_NOW, kind="opened", detail="x"))
+        self.repository.close("ancien-ferme", _NOW - timedelta(days=100))
+        self.repository.close("recent-ferme", _NOW - timedelta(days=10))
+
+        removed = self.repository.purge_closed(_NOW - timedelta(days=90), max_closed=10_000)
+
+        self.assertEqual(removed, 1)
+        self.assertIsNone(self.repository.get("ancien-ferme"))
+        self.assertEqual(self._count("incident_events", "ancien-ferme"), 0)
+        self.assertEqual(self._count("incident_observations", "ancien-ferme"), 0)
+        self.assertIsNotNone(self.repository.get("recent-ferme"))
+        self.assertIsNotNone(self.repository.get("ancien-ouvert"))  # ouvert depuis 200 j : jamais supprime
+
+    def test_purge_closed_caps_the_number_kept_oldest_closed_first(self):
+        for i in range(5):
+            self.repository.create(f"i{i}", f"s{i}:abcd", _NOW)
+            self.repository.close(f"i{i}", _NOW - timedelta(days=5 - i))  # i0 ferme le plus anciennement
+        self.repository.create("ouvert", "s:abcd", _NOW)
+        self.assertEqual(self.repository.purge_closed(_NOW - timedelta(days=90), max_closed=2), 3)
+        remaining = {incident.incident_id for incident in self.repository.list_recent(IncidentFilters())}
+        self.assertEqual(remaining, {"i3", "i4", "ouvert"})
+
+
 if __name__ == "__main__":
     unittest.main()

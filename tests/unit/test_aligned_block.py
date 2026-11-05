@@ -9,8 +9,10 @@ from rich.text import Text
 from omega_serv.interfaces.tui.rendering.aligned_block import (
     SECTION_WIDTH,
     AlignedBlock,
+    centered_section_title,
     section_title,
 )
+from omega_serv.interfaces.tui.screens.resource_status_screen import gauge_level, sparkline
 
 
 def _lines(block: AlignedBlock) -> list[str]:
@@ -44,6 +46,50 @@ class TestSectionTitle(unittest.TestCase):
 
     def test_very_long_title_keeps_a_frame(self):
         self.assertTrue(section_title("X" * 60).rstrip("\n").endswith("───"))
+
+
+class TestCenteredSectionTitle(unittest.TestCase):
+    def test_fills_the_box_with_the_title_in_the_middle(self):
+        for title, width in (("CLIENTS", 40), ("SÉCURITÉ", 33), ("系统状态", 50)):
+            with self.subTest(title=title):
+                line = centered_section_title(title, width).rstrip("\n")
+                self.assertEqual(cell_len(line), width)
+                left, right = line.split(f" {title} ")
+                self.assertLessEqual(abs(len(left) - len(right)), 1)
+
+    def test_too_narrow_box_keeps_three_dashes_each_side(self):
+        line = centered_section_title("X" * 60, 20).rstrip("\n")
+        self.assertTrue(line.startswith("───") and line.endswith("───"))
+
+    def test_styled_value_keeps_its_own_colour(self):
+        content = AlignedBlock().row("CPU", Text("[██] 50%", style="red")).render_into(Text())
+        self.assertEqual(content.plain, "  CPU : [██] 50%\n")
+        self.assertIn("red", [str(span.style) for span in content.spans])
+
+
+class TestGaugeLevel(unittest.TestCase):
+    def test_thresholds(self):
+        cases = {0: "success", 49.9: "success", 50: "warning", 74.9: "warning",
+                 75: "orange", 94.9: "orange", 95: "error", 100: "error"}
+        for percent, level in cases.items():
+            with self.subTest(percent=percent):
+                self.assertEqual(gauge_level(percent), level)
+
+
+class TestFreeLineAndSparkline(unittest.TestCase):
+    def test_free_line_does_not_widen_the_label_column(self):
+        lines = _lines(AlignedBlock().row("A", "1").line(Text("TCP ▁▂▃ tres long libelle")).row("BB", "2"))
+        self.assertEqual(lines, ["  A  : 1", "  TCP ▁▂▃ tres long libelle", "  BB : 2"])
+
+    def test_apply_lets_a_function_add_lines(self):
+        lines = _lines(AlignedBlock().row("A", "1").apply(lambda b: b.line(Text("x"))))
+        self.assertEqual(lines, ["  A : 1", "  x"])
+
+    def test_sparkline_scales_on_the_peak_and_keeps_the_last_values(self):
+        self.assertEqual(sparkline([0, 50, 100], 3), "▁▅█")
+        self.assertEqual(sparkline([100, 0, 0, 0], 2), "▁▁")
+        self.assertEqual(sparkline([0, 0], 5), "▁▁")
+        self.assertEqual(sparkline([1, 2], 0), "")
 
 
 if __name__ == "__main__":

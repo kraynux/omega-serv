@@ -20,28 +20,34 @@ class TestCpuInfo(unittest.TestCase):
         self.assertEqual(_cpu(quota=1.5).available, 2)           # CPUQuota=150 % -> 2
         self.assertEqual(_cpu(quota=0.2).available, 1)           # jamais moins de 1
 
-    def test_automatic_is_physical_cores_within_available(self):
-        self.assertEqual(_cpu().recommended_workers, 4)          # hyperthreading : coeurs physiques
-        self.assertEqual(_cpu(affinity=2).recommended_workers, 2)
-        self.assertEqual(_cpu(quota=1.0).recommended_workers, 1)
+    def test_usable_cores_are_physical_cores_within_available(self):
+        self.assertEqual(_cpu().usable_cores, 4)          # hyperthreading : coeurs physiques
+        self.assertEqual(_cpu(affinity=2).usable_cores, 2)
+        self.assertEqual(_cpu(quota=1.0).usable_cores, 1)
 
     def test_real_machine_detection_never_fails(self):
         cpu = cpu_info()
         self.assertGreaterEqual(cpu.available, 1)
-        self.assertGreaterEqual(cpu.recommended_workers, 1)
+        self.assertGreaterEqual(cpu.usable_cores, 1)
         self.assertLessEqual(cpu.physical, cpu.logical)
 
 
 class TestEffectiveWorkerCount(unittest.TestCase):
-    def test_automatic_and_explicit_values(self):
-        self.assertEqual(effective_worker_count(0, 4, 2), (2, None))
-        self.assertEqual(effective_worker_count(3, 4, 2), (3, None))
-        self.assertEqual(effective_worker_count(1, 4, 2), (1, None))
+    def test_explicit_values_within_the_maximum(self):
+        self.assertEqual(effective_worker_count(3, "python", 4), (3, None))
+        self.assertEqual(effective_worker_count(1, "python", 4), (1, None))
+        self.assertEqual(effective_worker_count(2, "native", 4), (2, None))
+
+    def test_old_automatic_value_gives_the_maximum_with_a_message(self):
+        count, message = effective_worker_count(0, "python", 2)
+        self.assertEqual(count, 2)
+        self.assertIn("automatique", message)
 
     def test_more_than_the_machine_is_capped_with_a_message(self):
-        count, message = effective_worker_count(16, 4, 2)
+        count, message = effective_worker_count(16, "python", 4)
         self.assertEqual(count, 4)
         self.assertIn("16", message)
+        self.assertEqual(effective_worker_count(4, "native", 2)[0], 1)
 
 
 class TestValidation(unittest.TestCase):

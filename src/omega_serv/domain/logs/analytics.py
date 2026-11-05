@@ -3,7 +3,7 @@ refonte menu 2026-10-15) - porte verbatim depuis omega-log (lui-meme
 porte depuis omega-fire), aucune lecture fichier ici."""
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 
 from omega_serv.domain.logs.models import (
@@ -13,6 +13,7 @@ from omega_serv.domain.logs.models import (
     LogSource,
     LogStats,
     TopIP,
+    TrafficStats,
 )
 
 
@@ -117,3 +118,57 @@ def filter_entries_by_source(entries: list[LogEntry], source: LogSource) -> list
 
 def filter_error_entries(entries: list[LogEntry]) -> list[LogEntry]:
     return [e for e in entries if e.is_error()]
+
+
+TRAFFIC_TOP_SIZE = 5
+"""Lignes des tops du viewer Simple (meme valeur que le cadre FLUX d'Etat & Ressources)."""
+
+
+def compute_traffic_stats(entries: list[LogEntry]) -> TrafficStats:
+    """Barre de statut du viewer Simple. Debits rapportes a la duree couverte par les lignes (horodatages
+    du log), jamais au temps passe devant l'ecran : un tampon charge d'un coup a l'ouverture donne le
+    meme debit que si on l'avait regarde arriver."""
+    stats = TrafficStats(total=len(entries))
+    if not entries:
+        return stats
+    statuses = [e.http_status for e in entries if e.http_status is not None]
+    stats.http_total = len(statuses)
+    stats.status_2xx = sum(1 for s in statuses if 200 <= s < 300)
+    stats.status_3xx = sum(1 for s in statuses if 300 <= s < 400)
+    stats.status_4xx = sum(1 for s in statuses if 400 <= s < 500)
+    stats.status_5xx = sum(1 for s in statuses if 500 <= s < 600)
+
+    first, last = compute_time_range(entries)
+    if first is not None and last is not None:
+        span = (last - first).total_seconds()
+        if span >= 1:
+            stats.span_seconds = span
+            stats.requests_per_second = len(entries) / span
+
+    latencies = [e.latency_ms for e in entries if e.latency_ms is not None]
+    if latencies:
+        stats.avg_latency_ms = sum(latencies) / len(latencies)
+    sizes = [e.bytes_sent for e in entries if e.bytes_sent is not None]
+    if sizes:
+        stats.bytes_total = sum(sizes)
+        stats.avg_size = stats.bytes_total / len(sizes)
+        if stats.span_seconds is not None:
+            stats.bytes_per_second = stats.bytes_total / stats.span_seconds
+
+    stats.status_403 = sum(1 for s in statuses if s == 403)
+    stats.status_429 = sum(1 for s in statuses if s == 429)
+    stats.top_ips = [(t.ip, t.count) for t in compute_top_ips(entries, n=TRAFFIC_TOP_SIZE)]
+    paths = [(e.http_path.split("?", 1)[0], e.http_status) for e in entries if e.http_path]
+    stats.top_paths = Counter(path for path, _status in paths).most_common(TRAFFIC_TOP_SIZE)
+    stats.top_not_found = Counter(path for path, status in paths if status == 404).most_common(TRAFFIC_TOP_SIZE)
+
+    top = compute_top_ips(entries, n=1)
+    stats.unique_ips = len({e.ip for e in entries if e.has_ip()})
+    if top:
+        stats.top_ip, stats.top_ip_count = top[0].ip, top[0].count
+
+    if stats.http_total:
+        stats.error_rate = (stats.status_4xx + stats.status_5xx) / stats.http_total * 100
+    else:
+        stats.error_rate = sum(1 for e in entries if e.is_error()) / len(entries) * 100
+    return stats

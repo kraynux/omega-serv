@@ -7,6 +7,7 @@ routing/dirlisting.py) et le cache (domain/routing/cache_policy.py) - ne
 fait jamais d'I/O directement (delegue a FilesystemPort)."""
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 from omega_serv.domain.config.entities import SecurityConfig
@@ -134,16 +135,45 @@ def serve_static_file(
     return response
 
 
+_ABSENT_VARIANT_SECONDS = 2.0
+_ABSENT_VARIANT_MAX = 4096
+_absent_variants: dict[Path, float] = {}
+"""Variantes `.br`/`.gz` absentes, retenues 2 s (plan moteur C++, lot 0, 2026-11-02 ; propose par l'analyse du
+29/10) : deux recherches ratees par requete coutaient ~7 % du temps de traitement. Seules les ABSENCES sont
+retenues : au pire, un fichier pre-compresse tout juste cree est servi 2 s plus tard (l'original l'est entre-temps,
+jamais une version perimee). Taille bornee : videe quand elle depasse 4 096 entrees."""
+
+
+def _known_absent(candidate: Path, now: float) -> bool:
+    until = _absent_variants.get(candidate)
+    if until is None:
+        return False
+    if now < until:
+        return True
+    del _absent_variants[candidate]
+    return False
+
+
+def _remember_absent(candidate: Path, now: float) -> None:
+    if len(_absent_variants) >= _ABSENT_VARIANT_MAX:
+        _absent_variants.clear()
+    _absent_variants[candidate] = now + _ABSENT_VARIANT_SECONDS
+
+
 def _precompressed_variant(
     request: HttpRequest, filesystem: FilesystemPort, original: Path, original_mtime: float,
 ) -> tuple[str, Path, int, float] | None:
     """(codage, fichier, taille, date) du premier `fichier.br`/`fichier.gz` accepte par le
     navigateur, dans le MEME dossier que l'original (un lien qui pointerait ailleurs est
     ignore) et au moins aussi recent que lui (jamais une version perimee)."""
+    now = time.monotonic()
     for encoding, suffix in preferred_encodings(request.header("accept-encoding")):
         candidate = original.with_name(original.name + suffix)
+        if _known_absent(candidate, now):
+            continue
         info = filesystem.path_info(candidate)
         if info is None or not info.is_file:
+            _remember_absent(candidate, now)
             continue
         if filesystem.resolve_real_path(candidate).parent != original.parent:
             continue
@@ -162,15 +192,24 @@ def _render_listing(
     display_path: str,
 ) -> HttpResponse:
     settings = dirlisting_settings or DirlistingSettings()
-    entries = filesystem.list_directory_entries(directory_path)
-    entry_info = {
-        name: DirEntryInfo(
-            is_directory=(is_dir := filesystem.is_dir(directory_path / name)),
-            size=None if is_dir else filesystem.file_size(directory_path / name),
-            mtime=filesystem.file_mtime(directory_path / name),
-        )
-        for name in entries
-    }
+    entries: list[str] = []
+    entry_info: dict[str, DirEntryInfo] = {}
+    for name in filesystem.list_directory_entries(directory_path):
+        entry_path = directory_path / name
+        try:
+            is_dir = filesystem.is_dir(entry_path)
+            info = DirEntryInfo(
+                is_directory=is_dir,
+                size=None if is_dir else filesystem.file_size(entry_path),
+                mtime=filesystem.file_mtime(entry_path),
+            )
+        except OSError:
+            # Corrige 2026-11-02 (banc du moteur natif) : un lien en boucle ou casse, ou un fichier disparu
+            # entre-temps, faisait planter TOUT le listing (connexion fermee sans reponse). Jamais servable en acces
+            # direct, donc jamais liste (regle de dirlisting.py).
+            continue
+        entries.append(name)
+        entry_info[name] = info
     header_content = (
         _read_side_file(filesystem, directory_path, settings.header_file) if settings.show_header else None
     )

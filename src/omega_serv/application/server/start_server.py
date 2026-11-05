@@ -9,7 +9,8 @@ serveur reel, pour `waf test` (simulateur) et la gestion de blocklist -
 memes objets reels, jamais une reconstruction paralelle."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+import sys
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -25,6 +26,7 @@ from omega_serv.domain.security.active_defense.config import (
     ActiveDefenseConfig,
     parse_active_defense_config,
 )
+from omega_serv.domain.security.active_defense.entities import Incident
 from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
 from omega_serv.domain.security.waf.config import (
     DEFAULT_BLOCKLIST_PATH,
@@ -78,7 +80,10 @@ from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStor
 from omega_serv.infrastructure.waf.reputation_tracker import InMemoryReputationTracker
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
 from omega_serv.infrastructure.waf.shared_counters import SharedCounters
-from omega_serv.ports.active_defense_writer_port import ActiveDefenseWriterPort
+from omega_serv.ports.active_defense_writer_port import (
+    ActiveDefenseRepositories,
+    ActiveDefenseWriterPort,
+)
 from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
 from omega_serv.ports.blocklist_port import BlocklistPort
 from omega_serv.ports.clock_port import ClockPort
@@ -239,6 +244,44 @@ class ActiveDefenseCollaborators:
     decoy_proxy_client: HttpProxyClientPort
     writer: ActiveDefenseWriterPort | None = None
     """Seulement pour le serveur (`write_behind=True`) : la CLI et la TUI ecrivent directement."""
+    security_events_path: Path | None = None
+    """Journal des evenements de securite (lot 1 RIPOSTE), voir ActiveDefenseLoggingConfig."""
+
+
+def incident_maintenance(
+    active_defense_config: ActiveDefenseConfig, project_root: Path, clock: ClockPort,
+) -> Callable[[ActiveDefenseRepositories], None]:
+    """Entretien automatique des incidents par le serveur (decision utilisateur 2026-11-01) : un incident
+    dont la menace est effacee se ferme tout seul (meme regle que `active-defense purge`), avec l'export
+    automatique a la fermeture s'il est active. Execute dans le fil d'ecriture d'Active Defense."""
+    from omega_serv.application.active_defense.auto_export import auto_export_closed_incidents
+    from omega_serv.application.active_defense.sweep_active_defense import close_quiet_incidents
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
+    from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
+        MarkdownIncidentReportExporter,
+    )
+    from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
+
+    export_dir = project_root / active_defense_config.storage.export_dir
+
+    def run(repositories: ActiveDefenseRepositories) -> None:
+        closed = close_quiet_incidents(repositories.threat_states, repositories.incidents, clock, active_defense_config)
+        if not closed or not active_defense_config.ioc.auto_export_on_close:
+            return
+        filesystem = LocalFilesystem()
+        exporters = build_ioc_exporters(filesystem, export_dir, active_defense_config.ioc)
+
+        def export_ioc(incident: Incident, export_format: str) -> object:
+            exporter = exporters.get(export_format)
+            return None if exporter is None else exporter.export(incident)
+
+        auto_export_closed_incidents(
+            closed, repositories.incidents, active_defense_config, export_ioc,
+            lambda incident: MarkdownIncidentReportExporter(filesystem, export_dir).render(incident),
+            lambda message: print(f"Active Defense : export automatique impossible {message}", file=sys.stderr),
+        )
+
+    return run
 
 
 def build_active_defense_collaborators(
@@ -282,6 +325,7 @@ def build_active_defense_collaborators(
         writer = SqliteActiveDefenseWriter(
             database, clock or SystemClock(),
             purge_interval_seconds=purge_interval_for(active_defense_config.state_ttl_seconds),
+            after_purge=incident_maintenance(active_defense_config, project_root, clock or SystemClock()),
         )
         threat_states = WriteBehindThreatStateRepository(SqliteThreatStateRepository(connection), writer)
         assignments = WriteBehindDeceptionAssignmentRepository(SqliteDeceptionAssignmentRepository(connection), writer)
@@ -295,6 +339,7 @@ def build_active_defense_collaborators(
         enriched_log_path=project_root / active_defense_config.logging.log_path,
         decoy_proxy_client=AsyncioHttpProxyClient(),
         writer=writer,
+        security_events_path=project_root / active_defense_config.logging.security_events_path,
     )
 
 
@@ -422,6 +467,7 @@ def build_server(
         decoy_dispatch_port=active_defense.decoy_dispatch_port if active_defense else None,
         delay_scheduler=active_defense.delay_scheduler if active_defense else None,
         active_defense_enriched_log_path=active_defense.enriched_log_path if active_defense else None,
+        active_defense_security_events_path=active_defense.security_events_path if active_defense else None,
         decoy_proxy_client=active_defense.decoy_proxy_client if active_defense else None,
         active_defense_writer=active_defense.writer if active_defense else None,
         clock=clock,

@@ -19,9 +19,8 @@ OPTIONS_SCREEN = ScreenGuide(
             label=_("Sélection + Activer / Désactiver"),
             definition=_("Chaque ligne du tableau représente une option superposable connue."),
             utilisation=(
-                _("14 options connues : dirlisting, waf, auth, fastcgi, aliases, redirects, "
-                "rewrites, cache, trusted_proxy, upload, error_pages, access_control, "
-                "reverse_proxy, active_defense.")
+                _("15 options connues : dirlisting, waf, auth, fastcgi, aliases, redirects, rewrites, cache, "
+                  "trusted_proxy, upload, error_pages, access_control, reverse_proxy, active_defense, riposte.")
             ),
             action=_("Sélectionner une ligne puis Activer/Desactiver bascule option.enabled dans la configuration."),
             reaction=(
@@ -30,6 +29,7 @@ OPTIONS_SCREEN = ScreenGuide(
                 "REDÉMARRAGE COMPLET (leur client n'est construit qu'au démarrage). "
                 "active_defense exige TOUJOURS un redémarrage complet, à l'activation comme à "
                 "la désactivation.")
+                + " " + _("riposte aussi : son processus est lancé et surveillé par le service au démarrage.")
             ),
         ),
     ),

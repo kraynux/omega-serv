@@ -1,8 +1,13 @@
 """Sous-ecran Resistance et limites (plan interface §7) - les 10 champs
 entiers de ServerConfig lies aux limites/delais anti-abus (spec §9.2), plus
-le nombre de workers du mode « boost » (OMEGA-SERV_ETUDE_MODE_BOOST.md) : sous
+le nombre de processus (`server.workers`, OMEGA-SERV_ETUDE_MODE_BOOST.md) : sous
 le champ, les chiffres REELS de la machine (decision utilisateur 2026-10-26 :
-un nombre de workers doit correspondre a la machine ou omega-serv est installe)."""
+un nombre de workers doit correspondre a la machine ou omega-serv est installe).
+
+Plan moteur C++ §25 (decision utilisateur 2026-11-04) : plus de noms de niveaux. Le maximum depend du moteur choisi
+dans « Configuration de base » et du processeur detecte (engine_levels.max_workers) ; l'ecran dit ce qui est
+compatible, si augmenter apporte quelque chose sur CETTE machine, et refuse une valeur au-dela du maximum : on ne
+laisse jamais croire a un reglage qui ne serait pas applique."""
 from __future__ import annotations
 
 from dataclasses import replace
@@ -13,6 +18,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Input, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.application.server.engine_levels import describe_run, max_workers
 from omega_serv.core.i18n import _
 from omega_serv.core.platform_info import cpu_info
 from omega_serv.domain.config.validation import validate_config
@@ -53,9 +59,11 @@ class LimitsScreen(OmegaScreen):
             for field_name, label in _FIELDS:
                 yield Static(label, classes="omega-subtitle")
                 yield Input(id=f"field-{field_name}")
-            yield Static(_("Nombre de workers - mode boost (workers, 0 = automatique)"), classes="omega-subtitle")
+            yield Static(_("Nombre de processus (workers)"), classes="omega-subtitle")
             yield Input(id="field-workers")
             yield Static(self._machine_hint(), id="workers-hint", classes="omega-hint")
+            yield Static("", id="workers-engine-hint", classes="omega-hint")
+            yield Static("", id="workers-result", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Enregistrer"), id="save", variant="primary")
@@ -75,7 +83,68 @@ class LimitsScreen(OmegaScreen):
         server = result.config.server
         for field_name, _label in _FIELDS:
             self.query_one(f"#field-{field_name}", Input).value = str(getattr(server, field_name))
+        # Moteur EFFECTIF prevu (un natif demande mais impossible tourne en Python : son maximum s'applique)
+        self._engine = self._container.engine_status(result.config).forecast.effective
+        self._security_active = any(result.config.option_enabled(name) for name in ("waf", "active_defense", "auth"))
+        self._maximum = max_workers(self._engine, cpu_info().usable_cores)
+        # Une valeur de fichier hors bornes (0 = ancien « automatique », config copiee) est montree telle quelle :
+        # la ligne de resultat dit ce qui sera applique, l'enregistrement demande une valeur correcte.
         self.query_one("#field-workers", Input).value = str(server.workers)
+        self.query_one("#workers-engine-hint", Static).update(self._engine_hint())
+        self._refresh_result()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input.id == "field-workers" and hasattr(self, "_engine"):
+            self._refresh_result()
+
+    def _workers_error(self, workers: int) -> str | None:
+        if workers < 1:
+            return _("Au moins 1 processus.")
+        if workers > self._maximum:
+            engine = _("moteur natif") if self._engine == "native" else _("moteur Python")
+            return _("Trop élevé : {maximum} processus au maximum sur cette machine avec le {engine}.").format(
+                maximum=self._maximum, engine=engine)
+        return None
+
+    def _refresh_result(self) -> None:
+        result = self.query_one("#workers-result", Static)
+        try:
+            workers = int(self.query_one("#field-workers", Input).value.strip())
+        except ValueError:
+            result.update("")
+            return
+        error = self._workers_error(workers)
+        if error:
+            result.update(error)
+            return
+        lines = [_("Au prochain démarrage : {run}.").format(run=describe_run(self._engine, workers))]
+        if self._engine == "native" and workers > 1 and not self._security_active:
+            lines.append(_("Le 2e reste sans effet tant qu'aucun contrôle de sécurité (WAF, Active Defense, "
+                           "authentification) n'est actif."))
+        result.update(" ".join(lines))
+
+    def _engine_hint(self) -> str:
+        cores = cpu_info().usable_cores
+        if self._engine != "native":
+            return _(
+                "Moteur Python (écran « Configuration de base ») : de 1 à {maximum} processus sur cette machine, un "
+                "par cœur physique. Chaque processus sert les requêtes : en ajouter augmente le débit, jusqu'à ce "
+                "nombre. Au-delà, les processus se disputeraient le processeur."
+            ).format(maximum=self._maximum)
+        if self._maximum > 1:
+            return _(
+                "Moteur natif (écran « Configuration de base ») : il utilise déjà tous les cœurs à lui seul. Les "
+                "processus réglés ici font les contrôles de sécurité (WAF, Active Defense, authentification) : 1 ou "
+                "2 sur cette machine. Ils ne reçoivent que les requêtes à vérifier : un 2e augmente le débit "
+                "seulement quand beaucoup de requêtes passent par eux (magnet actif, attaque "
+                "en cours)."
+            )
+        return _(
+            "Moteur natif (écran « Configuration de base ») : il utilise déjà tous les cœurs à lui seul. Les "
+            "processus réglés ici font les contrôles de sécurité : 1 seul sur cette machine ({cores} cœur(s) "
+            "physique(s)). Un 2e n'apporterait rien, le processeur étant déjà occupé ; il faut au moins 4 cœurs "
+            "physiques."
+        ).format(cores=cores)
 
     @staticmethod
     def _machine_hint() -> str:
@@ -85,16 +154,10 @@ class LimitsScreen(OmegaScreen):
         )
         return _(
             "Cette machine : {physical} cœur(s) physique(s), {logical} thread(s), {available} CPU "
-            "disponible(s) pour omega-serv{quota}. Automatique (0) : {recommended} worker(s) ; "
-            "maximum : {available}. Le nombre de workers doit correspondre à cette machine : au-delà, "
-            "les processus se disputent le processeur. 1 = un seul processus (fonctionnement "
-            "classique). Les compteurs de sécurité (rate limit, récidive) restent exacts quel que "
-            "soit le nombre de workers ; un script magnet garde ses propres compteurs dans chaque "
-            "worker. Tout changement exige un redémarrage complet."
-        ).format(
-            physical=cpu.physical, logical=cpu.logical, available=cpu.available, quota=quota,
-            recommended=cpu.recommended_workers,
-        )
+            "disponible(s) pour omega-serv{quota}. Les compteurs de sécurité (rate limit, récidive) restent "
+            "exacts quel que soit le nombre de processus ; un script magnet garde ses propres compteurs dans "
+            "chaque processus. Tout changement exige un redémarrage complet."
+        ).format(physical=cpu.physical, logical=cpu.logical, available=cpu.available, quota=quota)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back":
@@ -112,7 +175,7 @@ class LimitsScreen(OmegaScreen):
         assert load_result.config is not None
 
         values: dict[str, int] = {}
-        for field_name, label in (*_FIELDS, ("workers", _("Nombre de workers"))):
+        for field_name, label in (*_FIELDS, ("workers", _("Nombre de processus (workers)"))):
             text = self.query_one(f"#field-{field_name}", Input).value.strip()
             try:
                 values[field_name] = int(text)
@@ -136,13 +199,10 @@ class LimitsScreen(OmegaScreen):
         )
         new_config = replace(load_result.config, server=new_server)
 
-        available = cpu_info().available
         errors = validate_config(new_config) + boost_errors(new_config)
-        if new_server.workers > available:
-            errors.append(
-                _("{workers} workers demandés, mais cette machine n'a que {available} CPU disponible(s) "
-                "pour omega-serv").format(workers=new_server.workers, available=available)
-            )
+        workers_error = self._workers_error(new_server.workers)
+        if workers_error:
+            errors.append(workers_error)
         if errors:
             error_widget.update(_("Erreur de validation :\n") + "\n".join(f"  - {e}" for e in errors))
             return
@@ -152,7 +212,7 @@ class LimitsScreen(OmegaScreen):
         if new_server.workers != load_result.config.server.workers:
             notify_restart_required(
                 self, self._container,
-                _("Enregistré - le nombre de workers ne change qu'au REDÉMARRAGE COMPLET du service."),
+                _("Enregistré - le nombre de processus ne change qu'au REDÉMARRAGE COMPLET du service."),
             )
         elif new_server.listen_backlog != load_result.config.server.listen_backlog:
             notify_restart_required(

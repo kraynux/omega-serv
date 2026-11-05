@@ -96,3 +96,27 @@ class TestRightmostUntrustedResolution(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
+class TestTrustedProxyCaches(unittest.TestCase):
+    """Lot 0 du plan moteur C++ (2026-11-02) : caches sans changement de resultat ni croissance memoire pilotee
+    par le client (valeurs X-Forwarded-For geantes jamais mises en cache)."""
+
+    def test_same_results_as_before(self):
+        from omega_serv.domain.security.trusted_proxy import is_trusted_proxy, normalize_ip
+
+        self.assertEqual(normalize_ip("::ffff:203.0.113.10"), "203.0.113.10")
+        self.assertEqual(normalize_ip("pas-une-ip"), "pas-une-ip")
+        self.assertTrue(is_trusted_proxy("127.0.0.1", ["127.0.0.1", "bad", "::1"]))
+        self.assertTrue(is_trusted_proxy("::ffff:127.0.0.1", ["127.0.0.0/8"]))
+        self.assertFalse(is_trusted_proxy("203.0.113.9", ["127.0.0.1"]))
+        self.assertFalse(is_trusted_proxy("x" * 20000, ["0.0.0.0/0"]))
+
+    def test_huge_values_never_enter_the_cache(self):
+        from omega_serv.domain.security import trusted_proxy
+
+        before = trusted_proxy._normalize_ip.cache_info().currsize
+        for i in range(50):
+            trusted_proxy.normalize_ip(f"{i}" + "a" * 10000)
+        self.assertEqual(trusted_proxy._normalize_ip.cache_info().currsize, before)

@@ -38,8 +38,10 @@ from omega_serv.domain.security.active_defense.entities import DeceptionAssignme
 from omega_serv.domain.security.active_defense.policies import (
     AUDIT_MAX_ROWS,
     AUDIT_RETENTION_DAYS,
+    CLOSED_INCIDENT_RETENTION_DAYS,
     INCIDENT_HISTORY_KEEP_FIRST,
     INCIDENT_HISTORY_KEEP_LAST,
+    MAX_CLOSED_INCIDENTS,
     MAX_TRACKED_SUBJECTS,
 )
 from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
@@ -121,8 +123,12 @@ class SqliteActiveDefenseWriter:
         retry_pause_seconds: float = RETRY_PAUSE_SECONDS,
         purge_interval_seconds: float = PURGE_INTERVAL_SECONDS,
         batch_window_seconds: float = BATCH_WINDOW_SECONDS,
+        after_purge: Callable[[ActiveDefenseRepositories], None] | None = None,
     ) -> None:
         self._database_path = database_path
+        # Entretien supplementaire du serveur (2026-11-01) : fermeture des incidents dont la menace est
+        # effacee (+ export automatique), fourni par application/server/start_server.py.
+        self._after_purge = after_purge
         self._clock = clock
         self._queue: queue.Queue[ActiveDefenseJob] = queue.Queue(maxsize=max_pending)
         self._lock_timeout_seconds = lock_timeout_seconds
@@ -268,6 +274,12 @@ class SqliteActiveDefenseWriter:
         repositories.threat_states.cap_tracked_subjects(MAX_TRACKED_SUBJECTS)
         repositories.threat_states.prune_audit_log(now - timedelta(days=AUDIT_RETENTION_DAYS), AUDIT_MAX_ROWS)
         repositories.incidents.prune_history(INCIDENT_HISTORY_KEEP_FIRST, INCIDENT_HISTORY_KEEP_LAST)
+        repositories.incidents.purge_closed(now - timedelta(days=CLOSED_INCIDENT_RETENTION_DAYS), MAX_CLOSED_INCIDENTS)
+        if self._after_purge is not None:
+            try:
+                self._after_purge(repositories)
+            except Exception as error:  # noqa: BLE001 - un entretien supplementaire ne doit jamais annuler la purge
+                self.report(f"Active Defense : entretien des incidents en erreur ({error!r}) - nouvel essai au prochain")
 
     def _execute(
         self, batch: list[ActiveDefenseJob], connection: sqlite3.Connection, repositories: ActiveDefenseRepositories,

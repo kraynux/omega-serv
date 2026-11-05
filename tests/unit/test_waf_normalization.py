@@ -36,5 +36,22 @@ class TestDecodeBoundedForInspection(unittest.TestCase):
         self.assertEqual(decode_bounded_for_inspection("union select 1", 2), "union select 1")
 
 
+    def test_ascii_without_percent_is_returned_unchanged_like_full_decoding(self):
+        import random
+        import unicodedata
+        import urllib.parse
+
+        rng = random.Random(11)
+        alphabet = "".join(chr(c) for c in range(128) if chr(c) != "%")
+        for _ in range(2000):
+            raw = "".join(rng.choice(alphabet) for _ in range(rng.randint(0, 40)))
+            full = unicodedata.normalize("NFKC", urllib.parse.unquote(unicodedata.normalize("NFKC", raw), errors="replace"))
+            self.assertEqual(decode_bounded_for_inspection(raw, 3), full)
+            self.assertIs(decode_bounded_for_inspection(raw, 3), raw)
+        # avec « % » ou du non ASCII : toujours decode
+        self.assertEqual(decode_bounded_for_inspection("%3Cscript%3E", 2), "<script>")
+        self.assertEqual(decode_bounded_for_inspection("\uff1cscript\uff1e", 2), "<script>")
+
+
 if __name__ == "__main__":
     unittest.main()

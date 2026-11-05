@@ -10,8 +10,9 @@ ACTIVE_DEFENSE_MENU_SCREEN = ScreenGuide(
     title=_("Active Sécurité (menu)"),
     acces=_("Accueil -> Active Sécurité"),
     definition=(
-        _("Regroupe deux blocs d'état opérationnel (change en continu, pas des formulaires de "
-        "réglages statiques) : Active Defense (menaces/incidents/leurres) et WAF (mode/packs/blocklist).")
+        _("Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), "
+          "Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la "
+          "durée : bans de plus en plus longs pour les sources qui reviennent).")
     ),
     fields=(),
     consequences=_("Aucune - purement navigation."),
@@ -119,6 +120,7 @@ ACTIVE_DEFENSE_SETTINGS_SCREEN = ScreenGuide(
                 "risque) ou proxy (redirigé vers un vrai serveur isolé que vous faites tourner, "
                 "voir Zones de leurre ci-dessous). Zone de leurre associée : requise si Isolation "
                 "= proxy, doit correspondre à un nom de la table Zones de leurre.")
+                + " " + _("Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan.")
             ),
             action=_("Ajouter/Supprimer un profil."),
             reaction=_("REDÉMARRAGE COMPLET toujours nécessaire."),
@@ -169,6 +171,10 @@ ACTIVE_DEFENSE_SETTINGS_SCREEN = ScreenGuide(
             "l'enregistrement le refuse désormais avec un message explicite.")
         ),
         (
+            _("Un profil refusé n'est pas enregistré : le formulaire se referme et la raison s'affiche EN HAUT de cet "
+            "écran - remontez pour la lire, puis ressaisissez le profil (causes fréquentes : FAQ).")
+        ),
+        (
             _("Une zone de leurre n'est jamais créée automatiquement et son existence n'est pas "
             "vérifiée à l'enregistrement - si rien n'écoute à l'adresse indiquée, l'attaquant "
             "reçoit une erreur 502 au moment de la requête, pas avant.")
@@ -199,6 +205,24 @@ INCIDENTS_SCREEN = ScreenGuide(
     acces=_("Accueil -> Active Sécurité -> Incidents"),
     definition=_("Liste les incidents de sécurité ouverts/fermes, permet de les fermer et d'exporter des indicateurs de compromission (IoC)."),
     fields=(
+        FieldGuide(
+            label=_("Ouverts / Fermés / Tous"),
+            definition=_("Filtre de la liste, avec le nombre d'incidents de chaque sorte."),
+            utilisation=_("« Ouverts » est affiché par défaut ; un incident fermé quitte cette vue et reste "
+                          "consultable et exportable dans « Fermés »."),
+            action=_("Change seulement l'affichage."),
+            reaction=_("Les incidents fermés depuis plus de 90 jours sont supprimés automatiquement, avec leur "
+                       "historique (jamais un incident ouvert) ; les exports et rapports déjà écrits restent."),
+        ),
+        FieldGuide(
+            label=_("Purger maintenant"),
+            definition=_("Fait tout de suite ce que le serveur fait seul régulièrement : ferme les incidents dont la "
+                         "menace est effacée, supprime les incidents fermés depuis plus de 90 jours et les états "
+                         "de menace expirés."),
+            utilisation=_("Bouton, avec confirmation ; même action que la commande « active-defense purge »."),
+            action=_("Un incident fermé quitte la vue « Ouverts » ; un bilan s'affiche."),
+            reaction=_("L'export automatique à la fermeture (activé par défaut) s'applique aussi à ces incidents."),
+        ),
         FieldGuide(
             label=_("Fermer l'incident"),
             definition=_("Marque un incident comme fermé."),
@@ -296,7 +320,11 @@ WAF_STATUS_SCREEN = ScreenGuide(
     screen_class_name="WafStatusScreen",
     title=_("WAF - État"),
     acces=_("Accueil -> Active Sécurité -> État (bloc WAF)"),
-    definition=_("Vue d'ensemble en lecture seule : mode, comportement en cas d'erreur interne, packs de règles référencés, taille de la blocklist."),
+    definition=(
+        _("Vue d'ensemble en lecture seule : mode, comportement en cas d'erreur interne, packs de règles "
+        "référencés, taille de la blocklist. Avec le moteur natif, aussi : combien de règles il évalue "
+        "lui-même, s'il sert seul les requêtes sans correspondance (sinon pourquoi), et le contrôle 1/N.")
+    ),
     fields=(),
     consequences=_("Purement consultatif."),
     points_de_vigilance=(
@@ -326,6 +354,23 @@ WAF_MODULES_SCREEN = ScreenGuide(
             utilisation=_("fail-open (laisse passer) ou fail-closed (bloque par prudence)."),
             action=_("Enregistre avec le mode."),
             reaction=_("Rechargement automatique."),
+        ),
+        FieldGuide(
+            label=_("Contrôle du moteur natif (native_check_every)"),
+            definition=(
+                _("Avec le moteur natif, une requête sur laquelle aucune règle ne correspond est servie sans "
+                "passer par Python. Ce réglage en soumet quand même une sur N à Python, pour vérifier que les "
+                "deux donnent le même verdict.")
+            ),
+            utilisation=(
+                _("Entier de 0 à 1000000. 0 (par défaut) = jamais ; 1000 = une requête propre sur mille, un coût "
+                "négligeable. Sans effet avec le moteur Python.")
+            ),
+            action=_("Enregistre dans options.waf.native_check_every, avec le mode."),
+            reaction=(
+                _("Rechargement automatique. La requête contrôlée reçoit le verdict de Python ; un désaccord est "
+                "écrit dans le journal d'erreurs.")
+            ),
         ),
         FieldGuide(
             label=_("Packs de règles (rule_paths)"),
@@ -360,8 +405,8 @@ WAF_MODULES_SCREEN = ScreenGuide(
 
 WAF_RATE_LIMIT_SCREEN = ScreenGuide(
     screen_class_name="WafRateLimitScreen",
-    title=_("WAF - Exclusions et débit"),
-    acces=_("Accueil -> Active Sécurité -> Exclusions et débit (bloc WAF)"),
+    title=_("WAF - Limitations (exclusions et débit)"),
+    acces=_("Accueil -> Active Sécurité -> Limitations (bloc WAF)"),
     definition=(
         _("Règle la limite de débit (rate limit) du WAF natif : la limite globale, des règles par "
         "dossier et des règles par IP/réseau, ainsi que les exclusions d'inspection. Sert surtout "

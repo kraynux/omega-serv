@@ -21,6 +21,7 @@ from omega_serv.interfaces.tui.guide.menu_tree import GUIDE_MENU_ENTRIES
 from omega_serv.interfaces.tui.guide.registry import ALL_FAQ_ENTRIES, SCREEN_GUIDES
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens._export_worker import run_html_export
+from omega_serv.interfaces.tui.screens.contact_support_screen import ContactSupportScreen
 from omega_serv.interfaces.tui.screens.faq_screen import FaqScreen
 from omega_serv.interfaces.tui.screens.guide_detail_screen import GuideDetailScreen
 
@@ -51,6 +52,8 @@ class GuideMenuScreen(OmegaScreen):
                     yield Button(_("FAQ"), id="faq", variant="primary")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Exporter le guide en HTML"), id="export-html")
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Contact et support"), id="contact-support")
             yield Select(
                 [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, id="export-theme-select",
             )
@@ -85,6 +88,8 @@ class GuideMenuScreen(OmegaScreen):
             self.app.push_screen(FaqScreen())
         elif event.button.id == "export-html":
             self._export_html()
+        elif event.button.id == "contact-support":
+            self.app.push_screen(ContactSupportScreen(container=self._container))
 
     def _exports_dir(self) -> Path:
         override = self._container.settings_store.get("exports_dir_override", "")

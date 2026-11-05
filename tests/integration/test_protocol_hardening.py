@@ -100,5 +100,76 @@ class TestProtocolHardeningIntegration(unittest.IsolatedAsyncioTestCase):
         writer.close()
 
 
+    async def _raw(self, data: bytes) -> bytes:
+        reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
+        writer.write(data)
+        await writer.drain()
+        response = await asyncio.wait_for(reader.read(), timeout=3)
+        writer.close()
+        return response
+
+    def _access_lines(self) -> list[str]:
+        path = self.root / self.config.logs.access
+        return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+    async def test_unknown_major_version_gets_505(self):
+        # Plan moteur C++ §14 (2026-11-02) : HTTP/9.9 etait servi en 200.
+        for version in (b"HTTP/9.9", b"HTTP/2.0", b"HTTP/0.9"):
+            response = await self._raw(b"GET /index.html " + version + b"\r\nHost: test\r\n\r\n")
+            self.assertTrue(response.startswith(b"HTTP/1.1 505 "), version)
+
+    async def test_malformed_version_gets_400(self):
+        for version in (b"HTTP/abc", b"HTTP/1.1.1", b"HTTP/11", b"HTTP/1.\xd9\xa1"):
+            response = await self._raw(b"GET /index.html " + version + b"\r\nHost: test\r\n\r\n")
+            self.assertTrue(response.startswith(b"HTTP/1.1 400 "), version)
+
+    async def test_higher_minor_version_is_served_as_1_1(self):
+        reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
+        request = b"GET /index.html HTTP/1.7\r\nHost: test\r\n\r\n"
+        writer.write(request + request)  # keep-alive comme en 1.1 : deux reponses sur la meme connexion
+        await writer.drain()
+        data = b""
+        while data.count(b"hello world") < 2:
+            chunk = await asyncio.wait_for(reader.read(65536), timeout=3)
+            self.assertTrue(chunk, data)
+            data += chunk
+        writer.close()
+        self.assertEqual(data.count(b"HTTP/1.1 200 OK"), 2)
+
+    async def test_absolute_form_target_is_accepted(self):
+        for target in (b"http://exemple.test/index.html", b"HTTPS://exemple.test/index.html?x=1"):
+            response = await self._raw(b"GET " + target + b" HTTP/1.1\r\nHost: test\r\nConnection: close\r\n\r\n")
+            self.assertTrue(response.startswith(b"HTTP/1.1 200 "), target)
+            self.assertIn(b"hello world", response)
+        # chemin absent : la racine (index.html)
+        response = await self._raw(b"GET http://exemple.test HTTP/1.1\r\nHost: test\r\nConnection: close\r\n\r\n")
+        self.assertTrue(response.startswith(b"HTTP/1.1 200 "))
+        # la ligne d'acces garde la cible telle que recue
+        self.assertIn('"GET http://exemple.test/index.html HTTP/1.1" 200', "\n".join(self._access_lines()))
+
+    async def test_invalid_absolute_form_target_gets_400(self):
+        for target in (b"http:///index.html", b"http://user@exemple.test/", b"http://a\x01b/"):
+            response = await self._raw(b"GET " + target + b" HTTP/1.1\r\nHost: test\r\n\r\n")
+            self.assertTrue(response.startswith(b"HTTP/1.1 400 "), target)
+
+    async def test_http_1_0_without_host_still_rejected(self):
+        response = await self._raw(b"GET /index.html HTTP/1.0\r\n\r\n")
+        self.assertTrue(response.startswith(b"HTTP/1.1 400 "))
+
+    async def test_parse_errors_are_written_to_access_log(self):
+        # Plan moteur C++ §14 (valide 2026-11-02) : visibles par fail2ban et RIPOSTE.
+        await self._raw(b"GET /a HTTP/9.9\r\nHost: test\r\nUser-Agent: scan\r\n\r\n")
+        await self._raw(b"GET /b HTTP/1.1\r\nHost: test\r\nUser-Agent: ua2\r\nX-A : 1\r\n\r\n")
+        await self._raw(b"GET /" + b"x" * 9000 + b" HTTP/1.1\r\nHost: test\r\n\r\n")
+        await self._raw(b"GET /c HTTP/1.1\r\nHost: a\r\nHost: b\r\n\r\n")
+        await self._raw(b"GET /d HTTP/1.1\r\nHost: test\r\nContent-Length: 1_0\r\n\r\n")
+        lines = self._access_lines()
+        self.assertEqual(len(lines), 5, lines)
+        self.assertRegex(lines[0], r'^127\.0\.0\.1 - - \[[^\]]+\] "GET /a HTTP/9\.9" 505 \d+ "-" "-" [0-9a-f]{16}$')  # refusee avant les en-tetes
+        self.assertRegex(lines[1], r'"GET /b HTTP/1\.1" 400 \d+ "-" "ua2" ')  # en-tetes lus avant l'erreur
+        self.assertRegex(lines[2], r'\] "-" 414 \d+ "-" "-" ')
+        self.assertRegex(lines[3], r'"GET /c HTTP/1\.1" 400 ')
+        self.assertRegex(lines[4], r'"GET /d HTTP/1\.1" 400 ')
+
 if __name__ == "__main__":
     unittest.main()

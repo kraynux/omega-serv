@@ -16,12 +16,16 @@ faute de mieux - ne jamais inventer une mesure absente ici.
 
 Pur (aucune I/O, aucune lecture d'horloge murale directe) : `now` est
 toujours fourni par l'appelant, meme convention que
-domain/logs/rotation.py::plan_rotation."""
+domain/logs/rotation.py::plan_rotation.
+
+Ajouts 2026-11-05 (retour utilisateur : cadre « maigrichon » pour un tableau de bord) : debits
+RECENTS sur 1 et 5 minutes (fenetre glissante sur l'horodatage des lignes, a cote du cumul qui reste
+inchange), top 5 des IP, des chemins et des chemins en 404, refus 403/429, et les dernieres requetes."""
 from __future__ import annotations
 
 from collections import OrderedDict, deque
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
 from omega_serv.domain.logging.access_log_parser import ParsedAccessLogEntry
 
@@ -58,6 +62,16 @@ class LiveTrafficStats:
     bytes_total: int
     avg_size: float
     buffer_size: int
+    rps_1m: float = 0.0
+    rps_5m: float = 0.0
+    forbidden_403: int = 0
+    rate_limited_429: int = 0
+    top_ips: tuple[tuple[str, int], ...] = ()
+    top_paths: tuple[tuple[str, int], ...] = ()
+    top_not_found: tuple[tuple[str, int], ...] = ()
+    """Chemins renvoyant une 404 : souvent des scanners (/wp-admin, /.env...)."""
+    recent: tuple[ParsedAccessLogEntry, ...] = field(default_factory=tuple)
+    """Dernieres requetes, la plus recente en premier."""
 
 
 class LiveTrafficBuffer:
@@ -82,6 +96,12 @@ class LiveTrafficBuffer:
         self._errors_5xx = 0
         self._bytes_total = 0
         self._ip_counts: OrderedDict[str, int] = OrderedDict()
+        self._path_counts: OrderedDict[str, int] = OrderedDict()
+        self._not_found_counts: OrderedDict[str, int] = OrderedDict()
+        self._forbidden_403 = 0
+        self._rate_limited_429 = 0
+        self._recent_times: deque[datetime] = deque()
+        """Horodatages des 5 dernieres minutes (purges a chaque `get_stats`)."""
 
     def add(self, entry: ParsedAccessLogEntry) -> None:
         self._buffer.append(entry)
@@ -95,15 +115,22 @@ class LiveTrafficBuffer:
         elif 500 <= entry.status_code < 600:
             self._errors_5xx += 1
         self._bytes_total += entry.response_size
-        if entry.ip in self._ip_counts:
-            self._ip_counts[entry.ip] += 1
-            self._ip_counts.move_to_end(entry.ip)
-        else:
-            if len(self._ip_counts) >= _MAX_TRACKED_IPS:
-                self._ip_counts.popitem(last=False)
-            self._ip_counts[entry.ip] = 1
+        _count(self._ip_counts, entry.ip)
+        if entry.path:
+            path = entry.path.split("?", 1)[0]
+            _count(self._path_counts, path)
+            if entry.status_code == 404:
+                _count(self._not_found_counts, path)
+        if entry.status_code == 403:
+            self._forbidden_403 += 1
+        elif entry.status_code == 429:
+            self._rate_limited_429 += 1
+        self._recent_times.append(entry.timestamp)
 
     def get_stats(self, now: datetime) -> LiveTrafficStats:
+        while self._recent_times and self._recent_times[0] < now - _WINDOW_5M:
+            self._recent_times.popleft()
+        last_minute = sum(1 for t in self._recent_times if t >= now - _WINDOW_1M)
         elapsed = max(0.1, (now - self._started_at).total_seconds())
         total_errors = self._errors_4xx + self._errors_5xx
         top_ip = max(self._ip_counts, key=lambda ip: self._ip_counts[ip]) if self._ip_counts else "N/A"
@@ -121,4 +148,33 @@ class LiveTrafficBuffer:
             bytes_total=self._bytes_total,
             avg_size=(self._bytes_total / self._total) if self._total else 0.0,
             buffer_size=len(self._buffer),
+            rps_1m=last_minute / _WINDOW_1M.total_seconds(),
+            rps_5m=len(self._recent_times) / _WINDOW_5M.total_seconds(),
+            forbidden_403=self._forbidden_403,
+            rate_limited_429=self._rate_limited_429,
+            top_ips=_top(self._ip_counts),
+            top_paths=_top(self._path_counts),
+            top_not_found=_top(self._not_found_counts),
+            recent=tuple(reversed(list(self._buffer)[-RECENT_ENTRIES:])),
         )
+
+
+_WINDOW_1M = timedelta(minutes=1)
+_WINDOW_5M = timedelta(minutes=5)
+TOP_SIZE = 5
+RECENT_ENTRIES = 5
+
+
+def _count(counts: OrderedDict[str, int], key: str) -> None:
+    """Compteur borne (eviction LRU au-dela de `_MAX_TRACKED_IPS`), meme regle que les IP."""
+    if key in counts:
+        counts[key] += 1
+        counts.move_to_end(key)
+        return
+    if len(counts) >= _MAX_TRACKED_IPS:
+        counts.popitem(last=False)
+    counts[key] = 1
+
+
+def _top(counts: OrderedDict[str, int]) -> tuple[tuple[str, int], ...]:
+    return tuple(sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:TOP_SIZE])

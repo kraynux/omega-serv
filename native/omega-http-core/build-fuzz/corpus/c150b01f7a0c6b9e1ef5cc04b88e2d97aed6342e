@@ -1,0 +1,4 @@
+GET / HTTP/
+Hos: tx
+ContenLenP: 3
+abc

@@ -1,0 +1,284 @@
+=== repetition 1 08:55:28 charge: 1.24 0.36 0.12
+nginx-1                small.html     129374    132.5     0.2     0.3      0
+nginx-1                medium.png      89674   9182.3     0.3     0.4      0
+nginx-1                large.bin        3656  19162.6     2.1     3.7      0
+nginx-1 PSS_Mo repos=3 apres_charge=3
+nginx-2                small.html     258879    265.1     0.1     0.2      0
+nginx-2                medium.png     160675  16452.9     0.2     0.3      0
+nginx-2                large.bin        6707  35157.8     1.1     2.1      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+lighttpd-1             small.html     199924    204.7     0.2     0.3      0
+lighttpd-1             medium.png     111701  11437.9     0.3     0.6      0
+lighttpd-1             large.bin        3020  15828.1     2.6     3.3      0
+lighttpd-1 PSS_Mo repos=1 apres_charge=1
+lighttpd-2             small.html     402480    412.1     0.1     0.2      0
+lighttpd-2             medium.png     207339  21231.3     0.1     0.4      0
+lighttpd-2             large.bin        5466  28653.5     1.6     2.1      0
+lighttpd-2 PSS_Mo repos=1 apres_charge=1
+Terminated                 timeout 120 "$HERE/run.sh" "$1" "$n" 2> /dev/null
+caddy-1                small.html      27562     28.2     1.0     4.4      0
+caddy-1                medium.png      12150   1243.8     2.2     7.6      0
+caddy-1                large.bin         458   2395.5     2.2   331.1      0
+caddy-1 PSS_Mo repos=51 apres_charge=61
+caddy-2                small.html      53894     55.2     0.4     2.6      0
+caddy-2                medium.png      22094   2262.1     0.8     5.5      0
+caddy-2                large.bin         728   3811.4     7.8    44.8      0
+caddy-2 PSS_Mo repos=49 apres_charge=62
+apache-1               small.html     187740    192.2     0.1     0.6      0
+apache-1               medium.png     146542  15005.6     0.2     0.8      0
+apache-1               large.bin        7637  40037.4     0.9     3.2      0
+apache-1 PSS_Mo repos=3 apres_charge=5
+apache-2               small.html     188335    192.9     0.1     0.8      0
+apache-2               medium.png     153463  15714.3     0.2     0.9      0
+apache-2               large.bin        7850  41153.0     0.9     2.9      0
+apache-2 PSS_Mo repos=4 apres_charge=7
+omega-v2-1-0           small.html      10667     10.9     2.9     5.2      0
+omega-v2-1-0           medium.png       9958   1019.3     3.1     5.3      0
+omega-v2-1-0           large.bin        2757  14451.0     2.8     4.3      0
+omega-v2-1-0 PSS_Mo repos=32 apres_charge=36
+omega-v2-1-1           small.html       8448      8.6     3.7     6.0      0
+omega-v2-1-1           medium.png       7946    813.4     3.9     6.2      0
+omega-v2-1-1           large.bin        2549  13358.2     3.0     4.7      0
+omega-v2-1-1 PSS_Mo repos=30 apres_charge=34
+omega-v2-2-0           small.html      20165     20.6     1.7     2.7      0
+omega-v2-2-0           medium.png      18948   1940.0     1.8     2.6      0
+omega-v2-2-0           large.bin        4943  25909.6     1.5     2.7      0
+omega-v2-2-0 PSS_Mo repos=42 apres_charge=51
+omega-v2-2-1           small.html      15654     16.0     2.0     3.3      0
+omega-v2-2-1           medium.png      14833   1518.6     2.3     3.4      0
+omega-v2-2-1           large.bin        4569  23950.8     1.6     3.0      0
+omega-v2-2-1 PSS_Mo repos=46 apres_charge=54
+omega-v2-1-0-native    small.html     285213    292.1     0.1     0.3      0
+omega-v2-1-0-native    medium.png      92293   9450.5     0.3     1.2      0
+omega-v2-1-0-native    large.bin        7227  37887.6     0.9     2.3      0
+omega-v2-1-0-native PSS_Mo repos=35 apres_charge=39
+omega-v2-1-1-native    small.html      39000     39.9     0.8     1.3      0
+omega-v2-1-1-native    medium.png      36211   3707.7     0.8     2.0      0
+omega-v2-1-1-native    large.bin        6227  32645.7     1.4     2.4      0
+omega-v2-1-1-native PSS_Mo repos=42 apres_charge=49
+omega-v2-2-1-native    small.html      60141     61.6     0.5     1.6      0
+omega-v2-2-1-native    medium.png      44901   4597.6     0.7     2.0      0
+omega-v2-2-1-native    large.bin        5400  28306.8     1.8     3.1      0
+omega-v2-2-1-native PSS_Mo repos=52 apres_charge=58
+omega-v1-1-0           small.html       8870      9.1     3.5     5.3      0
+omega-v1-1-0           medium.png       7625    780.5     4.1     5.8      0
+omega-v1-1-0           large.bin         717   3755.6    11.0    13.9      0
+omega-v1-1-0 PSS_Mo repos=25 apres_charge=73
+omega-v1-1-1           small.html       7596      7.8     4.1     5.9      0
+omega-v1-1-1           medium.png       6561    671.5     4.8     7.2      0
+omega-v1-1-1           large.bin         648   3395.7    12.2    15.6      0
+omega-v1-1-1 PSS_Mo repos=23 apres_charge=69
+omega-v20-1-0          small.html      10122     10.4     3.1     5.2      0
+omega-v20-1-0          medium.png       9363    958.4     3.3     5.6      0
+omega-v20-1-0          large.bin        2693  14113.6     2.9     4.9      0
+omega-v20-1-0 PSS_Mo repos=30 apres_charge=33
+omega-v20-1-1          small.html       8334      8.5     3.7     5.9      0
+omega-v20-1-1          medium.png       7764    794.7     4.0     5.6      0
+omega-v20-1-1          large.bin        2560  13415.0     3.1     4.4      0
+omega-v20-1-1 PSS_Mo repos=28 apres_charge=32
+omega-v20-2-0          small.html      19398     19.9     2.4     3.2      0
+omega-v20-2-0          medium.png      18070   1850.0     2.0     2.7      0
+omega-v20-2-0          large.bin        4887  25619.8     1.5     2.7      0
+omega-v20-2-0 PSS_Mo repos=40 apres_charge=50
+omega-v20-2-1          small.html      15740     16.1     2.5     3.2      0
+omega-v20-2-1          medium.png      15003   1536.0     2.4     3.3      0
+omega-v20-2-1          large.bin        4692  24593.3     1.6     2.7      0
+omega-v20-2-1 PSS_Mo repos=42 apres_charge=50
+=== repetition 2 09:07:38 charge: 4.97 6.18 4.29
+nginx-1                small.html     129149    132.2     0.2     0.3      0
+nginx-1                medium.png      90056   9221.4     0.3     0.5      0
+nginx-1                large.bin        3578  18754.2     2.1     3.3      0
+nginx-1 PSS_Mo repos=3 apres_charge=3
+nginx-2                small.html     247420    253.4     0.1     0.2      0
+nginx-2                medium.png     157224  16099.4     0.2     0.3      0
+nginx-2                large.bin        6610  34651.0     1.2     1.9      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+lighttpd-1             small.html     197663    202.4     0.2     0.3      0
+lighttpd-1             medium.png     113207  11592.0     0.3     0.6      0
+lighttpd-1             large.bin        2967  15551.8     2.7     3.2      0
+lighttpd-1 PSS_Mo repos=1 apres_charge=1
+lighttpd-2             small.html     378590    387.7     0.1     0.2      0
+lighttpd-2             medium.png     197905  20265.2     0.2     0.4      0
+lighttpd-2             large.bin        5336  27972.5     1.5     1.8      0
+lighttpd-2 PSS_Mo repos=1 apres_charge=1
+Terminated                 timeout 120 "$HERE/run.sh" "$1" "$n" 2> /dev/null
+caddy-1                small.html      27260     27.9     1.0     4.5      0
+caddy-1                medium.png      12422   1271.7     2.3     7.3      0
+caddy-1                large.bin         460   2408.7     2.3   254.6      0
+caddy-1 PSS_Mo repos=48 apres_charge=61
+caddy-2                small.html      52785     54.0     0.4     2.8      0
+caddy-2                medium.png      22102   2262.9     0.8     5.5      0
+caddy-2                large.bin         740   3874.5     7.6    43.5      0
+caddy-2 PSS_Mo repos=48 apres_charge=60
+apache-1               small.html     183980    188.4     0.2     0.6      0
+apache-1               medium.png     148012  15156.1     0.2     0.8      0
+apache-1               large.bin        7611  39901.9     0.9     3.2      0
+apache-1 PSS_Mo repos=3 apres_charge=5
+apache-2               small.html     191219    195.8     0.1     0.7      0
+apache-2               medium.png     153265  15694.0     0.2     0.9      0
+apache-2               large.bin        7880  41312.3     0.9     2.9      0
+apache-2 PSS_Mo repos=4 apres_charge=7
+omega-v2-1-0           small.html      10524     10.8     3.0     4.4      0
+omega-v2-1-0           medium.png       9739    997.0     3.2     4.8      0
+omega-v2-1-0           large.bin        2700  14149.3     2.9     4.4      0
+omega-v2-1-0 PSS_Mo repos=30 apres_charge=34
+omega-v2-1-1           small.html       8155      8.3     3.8     5.8      0
+omega-v2-1-1           medium.png       7782    796.6     4.0     6.1      0
+omega-v2-1-1           large.bin        2531  13264.0     3.1     5.0      0
+omega-v2-1-1 PSS_Mo repos=30 apres_charge=34
+omega-v2-2-0           small.html      19911     20.4     2.1     3.3      0
+omega-v2-2-0           medium.png      18595   1903.8     2.2     3.3      0
+omega-v2-2-0           large.bin        4927  25829.1     1.5     2.7      0
+omega-v2-2-0 PSS_Mo repos=42 apres_charge=52
+omega-v2-2-1           small.html      15783     16.2     2.0     3.4      0
+omega-v2-2-1           medium.png      15140   1550.0     2.6     4.0      0
+omega-v2-2-1           large.bin        4612  24176.0     1.7     3.1      0
+omega-v2-2-1 PSS_Mo repos=44 apres_charge=55
+omega-v2-1-0-native    small.html     285510    292.4     0.1     0.3      0
+omega-v2-1-0-native    medium.png      96277   9858.4     0.3     1.2      0
+omega-v2-1-0-native    large.bin        7233  37917.9     0.9     2.9      0
+omega-v2-1-0-native PSS_Mo repos=35 apres_charge=38
+omega-v2-1-1-native    small.html      39299     40.2     0.8     1.5      0
+omega-v2-1-1-native    medium.png      35794   3664.9     0.8     1.9      0
+omega-v2-1-1-native    large.bin        6148  32230.0     1.0     2.9      0
+omega-v2-1-1-native PSS_Mo repos=42 apres_charge=48
+omega-v2-2-1-native    small.html      66850     68.5     0.5     1.6      0
+omega-v2-2-1-native    medium.png      46294   4740.2     0.6     2.2      0
+omega-v2-2-1-native    large.bin        6203  32516.8     0.6     3.2      0
+omega-v2-2-1-native PSS_Mo repos=53 apres_charge=64
+omega-v1-1-0           small.html       8721      8.9     3.6     6.0      0
+omega-v1-1-0           medium.png       7595    777.4     4.1     5.4      0
+omega-v1-1-0           large.bin         695   3640.5    11.3    14.1      0
+omega-v1-1-0 PSS_Mo repos=23 apres_charge=106
+omega-v1-1-1           small.html       7720      7.9     4.1     5.4      0
+omega-v1-1-1           medium.png       6636    679.2     4.8     6.5      0
+omega-v1-1-1           large.bin         668   3499.4    11.8    14.6      0
+omega-v1-1-1 PSS_Mo repos=23 apres_charge=112
+omega-v20-1-0          small.html      10245     10.5     3.1     4.5      0
+omega-v20-1-0          medium.png       9550    977.6     3.3     4.8      0
+omega-v20-1-0          large.bin        2682  14058.5     2.9     4.6      0
+omega-v20-1-0 PSS_Mo repos=28 apres_charge=32
+omega-v20-1-1          small.html       8371      8.6     3.8     5.3      0
+omega-v20-1-1          medium.png       7928    811.5     4.0     5.5      0
+omega-v20-1-1          large.bin        2544  13335.1     3.1     4.6      0
+omega-v20-1-1 PSS_Mo repos=28 apres_charge=32
+omega-v20-2-0          small.html      19192     19.6     2.2     3.2      0
+omega-v20-2-0          medium.png      17756   1817.9     2.4     3.7      0
+omega-v20-2-0          large.bin        4851  25427.3     1.6     2.9      0
+omega-v20-2-0 PSS_Mo repos=40 apres_charge=49
+omega-v20-2-1          small.html      15351     15.7     2.3     3.5      0
+omega-v20-2-1          medium.png      14748   1509.9     2.6     3.4      0
+omega-v20-2-1          large.bin        4658  24418.9     1.6     2.7      0
+omega-v20-2-1 PSS_Mo repos=42 apres_charge=52
+=== repetition 3 09:19:48 charge: 4.82 5.99 5.63
+nginx-1                small.html     130111    133.2     0.2     0.3      0
+nginx-1                medium.png      90379   9254.5     0.3     0.4      0
+nginx-1                large.bin        3655  19161.0     2.1     3.6      0
+nginx-1 PSS_Mo repos=3 apres_charge=3
+nginx-2                small.html     248184    254.1     0.1     0.2      0
+nginx-2                medium.png     148006  15155.5     0.2     0.3      0
+nginx-2                large.bin        6420  33655.8     1.1     2.6      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+lighttpd-1             small.html     201708    206.5     0.2     0.3      0
+lighttpd-1             medium.png     111981  11466.6     0.3     0.6      0
+lighttpd-1             large.bin        3010  15777.7     2.6     3.3      0
+lighttpd-1 PSS_Mo repos=1 apres_charge=1
+lighttpd-2             small.html     374065    383.0     0.1     0.2      0
+lighttpd-2             medium.png     197417  20215.2     0.2     0.3      0
+lighttpd-2             large.bin        5344  28011.3     1.5     1.9      0
+lighttpd-2 PSS_Mo repos=1 apres_charge=1
+Terminated                 timeout 120 "$HERE/run.sh" "$1" "$n" 2> /dev/null
+caddy-1                small.html      27534     28.2     1.0     4.5      0
+caddy-1                medium.png      12234   1252.4     2.2     7.6      0
+caddy-1                large.bin         462   2420.6     2.2   300.9      0
+caddy-1 PSS_Mo repos=47 apres_charge=58
+caddy-2                small.html      52897     54.2     0.4     2.8      0
+caddy-2                medium.png      20544   2103.4     0.8     6.1      0
+caddy-2                large.bin         720   3772.0     7.8    45.9      0
+caddy-2 PSS_Mo repos=48 apres_charge=63
+apache-1               small.html     180013    184.3     0.2     0.7      0
+apache-1               medium.png     148170  15172.2     0.2     0.8      0
+apache-1               large.bin        7619  39940.4     0.9     3.1      0
+apache-1 PSS_Mo repos=3 apres_charge=5
+apache-2               small.html     188221    192.7     0.1     0.8      0
+apache-2               medium.png     151858  15550.0     0.2     0.9      0
+apache-2               large.bin        7799  40885.2     0.9     3.0      0
+apache-2 PSS_Mo repos=4 apres_charge=7
+omega-v2-1-0           small.html      10553     10.8     3.0     4.4      0
+omega-v2-1-0           medium.png       9805   1003.7     3.2     4.7      0
+omega-v2-1-0           large.bin        2714  14227.2     2.9     4.2      0
+omega-v2-1-0 PSS_Mo repos=30 apres_charge=34
+omega-v2-1-1           small.html       8365      8.6     3.8     5.4      0
+omega-v2-1-1           medium.png       7919    810.6     4.0     5.6      0
+omega-v2-1-1           large.bin        2544  13333.0     3.1     4.6      0
+omega-v2-1-1 PSS_Mo repos=30 apres_charge=34
+omega-v2-2-0           small.html      19852     20.3     2.5     3.6      0
+omega-v2-2-0           medium.png      18806   1925.5     1.8     2.7      0
+omega-v2-2-0           large.bin        4882  25592.6     1.9     3.1      0
+omega-v2-2-0 PSS_Mo repos=42 apres_charge=50
+omega-v2-2-1           small.html      15784     16.2     2.7     4.0      0
+omega-v2-2-1           medium.png      15015   1537.3     3.1     4.5      0
+omega-v2-2-1           large.bin        4693  24600.7     1.7     2.6      0
+omega-v2-2-1 PSS_Mo repos=44 apres_charge=54
+omega-v2-1-0-native    small.html     280856    287.6     0.1     0.4      0
+omega-v2-1-0-native    medium.png      99655  10204.4     0.3     0.9      0
+omega-v2-1-0-native    large.bin        7795  40865.3     1.0     2.3      0
+omega-v2-1-0-native PSS_Mo repos=35 apres_charge=39
+omega-v2-1-1-native    small.html      38636     39.6     0.8     1.4      0
+omega-v2-1-1-native    medium.png      36514   3738.7     0.8     1.7      0
+omega-v2-1-1-native    large.bin        6236  32693.0     0.6     3.1      0
+omega-v2-1-1-native PSS_Mo repos=42 apres_charge=48
+omega-v2-2-1-native    small.html      60331     61.8     0.5     1.6      0
+omega-v2-2-1-native    medium.png      45491   4658.0     0.6     2.0      0
+omega-v2-2-1-native    large.bin        4925  25815.5     2.2     3.5      0
+omega-v2-2-1-native PSS_Mo repos=53 apres_charge=63
+omega-v1-1-0           small.html       9019      9.2     3.5     4.1      0
+omega-v1-1-0           medium.png       7766    794.9     4.1     4.5      0
+omega-v1-1-0           large.bin         681   3564.1    11.7    13.9      0
+omega-v1-1-0 PSS_Mo repos=23 apres_charge=67
+omega-v1-1-1           small.html       7687      7.9     4.1     5.6      0
+omega-v1-1-1           medium.png       6634    679.0     4.7     6.4      0
+omega-v1-1-1           large.bin         625   3274.1    12.7    15.9      0
+omega-v1-1-1 PSS_Mo repos=23 apres_charge=107
+omega-v20-1-0          small.html      10348     10.6     3.0     4.4      0
+omega-v20-1-0          medium.png       9469    969.3     3.3     4.9      0
+omega-v20-1-0          large.bin        2670  13995.0     2.9     4.5      0
+omega-v20-1-0 PSS_Mo repos=28 apres_charge=32
+omega-v20-1-1          small.html       8456      8.7     3.7     5.4      0
+omega-v20-1-1          medium.png       7745    792.8     4.0     5.8      0
+omega-v20-1-1          large.bin        2501  13107.4     3.1     4.7      0
+omega-v20-1-1 PSS_Mo repos=28 apres_charge=32
+omega-v20-2-0          small.html      18932     19.4     1.9     3.0      0
+omega-v20-2-0          medium.png      17536   1795.4     2.3     3.5      0
+omega-v20-2-0          large.bin        4750  24898.0     1.6     2.6      0
+omega-v20-2-0 PSS_Mo repos=42 apres_charge=50
+omega-v20-2-1          small.html      15232     15.6     2.9     4.3      0
+omega-v20-2-1          medium.png      14443   1478.6     2.5     3.7      0
+omega-v20-2-1          large.bin        4432  23232.9     2.0     3.5      0
+omega-v20-2-1 PSS_Mo repos=44 apres_charge=51
+=== gros telechargements 09:31:59
+--- 1.0.0 passage 1
+memoire du serveur : repos 36 Mo, pic 1836 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 156 ms, mediane 0 ms
+--- 2.0.0 passage 1
+memoire du serveur : repos 42 Mo, pic 42 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 0 ms
+--- 2.5 Python passage 1
+memoire du serveur : repos 44 Mo, pic 44 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 0 ms
+--- 2.5 natif passage 1
+memoire du serveur : repos 54 Mo, pic 55 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 0 ms, mediane 0 ms
+--- 1.0.0 passage 2
+memoire du serveur : repos 36 Mo, pic 1836 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 158 ms, mediane 0 ms
+--- 2.0.0 passage 2
+memoire du serveur : repos 42 Mo, pic 42 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 0 ms
+--- 2.5 Python passage 2
+memoire du serveur : repos 44 Mo, pic 44 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 0 ms
+--- 2.5 natif passage 2
+memoire du serveur : repos 55 Mo, pic 55 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 0 ms, mediane 0 ms
+=== fin 09:32:26

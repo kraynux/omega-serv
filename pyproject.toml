@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "omega-serv"
-version = "2.0.1"
+version = "2.5.0"
 description = "Serveur web HTTP Python autonome, portable et durci par defaut"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "kraynux", email = "kraynux@proton.me" }]
 dependencies = [
     # Interface interactive (plan interface §3.2, Phase I, 2026-09-08) -
@@ -187,6 +188,7 @@ source_modules = [
     "omega_serv.infrastructure.tls",
     "omega_serv.infrastructure.upload",
     "omega_serv.infrastructure.waf",
+    "omega_serv.infrastructure.riposte",
 ]
 forbidden_modules = ["subprocess"]
 
@@ -307,6 +309,7 @@ source_modules = [
     "omega_serv.infrastructure.tls",
     "omega_serv.infrastructure.upload",
     "omega_serv.infrastructure.waf",
+    "omega_serv.infrastructure.riposte",
 ]
 forbidden_modules = ["sqlite3"]
 

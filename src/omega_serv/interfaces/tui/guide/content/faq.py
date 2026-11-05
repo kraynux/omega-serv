@@ -218,6 +218,22 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "un profil nommé fake_admin avec les classes scan,credential_stuffing attirera les "
             "scanners et les tentatives de bruteforce de connexion vers une fausse page "
             "d'authentification. Plusieurs classes peuvent être listées, séparées par des virgules.")
+            + " " + _("Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan.")
+        ),
+    ),
+    FaqEntry(
+        category=_("WAF/Active Defense"),
+        question=_("« Ajouter un profil de leurre » refuse le profil - que corriger ?"),
+        answer=(
+            _("Rien n'est enregistré tant que le profil est invalide. Le formulaire reste ouvert, la raison s'affiche "
+              "sous les champs et la saisie est conservée : corrigez le champ indiqué, puis cliquez à nouveau sur "
+              "Valider. Causes les plus fréquentes : (1) Isolation = fixture avec un nom autre que fake_admin, fake_cms, fake_api ou "
+              "fake_secrets (en minuscules, sans espace) ; (2) classe d'attaque mal écrite - valeurs exactes, "
+              "séparées par des virgules : scan, credential_stuffing, sqli, xss, path_traversal, upload_probe, "
+              "api_probe, command_injection, unknown ; (3) Isolation = proxy sans zone de leurre, ou avec un nom de "
+              "zone qui n'existe pas encore (créez d'abord la zone dans « Zones de leurre ») ; (4) un autre réglage "
+              "de l'écran est invalide (le message le nomme). Le plus simple : Isolation fixture, l'un des 4 noms, "
+              "zone vide. Le formulaire « Ajouter une zone » fonctionne de la même façon.")
         ),
     ),
     FaqEntry(
@@ -559,6 +575,222 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et "
             "le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par "
             "Certbot - il précise généralement laquelle de ces causes s'applique.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Quelle différence entre Active Defense et RIPOSTE ?"),
+        answer=(
+            _("Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, "
+              "niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, "
+              "incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence "
+              "(épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), "
+              "avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni "
+              "les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Pourquoi RIPOSTE a-t-il banni cette adresse ?"),
+        answer=(
+            _("Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. "
+              "Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, "
+              "nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et "
+              "« riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce "
+              "ban dans la récidive », et au besoin « Lever et exempter cette source ».")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"),
+        answer=(
+            _("Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail "
+              "<service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne "
+              "retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client "
+              "(la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne "
+              "couvre pas la même adresse : RIPOSTE n'y touche jamais.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"),
+        answer=(
+            _("Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit "
+              "donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, "
+              "« Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu "
+              "Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, "
+              "puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), "
+              "Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour "
+              "fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter "
+              "-> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un "
+              "redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("RIPOSTE ne fait rien - pourquoi ?"),
+        answer=(
+            _("Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ "
+              "complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une "
+              "politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt "
+              "d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit "
+              "être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins "
+              "1 h de silence. Simuler avec la même situation montre la condition qui manque.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"),
+        answer=(
+            _("C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou "
+              "ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute "
+              "la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban "
+              "agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour "
+              "savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « "
+              "riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list ».")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"),
+        answer=(
+            _("Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une"
+              " politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne"
+              " dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails "
+              "ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h "
+              "va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails,"
+              " préfixé par le nom de son service.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"),
+        answer=(
+            _("Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le "
+              "dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et"
+              " propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne "
+              "sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). "
+              "Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans "
+              "rien à déclarer.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"),
+        answer=(
+            _("Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du "
+              "visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors "
+              "chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la "
+              "page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son "
+              "ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"),
+        answer=(
+            _("En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile "
+              "ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être "
+              "bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la "
+              "signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si "
+              "seuls les paliers RIPOSTE doivent compter.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"),
+        answer=(
+            _("Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 "
+              "UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être "
+              "exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse "
+              "publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie :"
+              " nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) "
+              "une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore "
+              "les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
+        question=_("Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"),
+        answer=(
+            _("omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : "
+              "auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → "
+              "Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, "
+              "dont ceux de RIPOSTE, apparaissent bien dans omega-fire.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Moteur Python ou natif : qu'est-ce que ça change concrètement ?"),
+        answer=(
+            _("Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui "
+            "change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui "
+            "utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur "
+            "laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute "
+            "(correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, "
+            "zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si "
+            "magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée "
+            "par le moteur natif, sans coût mesurable. Mesuré sur trois "
+            "machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites "
+            "pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus "
+            "vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 "
+            "fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les "
+            "plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et "
+            "environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et "
+            "WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un "
+            "petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des "
+            "dizaines de millions de requêtes par jour sur une machine modeste.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Combien de processus choisir ?"),
+        answer=(
+            _("Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus "
+            "servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques "
+            "(le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur "
+            "natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, "
+            "qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par "
+            "Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : "
+            "mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet "
+            "actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de "
+            "requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : "
+            "l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. "
+            "L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; "
+            "le nombre réellement appliqué s'affiche dans État & Ressources.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"),
+        answer=(
+            _("Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core "
+            "est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), "
+            "ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif "
+            "(ces routes demandent de confier la connexion au processus Python, impossible quand le natif "
+            "chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. "
+            "Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"),
+        answer=(
+            _("Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux "
+            "de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python "
+            "qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne "
+            "voient aucune différence. Une adresse bannie l'est quel que soit le moteur.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"),
+        answer=(
+            _("Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou "
+            "le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas "
+            "servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & "
+            "Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv "
+            "engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre.")
         ),
     ),
 )

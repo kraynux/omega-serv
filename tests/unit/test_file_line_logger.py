@@ -116,5 +116,47 @@ class TestFileLineLogger(unittest.TestCase):
         self.assertIn("third line", path.read_text())
 
 
+class TestReopenAfterReplacement(unittest.TestCase):
+    """2026-11-01 : un journal remplace par os.replace (« Voir et traiter IP ») ou supprime ne doit
+    plus recevoir les lignes dans un fichier fantome jusqu'au redemarrage du serveur."""
+
+    def setUp(self):
+        self._tmp = TemporaryDirectory()
+        self.path = Path(self._tmp.name) / "access.log"
+        self.logger = FileLineLogger()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_lines_follow_a_file_replaced_by_os_replace(self):
+        self.logger.append_line(self.path, "avant")
+        tmp = self.path.with_name("access.log.tmp")
+        tmp.write_text("reecrit\n")
+        os.replace(tmp, self.path)
+        with patch("omega_serv.infrastructure.logging.file_line_logger._REOPEN_CHECK_SECONDS", 0.0):
+            self.logger.append_line(self.path, "apres")
+        self.assertEqual(self.path.read_text(), "reecrit\napres\n")
+
+    def test_deleted_file_is_recreated(self):
+        self.logger.append_line(self.path, "avant")
+        self.path.unlink()
+        with patch("omega_serv.infrastructure.logging.file_line_logger._REOPEN_CHECK_SECONDS", 0.0):
+            self.logger.append_line(self.path, "apres")
+        self.assertEqual(self.path.read_text(), "apres\n")
+
+    def test_truncation_in_place_keeps_the_same_file(self):
+        self.logger.append_line(self.path, "avant")
+        self.path.write_text("")  # rotation : troncature sur le meme inode
+        self.logger.append_line(self.path, "apres")
+        self.assertEqual(self.path.read_text(), "apres\n")
+
+    def test_identity_is_checked_at_most_once_per_interval(self):
+        self.logger.append_line(self.path, "1")
+        with patch("omega_serv.infrastructure.logging.file_line_logger.os.stat", wraps=os.stat) as spy:
+            for i in range(50):
+                self.logger.append_line(self.path, str(i))
+        self.assertLessEqual(spy.call_count, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

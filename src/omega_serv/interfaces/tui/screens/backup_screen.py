@@ -48,10 +48,17 @@ class BackupScreen(OmegaScreen):
                 "n'est jamais chiffrée par défaut."),
                 classes="omega-hint",
             )
+            yield Checkbox(_("Tout sauvegarder (configuration complète)"), id="include-all")
             yield Checkbox(_("Inclure les règles WAF (règles + liste de blocage)"), id="include-waf")
+            yield Static(_("Règles WAF : packs, listes de mots-clés, scripts Magnet et listes de blocage."),
+                         classes="omega-hint")
             yield Checkbox(_("Inclure les zones d'authentification (secrets réels)"), id="include-auth")
             yield Checkbox(_("Inclure les certificats (clés privées TLS incluses)"), id="include-certificates")
             yield Checkbox(_("Inclure Active Defense (base de menaces/incidents)"), id="include-active-defense")
+            yield Checkbox(_("Inclure RIPOSTE (mémoire de récidive, décisions, actions)"), id="include-riposte")
+            yield Checkbox(_("Inclure les pages d'erreur personnalisées"), id="include-error-pages")
+            yield Checkbox(_("Inclure les préférences (thème, langues, nom du service)"), id="include-preferences")
+            yield Checkbox(_("Inclure la bibliothèque des journaux (favoris, sources, rotations)"), id="include-logs-library")
             yield Static(_("Description"), classes="omega-subtitle")
             yield Input(id="description-input")
             with Horizontal(classes="omega-actions"):
@@ -161,6 +168,10 @@ class BackupScreen(OmegaScreen):
             include_auth_zones=self.query_one("#include-auth", Checkbox).value,
             include_certificates=self.query_one("#include-certificates", Checkbox).value,
             include_active_defense=self.query_one("#include-active-defense", Checkbox).value,
+            include_riposte=self.query_one("#include-riposte", Checkbox).value,
+            include_error_pages=self.query_one("#include-error-pages", Checkbox).value,
+            include_preferences=self.query_one("#include-preferences", Checkbox).value,
+            include_logs_library=self.query_one("#include-logs-library", Checkbox).value,
             description=self.query_one("#description-input", Input).value,
         )
         error_widget.update(_("Création de la sauvegarde en cours..."))
@@ -178,7 +189,8 @@ class BackupScreen(OmegaScreen):
         if not result.success:
             error_widget.update(result.message)
             return
-        error_widget.update("")
+        # Elements demandes mais non archives (hors du dossier omega-serv) : toujours dits, jamais tus.
+        error_widget.update("\n".join(result.skipped))
         self.app.notify(result.message)
         self._refresh()
 
@@ -192,10 +204,26 @@ class BackupScreen(OmegaScreen):
 
     def _restore_in_thread(self, snapshot_id: str) -> None:
         result = self._container.restore_backup(snapshot_id)
-        self.app.call_from_thread(self._finish_restore, result)
+        self.app.call_from_thread(self._finish_restore, result, snapshot_id)
 
-    def _finish_restore(self, result: RestoreResult) -> None:
+    def _finish_restore(self, result: RestoreResult, snapshot_id: str | None = None) -> None:
         error_widget = self.query_one("#backup-error", Static)
+        if result.needs_service_stop and snapshot_id is not None:
+            # Base dans la sauvegarde + serveur actif (decision utilisateur 2026-11-01) : jamais restauree
+            # sous le serveur ; on propose « Arreter, restaurer, redemarrer ».
+            error_widget.update(result.message)
+            self.app.push_screen(
+                ConfirmScreen(
+                    title=_("ARRÊTER, RESTAURER, REDÉMARRER"),
+                    message=_("Cette sauvegarde contient une base ({databases}) et le serveur tourne. Arrêter le "
+                              "service, restaurer, puis le redémarrer ? Les bases actuelles sont mises de côté "
+                              "avant d'être remplacées. Une authentification (sudo) peut être demandée.").format(
+                        databases=", ".join(result.databases)),
+                ),
+                lambda confirmed: self._restore_stopping_service(snapshot_id, confirmed),
+            )
+            self._refresh()
+            return
         if not result.success:
             error_widget.update(result.message)
             self._refresh()
@@ -203,6 +231,36 @@ class BackupScreen(OmegaScreen):
         error_widget.update("")
         notify_restart_required(self, self._container, result.message)
         self._refresh()
+
+    def _restore_stopping_service(self, snapshot_id: str, confirmed: bool | None) -> None:
+        if not confirmed:
+            self._refresh()
+            return
+        with self._maybe_suspend():  # sudo eventuel : terminal rendu le temps de l'arret/redemarrage
+            result = self._container.restore_backup(snapshot_id, stop_and_restart=True)
+        self.app.notify(result.message, severity="information" if result.success else "error")
+        self.query_one("#backup-error", Static).update("" if result.success else result.message)
+        self._refresh()
+
+    _COMPONENT_CHECKBOXES = (
+        "#include-waf", "#include-auth", "#include-certificates", "#include-active-defense",
+        "#include-riposte", "#include-error-pages", "#include-preferences", "#include-logs-library",
+    )
+
+    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
+        """« Tout sauvegarder » coche OU decoche toutes les cases (retour utilisateur 2026-11-01 : decocher
+        laissait tout coche). Decocher une seule case quand tout etait coche decoche seulement « Tout
+        sauvegarder ». Les secrets restent confirmes a la creation."""
+        all_box = self.query_one("#include-all", Checkbox)
+        if event.checkbox.id == "include-all":
+            if getattr(self, "_skip_next_all_event", False):
+                self._skip_next_all_event = False  # decochee par le programme (ci-dessous) : ne rien propager
+                return
+            for checkbox_id in self._COMPONENT_CHECKBOXES:
+                self.query_one(checkbox_id, Checkbox).value = event.value
+        elif not event.value and all_box.value:
+            self._skip_next_all_event = True
+            all_box.value = False
 
     def _delete_if_confirmed(self, confirmed: bool | None) -> None:
         if not confirmed or self._selected_snapshot_id is None:

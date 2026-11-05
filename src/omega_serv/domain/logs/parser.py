@@ -14,6 +14,7 @@ afficher/analyser N'IMPORTE QUEL log ajoute a la Bibliotheque, pas
 seulement ceux propres a Omega-Serv."""
 from __future__ import annotations
 
+import ipaddress
 import re
 from datetime import datetime, timezone
 
@@ -86,13 +87,34 @@ _PORT_PATTERNS = [
 ]
 
 
-def extract_ip(line: str) -> str | None:
-    match = _IP_RE.search(line)
-    return match.group(0) if match else None
+_IPV6_CANDIDATE_RE = re.compile(r"(?<![0-9A-Fa-f:.])[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}(?:\.\d{1,3}){0,3}(?![0-9A-Fa-f:])")
+"""Candidat IPv6, forme compressee comprise (2a02:8440:a501:9913::be86:aa87, ::1) - toujours valide
+ensuite par `ipaddress` : une heure (07:52:31) ou un autre texte a deux-points n'est jamais une adresse."""
 
 
 def extract_all_ips(line: str) -> list[str]:
-    return _IP_RE.findall(line)
+    """IPv4 et IPv6 (forme complete OU compressee), dans l'ordre d'apparition. Avant 2026-11-02, seule
+    l'IPv6 complete (8 groupes) etait reconnue : la forme compressee, la plus courante, etait perdue
+    (colonne IP vide, statistiques par IP fausses)."""
+    found: list[tuple[int, str]] = []
+    ipv6_spans: list[tuple[int, int]] = []
+    for m in _IPV6_CANDIDATE_RE.finditer(line):
+        try:
+            if ipaddress.ip_address(m.group(0)).version == 6:
+                found.append((m.start(), m.group(0)))
+                ipv6_spans.append(m.span())
+        except ValueError:
+            continue
+    for m in re.finditer(IPV4_PATTERN, line):
+        # IPv4 incluse dans une IPv6 (::ffff:192.0.2.1) : une seule adresse, jamais comptee deux fois.
+        if not any(start <= m.start() < end for start, end in ipv6_spans):
+            found.append((m.start(), m.group(0)))
+    return [ip for _, ip in sorted(found)]
+
+
+def extract_ip(line: str) -> str | None:
+    ips = extract_all_ips(line)
+    return ips[0] if ips else None
 
 
 def extract_timestamp(line: str) -> datetime | None:
@@ -204,6 +226,15 @@ def extract_http_fields(line: str) -> tuple[str | None, str | None, int | None, 
     return match.group("method"), match.group("path"), status, latency_ms
 
 
+def extract_response_size(line: str) -> int | None:
+    """Taille de la reponse (champ %b du Combined/Common) - None si la ligne n'est pas de ce format ou si
+    la taille vaut "-" (aucun corps) : jamais une valeur estimee."""
+    match = COMBINED_LOG_PATTERN.search(line)
+    if not match or not match.group("size").isdigit():
+        return None
+    return int(match.group("size"))
+
+
 def detect_log_source(line: str) -> LogSource:
     line_lower = line.lower()
 
@@ -267,6 +298,7 @@ def parse_log_line(
         http_path=http_path,
         http_status=http_status,
         latency_ms=latency_ms,
+        bytes_sent=extract_response_size(line),
         service=service,
     )
 

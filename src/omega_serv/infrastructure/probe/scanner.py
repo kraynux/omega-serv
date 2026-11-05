@@ -18,6 +18,7 @@ import socket
 import sys
 from pathlib import Path
 
+from omega_serv.application.server.engine_levels import max_workers
 from omega_serv.core.capability import Capability, CapabilityStatus
 from omega_serv.core.i18n import _
 from omega_serv.core.platform_info import MIN_PYTHON_VERSION, cpu_info, python_version_supported
@@ -251,28 +252,31 @@ class SystemCapabilityScanner:
         )
 
     def _probe_cpu(self) -> Capability:
-        """Mode « boost » (OMEGA-SERV_ETUDE_MODE_BOOST.md) : ce que CETTE machine permet - le
-        nombre de workers doit y correspondre (ecran Resistance et limites)."""
+        """Ce que CETTE machine permet - le nombre de processus en depend, selon le moteur (ecran Resistance et
+        limites ; application/server/engine_levels.py::max_workers, plan moteur C++ §25)."""
         cpu = cpu_info()
         detail = {
             "physical": cpu.physical, "logical": cpu.logical, "affinity": cpu.affinity,
-            "quota": cpu.quota, "available": cpu.available, "recommended_workers": cpu.recommended_workers,
+            "quota": cpu.quota, "available": cpu.available, "usable_cores": cpu.usable_cores,
+            "max_workers_python": max_workers("python", cpu.usable_cores),
+            "max_workers_native": max_workers("native", cpu.usable_cores),
             "load_1min": cpu.load_1min,
         }
         quota = _("quota {quota:g} CPU").format(quota=cpu.quota) if cpu.quota is not None else _("aucun quota")
         load = f"{cpu.load_1min:.2f}" if cpu.load_1min is not None else "?"
         reason = _(
             "Processeur : {physical} cœur(s) physique(s), {logical} thread(s), {available} CPU "
-            "disponible(s) ({quota}), charge {load} - mode boost : jusqu'à {available} worker(s), "
-            "automatique = {recommended}"
+            "disponible(s) ({quota}), charge {load} - processus au maximum : {python} avec le moteur "
+            "Python, {native} avec le moteur natif"
         ).format(
             physical=cpu.physical, logical=cpu.logical, available=cpu.available, quota=quota,
-            load=load, recommended=cpu.recommended_workers,
+            load=load, python=max_workers("python", cpu.usable_cores),
+            native=max_workers("native", cpu.usable_cores),
         )
         if not cpu.detected:
             return Capability(
                 id="processeur", status=CapabilityStatus.DEGRADED,
-                reason=_("Processeur : détection impossible, 1 worker par défaut"), detail=detail, category="systeme",
+                reason=_("Processeur : détection impossible, 1 processus par défaut"), detail=detail, category="systeme",
             )
         return Capability(id="processeur", status=CapabilityStatus.AVAILABLE, reason=reason, detail=detail, category="systeme")
 

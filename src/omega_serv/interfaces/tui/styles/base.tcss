@@ -63,6 +63,17 @@ Screen {
     margin-bottom: 1;
 }
 
+/* Choix du moteur HTTP (Configuration de base, plan moteur C++ lot 9) : meme colonne que les champs ; un choix
+   impossible est visiblement grise (decision utilisateur 2026-11-02 : griser + expliquer comment degriser). */
+.omega-form-panel > RadioSet {
+    width: 70;
+    margin-bottom: 1;
+}
+
+.omega-form-panel RadioButton:disabled {
+    text-opacity: 45%;
+}
+
 .omega-form-panel .omega-title,
 .omega-form-panel .omega-subtitle,
 .omega-form-panel .omega-hint {
@@ -381,6 +392,22 @@ Screen {
     padding: 0 1;
     height: 1fr;
     overflow-y: auto;
+    scrollbar-size-vertical: 1;  /* cadres etroits : une seule colonne pour la barre (2026-11-05) */
+}
+
+/* Tableau de bord remonte (2026-11-05) : ni retrait du panneau ni marge au-dessus du titre - deux
+   lignes de plus pour les cadres, l'ecart titre / cadres est garde. Les autres ecrans ne changent pas. */
+#resource-panel {
+    padding: 0 2 1 2;  /* les 4 cotes : un `padding-top` seul remettait tout a zero */
+}
+
+#resource-panel .omega-title {
+    margin: 0 0 1 0;
+}
+
+/* Titres des cadres centres (2026-11-05) - seulement ici, pas le panneau stats du viewer de logs. */
+#resource-dashboard-body .omega-dash-box {
+    border-title-align: center;
 }
 
 /* Viewer 1 (log_simple_viewer_screen.py, gestion des logs, refonte menu
@@ -389,7 +416,75 @@ Screen {
    oubliee lors du portage initial (retour utilisateur : "il n'y a aucun
    parser, juste les stats http" - la table etait ecrasee a 1 colonne de
    large, invisible, faute de cette largeur fixe sur sa voisine). */
-#stats-box {
+#stats-frame {
     width: 34;
     height: 1fr;
+}
+
+/* Viewer Simple : le corps prend toute la hauteur et le tableau defile (meme regle que #live-body
+   d'omega-fire) - sans elle, hauteur auto : 30 lignes visibles, aucun ascenseur (retour utilisateur
+   2026-11-02). */
+#simple-viewer-body {
+    height: 1fr;
+}
+
+#simple-viewer-body > DataTable {
+    width: 1fr;
+    height: 1fr;
+}
+
+/* RIPOSTE (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 5, topo §6.3) - ecran ACTIVE SECURITE a trois
+   colonnes WAF / ACTIVE DEFENSE / RIPOSTE : classe dediee a cet ecran (les autres menus gardent leur
+   cadre de 32). Cadre de bouton 20 (18 cellules de libelle : « Einschränkungen » = 15), padding 1 1 :
+   3 x (20 + 2 bordure + 2 padding) + 2 x 2 de marge = 76 colonnes, tient dans 80. */
+.omega-security-menu {
+    padding: 1 1;
+}
+
+.omega-security-menu .omega-btn-frame {
+    width: 20;
+}
+
+/* Tableaux des ecrans RIPOSTE : hauteur auto bornee (jamais 1fr dans une zone qui defile - le tableau
+   tomberait a la seule ligne d'en-tete). */
+.omega-riposte-table {
+    height: auto;
+    max-height: 14;
+    margin-bottom: 1;
+}
+
+/* Barre d'actions HORS de la zone qui defile (toujours visible) : meme style que .omega-actions. */
+.omega-riposte-actions {
+    padding: 0 2;
+    margin-top: 0;
+}
+
+/* Modale a plusieurs choix (choice_screen.py) : boutons empiles, pleine largeur de la boite. */
+.omega-choice-box {
+    width: 72;
+    height: auto;
+    border: round $accent;
+    padding: 1 2;
+}
+
+.omega-choice-message {
+    padding: 0 0 1 0;
+}
+
+.omega-choice-buttons {
+    width: 100%;
+    height: auto;
+}
+
+.omega-choice-buttons .omega-btn-frame {
+    width: 100%;
+}
+
+.omega-choice-buttons Button {
+    width: 100%;
+}
+
+.omega-choice-message-scroll {
+    height: auto;
+    max-height: 14;
 }

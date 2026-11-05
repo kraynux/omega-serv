@@ -21,7 +21,18 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
+
+from omega_serv.application.server.engine_levels import resolved_worker_count, worker_count_notice
+
+
+class RiposteChildPort(Protocol):
+    """Ce dont le superviseur a besoin du processus RIPOSTE (interfaces/cli/riposte_commands.py)."""
+
+    def start(self) -> None: ...
+    def tick(self) -> None: ...
+    def reload(self) -> None: ...
+    def stop(self) -> None: ...
 
 _RESTART_WINDOW_SECONDS = 60.0
 _MAX_RESTARTS_IN_WINDOW = 5
@@ -35,18 +46,12 @@ class WorkerContext:
     shared_counters: Any
 
 
-def effective_worker_count(configured: int, available_cores: int, recommended: int) -> tuple[int, str | None]:
-    """0 = automatique (un par coeur physique, dans la limite des CPU disponibles). Au-dela des
-    CPU de CETTE machine (config recopiee depuis une machine plus grosse), on se limite a eux et
-    on le dit, plutot que de refuser de demarrer un serveur en production."""
-    if configured == 0:
-        return recommended, None
-    if configured > available_cores:
-        return available_cores, (
-            f"server.workers = {configured} mais cette machine n'a que {available_cores} coeur(s) "
-            f"disponible(s) : {available_cores} worker(s) lance(s)"
-        )
-    return configured, None
+def effective_worker_count(configured: int, engine: str, usable_cores: int) -> tuple[int, str | None]:
+    """Nombre de processus lance avec `engine`, ramene au maximum de CETTE machine (engine_levels.max_workers ;
+    0 = ancien « automatique » : le maximum). Au-dela (config recopiee depuis une machine plus grosse), on se limite
+    et on le dit, plutot que de refuser de demarrer un serveur en production."""
+    return (resolved_worker_count(configured, engine, usable_cores),
+            worker_count_notice(configured, engine, usable_cores))
 
 
 def open_listen_socket(bind: str, port: int, backlog: int) -> socket.socket:
@@ -63,6 +68,7 @@ def run_workers(
     run_worker: Callable[[WorkerContext], int],
     grace_period_seconds: int,
     read_configured_workers: Callable[[], int | None],
+    riposte: RiposteChildPort | None = None,
 ) -> int:
     signal.pthread_sigmask(signal.SIG_BLOCK, _CONTROL_SIGNALS)
     children: dict[int, int] = {}  # pid -> numero du worker
@@ -86,6 +92,10 @@ def run_workers(
     for index in range(1, worker_count + 1):
         spawn(index)
     print(f"OMEGA-SERV : {worker_count} worker(s) lance(s)")
+    if riposte is not None:
+        # Lance APRES les fork des workers, par posix_spawn (jamais un fork du principal) ; recolte
+        # eventuellement par _reap ci-dessous (waitpid(-1)) : RiposteChildPort le tolere.
+        riposte.start()
 
     stopping = False
     failed = False
@@ -105,6 +115,8 @@ def run_workers(
                     file=sys.stderr,
                 )
             _signal_all(children, signal.SIGHUP)
+            if riposte is not None:
+                riposte.reload()
         for pid, index in _reap(children):
             if stopping:
                 continue
@@ -121,9 +133,13 @@ def run_workers(
                 continue
             print(f"Worker {index} (PID {pid}) arrete de facon inattendue : relance", file=sys.stderr)
             spawn(index)
+        if riposte is not None and not stopping:
+            riposte.tick()
         if stopping and children and time.monotonic() > stop_deadline:
             print(f"{len(children)} worker(s) arrete(s) de force apres le delai de grace.", file=sys.stderr)
             _signal_all(children, signal.SIGKILL)
+    if riposte is not None:
+        riposte.stop()
     return 1 if failed else 0
 
 

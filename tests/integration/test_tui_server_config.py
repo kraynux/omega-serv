@@ -158,10 +158,10 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"max_connections": 512', container.config_file.read_text())
 
     async def test_limits_screen_workers_follow_this_machine(self):
-        """Mode boost (OMEGA-SERV_ETUDE_MODE_BOOST.md) : chiffres reels de la machine sous le
-        champ ; au-dela des CPU disponibles, refus ; changement = redemarrage complet."""
+        """Chiffres reels de la machine sous le champ ; maximum du moteur Python = coeurs physiques utilisables
+        (plan moteur C++ §25) ; au-dela, ou 0, refus sans ecriture ; changement = redemarrage complet."""
         from omega_serv.core.platform_info import cpu_info
-        available = cpu_info().available
+        cpu = cpu_info()
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
@@ -171,19 +171,22 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#limits", Button).press()
             await pilot.pause()
             hint = str(pilot.app.screen.query_one("#workers-hint").content)
-            self.assertIn(f"{available} CPU", hint)
+            self.assertIn(f"{cpu.available} CPU", hint)
+            engine_hint = str(pilot.app.screen.query_one("#workers-engine-hint").content)
+            self.assertIn(f"de 1 à {cpu.usable_cores} processus", engine_hint)
             self.assertEqual(pilot.app.screen.query_one("#field-workers", Input).value, "1")
             before = container.config_file.read_text()
-            pilot.app.screen.query_one("#field-workers", Input).value = str(available + 1)
-            pilot.app.screen.query_one("#save", Button).press()
-            await pilot.pause()
-            self.assertIn("CPU", str(pilot.app.screen.query_one("#form-error").content))
-            self.assertEqual(container.config_file.read_text(), before)
-            pilot.app.screen.query_one("#field-workers", Input).value = "0"
+            for refused in (str(cpu.usable_cores + 1), "0"):
+                pilot.app.screen.query_one("#field-workers", Input).value = refused
+                pilot.app.screen.query_one("#save", Button).press()
+                await pilot.pause()
+                self.assertIn("processus", str(pilot.app.screen.query_one("#form-error").content))
+                self.assertEqual(container.config_file.read_text(), before)
+            pilot.app.screen.query_one("#field-workers", Input).value = str(cpu.usable_cores)
             pilot.app.screen.query_one("#save", Button).press()
             await pilot.pause()
             self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
-        self.assertIn('"workers": 0', container.config_file.read_text())
+        self.assertIn(f'"workers": {cpu.usable_cores}', container.config_file.read_text())
 
     async def test_limits_screen_no_restart_warning_when_backlog_unchanged(self):
         container = self._container()

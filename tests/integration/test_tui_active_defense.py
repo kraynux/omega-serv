@@ -19,6 +19,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -49,6 +50,7 @@ from omega_serv.interfaces.tui.screens.active_defense_simulate_screen import (
 from omega_serv.interfaces.tui.screens.active_defense_status_screen import ActiveDefenseStatusScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.deception_screen import DeceptionScreen
+from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.home import HomeScreen
 from omega_serv.interfaces.tui.screens.incidents_screen import IncidentsScreen
 from omega_serv.interfaces.tui.screens.terminal_warning import TerminalWarningScreen
@@ -80,8 +82,19 @@ class _FakeBlocklistPort:
     def add_entry(self, entry: BlocklistEntry) -> None:
         self.entries[entry.network] = entry
 
+    def add_entry_unless_stronger(self, entry: BlocklistEntry) -> bool:
+        self.entries[entry.network] = entry
+        return True
+
     def remove_entry(self, network: str) -> bool:
         return self.entries.pop(network, None) is not None
+
+    def remove_entry_if(self, network: str, predicate: Callable[[BlocklistEntry], bool]) -> bool:
+        entry = self.entries.get(network)
+        if entry is None or not predicate(entry):
+            return False
+        del self.entries[network]
+        return True
 
     def purge_expired(self) -> int:
         return 0
@@ -302,8 +315,45 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
+            # Filtre « Ouverts » par defaut (2026-11-01) : l'incident ferme quitte la liste...
             table = pilot.app.screen.query_one("#incidents-table", DataTable)
+            self.assertEqual(table.row_count, 0)
+            self.assertEqual(str(pilot.app.screen.query_one("#filter-closed", Button).label), "Fermés (1)")
+            # ... et reste consultable dans « Fermés ».
+            pilot.app.screen.query_one("#filter-closed", Button).press()
+            await pilot.pause()
+            self.assertEqual(table.row_count, 1)
             self.assertEqual(table.get_row_at(0)[2], "closed")
+            pilot.app.screen.query_one("#filter-all", Button).press()
+            await pilot.pause()
+            self.assertEqual(table.row_count, 1)
+            pilot.app.screen.query_one("#filter-open", Button).press()
+            await pilot.pause()
+            self.assertEqual(table.row_count, 0)
+
+    async def test_purge_now_closes_incidents_whose_threat_is_erased(self):
+        """2026-11-01 : « Purger maintenant » = la meme regle que l'entretien automatique, tout de suite."""
+        self._enable_active_defense(ioc={"auto_export_on_close": False})
+        active_defense = self._seed()
+        active_defense.incident_repository.create("inc-ancien", "203.0.113.9:abcd", _NOW)  # menace effacee
+        active_defense.incident_repository.add_event(
+            "inc-ancien", IncidentEvent(occurred_at=_NOW, kind="opened", detail="score=80")
+        )
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#incidents", Button).press()
+            await pilot.pause()
+            table = pilot.app.screen.query_one("#incidents-table", DataTable)
+            self.assertEqual(table.row_count, 1)
+            pilot.app.screen.query_one("#purge-now", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            table = pilot.app.screen.query_one("#incidents-table", DataTable)
+            self.assertEqual(table.row_count, 0)  # a quitte « Ouverts »
+            self.assertEqual(str(pilot.app.screen.query_one("#filter-closed", Button).label), "Fermés (1)")
 
     async def test_incidents_screen_exports_ioc_and_report(self):
         self._enable_active_defense()
@@ -600,6 +650,65 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             body = str(pilot.app.screen.query_one("#status-body", Static).content)
             self.assertIn("mode=block", body)
             self.assertIn("scanner-ua.json", body)
+
+    async def test_waf_status_screen_describes_the_native_filter(self):
+        # Plan WAF natif, lot 5 : avec le moteur natif, l'ecran dit ce que le natif fait des regles.
+        rules = self.root / "secure" / "waf" / "rules"
+        rules.mkdir(parents=True)
+        shutil.copy(_REAL_PROJECT_ROOT / "secure" / "waf" / "rules" / "scanner-ua.json", rules / "scanner-ua.json")
+        result = load_config(self.container.configuration, self.container.config_file)
+        assert result.success and result.config is not None
+        self.container.configuration.save(self.container.config_file, replace(
+            result.config, server=replace(result.config.server, engine="native")))
+        self._enable_waf(mode="block", rules={"paths": ["secure/waf/rules/scanner-ua.json"]})
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-status", Button).press()
+            await pilot.pause()
+            body = str(pilot.app.screen.query_one("#status-body", Static).content)
+            self.assertIn("Règles évaluées aussi par le moteur natif : 9 sur 9", body)
+            self.assertIn("servies par le moteur natif seul", body)
+            self.assertIn("Contrôle 1/N : désactivé", body)
+            pilot.app.screen.query_one("#back", Button).press()
+            await pilot.pause()
+            # Lot 6 : limite de debit comptee par le natif -> toujours servies par lui seul ; magnet -> Python
+            self._enable_waf(mode="block", rules={"paths": ["secure/waf/rules/scanner-ua.json"]},
+                             rate_limit={"enabled": True}, native_check_every=500)
+            pilot.app.screen.query_one("#waf-status", Button).press()
+            await pilot.pause()
+            body = str(pilot.app.screen.query_one("#status-body", Static).content)
+            self.assertIn("servies par le moteur natif seul", body)
+            self.assertIn("une requête propre sur 500 est vérifiée par Python", body)
+            pilot.app.screen.query_one("#back", Button).press()
+            await pilot.pause()
+            self._enable_waf(mode="block", rules={"paths": ["secure/waf/rules/scanner-ua.json"]},
+                             rate_limit={"enabled": True}, magnet={"enabled": True})
+            pilot.app.screen.query_one("#waf-status", Button).press()
+            await pilot.pause()
+            body = str(pilot.app.screen.query_one("#status-body", Static).content)
+            self.assertIn("Toutes les requêtes passent par le contrôle Python : magnet est actif.", body)
+
+    async def test_waf_modules_saves_the_native_check(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#waf-modules", Button).press()
+            await pilot.pause()
+            check = pilot.app.screen.query_one("#native-check-input", Input)
+            self.assertEqual(check.value, "0")
+            for bad in ("-1", "abc", "1000001", "²"):
+                check.value = bad
+                pilot.app.screen.query_one("#save-mode", Button).press()
+                await pilot.pause()
+                self.assertIn("Valeur invalide", str(pilot.app.screen.query_one("#form-error").content), bad)
+            check.value = "1000"
+            pilot.app.screen.query_one("#save-mode", Button).press()
+            await pilot.pause()
+            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
+            self.assertEqual(self._waf_settings()["native_check_every"], 1000)
 
     async def test_waf_modules_mode_save_and_test_and_blocklist_crud(self):
         app = OmegaServApp(self.container)
@@ -1021,6 +1130,61 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             await self._dismiss_restart_prompt(pilot)
             self.assertEqual(pilot.app.screen.query_one("#decoy-zones-table", DataTable).row_count, 0)
+
+    async def test_settings_screen_invalid_profile_keeps_the_form_open_with_the_input(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#settings", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add-profile", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-name", Input).value = "fake_adm"
+            pilot.app.screen.query_one("#df-match_attack_classes", Input).value = "scan"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            # Nom de fixture inconnu : la modale reste ouverte, erreur visible, saisie intacte.
+            self.assertIsInstance(pilot.app.screen, DynamicFormScreen)
+            self.assertIn("fake_admin", str(pilot.app.screen.query_one("#df-error", Static).content))
+            self.assertEqual(pilot.app.screen.query_one("#df-match_attack_classes", Input).value, "scan")
+            self.assertNotIn("deception", json.loads(self.container.config_file.read_text())["options"].get("active_defense", {}))
+
+            # Corriger le seul champ fautif suffit pour enregistrer.
+            pilot.app.screen.query_one("#df-name", Input).value = "fake_admin"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._dismiss_restart_prompt(pilot)
+            data = json.loads(self.container.config_file.read_text())
+            self.assertEqual(data["options"]["active_defense"]["deception"]["profiles"]["fake_admin"]["match_attack_classes"], ["scan"])
+
+    async def test_settings_screen_proxy_profile_without_zone_and_invalid_zone_stay_open(self):
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._reach_home(pilot)
+            await self._open_menu(pilot)
+            pilot.app.screen.query_one("#settings", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#add-profile", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-name", Input).value = "admin-proxy"
+            pilot.app.screen.query_one("#df-isolation_level", Input).value = "proxy"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, DynamicFormScreen)
+            self.assertIn("reverse_proxy_zone_name", str(pilot.app.screen.query_one("#df-error", Static).content))
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
+
+            pilot.app.screen.query_one("#add-decoy-zone", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-name", Input).value = "backend"
+            pilot.app.screen.query_one("#df-upstreams", Input).value = "127.0.0.1"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, DynamicFormScreen)
+            self.assertIn("host:port", str(pilot.app.screen.query_one("#df-error", Static).content))
+            self.assertEqual(pilot.app.screen.query_one("#df-name", Input).value, "backend")
 
 
 if __name__ == "__main__":

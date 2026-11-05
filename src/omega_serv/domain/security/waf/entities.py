@@ -106,6 +106,11 @@ class WafFinding:
 
 WafActionLiteral = Literal["allow", "log", "block"]
 
+WafStage = Literal["blocklist", "rate_limit", "inspection"]
+"""Etape du pipeline WAF qui a produit la decision (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 1),
+journalisee dans `waf-alerts.log` : un rejet par la blocklist (`blocklist`, score 0, aucune regle)
+n'est pas une nouvelle attaque - sans ce champ, un lecteur du journal ne pouvait pas le distinguer."""
+
 
 @dataclass(frozen=True)
 class WafDecision:
@@ -129,6 +134,9 @@ class WafDecision:
     # par la reputation ni l'auto-ban (decision utilisateur 2026-10-26, cas
     # reel : une page de captures en 4G faisait bannir le visiteur).
     volume_only: bool = False
+    # None = inspection (packs, listes, magnet) : seules les sorties anticipees du pipeline
+    # (blocklist, limite de debit) le renseignent, voir evaluate_waf_request.py.
+    stage: WafStage | None = None
 
 
 @dataclass(frozen=True)
@@ -150,4 +158,5 @@ class BlocklistEntry:
     reason: str
     created_at: str
     expires_at: str | None = None
-    source: Literal["manual", "auto"] = "manual"
+    source: Literal["manual", "auto", "riposte"] = "manual"
+    """`riposte` : ban pose par le processus RIPOSTE (raison `riposte:<id_action> ...`), retire par lui seul."""

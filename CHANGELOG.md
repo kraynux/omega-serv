@@ -13,6 +13,328 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## Non publié (prépare la 2.5.0)
+
+### Ajouté
+
+- **État & Ressources plus complet** *FLUX* : relit à l'ouverture les 15 dernières minutes du journal d'accès (plus de cadre vide au
+  départ), débits sur la dernière minute et les 5 dernières, top 5 des IP, des chemins demandés et des
+  chemins en 404 (souvent des scanners), section *SÉCURITÉ* (attaques bloquées, refus de liste de blocage et
+  de limite de débit lus dans le journal d'alertes du WAF, refus 403/429, IP bannies dont RIPOSTE) et les
+  5 dernières requêtes. *RESSOURCES* : nouvelle section *OMEGA-SERV* (processus du serveur avec CPU, RAM,
+  fils, fichiers ouverts et durée de fonctionnement ; connexions établies sur son port ; taille des
+  journaux et plus gros fichier ; espace libre de `var/`). Lecture seule, toujours hors du fil de l'écran. Titres des
+  cadres et des sections centrés ; jauges CPU, RAM et disque colorées selon le niveau (vert jusqu'à 49 %,
+  jaune de 50 à 74 %, orange de 75 à 94 %, rouge à partir de 95 %), teintes prises dans le thème actif. *ÉTAT DU
+  SERVEUR* : nouvelles sections *INSTANCE* (nombre d'instances, l'instance courante comprise même si elle
+  n'est pas inscrite au registre, celle qui affiche l'écran, puis au plus 3 instances avec leur PID, la
+  courante d'abord puis celles en marche) et *SAUVEGARDE* (date de la dernière sauvegarde et nombre de
+  sauvegardes du menu Sauvegarde) ; les options actives ont leur titre *CONFIGURATION OPTIONS*. *RÉSEAU* :
+  section *INTERFACES* (cartes ethernet et wifi, l'active - celle de la route par défaut - en vert). Graphique
+  TCP/UDP sous *Débit* (paquets/s sur les 2 dernières minutes, le noyau ne comptant pas les octets par
+  protocole) ; ligne *Envoyé* d'omega-serv (somme des tailles de réponse de l'access log depuis le
+  démarrage du serveur : Linux ne compte pas le réseau par processus) ; swap, charge (rapportée au nombre
+  de cœurs, affiché) et espace libre de `var/` (barème retourné) colorés selon le niveau. Bouton
+  **access.log** : ouvre directement le viewer Simple sur l'access log de l'instance, sans sélection.
+- **Viewer Simple : repris du tableau de bord** - refus 403 et 429, top 5 des IP (au lieu d'une seule),
+  top 5 des chemins demandés et des chemins en 404 (sans la partie `?…`), chemin depuis le bord gauche et
+  compte collé à droite ; le cadre de gauche défile. Tableau de bord : icônes devant les titres de section
+  et les lignes clés (emoji de largeur fixe, l'alignement est conservé). Viewers Simple et Classique :
+  titre et boutons centrés. État & Ressources remonté de deux lignes (moins de vide sous l'en-tête). README : police emoji (Noto
+  Color Emoji) ajoutée aux outils facultatifs - une Nerd Font ne contient pas ces icônes.
+- **Contact et support** (Guide d'aide, touche `a`) : *Payer un café* (page PayPal du développeur),
+  *Contacter le support* (formulaire de contact du site, adresse mail affichée ; aucun formulaire dans
+  omega-serv) et *Se déclarer utilisateur (anonyme)*. La déclaration est **volontaire et désactivée par
+  défaut** : une clé tirée au hasard, la version, le mode choisi (*une seule fois* ou *chaque jour*) et,
+  facultatifs, un continent et un pays pris dans des listes fermées (249 pays, noms traduits dans les
+  17 langues). Le message exact est affiché avant l'envoi. En mode *chaque jour*, `serve` lance au plus un
+  envoi par 24 h dans un **processus séparé** (jamais un fil dans le serveur, jamais attendu au démarrage ni
+  à l'arrêt) ; une seule ligne au journal d'erreurs par série d'échecs ; `DO_NOT_TRACK=1` coupe tout envoi
+  automatique. *Ne plus me déclarer* supprime l'entrée côté réception puis efface la clé locale. Aucun mot de
+  passe ni secret dans le code, aucune dépendance ajoutée (`urllib`). État sous `var/lib/declaration/`.
+  Ligne de commande : `omega-serv declaration status | declare | withdraw`. Fiches d'aide F1, guide du site
+  et README dans les 17 langues.
+- **Version 2.5.0** : numéro porté dans `pyproject.toml`, splash « 2.5.0 », README et pages du site
+  (téléchargement, « Version : ») dans les 17 langues.
+- **README : outils de compilation du moteur natif** (documentation). « Outils optionnels recommandés »
+  liste désormais `cmake`, un compilateur C++20, les en-têtes OpenSSL 3 et PCRE2, avec leur commande
+  d'installation (Arch, Debian/Ubuntu, Fedora) : nécessaires seulement si le moteur natif fourni ne démarre
+  pas (glibc antérieure à 2.38). Jusqu'ici, seul le message d'`install.sh` les citait. 17 langues.
+- **Sauvegarde de configuration complète** : case **« Tout sauvegarder (configuration complète) »**
+  (`config backup --all`) et nouvelles cases — **RIPOSTE** (`--include-riposte`), **pages d'erreur
+  personnalisées** (`--include-error-pages`), **préférences** : thème, langues, nom du service
+  (`--include-preferences`), **bibliothèque des journaux** : favoris, sources distantes, rotations planifiées
+  (`--include-logs-library`). Après la création, ce qui n'a pas pu être archivé est indiqué (ex. un certificat
+  hors du dossier omega-serv). Nouvelle option `config restore --stop-and-restart`.
+- **Moteur HTTP natif (en développement)** : réglage `server.engine` (`python` par défaut, `native`). Le moteur
+  natif (C++) sert le contenu statique ; le serveur Python garde la configuration, la sécurité et la surveillance.
+  Il gère aussi TLS en mode direct (même bibliothèque OpenSSL et mêmes réglages que le moteur Python : versions,
+  suites, certificat, phrase de passe ; un certificat inutilisable empêche le démarrage, jamais de HTTP à la place).
+  Avec WAF, Auth, Active Defense ou leurres actifs, chaque requête passe par un processus Python de sécurité qui
+  applique exactement les mêmes contrôles que le moteur Python (mêmes alertes, mêmes journaux de sécurité) ; s'il ne
+  répond pas, `waf.on_internal_error` décide (servir sans contrôle ou 503), et une zone Auth active est toujours
+  refusée (503) dans ce cas.
+  Pour alléger ce contrôle, le moteur natif transmet l'adresse client déjà résolue et indique quand une adresse est
+  absente de la blocklist (relue à chaque requête : un ban ajouté ou retiré s'applique dès la requête suivante) ;
+  dans tous les autres cas, le contrôle Python vérifie lui-même.
+  **Interface** : choix du moteur dans **Configuration de base** (le choix « Natif C++ » est grisé tant qu'une
+  cause l'empêche, avec ce qu'il faut changer pour le rendre possible) ; ce qui tournera au prochain démarrage est
+  affiché tel quel (« moteur natif, 1 processus ») ; avec le moteur natif, les processus réglés dans **Résistance et
+  limites** sont ceux des contrôles de sécurité : 1, ou 2 à partir de 4 cœurs physiques, l'écran disant ce qu'un 2e
+  apporte sur la machine ; tableau des connecteurs (natif, contrôle Python, route Python, confié à Python) dans
+  **État & Ressources** et `omega-serv engine status` ; un réglage enregistré ailleurs (TLS, options, profil) qui
+  ferait perdre le moteur natif demande d'abord une confirmation. FAQ « Moteur HTTP et performances », avec ce que
+  le choix du moteur et du nombre de processus change, mesuré.
+  **Installation** : l'archive contient le moteur natif compilé (x86_64, glibc 2.38 ou plus récente, OpenSSL 3) ;
+  `install.sh` vérifie qu'il démarre et, sinon, le recompile sur place quand cmake, un compilateur C++20 et les
+  en-têtes OpenSSL sont présents — sans jamais bloquer l'installation. Une nouvelle instance reçoit aussi le moteur
+  natif.
+  Les routes applicatives (reverse proxy, FastCGI/PHP, envoi de fichiers, WebSocket) sont confiées au moteur Python
+  pour toute la suite de la connexion, et le listing de répertoire lui est demandé : mêmes réponses qu'avec le moteur
+  Python. En mode `fail-open`, une adresse déjà bannie reste refusée (451) même si le contrôle est indisponible.
+  Seule combinaison non prise en charge : TLS direct avec ces routes applicatives.
+  Si le natif ne peut pas tout servir ou ne démarre pas, le moteur Python est
+  utilisé à sa place et la raison est affichée (écran État & Ressources, `omega-serv engine status`, error.log) -
+  jamais un serveur à moitié natif. Changer de moteur demande un redémarrage complet : un rechargement qui l'exigerait
+  est refusé avec ce message.
+- **RIPOSTE (en développement)** : 3e module de Sécurité active, qui
+  décide de réponses graduées dans la durée (bans de plus en plus longs pour les récidivistes). Option
+  `riposte`, désactivée par défaut ; l'activer demande un redémarrage complet. Processus séparé lancé et
+  surveillé par `serve` (mode simple et mode boost, un par instance, relancé s'il s'arrête, jamais au
+  détriment du serveur web), qui lit `waf-alerts.log` et `security-events.jsonl`, tient une mémoire de
+  récidive par IP (épisodes, retours, paliers 1 h / 6 h / 24 h / 7 j, fenêtre 30 j, historique 90 j) et
+  **applique** ses décisions : ban local dans la blocklist du WAF (source `riposte`, toujours avec une
+  échéance, jamais au-dessus d'un ban manuel, permanent ou plus long) ou leurre Active Defense prolongé.
+  Registre des actions (en cours / terminées, rien ne disparaît), vérifié au démarrage et toutes les
+  60 s (une action retirée à la main est vue comme telle). Sans WAF, les bans restent sans effet et le
+  disent. Commandes : `riposte status`, `riposte scenarios list|show`, `riposte policies
+  list|show|enable|disable [--revoke]`, `riposte simulate`, `riposte measure` (rejeu d'une politique sur
+  les journaux), `riposte sources list|show|forget`, `riposte decisions list`, `riposte actions
+  list [--finished]|show|revoke [--exempt 24h|7d|forever] [--not-recidive]|not-recidive`,
+  `riposte exemptions list|remove`, `riposte stop [--revoke]` (arrêt d'urgence, persistant) et
+  `riposte resume`. Base séparée `var/lib/riposte.sqlite3`. Aucune dépendance nouvelle.
+  **Interface** : l'écran ACTIVE SÉCURITÉ passe à trois colonnes dans l'ordre d'une attaque — WAF, ACTIVE
+  DEFENSE, RIPOSTE — et tient en 80 colonnes ; le bouton WAF « Exclusions et débit » devient « Limitations »
+  (le titre de l'écran ne change pas). Six écrans RIPOSTE : **État** (processus, actions en cours, arrêt
+  d'urgence / Reprendre), **Politiques** (ajout à partir d'un scénario, d'une copie ou d'un formulaire
+  vierge ; modifier, activer, désactiver avec ou sans levée des actions, retirer), **Actions** (en cours /
+  terminées, lever, lever et exempter 24 h / 7 j / toujours, « ne compte pas dans la récidive »),
+  **Récidives** (chronologie par source, oublier une source), **Simuler** (décision expliquée, décisions
+  récentes) et **Réglages** (paliers, fenêtres, plafond, exemptions). Le formulaire de politique explique
+  chaque champ, mesure la politique sur les journaux des 7 derniers jours, demande une confirmation nommée
+  pour un réglage moins prudent (durée > 7 j, niveau « suspicious ») puis propose Activer / Enregistrer sans
+  activer. Les heures de `riposte status` sont affichées à l'heure locale.
+  **Ban réseau** (action « ban local + ban réseau ») : après le ban local, RIPOSTE écrit une ligne dans
+  `var/log/riposte-decisions.jsonl`, lue par les jails omega-jail `<service>-riposte-1h/6h/24h/7d` de l'instance ;
+  chaque palier va à la jail la plus longue qui ne le dépasse pas (affiché : « palier 2 h -> jail …-1h »). Une levée
+  ne retire que le ban local et le dit ; l'écran État indique les jails installées ou absentes et signale la jail
+  `omega-serv-active-defense` (ban fixe de 24 h) qui écrase les paliers réseau. Nécessite omega-jail avec les jails
+  RIPOSTE.
+  Interface et aide (F1, FAQ) traduites dans les 16 langues ; README, readme.html et guide.html décrivent RIPOSTE
+  dans les 17 langues.
+  FAQ (guide et F1) : 7 questions sur les bans RIPOSTE — page 451 ou fail2ban, rôle des jails
+  `<service>-riposte-*`, mise à jour d'omega-jail, bans derrière Tailscale Funnel (relayés en 451 par
+  omega-jail), jail
+  `omega-serv-active-defense`, attaque de test sans effet, bans visibles dans omega-fire.
+
+- **Journal des événements de sécurité** `var/log/security-events.jsonl` (Active Defense, réglable par
+  `options.active_defense.logging.security_events_path`). Une ligne JSON par événement — escalade de
+  niveau d'une source, incident ouvert, leurre affecté, visite d'un leurre — jamais par requête normale.
+  Contenu : identifiant unique, type, date, IP, identifiant de source (IP + empreinte du User-Agent),
+  niveau, score, classe d'attaque, incident ou profil de leurre ; jamais de corps, d'en-têtes ni de
+  User-Agent en clair. Ces événements existaient déjà dans le code mais n'étaient écrits nulle part ;
+  ils servent de source au futur module RIPOSTE et à tout outil externe.
+- **Champ `stage` dans `waf-alerts.log`** : étape du WAF qui a produit la décision (`blocklist`,
+  `rate_limit`, `inspection`). Un refus parce que l'IP est déjà dans la blocklist (score 0, sans règle)
+  devient identifiable. Ajout seulement : aucun champ retiré, les jails omega-jail (qui ne lisent que
+  l'IP et l'action) fonctionnent sans changement.
+
+### Modifié
+
+- **Nombre de processus (`server.workers`) limité selon le moteur et le processeur** : avec le moteur Python, au plus
+  un processus par **cœur physique** (auparavant : par CPU logique, hyperthreading compris — au-delà, les mesures
+  ne montrent aucun gain) ; avec le moteur natif, 1, ou 2 à partir de 4 cœurs physiques. L'écran **Résistance et
+  limites** affiche le maximum de la machine et ce qu'augmenter apporte, et refuse une valeur trop grande ou 0.
+  **Une configuration existante démarre toujours** : une valeur trop grande, ou l'ancien `0` (automatique), est
+  ramenée au maximum de la machine, avec un message dans le journal d'erreurs et dans **État & Ressources**.
+  Passer au moteur natif avec un nombre de processus trop grand demande de le ramener au maximum (confirmation).
+- **WAF plus rapide, avec les mêmes décisions** (moteurs Python et natif) :
+  - les règles insensibles à la casse sont cherchées sur le texte mis en minuscules, quand le texte est en ASCII et
+    que la règle est prouvée équivalente (sinon, recherche d'origine) ;
+  - seules les parties de la requête qu'une règle lit sont préparées et parcourues ;
+  - la normalisation est sautée quand elle ne changerait rien (texte ASCII sans `%`) ;
+  - la liste de blocage répond tout de suite quand elle est vide et mémorise les adresses déjà analysées ;
+  - avec le moteur natif, le processus de sécurité traite une requête propre sans attente dans la boucle et
+    renvoie un verdict préparé à l'avance.
+
+  Des tests comparent l'ancien et le nouveau calcul sur toutes les règles livrées.
+- **Moteur natif avec WAF : les requêtes propres ne passent plus par Python.** Le moteur natif évalue lui-même les
+  règles du WAF (traduites depuis les règles Python et vérifiées contre elles) et sert directement une requête sur
+  laquelle **aucune règle ne correspond**. Tout le reste part au processus de sécurité Python, qui décide et
+  journalise comme avant : correspondance, adresse bannie, zone protégée, texte non ASCII, toutes les requêtes
+  d'une source qui a un état Active Defense ou un leurre (pendant la durée de cet état, leurres affectés par RIPOSTE
+  compris), et toutes les requêtes quand magnet est actif. Sans processus de sécurité,
+  `on_internal_error` s'applique comme avant (fail-closed et authentification : 503).
+  Compilation du moteur natif : PCRE2 conseillé (lié dans le binaire, rien à installer pour l'utiliser) ; sans
+  PCRE2, le moteur fonctionne comme avant, chaque requête étant inspectée par Python.
+  - Au chargement, le moteur natif rejoue pour chaque règle des textes de contrôle calculés par Python ; au moindre
+    désaccord, ou si une règle ne peut pas être traduite, elle reste évaluée par Python seul et une ligne l'indique
+    dans le journal d'erreurs.
+  - Nouveau réglage `options.waf.native_check_every` (0 par défaut, désactivé) : une requête jugée propre par le
+    moteur natif sur N est quand même soumise à Python, qui la traite normalement et journalise tout désaccord.
+  - Limite de débit comptée par le moteur natif, qui voit toutes les requêtes : même seau à jetons et mêmes règles
+    (dossier, IP/réseau, globale) que Python, même réponse 429 et mêmes journaux, écrits par Python. L'activer ne coûte
+    plus rien de mesurable (machine A : 11 391 req/s avec, 11 330 sans ; avant, toutes les requêtes passaient par
+    Python). Les requêtes servies par un leurre ou refusées par la liste de blocage comptent aussi : plus strict
+    qu'avec le moteur Python, jamais plus permissif.
+  - Écrans : avec le moteur natif, WAF — État indique combien de règles il évalue lui-même, s'il sert seul les
+    requêtes propres (sinon pourquoi) et l'état du contrôle 1/N, réglable dans WAF — Modules.
+  - Mesuré sur trois machines : avec le WAF, le moteur natif sert 3,4 à 6,8 fois plus de petites pages qu'avant et
+    garde 78 à 95 % de son débit sans WAF. Un 2e processus de sécurité n'apporte plus rien au trafic ordinaire.
+
+### Corrigé
+
+- **État & Ressources : le « Débit » réseau affichait le total depuis le démarrage de la machine**, pas un
+  débit. Il affiche désormais les octets reçus et envoyés par seconde, mesurés entre deux rafraîchissements.
+- **État & Ressources : un cadre trop long était coupé au lieu de défiler** (la fin du contenu restait
+  invisible). Chaque cadre défile désormais réellement, la barre d'actions restant fixe en bas.
+- **Installation : avertissement setuptools répété** (« `project.license` as a TOML table is deprecated ») pendant
+  `install.sh`. `pyproject.toml` déclare désormais la licence au format SPDX (`license = "MIT"`,
+  `license-files = ["LICENSE"]`, setuptools 77 ou plus récent, téléchargé automatiquement par pip).
+- **Alias : une cible absolue sous `/var` du système était refusée** (« alias vers un dossier interdit (var/) »),
+  par exemple `/var/www/html` ou `/var/secure`, même avec `allow_outside_webroot`. La règle visait les dossiers
+  `secure/`, `config/`, `src/` et `var/` d'omega-serv lui-même : elle s'applique désormais à eux seuls, y compris
+  quand une cible absolue ou un lien symbolique y ramène.
+
+- **Interface, formulaires « Ajouter un profil » et « Ajouter une zone » (Active Defense → Réglages)** : un profil
+  ou une zone invalide fermait le formulaire sans rien enregistrer, et la raison s'affichait en haut de l'écran
+  Réglages, souvent hors de vue ; il fallait tout ressaisir. Le formulaire reste désormais ouvert, affiche la
+  raison sous les champs et garde la saisie : on corrige le champ fautif et on valide de nouveau. La fiche FAQ
+  correspondante (guide et F1, 17 langues) est mise à jour.
+
+- **Documentation, badges** : « Python pur » et « Sans dépendance » ne décrivaient plus omega-serv depuis le
+  moteur natif ; ils deviennent « Python + C++ natif » et « Cœur HTTP stdlib » (index, présentation, readme,
+  17 langues). L'étape d'installation du README précise « aucune dépendance externe **pour le cœur du serveur** »,
+  comme le readme du site.
+
+- **Documentation, commandes fausses** : `simulate-request` s'écrit `--method GET --url /index.html` et
+  `auth create-zone` attend `--path-prefix` et `--realm` (le README et le guide donnaient `--url-prefix` et des
+  arguments sans option, refusés) ; `diagnostics`, cité par le guide, n'existe pas. Toutes les commandes du guide
+  sont désormais vérifiées par le parseur du CLI, et les 16 commandes qui manquaient à « Commandes utiles
+  étendues » y sont ajoutées (`serve`, `config enable-tls|disable-tls`, `engine status`, `waf never-auto-block`,
+  `certs import|verify`, `auth change-password|remove-user|remove-zone|check-permissions`,
+  `service reload|enable|disable|uninstall`).
+
+- **Sécurité, analyse HTTP plus stricte (RFC 9112)** : un nom d'en-tête contenant une espace ou une
+  tabulation (`X-A : 1`) était accepté après nettoyage ; un `Content-Length` écrit `+5`, `1_000` ou avec des
+  chiffres non ASCII était lu comme un nombre. D'autres serveurs (proxy devant omega-serv) peuvent lire ces
+  formes autrement, ce qui ouvre la porte à la désynchronisation de requêtes (« request smuggling »). Ces
+  requêtes reçoivent désormais **400** (lignes dans error.log et access.log, comme toute erreur d'analyse).
+  Aucun client HTTP normal n'envoie ces formes.
+- **Sécurité, version HTTP vérifiée (RFC 9112 / 9110)** : toute version commençant par `HTTP/` était servie
+  (`HTTP/9.9`, `HTTP/2.0`, `HTTP/abc`...). Une version mal écrite reçoit désormais **400**, une version majeure
+  autre que 1 reçoit **505** (« HTTP Version Not Supported ») ; `HTTP/1.2` à `HTTP/1.9` sont traitées comme
+  `HTTP/1.1`. Les navigateurs et outils courants envoient `HTTP/1.0` ou `HTTP/1.1` : rien ne change pour eux.
+- **Cible de requête en forme absolue acceptée (RFC 9112)** : `GET http://hôte/page HTTP/1.1` cherchait un
+  fichier nommé d'après l'adresse entière (404). Le chemin est maintenant extrait et servi normalement ;
+  l'hôte de l'adresse remplace l'en-tête `Host`, qui reste obligatoire. Un hôte vide, avec identifiants
+  (`user@`), espace ou caractère de contrôle reçoit **400**. Seuls `http://` et `https://` sont reconnus.
+- **Logs, erreurs d'analyse dans access.log** : une requête refusée avant d'être traitée (mal formée, trop
+  grande, version refusée, `Expect`, `Host` invalide, corps trop lent ou tronqué) n'écrivait qu'une ligne dans
+  error.log ; elle écrit désormais aussi sa ligne dans access.log, visible par fail2ban, omega-jail et RIPOSTE.
+  La ligne de requête y figure telle que reçue (`-` si elle n'a pas pu être lue). L'adresse client suit la
+  même règle de proxy de confiance que les autres requêtes, avec les en-têtes déjà lus : une erreur détectée
+  sur la ligne de requête elle-même est donc attribuée à l'adresse du proxy quand un proxy est devant
+  omega-serv. La ligne d'error.log porte maintenant l'identifiant de requête, comme la ligne d'access.log.
+- **Restauration d'une sauvegarde avec base pendant que le serveur tourne** : la vérification « serveur en
+  marche » lisait mal le fichier PID et répondait toujours « arrêté » ; la restauration n'était donc pas bloquée
+  comme prévu. Elle l'est désormais, et « Arrêter, restaurer, redémarrer » attend réellement l'arrêt.
+- **Listing de répertoire : un lien symbolique en boucle ou cassé faisait planter tout le listing** (connexion
+  fermée sans réponse). Ces entrées, inaccessibles de toute façon, sont désormais simplement absentes de la liste.
+- **Logs, guillemets échappés dans access.log** : un guillemet `"` envoyé par le client (requête, Referer,
+  User-Agent) était écrit tel quel et fermait le champ avant l'heure : la ligne devenait illisible pour les
+  statistiques et l'écran des journaux, et un client pouvait faire apparaître un faux statut (« 404 ») devant le
+  vrai. Il est désormais écrit `\x22`, comme nginx. Les outils qui lisent le format combiné (fail2ban,
+  omega-jail, lnav, goaccess) ne sont pas affectés.
+- **Logs, viewer Simple** : la barre de statut se limitait à « Aperçu » et « Top IP » ; elle reprend celle
+  du viewer Simple d'omega-fire — rendement (débit, latence moyenne), bande passante (débit réseau, volume,
+  taille moyenne), statuts HTTP, clients et réseau, santé et tampon — calculée uniquement sur les valeurs
+  présentes dans le log (« - » sinon, jamais une taille ou une latence supposée). Le tableau n'affichait que
+  30 lignes sans ascenseur pour un tampon de 200 : tout le tampon défile désormais, et l'affichage suit les
+  nouvelles lignes tant qu'on est en bas.
+- **Logs : adresses IPv6 compressées non reconnues** (`2a02:8440:a501:9913::be86:aa87`, `::1`) : seule la
+  forme complète à 8 groupes l'était ; colonne IP vide et statistiques par IP fausses (viewer Simple, Voir
+  et traiter IP) pour tout client IPv6.
+- **Comportement par défaut — une IP bannie reçoit enfin 451** (page « Votre IP a été bannie ») sur toutes
+  ses requêtes pendant la durée du ban, comme promis par la documentation et le message d'activation de
+  l'auto-ban ; elle recevait jusqu'ici un 403 (« accès interdit à la ressource »), impossible à distinguer d'un
+  simple refus. Vaut pour tout ban de la blocklist native : auto-ban du WAF, ban manuel, RIPOSTE, pont
+  omega-jail. La requête d'attaque elle-même reste refusée en 403.
+- **Sauvegarde de configuration incomplète** : les **listes de mots-clés du WAF** et les **scripts Magnet**
+  (`waf.lua`, script personnel, `magnet-rules.d/`, blocklist Magnet) n'étaient jamais sauvegardés ; ils font
+  désormais partie de « Règles WAF ». Un certificat configuré à un autre endroit du projet que
+  `secure/certificates` est maintenant inclus.
+- **Base Active Defense mal copiée par la sauvegarde** : la base, en mode WAL, était archivée sans son fichier
+  `-wal` — les écritures récentes pouvaient manquer, et une copie faite pendant une écriture pouvait être
+  incohérente. Les bases (Active Defense, RIPOSTE) sont désormais copiées par l'API de sauvegarde de SQLite :
+  copie complète et cohérente, **serveur en marche**.
+- **Restauration d'une base sous un serveur actif** : une sauvegarde qui contient une base n'est plus jamais
+  restaurée pendant que le serveur tourne (les workers et RIPOSTE écrivent dans ces bases). L'interface propose
+  **« Arrêter, restaurer, redémarrer »** (gestionnaire de service ; `--stop-and-restart` en ligne de commande) ;
+  le service est toujours redémarré, même si la restauration échoue. Les bases remplacées et leurs fichiers
+  `-wal`/`-shm` sont d'abord mis de côté : un ancien `-wal` laissé en place aurait été rejoué sur la base
+  restaurée. Une sauvegarde sans base se restaure comme avant.
+- **Sondes WordPress et injections de commandes non classées** (Active Defense, changement de comportement).
+  Les attaques détectées par les packs livrés `wordpress-probes` et `body-cmdi` recevaient la classe
+  « unknown » : un profil de leurre visant « scan » ne voyait pas les sondes WordPress, et l'injection de
+  commandes n'avait aucune classe. Désormais `wordpress-probes` → **scan** (reconnaissance, comme
+  `sensitive-paths`) et `body-cmdi` → nouvelle classe **command_injection**, utilisable dans les profils de
+  leurre. Un test vérifie la classe de chaque pack livré : un pack ajouté sans classe est détecté.
+- **Incidents fermés mêlés aux ouverts, et jamais supprimés** (Active Defense). L'écran Incidents affichait
+  tout sans distinction : un incident fermé restait dans la liste. Il propose désormais un filtre
+  **Ouverts** (par défaut) / **Fermés** / **Tous** avec le nombre de chaque sorte ; un incident fermé reste
+  consultable et exportable dans « Fermés ». La base ne supprimait jamais aucun incident : les incidents
+  **fermés depuis plus de 90 jours** sont maintenant supprimés avec leur historique (événements,
+  observations, indicateurs), et jamais plus de 10 000 incidents fermés ne sont gardés — par l'entretien
+  automatique du serveur et par `active-defense purge`. Un incident **ouvert** n'est jamais supprimé ; les
+  exports IoC et rapports déjà écrits restent sur le disque.
+- **Un incident dont la menace était effacée restait « ouvert »** (Active Defense). L'état de menace expirait
+  bien tout seul, mais l'incident ne se fermait qu'avec `active-defense purge` lancé à la main. Désormais
+  **l'entretien automatique du serveur ferme lui-même** ces incidents (source revenue au niveau normal et
+  calme depuis la durée de vie de l'état, 2 h par défaut — même règle qu'avant) : ils quittent la vue
+  « Ouverts » sans intervention. Nouveau bouton **« Purger maintenant »** dans l'écran Incidents pour le faire
+  tout de suite (avec confirmation et bilan). L'export automatique à la fermeture (`ioc.auto_export_on_close`,
+  **activé par défaut** : JSON, CSV, Markdown dans `var/lib/active-defense/exports/`) s'applique à toutes ces
+  fermetures, y compris par `active-defense purge` en ligne de commande, qui ne l'appliquait pas.
+- **Lignes de journal perdues après « Voir et traiter IP »**. Retirer une IP d'un journal le réécrit
+  sous un nouveau fichier ; le serveur, qui gardait l'ancien fichier ouvert, continuait d'écrire dans ce
+  fichier supprimé : les lignes suivantes (accès, alertes WAF…) n'apparaissaient plus nulle part —
+  ni dans lnav, ni pour fail2ban / omega-jail — jusqu'au redémarrage du serveur. Désormais le serveur
+  vérifie au plus une fois par seconde que le journal est toujours le même fichier, et le rouvre sinon
+  (même chose si le fichier a été supprimé). La rotation (troncature sur place) n'est pas concernée.
+  Coût mesuré : +0,56 µs par ligne écrite.
+
+- **Bans perdus quand plusieurs processus écrivent la blocklist au même moment** (sécurité). La
+  blocklist (`var/lib/waf/blocklist.json`) s'écrivait en « lire → modifier → remplacer » sans verrou
+  entre processus : en mode boost, deux workers qui bannissaient au même moment (ou un worker et la
+  CLI / la TUI) partaient de la même liste, et le second effaçait le ban du premier. Mesuré : 4
+  processus posant 160 bans en même temps n'en gardaient que 56 à 61. Désormais chaque écriture se
+  fait sous un verrou exclusif (`blocklist.json.lock`, créé en mode 664 pour rester utilisable par le
+  service dédié et par l'utilisateur) et relit toujours le fichier sous ce verrou : 160 sur 160.
+  Attente du verrou bornée à 1 s ; au-delà, ou si le verrou ne peut pas être ouvert, l'écriture se fait
+  comme avant (sans verrou) avec un avertissement sur stderr (journalctl) — jamais un ban refusé ni un
+  serveur figé. Un fichier devenu illisible mais inchangé reste réécrit depuis le cache (correctif du
+  2026-10-18 conservé).
+- **Un ban automatique pouvait écraser un ban plus fort** (changement de comportement). Le
+  bannissement automatique du WAF (récidive) remplaçait toute entrée du même réseau : un ban manuel ou
+  permanent posé entre-temps par un autre processus, ou un ban automatique plus long, pouvait être
+  remplacé par un ban plus court. Désormais un ban automatique **ne remplace jamais** une entrée encore
+  en vigueur qui est manuelle, permanente ou plus longue. Un ajout manuel (CLI, TUI) remplace toujours,
+  comme avant : c'est une décision explicite.
+- Nouvelle opération interne de retrait conditionnel (ne retire une entrée que si elle remplit une
+  condition donnée), pour qu'un mécanisme automatique ne puisse jamais retirer un ban qu'il n'a pas posé.
+  Aucun changement pour les retraits manuels.
+
 ## version 2.0.1 : Publié
 
 ### Ajouté

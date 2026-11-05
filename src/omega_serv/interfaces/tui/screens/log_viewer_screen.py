@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Center, Container, Horizontal, Vertical
 from textual.timer import Timer
 from textual.widgets import Button, Footer, Header, RichLog, Static
 
@@ -43,10 +43,11 @@ class LogViewerScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static(_("VOIR / SUIVRE - {path}").format(path=self._path), classes="omega-title")
+            with Center():  # titre et boutons centres (2026-11-05)
+                yield Static(_("VOIR / SUIVRE - {path}").format(path=self._path), classes="omega-title")
             yield Static("", id="viewer-error", classes="omega-hint")
             yield RichLog(id="log-content", wrap=False, highlight=False, markup=False)
-            with Horizontal(classes="omega-actions"):
+            with Center(), Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Suivre en direct"), id="follow")
                 with Container(classes="omega-btn-frame"):

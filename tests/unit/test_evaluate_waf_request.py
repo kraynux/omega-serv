@@ -28,7 +28,14 @@ class _FakeBlocklist:
     def add_entry(self, entry):
         self.auto_entries.append(entry)
 
+    def add_entry_unless_stronger(self, entry):
+        self.auto_entries.append(entry)
+        return True
+
     def remove_entry(self, network):
+        return False
+
+    def remove_entry_if(self, network, predicate):
         return False
 
     def purge_expired(self):
@@ -110,7 +117,8 @@ class TestEvaluateWafRequest(unittest.IsolatedAsyncioTestCase):
             _FakeRateLimit(), _FakeReputationTracker(),
         )
         self.assertEqual(decision.action, "block")
-        self.assertEqual(decision.status_code, 403)
+        self.assertEqual(decision.status_code, 451)  # page « Votre IP a été bannie », jamais 403
+        self.assertEqual(decision.stage, "blocklist")  # lot 1 RIPOSTE : jamais pris pour une attaque
 
     async def test_rate_limit_exceeded_blocks_before_waf_inspection(self):
         decision = await evaluate_waf_request(
@@ -120,6 +128,7 @@ class TestEvaluateWafRequest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(decision.action, "block")
         self.assertEqual(decision.status_code, 429)
         self.assertIsNotNone(decision.retry_after_seconds)
+        self.assertEqual(decision.stage, "rate_limit")
 
     async def test_excluded_path_skips_waf_inspection(self):
         config = parse_waf_config({"exclusions": {"path_prefixes": ["/healthz"]}})

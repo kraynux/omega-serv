@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

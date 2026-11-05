@@ -3,10 +3,12 @@ from datetime import timezone
 from omega_serv.domain.logs.models import LogLevel, LogSource
 from omega_serv.domain.logs.parser import (
     detect_log_source,
+    extract_all_ips,
     extract_http_fields,
     extract_ip,
     extract_log_level,
     extract_port,
+    extract_response_size,
     extract_service,
     extract_timestamp,
     extract_user,
@@ -145,3 +147,60 @@ class TestParseLogLines:
     def test_skips_blank_lines(self):
         entries = parse_log_lines(["", "sshd: Accepted password for bob", "   "])
         assert len(entries) == 1
+
+
+
+class TestCompressedIpv6:
+    """2026-11-02 : seule l'IPv6 complete (8 groupes) etait reconnue - la forme compressee, la plus
+    courante, laissait la colonne IP vide et faussait les statistiques par IP du viewer Simple."""
+
+    def test_compressed_ipv6_at_start_of_combined_line(self):
+        line = '2a02:8440:a501:9913::be86:aa87 - - [02/Nov/2026:08:16:56 +0000] "GET / HTTP/1.1" 451 10'
+        assert extract_ip(line) == "2a02:8440:a501:9913::be86:aa87"
+
+    def test_loopback_and_link_local(self):
+        assert extract_ip("sshd[12]: Failed password from ::1 port 22") == "::1"
+        assert extract_ip("sshd[12]: Accepted key from fe80::1%eth0 port 22") == "fe80::1"
+
+    def test_times_are_never_addresses(self):
+        assert extract_all_ips("Nov  2 07:52:31 host kernel: 12:34 aa:bb") == []
+
+    def test_mapped_ipv4_counted_once(self):
+        assert extract_all_ips("from ::ffff:192.0.2.1 and 10.0.0.1") == ["::ffff:192.0.2.1", "10.0.0.1"]
+
+    def test_response_size_is_read_never_estimated(self):
+        assert extract_response_size('1.2.3.4 - - [02/Nov/2026:07:52:31 +0000] "GET / HTTP/1.1" 200 2331') == 2331
+        assert extract_response_size('1.2.3.4 - - [02/Nov/2026:07:52:31 +0000] "GET / HTTP/1.1" 304 -') is None
+        assert extract_response_size("Nov  2 07:52:31 host sshd[1]: Accepted password") is None
+
+
+class TestTrafficStats:
+    """Barre de statut du viewer Simple : uniquement des valeurs lues dans le log, jamais estimees."""
+
+    def _lines(self):
+        return [
+            '1.2.3.4 - - [02/Nov/2026:07:00:00 +0000] "GET /a HTTP/1.1" 200 1000',
+            '1.2.3.4 - - [02/Nov/2026:07:00:05 +0000] "GET /b HTTP/1.1" 404 -',
+            '2a02:8440::1 - - [02/Nov/2026:07:00:10 +0000] "GET /c HTTP/1.1" 500 3000',
+        ]
+
+    def test_rates_over_the_span_of_the_lines(self):
+        from omega_serv.domain.logs.analytics import compute_traffic_stats
+
+        stats = compute_traffic_stats(parse_log_lines(self._lines()))
+        assert stats.span_seconds == 10
+        assert stats.requests_per_second == 0.3
+        assert stats.bytes_total == 4000          # le "-" n'est pas compte, jamais estime
+        assert stats.avg_size == 2000
+        assert stats.bytes_per_second == 400
+        assert stats.avg_latency_ms is None       # pas de latence dans ce format : rien d'invente
+        assert (stats.status_2xx, stats.status_4xx, stats.status_5xx) == (1, 1, 1)
+        assert stats.unique_ips == 2
+        assert (stats.top_ip, stats.top_ip_count) == ("1.2.3.4", 2)
+        assert round(stats.error_rate, 1) == 66.7
+
+    def test_empty_buffer(self):
+        from omega_serv.domain.logs.analytics import compute_traffic_stats
+
+        stats = compute_traffic_stats([])
+        assert stats.total == 0 and stats.requests_per_second is None and stats.top_ip is None

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import functools
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, cast
@@ -41,7 +41,12 @@ _ATTACK_CLASS_BY_PACK_KEYWORD: tuple[tuple[str, AttackClass], ...] = (
     ("upload", "upload_probe"),
     ("scanner", "scan"),
     ("sensitive-paths", "scan"),
+    # Sondes WordPress (pack livre wordpress-probes : wp-login, xmlrpc.php, wp-config, plugins) :
+    # de la reconnaissance, comme sensitive-paths (decision utilisateur 2026-11-01).
+    ("wordpress", "scan"),
     ("credential", "credential_stuffing"),
+    # Injection de commandes shell (pack livre body-cmdi) : classe dediee, aucune autre ne convient.
+    ("cmdi", "command_injection"),
 )
 
 _LEVEL_RANK: dict[ThreatLevel, int] = {"normal": 0, "suspicious": 1, "hostile": 2, "contained": 3}
@@ -66,6 +71,13 @@ MAX_TRACKED_SUBJECTS = 200_000
 « normal » les plus anciennes sont supprimees d'abord (vues une fois, sans action) ; une source
 suspecte ou hostile n'est supprimee que s'il ne reste plus de source normale. Sans ce plafond, un
 botnet a 400 nouvelles adresses/s accumulait ~2,9 millions de lignes avant leur expiration."""
+
+CLOSED_INCIDENT_RETENTION_DAYS = 90
+MAX_CLOSED_INCIDENTS = 10_000
+"""Incidents FERMES (decision utilisateur 2026-11-01) : supprimes 90 j apres leur fermeture, avec leurs
+evenements, observations et indicateurs, et jamais plus de 10 000 gardes (les plus anciennement fermes
+partent d'abord). Un incident OUVERT n'est jamais supprime. Avant ce plafond, la table des incidents
+grossissait sans limite (seul l'historique a l'interieur de chaque incident etait borne)."""
 
 INCIDENT_HISTORY_KEEP_FIRST = 100
 INCIDENT_HISTORY_KEEP_LAST = 1_000
@@ -96,8 +108,15 @@ def attack_class_for_waf_decision(decision: WafDecision) -> AttackClass:
     "unknown" si aucun mot-cle connu ne correspond (jamais une exception :
     une classification manquante ne doit jamais bloquer l'observation
     elle-meme)."""
-    for finding in decision.findings:
-        pack_lower = finding.pack.lower()
+    return attack_class_for_packs(finding.pack for finding in decision.findings)
+
+
+def attack_class_for_packs(packs: Iterable[str]) -> AttackClass:
+    """Meme heuristique, a partir des seuls noms de packs - ce que contient `waf-alerts.log`
+    (RIPOSTE, OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md §3.4 : une seule table de classification,
+    jamais une seconde copie)."""
+    for pack in packs:
+        pack_lower = pack.lower()
         for keyword, attack_class in _ATTACK_CLASS_BY_PACK_KEYWORD:
             if keyword in pack_lower:
                 return attack_class

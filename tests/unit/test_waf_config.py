@@ -172,5 +172,23 @@ class TestReputationEnabledOnListLoad(unittest.TestCase):
         self.assertIs(settings, original)
 
 
+
+class TestNativeCheckEvery(unittest.TestCase):
+    """Plan WAF natif, lot 4 : controle 1/N, 0 (defaut) = jamais."""
+
+    def test_default_and_valid_values(self):
+        from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
+        self.assertEqual(parse_waf_config({}).native_check_every, 0)
+        for value in (0, 1, 1000, 1_000_000):
+            errors = validate_waf_config(parse_waf_config({"native_check_every": value}))
+            self.assertFalse(any("native_check_every" in e for e in errors), value)
+
+    def test_invalid_values_refused(self):
+        from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
+        for value in (-1, 1_000_001, 2.5, "10", True):
+            errors = validate_waf_config(parse_waf_config({"native_check_every": value}))
+            self.assertTrue(any("native_check_every" in e for e in errors), value)
+
+
 if __name__ == "__main__":
     unittest.main()

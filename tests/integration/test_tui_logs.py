@@ -294,6 +294,49 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, LogSimpleViewerScreen)
 
+    async def test_simple_viewer_shows_omega_fire_status_bar_and_scrolls_whole_buffer(self):
+        """Retour utilisateur 2026-11-02 : barre de statut comme le viewer Simple d'omega-fire (rendement,
+        bande passante, statuts HTTP, clients et reseau, sante et tampon) et tout le tampon (200 lignes)
+        dans un tableau qui defile, au lieu de 30 lignes sans ascenseur."""
+        start = datetime(2026, 11, 2, 7, 0, 0, tzinfo=timezone.utc)
+        lines = []
+        for i in range(200):
+            moment = (start + timedelta(seconds=i)).strftime("%d/%b/%Y:%H:%M:%S")
+            status = 404 if i % 10 == 0 else 200
+            size = "-" if i % 2 else "1024"
+            lines.append(f'203.0.113.{i % 7} - - [{moment} +0000] "GET /p{i} HTTP/1.1" {status} {size} "-" "curl"\n')
+        self.access_log.write_text("".join(lines))
+        container = self._container()
+        self._generate_config(container)
+        self._add_to_library(container, self.access_log)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_view_logs(pilot)
+            pilot.app.screen.query_one("#selection-input", Input).value = "1"
+            pilot.app.screen.query_one("#view-simple", Button).press()
+            await pilot.pause()
+            await pilot.pause()
+            screen = pilot.app.screen
+            self.assertIsInstance(screen, LogSimpleViewerScreen)
+            stats = str(screen.query_one("#stats-box", Static).render())
+            for heading in ("RENDEMENT", "BANDE PASSANTE", "STATUTS HTTP", "CLIENTS & RÉSEAU", "SANTÉ & TAMPON"):
+                self.assertIn(heading, stats)
+            self.assertIn("1.0 req/s", stats)          # 200 lignes sur 199 s
+            self.assertIn("100.0 KB", stats)           # 100 tailles connues x 1024, les "-" ignores
+            self.assertIn("200/500", stats)
+            # Repris du cadre FLUX d'Etat & Ressources (2026-11-05) : refus, top 5 IP, chemins et 404.
+            for heading in ("Refus 403", "Refus 429", "Top 5 IP", "CHEMINS DEMANDÉS", "CHEMINS EN 404"):
+                self.assertIn(heading, stats)
+            self.assertIn("203.0.113.", stats)
+            self.assertIn("/p0", stats)  # 404 une ligne sur dix : /p0, /p10...
+            table = screen.query_one("#entries-table", DataTable)
+            self.assertEqual(table.row_count, 200)    # tout le tampon, plus seulement 30 lignes
+            self.assertGreater(table.max_scroll_y, 0)  # donc un ascenseur
+            self.assertGreaterEqual(table.scroll_y, table.max_scroll_y - 1)  # ouvert sur les dernieres lignes
+            if os.environ.get("OMEGA_CAPTURE_DIR"):
+                pilot.app.save_screenshot(os.path.join(os.environ["OMEGA_CAPTURE_DIR"], "viewer-simple.svg"))
+
     async def test_view_logs_classic_opens_classic_viewer_for_single_log(self):
         self.access_log.write_text("line1\n")
         container = self._container()

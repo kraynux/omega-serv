@@ -12,6 +12,7 @@ from textual.widgets import Button, Footer, Header, Input, Static
 from omega_serv.application.config.load_config import load_config
 from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens.engine_guard import save_guarded
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_restart_required
 
 if TYPE_CHECKING:
@@ -90,13 +91,16 @@ class TlsToggleScreen(OmegaScreen):
             private_key_path=key or load_result.config.tls.private_key_path,
         )
         new_config = replace(load_result.config, tls=new_tls)
-        self._container.configuration.save(self._container.config_file, new_config)
-        error_widget.update("")
-        notify_restart_required(
-            self, self._container,
-            _("TLS activé (mode {mode}) - nécessite un REDÉMARRAGE COMPLET pour prendre effet (jamais un simple rechargement).").format(mode=mode),
-        )
-        self._refresh_status()
+
+        def after_save() -> None:
+            error_widget.update("")
+            notify_restart_required(
+                self, self._container,
+                _("TLS activé (mode {mode}) - nécessite un REDÉMARRAGE COMPLET pour prendre effet (jamais un simple rechargement).").format(mode=mode),
+            )
+            self._refresh_status()
+
+        save_guarded(self, self._container, load_result.config, new_config, after_save)
 
     def _disable(self) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)

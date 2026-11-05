@@ -56,6 +56,9 @@ class LogEntry:
     """Duree de traitement quand le format du log la fournit (ex. "%D"/
     "%T" Apache) - None si non applicable/non detectee, jamais une
     valeur inventee."""
+    bytes_sent: int | None = None
+    """Taille de la reponse (champ %b du format Combined/Common) - None si "-" ou format sans taille,
+    jamais une valeur estimee."""
     service: str | None = None
 
     def has_ip(self) -> bool:
@@ -150,3 +153,36 @@ class LogStats:
             return 0.0
         delta = self.last_entry - self.first_entry
         return delta.total_seconds() / 3600.0
+
+
+@dataclass
+class TrafficStats:
+    """Barre de statut du viewer Simple (meme contenu que le viewer Simple d'omega-fire : rendement, bande
+    passante, statuts HTTP, clients, sante) - calculee sur le tampon, UNIQUEMENT a partir de valeurs
+    reellement lues dans le log : None quand le log ne les fournit pas (jamais 350 octets ou 25 ms
+    supposes, contrairement a omega-fire)."""
+    total: int = 0
+    http_total: int = 0
+    status_2xx: int = 0
+    status_3xx: int = 0
+    status_4xx: int = 0
+    status_5xx: int = 0
+    span_seconds: float | None = None
+    """Duree couverte par le tampon (premiere -> derniere ligne horodatee) ; None si moins d'une seconde."""
+    requests_per_second: float | None = None
+    avg_latency_ms: float | None = None
+    bytes_total: int | None = None
+    bytes_per_second: float | None = None
+    avg_size: float | None = None
+    unique_ips: int = 0
+    top_ip: str | None = None
+    top_ip_count: int = 0
+    error_rate: float = 0.0
+    """% de 4xx/5xx parmi les lignes HTTP ; a defaut, % de lignes de niveau erreur."""
+    status_403: int = 0
+    status_429: int = 0
+    top_ips: list[tuple[str, int]] = field(default_factory=list)
+    """Repris du cadre FLUX d'Etat & Ressources (2026-11-05) : top 5 (IP, requetes), puis chemins (sans
+    la partie `?...`) les plus demandes et ceux en 404 - vides si le log n'a pas de champs HTTP."""
+    top_paths: list[tuple[str, int]] = field(default_factory=list)
+    top_not_found: list[tuple[str, int]] = field(default_factory=list)

@@ -63,8 +63,9 @@ class CpuInfo:
         return max(1, min(self.affinity, math.ceil(self.quota)))
 
     @property
-    def recommended_workers(self) -> int:
-        """Valeur « auto » : un worker par coeur physique, jamais plus que les CPU disponibles."""
+    def usable_cores(self) -> int:
+        """Coeurs physiques utilisables : jamais plus que les CPU disponibles. Base du nombre maximal de
+        processus (application/server/engine_levels.py::max_workers, decision utilisateur 2026-11-04)."""
         return max(1, min(self.physical, self.available))
 
 

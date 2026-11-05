@@ -51,7 +51,14 @@ class _Blocklist:
     def add_entry(self, entry):
         self.entries.append(entry)
 
+    def add_entry_unless_stronger(self, entry):
+        self.entries.append(entry)
+        return True
+
     def remove_entry(self, network):
+        return False
+
+    def remove_entry_if(self, network, predicate):
         return False
 
     def purge_expired(self):

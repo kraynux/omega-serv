@@ -158,6 +158,31 @@ class TestValidation(unittest.TestCase):
         self.assertEqual(len(errors), 4)
 
 
+class TestCountedByNative(unittest.IsolatedAsyncioTestCase):
+    # Plan WAF natif, lot 6 : le natif a deja compte la requete -> rien n'est compte ici, meme regle retenue.
+    async def _run(self, config, native, path="/"):
+        rate = _CountingRateLimit()
+        decision = await evaluate_waf_request(
+            _request(remote_ip="203.0.113.1", path=path), config, _FakeWafPort(_ALLOW), _FakeBlocklist(), rate,
+            _FakeReputationTracker(), native_rate_limit=native)
+        return decision, rate
+
+    async def test_allowed_by_native_not_counted_again(self):
+        decision, rate = await self._run(parse_waf_config({"rate_limit": {"enabled": True}}), 0)
+        self.assertEqual((decision.action, rate.counts), ("allow", {}))
+
+    async def test_exceeded_by_native_rejected_here_with_same_reason(self):
+        config = parse_waf_config({"rate_limit": {"enabled": True, "path_policies": [{"prefix": "/api", "requests": 5}]}})
+        decision, rate = await self._run(config, 7, path="/api/x")
+        self.assertEqual((decision.action, decision.status_code, decision.retry_after_seconds), ("block", 429, 7))
+        self.assertEqual((decision.blocked_reason, decision.stage, rate.counts), ("débit /api dépassé", "rate_limit", {}))
+
+    async def test_unlimited_rule_ignores_native_count(self):
+        config = parse_waf_config({"rate_limit": {"enabled": True, "path_policies": [{"prefix": "/g", "requests": 0}]}})
+        decision, _rate = await self._run(config, 3, path="/g/a.png")
+        self.assertEqual(decision.action, "allow")
+
+
 class TestPipeline(unittest.IsolatedAsyncioTestCase):
     async def _run(self, config, ip="203.0.113.1", path="/", rate=None, waf=None):
         return await evaluate_waf_request(

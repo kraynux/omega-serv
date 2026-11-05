@@ -333,6 +333,9 @@ class WafConfig:
     magnet: MagnetConfig = field(default_factory=MagnetConfig)
     exclusions: ExclusionsConfig = field(default_factory=ExclusionsConfig)
     logging: WafLoggingConfig = field(default_factory=WafLoggingConfig)
+    # Moteur natif (plan WAF natif, lot 4) : 1 requete jugee propre par le natif sur N est quand meme soumise a
+    # Python, qui la traite normalement et journalise tout desaccord. 0 = jamais (defaut).
+    native_check_every: int = 0
 
 
 def parse_waf_config(settings: dict[str, Any]) -> WafConfig:
@@ -356,6 +359,7 @@ def parse_waf_config(settings: dict[str, Any]) -> WafConfig:
         magnet=MagnetConfig.from_dict(settings.get("magnet", {})),
         exclusions=ExclusionsConfig.from_dict(settings.get("exclusions", {})),
         logging=WafLoggingConfig.from_dict(settings.get("logging", {})),
+        native_check_every=settings.get("native_check_every", defaults.native_check_every),
     )
 
 
@@ -374,6 +378,9 @@ def validate_waf_config(config: WafConfig) -> list[str]:
         errors.append(_("options.waf.magnet.on_error invalide : {on_error!r}").format(on_error=config.magnet.on_error))
     if config.magnet.timeout_ms <= 0:
         errors.append(_("options.waf.magnet.timeout_ms doit être strictement positif"))
+    if (not isinstance(config.native_check_every, int) or isinstance(config.native_check_every, bool)
+            or not 0 <= config.native_check_every <= 1_000_000):
+        errors.append(_("options.waf.native_check_every doit être un entier entre 0 et 1000000"))
     if config.inspect.decode_depth < 1:
         errors.append(_("options.waf.inspect.decode_depth doit être >= 1"))
     if config.inspect.body_max_inspect_bytes < 0:

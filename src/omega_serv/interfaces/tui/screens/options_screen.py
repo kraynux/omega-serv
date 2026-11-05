@@ -15,6 +15,7 @@ from omega_serv.application.config.manage_option import set_option_enabled
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens.engine_guard import save_guarded
 from omega_serv.interfaces.tui.screens.restart_prompt import (
     notify_reload_required,
     notify_restart_required,
@@ -92,23 +93,34 @@ class OptionsScreen(OmegaScreen):
             self._selected_name in ("fastcgi", "reverse_proxy") and enabled and not was_enabled
         )
         active_defense_always_needs_restart = self._selected_name == "active_defense"
+        # Le processus RIPOSTE est lance (ou non) au demarrage de `serve` : un rechargement ne le
+        # demarre ni ne l'arrete (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md §3.1).
+        riposte_always_needs_restart = self._selected_name == "riposte"
 
         result = set_option_enabled(load_result.config, self._selected_name, enabled)
         if not result.success:
             self.app.notify(result.message, severity="error")
             return
         assert result.new_config is not None
-        self._container.configuration.save(self._container.config_file, result.new_config)
-        if client_built_once_first_enable:
-            notify_restart_required(
-                self, self._container,
-                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (un simple rechargement ne suffit pas pour une PREMIÈRE activation).").format(message=result.message),
-            )
-        elif active_defense_always_needs_restart:
-            notify_restart_required(
-                self, self._container,
-                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (Active Defense n'est JAMAIS rechargé à chaud, même pour la désactiver).").format(message=result.message),
-            )
-        else:
-            notify_reload_required(self, self._container, result.message)
-        self._refresh_table()
+
+        def after_save() -> None:
+            if client_built_once_first_enable:
+                notify_restart_required(
+                    self, self._container,
+                    _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (un simple rechargement ne suffit pas pour une PREMIÈRE activation).").format(message=result.message),
+                )
+            elif active_defense_always_needs_restart:
+                notify_restart_required(
+                    self, self._container,
+                    _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (Active Defense n'est JAMAIS rechargé à chaud, même pour la désactiver).").format(message=result.message),
+                )
+            elif riposte_always_needs_restart:
+                notify_restart_required(
+                    self, self._container,
+                    _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (le processus RIPOSTE est lancé ou arrêté au démarrage du serveur).").format(message=result.message),
+                )
+            else:
+                notify_reload_required(self, self._container, result.message)
+            self._refresh_table()
+
+        save_guarded(self, self._container, load_result.config, result.new_config, after_save)

@@ -179,6 +179,25 @@ class TestValidateConfigEnvironment(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+    def _alias_config(self, target: str) -> OmegaServConfig:
+        return OmegaServConfig.from_dict({"options": {"aliases": {"enabled": True, "list": [
+            {"url_prefix": "/x/", "target_path": target, "allow_outside_webroot": True},
+        ]}}})
+
+    def test_absolute_alias_outside_project_passes(self):
+        """Regression 2026-11-05 : une cible systeme sous /var n'est pas le var/ du projet."""
+        with tempfile.TemporaryDirectory() as outside:
+            errors = validate_config_environment(self._alias_config(outside), self.filesystem, self.project_root)
+        self.assertEqual(errors, [])
+
+    def test_absolute_alias_symlink_into_project_var_rejected(self):
+        (self.project_root / "var" / "log").mkdir(parents=True)
+        with tempfile.TemporaryDirectory() as outside:
+            link = Path(outside) / "logs"
+            link.symlink_to(self.project_root / "var" / "log")
+            errors = validate_config_environment(self._alias_config(str(link)), self.filesystem, self.project_root)
+        self.assertTrue(any("var/" in e for e in errors), errors)
+
 class _FakeCertificateTool:
     def __init__(self, info, keys_match=True):
         self._info = info

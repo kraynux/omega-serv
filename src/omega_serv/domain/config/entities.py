@@ -126,6 +126,10 @@ class ServerConfig:
     # 1 = fonctionnement historique (un seul processus) ; 0 = automatique (un par coeur
     # disponible). Changer cette valeur exige un redemarrage complet.
     workers: int = 1
+    # Moteur HTTP (plan moteur C++ §7.3, lot 3) : "python" (defaut, historique) ou "native" (omega-http-core).
+    # Le moteur EFFECTIF peut differer (repli Python) : application/server/engine_selection.py. Redemarrage
+    # complet exige pour en changer, jamais a chaud.
+    engine: str = "python"
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ServerConfig:
@@ -147,6 +151,7 @@ class ServerConfig:
             listen_backlog=int(data.get("listen_backlog", defaults.listen_backlog)),
             shutdown_grace_period_seconds=int(data.get("shutdown_grace_period_seconds", defaults.shutdown_grace_period_seconds)),
             workers=int(data.get("workers", defaults.workers)),
+            engine=str(data.get("engine", defaults.engine)),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -166,6 +171,7 @@ class ServerConfig:
             "listen_backlog": self.listen_backlog,
             "shutdown_grace_period_seconds": self.shutdown_grace_period_seconds,
             "workers": self.workers,
+            "engine": self.engine,
         }
 
 

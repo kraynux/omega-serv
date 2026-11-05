@@ -138,6 +138,7 @@ rsync -a \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \
     --exclude='.coverage' --exclude='htmlcov/' \
     --exclude='build-release.sh' --exclude='omega-serv*.tar.gz' --exclude='dist/' \
+    --exclude='native/*/build*/' --exclude='/bin/' \
     --exclude='/tools/' \
     "$PROJECT_ROOT/" "$DEST/"
 
@@ -162,6 +163,30 @@ fi
 # l'application ne lit que les .mo compiles ci-dessus ; les sources ne servent qu'a
 # traduire et pesaient plus de la moitie de l'archive.
 find "$DEST/src/omega_serv/locale" \( -name '*.po' -o -name '*.pot' \) -delete 2>/dev/null || true
+
+# Moteur HTTP natif (plan moteur C++ lot 9, Q4) : binaire x86_64 compile ICI, libstdc++/libgcc statiques ; seules
+# la glibc et OpenSSL 3 (la meme bibliotheque que le module ssl de Python) restent chargees depuis le systeme.
+# Tests C++ executes avant livraison : un echec arrete le build (jamais un binaire non teste dans l'archive).
+# Les sources (native/) restent livrees : install.sh recompile sur place si le binaire fourni ne demarre pas.
+info "Construction du moteur natif (bin/omega-http-core)..."
+for tool in cmake c++; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        err "$tool introuvable : impossible de construire le moteur natif."
+        exit 1
+    fi
+done
+NATIVE_BUILD="$STAGING_DIR/native-build"
+GENERATOR=()
+command -v ninja >/dev/null 2>&1 && GENERATOR=(-G Ninja)
+cmake -S "$PROJECT_ROOT/native/omega-http-core" -B "$NATIVE_BUILD" "${GENERATOR[@]}" \
+    -DCMAKE_BUILD_TYPE=Release -DOMEGA_STATIC_LIBSTDCXX=ON >/dev/null
+cmake --build "$NATIVE_BUILD" -j "$(nproc)" >/dev/null
+"$NATIVE_BUILD/omega_tests" >/dev/null
+mkdir -p "$DEST/bin"
+install -m 0755 "$NATIVE_BUILD/omega-http-core" "$DEST/bin/omega-http-core"
+command -v strip >/dev/null 2>&1 && strip --strip-unneeded "$DEST/bin/omega-http-core"
+GLIBC_NEEDED="$(objdump -T "$DEST/bin/omega-http-core" 2>/dev/null | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -n1)"
+ok "Moteur natif : $("$DEST/bin/omega-http-core" --version) (tests C++ reussis, glibc requise : ${GLIBC_NEEDED:-inconnue})."
 
 info "Vendoring d'omega-lib (dependance obligatoire, non publiee sur PyPI)..."
 mkdir -p "$DEST/vendor/omega-lib"

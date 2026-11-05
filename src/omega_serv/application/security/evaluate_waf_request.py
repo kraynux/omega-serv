@@ -54,7 +54,7 @@ from omega_serv.domain.security.waf.rate_limit_policy import (
 )
 from omega_serv.domain.security.waf.reputation import evaluate_escalation, is_exempt_from_auto_block
 from omega_serv.ports.blocklist_port import BlocklistPort
-from omega_serv.ports.rate_limit_port import RateLimitPort
+from omega_serv.ports.rate_limit_port import RateLimitCheckResult, RateLimitPort
 from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
 from omega_serv.ports.waf_port import WafPort
 
@@ -68,7 +68,16 @@ async def evaluate_waf_request(
     reputation_tracker: ReputationTrackerPort,
     magnet_port: WafPort | None = None,
     magnet_executor: Executor | None = None,
+    blocklist_known_clear: bool = False,
+    native_rate_limit: int | None = None,
 ) -> WafDecision:
+    """`blocklist_known_clear` (moteur natif, plan lot 8) : le natif vient de lire l'etat ACTUEL de la blocklist et
+    l'adresse n'y figure pas - la verification est sautee. Toute autre situation (bannie, fichier illisible, date
+    abimee) arrive sans cette indication : la verification complete ci-dessous decide et journalise.
+
+    `native_rate_limit` (moteur natif, plan WAF natif lot 6) : le natif, qui voit toutes les requetes, a deja compte
+    celle-ci avec le meme seau et les memes regles - 0 = autorisee, N = depassement (Retry-After N s). Rien n'est
+    alors compte ici ; la regle retenue (motif, source sure) est toujours choisie ici."""
     if request.method in ("GET", "HEAD") and request.path == ERROR_CSS_PATH:
         # Feuille de style FIXE des pages d'erreur par defaut (decision
         # utilisateur 2026-10-26, retour n° 3) : servie meme a une IP bloquee
@@ -77,14 +86,19 @@ async def evaluate_waf_request(
         # sans aucune entree utilisateur (serve_error_css.py) : rien a inspecter.
         return WafDecision(action="allow", status_code=None, score=0, log_level="debug")
 
-    blocked_entry = blocklist_port.is_blocked(request.remote_ip)
+    blocked_entry = None if blocklist_known_clear else blocklist_port.is_blocked(request.remote_ip)
     if blocked_entry is not None:
+        # 451 (page « Votre IP a été bannie ») pendant toute la durée du ban, quelle que soit la page
+        # demandée - jamais 403, réservé au refus d'UNE requête (règle, chemin interdit). Promis par la
+        # doc et le message d'activation de l'auto-ban ; s'applique à tout ban (auto-ban WAF, manuel,
+        # RIPOSTE, pont omega-jail).
         return WafDecision(
             action="block",
-            status_code=403,
+            status_code=451,
             score=0,
             blocked_reason=f"IP bloquée : {blocked_entry.reason}",
             log_level="warning",
+            stage="blocklist",
         )
 
     if waf_config.rate_limit.enabled:
@@ -95,7 +109,11 @@ async def evaluate_waf_request(
         # de debit).
         selected = select_rate_limit(request.path, request.remote_ip, waf_config.rate_limit)
         if selected.requests > 0:
-            result = rate_limit_port.check(selected.key, selected.requests, selected.window_seconds)
+            if native_rate_limit is None:
+                result = rate_limit_port.check(selected.key, selected.requests, selected.window_seconds)
+            else:
+                result = RateLimitCheckResult(allowed=native_rate_limit == 0,
+                                              retry_after_seconds=native_rate_limit or None)
             if not result.allowed:
                 return WafDecision(
                     action="block",
@@ -104,6 +122,7 @@ async def evaluate_waf_request(
                     blocked_reason=f"{selected.label} dépassé",
                     log_level="warning",
                     retry_after_seconds=result.retry_after_seconds,
+                    stage="rate_limit",
                     # D4 : source sure -> journalise "throttle", jamais compte
                     # par la jail fail2ban `omega-serv-waf-block`.
                     throttle_only=is_trusted_rate_limit_source(
@@ -245,7 +264,9 @@ def _auto_block(ip: str, reason: str, duration_seconds: int, blocklist_port: Blo
     )
     if validate_blocklist_entry(entry) is None:
         try:
-            blocklist_port.add_entry(entry)
+            # Jamais un ban manuel, permanent ou plus long ecrase par cet auto-ban (lot 0) : un autre
+            # processus a pu bannir la meme IP depuis la verification de debut de requete.
+            blocklist_port.add_entry_unless_stronger(entry)
         except OSError as e:
             # Un ban qui ne peut pas etre ecrit (fichier illisible, ou secure/ non
             # inscriptible par le service systemd) ne doit JAMAIS faire echouer la

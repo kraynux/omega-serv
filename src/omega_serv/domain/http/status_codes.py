@@ -35,6 +35,7 @@ class HttpStatus(IntEnum):
     INTERNAL_SERVER_ERROR = 500
     BAD_GATEWAY = 502
     SERVICE_UNAVAILABLE = 503
+    HTTP_VERSION_NOT_SUPPORTED = 505
 
     @property
     def reason_phrase(self) -> str:
@@ -65,6 +66,7 @@ _REASON_PHRASES: dict[HttpStatus, str] = {
     HttpStatus.INTERNAL_SERVER_ERROR: "Internal Server Error",
     HttpStatus.BAD_GATEWAY: "Bad Gateway",
     HttpStatus.SERVICE_UNAVAILABLE: "Service Unavailable",
+    HttpStatus.HTTP_VERSION_NOT_SUPPORTED: "HTTP Version Not Supported",
 }
 
 

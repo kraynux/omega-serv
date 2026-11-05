@@ -11,11 +11,26 @@ confiance declare - jamais en provenance directe d'Internet."""
 from __future__ import annotations
 
 import ipaddress
+from functools import lru_cache
 
 from omega_serv.domain.http.headers import HttpHeaders
 
+_MAX_IP_TEXT = 45
+"""Longueur maximale d'une adresse IP ecrite en texte (IPv6 avec IPv4 incluse). Au-dela, jamais mise en cache :
+une valeur venant de X-Forwarded-For est choisie par le client et peut faire 16 Ko - 8 192 entrees geantes
+occuperaient jusqu'a 128 Mo."""
+
 
 def normalize_ip(ip_str: str) -> str:
+    """Mise en cache (plan moteur C++, lot 0, 2026-11-02 : appelee plusieurs fois par requete, ~4 % du temps de
+    traitement sous charge) - seulement pour une chaine qui peut etre une adresse."""
+    if len(ip_str) > _MAX_IP_TEXT:
+        return ip_str  # jamais une adresse valide : meme resultat qu'avant (ValueError -> chaine inchangee)
+    return _normalize_ip(ip_str)
+
+
+@lru_cache(maxsize=8192)
+def _normalize_ip(ip_str: str) -> str:
     try:
         addr = ipaddress.ip_address(ip_str)
     except ValueError:
@@ -25,21 +40,33 @@ def normalize_ip(ip_str: str) -> str:
     return str(addr)
 
 
-def is_trusted_proxy(peer_ip: str, trusted_networks: list[str]) -> bool:
-    normalized = normalize_ip(peer_ip)
-    try:
-        addr = ipaddress.ip_address(normalized)
-    except ValueError:
-        return False
-
+@lru_cache(maxsize=64)
+def _parsed_networks(trusted_networks: tuple[str, ...]) -> tuple[ipaddress.IPv4Network | ipaddress.IPv6Network, ...]:
+    """Reseaux de confiance analyses une fois par liste (avant 2026-11-02 : a chaque requete, ~6 % du temps de
+    traitement sous charge). Une entree invalide est ignoree, comme avant."""
+    parsed = []
     for network_str in trusted_networks:
         try:
-            network = ipaddress.ip_network(network_str, strict=False)
+            parsed.append(ipaddress.ip_network(network_str, strict=False))
         except ValueError:
             continue
-        if addr in network:
-            return True
-    return False
+    return tuple(parsed)
+
+
+@lru_cache(maxsize=8192)
+def _is_trusted(normalized_ip: str, trusted_networks: tuple[str, ...]) -> bool:
+    try:
+        addr = ipaddress.ip_address(normalized_ip)
+    except ValueError:
+        return False
+    return any(addr in network for network in _parsed_networks(trusted_networks))
+
+
+def is_trusted_proxy(peer_ip: str, trusted_networks: list[str] | tuple[str, ...]) -> bool:
+    normalized = normalize_ip(peer_ip)
+    if len(normalized) > _MAX_IP_TEXT:
+        return False  # pas une adresse (avant : ValueError -> False)
+    return _is_trusted(normalized, tuple(trusted_networks))
 
 
 def _forwarded_hop_for(hop: str) -> str | None:

@@ -12,13 +12,15 @@
 官方页面：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/) &nbsp; 参考、使用、帮助与常见问题：[完整指南](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/guide.html)  
 预览：[截图](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; 演示 [演示服务器](https://craftdark.snake-mackarel.ts.net) &nbsp; [Web 服务器对比/测试](comparatif-serveurs-web.md)  
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Lua](https://img.shields.io/badge/Lua-5.4%2B-2C2D72.svg)](https://www.lua.org/)
+[![HTML](https://img.shields.io/badge/HTML-5-E34F26.svg)](https://developer.mozilla.org/docs/Web/HTML)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
 [![Interface](https://img.shields.io/badge/Interface-CLI%20%2B%20TUI-cyan.svg)](#3-使用)
 [![Textual](https://img.shields.io/badge/Textual-TUI-5A5AFB.svg)](https://textual.textualize.io/)
+[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
 🌐 文档、导出和界面提供 **17 种语言** —— 参见 [界面语言](#界面语言)。  
 **语言：**
@@ -26,7 +28,7 @@
 
 ---
 
-**OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有无法关闭的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。它是 `omega-` 工具套件中的第七个工具，但有意**不纳入未来的 `omega-suite` 集成**（它作用于托管它的本机，而不是远程目标 —— 与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
+**OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有默认启用的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。可选的原生 C++ 引擎可以代替 Python 引擎处理请求，安全检查完全相同（见 §6b）。它是 `omega-` 工具套件中的第七个工具，但有意**不纳入未来的 `omega-suite` 集成**（它作用于托管它的本机，而不是远程目标 —— 与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
 
 ## 1. 愿景与范围
 
@@ -35,9 +37,9 @@
 ### OMEGA-SERV 能做什么
 
 - 提供静态内容（文件、可选目录列表、别名、重定向、重写、缓存），并进行安全的路径解析（目录穿越、双重编码、符号链接）。大文件直接从磁盘分块发送，从不载入内存；每个文件都带有 `ETag` 和 `Last-Modified`（重新加载 = 空的 304 响应），并接受 `Range` 部分请求（断点续传、视频）；图片、媒体、字体、CSS 和 JS 会获得默认的 `Cache-Control`，可在 缓存 屏幕中修改。预压缩的文本文件：如果 `site.css` 旁边存在 `site.css.br` 或 `site.css.gz`（用 `brotli -k site.css` 或 `gzip -k site.css` 生成）且浏览器接受，就改为发送它们 —— 绝不会发送比原文件更旧的版本。
-- 默认加固 HTTP 协议，且没有关闭选项：显式允许的方法、`Host` 头校验、拒绝 `Content-Length`/`Transfer-Encoding` 的歧义、无法绕过的安全头和基础 CSP。
+- 默认加固 HTTP 协议：严格解析请求，且没有关闭选项（拒绝 `Content-Length`/`Transfer-Encoding` 的歧义），显式允许的方法、`Host` 头校验，网站响应及其错误页面都带有安全头和基础 CSP。
 - 可选：WAF 过滤（特征、速率限制、封禁列表）、直接 TLS（自签名证书、本地 CA 签发，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书 —— 参见 §9）、按区域的 HTTP Basic 认证、通过 FastCGI/PHP-FPM 运行 PHP、隔离的上传区域。
-- 「boost」模式：多个服务器进程，每个可用 CPU 最多一个（抗压与限制 屏幕）；安全计数器（速率限制、重犯）在各进程之间共享，始终准确。
+- 多个服务器进程，使用 Python 引擎时每个物理核心最多一个（抗压与限制 屏幕）；安全计数器（速率限制、重犯）在各进程之间共享，始终准确。
 - 审计自身配置（`audit security`），并可安装为系统服务（systemd/OpenRC/runit）。
 - 端到端可脚本化的非交互式 CLI，**以及交互式界面（Textual）**，二者覆盖完全相同的用例 —— 参见 §3。界面路线图（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`，§12）**已全部交付**：能力清单、配置档案/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/认证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（日志库/收藏、3 种查看器 —— 简单/经典/合并 lnav ——、查看并处理 IP、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、上下文帮助指南（每个屏幕一张卡片并附具体示例、常见问题、HTML 导出、经测试验证的完整覆盖）、每次保存后系统提示重新加载/重启，以及无需手动编辑文件即可完整配置 Active Defense。
 
@@ -63,13 +65,14 @@ Omega-serv **拒绝以 root 身份启动**。在任何内置配置档案中（�
 
 - Python 3.10+
 - `openssl`（程序，而非 Python 库），用于所有与 TLS 证书相关的操作 —— 其他功能没有它也能运行。
+- 原生引擎（可选，提供针对 x86_64 编译好的版本）：需要 glibc 2.38 或更新版本以及 OpenSSL 3，这两个系统库 Python 本身就在使用。如果它无法启动，在具备 cmake、C++20 编译器和 OpenSSL 头文件时，`install.sh` 会在本机重新编译；否则 omega-serv 使用其 Python 引擎运行。
 
 ### 下载
 
-最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -79,7 +82,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **您是在更新现有安装吗？** 如果 `omega-serv/` 已经存在，下面的命令会**静默跳过解压**（它认为这是一次中断的首次安装，而不是更新）—— 这样您就会在**旧的、未改变的代码**上重新安装依赖，而且没有任何错误提示。请改用下方的 [更新](#更新) 一节。
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.0.1.tar.gz
+[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -88,9 +91,10 @@ chmod +x install.sh
 `install.sh`：
 
 1. 如果虚拟环境 `.venv` 尚不存在，则创建它。
-2. 安装软件包（`pip install -e .`）—— **没有任何外部依赖**（参见 §6）。
+2. 安装软件包（`pip install -e .`）—— 服务器核心**没有任何外部依赖**（参见 §6）。
 3. 使 `omega-serv.sh` 和 `install.sh` 可执行。
-4. 将别名 `serv` 添加到 `~/.bashrc` 和 `~/.zshrc`（若已存在则不重复添加）。
+4. 检查随附的原生引擎能否在本机启动，必要且可行时在本机重新编译 —— 绝不阻塞安装（§6b）。
+5. 将别名 `serv` 添加到 `~/.bashrc` 和 `~/.zshrc`（若已存在则不重复添加）。
 
 ### 更新
 
@@ -98,7 +102,7 @@ chmod +x install.sh
 
 ```bash
 # 在 omega-serv/ 的上级目录中执行（切勿在其内部）
-tar -xzf omega-serv-2.0.1.tar.gz
+tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -128,6 +132,8 @@ cd omega-serv/
 - `lnav` —— 在 **日志管理** 屏幕中进行高级合并日志分析（§3）；找不到程序时给出清晰明确的错误信息，不会崩溃，屏幕其余部分（查看/跟踪/轮转/统计）没有它也正常工作。
 - `scp`（`openssh`/`openssh-clients` 软件包，几乎总是已经安装）—— 仅 **远程来源（SSH）** 需要（§13a）；没有它，获取会以清晰的提示失败，日志库其余部分正常工作。
 - `python-psutil`（与 PyPI 上的 `psutil` 对应的系统软件包）—— 无论如何都会由 `pip install -e .` 自动安装（软件包的必需依赖，**状态与资源** 屏幕始终需要它），但通过系统包管理器预先安装可以免去 `pip` 在本地编译 wheel。
+- `cmake`、C++20 编译器（`g++`）、OpenSSL 3 头文件和 PCRE2 —— 仅当随附的原生引擎无法启动（glibc 低于 2.38）时才需要：此时 `install.sh` 会在本机重新编译。没有 PCRE2 时，本地编译的引擎在启用 WAF 后会把每个请求交给 Python 检查（更慢）；没有这些工具时，omega-serv 继续使用 Python 引擎。
+- 一款 emoji 字体（Noto Color Emoji）—— 可选，用于简单查看器（日志管理）的图标；没有它时部分图标会显示为方框，其他功能不受影响。Nerd Font 不包含这些 emoji。
 
 ```bash
 # Arch Linux 及其衍生版
@@ -138,6 +144,16 @@ sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil openssh-clients
+
+# 本地编译原生引擎（仅当 glibc < 2.38 时）
+sudo pacman -S cmake gcc openssl pcre2                     # Arch
+sudo apt install cmake g++ libssl-dev libpcre2-dev         # Debian/Ubuntu
+sudo dnf install cmake gcc-c++ openssl-devel pcre2-devel   # Fedora
+
+# 简单查看器的图标（emoji 字体，可选）
+sudo pacman -S noto-fonts-emoji                            # Arch
+sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
+sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
 ## 3. 使用
@@ -185,13 +201,17 @@ serv
 
 内置的帮助系统，而不只是静态文本：每个有文档的屏幕（卡片包含定义/需填写的字段及具体示例/触发的操作/反应 —— 重新加载、重启或无）都可以直接在该屏幕上通过 `F1` 打开；`a` 键打开完整菜单（树形结构与应用的真实导航完全一致），可访问常见问题（实际使用中遇到的陷阱，例如 Active Defense 攻击类别、共享服务的权限）以及整个指南的独立 HTML 导出（保留当前主题）。在某个屏幕还没有专属卡片时，会回退到通用参考屏幕 —— 目前的覆盖已经完整，并经过测试验证。
 
+#### 联系与支持（帮助指南）
+
+帮助指南（`a` 键）提供 **联系与支持** 界面：*请我喝杯咖啡*（开发者的 PayPal 页面）、*联系支持*（网站的联系表单，并显示邮箱地址）以及 *登记为用户（匿名）*。登记是自愿的，默认关闭：仅用于统计用户数量，以及（如您愿意）其所在的大洲或国家（封闭列表，绝无自由文本）。发送的内容为一个随机生成的密钥、omega-serv 的版本和所选方式（*一次* 或 *每天*，后者可统计活跃的安装）；绝不发送姓名、机器名、内容或日志。每日发送在单独的进程中运行，绝不会拖慢服务器。IP 地址不会记录在登记中，但与任何访问一样，会经过接收服务器的安全检查和日志。可随时在同一界面或通过 `omega-serv declaration withdraw` 撤回；`DO_NOT_TRACK=1` 会停止所有自动发送。
+
 #### 主菜单（交互式界面）
 
 - **首次启动向导** —— 分 8 步的引导流程（欢迎 → 只读能力检测 → 选择配置档案 → bind/端口 → 可选 TLS → 检查 → 摘要 + 写入 → 提议安装服务）；无需了解 CLI 即可生成完整配置并启动服务器。
 - **能力清单** —— 只读系统探测（init 系统、所配置的端口是否已被占用、是否存在 `openssl`/`logrotate`/`tailscale`/`lnav`、磁盘空间、描述符上限……），可导出 JSON/HTML。
 - **配置档案** —— 与 CLI 中 `profile` 相同的用例（§5），写入前始终显示 diff。
 - **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/认证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、生成自签名证书、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用 —— 参见 §9）；第二个框 **选项与检查** 集中了指向 **选项**（`option` CLI，§7）和 **检查配置**（`config check` CLI，§10）的快捷入口 —— 与"先调整设置再检查"的流程一致，这两个屏幕不再能从主菜单直接打开。WAF 不再位于此处（参见下方"主动安全"）：它主要展示不断变化的运行状态，而不是简单的静态配置表单。每次保存都会系统地指明后续步骤：若服务正在运行，则自动静默热重新加载（目录列表、访问、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、用户/认证区域）；若修改涉及监听套接字、TLS 或 Active Defense，则显式确认完整重启 —— 再也没有任何屏幕让您去猜是否需要重启服务器。
-- **主动安全** —— 单一屏幕，两个并排的区块：**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置，参见 §11）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表（参见 §11b）、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）—— 参见 §11。
+- **主动安全** —— 单一屏幕，两个并排的区块：**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置，参见 §11）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表（参见 §11b）、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）—— 参见 §11。 **RIPOSTE**:第三个区块(WAF → Active Defense → RIPOSTE,即攻击的顺序)——随时间推移的分级响应,见 §11d。
 - **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 §7 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/全部，可移除某个 IP）。**维护** 栏（未变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（声明式 —— 参见下方说明）、恢复/清理归档、导出列表。
 - **服务** —— 与 CLI 中 `service` 相同的操作（§12），每个操作单独临时提权 `sudo`，绝不让整个应用以 root 身份运行。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），附每个实例的 systemd 状态；可直接在界面中创建新实例（复制目录树、独立的虚拟环境和依赖、带独立端口的全新配置、检查嵌套和端口冲突）。只有一个安装时该按钮几乎不可见（一旦已知实例达到 2 个，"多实例"标签就会变为"实例 (N)"）；可完整切换到另一个实例（`os.execv`，显式确认，重启时显示专门的切换启动画面）；可完整卸载实例（移除 unit、若不再被其他实例使用则移除专用系统账户，并可选删除目录，但绝不默认删除）。
@@ -227,7 +247,7 @@ serv
 ./omega-serv.sh option disable waf
 
 # 不启动服务器即模拟请求（便于在启用前验证规则）
-./omega-serv.sh simulate-request GET /index.html
+./omega-serv.sh simulate-request --method GET --url /index.html
 
 # WAF（即使选项已禁用也能运行，通过隐式 --force）
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1
@@ -249,6 +269,12 @@ serv
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
+# RIPOSTE(随时间推移的分级响应,选项 "riposte" - 见 §11d)
+./omega-serv.sh riposte status
+./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
+./omega-serv.sh riposte actions list
+./omega-serv.sh riposte stop
+
 # TLS 证书 - 自签名（9a）
 ./omega-serv.sh certs generate-self-signed --cn localhost --san-dns localhost --san-ip 127.0.0.1
 ./omega-serv.sh certs show
@@ -265,7 +291,7 @@ serv
 
 # HTTP Basic 认证
 ./omega-serv.sh auth add-user --username alice
-./omega-serv.sh auth create-zone --url-prefix /admin/ --allowed-users alice
+./omega-serv.sh auth create-zone --path-prefix /admin/ --realm "Administration" --allowed-users alice
 ./omega-serv.sh auth list
 
 # 安全审计（从不阻断，仅供参考）
@@ -350,6 +376,15 @@ src/omega_serv/
 
 由 `import-linter` 验证的规则（8 项契约）：`domain`/`core` 绝不依赖外层；`interfaces.tui` 绝不直接依赖 `infrastructure`；`textual` 仅限于 `interfaces.tui`；`subprocess` 仅限于 `infrastructure/process/subprocess_runner.py`（以及 `infrastructure/lnav/`，交互式 PTY 流）；`ssl` 仅限于 `infrastructure/tls/ssl_context_builder.py`；`jinja2` 仅限于 `infrastructure/exporters/html_exporter.py`；`sqlite3` 仅限于 `infrastructure/persistence/sqlite_active_defense_connection.py`（项目唯一的关系型存储，专供 Active Defense 使用 —— 参见 §11）；`lupa` 仅限于 `infrastructure/waf/lua_waf_adapter.py`（补充性 WAF 脚本「magnet」，§7）。
 
+## 6b. HTTP 引擎与进程数
+
+有两种引擎可以处理请求。使用默认的 **Python 引擎** 时，由 Python 解释器处理所有请求。**原生引擎**（C++，`bin/omega-http-core`）自行读取、解析并响应请求；Python 服务器保留配置、监控和安全决策。
+
+- **两个设置**：引擎（**基本配置** 界面）和进程数（**抗压与限制** 界面）。进程数根据引擎和检测到的处理器受到限制：使用 Python 引擎时，最多每个物理核心一个；使用已占用全部核心的原生引擎时，这些是安全检查进程，为 1，物理核心达到 4 个时可为 2。界面会说明增加进程在本机上带来什么，并拒绝过大的数值；正在运行的内容原样显示（「原生引擎，1 个进程」）。更换引擎或进程数需要完全重启。选择带来的变化（实测）：指南的 FAQ 和 [Web 服务器对比](comparatif-serveurs-web.md)。
+- **相同的响应、相同的日志**：使用原生引擎时，静态内容、重定向、重写、别名、缓存、错误页面和安全头由原生引擎处理；它自行检查 WAF 规则，没有任何规则匹配的请求由它独自响应，其他所有请求（WAF 匹配或存疑、Active Defense、身份验证）都交给一个 Python 进程，该进程执行完全相同的检查并写入相同的安全日志（RIPOSTE 和 omega-jail 看不出任何差别）；目录列表和内部页面向 Python 请求；反向代理、FastCGI、文件上传和 WebSocket 在整个连接期间交给 Python。直连 TLS 由原生引擎使用相同的库和相同的设置处理。
+- **绝不混用**：由同一条规则决定实际使用的引擎，并在各处显示（**状态与资源** 界面、`omega-serv engine status`）。如果原生引擎无法处理全部请求（直连 TLS 同时启用了反向代理、FastCGI 或文件上传）或无法启动，就由 Python 引擎处理，并显示原因。在 **基本配置** 中，只要有已启用的功能阻止，原生引擎选项就会变灰，并说明需要更改什么才能启用；在其他地方保存的、会导致失去原生引擎的设置，会先要求确认。
+- **如果 Python 检查没有响应**，由 `waf.on_internal_error` 决定：不经检查直接响应，或拒绝（503）。这种情况下身份验证区域始终被拒绝，已被封禁的地址也继续被拒绝（451）。
+
 ## 7. 可选模块
 
 在所有内置配置档案中均默认禁用 —— 启用始终是显式的（`option enable <名称>` 或 `config enable-tls`）：
@@ -363,6 +398,7 @@ src/omega_serv/
 | 出站反向代理 | Omega-serv 自身充当一个或多个后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）—— 负载均衡（round-robin、加权、least-connections、ip-hash、least-response-time、实际负载）、会话亲和与基于请求头的路由规则、被动与主动健康检查、响应缓存（多个 `Vary` 变体）、背压、防环保护、热管理 API —— 完整细节见 §7a |
 | Upload | 隔离区域、按区域配额、服务器端生成的文件名 —— V1 不支持流式传输（受 `server.max_request_size` 限制） |
 | `active_defense` | 基于已计算的 WAF 信号（绝不另算第二个评分）的 Deception + 战争模式：静态诱饵、有针对性的减速/增强日志/速率限制、事件 + IoC 导出 —— 参见 §11 |
+| `riposte` | 随时间推移的分级响应:按地址记录再犯,越来越长的封禁(WAF 的 blocklist、通过 omega-jail 的网络封禁)或延长诱饵,解除与紧急停止——独立进程,见 §11d |
 
 ### 7a. 出站反向代理 —— 详情
 
@@ -377,12 +413,12 @@ OMEGA-SERV 可以自身充当一个或多个 HTTP/HTTPS 后端的反向代理 �
 - **WebSocket** —— 可按区域允许 upgrade，建立后在整个隧道生命周期内固定一个 upstream，无应用层超时。
 - **热管理** —— 小型本地 HTTP API（`/.omega-serv-admin/`，与原生负载探针一样受 `trusted_proxy` 保护），使 TUI 能读取/强制设置某个后端的 DRAINING/MAINTENANCE 状态，并读取**实际正在运行的服务器**的缓存命中/未命中比例（专用屏幕 *后端实时状态*）—— 由于 TUI 和服务器始终是两个没有共享内存的独立进程，这个本地 HTTP 通道是二者之间唯一的桥梁。
 
-## 8. HTTP 加固（无法关闭）
+## 8. HTTP 加固（默认启用）
 
-- 请求头/请求行**在读取过程中**就加以限制（绝不事后处理），拒绝过时的头部折叠，始终拒绝 `Transfer-Encoding`（绝不猜测）。
-- 拒绝重复的 `Content-Length`；干净地拒绝 `Expect: 100-continue`（417）。
-- 显式的方法白名单（否则返回 405 + `Allow`），校验 `Host` 头（缺失/为空/重复即使相同/包含控制字符 → 400）。
-- 安全头和基础 CSP（`enforce`/`report-only`）应用于**所有**响应，包括错误响应 —— 任何选项都无法绕过。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` 始终为 `same-origin`，没有真正破坏网站的风险。`Cross-Origin-Embedder-Policy` 始终显式发送（绝不缺失 —— 外部扫描器借此区分「未考虑」和「有意放宽」），在**所有**配置档案（包括 `hardened`）中默认为 `unsafe-none`：与前两者不同，`require-corp`/`credentialless` 可能会阻止属于实际所提供网站的跨源资源（字体、图片、第三方 iframe）—— 可调整（`security.coep_mode`）。CSP 区域（`security.csp_zones`）：按路径前缀的**显式**例外（例如仅在真正需要的 `/某个目录/` 下允许 `unsafe-inline`），每个区域都完全替换其前缀的默认策略 —— 绝不合并，绝不全局放宽；任何例外都会在 `audit security` 中保持可见（CSP-001/CSP-002 也会扫描区域），即使是有意为之。通过向导逐条指令引导创建（**通用安全** 屏幕），每个字段都预填了全局策略的**当前**值 —— 这样只修改需要改变的部分，而不是从空白字段开始而无意中牺牲其他指令；如果组装后的区域放宽了 `unsafe-inline`/`unsafe-eval`/通配源 `*`，则需要额外的显式确认。
+- 请求解析，没有关闭选项：请求头/请求行**在读取过程中**就加以限制（绝不事后处理），拒绝过时的头部折叠，始终拒绝 `Transfer-Encoding`（绝不猜测）。
+- 拒绝重复的 `Content-Length`；干净地拒绝 `Expect` 头（例如 `100-continue`）（417）。
+- 显式的方法白名单（否则返回 405 + `Allow`），校验 `Host` 头（缺失/为空/重复即使相同/包含控制字符 → 400）；此检查默认启用，只能在配置中关闭（`security.require_valid_host`）。
+- 安全头和基础 CSP（`enforce`/`report-only`）应用于网站的响应，包括其错误页面（403、404……），且绝不会被模块移除或覆盖。例外：在对请求进行任何处理之前发出的响应（格式错误或过大的请求、超时、无效的 `Host`、被拒绝的方法、服务器饱和）不带这些头 —— 它们是不含网站内容的简短错误页面。默认启用，只能在 **通用安全** 界面关闭（`security.security_headers_enabled`）。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` 始终为 `same-origin`，没有真正破坏网站的风险。`Cross-Origin-Embedder-Policy` 始终显式发送（绝不缺失 —— 外部扫描器借此区分「未考虑」和「有意放宽」），在**所有**配置档案（包括 `hardened`）中默认为 `unsafe-none`：与前两者不同，`require-corp`/`credentialless` 可能会阻止属于实际所提供网站的跨源资源（字体、图片、第三方 iframe）—— 可调整（`security.coep_mode`）。CSP 区域（`security.csp_zones`）：按路径前缀的**显式**例外（例如仅在真正需要的 `/某个目录/` 下允许 `unsafe-inline`），每个区域都完全替换其前缀的默认策略 —— 绝不合并，绝不全局放宽；任何例外都会在 `audit security` 中保持可见（CSP-001/CSP-002 也会扫描区域），即使是有意为之。通过向导逐条指令引导创建（**通用安全** 屏幕），每个字段都预填了全局策略的**当前**值 —— 这样只修改需要改变的部分，而不是从空白字段开始而无意中牺牲其他指令；如果组装后的区域放宽了 `unsafe-inline`/`unsafe-eval`/通配源 `*`，则需要额外的显式确认。
 - 在任何比较之前（封禁列表、可信代理、速率限制）都会规范化 IPv4 映射的 IPv6 地址（`::ffff:x.x.x.x`）—— 否则就是一个已知的绕过方式。
 - 除常规单元/集成测试外，还通过属性测试（`hypothesis`，生成数千个样例）对 HTTP 解析器和路径解析器进行验证。
 
@@ -458,13 +494,24 @@ WAF 可以加载以文本文件形式存在的**可编辑列表**，每行一个
 
 ## 11c. 按目录和按 IP/网络的速率限制（WAF）
 
-WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 次请求 / 60 秒）可以在 **主动安全 → 排除与速率限制** 中细化（或手动编辑 `rate_limit.path_policies` / `rate_limit.source_policies`）：
+WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 次请求 / 60 秒）可以在 **主动安全 → 限制** 中细化（或手动编辑 `rate_limit.path_policies` / `rate_limit.source_policies`）：
 
 - **按目录的规则**（`prefix`、`requests`、`window_seconds`）：对该目录**取代**全局限制，并有自己的计数器（`requests: 0` = 不限）。最长前缀优先；`/images` 覆盖 `/images/a.png`，但绝不覆盖 `/images2`。典型场景是返回 429 的重型页面（图片画廊）。
 - **按 IP/网络的规则**（`network`、`requests`、`window_seconds`、`trusted`）：原理相同；最精确的网络优先。优先级：目录，其次 IP/网络，最后全局限制。
 - **对公众的封禁不变**：公网 IP 超限仍会在 `waf-alerts.log` 中记录为 `"action": "block"`，因此可被 omega-jail 封禁（10 分钟内 3 次拒绝 → 12 小时）。**可信来源** —— `never_auto_block` 网络或标记为 `trusted: true` 的规则 —— 仍会收到 429，但记录为 `"action": "throttle"`，jail 从不计入。
 - **magnet 脚本**：它自己的速率限制（429 响应）从不计为一次检测，因此绝不会导致自动封禁；对于被目录或 IP/网络规则覆盖的请求，以原生规则为准，magnet 的 429 会被忽略（它的攻击特征仍然生效）。
 - 速率规则**从不**关闭 WAF 检查；反之，检查排除（`exclusions.path_prefixes`）也从不解除速率限制。没有启用 `trusted_proxy` 时，覆盖 `127.0.0.1`/`::1` 的规则会被忽略（与 `never_auto_block` 相同的防护）。
+
+## 11d. RIPOSTE(随时间推移的分级响应)
+
+可选模块(`option enable riposte`,默认关闭,需要完全重启):Active Defense 在请求**期间**做出反应,而 RIPOSTE **随时间推移**行动。它会记住在一段安静期之后再次出现的地址(事件段),并对其施加越来越长的封禁——默认级别为 1 小时、6 小时、24 小时、7 天,再犯窗口 30 天,历史保留 90 天。
+
+- **独立进程**，由服务启动和监管（使用一个或多个进程，每个实例一个）：读取 WAF 和 Active Defense 的日志，从不读取正在处理的请求。没有启用 WAF 时，它看不到任何攻击。
+- **策略**:何时行动(攻击类别、返回次数、Active Defense 级别、诱饵访问次数)以及如何行动(在 WAF 的 blocklist 中本地封禁、通过 omega-jail 的 jail 进行本地 + 网络封禁,或延长 Active Defense 诱饵)。提供五个可直接加载的场景;每条策略在启用前都可以在真实日志上测量并模拟。已启用的策略会自动行动。
+- **一切都不会消失**:每个操作都保持可见,无论进行中还是已结束,并附有原因。三级停止:解除一个操作(可附带豁免或「不计入再犯」)、停用一条规则、会被记住的紧急停止。
+- **安全措施**:与 WAF 相同的排除项(本机、Tailscale、本地网络),从不覆盖手动或更长的封禁,每个事件段只执行一个操作,同时封禁数量有上限。
+- **本地封禁与网络封禁**：本地封禁由 omega-serv 写入 WAF 的封禁列表——在整个封禁期间，该地址的所有请求都会收到 451 页面“您的 IP 已被封禁”。网络封禁通过 omega-jail 的 jail 交给 fail2ban（`<service>-riposte-1h/6h/24h/7d`，每个实例一组）；当连接经由本地代理（Tailscale Funnel）到达时，它不起作用，此时只有本地封禁能提供保护。
+- **界面**:主动安全中的六个界面(状态、策略、操作、再犯、模拟、设置),以及相同的命令行命令(`riposte …`)。备份:`config backup --include-riposte`。
 
 ## 12. 服务与运维
 

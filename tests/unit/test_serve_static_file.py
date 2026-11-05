@@ -173,6 +173,22 @@ class TestServeStaticFile(unittest.TestCase):
         self.assertEqual(response.status, HttpStatus.OK)
         self.assertIn(b"<html", response.body.lower())
 
+    def test_unreadable_entries_are_left_out_instead_of_breaking_the_listing(self):
+        # 2026-11-02 (banc du moteur natif) : un lien en boucle faisait planter tout le listing.
+        folder = self.webroot / "mixed"
+        folder.mkdir()
+        (folder / "ok.txt").write_text("ok")
+        (folder / "boucle").symlink_to("boucle")
+        (folder / "casse").symlink_to("introuvable")
+        response = serve_static_file(
+            _make_request("GET", "/mixed/"), self.resolver, self.filesystem, self.security, index_files=("index.html",),
+            dirlisting_zones=(Zone("/mixed", True),),
+        )
+        self.assertEqual(response.status, HttpStatus.OK)
+        self.assertIn(b"ok.txt", response.body)
+        self.assertNotIn(b"boucle", response.body)
+        self.assertNotIn(b"casse", response.body)
+
     def test_directory_listing_not_shown_outside_configured_zone(self):
         (self.webroot / "empty-dir").mkdir()
         request = _make_request("GET", "/empty-dir")
@@ -287,6 +303,46 @@ class TestOneStatPerServedFile(unittest.TestCase):
         self.assertEqual(response.status, HttpStatus.OK)
         self.assertEqual(response.body, b"index")
         self.assertEqual(self._serve("/absent.html").status, HttpStatus.NOT_FOUND)
+
+class TestAbsentPrecompressedVariantCache(unittest.TestCase):
+    """Plan moteur C++, lot 0 (2026-11-02) : une variante .br/.gz absente est retenue 2 s - plus de recherche
+    ratee a chaque requete ; un .br cree ensuite est servi des l'expiration, jamais une version perimee."""
+
+    def setUp(self):
+        from omega_serv.application.server import serve_static_file as module
+
+        self.module = module
+        module._absent_variants.clear()
+        self._tmp = tempfile.TemporaryDirectory()
+        self.webroot = Path(self._tmp.name) / "webroot"
+        self.webroot.mkdir()
+        (self.webroot / "app.js").write_text("console.log(1)")
+        self.filesystem = LocalFilesystem()
+        self.resolver = SafePathResolver(self.filesystem, self.webroot)
+
+    def tearDown(self):
+        self.module._absent_variants.clear()
+        self._tmp.cleanup()
+
+    def _serve(self):
+        from dataclasses import replace
+
+        request = replace(_make_request("GET", "/app.js"), headers=HttpHeaders.from_pairs([("Accept-Encoding", "br")]))
+        return serve_static_file(request, self.resolver, self.filesystem, SecurityConfig(), index_files=("index.html",))
+
+    def test_absence_remembered_then_new_variant_served_after_expiry(self):
+        from unittest.mock import patch
+
+        clock = [1000.0]
+        with patch.object(self.module.time, "monotonic", side_effect=lambda: clock[0]):
+            self.assertIsNone(self._serve().headers.get("Content-Encoding"))
+            (self.webroot / "app.js.br").write_bytes(b"BR")
+            clock[0] += 1.0  # encore dans les 2 s : l'absence retenue s'applique (l'original est servi)
+            self.assertIsNone(self._serve().headers.get("Content-Encoding"))
+            clock[0] += 1.5  # expiree : la nouvelle variante est servie
+            response = self._serve()
+        self.assertEqual(response.headers.get("Content-Encoding"), "br")
+
 
 if __name__ == "__main__":
     unittest.main()

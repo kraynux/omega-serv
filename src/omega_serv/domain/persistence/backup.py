@@ -24,4 +24,26 @@ class BackupRequest:
     `incidents export-ioc`/`generate-report`). Comme `include_waf_rules`/
     `include_certificates`, aucun secret en clair (contrairement a
     `include_auth_zones`) - pas de gate `--confirm-secrets`."""
+    include_error_pages: bool = False
+    """Pages d'erreur personnalisees (`error_pages.custom_dir`, `webroot/.errors/` par defaut)."""
+    include_preferences: bool = False
+    """`var/settings.json` : theme, langues (interface et pages visiteurs), dossiers d'export, nom du service."""
+    include_logs_library: bool = False
+    """Bibliotheque et favoris des journaux, sources distantes (chemin de cle seulement), rotations planifiees."""
+    include_riposte: bool = False
+    """Base RIPOSTE (memoire de recidive, decisions, actions) - les politiques sont dans la configuration."""
     description: str = ""
+
+    @classmethod
+    def everything(cls, description: str = "") -> BackupRequest:
+        """« Tout sauvegarder » (decision utilisateur 2026-11-01) : configuration complete, y compris les
+        secrets (zones Auth, cles TLS) - l'appelant DOIT faire confirmer les secrets."""
+        return cls(
+            include_waf_rules=True, include_auth_zones=True, include_certificates=True, include_active_defense=True,
+            include_error_pages=True, include_preferences=True, include_logs_library=True, include_riposte=True,
+            description=description,
+        )
+
+    @property
+    def includes_databases(self) -> bool:
+        return self.include_active_defense or self.include_riposte

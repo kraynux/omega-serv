@@ -25,6 +25,7 @@ from omega_serv.domain.security.active_defense.config import (
     parse_active_defense_config,
     validate_active_defense_config,
 )
+from omega_serv.domain.security.riposte.config import parse_riposte_config, validate_riposte_config
 from omega_serv.domain.security.tls.validation import validate_tls_config_structure
 
 SUPPORTED_CONFIG_VERSIONS = frozenset({1})
@@ -55,6 +56,7 @@ def is_safe_relative_path(value: str) -> bool:
 
 
 MAX_WORKERS = 64
+SERVER_ENGINES = ("python", "native")
 """Borne de surete du mode « boost » ; la vraie limite est le nombre de coeurs de la machine
 (core/platform_info.available_cpu_cores), appliquee a l'ecran et au demarrage."""
 
@@ -107,9 +109,14 @@ def validate_config(config: OmegaServConfig) -> list[str]:
 
     if not 0 <= config.server.workers <= MAX_WORKERS:
         errors.append(
-            _("server.workers doit être compris entre 0 (automatique) et {maximum} : {workers}").format(
+            _("server.workers doit être compris entre 0 (le maximum de la machine) et {maximum} : {workers}").format(
                 maximum=MAX_WORKERS, workers=config.server.workers,
             )
+        )
+
+    if config.server.engine not in SERVER_ENGINES:
+        errors.append(
+            _("server.engine invalide : {engine!r} (attendu : {value})").format(engine=config.server.engine, value=list(SERVER_ENGINES))
         )
 
     unknown_methods = set(config.security.allowed_methods) - _KNOWN_HTTP_METHOD_TOKENS
@@ -198,6 +205,19 @@ def validate_config(config: OmegaServConfig) -> list[str]:
                     errors.append(
                         _("options.active_defense.deception.decoy_zones.{zone_name} : l'upstream ({host}:{port}) est déjà utilisé par une zone options.reverse_proxy de production - un leurre ne doit jamais partager son backend avec la production (plan §\"Routage vers les leurres\")").format(zone_name=zone_name, host=upstream.host, port=upstream.port)
                     )
+
+    riposte_option = config.options.get("riposte")
+    if riposte_option is not None and riposte_option.enabled:
+        # Profils de leurre reellement configures dans Active Defense (le domaine RIPOSTE ne lit
+        # jamais la configuration d'un autre module : c'est ici qu'on les lui fournit).
+        decoy_profile_names: frozenset[str] = frozenset()
+        if active_defense_option is not None and active_defense_option.enabled:
+            decoy_profile_names = frozenset(
+                parse_active_defense_config(active_defense_option.settings).deception.profiles,
+            )
+        errors.extend(validate_riposte_config(
+            parse_riposte_config(riposte_option.settings), decoy_profile_names=decoy_profile_names,
+        ))
 
     errors.extend(
         _("tls : {e}").format(e=e)

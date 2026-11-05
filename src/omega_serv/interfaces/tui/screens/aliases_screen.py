@@ -129,7 +129,7 @@ class AliasesScreen(OmegaScreen):
             target_path=values["target_path"],
             allow_outside_webroot=is_yes(values["allow_outside_webroot"]),
         )
-        error = validate_alias_rule(rule)
+        error = validate_alias_rule(rule, self._container.project_root)
         if error is not None:
             self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return
@@ -145,7 +145,7 @@ class AliasesScreen(OmegaScreen):
             target_path=values["target_path"],
             allow_outside_webroot=is_yes(values["allow_outside_webroot"]),
         )
-        error = validate_alias_rule(rule)
+        error = validate_alias_rule(rule, self._container.project_root)
         if error is not None:
             self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
             return

@@ -17,6 +17,7 @@ from omega_serv.core.i18n import _
 from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
+from omega_serv.interfaces.tui.screens.engine_guard import save_guarded
 from omega_serv.interfaces.tui.screens.restart_prompt import (
     notify_reload_required,
     notify_restart_required,
@@ -106,21 +107,25 @@ class ApplyProfileScreen(OmegaScreen):
     def _apply_if_confirmed(self, confirmed: bool | None) -> None:
         if not confirmed or self._plan is None:
             return
-        self._container.configuration.save(self._container.config_file, self._plan.new_config)
-        message = _("Profil '{profile_name}' appliqué dans {config_file}.").format(profile_name=self._profile_name, config_file=self._container.config_file)
-        new_server = self._plan.new_config.server
-        new_tls = self._plan.new_config.tls
-        needs_restart = self._previous_config is not None and (
-            new_server.bind != self._previous_config.server.bind
-            or new_server.port != self._previous_config.server.port
-            or new_server.listen_backlog != self._previous_config.server.listen_backlog
-            or new_tls != self._previous_config.tls
-        )
-        if needs_restart:
-            notify_restart_required(
-                self, self._container,
-                _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (bind/port/listen_backlog/TLS ont changé).").format(message=message),
+        plan = self._plan
+
+        def after_save() -> None:
+            message = _("Profil '{profile_name}' appliqué dans {config_file}.").format(profile_name=self._profile_name, config_file=self._container.config_file)
+            new_server = plan.new_config.server
+            new_tls = plan.new_config.tls
+            needs_restart = self._previous_config is not None and (
+                new_server.bind != self._previous_config.server.bind
+                or new_server.port != self._previous_config.server.port
+                or new_server.listen_backlog != self._previous_config.server.listen_backlog
+                or new_tls != self._previous_config.tls
             )
-        else:
-            notify_reload_required(self, self._container, message)
-            self.dismiss()
+            if needs_restart:
+                notify_restart_required(
+                    self, self._container,
+                    _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (bind/port/listen_backlog/TLS ont changé).").format(message=message),
+                )
+            else:
+                notify_reload_required(self, self._container, message)
+                self.dismiss()
+
+        save_guarded(self, self._container, self._previous_config or plan.new_config, plan.new_config, after_save)

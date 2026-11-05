@@ -29,6 +29,7 @@ KNOWN_OPTION_NAMES: frozenset[str] = frozenset({
     "access_control",
     "reverse_proxy",
     "active_defense",
+    "riposte",
 })
 
 

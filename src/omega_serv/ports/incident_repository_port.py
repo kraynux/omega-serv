@@ -50,5 +50,10 @@ class IncidentRepositoryPort(Protocol):
         """Elagage de l'historique des incidents (INCIDENT_HISTORY_KEEP_* du domaine)."""
         ...
 
+    def purge_closed(self, closed_before: datetime, max_closed: int) -> int:
+        """Supprime les incidents FERMES avant `closed_before`, puis ceux au-dela des `max_closed` plus
+        recemment fermes - avec tout leur historique. Jamais un incident ouvert. Retourne le nombre supprime."""
+        ...
+
     def list_recent(self, filters: IncidentFilters) -> list[Incident]:
         ...

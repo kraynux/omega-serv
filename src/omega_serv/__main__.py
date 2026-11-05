@@ -38,13 +38,16 @@ if TYPE_CHECKING:
     from omega_serv.domain.security.active_defense.config import IoCConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
     from omega_serv.domain.security.audit.entities import AuditResult
+    from omega_serv.domain.security.riposte.events import ObservedEvent
     from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
     from omega_serv.ports.clock_port import ClockPort
+    from omega_serv.ports.declaration_port import DeclarationSenderPort
     from omega_serv.ports.filesystem_port import FilesystemPort
     from omega_serv.ports.instance_registry_port import InstanceRegistryPort
     from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
+    from omega_serv.ports.riposte_store_port import RiposteStorePort
 
 
 def _run_config_check(
@@ -168,6 +171,40 @@ def _build_blocklist_port(
     return build_blocklist_port(config, project_root, filesystem, clock)
 
 
+def _open_riposte_store(path: Path, write: bool) -> RiposteStorePort:
+    from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+        open_riposte_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
+
+    return SqliteRiposteStore(open_riposte_connection(path, read_only=not write, create=False))
+
+
+def _installed_fail2ban_jails() -> frozenset[str] | None:
+    """Jails installees par omega-jail (RIPOSTE, ecran Etat) : lecture seule de /etc/fail2ban/jail.d."""
+    import os
+    from pathlib import Path
+
+    directory = Path("/etc/fail2ban/jail.d")
+    if not directory.is_dir() or not os.access(directory, os.R_OK | os.X_OK):
+        return None
+    prefix, suffix = "omega-jail-", ".conf"
+    return frozenset(p.name[len(prefix):-len(suffix)] for p in directory.glob(prefix + "*" + suffix))
+
+
+def _read_riposte_journals(waf_log: Path, security_log: Path) -> list[ObservedEvent]:
+    from omega_serv.infrastructure.riposte.journal_events import read_journal_events
+
+    return read_journal_events(waf_log, security_log)
+
+
+def _snapshot_database(source: Path, destination: Path) -> None:
+    """Copie coherente d'une base en service pour la sauvegarde (injectee : bootstrap n'atteint jamais sqlite3)."""
+    from omega_serv.infrastructure.persistence.sqlite_snapshot import snapshot_database
+
+    snapshot_database(source, destination)
+
+
 def _build_active_defense_collaborators(
     config: OmegaServConfig, project_root: Path,
 ) -> ActiveDefenseCollaborators | None:
@@ -249,6 +286,18 @@ def _run_lnav(log_paths: tuple[Path, ...], palette: Palette, title: str, menu_la
     except OSError as exc:
         return _("Échec du lancement de lnav : {exc}").format(exc=exc)
     return None
+
+
+def _build_declaration_sender(version: str) -> DeclarationSenderPort:
+    from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
+
+    return HttpsDeclarationSender(version)
+
+
+def _open_url(url: str) -> bool:
+    from omega_serv.infrastructure.desktop.browser_opener import open_in_browser
+
+    return open_in_browser(url).ok
 
 
 def _run_create_instance(
@@ -416,13 +465,13 @@ def _run_with_text_direction(app) -> None:  # type: ignore[no-untyped-def]
     """Arabe (plan i18n lot 11, option C) : omega-serv ordonne lui-meme le texte droite-a-gauche,
     le terminal passe en mode bidi explicite le temps de la TUI pour ne plus rien deplacer."""
     from omega_lib.i18n.policies import text_direction
-
-    from omega_serv.core.i18n import STATE
     from omega_lib.i18n.terminal_bidi import (
         ENTER_EXPLICIT_MODE,
         LEAVE_EXPLICIT_MODE,
         install_visual_reordering,
     )
+
+    from omega_serv.core.i18n import STATE
 
     if text_direction(STATE.language.code) != "rtl" or not install_visual_reordering():
         app.run()
@@ -507,6 +556,7 @@ def main(argv: list[str] | None = None) -> int:
             certificate_tool_factory=_build_certificate_tool,
             acme_client_factory=_build_acme_client,
             remote_log_fetch_runner_factory=_build_remote_log_fetch_runner,
+            database_snapshot_fn=_snapshot_database,
             lnav_runner=_run_lnav,
             create_instance_runner=_run_create_instance,
             export_capabilities_html_fn=_export_capabilities_html,
@@ -514,6 +564,11 @@ def main(argv: list[str] | None = None) -> int:
             export_guide_html_fn=_export_guide_html,
             export_in_language_runner=_run_export_in_language,
             serve_foreground_runner=_run_serve_foreground,
+            riposte_store_factory=_open_riposte_store,
+            riposte_journal_reader=_read_riposte_journals,
+            installed_jails_reader=_installed_fail2ban_jails,
+            declaration_sender_factory=_build_declaration_sender,
+            url_opener=_open_url,
         )
         from omega_serv.interfaces.tui.app import OmegaServApp
 

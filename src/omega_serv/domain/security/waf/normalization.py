@@ -32,6 +32,10 @@ def decode_bounded_for_inspection(raw: str, max_passes: int) -> str:
     doit jamais lever, seulement etre inspecte du mieux possible.
     Normalisation Unicode (NFKC) appliquee avant ET apres le decodage -
     voir docstring de module."""
+    if raw.isascii() and "%" not in raw:
+        # Cas courant (2026-11-04, cout du WAF) : NFKC laisse tout texte ASCII intact et `unquote` ne touche qu'aux
+        # sequences « % » - resultat identique, sans les deux passes.
+        return raw
     current = unicodedata.normalize("NFKC", raw)
     for _ in range(max(1, max_passes)):
         decoded = urllib.parse.unquote(current, errors="replace")

@@ -66,7 +66,7 @@ class TestBlocklistUnderVar(unittest.IsolatedAsyncioTestCase):
         ips = [e["network"] for e in json.loads(target.read_text())["entries"]]
         self.assertIn("203.0.113.9/32", ips, "ancien ban conserve")
         self.assertTrue(any(ip.startswith("127.0.0.1") for ip in ips), ips)
-        self.assertEqual(await asyncio.to_thread(self._get, "/index.html"), 403, "client banni")
+        self.assertEqual(await asyncio.to_thread(self._get, "/index.html"), 451, "client banni")
         self.assertEqual(json.loads(self.legacy.read_text())["entries"][0]["network"], "203.0.113.9/32")
 
 

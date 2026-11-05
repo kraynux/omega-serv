@@ -60,7 +60,12 @@ class ArchiveStore:
         except ValueError:
             return source.name
 
-    def create_archive(self, archive_name: str, source_paths: list[Path], base_path: Path | None = None) -> Path:
+    def create_archive(
+        self, archive_name: str, source_paths: list[Path], base_path: Path | None = None,
+        extra_files: list[tuple[Path, str]] | None = None,
+    ) -> Path:
+        """`extra_files` : (fichier, nom dans l'archive) - ex. la copie coherente d'une base, faite ailleurs
+        mais restauree a l'emplacement de la base (2026-11-01)."""
         archive_path = self._base_dir / archive_name
         try:
             with tarfile.open(archive_path, "w:gz") as tar:
@@ -68,6 +73,8 @@ class ArchiveStore:
                     if not source.exists():
                         continue
                     arcname = self._arcname_for(source, base_path)
+                    tar.add(source, arcname=arcname)
+                for source, arcname in extra_files or ():
                     tar.add(source, arcname=arcname)
         except (OSError, tarfile.TarError) as exc:
             raise ArchiveStoreError(_("Échec de création de l'archive {archive_name} : {exc}").format(archive_name=archive_name, exc=exc)) from exc
@@ -83,6 +90,13 @@ class ArchiveStore:
                     tar.extractall(dest_dir, members=_safe_members(tar, dest_dir))
         except (OSError, tarfile.TarError) as exc:
             raise ArchiveStoreError(_("Échec d'extraction de l'archive {archive_path} : {exc}").format(archive_path=archive_path, exc=exc)) from exc
+
+    def list_members(self, archive_path: Path) -> list[str]:
+        try:
+            with tarfile.open(archive_path, "r:gz") as tar:
+                return tar.getnames()
+        except (OSError, tarfile.TarError) as exc:
+            raise ArchiveStoreError(_("Archive illisible {archive_path} : {exc}").format(archive_path=archive_path, exc=exc)) from exc
 
     def list_archives(self, pattern: str = "*.tar.gz") -> list[Path]:
         return sorted(self._base_dir.glob(pattern))

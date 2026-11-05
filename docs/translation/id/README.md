@@ -12,14 +12,15 @@
 Halaman resmi: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/id/) &nbsp; Referensi, penggunaan, bantuan & FAQ: [Panduan lengkap](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/id/guide.html)  
 Pratinjau: [Tangkapan layar](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstrasi [Server demo](https://craftdark.snake-mackarel.ts.net) &nbsp; [Perbandingan/Pengujian server web](comparatif-serveurs-web.md)  
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Lua](https://img.shields.io/badge/Lua-5.4%2B-2C2D72.svg)](https://www.lua.org/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![HTML](https://img.shields.io/badge/HTML-5-E34F26.svg)](https://developer.mozilla.org/docs/Web/HTML)
-[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![Interface](https://img.shields.io/badge/Interface-CLI%20%2B%20TUI-cyan.svg)](#3-penggunaan)
 [![Textual](https://img.shields.io/badge/Textual-TUI-5A5AFB.svg)](https://textual.textualize.io/)
+[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
 🌐 Dokumentasi, ekspor & antarmuka tersedia dalam **17 bahasa** — lihat [Bahasa antarmuka](#bahasa-antarmuka).  
 **Bahasa:**
@@ -27,7 +28,7 @@ Pratinjau: [Tangkapan layar](https://kraynux.snake-mackarel.ts.net/omega-serv/sc
 
 ---
 
-**OMEGA-SERV** adalah server HTTP/1.1 yang ditulis dalam Python murni (hanya pustaka standar untuk inti server), dirancang untuk menyajikan konten statis dan, secara opsional, PHP-FPM, dengan pengerasan protokol yang tidak dapat dinonaktifkan serta modul keamanan (WAF, TLS, autentikasi) yang dapat ditumpuk alih-alih dipaksakan. Alat ketujuh dari rangkaian `omega-` tetapi sengaja **berada di luar integrasi `omega-suite` mendatang** (ia bekerja pada mesin lokal yang menjalankannya, bukan pada target jarak jauh — keluarga yang sama dengan `omega-fire`); disusun dengan Clean Architecture, dengan `bootstrap/` sebagai akar komposisi (composition root).
+**OMEGA-SERV** adalah server HTTP/1.1 yang ditulis dalam Python murni (hanya pustaka standar untuk inti server), dirancang untuk menyajikan konten statis dan, secara opsional, PHP-FPM, dengan pengerasan protokol yang aktif secara bawaan serta modul keamanan (WAF, TLS, autentikasi) yang dapat ditumpuk alih-alih dipaksakan. Mesin native C++ opsional dapat melayani permintaan sebagai pengganti mesin Python, dengan pemeriksaan keamanan yang sama (lihat §6b). Alat ketujuh dari rangkaian `omega-` tetapi sengaja **berada di luar integrasi `omega-suite` mendatang** (ia bekerja pada mesin lokal yang menjalankannya, bukan pada target jarak jauh — keluarga yang sama dengan `omega-fire`); disusun dengan Clean Architecture, dengan `bootstrap/` sebagai akar komposisi (composition root).
 
 ## 1. Visi dan cakupan
 
@@ -36,9 +37,9 @@ Prioritas yang dinyatakan adalah **kekokohan/keamanan inti HTTP terlebih dahulu*
 ### Yang dilakukan OMEGA-SERV
 
 - Menyajikan konten statis (berkas, daftar direktori opsional, alias, pengalihan, penulisan ulang, cache) dengan resolusi jalur yang aman (traversal, pengodean ganda, tautan simbolik). Berkas besar dikirim per blok dari disk, tidak pernah dimuat ke memori; setiap berkas membawa `ETag` dan `Last-Modified` (muat ulang = respons 304 kosong), menerima permintaan parsial `Range` (melanjutkan unduhan, video); gambar, media, font, CSS, dan JS menerima `Cache-Control` bawaan yang dapat diubah di layar Cache. Berkas teks yang sudah dikompresi: jika `site.css.br` atau `site.css.gz` ada di samping `site.css` (dibuat dengan `brotli -k site.css` atau `gzip -k site.css`) dan peramban menerimanya, berkas itu yang dikirim, tidak pernah versi yang lebih lama dari aslinya.
-- Mengeraskan protokol HTTP secara bawaan, tanpa opsi untuk menonaktifkannya: daftar metode yang diizinkan secara eksplisit, validasi header `Host`, penolakan ambiguitas `Content-Length`/`Transfer-Encoding`, header keamanan dan CSP dasar yang tidak dapat dilewati.
+- Mengeraskan protokol HTTP secara bawaan: analisis permintaan yang ketat, tanpa opsi untuk menonaktifkannya (penolakan ambiguitas `Content-Length`/`Transfer-Encoding`), daftar metode yang diizinkan secara eksplisit, validasi header `Host`, header keamanan dan CSP dasar pada respons situs dan halaman galatnya.
 - Secara opsional: penyaringan WAF (tanda tangan, pembatasan laju, daftar blokir), TLS langsung (sertifikat swatanda, ditandatangani CA lokal, atau publik melalui Let's Encrypt/Certbot dengan perpanjangan otomatis — lihat §9), autentikasi HTTP Basic per zona, PHP melalui FastCGI/PHP-FPM, zona unggahan yang terkurung.
-- Mode « boost »: beberapa proses server, paling banyak satu per CPU yang tersedia di mesin (layar Ketahanan dan batas); penghitung keamanan (rate limit, residivisme) dibagi di antara proses dan tetap akurat.
+- Beberapa proses server, paling banyak satu per inti fisik mesin dengan mesin Python (layar Ketahanan dan batas); penghitung keamanan (rate limit, residivisme) dibagi di antara proses dan tetap akurat.
 - Mengaudit konfigurasinya sendiri (`audit security`) dan memasang dirinya sebagai layanan sistem (systemd/OpenRC/runit).
 - CLI non-interaktif yang dapat ditulis skrip dari awal hingga akhir, **dan antarmuka interaktif (Textual)** yang membungkus kasus penggunaan yang persis sama — lihat §3. Peta jalan antarmuka (`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`, §12) **sudah diserahkan seluruhnya**: registri kapabilitas, profil/opsi, konfigurasi terperinci (alias/pengalihan/rewrite/FastCGI/dirlisting/autentikasi/cache/WAF/proxy tepercaya/reverse proxy keluar/TLS), pengelolaan log (Pustaka/Favorit, 3 penampil — sederhana/klasik/lnav gabungan —, Lihat dan tangani IP, sumber jarak jauh SSH, rotasi/cadangan/otomatisasi/pemulihan/pembersihan/ekspor), layanan sistem, multi-instans (registri, pembuatan), pemeriksaan/simulasi/audit, pencadangan/pemulihan konfigurasi, asisten peluncuran pertama, pengaturan aplikasi (tema, profil tampilan, jalur ekspor/tangkapan layar), panduan bantuan kontekstual (lembar per layar dengan contoh konkret, FAQ, ekspor HTML, cakupan lengkap yang diverifikasi oleh pengujian), penunjukan sistematis muat ulang/mulai ulang setelah setiap penyimpanan, konfigurasi Active Defense lengkap tanpa mengedit berkas secara manual.
 
@@ -64,13 +65,14 @@ Omega-serv **menolak berjalan sebagai root**. Tidak ada modul keamanan (WAF, TLS
 
 - Python 3.10+
 - `openssl` (berkas biner, bukan pustaka Python) untuk semua hal terkait sertifikat TLS — fungsi lainnya berjalan tanpanya.
+- Mesin native (opsional, disertakan dalam bentuk terkompilasi untuk x86_64): glibc 2.38 atau lebih baru dan OpenSSL 3, dua pustaka sistem yang sudah dipakai Python. Jika tidak dapat dijalankan, `install.sh` mengompilasinya ulang di tempat bila cmake, kompiler C++20, dan header OpenSSL tersedia; jika tidak, omega-serv berjalan dengan mesin Python-nya.
 
 ### Unduhan
 
-Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +82,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Anda memperbarui instalasi yang sudah ada?** Perintah di bawah **diam-diam melewati ekstraksi** jika `omega-serv/` sudah ada (ia menganggap ini instalasi pertama yang terputus, bukan pembaruan) — Anda akan memasang ulang dependensi di atas **kode lama yang tidak berubah**, tanpa pesan galat sedikit pun. Gunakan bagian [Pembaruan](#pembaruan) di bawah sebagai gantinya.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.0.1.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -89,9 +91,10 @@ chmod +x install.sh
 `install.sh`:
 
 1. Membuat lingkungan virtual `.venv` jika belum ada.
-2. Memasang paket (`pip install -e .`) — **tanpa dependensi eksternal** (lihat §6).
+2. Memasang paket (`pip install -e .`) — **tanpa dependensi eksternal** untuk inti server (lihat §6).
 3. Membuat `omega-serv.sh` dan `install.sh` dapat dieksekusi.
-4. Menambahkan alias `serv` ke `~/.bashrc` dan `~/.zshrc` (tanpa duplikat jika sudah ada).
+4. Memeriksa apakah mesin native yang disertakan dapat dijalankan di mesin ini, dan mengompilasinya ulang di tempat bila perlu dan bila memungkinkan — tanpa pernah menghambat instalasi (§6b).
+5. Menambahkan alias `serv` ke `~/.bashrc` dan `~/.zshrc` (tanpa duplikat jika sudah ada).
 
 ### Pembaruan
 
@@ -99,7 +102,7 @@ Jika `omega-serv/` sudah ada (instalasi sebelumnya), **jangan pernah menjalankan
 
 ```bash
 # Dari folder INDUK omega-serv/ (jangan pernah dari dalamnya)
-tar -xzf omega-serv-2.0.1.tar.gz
+tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -129,6 +132,8 @@ Antarmuka berjalan dalam mode terdegradasi jika alat-alat ini tidak ada:
 - `lnav` — analisis log tingkat lanjut yang digabungkan di layar **Pengelolaan log** (§3); pesan galat yang jelas jika biner tidak ditemukan, tanpa crash, bagian layar lainnya (lihat/ikuti/rotasi/statistik) tetap berjalan normal tanpanya.
 - `scp` (paket `openssh`/`openssh-clients`, hampir selalu sudah ada) — hanya diperlukan untuk **Sumber jarak jauh (SSH)** (§13a); tanpanya, pengambilan gagal dengan pesan yang jelas, bagian Pustaka lainnya tetap berjalan normal.
 - `python-psutil` (paket sistem setara `psutil` dari PyPI) — selalu dipasang otomatis oleh `pip install -e .` (dependensi wajib paket, layar **Status & Sumber Daya** selalu memerlukannya), tetapi memasangnya lebih dulu melalui pengelola paket sistem membuat `pip` tidak perlu mengompilasi wheel-nya sendiri.
+- `cmake`, kompiler C++20 (`g++`), header OpenSSL 3, dan PCRE2 — hanya diperlukan jika mesin native bawaan tidak bisa berjalan (glibc lebih lama dari 2.38): `install.sh` lalu mengompilasinya ulang di mesin tersebut. Tanpa PCRE2, mesin hasil kompilasi akan membuat Python memeriksa setiap permintaan saat WAF aktif (lebih lambat); tanpa alat-alat ini, omega-serv tetap memakai mesin Python.
+- Font emoji (Noto Color Emoji) — opsional, untuk ikon penampil Sederhana (Pengelolaan log); tanpanya beberapa ikon tampil sebagai kotak, selebihnya tidak terpengaruh. Nerd Font tidak berisi emoji ini.
 
 ```bash
 # Arch Linux dan turunannya
@@ -139,6 +144,16 @@ sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil openssh-clients
+
+# Kompilasi lokal mesin native (hanya jika glibc < 2.38)
+sudo pacman -S cmake gcc openssl pcre2                     # Arch
+sudo apt install cmake g++ libssl-dev libpcre2-dev         # Debian/Ubuntu
+sudo dnf install cmake gcc-c++ openssl-devel pcre2-devel   # Fedora
+
+# Ikon penampil Sederhana (font emoji, opsional)
+sudo pacman -S noto-fonts-emoji                            # Arch
+sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
+sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
 ## 3. Penggunaan
@@ -186,13 +201,17 @@ Layar pembuka (splash, tertutup dengan satu tombol atau klik) → menu utama (As
 
 Sistem bantuan terintegrasi, tidak pernah sekadar teks statis: setiap layar yang terdokumentasi (lembar definisi/kolom yang diisi dengan contoh konkret/tindakan yang dipicu/reaksi — muat ulang, mulai ulang, atau tidak ada) dapat diakses langsung darinya melalui `F1`; tombol `a` membuka menu lengkap (struktur pohon yang identik dengan navigasi nyata aplikasi) dengan akses ke FAQ (jebakan yang ditemui dalam penggunaan nyata, misalnya kelas serangan Active Defense, izin layanan bersama) dan ekspor HTML mandiri (tema aktif dipertahankan) dari seluruh panduan. Ada layar referensi umum sebagai cadangan selama lembar spesifik belum ada — cakupan saat ini lengkap, diverifikasi oleh pengujian.
 
+#### Kontak dan dukungan (panduan bantuan)
+
+Panduan bantuan (tombol `a`) menyediakan layar **Kontak dan dukungan**: *Traktir kopi* (halaman PayPal pengembang), *Hubungi dukungan* (formulir kontak situs, alamat surel ditampilkan) dan *Daftarkan saya sebagai pengguna (anonim)*. Pendaftaran bersifat sukarela dan nonaktif secara bawaan: hanya untuk menghitung pengguna dan, jika mau, benua atau negara mereka (daftar tertutup, tanpa teks bebas). Yang dikirim adalah kunci acak, versi omega-serv, dan mode yang dipilih (*sekali* atau *setiap hari*, yang terakhir memungkinkan penghitungan instalasi aktif); tidak pernah nama, nama mesin, isi, atau log. Pengiriman harian berjalan di proses terpisah dan tidak pernah memperlambat server. Alamat IP tidak dicatat dalam pendaftaran, tetapi seperti setiap kunjungan, alamat itu melewati pemeriksaan keamanan dan log server penerima. Dapat ditarik kapan saja dari layar yang sama atau dengan `omega-serv declaration withdraw`; `DO_NOT_TRACK=1` menghentikan semua pengiriman otomatis.
+
 #### Menu utama (antarmuka interaktif)
 
 - **Asisten peluncuran pertama** — alur terpandu 8 langkah (sambutan → kapabilitas hanya-baca → pilihan profil → bind/port → TLS opsional → pemeriksaan → ringkasan + penulisan → tawaran pemasangan layanan); memungkinkan membuat konfigurasi lengkap dan menjalankan server tanpa mengenal CLI.
 - **Registri kapabilitas** — penyelidikan sistem hanya-baca (sistem init, apakah port yang dikonfigurasi sudah dipakai, ada/tidaknya `openssl`/`logrotate`/`tailscale`/`lnav`, ruang disk, batas deskriptor berkas...), ekspor JSON/HTML.
 - **Profil** — kasus penggunaan yang sama dengan `profile` di CLI (§5), diff selalu ditampilkan sebelum penulisan.
 - **Konfigurasi terperinci server** — CRUD lengkap untuk alias/pengalihan/rewrite/dirlisting/proxy tepercaya/reverse proxy keluar/FastCGI/cache/autentikasi/kontrol akses/halaman kesalahan, ditambah submenu **TLS** (status, pembuatan swatanda, asisten CA lokal, asisten Let's Encrypt/Certbot, perpanjangan otomatis, pencabutan, aktifkan/nonaktifkan — lihat §9); bingkai kedua **OPSI DAN PEMERIKSAAN** mengelompokkan pintasan ke **Opsi** (`option` di CLI, §7) dan **Periksa konfigurasi** (`config check` di CLI, §10) — alur yang sama seperti menyesuaikan pengaturan lalu memeriksa, kedua layar ini tidak lagi dapat diakses langsung dari menu utama. WAF tidak lagi berada di sini (lihat "Keamanan Aktif" di bawah): ia terutama menampilkan status operasional yang terus berubah, bukan formulir konfigurasi statis sederhana. Setiap penyimpanan selalu menyebutkan langkah berikutnya: muat ulang panas otomatis dan senyap jika ada layanan aktif (dirlisting, akses, alias/pengalihan/rewrite, cache, halaman kesalahan, proxy tepercaya, zona reverse proxy/FastCGI, pengguna/zona autentikasi), atau konfirmasi eksplisit mulai ulang penuh ketika perubahan menyentuh soket pendengar, TLS, atau Active Defense — tidak ada lagi layar yang membuat Anda menebak apakah server harus dijalankan ulang.
-- **Keamanan Aktif** — layar tunggal yang mengelompokkan dua blok berdampingan: **Active Defense** (Status, Ancaman yang dilacak dengan skor/tingkat, Insiden dengan kronologi/ekspor IoC/laporan, penugasan Deception, Simulasikan keputusan dalam dry-run, **Pengaturan** — konfigurasi lengkap tanpa pernah mengedit `config/omega-serve.json` secara manual, lihat §11) dan **WAF** (Status, Modul — mode/paket aturan/daftar blokir, Uji permintaan, Custom — penulis aturan khusus dan pemuatan daftar jalur/kata kunci yang dapat diedit dengan tetikus (lihat §11b), Magnet — impor skrip `mod_magnet` eksternal dengan pemeriksaan kompatibilitas sebelum aktivasi) — lihat §11.
+- **Keamanan Aktif** — layar tunggal yang mengelompokkan dua blok berdampingan: **Active Defense** (Status, Ancaman yang dilacak dengan skor/tingkat, Insiden dengan kronologi/ekspor IoC/laporan, penugasan Deception, Simulasikan keputusan dalam dry-run, **Pengaturan** — konfigurasi lengkap tanpa pernah mengedit `config/omega-serve.json` secara manual, lihat §11) dan **WAF** (Status, Modul — mode/paket aturan/daftar blokir, Uji permintaan, Custom — penulis aturan khusus dan pemuatan daftar jalur/kata kunci yang dapat diedit dengan tetikus (lihat §11b), Magnet — impor skrip `mod_magnet` eksternal dengan pemeriksaan kompatibilitas sebelum aktivasi) — lihat §11. **RIPOSTE**: blok ketiga (WAF → Active Defense → RIPOSTE, urutan sebuah serangan) — respons bertingkat dari waktu ke waktu, lihat §11d.
 - **Pengelolaan log** — menu dua kolom. Kolom **Pustaka**: pusat yang merujuk setiap log yang perlu ditangani (penambahan manual, satu klik langsung menambahkan log milik instans — access/error/WAF bawaan, + skrip magnet §7 jika aktif —, atau **sumber jarak jauh** yang diambil melalui SSH, lihat di bawah); **Favorit** (kombinasi log + penampil yang disimpan dengan sebuah nama, dibuka langsung); **Lihat log** dengan 3 penampil pilihan menurut jumlah log yang dipilih — Sederhana (tail langsung + statistik umum IP/galat/kode HTTP pada format apa pun), Klasik (baca + ikuti), `lnav` gabungan (tampilan terminal nyata di antarmuka, log magnet otomatis disertakan + jalur manual yang **disematkan** agar tetap tersimpan antarsesi); **Lihat dan tangani IP** (IP teratas pada satu atau beberapa log pilihan, periode 24 jam/7 hari/30 hari/semua, penghapusan IP). Kolom **Pemeliharaan** (tidak berubah): rotasi/pengarsipan manual atau otomatis berdasarkan ambang ukuran, pembuatan cadangan seketika, konfigurasi/pengelolaan otomatisasi terjadwal (deklaratif — lihat catatan di bawah), pulihkan/bersihkan arsip, ekspor daftar.
 - **Layanan** — tindakan yang sama dengan `service` di CLI (§12), elevasi `sudo` sesekali per tindakan, tidak pernah seluruh aplikasi dijalankan sebagai root.
 - **Multi-instans** — registri global (`~/.config/omega-serv/instances.json`, di luar direktori proyek mana pun) dari instalasi yang dikenal di mesin, dengan status systemd masing-masing; pembuatan instans baru (salinan pohon direktori, lingkungan virtual dan dependensi tersendiri, konfigurasi baru dengan port berbeda, pemeriksaan tidak bertingkat dan tidak ada konflik port) langsung dari antarmuka. Tombol ini praktis tak terlihat untuk satu instalasi (label "Multi-instans" menjadi "Instances (N)" begitu 2 instans dikenal); peralihan penuh ke instans lain (`os.execv`, konfirmasi eksplisit, splash khusus yang mengumumkan peralihan saat mulai ulang); pencopotan lengkap sebuah instans (penghapusan unit, akun sistem khusus jika tidak lagi dipakai instans lain, dan penghapusan direktori secara opsional, tidak pernah secara bawaan).
@@ -228,7 +247,7 @@ Hanya preferensi antarmuka — tidak pernah dicampur dengan `config/omega-serve.
 ./omega-serv.sh option disable waf
 
 # Simulasikan permintaan tanpa menjalankan server (berguna untuk memvalidasi aturan sebelum diaktifkan)
-./omega-serv.sh simulate-request GET /index.html
+./omega-serv.sh simulate-request --method GET --url /index.html
 
 # WAF (berfungsi meski opsi dinonaktifkan, melalui --force implisit)
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1
@@ -250,6 +269,12 @@ Hanya preferensi antarmuka — tidak pernah dicampur dengan `config/omega-serve.
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
+# RIPOSTE (respons bertingkat dari waktu ke waktu, opsi "riposte" - lihat §11d)
+./omega-serv.sh riposte status
+./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
+./omega-serv.sh riposte actions list
+./omega-serv.sh riposte stop
+
 # Sertifikat TLS - swatanda (9a)
 ./omega-serv.sh certs generate-self-signed --cn localhost --san-dns localhost --san-ip 127.0.0.1
 ./omega-serv.sh certs show
@@ -266,7 +291,7 @@ Hanya preferensi antarmuka — tidak pernah dicampur dengan `config/omega-serve.
 
 # Autentikasi HTTP Basic
 ./omega-serv.sh auth add-user --username alice
-./omega-serv.sh auth create-zone --url-prefix /admin/ --allowed-users alice
+./omega-serv.sh auth create-zone --path-prefix /admin/ --realm "Administration" --allowed-users alice
 ./omega-serv.sh auth list
 
 # Audit keamanan (tidak pernah memblokir, bersifat informatif)
@@ -351,6 +376,15 @@ src/omega_serv/
 
 Aturan yang diverifikasi oleh `import-linter` (8 kontrak): `domain`/`core` tidak pernah bergantung pada lapisan luar; `interfaces.tui` tidak pernah langsung bergantung pada `infrastructure`; `textual` terkurung di `interfaces.tui`; `subprocess` terkurung di `infrastructure/process/subprocess_runner.py` (dan `infrastructure/lnav/`, aliran PTY interaktif); `ssl` terkurung di `infrastructure/tls/ssl_context_builder.py`; `jinja2` terkurung di `infrastructure/exporters/html_exporter.py`; `sqlite3` terkurung di `infrastructure/persistence/sqlite_active_defense_connection.py` (satu-satunya penyimpanan relasional proyek, khusus untuk Active Defense — lihat §11); `lupa` terkurung di `infrastructure/waf/lua_waf_adapter.py` (skrip WAF pelengkap « magnet », §7).
 
+## 6b. Mesin HTTP dan jumlah proses
+
+Dua mesin dapat melayani permintaan. Dengan **mesin Python**, bawaan, interpreter Python menangani semua permintaan. **Mesin native** (C++, `bin/omega-http-core`) membaca, menganalisis, dan melayani permintaan sendiri; server Python tetap memegang konfigurasi, pemantauan, dan keputusan keamanan.
+
+- **Dua pengaturan**: mesin (layar **Konfigurasi dasar**) dan jumlah proses (layar **Ketahanan dan batas**). Jumlah proses dibatasi menurut mesin dan prosesor yang terdeteksi: dengan mesin Python, hingga satu per inti fisik; dengan mesin native, yang sudah memakai semua inti, itu adalah proses pemeriksaan keamanan, 1, atau 2 mulai dari 4 inti fisik. Layar menunjukkan apa yang diberikan oleh penambahan pada mesin dan menolak nilai yang terlalu besar; yang berjalan ditampilkan apa adanya (“mesin native, 1 proses”). Mengganti mesin atau jumlah proses memerlukan mulai ulang penuh. Apa yang diubah oleh pilihan, diukur: FAQ panduan dan [perbandingan server web](comparatif-serveurs-web.md).
+- **Respons sama, log sama**: dengan mesin native, konten statis, pengalihan, penulisan ulang, alias, cache, halaman galat, dan header keamanan dilayani oleh mesin native; ia memeriksa sendiri aturan WAF dan melayani sendiri permintaan yang tidak cocok dengan aturan mana pun, dan setiap permintaan lain (kecocokan atau keraguan WAF, Active Defense, autentikasi) melewati proses Python yang menerapkan pemeriksaan yang persis sama dan menulis log keamanan yang sama (RIPOSTE dan omega-jail tidak melihat perbedaan apa pun); daftar direktori dan halaman internal diminta dari Python; reverse proxy, FastCGI, pengiriman berkas, dan WebSocket diserahkan kepadanya untuk seluruh koneksi. TLS langsung ditangani mesin native dengan pustaka yang sama dan pengaturan yang sama.
+- **Tidak pernah campuran**: satu aturan menentukan mesin yang berlaku dan semua tempat menampilkannya (layar **Status & Sumber Daya**, `omega-serv engine status`). Jika mesin native tidak dapat melayani semuanya (TLS langsung bersama reverse proxy, FastCGI, atau pengiriman berkas) atau tidak dapat dijalankan, mesin Python yang melayani, dan alasannya ditampilkan. Di **Konfigurasi dasar**, pilihan mesin native berwarna abu-abu selama ada fungsi aktif yang menghalanginya, beserta apa yang harus diubah agar memungkinkan; pengaturan yang disimpan di tempat lain yang akan membuat mesin native hilang meminta konfirmasi lebih dulu.
+- **Jika pemeriksaan Python tidak menjawab**, `waf.on_internal_error` yang memutuskan: melayani tanpa pemeriksaan atau menolak (503). Zona autentikasi selalu ditolak dalam hal ini, dan alamat yang sudah diblokir tetap ditolak (451).
+
 ## 7. Modul opsional
 
 Semuanya dinonaktifkan secara bawaan di semua profil yang disediakan — aktivasi selalu eksplisit (`option enable <nama>` atau `config enable-tls`):
@@ -364,6 +398,7 @@ Semuanya dinonaktifkan secara bawaan di semua profil yang disediakan — aktivas
 | Reverse proxy keluar | Omega-serv sendiri bertindak sebagai proxy ke satu atau beberapa backend (arah kebalikan dari `server.tls.mode = "behind_proxy"`) — penyeimbangan beban (round-robin, berbobot, least-connections, ip-hash, least-response-time, beban nyata), afinitas sesi dan aturan perutean berdasarkan header, kesehatan pasif dan aktif, cache respons (multivarian `Vary`), backpressure, perlindungan anti-loop, API administrasi panas — lihat §7a untuk detail lengkap |
 | Unggahan | Zona terkurung, kuota per zona, nama berkas dibuat di sisi server — tanpa streaming di V1 (dibatasi oleh `server.max_request_size`) |
 | `active_defense` | Deception + mode perang dari sinyal WAF yang sudah dihitung (tidak pernah skor kedua): umpan statis, perlambatan/pencatatan diperkaya/pembatasan laju yang terarah, insiden + ekspor IoC — lihat §11 |
+| `riposte` | Respons bertingkat dari waktu ke waktu: ingatan residivis per alamat, blokir yang makin lama (blocklist WAF, blokir jaringan melalui omega-jail) atau umpan diperpanjang, pencabutan dan henti darurat — proses terpisah, lihat §11d |
 
 ### 7a. Reverse proxy keluar — detail
 
@@ -378,12 +413,12 @@ OMEGA-SERV dapat sendiri bertindak sebagai reverse proxy ke satu atau beberapa b
 - **WebSocket** — upgrade dapat diizinkan per zona, satu upstream dikunci selama umur saluran setelah terjalin, tanpa timeout tingkat aplikasi.
 - **Administrasi panas** — API HTTP lokal kecil (`/.omega-serv-admin/`, dilindungi oleh `trusted_proxy` seperti probe beban bawaan) yang memungkinkan TUI membaca/memaksa status DRAINING/MAINTENANCE sebuah backend dan membaca rasio hit/miss cache **dari server yang benar-benar sedang berjalan** (layar khusus *Status langsung backend*) — TUI dan server tetap dua proses terpisah tanpa memori bersama, kanal HTTP lokal ini adalah satu-satunya jembatan di antara keduanya.
 
-## 8. Pengerasan HTTP (tidak dapat dinonaktifkan)
+## 8. Pengerasan HTTP (aktif secara bawaan)
 
-- Header/baris permintaan dibatasi **selama** pembacaan (tidak pernah setelahnya), pelipatan header usang ditolak, `Transfer-Encoding` selalu ditolak (tidak pernah ditebak).
-- `Content-Length` ganda ditolak; `Expect: 100-continue` ditolak dengan rapi (417).
-- Daftar putih metode yang eksplisit (405 + `Allow` jika tidak), header `Host` divalidasi (hilang/kosong/ganda-meski-identik/karakter kontrol → 400).
-- Header keamanan dan CSP dasar (`enforce`/`report-only`) diterapkan ke **setiap** respons, termasuk galat — tidak dapat dilewati dengan opsi. `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` selalu `same-origin`, tanpa risiko nyata merusak situs. `Cross-Origin-Embedder-Policy` selalu dikirim secara eksplisit (tidak pernah absen — pemindai eksternal membedakan « tidak dipertimbangkan » dari « longgar karena pilihan »), bawaan `unsafe-none` di **semua** profil termasuk `hardened`: berbeda dengan dua sebelumnya, `require-corp`/`credentialless` dapat memblokir sumber daya cross-origin (font, gambar, iframe pihak ketiga) milik situs yang benar-benar disajikan — dapat diatur (`security.coep_mode`). Zona CSP (`security.csp_zones`): pengecualian **eksplisit** per awalan jalur (mis. `unsafe-inline` hanya di bawah `/sebuah-folder/` yang benar-benar membutuhkannya), masing-masing menggantikan sepenuhnya kebijakan bawaan untuk awalannya — tidak pernah penggabungan, tidak pernah pelonggaran global; setiap pengecualian tetap terlihat di `audit security` (CSP-001/CSP-002 juga memindai zona), meski disengaja. Pembuatan terpandu oleh asisten per direktif (layar **Keamanan umum**), setiap kolom terisi lebih dulu dengan nilai **saat ini** dari kebijakan global — agar hanya mengubah yang perlu diubah alih-alih memulai dari kolom kosong yang tanpa sengaja mengorbankan direktif lain; konfirmasi eksplisit tambahan diminta jika zona yang dirakit melonggarkan `unsafe-inline`/`unsafe-eval`/sumber umum `*`.
+- Analisis permintaan, tanpa opsi untuk menonaktifkannya: header/baris permintaan dibatasi **selama** pembacaan (tidak pernah setelahnya), pelipatan header usang ditolak, `Transfer-Encoding` selalu ditolak (tidak pernah ditebak).
+- `Content-Length` ganda ditolak; header `Expect` (misalnya `100-continue`) ditolak dengan rapi (417).
+- Daftar putih metode yang eksplisit (405 + `Allow` jika tidak), header `Host` divalidasi (hilang/kosong/ganda-meski-identik/karakter kontrol → 400); pemeriksaan ini aktif secara bawaan dan hanya dapat dinonaktifkan di konfigurasi (`security.require_valid_host`).
+- Header keamanan dan CSP dasar (`enforce`/`report-only`) diterapkan pada respons situs, termasuk halaman galatnya (403, 404…), dan tidak pernah dihapus atau ditimpa oleh modul. Pengecualian: respons yang dikirim sebelum permintaan diproses sama sekali (permintaan cacat atau terlalu besar, batas waktu terlampaui, `Host` tidak valid, metode ditolak, server penuh) keluar tanpa header ini — itu adalah halaman galat singkat tanpa konten situs. Aktif secara bawaan, hanya dapat dinonaktifkan di layar **Keamanan umum** (`security.security_headers_enabled`). `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` selalu `same-origin`, tanpa risiko nyata merusak situs. `Cross-Origin-Embedder-Policy` selalu dikirim secara eksplisit (tidak pernah absen — pemindai eksternal membedakan « tidak dipertimbangkan » dari « longgar karena pilihan »), bawaan `unsafe-none` di **semua** profil termasuk `hardened`: berbeda dengan dua sebelumnya, `require-corp`/`credentialless` dapat memblokir sumber daya cross-origin (font, gambar, iframe pihak ketiga) milik situs yang benar-benar disajikan — dapat diatur (`security.coep_mode`). Zona CSP (`security.csp_zones`): pengecualian **eksplisit** per awalan jalur (mis. `unsafe-inline` hanya di bawah `/sebuah-folder/` yang benar-benar membutuhkannya), masing-masing menggantikan sepenuhnya kebijakan bawaan untuk awalannya — tidak pernah penggabungan, tidak pernah pelonggaran global; setiap pengecualian tetap terlihat di `audit security` (CSP-001/CSP-002 juga memindai zona), meski disengaja. Pembuatan terpandu oleh asisten per direktif (layar **Keamanan umum**), setiap kolom terisi lebih dulu dengan nilai **saat ini** dari kebijakan global — agar hanya mengubah yang perlu diubah alih-alih memulai dari kolom kosong yang tanpa sengaja mengorbankan direktif lain; konfirmasi eksplisit tambahan diminta jika zona yang dirakit melonggarkan `unsafe-inline`/`unsafe-eval`/sumber umum `*`.
 - Alamat IPv4-terpetakan-IPv6 (`::ffff:x.x.x.x`) dinormalisasi sebelum perbandingan apa pun (daftar blokir, proxy tepercaya, pembatasan laju) — jika tidak, ini celah pelewatan yang dikenal.
 - Diverifikasi dengan pengujian properti (`hypothesis`, ribuan contoh yang dibangkitkan) terhadap pengurai HTTP dan resolver jalur, di samping pengujian unit/integrasi biasa.
 
@@ -459,13 +494,24 @@ WAF dapat memuat **daftar yang dapat diedit** sebagai berkas teks, satu jalur (a
 
 ## 11c. Batas laju per folder dan per IP/jaringan (WAF)
 
-Batas laju WAF (token bucket, `options.waf.rate_limit`, bawaan 60 permintaan / 60 dtk per IP) dapat diperhalus dari **Keamanan Aktif → Pengecualian dan batas laju** (atau secara manual, `rate_limit.path_policies` / `rate_limit.source_policies`):
+Batas laju WAF (token bucket, `options.waf.rate_limit`, bawaan 60 permintaan / 60 dtk per IP) dapat diperhalus dari **Keamanan Aktif → Pembatasan** (atau secara manual, `rate_limit.path_policies` / `rate_limit.source_policies`):
 
 - **Aturan per folder** (`prefix`, `requests`, `window_seconds`): aturan ini **menggantikan** batas global untuk folder tersebut, dengan penghitungnya sendiri (`requests: 0` = tanpa batas). Awalan terpanjang menang; `/images` mencakup `/images/a.png`, tidak pernah `/images2`. Biasanya untuk halaman berat (galeri gambar) yang mengembalikan 429.
 - **Aturan per IP/jaringan** (`network`, `requests`, `window_seconds`, `trusted`): prinsip yang sama; jaringan yang paling spesifik menang. Prioritas: folder, lalu IP/jaringan, lalu batas global.
 - **Larangan tidak berubah untuk publik**: pelampauan oleh IP publik tetap dicatat `"action": "block"` di `waf-alerts.log`, sehingga dapat dilarang oleh omega-jail (3 penolakan dalam 10 menit → 12 jam). **Sumber aman** — jaringan `never_auto_block` atau aturan bertanda `trusted: true` — tetap menerima 429 tetapi dicatat `"action": "throttle"`, yang tidak pernah dihitung oleh jail.
 - **Skrip magnet**: batas lajunya sendiri (respons 429) tidak pernah dihitung sebagai deteksi, sehingga tidak pernah berujung pada larangan otomatis; pada permintaan yang dicakup aturan folder atau IP/jaringan, aturan bawaan yang berlaku dan 429 dari magnet diabaikan (tanda tangan serangannya tetap diterapkan).
 - Aturan laju **tidak pernah** menonaktifkan pemeriksaan WAF; sebaliknya, pengecualian pemeriksaan (`exclusions.path_prefixes`) tidak pernah mencabut rate limit. Tanpa `trusted_proxy` aktif, aturan yang mencakup `127.0.0.1`/`::1` diabaikan (pengaman yang sama dengan `never_auto_block`).
+
+## 11d. RIPOSTE (respons bertingkat dari waktu ke waktu)
+
+Modul opsional (`option enable riposte`, nonaktif secara bawaan, perlu mulai ulang penuh): jika Active Defense bereaksi **selama** permintaan, RIPOSTE bertindak **dari waktu ke waktu**. Ia mengingat alamat yang kembali setelah masa tenang (episode) dan memberinya blokir yang makin lama — tingkat bawaan 1 jam, 6 jam, 24 jam, 7 hari, jendela residivis 30 hari, riwayat 90 hari.
+
+- **Proses terpisah**, dijalankan dan diawasi oleh layanan (dengan satu atau beberapa proses, satu per instans): membaca log WAF dan Active Defense, tidak pernah permintaan yang sedang berjalan. Tanpa WAF aktif, ia tidak melihat serangan apa pun.
+- **Kebijakan**: kapan bertindak (kelas serangan, jumlah kembali, tingkat Active Defense, kunjungan umpan) dan bagaimana (blokir lokal di blocklist WAF, blokir lokal + jaringan melalui jail omega-jail, atau umpan Active Defense yang diperpanjang). Lima skenario siap muat; setiap kebijakan dapat diukur pada log nyata dan disimulasikan sebelum diaktifkan. Kebijakan aktif bertindak otomatis.
+- **Tidak ada yang hilang**: setiap tindakan tetap terlihat, sedang berjalan atau selesai, beserta alasannya. Tiga tingkat penghentian: mencabut satu tindakan (dengan pengecualian atau « tidak dihitung sebagai residivis »), menonaktifkan aturan, henti darurat yang diingat.
+- **Pengaman**: pengecualian yang sama dengan WAF (host lokal, Tailscale, jaringan lokal), tidak pernah menimpa blokir manual atau yang lebih lama, satu tindakan per episode, batas blokir serentak.
+- **Ban lokal dan ban jaringan**: ban lokal dipasang omega-serv di daftar blokir WAF — alamat menerima halaman 451 “IP Anda telah di-ban” untuk semua permintaannya, selama ban berlangsung. Ban jaringan diserahkan ke fail2ban melalui jail omega-jail (`<service>-riposte-1h/6h/24h/7d`, satu set per instans); ban ini tidak berpengaruh saat koneksi datang melalui proxy lokal (Tailscale Funnel), di mana hanya ban lokal yang melindungi.
+- **Antarmuka**: enam layar di Keamanan aktif (Status, Kebijakan, Tindakan, Residivis, Simulasi, Pengaturan) dan perintah baris yang sama (`riposte …`). Cadangan: `config backup --include-riposte`.
 
 ## 12. Layanan dan operasi
 

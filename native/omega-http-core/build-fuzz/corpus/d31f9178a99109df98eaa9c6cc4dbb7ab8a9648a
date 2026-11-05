@@ -1,0 +1,5 @@
+GET / HTTP/21
+Host: HTTP/2.1
+Host: [
+Host: x
+C/

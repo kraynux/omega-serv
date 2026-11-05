@@ -2,20 +2,33 @@
 "prefer un format structure JSON... plutot qu'un simple fichier
 texte"). Ecriture atomique (meme mecanisme que la configuration
 principale, infrastructure/config/json_config_repository.py) - jamais
-de fichier a moitie ecrit meme sous charge (auto-block)."""
+de fichier a moitie ecrit meme sous charge (auto-block).
+
+Ecritures entre processus (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 0) : chaque
+« lire -> modifier -> remplacer » se fait sous un verrou exclusif (`<blocklist>.lock`,
+infrastructure/filesystem/file_lock.py) et relit TOUJOURS le fichier sous ce verrou
+(jamais le cache, dont le mtime peut n'avoir qu'une seconde de precision) - sinon deux
+workers du mode boost, ou un worker et la CLI, qui bannissent au meme moment partent de
+la meme liste et le second efface le ban du premier. Verrou indisponible (fichier
+inouvrable, tenu trop longtemps) : l'ecriture se fait quand meme, sans verrou, comme
+avant ce lot, avec une ligne sur stderr - jamais un ban refuse ni un serveur fige."""
 from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from pathlib import Path
 
 from omega_serv.domain.security.waf.blocklist import (
     BlocklistIndex,
+    is_stronger_entry,
     parse_blocklist,
     purge_expired,
     serialize_blocklist,
 )
 from omega_serv.domain.security.waf.entities import BlocklistEntry
+from omega_serv.infrastructure.filesystem.file_lock import exclusive_file_lock
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 
@@ -50,6 +63,8 @@ class JsonBlocklistStore:
         self._cache: list[BlocklistEntry] | None = None
         self._cache_mtime: float | None = None
         self._last_reported_error: str | None = None
+        self._lock_path = path.with_name(f"{path.name}.lock")
+        self._last_reported_lock_problem: str | None = None
         # Index de recherche de la DERNIERE liste lue (voir is_blocked) ; reconstruit
         # seulement quand la liste change, jamais a chaque requete.
         self._index = BlocklistIndex([])
@@ -66,6 +81,23 @@ class JsonBlocklistStore:
                 file=sys.stderr,
             )
 
+    def _report_lock_problem(self, reason: str, detail: str) -> None:
+        """Une seule ligne par probleme DISTINCT (jamais une par ecriture) - message du
+        processus serveur (journalctl), en francais (D18, comme « ERREUR blocklist illisible »)."""
+        key = f"{reason}:{detail}"
+        if key == self._last_reported_lock_problem:
+            return
+        self._last_reported_lock_problem = key
+        if reason == "timeout":
+            print(f"AVERTISSEMENT blocklist ecrite sans verrou entre processus : verrou {self._lock_path} "
+                  f"occupe depuis plus de {detail} s", file=sys.stderr)
+        else:
+            print(f"AVERTISSEMENT blocklist ecrite sans verrou entre processus : verrou {self._lock_path} "
+                  f"impossible a ouvrir ({detail})", file=sys.stderr)
+
+    def _write_lock(self) -> AbstractContextManager[bool]:
+        return exclusive_file_lock(self._lock_path, on_unavailable=self._report_lock_problem)
+
     def _load(self, *, for_write: bool = False) -> list[BlocklistEntry]:
         """Incident reel du 2026-10-18 (craftdark) : blocklist.json reecrit en
         root:root 600 -> PermissionError a CHAQUE requete, site entier en 502.
@@ -80,9 +112,19 @@ class JsonBlocklistStore:
             return []
         try:
             current_mtime = self._fs.file_mtime(self._path)
-            if self._cache is not None and self._cache_mtime == current_mtime:
-                return self._cache
-            raw = self._fs.read_text(self._path)
+            current_cache = self._cache if self._cache_mtime == current_mtime else None
+            if current_cache is not None and not for_write:
+                return current_cache
+            try:
+                # En ecriture, toujours relu (lot 0) : un autre processus a pu ecrire dans la
+                # meme seconde que notre derniere lecture, sans changer le mtime visible.
+                raw = self._fs.read_text(self._path)
+            except OSError:
+                if for_write and current_cache is not None:
+                    # Fichier devenu illisible mais INCHANGE depuis notre derniere lecture
+                    # valide : le cache est son contenu, la reecriture reste sure (2026-10-18).
+                    return list(current_cache)
+                raise
         except OSError as e:
             self._report_read_error(e)
             if for_write:
@@ -121,25 +163,42 @@ class JsonBlocklistStore:
         return tuple(self._load())
 
     def add_entry(self, entry: BlocklistEntry) -> None:
-        entries = self._load(for_write=True)
-        entries = [e for e in entries if e.network != entry.network]
-        entries.append(entry)
-        self._save(entries)
+        with self._write_lock():
+            entries = self._load(for_write=True)
+            entries = [e for e in entries if e.network != entry.network]
+            entries.append(entry)
+            self._save(entries)
+
+    def add_entry_unless_stronger(self, entry: BlocklistEntry) -> bool:
+        with self._write_lock():
+            entries = self._load(for_write=True)
+            now = self._clock.now()
+            if any(e.network == entry.network and is_stronger_entry(e, entry, now) for e in entries):
+                return False
+            entries = [e for e in entries if e.network != entry.network]
+            entries.append(entry)
+            self._save(entries)
+            return True
 
     def remove_entry(self, network: str) -> bool:
-        entries = self._load(for_write=True)
-        remaining = [e for e in entries if e.network != network]
-        if len(remaining) == len(entries):
-            return False
-        self._save(remaining)
-        return True
+        return self.remove_entry_if(network, lambda _entry: True)
+
+    def remove_entry_if(self, network: str, predicate: Callable[[BlocklistEntry], bool]) -> bool:
+        with self._write_lock():
+            entries = self._load(for_write=True)
+            remaining = [e for e in entries if not (e.network == network and predicate(e))]
+            if len(remaining) == len(entries):
+                return False
+            self._save(remaining)
+            return True
 
     def purge_expired(self) -> int:
-        entries = self._load(for_write=True)
-        kept, removed_count = purge_expired(entries, self._clock.now())
-        if removed_count:
-            self._save(kept)
-        return removed_count
+        with self._write_lock():
+            entries = self._load(for_write=True)
+            kept, removed_count = purge_expired(entries, self._clock.now())
+            if removed_count:
+                self._save(kept)
+            return removed_count
 
     def count_auto_entries(self) -> int:
         return sum(1 for e in self._load() if e.source == "auto")

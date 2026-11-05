@@ -18,6 +18,7 @@ from omega_serv.interfaces.tui.screens._base import OmegaScreen
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.domain.config.entities import OmegaServConfig
 
 
 class WafStatusScreen(OmegaScreen):
@@ -65,7 +66,38 @@ class WafStatusScreen(OmegaScreen):
         if factory is not None:
             port = factory(config, self._container.filesystem, self._container.project_root, self._container.clock)
             lines.append(_("Entrées en liste de blocage : {count}").format(count=len(port.list_entries())))
+        if config.server.engine == "native":
+            lines.extend(self._native_lines(config, waf_config.native_check_every))
         body.update("\n".join(lines))
+
+    def _native_lines(self, config: OmegaServConfig, check_every: int) -> list[str]:
+        """Plan WAF natif, lot 5 : ce que le moteur natif fait des regles (meme section que son instantane)."""
+        section = self._container.native_waf_filter_section(config)
+        lines = ["", _("Moteur natif :")]
+        if section is None or not section.get("available"):
+            lines.append(_("  Toutes les requêtes passent par le contrôle Python : un pack de règles est illisible."))
+            return lines
+        exported = len(section["rules"])
+        total = exported + len(section["unexported"])
+        lines.append(_("  Règles évaluées aussi par le moteur natif : {exported} sur {total}").format(exported=exported, total=total))
+        if exported < total:
+            lines.append(_("  Les autres restent évaluées par Python seulement (raisons dans le journal d'erreurs)."))
+        decides = ("native_decides", "native_decides_with_watch", "native_decides_with_rate_limit")
+        if any(section.get(name) for name in decides):
+            lines.append(_("  Requêtes sans aucune correspondance : servies par le moteur natif seul."))
+        else:
+            reasons = {
+                "magnet": _("magnet est actif"),
+                "rate_limit": _("la limite de débit est active"),
+                "auth_zones": _("les zones d'authentification sont illisibles"),
+            }
+            reason = reasons.get(section["python_reason"], section["python_reason"] or "")
+            lines.append(_("  Toutes les requêtes passent par le contrôle Python : {reason}.").format(reason=reason))
+        if check_every:
+            lines.append(_("  Contrôle : une requête propre sur {count} est vérifiée par Python.").format(count=check_every))
+        else:
+            lines.append(_("  Contrôle 1/N : désactivé."))
+        return lines
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "back":

@@ -53,6 +53,10 @@ class _FakeIncidentRepository:
         self.pruned_history = (keep_first, keep_last)
         return 0
 
+    def purge_closed(self, closed_before, max_closed):
+        self.purge_closed_args = (closed_before, max_closed)
+        return 2
+
     def add(self, incident: Incident) -> None:
         self._incidents[incident.incident_id] = incident
 
@@ -174,6 +178,14 @@ class TestSweepActiveDefense(unittest.TestCase):
             _FakeThreatStateRepository(), incident_repo, _FixedClock(), ActiveDefenseConfig(state_ttl_seconds=7200),
         )
         self.assertEqual(result.closed_incidents, ("i1",))
+
+
+class TestSweepPurgesClosedIncidents(unittest.TestCase):
+    def test_closed_incidents_older_than_ninety_days_are_purged(self):
+        incident_repo = _FakeIncidentRepository()
+        result = sweep_active_defense(_FakeThreatStateRepository(), incident_repo, _FixedClock(), ActiveDefenseConfig())
+        self.assertEqual(result.purged_closed_incidents, 2)
+        self.assertEqual(incident_repo.purge_closed_args, (_NOW - timedelta(days=90), 10_000))
 
 
 if __name__ == "__main__":

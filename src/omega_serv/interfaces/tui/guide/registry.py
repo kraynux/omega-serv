@@ -17,6 +17,7 @@ from omega_serv.interfaces.tui.guide.content.configuration_base import (
 from omega_serv.interfaces.tui.guide.content.divers import ALL_DIVERS_GUIDES
 from omega_serv.interfaces.tui.guide.content.faq import FAQ_ENTRIES
 from omega_serv.interfaces.tui.guide.content.logs import ALL_LOGS_GUIDES
+from omega_serv.interfaces.tui.guide.content.riposte import ALL_RIPOSTE_GUIDES
 from omega_serv.interfaces.tui.guide.content.routage import (
     ALIASES_SCREEN,
     CACHE_SCREEN,
@@ -76,6 +77,7 @@ _ALL_GUIDES: tuple[ScreenGuide, ...] = (
     SIMULATE_REQUEST_SCREEN,
     CONFIG_CHECK_SCREEN,
     *ALL_ACTIVE_SECURITY_GUIDES,
+    *ALL_RIPOSTE_GUIDES,
     *ALL_DIVERS_GUIDES,
 )
 

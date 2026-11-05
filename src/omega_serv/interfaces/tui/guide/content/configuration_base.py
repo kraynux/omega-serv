@@ -25,7 +25,8 @@ BASE_CONFIG_SCREEN = ScreenGuide(
     acces=_("Accueil -> Configuration détaillée -> Configuration de base"),
     definition=(
         _("Réglages fondamentaux du serveur : adresse d'écoute, port, nom de serveur "
-        "annoncé, fichiers d'index cherches dans un répertoire sans nom de fichier explicite.")
+        "annoncé, fichiers d'index cherches dans un répertoire sans nom de fichier explicite, "
+        "moteur HTTP (Python ou natif C++).")
     ),
     fields=(
         FieldGuide(
@@ -73,9 +74,33 @@ BASE_CONFIG_SCREEN = ScreenGuide(
             action=_("Enregistre dans server.index_files."),
             reaction=_("Même réaction que le nom de serveur - rechargement nécessaire, jamais un redémarrage complet."),
         ),
+        FieldGuide(
+            label=_("Moteur HTTP (engine)"),
+            definition=(
+                _("Programme qui traite les requêtes HTTP. Python (par défaut) : l'interpréteur Python traite "
+                "tout. Natif C++ (omega-http-core) : un programme compilé, qui utilise tous les cœurs, traite "
+                "lui-même le contenu statique, les redirections, le cache et TLS ; il cherche lui-même les règles "
+                "du WAF et sert seul une requête sur laquelle aucune ne correspond ; il confie au processus Python "
+                "les autres contrôles de sécurité (requête suspecte ou douteuse, Active Defense, "
+                "authentification), le listing, les pages internes et les routes applicatives (reverse proxy, FastCGI, envoi de fichiers). Dans les deux "
+                "cas : mêmes réponses, mêmes journaux, même sécurité. Ce que le choix change, mesuré : FAQ, "
+                "« Moteur Python ou natif : qu'est-ce que ça change concrètement ? ».")
+            ),
+            utilisation=(
+                _("Python ou Natif C++. Le choix natif est GRISÉ tant qu'une cause l'empêche (binaire absent, "
+                "TLS en mode direct avec reverse proxy, FastCGI ou envoi de fichiers) : la liste des causes, "
+                "et comment lever chacune, s'affiche sous le choix. Lever d'abord la cause, puis revenir ici.")
+            ),
+            action=_("Enregistre dans server.engine."),
+            reaction=(
+                _("Nécessite un REDÉMARRAGE COMPLET - un rechargement qui changerait de moteur est refusé. "
+                "Le moteur réellement utilisé est affiché dans État & Ressources (section MOTEUR HTTP, avec "
+                "le tableau des connecteurs).")
+            ),
+        ),
     ),
     consequences=(
-        _("bind/port exigent toujours un redémarrage complet. server_name/index_files se "
+        _("bind/port et le moteur HTTP exigent toujours un redémarrage complet. server_name/index_files se "
         "rechargent à chaud mais nécessitent quand même un rechargement du service déjà lancé "
         "pour être pris en compte.")
     ),
@@ -183,29 +208,33 @@ LIMITS_SCREEN = ScreenGuide(
             reaction=_("Se recharge à chaud."),
         ),
         FieldGuide(
-            label=_("Nombre de workers - mode boost (workers)"),
+            label=_("Nombre de processus (workers)"),
             definition=(
-                _("Nombre de processus serveur qui se partagent le port. Un processus Python n'utilise "
-                "qu'un cœur : plusieurs workers servent davantage de requêtes en parallèle. Les compteurs de "
-                "sécurité (rate limit, récidive) sont partagés entre workers et restent exacts ; un "
-                "script magnet garde ses propres compteurs dans chaque worker.")
+                _("Avec le moteur Python : nombre de processus serveur qui se partagent le port ; un processus "
+                "Python n'utilise qu'un cœur, plusieurs servent davantage de requêtes en parallèle. Avec le "
+                "moteur natif (Configuration de base) : nombre de processus Python qui font les contrôles de "
+                "sécurité, le natif utilisant déjà tous les cœurs. Les compteurs de sécurité (rate limit, "
+                "récidive) sont partagés entre processus et restent exacts ; un script magnet garde ses propres "
+                "compteurs dans chaque processus.")
             ),
             utilisation=(
-                _("1 = un seul processus (par défaut, fonctionnement classique) ; 0 = automatique (un par "
-                "cœur physique) ; sinon un nombre jusqu'aux CPU disponibles de cette machine, affichés "
-                "sous le champ et dans le registre des capacités. Le nombre doit correspondre à la machine "
-                "où omega-serv est installé : une valeur plus grande est refusée.")
+                _("Le maximum dépend du moteur et du processeur détecté, et s'affiche sous le champ avec ce "
+                "qu'augmenter apporte sur cette machine : moteur Python, un processus par cœur physique ; moteur "
+                "natif, 1, ou 2 à partir de 4 cœurs physiques (un 2e n'aide que si un contrôle de sécurité est "
+                "actif). Une valeur au-delà du maximum est refusée. Ce que le choix change, mesuré : FAQ, "
+                "« Combien de processus choisir ? ».")
             ),
             action=_("Enregistre dans server.workers."),
             reaction=(
                 _("Redémarrage complet nécessaire. Si la configuration est recopiée sur une machine plus "
-                "petite, le serveur se limite à ses CPU disponibles et l'écrit dans le journal.")
+                "petite, le serveur se limite au maximum de cette machine et l'écrit dans le journal et dans "
+                "État & Ressources.")
             ),
         ),
     ),
     consequences=(
         _("Neuf champs sur onze se rechargent à chaud (rechargement du service nécessaire, "
-        "automatique si actif). listen_backlog et le nombre de workers exigent un redémarrage complet.")
+        "automatique si actif). listen_backlog et le nombre de processus exigent un redémarrage complet.")
     ),
     points_de_vigilance=(
         (

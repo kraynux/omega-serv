@@ -487,5 +487,67 @@ class TestActiveDefenseLockedDatabase(_ActiveDefenseServerTestCase):
         self.assertIn("écriture en base impossible", error_log)
         self.assertIn("écriture en base rétablie", error_log)
 
+
+class TestSecurityEventsJournal(_ActiveDefenseServerTestCase):
+    """Lot 1 RIPOSTE (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md) : les evenements qu'Active Defense
+    produisait deja sont ecrits dans var/log/security-events.jsonl, une ligne par evenement,
+    jamais par requete normale ; le journal WAF indique l'etape (stage)."""
+
+    _THRESHOLDS: ClassVar[dict[str, int]] = {"suspicious_score": 1, "hostile_score": 10, "incident_score": 10}
+
+    def _events(self):
+        self.assertTrue(self.server.flush_active_defense())  # incident : ecrit par le fil d'ecriture
+        path = self.root / "var" / "log" / "security-events.jsonl"
+        if not path.exists():
+            return []
+        return [json.loads(line) for line in path.read_text().splitlines()]
+
+    async def test_clean_traffic_writes_nothing(self):
+        await self._start(active_defense_settings={"war_mode": {"enabled": True}})
+        for _ in range(3):
+            await self._request("GET", "/index.html")
+        self.assertEqual(self._events(), [])
+
+    async def test_escalation_incident_assignment_and_decoy_visit(self):
+        await self._start(active_defense_settings={
+            "mode": "enforce",
+            "war_mode": {"enabled": True, "thresholds": self._THRESHOLDS, "actions": ["redirect_to_decoy", "create_incident"]},
+            "deception": {
+                "enabled": True, "fallback": "pass_through",
+                "profiles": {"fake_admin": {"enabled": True, "match_attack_classes": ["sqli"]}},
+            },
+        })
+        await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        await self._request("GET", "/dashboard")  # leurre servi
+
+        events = self._events()
+        by_type = {event["type"]: event for event in events}
+        self.assertEqual(set(by_type), {"threat_escalated", "incident_opened", "deception_assigned", "decoy_hit"})
+        escalation = by_type["threat_escalated"]
+        self.assertEqual((escalation["previous_level"], escalation["level"]), ("normal", "hostile"))
+        self.assertEqual(escalation["attack_class"], "sqli")
+        self.assertEqual(escalation["remote_ip"], "127.0.0.1")
+        self.assertTrue(escalation["subject_id"].startswith("127.0.0.1:"))
+        self.assertEqual(by_type["deception_assigned"]["decoy_profile"], "fake_admin")
+        self.assertEqual(by_type["decoy_hit"]["decoy_profile"], "fake_admin")
+        self.assertTrue(by_type["incident_opened"]["incident_id"])
+        self.assertEqual(len({event["event_id"] for event in events}), len(events))  # identifiants uniques
+
+    async def test_same_level_again_is_not_a_new_escalation(self):
+        await self._start(active_defense_settings={
+            "war_mode": {"enabled": True, "thresholds": {"suspicious_score": 1, "hostile_score": 1000}, "actions": []},
+        }, waf_mode="log-only")
+        for _ in range(3):
+            await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        escalations = [event for event in self._events() if event["type"] == "threat_escalated"]
+        self.assertEqual(len(escalations), 1)  # normal -> suspicious une seule fois
+
+    async def test_waf_alert_log_carries_the_stage(self):
+        await self._start(active_defense_settings=None)
+        await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        lines = (self.root / "var" / "log" / "waf-alerts.log").read_text().splitlines()
+        self.assertEqual(json.loads(lines[-1])["stage"], "inspection")
+
+
 if __name__ == "__main__":
     unittest.main()

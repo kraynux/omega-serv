@@ -60,6 +60,8 @@ def _parse_network(network: str) -> _IpNetwork | None:
 
 def matching_source_policy(ip: str, policies: tuple[SourceRateLimitPolicy, ...]) -> SourceRateLimitPolicy | None:
     """Regle IP/reseau la plus precise (plus grand prefixlen) contenant `ip`."""
+    if not policies:
+        return None  # cas courant : aucune regle par source, aucune analyse d'adresse par requete
     addr = _parse_ip(ip)
     if addr is None:
         return None

@@ -308,7 +308,7 @@ class TestWafMagnet(_WafServerTestCase):
 
 
 class TestWafBlocklist(_WafServerTestCase):
-    async def test_blocklisted_ip_gets_403(self):
+    async def test_blocklisted_ip_gets_451(self):
         blocklist_path = self.root / "secure" / "waf" / "blocklist.json"
         blocklist_path.write_text(json.dumps({
             "version": 1,
@@ -316,7 +316,7 @@ class TestWafBlocklist(_WafServerTestCase):
         }))
         await self._start({"rules": {"paths": ["secure/waf/rules/body-sqli.json"]}})
         status, _, _ = await self._request("GET", "/index.html")
-        self.assertEqual(status, 403)
+        self.assertEqual(status, 451)
 
 
 class TestWafRateLimit(_WafServerTestCase):

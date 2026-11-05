@@ -8,6 +8,7 @@ from omega_serv.domain.security.waf import blocklist as blocklist_module
 from omega_serv.domain.security.waf.blocklist import (
     BlocklistIndex,
     find_matching_entry,
+    is_stronger_entry,
     parse_blocklist,
     purge_expired,
     serialize_blocklist,
@@ -146,6 +147,48 @@ class TestPurgeExpired(unittest.TestCase):
         kept, removed_count = purge_expired(entries, _NOW)
         self.assertEqual(removed_count, 0)
         self.assertEqual(len(kept), 1)
+
+
+
+class TestIsStrongerEntry(unittest.TestCase):
+    """Lot 0 (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md) : un ajout AUTOMATIQUE n'ecrase jamais une
+    entree en vigueur manuelle, permanente ou plus longue."""
+
+    def _in(self, hours):
+        return (_NOW + timedelta(hours=hours)).isoformat()
+
+    def test_expired_existing_is_never_stronger(self):
+        existing = _entry(expires_at=self._in(-1), source="manual")
+        self.assertFalse(is_stronger_entry(existing, _entry(expires_at=self._in(1), source="auto"), _NOW))
+
+    def test_active_manual_entry_is_kept_even_if_shorter(self):
+        existing = _entry(expires_at=self._in(1), source="manual")
+        self.assertTrue(is_stronger_entry(existing, _entry(expires_at=self._in(24), source="auto"), _NOW))
+
+    def test_permanent_entry_is_kept(self):
+        existing = _entry(expires_at=None, source="auto")
+        self.assertTrue(is_stronger_entry(existing, _entry(expires_at=self._in(24), source="auto"), _NOW))
+
+    def test_longer_or_equal_automatic_entry_is_kept(self):
+        candidate = _entry(expires_at=self._in(6), source="auto")
+        self.assertTrue(is_stronger_entry(_entry(expires_at=self._in(24), source="auto"), candidate, _NOW))
+        self.assertTrue(is_stronger_entry(_entry(expires_at=self._in(6), source="auto"), candidate, _NOW))
+
+    def test_shorter_automatic_entry_is_replaced(self):
+        existing = _entry(expires_at=self._in(1), source="auto")
+        self.assertFalse(is_stronger_entry(existing, _entry(expires_at=self._in(6), source="auto"), _NOW))
+
+    def test_permanent_candidate_beats_a_temporary_automatic_entry(self):
+        existing = _entry(expires_at=self._in(24), source="auto")
+        self.assertFalse(is_stronger_entry(existing, _entry(expires_at=None, source="auto"), _NOW))
+
+    def test_dates_without_timezone_are_read_as_utc(self):
+        existing = _entry(expires_at=(_NOW + timedelta(hours=24)).replace(tzinfo=None).isoformat(), source="auto")
+        self.assertTrue(is_stronger_entry(existing, _entry(expires_at=self._in(6), source="auto"), _NOW))
+
+    def test_unreadable_date_keeps_the_existing_entry(self):
+        existing = _entry(expires_at="pas-une-date", source="auto")
+        self.assertTrue(is_stronger_entry(existing, _entry(expires_at=self._in(6), source="auto"), _NOW))
 
 
 if __name__ == "__main__":

@@ -87,5 +87,25 @@ class TestFormatWafAlertLine(unittest.TestCase):
         self.assertIsNone(record["user_agent"])
 
 
+class TestWafAlertStage(unittest.TestCase):
+    """Lot 1 RIPOSTE : l'etape du pipeline est journalisee, sans retirer aucun champ existant."""
+
+    def test_inspection_by_default(self):
+        record = json.loads(format_waf_alert_line(_entry(), WafLoggingConfig()))
+        self.assertEqual(record["stage"], "inspection")
+
+    def test_blocklist_hit_is_identifiable(self):
+        decision = WafDecision(action="block", status_code=403, score=0, log_level="warning", stage="blocklist")
+        record = json.loads(format_waf_alert_line(_entry(decision=decision), WafLoggingConfig()))
+        self.assertEqual(record["stage"], "blocklist")
+        self.assertEqual(record["score"], 0)
+
+    def test_omega_jail_failregex_still_matches(self):
+        """Jails omega-serv-waf-block (catalogue omega-jail) : `"remote_ip": "<HOST>".*"action": "block"`."""
+        import re
+        line = format_waf_alert_line(_entry(), WafLoggingConfig())
+        self.assertRegex(line, re.compile(r'"remote_ip": "203\.0\.113\.1".*"action": "block"'))
+
+
 if __name__ == "__main__":
     unittest.main()

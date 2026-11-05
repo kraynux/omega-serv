@@ -19,6 +19,7 @@ from omega_serv.application.active_defense.queries import (
     list_incidents,
     omitted_history_notice,
 )
+from omega_serv.application.active_defense.sweep_active_defense import sweep_active_defense
 from omega_serv.core.i18n import _
 from omega_serv.domain.security.active_defense.entities import IncidentFilters
 from omega_serv.interfaces.tui.screens._active_defense_collaborators_cache import (
@@ -43,12 +44,24 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         self._container = container
         self._reset_active_defense_cache()
         self._selected_incident_id: str | None = None
+        # Filtre (decision utilisateur 2026-11-01) : les incidents fermes ne restent plus melanges aux
+        # ouverts ; « Ouverts » par defaut, « Fermes » pour les consulter / exporter, « Tous ».
+        self._status_filter: str | None = "open"
 
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
             yield Static(_("INCIDENTS"), classes="omega-title")
             yield Static("", id="incidents-error", classes="omega-hint")
+            with Horizontal(classes="omega-actions"):
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Ouverts"), id="filter-open", variant="primary")
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Fermés"), id="filter-closed")
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Tous"), id="filter-all")
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Purger maintenant"), id="purge-now")
             yield DataTable(id="incidents-table")
             yield Static("", id="incident-detail", classes="omega-hint")
             with Horizontal(classes="omega-actions"):
@@ -81,7 +94,20 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             self.query_one("#incidents-error", Static).update(self._active_defense_error or "")
             return
         self.query_one("#incidents-error", Static).update("")
-        for incident in list_incidents(active_defense.incident_repository, IncidentFilters()):
+        incidents = list_incidents(active_defense.incident_repository, IncidentFilters())
+        open_count = sum(1 for incident in incidents if incident.status == "open")
+        counts = {"open": open_count, "closed": len(incidents) - open_count, None: len(incidents)}
+        for button_id, status, label in (
+            ("#filter-open", "open", _("Ouverts ({count})")),
+            ("#filter-closed", "closed", _("Fermés ({count})")),
+            ("#filter-all", None, _("Tous ({count})")),
+        ):
+            button = self.query_one(button_id, Button)
+            button.label = label.format(count=counts[status])
+            button.variant = "primary" if status == self._status_filter else "default"
+        for incident in incidents:
+            if self._status_filter is not None and incident.status != self._status_filter:
+                continue
             table.add_row(
                 incident.incident_id, incident.subject_id, incident.status,
                 incident.opened_at.isoformat(), incident.closed_at.isoformat() if incident.closed_at else "-",
@@ -106,8 +132,24 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
+        filters = {"filter-open": "open", "filter-closed": "closed", "filter-all": None}
+        if button_id in filters:
+            self._status_filter = filters[button_id]
+            self._refresh()
+            return
         if button_id == "back":
             self.dismiss()
+            return
+        if button_id == "purge-now":
+            self.app.push_screen(
+                ConfirmScreen(
+                    title=_("PURGER MAINTENANT"),
+                    message=_("Ferme les incidents dont la menace est effacée (source revenue au niveau normal et "
+                              "calme), supprime les incidents fermés depuis plus de 90 jours et les états de menace "
+                              "expirés - la même chose que l'entretien automatique, tout de suite. Continuer ?"),
+                ),
+                self._purge_if_confirmed,
+            )
             return
         if button_id == "close-incident" and self._selected_incident_id is not None:
             self.app.push_screen(
@@ -126,6 +168,26 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             return
         if button_id == "generate-report" and self._selected_incident_id is not None:
             self._generate_report()
+
+    def _purge_if_confirmed(self, confirmed: bool | None) -> None:
+        if not confirmed:
+            return
+        active_defense = self._active_defense_or_none()
+        if active_defense is None:
+            return
+        result = sweep_active_defense(
+            active_defense.threat_state_repository, active_defense.incident_repository,
+            self._container.clock, active_defense.config,
+        )
+        for incident_id in result.closed_incidents:
+            closed = active_defense.incident_repository.get(incident_id)
+            if closed is not None:
+                self._auto_export_ioc_on_close(active_defense, closed)
+        self.app.notify(_("Incidents fermés : {closed} - fermés depuis plus de 90 jours supprimés : {purged} - états de "
+                          "menace expirés purgés : {states}").format(
+            closed=len(result.closed_incidents), purged=result.purged_closed_incidents,
+            states=result.purged_threat_states))
+        self._refresh()
 
     def _close_incident(self, confirmed: bool | None) -> None:
         if not confirmed or self._selected_incident_id is None:

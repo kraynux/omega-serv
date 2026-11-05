@@ -46,6 +46,11 @@ class ActiveDefenseLoggingConfig:
     chemin de fichier dedie, alors que "separer les logs de deception
     des logs de production" est explicitement une regle du plan.
     Relatif a project_root, meme convention que storage.database."""
+    security_events_path: str = "var/log/security-events.jsonl"
+    """Journal des evenements de securite (escalades, incidents ouverts, leurres affectes et
+    visites de leurre - OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 1), lu par RIPOSTE. Toujours ecrit
+    quand Active Defense observe (contrairement au journal enrichi, lie a l'action enrich_log) :
+    une ligne par evenement, jamais par requete. Relatif a project_root."""
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ActiveDefenseLoggingConfig:
@@ -56,6 +61,7 @@ class ActiveDefenseLoggingConfig:
             max_body_bytes=int(data.get("max_body_bytes", defaults.max_body_bytes)),
             redact_fields=tuple(data.get("redact_fields", defaults.redact_fields)),
             log_path=data.get("log_path", defaults.log_path),
+            security_events_path=data.get("security_events_path", defaults.security_events_path),
         )
 
 

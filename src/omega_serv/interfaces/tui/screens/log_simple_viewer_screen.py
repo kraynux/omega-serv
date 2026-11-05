@@ -21,15 +21,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from rich.cells import cell_len, set_cell_size
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Center, Container, Horizontal, Vertical, VerticalScroll
 from textual.timer import Timer
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.core.i18n import _
-from omega_serv.domain.logs.analytics import compute_stats
-from omega_serv.domain.logs.models import LogEntry
+from omega_serv.domain.logs.analytics import compute_traffic_stats
+from omega_serv.domain.logs.models import LogEntry, TrafficStats
 from omega_serv.domain.logs.parser import parse_log_line
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.ports.live_tail_port import LiveTailPort
@@ -38,14 +39,25 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 _REFRESH_SECONDS = 2.0
-_VISIBLE_ROWS = 30
 _BUFFER_SIZE = 500
 _INITIAL_LINES = 200
+_TOP_WIDTH = 29
+"""Largeur utile du cadre de gauche avant son premier affichage (34 colonnes, cadre et barre deduits)."""
+
+
+def _format_bytes(size: float) -> str:
+    if size >= 1024 * 1024:
+        return f"{size / (1024 * 1024):.1f} MB"
+    if size >= 1024:
+        return f"{size / 1024:.1f} KB"
+    return f"{int(size)} B"
 
 
 class LogSimpleViewerScreen(OmegaScreen):
-    """Suit un fichier en direct, affiche les dernieres lignes parsees +
-    un petit tableau de stats generique (`compute_stats`)."""
+    """Suit un fichier en direct : tout le tampon dans un tableau qui defile (suivi automatique quand on
+    est en bas) + barre de statut identique au viewer Simple d'omega-fire (rendement, bande passante,
+    statuts HTTP, clients et reseau, sante et tampon - retour utilisateur 2026-11-02 : seuls « Apercu »
+    et « Top IP », et 30 lignes visibles sans ascenseur pour un tampon de 200)."""
 
     def __init__(self, *, container: DependencyContainer, path: str) -> None:
         super().__init__()
@@ -59,11 +71,15 @@ class LogSimpleViewerScreen(OmegaScreen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(classes="omega-panel"):
-            yield Static(_("VOIR LES LOGS - SIMPLE - {path}").format(path=self._path), classes="omega-title")
-            with Horizontal():
-                yield Static(id="stats-box", classes="omega-dash-box")
+            with Center():  # titre et bouton centres (2026-11-05)
+                yield Static(_("VOIR LES LOGS - SIMPLE - {path}").format(path=self._path), classes="omega-title")
+            with Horizontal(id="simple-viewer-body"):
+                # Cadre qui defile (2026-11-05) : avec les tops repris d'Etat & Ressources, un Static seul
+                # a hauteur fixe coupait la fin de son contenu.
+                with VerticalScroll(id="stats-frame", classes="omega-dash-box"):
+                    yield Static(id="stats-box")
                 yield DataTable(id="entries-table")
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+            with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Retour"), id="back")
         yield Footer()
 
@@ -120,49 +136,101 @@ class LogSimpleViewerScreen(OmegaScreen):
             self._stop()
             return
 
+        added = False
         for line in new_lines:
             self._line_number += 1
             entry = parse_log_line(line, line_number=self._line_number, log_path=self._path)
             if entry is not None:
                 self._buffer.append(entry)
+                added = True
         if len(self._buffer) > _BUFFER_SIZE:
             self._buffer = self._buffer[-_BUFFER_SIZE:]
 
         self._render_stats()
-        self._render_table()
+        if added:
+            self._render_table()
 
     def _render_stats(self) -> None:
-        stats = compute_stats(self._buffer, top_n=5)
+        self.query_one("#stats-box", Static).update(self._stats_text(compute_traffic_stats(self._buffer)))
+
+    def _stats_text(self, stats: TrafficStats) -> Text:
+        variables = self.app.get_css_variables()
+        heading = f"bold {variables.get('secondary', '')}".strip()
+        good = variables.get("success", "green") or "green"
+        warn = variables.get("warning", "yellow") or "yellow"
+        bad = variables.get("error", "red") or "red"
+        info = variables.get("secondary", "cyan") or "cyan"
+        none = "-"
+
         content = Text()
-        content.append(_("-- APERÇU --------------\n"), style="bold")
-        content.append(_(" Lignes tampon : {count}\n").format(count=len(self._buffer)))
-        content.append(_(" IPs uniques   : {unique_ips}\n").format(unique_ips=stats.unique_ips))
-        content.append(_(" Taux d'erreur : {value:.1f}%\n\n").format(value=stats.error_rate()))
+        content.append(_("── RENDEMENT ──────────────\n"), style=heading)
+        rps = none if stats.requests_per_second is None else _("{rps:.1f} req/s").format(rps=stats.requests_per_second)
+        content.append(_(" ⚡ Débit        : {value}\n").format(value=rps), style=info)
+        if stats.avg_latency_ms is None:
+            content.append(_(" ⏱ Latence moy. : {value}\n\n").format(value=none))
+        else:
+            latency = stats.avg_latency_ms
+            style = good if latency < 200 else (warn if latency < 500 else bad)
+            content.append(_(" ⏱ Latence moy. : {value}\n\n").format(value=f"{latency:.0f} ms"), style=style)
 
-        statuses = [e.http_status for e in self._buffer if e.http_status is not None]
-        if statuses:
-            # N'apparait que si au moins une ligne du tampon est reconnue comme
-            # un access log Combined/Common - jamais affiche (vide/inutile) pour
-            # un tampon auth.log/syslog/....
-            content.append(_("-- STATUTS HTTP ---------\n"), style="bold")
-            s2xx = sum(1 for s in statuses if 200 <= s < 300)
-            s3xx = sum(1 for s in statuses if 300 <= s < 400)
-            s4xx = sum(1 for s in statuses if 400 <= s < 500)
-            s5xx = sum(1 for s in statuses if 500 <= s < 600)
-            content.append(_(" 2xx succès    : {s2xx}\n").format(s2xx=s2xx), style="green")
-            content.append(_(" 3xx redirect  : {s3xx}\n").format(s3xx=s3xx), style="cyan")
-            content.append(_(" 4xx client    : {s4xx}\n").format(s4xx=s4xx), style="yellow")
-            content.append(_(" 5xx serveur   : {s5xx}\n\n").format(s5xx=s5xx), style="red")
+        content.append(_("── BANDE PASSANTE ─────────\n"), style=heading)
+        bps = none if stats.bytes_per_second is None else f"{_format_bytes(stats.bytes_per_second)}/s"
+        total = none if stats.bytes_total is None else _format_bytes(stats.bytes_total)
+        average = none if stats.avg_size is None else _format_bytes(stats.avg_size)
+        content.append(_(" 🌐 Débit réseau : {value}\n").format(value=bps))
+        content.append(_(" 📦 Volume total : {value}\n").format(value=total))
+        content.append(_(" 🗜 Taille moy.  : {value}\n\n").format(value=average))
 
-        content.append(_("-- TOP IP ---------------\n"), style="bold")
-        for top_ip in stats.top_ips[:5]:
-            content.append(f" {top_ip.ip:<15} {top_ip.count}\n")
-        self.query_one("#stats-box", Static).update(content)
+        content.append(_("── STATUTS HTTP ───────────\n"), style=heading)
+        content.append(_(" 📊 Requêtes     : {count}\n").format(count=stats.http_total))
+        content.append(_(" √  Succès 2xx   : {count}\n").format(count=stats.status_2xx), style=good)
+        content.append(_(" ↔  Redir. 3xx   : {count}\n").format(count=stats.status_3xx), style=info)
+        content.append(_(" ⚠  Erreurs 4xx  : {count}\n").format(count=stats.status_4xx), style=warn)
+        content.append(_(" ❌ Erreurs 5xx  : {count}\n").format(count=stats.status_5xx), style=bad)
+        content.append(_(" ⛔ Refus 403    : {count}\n").format(count=stats.status_403), style=warn)
+        content.append(_(" ⏳ Refus 429    : {count}\n\n").format(count=stats.status_429), style=warn)
+
+        content.append(_("── CLIENTS & RÉSEAU ───────\n"), style=heading)
+        content.append(_(" 💻 IPs uniques  : {count}\n").format(count=stats.unique_ips))
+        # Adresse sur sa propre ligne : une IPv4 longue ou une IPv6 deborderait du cadre (34 colonnes).
+        content.append(_(" 🖧 Top 5 IP     :\n"), style=info)
+        self._append_top(content, stats.top_ips, info)
+        if stats.top_paths:
+            content.append(_("── CHEMINS DEMANDÉS ───────\n"), style=heading)
+            self._append_top(content, stats.top_paths, "")
+            content.append(_("── CHEMINS EN 404 ─────────\n"), style=heading)
+            self._append_top(content, stats.top_not_found, warn)
+
+        content.append(_("── SANTÉ & TAMPON ─────────\n"), style=heading)
+        rate = stats.error_rate
+        health_style = good if rate < 5 else (warn if rate < 15 else bad)
+        health = _("EXCELLENT") if rate < 2 else (_("CORRECT") if rate < 10 else _("DÉGRADÉ"))
+        content.append(_(" 🌡 Santé        : {health}\n").format(health=health), style=health_style)
+        content.append(_(" ⚠  Taux d'erreur: {rate:.1f}%\n").format(rate=rate), style=health_style)
+        content.append(_(" 📥 Tampon       : {count}/{size}").format(count=len(self._buffer), size=_BUFFER_SIZE))
+        return content
+
+    def _append_top(self, content: Text, items: list[tuple[str, int]], style: str) -> None:
+        """Valeur (IP, chemin) depuis le bord gauche, compte colle au bord droit (2026-11-05) : le chemin
+        dispose de toute la largeur restante au lieu de commencer au milieu du cadre."""
+        if not items:
+            content.append("    " + _("(aucun)") + "\n\n", style="dim")
+            return
+        width = self.query_one("#stats-box", Static).size.width or _TOP_WIDTH
+        count_width = max(len(str(count)) for _value, count in items)
+        room = max(8, width - 2 - count_width)  # 1 espace de marge + 1 avant le compte
+        for value, count in items:
+            shown = value if cell_len(value) <= room else set_cell_size(value, room - 1) + "…"
+            content.append(" " + shown + " " * (room - cell_len(shown)) + " ", style=style)
+            content.append(f"{count:>{count_width}}\n", style="bold")
+        content.append("\n")
 
     def _render_table(self) -> None:
         table = self.query_one("#entries-table", DataTable)
+        # Suivi automatique seulement si on etait deja en bas : jamais arrache d'une lecture plus haut.
+        follow = table.scroll_y >= table.max_scroll_y - 1
         table.clear()
-        for entry in self._buffer[-_VISIBLE_ROWS:]:
+        for entry in self._buffer:
             level_style = {"error": "red", "critical": "bold red", "warning": "yellow"}.get(entry.level.value, "")
 
             if entry.http_status is None:
@@ -196,3 +264,5 @@ class LogSimpleViewerScreen(OmegaScreen):
                 timeout_cell,
                 entry.message[:80],
             )
+        if follow:
+            table.call_after_refresh(table.scroll_end, animate=False)

@@ -12,13 +12,15 @@
 Officiële pagina: [OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/nl/) &nbsp; Referentie, gebruik, Help & FAQ: [Volledige handleiding](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/nl/guide.html)  
 Voorbeeld: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; Demonstratie [Demoserver](https://craftdark.snake-mackarel.ts.net) &nbsp; [Vergelijking/tests van webservers](comparatif-serveurs-web.md)  
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Lua](https://img.shields.io/badge/Lua-5.4%2B-2C2D72.svg)](https://www.lua.org/)
+[![HTML](https://img.shields.io/badge/HTML-5-E34F26.svg)](https://developer.mozilla.org/docs/Web/HTML)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
-[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
 [![Interface](https://img.shields.io/badge/Interface-CLI%20%2B%20TUI-cyan.svg)](#3-gebruik)
 [![Textual](https://img.shields.io/badge/Textual-TUI-5A5AFB.svg)](https://textual.textualize.io/)
+[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
 🌐 Documentatie, exports en interface beschikbaar in **17 talen** — zie [Talen van de interface](#talen-van-de-interface).  
 **Talen:**
@@ -26,7 +28,7 @@ Voorbeeld: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screen
 
 ---
 
-**OMEGA-SERV** is een HTTP/1.1-server geschreven in puur Python (voor de serverkern alleen de standaardbibliotheek), bedoeld om statische inhoud en optioneel PHP-FPM te serveren, met een niet uitschakelbare protocolverharding en beveiligingsmodules (WAF, TLS, authenticatie) die u kunt stapelen in plaats van dat ze worden opgelegd. Zevende tool van de `omega-`-suite, maar bewust **buiten de toekomstige `omega-suite`-integratie** (hij werkt op de lokale machine die hem host, niet op externe doelen — dezelfde familie als `omega-fire`); opgebouwd volgens Clean Architecture, waarbij `bootstrap/` dienstdoet als compositiewortel.
+**OMEGA-SERV** is een HTTP/1.1-server geschreven in puur Python (voor de serverkern alleen de standaardbibliotheek), bedoeld om statische inhoud en optioneel PHP-FPM te serveren, met een standaard actieve protocolverharding en beveiligingsmodules (WAF, TLS, authenticatie) die u kunt stapelen in plaats van dat ze worden opgelegd. Een optionele native C++-engine kan de verzoeken afhandelen in plaats van de Python-engine, met dezelfde beveiligingscontroles (zie §6b). Zevende tool van de `omega-`-suite, maar bewust **buiten de toekomstige `omega-suite`-integratie** (hij werkt op de lokale machine die hem host, niet op externe doelen — dezelfde familie als `omega-fire`); opgebouwd volgens Clean Architecture, waarbij `bootstrap/` dienstdoet als compositiewortel.
 
 ## 1. Visie en reikwijdte
 
@@ -35,9 +37,9 @@ De uitgesproken prioriteit is **eerst de robuustheid/veiligheid van de HTTP-kern
 ### Wat OMEGA-SERV doet
 
 - Serveert statische inhoud (bestanden, optioneel mapoverzicht, aliassen, omleidingen, herschrijvingen, cache) met veilige padresolutie (traversal, dubbele codering, symbolische links). Grote bestanden gaan in blokken rechtstreeks van de schijf, nooit in het geheugen geladen; elk bestand krijgt een `ETag` en een `Last-Modified` (herladen = lege 304-respons) en accepteert gedeeltelijke `Range`-verzoeken (download hervatten, video); afbeeldingen, media, lettertypen, CSS en JS krijgen een standaard-`Cache-Control`, aan te passen in het scherm Cache. Voorgecomprimeerde tekstbestanden: als `site.css.br` of `site.css.gz` naast `site.css` staat (gemaakt met `brotli -k site.css` of `gzip -k site.css`) en de browser ze accepteert, worden ze in plaats daarvan verzonden, nooit een versie die ouder is dan het origineel.
-- Verhardt het HTTP-protocol standaard, zonder optie om dit uit te schakelen: expliciet toegestane methoden, validatie van de `Host`-header, weigering van de dubbelzinnigheid `Content-Length`/`Transfer-Encoding`, niet te omzeilen beveiligingsheaders en basis-CSP.
+- Verhardt het HTTP-protocol standaard: strikte analyse van de verzoeken, zonder optie om dit uit te schakelen (weigering van de dubbelzinnigheid `Content-Length`/`Transfer-Encoding`), expliciet toegestane methoden, validatie van de `Host`-header, beveiligingsheaders en basis-CSP op de antwoorden van de site en haar foutpagina's.
 - Optioneel: WAF-filtering (signaturen, snelheidsbeperking, blokkeerlijst), direct TLS (zelfondertekend certificaat, ondertekend door een lokale CA, of publiek via Let's Encrypt/Certbot met automatische vernieuwing — zie §9), HTTP Basic-authenticatie per zone, PHP via FastCGI/PHP-FPM, afgeschermde uploadzones.
-- « Boost »-modus: meerdere serverprocessen, hoogstens één per beschikbare CPU van de machine (scherm Weerbaarheid en limieten); de beveiligingstellers (snelheidsbeperking, herhaling) worden tussen hen gedeeld en blijven exact.
+- Meerdere serverprocessen, hoogstens één per fysieke kern van de machine met de Python-engine (scherm Weerbaarheid en limieten); de beveiligingstellers (snelheidsbeperking, herhaling) worden tussen hen gedeeld en blijven exact.
 - Auditeert zijn eigen configuratie (`audit security`) en installeert zich als systeemdienst (systemd/OpenRC/runit).
 - Volledig scriptbare, niet-interactieve CLI, **én interactieve interface (Textual)** die precies dezelfde use-cases omvat — zie §3. Roadmap van de interface (`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`, §12) **volledig opgeleverd**: capaciteitenregister, profielen/opties, gedetailleerde configuratie (aliassen/omleidingen/herschrijvingen/FastCGI/mapoverzicht/authenticatie/cache/WAF/vertrouwde proxy's/uitgaande reverse proxy/TLS), logbeheer (Bibliotheek/Favorieten, 3 viewers — eenvoudig/klassiek/samengevoegde lnav —, IP bekijken en behandelen, externe SSH-bronnen, rotatie/back-up/automatisering/herstel/opschonen/export), systeemdienst, multi-instantie (register, aanmaak), controle/simulatie/audit, back-up/herstel van de configuratie, eerste-installatie-assistent, applicatie-instellingen (thema, weergaveprofiel, paden voor exports/screenshots), contextuele helphandleiding (pagina per scherm met concrete voorbeelden, FAQ, HTML-export, volledige dekking gecontroleerd door tests), systematische melding herladen/herstarten na elke opslag, volledige configuratie van Active Defense zonder handmatige bestandsbewerking.
 
@@ -63,13 +65,14 @@ Omega-serv **weigert te starten als root**. In geen enkel meegeleverd profiel, o
 
 - Python 3.10+
 - `openssl` (programma, geen Python-bibliotheek) voor alles wat met TLS-certificaten te maken heeft — de andere functies werken ook zonder.
+- Native engine (optioneel, gecompileerd meegeleverd voor x86_64): glibc 2.38 of nieuwer en OpenSSL 3, twee systeembibliotheken die Python al gebruikt. Start hij niet, dan compileert `install.sh` hem ter plaatse opnieuw wanneer cmake, een C++20-compiler en de OpenSSL-headers aanwezig zijn; anders draait omega-serv met zijn Python-engine.
 
 ### Downloaden
 
-Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -79,7 +82,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Werkt u een bestaande installatie bij?** De onderstaande opdracht **slaat het uitpakken stilzwijgend over** als `omega-serv/` al bestaat (hij gaat ervan uit dat het om een onderbroken eerste installatie gaat, niet om een update) — u zou dan de afhankelijkheden opnieuw installeren op de **oude, ongewijzigde code**, zonder ook maar één foutmelding. Gebruik in plaats daarvan het onderdeel [Bijwerken](#bijwerken) hieronder.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.0.1.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -88,9 +91,10 @@ chmod +x install.sh
 `install.sh`:
 
 1. Maakt de virtuele omgeving `.venv` aan als die nog niet bestaat.
-2. Installeert het pakket (`pip install -e .`) — **geen externe afhankelijkheid** (zie §6).
+2. Installeert het pakket (`pip install -e .`) — **geen externe afhankelijkheid** voor de serverkern (zie §6).
 3. Maakt `omega-serv.sh` en `install.sh` uitvoerbaar.
-4. Voegt de alias `serv` toe aan `~/.bashrc` en `~/.zshrc` (zonder duplicaat als hij al bestaat).
+4. Controleert of de meegeleverde native engine op de machine start, en compileert hem zo nodig en zo mogelijk ter plaatse opnieuw — zonder de installatie ooit te blokkeren (§6b).
+5. Voegt de alias `serv` toe aan `~/.bashrc` en `~/.zshrc` (zonder duplicaat als hij al bestaat).
 
 ### Bijwerken
 
@@ -98,7 +102,7 @@ Als `omega-serv/` al bestaat (eerdere installatie), **start `tar` dan nooit vanu
 
 ```bash
 # Vanuit de BOVENLIGGENDE map van omega-serv/ (nooit van binnenuit)
-tar -xzf omega-serv-2.0.1.tar.gz
+tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -128,6 +132,8 @@ De interface werkt in beperkte modus als deze tools ontbreken:
 - `lnav` — geavanceerde, samengevoegde loganalyse in het scherm **Logbeheer** (§3); duidelijke, expliciete foutmelding als het programma niet gevonden wordt, geen crash; de rest van het scherm (bekijken/volgen/rotatie/statistieken) werkt ook zonder normaal.
 - `scp` (pakket `openssh`/`openssh-clients`, bijna altijd al aanwezig) — alleen nodig voor de **Externe bronnen (SSH)** (§13a); zonder dit mislukt het ophalen met een duidelijke melding, de rest van de Bibliotheek werkt normaal.
 - `python-psutil` (systeempakket dat overeenkomt met `psutil` van PyPI) — wordt in alle gevallen automatisch geïnstalleerd door `pip install -e .` (verplichte afhankelijkheid van het pakket, het scherm **Status & bronnen** heeft het altijd nodig), maar het vooraf via de pakketbeheerder installeren bespaart `pip` het lokaal compileren van het wheel.
+- `cmake`, een C++20-compiler (`g++`), de OpenSSL 3-headers en PCRE2 — alleen nodig als de meegeleverde native engine niet start (glibc ouder dan 2.38): `install.sh` compileert hem dan ter plaatse opnieuw. Zonder PCRE2 laat de lokaal gebouwde engine bij een actieve WAF elk verzoek door Python inspecteren (trager); zonder deze tools houdt omega-serv zijn Python-engine.
+- Een emoji-lettertype (Noto Color Emoji) — optioneel, voor de pictogrammen van de Simple-viewer (Logbeheer); zonder verschijnen sommige pictogrammen als een vakje, verder verandert er niets. Een Nerd Font bevat deze emoji niet.
 
 ```bash
 # Arch Linux en afgeleiden
@@ -138,6 +144,16 @@ sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil openssh-clients
+
+# Lokale compilatie van de native engine (alleen als glibc < 2.38)
+sudo pacman -S cmake gcc openssl pcre2                     # Arch
+sudo apt install cmake g++ libssl-dev libpcre2-dev         # Debian/Ubuntu
+sudo dnf install cmake gcc-c++ openssl-devel pcre2-devel   # Fedora
+
+# Pictogrammen van de Simple-viewer (emoji-lettertype, optioneel)
+sudo pacman -S noto-fonts-emoji                            # Arch
+sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
+sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
 ## 3. Gebruik
@@ -185,13 +201,17 @@ Opstartscherm (splash, sluit met een toets of klik) → hoofdmenu (Eerste instal
 
 Geïntegreerd helpsysteem, nooit een simpele statische tekst: elk gedocumenteerd scherm (pagina met definitie/in te vullen velden met concrete voorbeelden/geactiveerde actie/reactie — herladen, herstarten of geen) is er direct vanuit bereikbaar via `F1`; de toets `a` opent het volledige menu (boomstructuur identiek aan de echte navigatie van de applicatie) met toegang tot de FAQ (in de praktijk tegengekomen valkuilen, bv. aanvalsklassen van Active Defense, rechten bij een gedeelde dienst) en een zelfstandige HTML-export (actief thema behouden) van de hele handleiding. Terugval op een generiek referentiescherm zolang er nog geen specifieke pagina bestaat — de dekking is momenteel volledig en door tests gecontroleerd.
 
+#### Contact en ondersteuning (hulpgids)
+
+De hulpgids (toets `a`) biedt een scherm **Contact en ondersteuning**: *Trakteer op een koffie* (PayPal-pagina van de ontwikkelaar), *Contact opnemen met ondersteuning* (contactformulier van de site, e-mailadres getoond) en *Mij aanmelden als gebruiker (anoniem)*. De aanmelding is vrijwillig en staat standaard uit: ze dient alleen om gebruikers te tellen en, desgewenst, hun continent of land (gesloten lijsten, nooit vrije tekst). Ze verstuurt een willekeurig getrokken sleutel, de versie van omega-serv en de gekozen wijze (*eenmalig* of *elke dag*, waarbij dat laatste het tellen van actieve installaties mogelijk maakt); nooit een naam, machinenaam, inhoud of logboeken. De dagelijkse verzending draait in een apart proces en vertraagt de server nooit. Het IP-adres wordt niet vastgelegd in de aanmeldingen, maar gaat zoals elk bezoek door de beveiligingscontroles en het logboek van de ontvangende server. Op elk moment in te trekken via hetzelfde scherm of `omega-serv declaration withdraw`; `DO_NOT_TRACK=1` stopt elke automatische verzending.
+
 #### Hoofdmenu (interactieve interface)
 
 - **Eerste installatie** — begeleid traject in 8 stappen (welkom → capaciteiten alleen-lezen → profielkeuze → bind/poort → optionele TLS → controle → samenvatting + schrijven → aanbod om de dienst te installeren); genereert een volledige configuratie en zet de server aan het werk zonder de CLI te kennen.
 - **Capaciteitenregister** — alleen-lezen systeemscan (init-systeem, geconfigureerde poort al bezet of niet, `openssl`/`logrotate`/`tailscale`/`lnav` aanwezig, schijfruimte, limiet van descriptors...), export naar JSON/HTML.
 - **Profielen** — dezelfde use-case als `profile` in de CLI (§5), diff altijd getoond vóór het schrijven.
 - **Gedetailleerde configuratie van de server** — volledige CRUD op aliassen/omleidingen/herschrijvingen/mapoverzicht/vertrouwde proxy's/uitgaande reverse proxy/FastCGI/cache/authenticatie/toegangscontrole/foutpagina's, plus het submenu **TLS** (status, zelfondertekende generatie, assistent lokale CA, Let's Encrypt/Certbot-assistent, automatische vernieuwing, intrekking, in-/uitschakelen — zie §9); een tweede kader **OPTIES EN CONTROLE** bundelt daar de snelkoppelingen naar **Opties** (`option` CLI, §7) en **Configuratie controleren** (`config check` CLI, §10) — hetzelfde traject als instellingen aanpassen en daarna controleren; deze twee schermen zijn niet meer rechtstreeks vanuit het hoofdmenu bereikbaar. De WAF woont hier niet meer (zie "Actieve beveiliging" hieronder): hij toont vooral operationele status die voortdurend verandert, geen eenvoudig statisch configuratieformulier. Elke opslag vermeldt systematisch de volgende stap: automatische en stille herlading tijdens bedrijf als er een dienst actief is (mapoverzicht, toegang, aliassen/omleidingen/herschrijvingen, cache, foutpagina's, vertrouwde proxy's, reverse-proxy-/FastCGI-zones, gebruikers/authenticatiezones), of expliciete bevestiging van een volledige herstart wanneer de wijziging de luistersocket, TLS of Active Defense raakt — geen enkel scherm laat u nog raden of de server opnieuw gestart moet worden.
-- **Actieve beveiliging** — één scherm met twee blokken naast elkaar: **Active Defense** (Status, Gevolgde dreigingen met score/niveau, Incidenten met tijdlijn/IoC-export/rapport, toewijzingen van Deception, Een beslissing simuleren in dry-run, **Instellingen** — volledige configuratie zonder ooit `config/omega-serve.json` met de hand te bewerken, zie §11) en **WAF** (Status, Modules — modus/regelpakketten/blokkeerlijst, Een verzoek testen, Custom — eigen regels opstellen en met de muis bewerkbare lijsten van paden/trefwoorden laden (zie §11b), Magnet — een extern `mod_magnet`-script importeren met compatibiliteitscontrole vóór activering) — zie §11.
+- **Actieve beveiliging** — één scherm met twee blokken naast elkaar: **Active Defense** (Status, Gevolgde dreigingen met score/niveau, Incidenten met tijdlijn/IoC-export/rapport, toewijzingen van Deception, Een beslissing simuleren in dry-run, **Instellingen** — volledige configuratie zonder ooit `config/omega-serve.json` met de hand te bewerken, zie §11) en **WAF** (Status, Modules — modus/regelpakketten/blokkeerlijst, Een verzoek testen, Custom — eigen regels opstellen en met de muis bewerkbare lijsten van paden/trefwoorden laden (zie §11b), Magnet — een extern `mod_magnet`-script importeren met compatibiliteitscontrole vóór activering) — zie §11. **RIPOSTE**: derde blok (WAF → Active Defense → RIPOSTE, de volgorde van een aanval) — getrapte reacties over de tijd, zie §11d.
 - **Logbeheer** — menu in twee kolommen. Kolom **Bibliotheek**: centrale hub die elke te behandelen log refereert (handmatige vulling, één klik voegt automatisch de eigen logs van de instantie toe — access/error/native WAF, + magnet-script §7 indien actief —, of een via SSH opgehaalde **externe bron**, zie hieronder); **Favorieten** (combinatie van logs + viewer opgeslagen onder een naam, directe start); **Logs bekijken** met 3 viewers naar keuze afhankelijk van het aantal geselecteerde logs — Eenvoudig (live tail + generieke statistieken IP's/fouten/HTTP-codes voor elk formaat), Klassiek (lezen + volgen), samengevoegde `lnav` (echte terminalweergave in de interface, magnet-logs automatisch inbegrepen + handmatige paden die u **vastzet** om ze tussen sessies te bewaren); **IP bekijken en behandelen** (top-IP's uit één of meer gekozen logs, periode 24u/7d/30d/alles, verwijderen van een IP). Kolom **Onderhoud** (ongewijzigd): handmatige of automatische rotatie/archivering op groottedrempel, direct een back-up maken, instellen/beheren van geplande automatiseringen (declaratief — zie opmerking hieronder), een archief herstellen/opschonen, export van de lijst.
 - **Dienst** — dezelfde acties als `service` in de CLI (§12), eenmalige `sudo`-verhoging per actie, nooit de hele applicatie als root gestart.
 - **Multi-instantie** — globaal register (`~/.config/omega-serv/instances.json`, buiten elke projectmap) van de op de machine bekende installaties, met de systemd-status van elk; aanmaak van een nieuwe instantie (kopie van de mapstructuur, eigen virtuele omgeving en afhankelijkheden, verse configuratie met aparte poort, controle op nesting en poortconflict) rechtstreeks vanuit de interface. Knop praktisch onzichtbaar bij een enkele installatie (het label "Multi-instantie" wordt "Instanties (N)" zodra er 2 bekend zijn); volledige overschakeling naar een andere instantie (`os.execv`, expliciete bevestiging, eigen splash die de overschakeling bij het herstarten aankondigt); volledige verwijdering van een instantie (verwijderen van de unit, van het speciale systeemaccount als geen andere instantie het nog gebruikt, en optioneel verwijderen van de map, nooit standaard).
@@ -227,7 +247,7 @@ Alleen interfacevoorkeuren — nooit te verwarren met `config/omega-serve.json` 
 ./omega-serv.sh option disable waf
 
 # Een verzoek simuleren zonder de server te starten (handig om een regel voor activering te valideren)
-./omega-serv.sh simulate-request GET /index.html
+./omega-serv.sh simulate-request --method GET --url /index.html
 
 # WAF (werkt zelfs met uitgeschakelde optie, via impliciete --force)
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1
@@ -249,6 +269,12 @@ Alleen interfacevoorkeuren — nooit te verwarren met `config/omega-serve.json` 
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
+# RIPOSTE (getrapte reacties over de tijd, optie "riposte" - zie §11d)
+./omega-serv.sh riposte status
+./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
+./omega-serv.sh riposte actions list
+./omega-serv.sh riposte stop
+
 # TLS-certificaten - zelfondertekend (9a)
 ./omega-serv.sh certs generate-self-signed --cn localhost --san-dns localhost --san-ip 127.0.0.1
 ./omega-serv.sh certs show
@@ -265,7 +291,7 @@ Alleen interfacevoorkeuren — nooit te verwarren met `config/omega-serve.json` 
 
 # HTTP Basic-authenticatie
 ./omega-serv.sh auth add-user --username alice
-./omega-serv.sh auth create-zone --url-prefix /admin/ --allowed-users alice
+./omega-serv.sh auth create-zone --path-prefix /admin/ --realm "Administration" --allowed-users alice
 ./omega-serv.sh auth list
 
 # Beveiligingsaudit (blokkeert nooit, informatief)
@@ -350,6 +376,15 @@ src/omega_serv/
 
 Regels gecontroleerd door `import-linter` (8 contracten): `domain`/`core` nooit afhankelijk van de buitenste lagen; `interfaces.tui` nooit rechtstreeks afhankelijk van `infrastructure`; `textual` beperkt tot `interfaces.tui`; `subprocess` beperkt tot `infrastructure/process/subprocess_runner.py` (en `infrastructure/lnav/`, interactieve PTY-stroom); `ssl` beperkt tot `infrastructure/tls/ssl_context_builder.py`; `jinja2` beperkt tot `infrastructure/exporters/html_exporter.py`; `sqlite3` beperkt tot `infrastructure/persistence/sqlite_active_defense_connection.py` (enige relationele opslag van het project, voorbehouden aan Active Defense — zie §11); `lupa` beperkt tot `infrastructure/waf/lua_waf_adapter.py` (aanvullend WAF-script « magnet », §7).
 
+## 6b. HTTP-engine en aantal processen
+
+Twee engines kunnen de verzoeken afhandelen. Met de **Python-engine**, de standaard, verwerkt de Python-interpreter alle verzoeken. De **native engine** (C++, `bin/omega-http-core`) leest, analyseert en handelt de verzoeken zelf af; de Python-server houdt de configuratie, de bewaking en de beveiligingsbeslissingen.
+
+- **Twee instellingen**: de engine (scherm **Basisconfiguratie**) en het aantal processen (scherm **Weerbaarheid en limieten**). Het aantal processen is begrensd volgens de engine en de gedetecteerde processor: met de Python-engine tot één per fysieke kern; met de native engine, die al alle kernen gebruikt, zijn het de processen van de beveiligingscontroles, 1, of 2 vanaf 4 fysieke kernen. Het scherm toont wat verhogen op de machine oplevert en weigert een te grote waarde; wat draait, wordt zo getoond (‘native engine, 1 proces’). Van engine of aantal processen wisselen vereist een volledige herstart. Wat de keuze verandert, gemeten: FAQ van de handleiding en [vergelijking van webservers](comparatif-serveurs-web.md).
+- **Dezelfde antwoorden, dezelfde logs**: met de native engine worden statische inhoud, omleidingen, herschrijvingen, aliassen, de cache, de foutpagina's en de beveiligingsheaders door de native engine afgehandeld; hij doorzoekt zelf de WAF-regels en handelt een verzoek waarop geen enkele van toepassing is alleen af, en elk ander verzoek (overeenkomst of twijfel van de WAF, Active Defense, authenticatie) gaat via een Python-proces dat precies dezelfde controles toepast en dezelfde beveiligingslogs schrijft (RIPOSTE en omega-jail zien geen verschil); de mapweergave en de interne pagina's worden aan Python gevraagd; de reverse proxy, FastCGI, bestandsupload en WebSocket worden hem voor de hele verbinding toevertrouwd. Direct TLS wordt door de native engine afgehandeld met dezelfde bibliotheek en dezelfde instellingen.
+- **Nooit een mengeling**: één enkele regel bepaalt de werkelijke engine en alles toont hem (scherm **Status & bronnen**, `omega-serv engine status`). Kan de native engine niet alles afhandelen (direct TLS met reverse proxy, FastCGI of bestandsupload) of start hij niet, dan handelt de Python-engine af, en de reden wordt getoond. In **Basisconfiguratie** is de native keuze grijs zolang een actieve functie hem verhindert, met wat er moet veranderen om hem mogelijk te maken; een elders opgeslagen instelling waardoor de native engine verloren zou gaan, vraagt eerst om bevestiging.
+- **Antwoordt de Python-controle niet**, dan beslist `waf.on_internal_error`: zonder controle afhandelen of weigeren (503). Een authenticatiezone wordt in dat geval altijd geweigerd, en een al geblokkeerd adres blijft geweigerd (451).
+
 ## 7. Optionele modules
 
 In alle meegeleverde profielen standaard uitgeschakeld — inschakelen altijd expliciet (`option enable <naam>` of `config enable-tls`):
@@ -363,6 +398,7 @@ In alle meegeleverde profielen standaard uitgeschakeld — inschakelen altijd ex
 | Uitgaande reverse proxy | Omega-serv treedt zelf op als proxy naar één of meer backends (omgekeerde richting van `server.tls.mode = "behind_proxy"`) — lastverdeling (round-robin, gewogen, least-connections, ip-hash, least-response-time, echte belasting), sessie-affiniteit en routeringsregels op header, passieve en actieve gezondheid, antwoordcache (meerdere `Vary`-varianten), backpressure, lusbescherming, beheer-API tijdens bedrijf — zie §7a voor alle details |
 | Upload | Afgeschermde zones, quota per zone, aan serverzijde gegenereerde bestandsnamen — geen streaming in V1 (begrensd door `server.max_request_size`) |
 | `active_defense` | Deception + oorlogsmodus op basis van de al berekende WAF-signalen (nooit een tweede score): statische lokazen, gerichte vertraging/verrijkte logging/snelheidsbeperking, incidenten + IoC-export — zie §11 |
+| `riposte` | Getrapte reacties over de tijd: recidivegeheugen per adres, steeds langere bans (blocklist van de WAF, netwerkban via omega-jail) of verlengd lokaas, opheffen en noodstop — apart proces, zie §11d |
 
 ### 7a. Uitgaande reverse proxy — details
 
@@ -377,12 +413,12 @@ OMEGA-SERV kan zelf optreden als reverse proxy naar één of meer HTTP/HTTPS-bac
 - **WebSocket** — upgrade per zone toe te staan, één enkele upstream vastgelegd voor de hele duur van de tunnel zodra die is opgezet, zonder applicatietime-out.
 - **Beheer tijdens bedrijf** — kleine lokale HTTP-API (`/.omega-serv-admin/`, net als de native belastingsonde beschermd door `trusted_proxy`) waarmee de TUI de toestand DRAINING/MAINTENANCE van een backend kan lezen/afdwingen en de hit/miss-ratio van de cache **van de daadwerkelijk draaiende server** kan lezen (eigen scherm *Live status van de backends*) — omdat TUI en server twee aparte processen zonder gedeeld geheugen blijven, is dit lokale HTTP-kanaal de enige brug tussen beide.
 
-## 8. HTTP-verharding (niet uitschakelbaar)
+## 8. HTTP-verharding (standaard actief)
 
-- Header/verzoekregel begrensd **tijdens** het lezen (nooit achteraf), verouderd vouwen van headers geweigerd, `Transfer-Encoding` altijd geweigerd (nooit geraden).
-- Dubbele `Content-Length` afgewezen; `Expect: 100-continue` netjes afgewezen (417).
-- Expliciete whitelist van methoden (anders 405 + `Allow`), `Host`-header gevalideerd (ontbrekend/leeg/dubbel-zelfs-identiek/stuurteken → 400).
-- Beveiligingsheaders en basis-CSP (`enforce`/`report-only`) toegepast op **elk** antwoord, ook op fouten — niet te omzeilen met een optie. `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` altijd `same-origin`, zonder echt risico een site te breken. `Cross-Origin-Embedder-Policy` altijd expliciet verzonden (nooit afwezig — een externe scanner onderscheidt zo « niet overwogen » van « bewust permissief »), standaard `unsafe-none` in **alle** profielen inclusief `hardened`: anders dan de twee vorige kunnen `require-corp`/`credentialless` cross-origin bronnen (lettertypen, afbeeldingen, iframes van derden) blokkeren die bij de daadwerkelijk geserveerde site horen — instelbaar (`security.coep_mode`). CSP-zones (`security.csp_zones`): **expliciete** uitzonderingen per padprefix (bv. `unsafe-inline` alleen onder `/een-map/` die het echt nodig heeft), elk vervangt het standaardbeleid voor zijn prefix volledig — nooit een samenvoeging, nooit een globale versoepeling; elke uitzondering blijft zichtbaar in `audit security` (CSP-001/CSP-002 scannen ook de zones), ook als die bewust is. Aanmaak begeleid door een assistent richtlijn voor richtlijn (scherm **Algemene beveiliging**), elk veld vooraf ingevuld met de **huidige** waarde van het globale beleid — om alleen te wijzigen wat moet veranderen, in plaats van te beginnen met een leeg veld dat ongewild de andere richtlijnen zou opofferen; een extra expliciete bevestiging wordt gevraagd als de samengestelde zone `unsafe-inline`/`unsafe-eval`/een generieke bron `*` versoepelt.
+- Analyse van de verzoeken, zonder optie om die uit te schakelen: header/verzoekregel begrensd **tijdens** het lezen (nooit achteraf), verouderd vouwen van headers geweigerd, `Transfer-Encoding` altijd geweigerd (nooit geraden).
+- Dubbele `Content-Length` afgewezen; `Expect`-header (bijvoorbeeld `100-continue`) netjes afgewezen (417).
+- Expliciete whitelist van methoden (anders 405 + `Allow`), `Host`-header gevalideerd (ontbrekend/leeg/dubbel-zelfs-identiek/stuurteken → 400); deze controle is standaard actief en kan alleen in de configuratie worden uitgeschakeld (`security.require_valid_host`).
+- Beveiligingsheaders en basis-CSP (`enforce`/`report-only`) toegepast op de antwoorden van de site, ook op haar foutpagina's (403, 404…), en nooit door een module verwijderd of overschreven. Uitzondering: antwoorden die vóór elke verwerking van het verzoek worden verzonden (misvormd of te groot verzoek, time-out, ongeldige `Host`, geweigerde methode, overbelaste server) gaan zonder deze headers de deur uit — het zijn korte foutpagina's zonder inhoud van de site. Standaard actief, alleen uitschakelbaar in het scherm **Algemene beveiliging** (`security.security_headers_enabled`). `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` altijd `same-origin`, zonder echt risico een site te breken. `Cross-Origin-Embedder-Policy` altijd expliciet verzonden (nooit afwezig — een externe scanner onderscheidt zo « niet overwogen » van « bewust permissief »), standaard `unsafe-none` in **alle** profielen inclusief `hardened`: anders dan de twee vorige kunnen `require-corp`/`credentialless` cross-origin bronnen (lettertypen, afbeeldingen, iframes van derden) blokkeren die bij de daadwerkelijk geserveerde site horen — instelbaar (`security.coep_mode`). CSP-zones (`security.csp_zones`): **expliciete** uitzonderingen per padprefix (bv. `unsafe-inline` alleen onder `/een-map/` die het echt nodig heeft), elk vervangt het standaardbeleid voor zijn prefix volledig — nooit een samenvoeging, nooit een globale versoepeling; elke uitzondering blijft zichtbaar in `audit security` (CSP-001/CSP-002 scannen ook de zones), ook als die bewust is. Aanmaak begeleid door een assistent richtlijn voor richtlijn (scherm **Algemene beveiliging**), elk veld vooraf ingevuld met de **huidige** waarde van het globale beleid — om alleen te wijzigen wat moet veranderen, in plaats van te beginnen met een leeg veld dat ongewild de andere richtlijnen zou opofferen; een extra expliciete bevestiging wordt gevraagd als de samengestelde zone `unsafe-inline`/`unsafe-eval`/een generieke bron `*` versoepelt.
 - IPv4-gemapte IPv6-adressen (`::ffff:x.x.x.x`) genormaliseerd vóór elke vergelijking (blokkeerlijst, vertrouwde proxy, snelheidsbeperking) — anders een bekende omzeiling.
 - Gecontroleerd met eigenschapstests (`hypothesis`, duizenden gegenereerde voorbeelden) op de HTTP-parser en de padresolver, naast de klassieke unit-/integratietests.
 
@@ -458,13 +494,24 @@ De WAF kan **bewerkbare lijsten** als tekstbestand laden, één pad (of trefwoor
 
 ## 11c. Snelheidsbeperking per map en per IP/netwerk (WAF)
 
-De snelheidsbeperking van de WAF (token bucket, `options.waf.rate_limit`, standaard 60 verzoeken / 60 s per IP) kan worden verfijnd via **Actieve beveiliging → Uitzonderingen en limiet** (of met de hand, `rate_limit.path_policies` / `rate_limit.source_policies`):
+De snelheidsbeperking van de WAF (token bucket, `options.waf.rate_limit`, standaard 60 verzoeken / 60 s per IP) kan worden verfijnd via **Actieve beveiliging → Beperkingen** (of met de hand, `rate_limit.path_policies` / `rate_limit.source_policies`):
 
 - **Regel per map** (`prefix`, `requests`, `window_seconds`): die **vervangt** de globale limiet voor die map, met een eigen teller (`requests: 0` = onbeperkt). Het langste voorvoegsel wint; `/images` dekt `/images/a.png`, nooit `/images2`. Typisch een zware pagina (afbeeldingengalerij) die 429 teruggeeft.
 - **Regel per IP/netwerk** (`network`, `requests`, `window_seconds`, `trusted`): zelfde principe; het meest precieze netwerk wint. Prioriteit: map, dan IP/netwerk, dan de globale limiet.
 - **Bannen ongewijzigd voor het publiek**: een overschrijding door een publiek IP wordt nog steeds als `"action": "block"` in `waf-alerts.log` gelogd en kan dus door omega-jail worden geband (3 weigeringen in 10 min → 12 u). Een **veilige bron** — een `never_auto_block`-netwerk of een regel gemarkeerd `trusted: true` — krijgt nog steeds de 429 maar wordt gelogd als `"action": "throttle"`, wat de jail nooit telt.
 - **Magnet-script**: zijn eigen snelheidsbeperking (429-respons) telt nooit als een detectie en leidt dus nooit tot een automatische ban; bij een verzoek dat onder een map- of IP/netwerkregel valt, geldt de native regel en wordt de 429 van magnet genegeerd (zijn aanvalssignaturen blijven gelden).
 - Een snelheidsregel schakelt de WAF-inspectie **nooit** uit; omgekeerd heft een inspectie-uitzondering (`exclusions.path_prefixes`) de snelheidsbeperking nooit op. Zonder actieve `trusted_proxy` wordt een regel voor `127.0.0.1`/`::1` genegeerd (dezelfde beveiliging als `never_auto_block`).
+
+## 11d. RIPOSTE (getrapte reacties over de tijd)
+
+Optionele module (`option enable riposte`, standaard uitgeschakeld, volledige herstart vereist): waar Active Defense **tijdens** het verzoek reageert, handelt RIPOSTE **over de tijd**. Het onthoudt adressen die na een stilte terugkomen (episodes) en legt ze steeds langere bans op — standaard treden van 1 u, 6 u, 24 u en 7 d, recidivevenster van 30 d, geschiedenis van 90 d.
+
+- **Apart proces**, gestart en bewaakt door de dienst (met één of meer processen, één per instantie): het leest de logs van de WAF en van Active Defense, nooit een lopend verzoek. Zonder actieve WAF ziet het geen enkele aanval.
+- **Beleidsregels**: wanneer handelen (aanvalsklassen, aantal terugkeren, Active Defense-niveau, lokaasbezoeken) en hoe (lokale ban in de blocklist van de WAF, lokale + netwerkban via de omega-jail-jails, of een verlengd Active Defense-lokaas). Vijf kant-en-klare scenario's; elke beleidsregel kan vóór het inschakelen op de echte logs gemeten en gesimuleerd worden. Een actieve beleidsregel handelt automatisch.
+- **Niets verdwijnt**: elke actie blijft zichtbaar, lopend of afgerond, met de reden. Drie niveaus van stoppen: een actie opheffen (met vrijstelling of « telt niet mee voor recidive »), een regel uitschakelen, een onthouden noodstop.
+- **Waarborgen**: dezelfde uitzonderingen als de WAF (lokale host, Tailscale, lokaal netwerk), nooit boven een handmatige of langere ban, één actie per episode, een plafond voor gelijktijdige bans.
+- **Lokale ban en netwerkban**: de lokale ban legt omega-serv op in de blokkeerlijst van de WAF – het adres krijgt de 451-pagina „Uw IP is geband” op al zijn verzoeken, zolang de ban duurt. De netwerkban wordt via de jails van omega-jail aan fail2ban overgelaten (`<service>-riposte-1h/6h/24h/7d`, één set per instantie); hij heeft geen effect wanneer verbindingen via een lokale proxy binnenkomen (Tailscale Funnel), waar alleen de lokale ban beschermt.
+- **Interface**: zes schermen in Actieve beveiliging (Status, Beleidsregels, Acties, Recidive, Simuleren, Instellingen) en dezelfde opdrachten op de opdrachtregel (`riposte …`). Back-up: `config backup --include-riposte`.
 
 ## 12. Diensten en beheer
 

@@ -23,6 +23,13 @@ def sanitize_log_field(value: str, max_length: int = 512) -> str:
     return value.translate(_CONTROL_TO_SPACE)[:max_length]
 
 
+def _quoted_field(value: str) -> str:
+    """Champ entre guillemets du journal d'acces (requete, Referer, User-Agent) : un guillemet venu du client
+    devient `\\x22`, comme nginx (2026-11-02). Sinon `/a" 404 "x` fermait le champ avant l'heure : ligne illisible
+    pour les statistiques, et un « 404 » fabrique par le client devant le vrai statut."""
+    return value.replace('"', "\\x22")
+
+
 def _format_apache_timestamp(ts: datetime) -> str:
     text = ts.strftime("%d/%b/%Y:%H:%M:%S %z")
     return text + "+0000" if text.endswith(" ") else text  # date sans fuseau : UTC
@@ -40,19 +47,25 @@ class AccessLogEntry:
     referer: str | None
     user_agent: str | None
     request_id: str
+    raw_request_line: str | None = None
+    """Requete refusee pendant l'analyse de sa tete : ligne de requete brute (ou `-`), ecrite telle quelle a la
+    place de « METHODE CIBLE HTTP/1.1 »."""
 
 
 def format_combined_log_line(entry: AccessLogEntry) -> str:
-    request_line = f"{entry.method} {entry.request_target} {entry.http_version}"
+    request_line = (
+        entry.raw_request_line if entry.raw_request_line is not None
+        else f"{entry.method} {entry.request_target} {entry.http_version}"
+    )
     referer = entry.referer or "-"
     user_agent = entry.user_agent or "-"
     size = str(entry.response_size) if entry.response_size else "-"
     return (
         f'{sanitize_log_field(entry.remote_ip, 64)} - - '
         f'[{_format_apache_timestamp(entry.timestamp)}] '
-        f'"{sanitize_log_field(request_line, 2048)}" '
+        f'"{_quoted_field(sanitize_log_field(request_line, 2048))}" '
         f'{entry.status_code} {size} '
-        f'"{sanitize_log_field(referer, 512)}" "{sanitize_log_field(user_agent, 256)}" '
+        f'"{_quoted_field(sanitize_log_field(referer, 512))}" "{_quoted_field(sanitize_log_field(user_agent, 256))}" '
         f'{sanitize_log_field(entry.request_id, 64)}'
     )
 

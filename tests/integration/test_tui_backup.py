@@ -127,6 +127,80 @@ class TestTuiBackup(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(str(pilot.app.screen.query_one("#backup-error").content), "")
         self.assertIn('"version"', container.config_file.read_text())
 
+    async def test_everything_checks_every_box(self):
+        """« Tout sauvegarder » (2026-11-01) coche toutes les cases ; les secrets restent confirmes."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 60)) as pilot:
+            await self._start(pilot)
+            await self._open_backup_screen(pilot)
+            pilot.app.screen.query_one("#include-all", Checkbox).value = True
+            await pilot.pause()
+            for checkbox_id in ("#include-waf", "#include-auth", "#include-certificates", "#include-active-defense",
+                                "#include-riposte", "#include-error-pages", "#include-preferences",
+                                "#include-logs-library"):
+                self.assertTrue(pilot.app.screen.query_one(checkbox_id, Checkbox).value, checkbox_id)
+            pilot.app.screen.query_one("#create", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)  # secrets : toujours confirmes
+
+    async def test_unchecking_everything_unchecks_every_box_and_a_single_box_unchecks_everything(self):
+        """Retour utilisateur 2026-11-01 : decocher « Tout sauvegarder » laissait les cases cochees."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        boxes = ("#include-waf", "#include-auth", "#include-certificates", "#include-active-defense",
+                 "#include-riposte", "#include-error-pages", "#include-preferences", "#include-logs-library")
+        async with app.run_test(size=(120, 60)) as pilot:
+            await self._start(pilot)
+            await self._open_backup_screen(pilot)
+            screen = pilot.app.screen
+            screen.query_one("#include-all", Checkbox).value = True
+            await pilot.pause()
+            screen.query_one("#include-all", Checkbox).value = False
+            await pilot.pause()
+            self.assertFalse(any(screen.query_one(b, Checkbox).value for b in boxes))
+
+            screen.query_one("#include-all", Checkbox).value = True
+            await pilot.pause()
+            screen.query_one("#include-riposte", Checkbox).value = False  # une seule case
+            await pilot.pause()
+            self.assertFalse(screen.query_one("#include-all", Checkbox).value)
+            self.assertTrue(all(screen.query_one(b, Checkbox).value for b in boxes if b != "#include-riposte"))
+
+    async def test_restore_with_a_database_while_running_offers_stop_restore_restart(self):
+        """Base dans la sauvegarde + serveur actif : jamais restauree, « Arreter, restaurer, redemarrer » propose."""
+        from unittest.mock import patch
+
+        from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+            open_riposte_connection,
+        )
+        open_riposte_connection(self.root / "var" / "lib" / "riposte.sqlite3").close()
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 60)) as pilot:
+            await self._start(pilot)
+            await self._open_backup_screen(pilot)
+            pilot.app.screen.query_one("#include-riposte", Checkbox).value = True
+            pilot.app.screen.query_one("#create", Button).press()
+            await pilot.pause(0.5)
+            table = pilot.app.screen.query_one("#backups-table", DataTable)
+            table.move_cursor(row=0)
+            table.action_select_cursor()
+            await pilot.pause()
+            with patch.object(container, "server_running", return_value=True):
+                pilot.app.screen.query_one("#restore", Button).press()
+                await pilot.pause()
+                pilot.app.screen.query_one("#confirm", Button).press()
+                await pilot.pause(0.5)
+                self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+                self.assertIn("ARRÊTER, RESTAURER, REDÉMARRER", str(pilot.app.screen.query_one(".omega-confirm-title").content))
+                pilot.app.screen.query_one("#cancel", Button).press()
+                await pilot.pause()
+        self.assertTrue((self.root / "var" / "lib" / "riposte.sqlite3").exists())  # rien n'a ete touche
+
     async def test_delete_requires_confirmation_and_removes_row(self):
         container = self._container()
         self._generate_config(container)

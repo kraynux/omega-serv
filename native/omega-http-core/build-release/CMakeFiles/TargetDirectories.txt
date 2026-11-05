@@ -1,0 +1,6 @@
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/omega_core.dir
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/omega-http-core.dir
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/omega_tests.dir
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/test.dir
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/edit_cache.dir
+/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-release/CMakeFiles/rebuild_cache.dir

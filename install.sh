@@ -100,6 +100,51 @@ _state_dir "secure/auth" 0750
 ok "Dossiers d'état présents (var/, secure/auth/) - les existants sont laissés tels quels."
 
 # -------------------------------------------------------------------------
+# 3c. Moteur HTTP natif (bin/omega-http-core, plan moteur C++ lot 9) : le
+#     binaire fourni est essaye ; s'il ne demarre pas sur cette machine
+#     (glibc trop ancienne, OpenSSL 3 absent), compilation locale si cmake
+#     et un compilateur C++ sont presents - jamais une question. Sans lui,
+#     omega-serv fonctionne normalement avec le moteur Python et le choix
+#     du natif reste grise, avec la raison.
+# -------------------------------------------------------------------------
+NATIVE_BIN="$SCRIPT_DIR/bin/omega-http-core"
+native_ok() { [ -x "$NATIVE_BIN" ] && "$NATIVE_BIN" --version >/dev/null 2>&1; }
+if native_ok; then
+    ok "Moteur natif disponible ($("$NATIVE_BIN" --version))."
+else
+    if [ -f "$NATIVE_BIN" ]; then
+        warn "Le moteur natif fourni ne démarre pas sur cette machine (glibc trop ancienne ou OpenSSL 3 absent)."
+    else
+        warn "Moteur natif absent (bin/omega-http-core)."
+    fi
+    if command -v cmake >/dev/null 2>&1 && command -v c++ >/dev/null 2>&1 && [ -d "$SCRIPT_DIR/native/omega-http-core" ]; then
+        info "Compilation locale du moteur natif (une à deux minutes)..."
+        NATIVE_LOG="$(mktemp)"
+        LOCAL_BUILD="$SCRIPT_DIR/native/omega-http-core/build-local"
+        if cmake -S "$SCRIPT_DIR/native/omega-http-core" -B "$LOCAL_BUILD" -DCMAKE_BUILD_TYPE=Release >"$NATIVE_LOG" 2>&1 \
+            && cmake --build "$LOCAL_BUILD" -j "$(nproc)" >>"$NATIVE_LOG" 2>&1 \
+            && "$LOCAL_BUILD/omega_tests" >>"$NATIVE_LOG" 2>&1; then
+            mkdir -p "$SCRIPT_DIR/bin"
+            install -m 0755 "$LOCAL_BUILD/omega-http-core" "$NATIVE_BIN"
+        fi
+        if native_ok; then
+            ok "Moteur natif compilé sur cette machine ($("$NATIVE_BIN" --version))."
+            if grep -q "PCRE2 introuvable" "$NATIVE_LOG"; then
+                warn "PCRE2 absent : avec le WAF, le moteur natif fait inspecter chaque requête par Python (plus lent)."
+                tip "Installez PCRE2 (ex. apt install libpcre2-dev, pacman -S pcre2) puis relancez ce script."
+            fi
+            rm -f "$NATIVE_LOG"
+        else
+            warn "Échec de la compilation locale du moteur natif (détails : $NATIVE_LOG)."
+            tip "Il faut cmake, un compilateur C++20 et les en-têtes OpenSSL 3, PCRE2 conseillé (ex. apt install cmake g++ libssl-dev libpcre2-dev)."
+        fi
+    fi
+    if ! native_ok; then
+        tip "omega-serv fonctionne normalement avec le moteur Python ; le moteur natif reste indisponible, raison affichée dans Configuration de base."
+    fi
+fi
+
+# -------------------------------------------------------------------------
 # 4. Verification de la presence d'openssl (necessaire pour tout ce qui
 #    touche aux certificats TLS - le reste du serveur fonctionne sans).
 # -------------------------------------------------------------------------

@@ -15,11 +15,13 @@ ActionType = Literal[
 ]
 
 AttackClass = Literal[
-    "scan", "credential_stuffing", "sqli", "xss", "path_traversal", "upload_probe", "api_probe", "unknown",
+    "scan", "credential_stuffing", "sqli", "xss", "path_traversal", "upload_probe", "api_probe",
+    "command_injection", "unknown",
 ]
 
 KNOWN_ATTACK_CLASSES: frozenset[str] = frozenset(
-    {"scan", "credential_stuffing", "sqli", "xss", "path_traversal", "upload_probe", "api_probe", "unknown"}
+    {"scan", "credential_stuffing", "sqli", "xss", "path_traversal", "upload_probe", "api_probe",
+     "command_injection", "unknown"}
 )
 """Meme valeurs que le Literal AttackClass ci-dessus, dupliquees ici en
 frozenset - necessaire pour valider une valeur lue depuis le JSON de

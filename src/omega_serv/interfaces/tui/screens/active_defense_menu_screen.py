@@ -20,7 +20,16 @@ ajoute a Modules.
 
 "Exclusions et debit" (OMEGA-SERV_ETUDE_RATE_LIMIT_EXCLUSIONS.md, lot 3)
 juste sous Modules : regles de debit par dossier/IP-reseau et exclusions
-d'inspection (waf_rate_limit_screen.py)."""
+d'inspection (waf_rate_limit_screen.py) - libelle du bouton devenu
+« Limitations » (RIPOSTE lot 5, topo §6.2 : plus court, couvre limite
+globale, par dossier, par IP et exclusions ; le titre de l'ecran reste
+complet).
+
+RIPOSTE (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 5) : 3e colonne, ordre
+WAF -> ACTIVE DEFENSE -> RIPOSTE (proteger, detecter, riposter - le
+parcours d'une attaque). Classe dediee `.omega-security-menu` (cadre de
+bouton 20, padding reduit) pour tenir en 80 colonnes ; les autres menus
+gardent leur cadre de 32."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -43,6 +52,12 @@ from omega_serv.interfaces.tui.screens.active_defense_simulate_screen import (
 from omega_serv.interfaces.tui.screens.active_defense_status_screen import ActiveDefenseStatusScreen
 from omega_serv.interfaces.tui.screens.deception_screen import DeceptionScreen
 from omega_serv.interfaces.tui.screens.incidents_screen import IncidentsScreen
+from omega_serv.interfaces.tui.screens.riposte_actions_screen import RiposteActionsScreen
+from omega_serv.interfaces.tui.screens.riposte_policies_screen import RipostePoliciesScreen
+from omega_serv.interfaces.tui.screens.riposte_recidives_screen import RiposteRecidivesScreen
+from omega_serv.interfaces.tui.screens.riposte_settings_screen import RiposteSettingsScreen
+from omega_serv.interfaces.tui.screens.riposte_simulate_screen import RiposteSimulateScreen
+from omega_serv.interfaces.tui.screens.riposte_status_screen import RiposteStatusScreen
 from omega_serv.interfaces.tui.screens.threats_screen import ThreatsScreen
 from omega_serv.interfaces.tui.screens.waf_custom_rule_screen import WafCustomRuleScreen
 from omega_serv.interfaces.tui.screens.waf_magnet_screen import WafMagnetScreen
@@ -66,10 +81,19 @@ _ACTIVE_DEFENSE_ITEMS: tuple[tuple[str, str], ...] = (
 _WAF_ITEMS: tuple[tuple[str, str], ...] = (
     ("waf-status", _("État")),
     ("waf-modules", _("Modules")),
-    ("waf-rate-limit", _("Exclusions et débit")),
+    ("waf-rate-limit", _("Limitations")),
     ("waf-test", _("Tester")),
     ("waf-custom", _("Custom")),
     ("waf-magnet", _("Magnet")),
+)
+
+_RIPOSTE_ITEMS: tuple[tuple[str, str], ...] = (
+    ("riposte-status", _("État")),
+    ("riposte-policies", _("Politiques")),
+    ("riposte-actions", _("Actions")),
+    ("riposte-recidives", _("Récidives")),
+    ("riposte-simulate", _("Simuler")),
+    ("riposte-settings", _("Réglages")),
 )
 
 
@@ -93,16 +117,13 @@ class ActiveDefenseMenuScreen(OmegaScreen):
                         classes="omega-hint",
                     )
             with Center(), Horizontal(classes="omega-panel-row"):
-                with Vertical(classes="omega-home-menu") as active_defense_menu:
-                    for item_id, label in _ACTIVE_DEFENSE_ITEMS:
-                        with Container(classes="omega-btn-frame"):
-                            yield Button(label, id=item_id)
-                    active_defense_menu.border_title = _("ACTIVE DEFENSE")
-                with Vertical(classes="omega-home-menu") as waf_menu:
-                    for item_id, label in _WAF_ITEMS:
-                        with Container(classes="omega-btn-frame"):
-                            yield Button(label, id=item_id)
-                    waf_menu.border_title = _("WAF")
+                for title, items in ((_("WAF"), _WAF_ITEMS), (_("ACTIVE DEFENSE"), _ACTIVE_DEFENSE_ITEMS),
+                                     (_("RIPOSTE"), _RIPOSTE_ITEMS)):
+                    with Vertical(classes="omega-home-menu omega-security-menu") as menu:
+                        for item_id, label in items:
+                            with Container(classes="omega-btn-frame"):
+                                yield Button(label, id=item_id)
+                        menu.border_title = title
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Retour"), id="back")
         yield Footer()
@@ -140,4 +161,10 @@ class ActiveDefenseMenuScreen(OmegaScreen):
             return WafCustomRuleScreen(container=self._container)
         if item_id == "waf-magnet":
             return WafMagnetScreen(container=self._container)
-        return None
+        riposte_screens: dict[str, type[OmegaScreen]] = {
+            "riposte-status": RiposteStatusScreen, "riposte-policies": RipostePoliciesScreen,
+            "riposte-actions": RiposteActionsScreen, "riposte-recidives": RiposteRecidivesScreen,
+            "riposte-simulate": RiposteSimulateScreen, "riposte-settings": RiposteSettingsScreen,
+        }
+        screen_class = riposte_screens.get(item_id or "")
+        return None if screen_class is None else screen_class(container=self._container)  # type: ignore[call-arg]

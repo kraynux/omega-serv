@@ -1,0 +1,75 @@
+=== repetition 1 19:01:32 charge: 1.60 1.40 1.60
+nginx-2                small.html      23837     24.4     1.0     5.4      0
+nginx-2                medium.png      10936   1119.6     1.9    10.9      0
+nginx-2                large.bin         440   2300.9    16.4    38.2      0
+nginx-2 PSS_Mo repos=6 apres_charge=6
+omega-v2-1-0-native    small.html      14759     15.1     1.9     6.5      0
+omega-v2-1-0-native    medium.png       4552    465.9     6.0    16.9      0
+omega-v2-1-0-native    large.bin         441   2307.2    16.6    46.8      0
+omega-v2-1-0-native PSS_Mo repos=39 apres_charge=41
+omega-v2-1-1-native    small.html      12233     12.5     2.3     6.9      0
+omega-v2-1-1-native    medium.png       4361    446.2     7.9    17.8      0
+omega-v2-1-1-native    large.bin         425   2226.6    17.6    43.1      0
+omega-v2-1-1-native PSS_Mo repos=45 apres_charge=47
+omega-v2-2-1-native    small.html      12899     13.2     2.4     7.5      0
+omega-v2-2-1-native    medium.png       4243    434.1     6.8    17.9      0
+omega-v2-2-1-native    large.bin         436   2279.4    17.0    49.7      0
+omega-v2-2-1-native PSS_Mo repos=45 apres_charge=47
+omega-v2-1-0           small.html       1414      1.4    21.4    36.7      0
+omega-v2-1-0           medium.png       1214    124.0    24.7    44.5      0
+omega-v2-1-0           large.bin         291   1521.1    24.7    60.9      0
+omega-v2-1-0 PSS_Mo repos=32 apres_charge=36
+omega-v2-1-1           small.html       1414      1.4    21.2    37.5      0
+omega-v2-1-1           medium.png        989    100.9    30.8    55.8      0
+omega-v2-1-1           large.bin         289   1512.8    26.1    47.6      0
+omega-v2-1-1 PSS_Mo repos=31 apres_charge=36
+=== repetition 2 19:05:10 charge: 2.68 2.37 1.98
+nginx-2                small.html      19610     20.1     1.4     6.3      0
+nginx-2                medium.png      11986   1227.1     2.1     9.6      0
+nginx-2                large.bin         437   2285.5    16.8    36.2      0
+nginx-2 PSS_Mo repos=6 apres_charge=6
+omega-v2-1-0-native    small.html      13861     14.2     2.3     7.3      0
+omega-v2-1-0-native    medium.png       4580    468.6     7.7    18.2      0
+omega-v2-1-0-native    large.bin         430   2250.7    17.1    42.3      0
+omega-v2-1-0-native PSS_Mo repos=36 apres_charge=37
+omega-v2-1-1-native    small.html      11990     12.3     2.7     7.2      0
+omega-v2-1-1-native    medium.png       4007    410.0     8.5    24.4      0
+omega-v2-1-1-native    large.bin         415   2173.0    17.9    45.8      0
+omega-v2-1-1-native PSS_Mo repos=46 apres_charge=47
+omega-v2-2-1-native    small.html      11746     12.0     2.4     7.3      0
+omega-v2-2-1-native    medium.png       4263    436.2     8.2    20.4      0
+omega-v2-2-1-native    large.bin         429   2242.7    17.5    42.6      0
+omega-v2-2-1-native PSS_Mo repos=46 apres_charge=47
+omega-v2-1-0           small.html       1602      1.6    19.9    34.6      0
+omega-v2-1-0           medium.png       1260    128.7    23.8    40.2      0
+omega-v2-1-0           large.bin         315   1644.8    23.7    45.0      0
+omega-v2-1-0 PSS_Mo repos=31 apres_charge=36
+omega-v2-1-1           small.html       1426      1.5    22.8    38.1      0
+omega-v2-1-1           medium.png       1135    115.9    26.6    44.4      0
+omega-v2-1-1           large.bin         298   1556.6    25.0    49.8      0
+omega-v2-1-1 PSS_Mo repos=32 apres_charge=35
+=== repetition 3 19:08:49 charge: 2.43 2.76 2.26
+nginx-2                small.html      21439     22.0     1.3     5.1      0
+nginx-2                medium.png      11545   1181.9     2.0    10.3      0
+nginx-2                large.bin         436   2282.4    16.7    38.9      0
+nginx-2 PSS_Mo repos=6 apres_charge=6
+omega-v2-1-0-native    small.html      13706     14.0     2.0     6.7      0
+omega-v2-1-0-native    medium.png       4486    459.1     6.9    18.4      0
+omega-v2-1-0-native    large.bin         412   2157.2    16.9    49.0      0
+omega-v2-1-0-native PSS_Mo repos=37 apres_charge=39
+omega-v2-1-1-native    small.html      11578     11.9     2.7     7.7      0
+omega-v2-1-1-native    medium.png       4229    432.7     8.3    19.1      0
+omega-v2-1-1-native    large.bin         422   2210.6    17.5    50.1      0
+omega-v2-1-1-native PSS_Mo repos=45 apres_charge=46
+omega-v2-2-1-native    small.html      11395     11.7     2.8     8.5      0
+omega-v2-2-1-native    medium.png       4214    431.2     7.5    18.3      0
+omega-v2-2-1-native    large.bin         430   2251.6    17.2    46.8      0
+omega-v2-2-1-native PSS_Mo repos=45 apres_charge=46
+omega-v2-1-0           small.html       1416      1.4    21.3    35.9      0
+omega-v2-1-0           medium.png       1240    126.7    24.4    40.6      0
+omega-v2-1-0           large.bin         301   1572.0    24.9    49.0      0
+omega-v2-1-0 PSS_Mo repos=32 apres_charge=35
+omega-v2-1-1           small.html       1237      1.3    24.8    37.7      0
+omega-v2-1-1           medium.png       1056    107.8    28.4    51.6      0
+omega-v2-1-1           large.bin         291   1521.6    25.6    51.5      0
+omega-v2-1-1 PSS_Mo repos=31 apres_charge=36

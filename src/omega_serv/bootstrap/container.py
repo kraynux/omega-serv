@@ -8,6 +8,7 @@ que les couches superieures aient a changer."""
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -21,6 +22,8 @@ from omega_serv.infrastructure.clock.system_clock import SystemClock
 from omega_serv.infrastructure.config.json_config_repository import JsonConfigRepository
 from omega_serv.infrastructure.config.json_settings_store import JsonSettingsStore
 from omega_serv.infrastructure.config.profile_repository import FileProfileRepository
+from omega_serv.infrastructure.declaration.app_version import application_version
+from omega_serv.infrastructure.declaration.json_declaration_store import JsonDeclarationStore
 from omega_serv.infrastructure.filesystem.local_file_access import LocalFileAccess
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
 from omega_serv.infrastructure.i18n.gettext_language_catalog import GettextLanguageCatalog
@@ -30,6 +33,7 @@ from omega_serv.infrastructure.waf.keyword_reference_store import PackagedKeywor
 from omega_serv.ports.capability_scanner_port import CapabilityScannerPort
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.configuration_port import ConfigurationPort
+from omega_serv.ports.declaration_port import DeclarationSenderPort, DeclarationStorePort
 from omega_serv.ports.file_access_port import FileAccessPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.instance_registry_port import InstanceRegistryPort
@@ -52,6 +56,7 @@ if TYPE_CHECKING:
     from omega_serv.application.persistence.restore_backup import RestoreResult
     from omega_serv.application.security.check_magnet_compatibility import MagnetCompatibilityCheck
     from omega_serv.application.security.simulate_waf_request import WafSimulationReport
+    from omega_serv.application.server.engine_status import EngineStatus
     from omega_serv.application.server.simulate_request import SimulationReport
     from omega_serv.application.server.start_server import ActiveDefenseCollaborators
     from omega_serv.core.capability import Capability
@@ -62,6 +67,7 @@ if TYPE_CHECKING:
     from omega_serv.domain.security.active_defense.config import IoCConfig
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
     from omega_serv.domain.security.audit.entities import AuditResult
+    from omega_serv.domain.security.riposte.events import ObservedEvent
     from omega_serv.domain.security.waf.config import MagnetConfig
     from omega_serv.infrastructure.logging.rotation_automation_store import RotationAutomationStore
     from omega_serv.infrastructure.persistence.backup_metadata_store import BackupMetadataStore
@@ -70,6 +76,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
     from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
+    from omega_serv.ports.riposte_store_port import RiposteStorePort
     from omega_serv.ports.users_repository_port import UsersRepositoryPort
 
 
@@ -119,12 +126,18 @@ class DependencyContainer:
         certificate_tool_factory: Callable[[], CertificateToolPort] | None = None,
         acme_client_factory: Callable[[], ProcessRunnerPort] | None = None,
         remote_log_fetch_runner_factory: Callable[[], ProcessRunnerPort] | None = None,
+        database_snapshot_fn: Callable[[Path, Path], None] | None = None,
         lnav_runner: Callable[[tuple[Path, ...], Palette, str, str], str | None] | None = None,
         export_capabilities_html_fn: Callable[[Sequence[Capability], str], str] | None = None,
         export_log_archives_html_fn: Callable[[Sequence[dict], str], str] | None = None,
         export_guide_html_fn: Callable[[Sequence[dict], Sequence[dict], str], str] | None = None,
         export_in_language_runner: Callable[[list[str], str], ProcessResult] | None = None,
         serve_foreground_runner: Callable[[Path, DependencyContainer], Awaitable[int]] | None = None,
+        riposte_store_factory: Callable[[Path, bool], RiposteStorePort] | None = None,
+        riposte_journal_reader: Callable[[Path, Path], list[ObservedEvent]] | None = None,
+        installed_jails_reader: Callable[[], frozenset[str] | None] | None = None,
+        declaration_sender_factory: Callable[[str], DeclarationSenderPort] | None = None,
+        url_opener: Callable[[str], bool] | None = None,
         create_instance_runner: Callable[
             [Path, str, Path, str, int, str, FilesystemPort, InstanceRegistryPort, ClockPort,
              Callable[[int, int, str], None] | None],
@@ -149,6 +162,9 @@ class DependencyContainer:
         self._certificate_tool_factory = certificate_tool_factory
         self._acme_client_factory = acme_client_factory
         self._remote_log_fetch_runner_factory = remote_log_fetch_runner_factory
+        # Copie coherente d'une base SQLite en service (sauvegarde) : injectee par __main__.py / la CLI,
+        # jamais importee ici (contrat import-linter : bootstrap n'atteint jamais sqlite3).
+        self._database_snapshot_fn = database_snapshot_fn
         self._lnav_runner = lnav_runner
         self._create_instance_runner = create_instance_runner
         self._export_capabilities_html_fn = export_capabilities_html_fn
@@ -157,6 +173,11 @@ class DependencyContainer:
         self._export_in_language_runner = export_in_language_runner
         self._last_export_error: str | None = None
         self._serve_foreground_runner = serve_foreground_runner
+        self._riposte_store_factory = riposte_store_factory
+        self._riposte_journal_reader = riposte_journal_reader
+        self._installed_jails_reader = installed_jails_reader
+        self._declaration_sender_factory = declaration_sender_factory
+        self._url_opener = url_opener
         self._project_root = project_root
         self._systemd_unit_dir = systemd_unit_dir
         self._filesystem: FilesystemPort = LocalFilesystem()
@@ -393,6 +414,13 @@ class DependencyContainer:
     def build_auth_zones_repository(self, auth_zones_file: Path) -> AuthZonesRepositoryPort:
         return JsonAuthZonesRepository(self._filesystem, auth_zones_file)
 
+    def native_waf_filter_section(self, config: OmegaServConfig) -> dict[str, Any] | None:
+        """Section `waf_filter` que recevrait le moteur natif (plan WAF natif, lot 5 : ecran Etat du WAF) - memes
+        fonctions que l'instantane ; None sans WAF."""
+        from omega_serv.infrastructure.server.native_snapshot import waf_filter_section
+
+        return waf_filter_section(config, self._project_root)
+
     def build_capability_scanner(self, configured_port: int, fastcgi_socket: Path | None) -> CapabilityScannerPort:
         from omega_serv.infrastructure.probe.scanner import SystemCapabilityScanner
 
@@ -407,6 +435,18 @@ class DependencyContainer:
         from omega_serv.infrastructure.probe.system_stats import collect_system_stats
 
         return collect_system_stats()
+
+    def collect_server_stats(self, pid: int | None, port: int) -> dict[str, Any]:
+        """Processus omega-serv, connexions sur son port, journaux et espace libre de var/ (psutil)."""
+        from omega_serv.infrastructure.probe.system_stats import collect_server_stats
+
+        return collect_server_stats(pid, port, self._project_root / "var" / "log", self._project_root / "var")
+
+    def access_log_sent_bytes(self, path: Path, since: datetime, offset: int | None) -> tuple[int, int]:
+        """Octets de reponse de l'access log depuis `since`, a partir de `offset` (voir access_log_volume)."""
+        from omega_serv.infrastructure.logging.access_log_volume import sent_bytes_since
+
+        return sent_bytes_since(path, since, offset)
 
     def build_archive_store(self, base_dir: Path) -> ArchiveStore:
         from omega_serv.infrastructure.storage.files.archive_store import ArchiveStore
@@ -522,6 +562,46 @@ class DependencyContainer:
         transitivement."""
         return self._serve_foreground_runner
 
+    @property
+    def riposte_store_factory(self) -> Callable[[Path, bool], RiposteStorePort] | None:
+        """`factory(base, ecriture)` : ouvre la base RIPOSTE (jamais creee : elle appartient au processus
+        RIPOSTE) ; FileNotFoundError si RIPOSTE n'a jamais ete lance, OSError si illisible. Une connexion par
+        appel, a fermer (`close()`) : jamais partagee entre fils. Injectee depuis __main__.py (sqlite3)."""
+        return self._riposte_store_factory
+
+    @property
+    def riposte_journal_reader(self) -> Callable[[Path, Path], list[ObservedEvent]] | None:
+        """`reader(waf_alerts_log, security_events_log)` : evenements des journaux pour « Mesurer »."""
+        return self._riposte_journal_reader
+
+    @property
+    def installed_jails_reader(self) -> Callable[[], frozenset[str] | None] | None:
+        """`reader()` : noms des jails installees par omega-jail (fichiers `jail.d/omega-jail-<nom>.conf`), None si
+        fail2ban est absent ou illisible. Lecture seule ; injectee depuis __main__.py."""
+        return self._installed_jails_reader
+
+    @property
+    def app_version(self) -> str:
+        """Version d'omega-serv (pyproject.toml, seule source)."""
+        return application_version(self._project_root)
+
+    @property
+    def declaration_store(self) -> DeclarationStorePort:
+        """Declaration anonyme d'utilisateur (OMEGA-SERV_ETUDE_TELEMETRIE.md §3b), sous var/lib/declaration/."""
+        return JsonDeclarationStore(self._project_root)
+
+    def declaration_sender(self) -> DeclarationSenderPort | None:
+        """Envoi HTTPS vers la reception ; None hors interface (urllib atteint ssl : injecte depuis
+        __main__.py, jamais importe ici)."""
+        factory = self._declaration_sender_factory
+        return None if factory is None else factory(self.app_version)
+
+    def open_url(self, url: str) -> bool:
+        """Ouvre une adresse web dans le navigateur de l'utilisateur (meme sous sudo). False sans
+        session graphique : l'ecran affiche alors l'adresse, deja visible en clair."""
+        opener = self._url_opener
+        return False if opener is None else opener(url)
+
 
     def _backups_dir(self) -> Path:
         return self._project_root / "var" / "backups" / "config-snapshots"
@@ -579,15 +659,63 @@ class DependencyContainer:
         backups_dir = self._backups_dir()
         archive_store = self.build_archive_store(backups_dir)
         metadata_store = self.build_backup_metadata_store(backups_dir)
-        return create_backup(request, config, self._project_root, config_file, archive_store, metadata_store, self._clock)
+        return create_backup(
+            request, config, self._project_root, config_file, archive_store, metadata_store, self._clock,
+            snapshot=self._database_snapshot_fn,
+        )
 
-    def restore_backup(self, snapshot_id: str) -> RestoreResult:
-        from omega_serv.application.persistence.restore_backup import restore_backup
+    def server_running(self) -> bool:
+        """Serveur de CETTE instance en marche (fichier PID et processus vivant), service ou lancement a la main."""
+        from omega_serv.application.services.pid_file import pid_file_status
+        from omega_serv.core.platform_info import is_process_running
+
+        # Corrige 2026-11-02 : pid_file_status rend (pid, ILLISIBLE), pas (pid, vivant) - le second element etait
+        # pris pour « vivant », donc un serveur en marche passait pour arrete (restauration d'une base permise).
+        pid, _unreadable = pid_file_status(self._filesystem, self._project_root / "var" / "run" / "omega-serv.pid")
+        return pid is not None and is_process_running(pid)
+
+    def engine_status(self, config: OmegaServConfig) -> EngineStatus:
+        """Moteur HTTP demande / effectif / raisons (plan moteur C++ §16.5) : etat reel si le serveur tourne,
+        sinon prevision pour `config`."""
+        from omega_serv.application.server.engine_status import engine_status
+
+        return engine_status(self._filesystem, self._project_root, config, self.native_binary_problem())
+
+    def native_binary_problem(self) -> str | None:
+        """Binaire natif present et executable (None), sinon BINARY_MISSING / BINARY_NOT_EXECUTABLE - verifie ici,
+        jamais suppose par l'interface (choix du moteur grise, garde-fou d'enregistrement)."""
+        from omega_serv.application.server.engine_selection import NATIVE_BINARY_RELATIVE_PATH
+        from omega_serv.infrastructure.process.native_engine_process import native_binary_problem
+
+        return native_binary_problem(self._project_root / NATIVE_BINARY_RELATIVE_PATH)
+
+    def restore_backup(self, snapshot_id: str, *, stop_and_restart: bool = False) -> RestoreResult:
+        """Une sauvegarde qui contient une base est refusee tant que le serveur tourne (decision utilisateur
+        2026-11-01) ; `stop_and_restart` : « Arreter, restaurer, redemarrer » par le gestionnaire de service."""
+        from omega_serv.application.persistence.restore_backup import RestoreResult, restore_backup
+        from omega_serv.application.persistence.restore_with_service import restore_stopping_service
+        from omega_serv.application.services.resolve_current_service_name import (
+            resolve_current_service_name,
+        )
+        from omega_serv.core.i18n import _
 
         backups_dir = self._backups_dir()
         archive_store = self.build_archive_store(backups_dir)
         metadata_store = self.build_backup_metadata_store(backups_dir)
-        return restore_backup(snapshot_id, self._project_root, archive_store, metadata_store)
+        if not stop_and_restart:
+            return restore_backup(
+                snapshot_id, self._project_root, archive_store, metadata_store, server_running=self.server_running(),
+            )
+        manager = self._service_manager_factory() if self._service_manager_factory is not None else None
+        if manager is None:
+            return RestoreResult(False, _("Aucun gestionnaire de service : arrêtez le serveur vous-même, puis restaurez."))
+        service_name = resolve_current_service_name(
+            self.instance_registry, self._filesystem, self.settings_store, self._project_root,
+        )
+        return restore_stopping_service(
+            lambda: restore_backup(snapshot_id, self._project_root, archive_store, metadata_store, server_running=False),
+            manager, service_name, self.server_running,
+        )
 
     def list_backups(self) -> list[SnapshotMetadata]:
         return self.build_backup_metadata_store(self._backups_dir()).list_all()

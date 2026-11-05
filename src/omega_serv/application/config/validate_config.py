@@ -6,13 +6,14 @@ executes l'un apres l'autre par les futures commandes CLI
 sans effet de bord), environnement ensuite (necessite le disque)."""
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 from omega_serv.application.server.start_server import resolve_magnet_paths
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.routing.alias import parse_alias_rules
+from omega_serv.domain.routing.alias import parse_alias_rules, validate_alias_rule
 from omega_serv.domain.routing.fastcgi_zone import (
     parse_fastcgi_config,
     validate_fastcgi_config_structure,
@@ -98,6 +99,27 @@ def validate_config_environment(
     if upload_option is not None and upload_option.enabled:
         errors.extend(_validate_upload_environment(upload_option.settings, filesystem, project_root))
 
+    aliases_option = config.options.get("aliases")
+    if aliases_option is not None and aliases_option.enabled:
+        errors.extend(_validate_alias_environment(aliases_option.settings, project_root))
+
+    return errors
+
+
+def _validate_alias_environment(settings: dict, project_root: Path) -> list[str]:
+    """Cibles absolues (ex. /var/secure) : le validateur structurel ne
+    connait pas le dossier du projet, la verification se fait ici sur le
+    chemin REEL (liens symboliques resolus) - un lien qui ramene vers
+    <projet>/var ou secure/ reste refuse, un /var/... du systeme passe."""
+    errors: list[str] = []
+    real_root = project_root.resolve()
+    for rule in parse_alias_rules(settings.get("list", [])):
+        if not rule.target_path.replace("\\", "/").startswith("/"):
+            continue
+        real_rule = replace(rule, target_path=str(Path(rule.target_path).resolve()))
+        reason = validate_alias_rule(real_rule, real_root) or validate_alias_rule(rule, real_root)
+        if reason is not None:
+            errors.append(_("options.aliases : {reason}").format(reason=reason))
     return errors
 
 

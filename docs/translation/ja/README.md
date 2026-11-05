@@ -12,14 +12,15 @@
 公式ページ：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ja/) &nbsp; リファレンス・使い方・ヘルプ・FAQ：[完全ガイド](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ja/guide.html)  
 プレビュー：[スクリーンショット](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; デモ [デモサーバー](https://craftdark.snake-mackarel.ts.net) &nbsp; [Web サーバーの比較・テスト](comparatif-serveurs-web.md)  
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
 [![Lua](https://img.shields.io/badge/Lua-5.4%2B-2C2D72.svg)](https://www.lua.org/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![HTML](https://img.shields.io/badge/HTML-5-E34F26.svg)](https://developer.mozilla.org/docs/Web/HTML)
-[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2020%2B-F7DF1E.svg)](https://developer.mozilla.org/docs/Web/JavaScript)
 [![Interface](https://img.shields.io/badge/Interface-CLI%20%2B%20TUI-cyan.svg)](#3-使い方)
 [![Textual](https://img.shields.io/badge/Textual-TUI-5A5AFB.svg)](https://textual.textualize.io/)
+[![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
 🌐 ドキュメント・エクスポート・インターフェースは **17 言語** に対応しています — [インターフェースの言語](#インターフェースの言語) を参照してください。  
 **言語：**
@@ -27,7 +28,7 @@
 
 ---
 
-**OMEGA-SERV** は純粋な Python（サーバーのコアには標準ライブラリのみを使用）で書かれた HTTP/1.1 サーバーです。静的コンテンツの配信と、オプションで PHP-FPM の実行を目的としており、無効化できないプロトコルの堅牢化と、押し付けではなく必要に応じて重ねられるセキュリティモジュール（WAF、TLS、認証）を備えています。`omega-` スイートの 7 番目のツールですが、意図的に **将来の `omega-suite` 統合の対象外** としています（遠隔のターゲットではなく、自身を動かしているローカルマシンに作用するためで、`omega-fire` と同じ系統です）。Clean Architecture で構成され、`bootstrap/` がコンポジションルートの役割を担います。
+**OMEGA-SERV** は純粋な Python（サーバーのコアには標準ライブラリのみを使用）で書かれた HTTP/1.1 サーバーです。静的コンテンツの配信と、オプションで PHP-FPM の実行を目的としており、デフォルトで有効なプロトコルの堅牢化と、押し付けではなく必要に応じて重ねられるセキュリティモジュール（WAF、TLS、認証）を備えています。オプションのネイティブ C++ エンジンが、同じセキュリティチェックのまま、Python エンジンの代わりにリクエストを処理できます（§6b を参照）。`omega-` スイートの 7 番目のツールですが、意図的に **将来の `omega-suite` 統合の対象外** としています（遠隔のターゲットではなく、自身を動かしているローカルマシンに作用するためで、`omega-fire` と同じ系統です）。Clean Architecture で構成され、`bootstrap/` がコンポジションルートの役割を担います。
 
 ## 1. ビジョンと範囲
 
@@ -36,9 +37,9 @@
 ### OMEGA-SERV ができること
 
 - 安全なパス解決（トラバーサル、二重エンコード、シンボリックリンク）を備えた静的コンテンツ配信（ファイル、任意のディレクトリ一覧、エイリアス、リダイレクト、リライト、キャッシュ）。大きなファイルはディスクからブロック単位で送信され、メモリに読み込まれることはありません。各ファイルには `ETag` と `Last-Modified` が付き（再読み込み = 空の 304 応答）、部分リクエスト `Range`（ダウンロードの再開、動画）を受け付けます。画像・メディア・フォント・CSS・JS にはデフォルトの `Cache-Control` が付与され、キャッシュ画面で変更できます。事前圧縮されたテキストファイル：`site.css` の隣に `site.css.br` または `site.css.gz` があり（`brotli -k site.css` や `gzip -k site.css` で作成）、ブラウザが受け入れる場合はそれが代わりに送信されます。元のファイルより古い版が送られることはありません。
-- 無効化するオプションなしに、デフォルトで HTTP プロトコルを堅牢化します：明示的な許可メソッド、`Host` ヘッダーの検証、`Content-Length`/`Transfer-Encoding` の曖昧さの拒否、回避できないセキュリティヘッダーと基本 CSP。
+- デフォルトで HTTP プロトコルを堅牢化します：無効化するオプションのない厳格なリクエスト解析（`Content-Length`/`Transfer-Encoding` の曖昧さの拒否）、明示的な許可メソッド、`Host` ヘッダーの検証、サイトの応答とそのエラーページへのセキュリティヘッダーと基本 CSP。
 - オプション：WAF によるフィルタリング（シグネチャ、レート制限、ブロックリスト）、TLS の直接終端（自己署名証明書、ローカル CA による署名、または自動更新付きの Let's Encrypt/Certbot による公開証明書 — §9 参照）、ゾーン単位の HTTP Basic 認証、FastCGI/PHP-FPM による PHP、隔離されたアップロードゾーン。
-- 「boost」モード：複数のサーバープロセス（マシンで利用可能な CPU 1 つにつき最大 1 つ、耐性と制限の画面）。セキュリティカウンター（rate limit、再犯）はプロセス間で共有され、常に正確です。
+- 複数のサーバープロセス（Python エンジンではマシンの物理コア 1 つにつき最大 1 つ、耐性と制限の画面）。セキュリティカウンター（rate limit、再犯）はプロセス間で共有され、常に正確です。
 - 自身の設定を監査し（`audit security`）、システムサービス（systemd/OpenRC/runit）として自らをインストールします。
 - 最初から最後までスクリプト化できる非対話 CLI と、**まったく同じユースケースを包む対話型インターフェース（Textual）** — §3 参照。インターフェースのロードマップ（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`、§12）は **すべて提供済み** です：機能レジストリ、プロファイル/オプション、詳細設定（エイリアス/リダイレクト/リライト/FastCGI/dirlisting/認証/キャッシュ/WAF/信頼済みプロキシ/送信リバースプロキシ/TLS）、ログ管理（ライブラリ/お気に入り、3 種類のビューア — シンプル/クラシック/統合 lnav —、IP の表示と処理、SSH リモートソース、ローテーション/バックアップ/自動化/復元/削除/エクスポート）、システムサービス、マルチインスタンス（レジストリ、作成）、確認/シミュレーション/監査、設定のバックアップ/復元、初回起動ウィザード、アプリケーション設定（テーマ、描画プロファイル、エクスポート/スクリーンショットのパス）、コンテキストヘルプガイド（具体例付きの画面ごとの解説、FAQ、HTML エクスポート、テストで検証された網羅的なカバー）、保存のたびにリロード/再起動の要否を必ず表示、ファイルを手で編集しない Active Defense の完全な設定。
 
@@ -64,13 +65,14 @@ Omega-serv は **root として起動することを拒否します**。提供�
 
 - Python 3.10+
 - TLS 証明書に関わるすべてに `openssl`（Python ライブラリではなく実行ファイル） — それ以外の機能はなくても動作します。
+- ネイティブエンジン（オプション、x86_64 向けにコンパイル済みで同梱）：glibc 2.38 以降と OpenSSL 3。どちらも Python がすでに使っているシステムライブラリです。起動しない場合、cmake、C++20 コンパイラー、OpenSSL のヘッダーがあれば `install.sh` がその場で再コンパイルします。なければ、omega-serv は Python エンジンで動作します。
 
 ### ダウンロード
 
-最新版のアーカイブと各バージョンの SHA-256 フィンガープリント：[omega-serv-2.0.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+最新版のアーカイブと各バージョンの SHA-256 フィンガープリント：[omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.0.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -80,7 +82,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **既存のインストールを更新しますか？** 以下のコマンドは、`omega-serv/` がすでに存在すると **展開を黙ってスキップします**（更新ではなく中断された初回インストールとみなすため）— その場合、**変更されていない古いコード** の上に依存関係を再インストールすることになり、エラーメッセージは一切出ません。代わりに下の [アップデート](#アップデート) を使ってください。
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ ここには展開済みです。この手順をスキップします。" || tar -xzf omega-serv-2.0.1.tar.gz
+[ -d omega-serv ] && echo "ℹ️ ここには展開済みです。この手順をスキップします。" || tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -89,9 +91,10 @@ chmod +x install.sh
 `install.sh`：
 
 1. 仮想環境 `.venv` がなければ作成します。
-2. パッケージをインストールします（`pip install -e .`）— **外部依存なし**（§6 参照）。
+2. パッケージをインストールします（`pip install -e .`）— サーバーのコアは**外部依存なし**（§6 参照）。
 3. `omega-serv.sh` と `install.sh` を実行可能にします。
-4. `~/.bashrc` と `~/.zshrc` にエイリアス `serv` を追加します（既にあれば重複しません）。
+4. 同梱のネイティブエンジンがこのマシンで起動するかを確認し、必要かつ可能ならその場で再コンパイルします — インストールを止めることは決してありません（§6b）。
+5. `~/.bashrc` と `~/.zshrc` にエイリアス `serv` を追加します（既にあれば重複しません）。
 
 ### アップデート
 
@@ -99,7 +102,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/ の親フォルダーから実行（中からは絶対に実行しない）
-tar -xzf omega-serv-2.0.1.tar.gz
+tar -xzf omega-serv-2.5.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -129,6 +132,8 @@ cd omega-serv/
 - `lnav` — **ログ管理** 画面（§3）に統合された高度なログ解析。実行ファイルが見つからない場合は明確なエラーメッセージを出し、クラッシュしません。画面の他の部分（表示/追跡/ローテーション/統計）はなくても通常どおり動作します。
 - `scp`（`openssh`/`openssh-clients` パッケージ、ほぼ常に導入済み）— **リモートソース（SSH）**（§13a）にのみ必要です。ない場合は取得が明確なメッセージとともに失敗し、ライブラリの他の部分は通常どおり動作します。
 - `python-psutil`（PyPI の `psutil` に相当するシステムパッケージ）— どの場合も `pip install -e .` で自動的にインストールされます（パッケージの必須依存で、**状態とリソース** 画面が常に必要とします）が、システムのパッケージマネージャーで事前に入れておくと `pip` が wheel をローカルでビルドせずに済みます。
+- `cmake`、C++20 コンパイラー（`g++`）、OpenSSL 3 のヘッダーと PCRE2 —— 同梱のネイティブエンジンが起動しない場合（glibc が 2.38 より古い場合）だけ必要です。その場合 `install.sh` がその場で再コンパイルします。PCRE2 がないと、ローカルでビルドしたエンジンは WAF 有効時にすべてのリクエストを Python に検査させます（低速）。これらのツールがなければ、omega-serv は Python エンジンのまま動作します。
+- 絵文字フォント（Noto Color Emoji）—— 任意。シンプルビューアー（ログ管理）のアイコン用です。ない場合は一部のアイコンが四角で表示されますが、それ以外に影響はありません。Nerd Font にはこれらの絵文字は含まれていません。
 
 ```bash
 # Arch Linux と派生ディストリビューション
@@ -139,6 +144,16 @@ sudo apt install openssl certbot lnav python3-psutil openssh-client
 
 # Fedora
 sudo dnf install openssl certbot lnav python3-psutil openssh-clients
+
+# ネイティブエンジンのローカルビルド（glibc < 2.38 の場合のみ）
+sudo pacman -S cmake gcc openssl pcre2                     # Arch
+sudo apt install cmake g++ libssl-dev libpcre2-dev         # Debian/Ubuntu
+sudo dnf install cmake gcc-c++ openssl-devel pcre2-devel   # Fedora
+
+# シンプルビューアーのアイコン（絵文字フォント、任意）
+sudo pacman -S noto-fonts-emoji                            # Arch
+sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
+sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
 ## 3. 使い方
@@ -186,13 +201,17 @@ serv
 
 単なる静的テキストではない、組み込みのヘルプシステムです：解説のある各画面（定義/具体例付きの入力項目/実行される操作/反応 — リロード、再起動、またはなし）には、その画面から `F1` で直接アクセスできます。`a` キーは完全なメニュー（アプリケーションの実際のナビゲーションと同一の階層）を開き、FAQ（実際の利用で遭遇した落とし穴。例：Active Defense の攻撃クラス、共有サービスのパーミッション）と、ガイド全体の自己完結型 HTML エクスポート（現在のテーマを保持）にアクセスできます。個別の解説がまだない画面には汎用のリファレンス画面で代替します — 現在のカバーは網羅的で、テストで検証されています。
 
+#### お問い合わせとサポート（ヘルプガイド）
+
+ヘルプガイド（`a` キー）には **お問い合わせとサポート** 画面があります：*コーヒーをおごる*（開発者の PayPal ページ）、*サポートに連絡*（サイトのお問い合わせフォーム、メールアドレスも表示）、*ユーザーとして登録（匿名）*。登録は任意で、初期状態ではオフです。ユーザー数と、希望すれば大陸または国を数えるためだけに使われます（選択式の一覧のみで、自由記述はありません）。送信されるのはランダムなキー、omega-serv のバージョン、選んだ方式（*1 回のみ* または *毎日*。後者で稼働中のインストールを数えられます）だけで、名前、マシン名、内容、ログは決して送信されません。毎日の送信は別プロセスで動作し、サーバーを遅くすることはありません。IP アドレスは登録情報には記録されませんが、どのアクセスとも同じく受信サーバーのセキュリティチェックとログを通過します。同じ画面または `omega-serv declaration withdraw` でいつでも取り消せます。`DO_NOT_TRACK=1` で自動送信はすべて止まります。
+
 #### メインメニュー（対話型インターフェース）
 
 - **初回起動ウィザード** — 8 ステップのガイド付き手順（ようこそ → 読み取り専用の機能確認 → プロファイル選択 → bind/ポート → 任意の TLS → 確認 → 要約 + 書き込み → サービスのインストール提案）。CLI を知らなくても、完全な設定を作成してサーバーを起動できます。
 - **機能レジストリ** — 読み取り専用のシステム調査（init システム、設定したポートが使用中かどうか、`openssl`/`logrotate`/`tailscale`/`lnav` の有無、ディスク容量、ファイルディスクリプター上限...）、JSON/HTML エクスポート。
 - **プロファイル** — CLI の `profile`（§5）と同じユースケース。書き込み前に必ず差分を表示します。
 - **サーバーの詳細設定** — エイリアス/リダイレクト/リライト/dirlisting/信頼済みプロキシ/送信リバースプロキシ/FastCGI/キャッシュ/認証/アクセス制御/エラーページの完全な CRUD と、サブメニュー **TLS**（状態、自己署名の生成、ローカル CA ウィザード、Let's Encrypt/Certbot ウィザード、自動更新、失効、有効化/無効化 — §9 参照）。2 つ目の枠 **オプションと確認** には **オプション**（CLI の `option`、§7）と **設定を確認**（CLI の `config check`、§10）へのショートカットがまとめられています — 設定を調整してから確認するという同じ流れで、この 2 画面はもうメインメニューから直接は開けません。WAF はもうここにはありません（下の「アクティブセキュリティ」参照）：WAF が主に表示するのは常に変化する運用状態であり、単純な静的設定フォームではないためです。保存のたびに次に起こることを必ず明示します：サービスが稼働中なら自動かつ静かなホットリロード（dirlisting、アクセス、エイリアス/リダイレクト/リライト、キャッシュ、エラーページ、信頼済みプロキシ、リバースプロキシ/FastCGI ゾーン、認証ユーザー/ゾーン）、変更が待ち受けソケット・TLS・Active Defense に関わる場合は完全な再起動の明示的な確認 — サーバーを再起動すべきか推測させる画面はもうありません。
-- **アクティブセキュリティ** — 2 つのブロックを並べた単一の画面：**Active Defense**（状態、スコア/レベル付きの追跡中の脅威、タイムライン/IoC エクスポート/レポート付きのインシデント、Deception の割り当て、ドライランでの判定シミュレーション、**設定** — `config/omega-serve.json` を手で編集することなく完全に設定、§11 参照）と **WAF**（状態、モジュール — モード/ルールパック/ブロックリスト、リクエストのテスト、Custom — カスタムルールの作成と、マウスで編集できるパス/キーワードリストの読み込み（§11b 参照）、Magnet — 有効化前に互換性を確認したうえで外部の `mod_magnet` スクリプトをインポート）— §11 参照。
+- **アクティブセキュリティ** — 2 つのブロックを並べた単一の画面：**Active Defense**（状態、スコア/レベル付きの追跡中の脅威、タイムライン/IoC エクスポート/レポート付きのインシデント、Deception の割り当て、ドライランでの判定シミュレーション、**設定** — `config/omega-serve.json` を手で編集することなく完全に設定、§11 参照）と **WAF**（状態、モジュール — モード/ルールパック/ブロックリスト、リクエストのテスト、Custom — カスタムルールの作成と、マウスで編集できるパス/キーワードリストの読み込み（§11b 参照）、Magnet — 有効化前に互換性を確認したうえで外部の `mod_magnet` スクリプトをインポート）— §11 参照。 **RIPOSTE**：3 つ目のブロック（WAF → Active Defense → RIPOSTE、攻撃の順序）— 時間をかけた段階的な対応。§11d を参照。
 - **ログ管理** — 2 列のメニュー。**ライブラリ** 列：処理対象のすべてのログを参照する中心（手動で追加、ワンクリックでインスタンス固有のログを追加 — access/error/ネイティブ WAF、+ 有効なら magnet スクリプト §7 —、または SSH で取得した **リモートソース**、下記参照）。**お気に入り**（ログ + ビューアの組み合わせを名前付きで保存し、直接起動）。**ログを表示** では選択したログの数に応じて 3 種類のビューアから選べます — シンプル（ライブ tail + あらゆる形式での IP/エラー/HTTP コードの汎用統計）、クラシック（閲覧 + 追跡）、統合 `lnav`（インターフェース内での実ターミナル描画、magnet ログを自動で含め、手動パスを **ピン留め** してセッション間で保持）。**IP の表示と処理**（選んだ 1 つ以上のログの上位 IP、期間 24 時間/7 日/30 日/すべて、IP の除去）。**メンテナンス** 列（変更なし）：手動またはサイズしきい値による自動のローテーション/アーカイブ、即時バックアップの作成、スケジュール自動化の設定/管理（宣言的 — 下の注記参照）、アーカイブの復元/削除、一覧のエクスポート。
 - **サービス** — CLI の `service`（§12）と同じ操作。操作ごとに一時的に `sudo` で昇格し、アプリケーション全体を root で動かすことはありません。
 - **マルチインスタンス** — マシン上の既知のインストールのグローバルレジストリ（`~/.config/omega-serv/instances.json`、どのプロジェクトディレクトリにも属さない）と、それぞれの systemd 状態。新しいインスタンスの作成（ツリーのコピー、専用の仮想環境と依存関係、別ポートの新しい設定、入れ子とポート競合のチェック）をインターフェースから直接行えます。インストールが 1 つだけのときボタンは実質的に目立たず（2 つ以上になるとラベル「マルチインスタンス」が「Instances (N)」に変わります）、別のインスタンスへの完全な切り替え（`os.execv`、明示的な確認、再起動時に切り替えを告げる専用スプラッシュ）、インスタンスの完全なアンインストール（ユニットの削除、他のインスタンスがもう使っていなければ専用システムアカウントの削除、そして任意でディレクトリの削除 — デフォルトでは決して削除しません）が可能です。
@@ -228,7 +247,7 @@ serv
 ./omega-serv.sh option disable waf
 
 # サーバーを起動せずにリクエストをシミュレート（有効化前のルール検証に便利）
-./omega-serv.sh simulate-request GET /index.html
+./omega-serv.sh simulate-request --method GET --url /index.html
 
 # WAF（オプションが無効でも暗黙の --force で動作）
 ./omega-serv.sh waf test --method GET --path /admin --remote-ip 203.0.113.1
@@ -250,6 +269,12 @@ serv
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
+# RIPOSTE（時間をかけた段階的な対応、オプション "riposte" - §11d を参照）
+./omega-serv.sh riposte status
+./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
+./omega-serv.sh riposte actions list
+./omega-serv.sh riposte stop
+
 # TLS 証明書 - 自己署名（9a）
 ./omega-serv.sh certs generate-self-signed --cn localhost --san-dns localhost --san-ip 127.0.0.1
 ./omega-serv.sh certs show
@@ -266,7 +291,7 @@ serv
 
 # HTTP Basic 認証
 ./omega-serv.sh auth add-user --username alice
-./omega-serv.sh auth create-zone --url-prefix /admin/ --allowed-users alice
+./omega-serv.sh auth create-zone --path-prefix /admin/ --realm "Administration" --allowed-users alice
 ./omega-serv.sh auth list
 
 # セキュリティ監査（決してブロックせず、情報提供のみ）
@@ -351,6 +376,15 @@ src/omega_serv/
 
 `import-linter` が検証するルール（8 つの契約）：`domain`/`core` は外側のレイヤーに決して依存しない。`interfaces.tui` は `infrastructure` に決して直接依存しない。`textual` は `interfaces.tui` に限定。`subprocess` は `infrastructure/process/subprocess_runner.py`（と対話 PTY ストリームの `infrastructure/lnav/`）に限定。`ssl` は `infrastructure/tls/ssl_context_builder.py` に限定。`jinja2` は `infrastructure/exporters/html_exporter.py` に限定。`sqlite3` は `infrastructure/persistence/sqlite_active_defense_connection.py` に限定（プロジェクト唯一のリレーショナルストレージで、Active Defense 専用 — §11 参照）。`lupa` は `infrastructure/waf/lua_waf_adapter.py` に限定（補助 WAF スクリプト「magnet」、§7）。
 
+## 6b. HTTP エンジンとプロセス数
+
+リクエストを処理できるエンジンは 2 つあります。既定の **Python エンジン** では、Python インタープリターがすべてのリクエストを処理します。**ネイティブエンジン**（C++、`bin/omega-http-core`）はリクエストを自ら読み込み、解析し、応答します。Python サーバーは設定、監視、セキュリティの判断を受け持ちます。
+
+- **2 つの設定**：エンジン（**基本設定** 画面）とプロセス数（**耐性と制限** 画面）。プロセス数はエンジンと検出されたプロセッサーに応じて制限されます：Python エンジンでは物理コア 1 つにつき最大 1 つ、すでにすべてのコアを使うネイティブエンジンではセキュリティチェック用のプロセスで、1、または物理コアが 4 以上なら 2 です。画面はこのマシンで増やすと何が得られるかを示し、大きすぎる値は拒否します。動作中の内容はそのまま表示されます（「ネイティブエンジン、1 プロセス」）。エンジンやプロセス数の変更には完全な再起動が必要です。選択で何が変わるか（実測）：ガイドの FAQ と [Web サーバー比較](comparatif-serveurs-web.md)。
+- **同じ応答、同じログ**：ネイティブエンジンでは、静的コンテンツ、リダイレクト、書き換え、エイリアス、キャッシュ、エラーページ、セキュリティヘッダーはネイティブエンジンが処理します。WAF のルールも自ら照合し、どのルールにも一致しないリクエストは単独で応答します。それ以外のリクエスト（WAF の一致または疑い、Active Defense、認証）はすべて、まったく同じチェックを行い同じセキュリティログを書き込む Python プロセスを通ります（RIPOSTE と omega-jail には違いがまったく見えません）。ディレクトリ一覧と内部ページは Python に要求し、リバースプロキシ、FastCGI、ファイル送信、WebSocket は接続全体を Python に任せます。直接 TLS は、同じライブラリと同じ設定でネイティブエンジンが処理します。
+- **混在は決してしない**：1 つの規則が実際のエンジンを決め、どこでもそれを表示します（**状態とリソース** 画面、`omega-serv engine status`）。ネイティブエンジンがすべてを処理できない場合（直接 TLS とリバースプロキシ・FastCGI・ファイル送信の併用）や起動しない場合は Python エンジンが処理し、理由を表示します。**基本設定** では、有効な機能が妨げている間はネイティブの選択肢が灰色表示になり、可能にするために何を変えるべきかが示されます。ネイティブエンジンが使えなくなるような設定を別の場所で保存する場合は、まず確認を求めます。
+- **Python のチェックが応答しない場合**は `waf.on_internal_error` が決めます：チェックなしで応答するか、拒否するか（503）。この場合、認証ゾーンは常に拒否され、すでに BAN されたアドレスも拒否されたままです（451）。
+
 ## 7. オプションモジュール
 
 提供されるすべてのプロファイルでデフォルトは無効 — 有効化は常に明示的です（`option enable <名前>` または `config enable-tls`）：
@@ -364,6 +398,7 @@ src/omega_serv/
 | 送信リバースプロキシ | Omega-serv 自身が 1 つ以上のバックエンドへのプロキシとして動作（`server.tls.mode = "behind_proxy"` とは逆方向）— 負荷分散（ラウンドロビン、重み付き、least-connections、ip-hash、least-response-time、実負荷）、セッションアフィニティとヘッダーによるルーティング規則、パッシブ/アクティブなヘルスチェック、応答キャッシュ（`Vary` による複数バリアント）、バックプレッシャー、ループ防止、ホット管理 API — 詳細は §7a 参照 |
 | アップロード | 隔離されたゾーン、ゾーンごとのクォータ、サーバー側で生成するファイル名 — V1 ではストリーミングなし（`server.max_request_size` で上限） |
 | `active_defense` | すでに計算済みの WAF シグナル（決して 2 つ目のスコアではない）に基づく Deception + 戦闘モード：静的なおとり、対象を絞った減速/詳細ログ/レート制限、インシデント + IoC エクスポート — §11 参照 |
+| `riposte` | 時間をかけた段階的な対応：アドレスごとの再犯の記憶、ますます長い BAN（WAF の blocklist、omega-jail によるネットワーク BAN）またはデコイ延長、解除と緊急停止 — 別プロセス、§11d を参照 |
 
 ### 7a. 送信リバースプロキシ — 詳細
 
@@ -378,12 +413,12 @@ OMEGA-SERV 自身が 1 つ以上の HTTP/HTTPS バックエンドへのリバー
 - **WebSocket** — ゾーンごとにアップグレードを許可でき、確立後はパイプの寿命の間 1 つの upstream に固定され、アプリケーションレベルのタイムアウトはありません。
 - **ホット管理** — 小さなローカル HTTP API（`/.omega-serv-admin/`、ネイティブの負荷プローブと同様に `trusted_proxy` で保護）により、TUI はバックエンドの DRAINING/MAINTENANCE 状態を読み取り/強制し、**実際に稼働中のサーバー** のキャッシュのヒット/ミス率を読み取れます（専用画面 *バックエンドのライブ状態*）— TUI とサーバーは共有メモリを持たない別々の 2 プロセスなので、このローカル HTTP チャネルが両者をつなぐ唯一の橋です。
 
-## 8. HTTP の堅牢化（無効化不可）
+## 8. HTTP の堅牢化（デフォルトで有効）
 
-- ヘッダー/リクエスト行は読み込み **中** に上限を適用（後からではない）、廃止されたヘッダーの折り返しは拒否、`Transfer-Encoding` は常に拒否（推測しない）。
-- 重複した `Content-Length` は拒否。`Expect: 100-continue` はきれいに拒否（417）。
-- 明示的なメソッドのホワイトリスト（それ以外は 405 + `Allow`）、`Host` ヘッダーを検証（欠落/空/同一でも重複/制御文字 → 400）。
-- セキュリティヘッダーと基本 CSP（`enforce`/`report-only`）をエラーを含む **すべて** の応答に適用 — オプションで回避できません。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` は常に `same-origin` で、サイトを壊す実際のリスクはありません。`Cross-Origin-Embedder-Policy` は常に明示的に送信し（欠落させない — 外部スキャナーが「考慮されていない」と「意図的に許容」を区別できる）、`hardened` を含む **すべて** のプロファイルでデフォルトは `unsafe-none`：前の 2 つと異なり、`require-corp`/`credentialless` は実際に配信しているサイト固有のクロスオリジンリソース（フォント、画像、サードパーティの iframe）をブロックしうるためです — 調整可能（`security.coep_mode`）。CSP ゾーン（`security.csp_zones`）：パスのプレフィックスごとの **明示的な** 例外（例：本当に必要な `/un-dossier/` 配下だけ `unsafe-inline`）。各ゾーンはそのプレフィックスについてデフォルトのポリシーを完全に置き換えます — 統合も全体的な緩和も決してしません。例外はすべて意図的であっても `audit security` に表示され続けます（CSP-001/CSP-002 はゾーンもスキャンします）。ディレクティブごとのウィザード（**汎用セキュリティ** 画面）で作成でき、各項目にはグローバルポリシーの **現在** の値があらかじめ入っています — 空欄から始めて他のディレクティブを意図せず失うのではなく、変えるべきところだけを変えるためです。組み立てたゾーンが `unsafe-inline`/`unsafe-eval`/汎用ソース `*` を緩める場合は、追加の明示的な確認を求めます。
+- 無効化するオプションのないリクエスト解析：ヘッダー/リクエスト行は読み込み**中**に上限を適用（後からではない）、廃止されたヘッダーの折り返しは拒否、`Transfer-Encoding` は常に拒否（推測しない）。
+- 重複した `Content-Length` は拒否。`Expect` ヘッダー（例：`100-continue`）はきれいに拒否（417）。
+- 明示的なメソッドのホワイトリスト（それ以外は 405 + `Allow`）、`Host` ヘッダーを検証（欠落/空/同一でも重複/制御文字 → 400）。このチェックはデフォルトで有効で、設定でのみ無効化できます（`security.require_valid_host`）。
+- セキュリティヘッダーと基本 CSP（`enforce`/`report-only`）を、サイトの応答とそのエラーページ（403、404…）に適用し、モジュールが削除・上書きすることはありません。例外：リクエストを処理する前に送られる応答（不正な形式や大きすぎるリクエスト、タイムアウト、無効な `Host`、拒否されたメソッド、飽和したサーバー）は、これらのヘッダーなしで送られます — サイトの内容を含まない短いエラーページです。デフォルトで有効で、無効化できるのは **汎用セキュリティ** 画面だけです（`security.security_headers_enabled`）。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` は常に `same-origin` で、サイトを壊す実際のリスクはありません。`Cross-Origin-Embedder-Policy` は常に明示的に送信し（欠落させない — 外部スキャナーが「考慮されていない」と「意図的に許容」を区別できる）、`hardened` を含む **すべて** のプロファイルでデフォルトは `unsafe-none`：前の 2 つと異なり、`require-corp`/`credentialless` は実際に配信しているサイト固有のクロスオリジンリソース（フォント、画像、サードパーティの iframe）をブロックしうるためです — 調整可能（`security.coep_mode`）。CSP ゾーン（`security.csp_zones`）：パスのプレフィックスごとの **明示的な** 例外（例：本当に必要な `/un-dossier/` 配下だけ `unsafe-inline`）。各ゾーンはそのプレフィックスについてデフォルトのポリシーを完全に置き換えます — 統合も全体的な緩和も決してしません。例外はすべて意図的であっても `audit security` に表示され続けます（CSP-001/CSP-002 はゾーンもスキャンします）。ディレクティブごとのウィザード（**汎用セキュリティ** 画面）で作成でき、各項目にはグローバルポリシーの **現在** の値があらかじめ入っています — 空欄から始めて他のディレクティブを意図せず失うのではなく、変えるべきところだけを変えるためです。組み立てたゾーンが `unsafe-inline`/`unsafe-eval`/汎用ソース `*` を緩める場合は、追加の明示的な確認を求めます。
 - IPv4 射影 IPv6 アドレス（`::ffff:x.x.x.x`）はあらゆる比較（ブロックリスト、信頼済みプロキシ、レート制限）の前に正規化します — そうしないと既知の回避手段になります。
 - 通常の単体テスト/結合テストに加え、HTTP パーサーとパスリゾルバーに対するプロパティテスト（`hypothesis`、数千件の生成例）で検証しています。
 
@@ -459,13 +494,24 @@ WAF は、1 行に 1 つのパス（またはキーワード）を書いた **�
 
 ## 11c. フォルダー別・IP/ネットワーク別のレート制限（WAF）
 
-WAF のレート制限（トークンバケット、`options.waf.rate_limit`、デフォルトは IP ごとに 60 リクエスト / 60 秒）は、**アクティブセキュリティ → 除外とレート制限** から（または手で `rate_limit.path_policies` / `rate_limit.source_policies`）細かく調整できます：
+WAF のレート制限（トークンバケット、`options.waf.rate_limit`、デフォルトは IP ごとに 60 リクエスト / 60 秒）は、**アクティブセキュリティ → 制限** から（または手で `rate_limit.path_policies` / `rate_limit.source_policies`）細かく調整できます：
 
 - **フォルダー別ルール**（`prefix`、`requests`、`window_seconds`）：そのフォルダーについて全体の上限を **置き換え**、独自のカウンターを持ちます（`requests: 0` = 無制限）。最長のプレフィックスが優先されます。`/images` は `/images/a.png` を含みますが、`/images2` は決して含みません。典型的には 429 を返す重いページ（画像ギャラリー）です。
 - **IP/ネットワーク別ルール**（`network`、`requests`、`window_seconds`、`trusted`）：同じ原理で、最も具体的なネットワークが優先されます。優先順位：フォルダー、次に IP/ネットワーク、最後に全体の上限。
 - **一般の利用者に対する BAN は変わらない**：パブリック IP による超過は引き続き `waf-alerts.log` に `"action": "block"` として記録されるため、omega-jail による BAN の対象になります（10 分間に 3 回の拒否 → 12 時間）。**安全な送信元** — `never_auto_block` のネットワーク、または `trusted: true` が付いたルール — は 429 を受け取りますが `"action": "throttle"` として記録され、jail はこれを決して数えません。
 - **magnet スクリプト**：その独自のレート制限（429 応答）は決して検知として数えられないため、自動 BAN につながることは決してありません。フォルダーまたは IP/ネットワークのルールが適用されるリクエストでは、ネイティブのルールが優先され、magnet の 429 は無視されます（攻撃シグネチャは引き続き適用されます）。
 - レートのルールが WAF の検査を無効にすることは **決してありません**。逆に、検査の除外（`exclusions.path_prefixes`）が rate limit を解除することも決してありません。`trusted_proxy` が有効でなければ、`127.0.0.1`/`::1` を含むルールは無視されます（`never_auto_block` と同じ安全装置）。
+
+## 11d. RIPOSTE（時間をかけた段階的な対応）
+
+オプションのモジュール（`option enable riposte`、既定では無効、完全な再起動が必要）：Active Defense がリクエストの**最中**に反応するのに対し、RIPOSTE は**時間をかけて**動きます。沈黙のあとに戻ってくるアドレス（エピソード）を記憶し、ますます長い BAN を適用します — 既定の段階は 1 時間、6 時間、24 時間、7 日、再犯期間 30 日、履歴 90 日です。
+
+- **別プロセス**で、サービスが起動・監視します（1 つまたは複数のプロセスで、インスタンスごとに 1 つ）。WAF と Active Defense のログを読み、処理中のリクエストは決して読みません。WAF が有効でなければ、攻撃は一切見えません。
+- **ポリシー**：いつ動くか（攻撃クラス、戻ってきた回数、Active Defense のレベル、デコイへの訪問）と、どう動くか（WAF の blocklist へのローカル BAN、omega-jail の jail によるローカル + ネットワーク BAN、または Active Defense のデコイ延長）。すぐに読み込める 5 つのシナリオがあり、各ポリシーは有効にする前に実際のログで測定し、シミュレーションできます。有効なポリシーは自動的に動きます。
+- **何も消えません**：各アクションは進行中でも終了後でも、理由とともに表示されたままです。停止は 3 段階：アクションの解除（除外または「再犯に数えない」付き）、ルールの無効化、記憶される緊急停止。
+- **安全策**：WAF と同じ除外（ローカルホスト、Tailscale、ローカルネットワーク）、手動またはより長い BAN を決して上書きしない、エピソードごとに 1 アクション、同時 BAN 数の上限。
+- **ローカル BAN とネットワーク BAN**：ローカル BAN は omega-serv が WAF のブロックリストに設定します。そのアドレスは BAN の期間中、すべてのリクエストで 451 ページ「あなたの IP は BAN されました」を受け取ります。ネットワーク BAN は omega-jail の jail（`<service>-riposte-1h/6h/24h/7d`、インスタンスごとに 1 組）を通じて fail2ban に任されます。接続がローカルプロキシ（Tailscale Funnel）経由で届く場合は効果がなく、ローカル BAN だけが守ります。
+- **インターフェース**：アクティブセキュリティ内の 6 画面（状態、ポリシー、アクション、再犯、シミュレーション、設定）と、同じコマンドライン（`riposte …`）。バックアップ：`config backup --include-riposte`。
 
 ## 12. サービスと運用
 
