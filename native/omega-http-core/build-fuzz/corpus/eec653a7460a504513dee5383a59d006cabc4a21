@@ -1,5 +1,0 @@
-GET / HTTP/1.
-Host: x
-Content-Length: 
-
-abc

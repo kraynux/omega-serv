@@ -1,39 +1,41 @@
-# Environnement Python
+# ==============================================================================
+# omega-serv - fichiers jamais versionnes
+# Meme logique que les exclusions de build-release.sh : ce qui n'est pas livre
+# dans l'archive (etat, secrets, binaires compiles) n'est pas commit non plus.
+# ==============================================================================
+
+# --- Environnement Python et caches d'outils ---------------------------------
 venv/
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .import_linter_cache/
 .hypothesis/
+.coverage
+htmlcov/
 
-# etat runtime genere localement (recree automatiquement au demarrage)
-var/log/*
-var/cache/*
-var/run/*
-var/uploads/*
-var/backups/*
-var/exports/*
-var/screenshots/*
-var/settings.json
-!var/log/.gitkeep
-!var/cache/.gitkeep
-!var/run/.gitkeep
-!var/uploads/.gitkeep
-!var/backups/.gitkeep
-!var/exports/.gitkeep
-!var/screenshots/.gitkeep
+# --- Etat vivant sous var/ (recree au demarrage) -----------------------------
+# Tout var/ est de l'etat (journaux, bases Active Defense et RIPOSTE, blocklist,
+# cle de declaration anonyme, favoris, bibliotheque, sources distantes SSH) :
+# seuls les .gitkeep gardent l'arborescence.
+var/**
+!var/
+!var/*/
+!var/*/.gitkeep
 
-# configuration active generee (config init) - config/profiles|schemas|
-# defaults restent versionnes, ce sont des references, pas de l'etat
+# --- Configuration active (config init) --------------------------------------
+# config/profiles, schemas et defaults restent versionnes (references).
 config/omega-serve.json
 
-# secrets et donnees sensibles - jamais commit
-secure/auth/users.json
-secure/auth/zones.json
+# --- Secrets et donnees propres au site --------------------------------------
+secure/auth/*
+!secure/auth/.gitkeep
+secure/secrets/*
+!secure/secrets/.gitkeep
 secure/certificates/**/*.key
 secure/certificates/**/*.pem
 secure/certificates/**/*.crt
@@ -44,34 +46,40 @@ secure/certificates/**/*.der
 secure/certificates/**/serial.txt
 secure/certificates/**/index.txt
 secure/certificates/acme/**
-secure/secrets/*
-!secure/secrets/.gitkeep
+secure/certificates/letsencrypt/**
 secure/waf/blocklist.json
 secure/waf/allowlist.json
+# Regles et script propres au site de l'auteur (waf.lua generique, lui, versionne)
+secure/waf/rules/custom.json
+secure/waf/scripts/waf-personal.lua
+# Listes de mots-cles saisies par l'utilisateur (seul le .example est versionne)
+secure/waf/rules/keywords/*.txt
 
-# editeurs
-*~
-*.bak
-*.swp
+# --- Moteur natif : compilations et binaire ----------------------------------
+# Recompile par build-release.sh (archive) ou install.sh (sur place).
+native/*/build*/
+/bin/
 
-# fichiers systeme
-.DS_Store
-Thumbs.db
+# --- Site servi : contenu propre a chaque installation -----------------------
+webroot/*
+!webroot/assets/
+webroot/assets/*
+!webroot/assets/.gitkeep
+**/HEADER.txt
 
-# couverture de tests
-.coverage
-htmlcov/
-
-# archives distribuables
+# --- Archives distribuables et sorties de build ------------------------------
 omega-serv.tar.gz
 omega-serv-*.tar.gz
 vendor/
 dist/
-build/
+/build/
 
-# fichiers HEADER.txt (en-tetes de listing de dossier) - jamais commit, ou qu ils soient
-**/HEADER.txt
-
-# dossier assets du site : versionne vide (seul .gitkeep), contenu jamais commit
-webroot/assets/*
-!webroot/assets/.gitkeep
+# --- Editeurs et systeme -----------------------------------------------------
+*~
+*.bak
+*.orig
+*.rej
+*.swp
+.DS_Store
+Thumbs.db
+.claude/

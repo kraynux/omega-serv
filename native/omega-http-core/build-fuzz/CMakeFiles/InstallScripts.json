@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/kraynux/DEV/SERV/omega-serv/native/omega-http-core/build-fuzz/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

@@ -1,6 +1,0 @@
-GET // .1/ HTTP/.1
-H: 3:ET // ITTP/0.1
-H: 
-H: 3T // ITTP/0.1
-H: 3:
-ab
