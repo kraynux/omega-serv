@@ -13,7 +13,7 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
-## version 2.5.01 : Publié
+## version 2.5.0 : Publié
 
 ### Ajouté
 
