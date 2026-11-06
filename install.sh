@@ -188,6 +188,19 @@ for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
 done
 
 # -------------------------------------------------------------------------
+# 6b. Page de manuel (man omega-serv) — dossier de l'utilisateur, pas de
+#     sudo. `man` le lit des que ~/.local/bin est dans le PATH (man-db
+#     associe <dossier>/bin a <dossier>/share/man) ; sinon, lecture directe
+#     du fichier fourni dans docs/.
+# -------------------------------------------------------------------------
+MAN_DIR="$HOME/.local/share/man/man1"
+if mkdir -p "$MAN_DIR" 2>/dev/null && cp "$SCRIPT_DIR/docs/omega-serv.1" "$MAN_DIR/omega-serv.1" 2>/dev/null; then
+    ok "Page de manuel installée : man omega-serv"
+else
+    warn "Page de manuel non installée - lisible directement : man $SCRIPT_DIR/docs/omega-serv.1"
+fi
+
+# -------------------------------------------------------------------------
 # 7. Recuperation automatique d'une ancienne installation, SANS AUCUNE
 #    QUESTION (2026-09-28, retour utilisateur : "il faut penser
 #    multi-machines et multi-utilisateur, une mise a jour a pour principe

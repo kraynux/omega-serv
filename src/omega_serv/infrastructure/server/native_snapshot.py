@@ -168,7 +168,7 @@ def waf_filter_section(config: OmegaServConfig, project_root: Path) -> dict[str,
     # champ que seul un natif recent lit ; un natif plus ancien voit `native_decides: false` et envoie tout ici.
     payload["native_decides_with_watch"] = not [reason for reason in reasons if reason != "deception"]
     # Raison affichee : ce qui empeche vraiment le natif de decider seul (leurres et debit ne l'empechent plus).
-    payload["python_reason"] = (blocking or reasons or [None])[0]
+    payload["python_reason"] = next(iter(blocking or reasons), None)
     return payload
 
 

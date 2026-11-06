@@ -62,6 +62,18 @@ CONTACT ET SUPPORT
   avant l'envoi, et vous pouvez vous retirer à tout moment.
 
 
+TOUTES LES COMMANDES EXPLIQUÉES
+-------------------------------
+- Chaque commande et chaque option de la ligne de commande ont maintenant leur aide :
+  omega-serv <commande> --help.
+- Nouvelle commande « omega-serv help » : l'arbre complet des commandes, ou une seule
+  branche (omega-serv help riposte).
+- Page de manuel : man omega-serv (installée par install.sh, sans sudo), et la même
+  référence dans docs/HELP.md.
+- Les textes d'aide et « omega-serv help » sont traduits dans les 16 langues de
+  l'interface (la page de manuel reste en français).
+
+
 SAUVEGARDES PLUS COMPLÈTES
 --------------------------
 - Nouvelle case « Tout sauvegarder » : RIPOSTE, pages d'erreur personnalisées,
@@ -84,6 +96,12 @@ CORRECTIONS
   machine : il affiche maintenant un vrai débit par seconde.
 - Les alias peuvent viser un dossier du système sous /var (ex. /var/www/html) : ils
   étaient refusés à tort. Les dossiers internes d'omega-serv restent protégés.
+- « option enable waf » donnait un WAF sans aucune règle, refusé ensuite au démarrage :
+  la première activation ajoute maintenant les packs de règles fournis (en mode
+  log-only, rien n'est bloqué tant que vous ne passez pas en mode block).
+- RIPOSTE : une politique « leurre » enregistrée sans profil choisi recevait un nom de
+  profil inexistant.
+- « blocklist add » affiche correctement la date d'expiration d'un ban temporaire.
 - Un lien symbolique cassé ou en boucle ne fait plus planter le listing d'un dossier.
 - Les adresses IPv6 abrégées (::1, 2a02:...::be86) sont reconnues dans les journaux.
 - Les formulaires d'Active Defense restent ouverts en cas d'erreur, plus besoin de tout

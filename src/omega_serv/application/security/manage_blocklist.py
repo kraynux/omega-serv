@@ -43,7 +43,7 @@ def add_blocklist_entry(
         return ManageBlocklistResult(False, error)
 
     blocklist_port.add_entry(entry)
-    return ManageBlocklistResult(True, _("Entrée ajoutée : {network} ({value})").format(network=network, value=_('permanent') if expires_at is None else f'_(expire ){expires_at}'))
+    return ManageBlocklistResult(True, _("Entrée ajoutée : {network} ({value})").format(network=network, value=_('permanent') if expires_at is None else _("expire le {date}").format(date=expires_at)))
 
 
 def remove_blocklist_entry(blocklist_port: BlocklistPort, network: str) -> ManageBlocklistResult:

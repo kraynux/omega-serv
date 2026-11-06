@@ -45,6 +45,7 @@ from omega_serv.domain.declaration.model import (
 )
 from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
 from omega_serv.infrastructure.process.child_process import SpawnedChild
+from omega_serv.interfaces.cli.command_tree import add_command, add_group
 from omega_serv.interfaces.cli.serve_native import log_error_line
 from omega_serv.ports.declaration_port import DeclarationStorePort
 
@@ -246,14 +247,21 @@ def _country_argument(value: str) -> str:
 
 
 def add_declaration_parser(subparsers: argparse._SubParsersAction) -> None:
-    declaration_parser = subparsers.add_parser("declaration")
-    declaration_sub = declaration_parser.add_subparsers(dest="declaration_command", required=True)
-    declaration_sub.add_parser("status").set_defaults(func=cmd_declaration_status)
-    declare_parser = declaration_sub.add_parser("declare")
-    declare_parser.add_argument("--mode", choices=MODES, required=True)
-    declare_parser.add_argument("--continent", choices=(*CONTINENTS, OTHER), default="")
-    declare_parser.add_argument("--pays", choices=(*COUNTRY_CODES, OTHER), default="", type=_country_argument)
-    declare_parser.add_argument("--yes", action="store_true")
+    declaration_sub = add_group(subparsers, "declaration", _(
+        "Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut)."), "declaration_command")
+    add_command(declaration_sub, "status", _("Affiche l'état de la déclaration.")).set_defaults(
+        func=cmd_declaration_status)
+    declare_parser = add_command(declaration_sub, "declare", _(
+        "Se déclarer utilisateur. Sans --yes, affiche seulement le message exact et sa destination."))
+    declare_parser.add_argument("--mode", choices=MODES, required=True, help=_(
+        "unique : une seule fois ; quotidien : chaque jour, envoyé par le serveur."))
+    declare_parser.add_argument("--continent", choices=(*CONTINENTS, OTHER), default="", metavar=_("CODE"), help=_(
+        "Continent (facultatif) : AF, AN, AS, EU, NA, OC, SA ou autre."))
+    declare_parser.add_argument("--pays", choices=(*COUNTRY_CODES, OTHER), default="", type=_country_argument,
+                                metavar=_("CODE"), help=_("Pays (facultatif) : code à deux lettres (FR, BE...) ou autre."))
+    declare_parser.add_argument("--yes", action="store_true", help=_("Confirme l'envoi."))
     declare_parser.set_defaults(func=cmd_declaration_declare)
-    declaration_sub.add_parser("withdraw").set_defaults(func=cmd_declaration_withdraw)
-    declaration_sub.add_parser("send-scheduled").set_defaults(func=cmd_declaration_send_scheduled)
+    add_command(declaration_sub, "withdraw", _(
+        "Retire la déclaration (supprimée à la réception).")).set_defaults(func=cmd_declaration_withdraw)
+    add_command(declaration_sub, "send-scheduled", _(
+        "Envoi quotidien, lancé par serve (pas à utiliser à la main).")).set_defaults(func=cmd_declaration_send_scheduled)

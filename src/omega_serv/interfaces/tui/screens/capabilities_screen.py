@@ -51,7 +51,7 @@ class CapabilitiesScreen(OmegaScreen):
             yield CapabilitiesTable(id="capabilities-table")
             yield Static(_("Thème d'export HTML"), classes="omega-subtitle")
             yield Select(
-                [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, id="export-theme-select",
+                [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False, id="export-theme-select",
             )
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):

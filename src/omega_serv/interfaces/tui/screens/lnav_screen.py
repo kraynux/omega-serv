@@ -196,7 +196,7 @@ class LnavScreen(OmegaScreen):
         error_widget = self.query_one("#lnav-error", Static)
         select = self.query_one("#unpin-select", Select)
         value = select.value
-        if value is Select.BLANK or not value:
+        if value is Select.NULL or not value:
             error_widget.update(_("Choisissez d'abord une épingle à retirer."))
             return
         pins = self._load_pinned_paths()

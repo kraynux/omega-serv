@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-05 17:09+0100\n"
+"POT-Creation-Date: 2026-11-06 06:56+0100\n"
 "PO-Revision-Date: 2026-10-23 23:30+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Bahasa Indonesia\n"
@@ -152,138 +152,153 @@ msgstr "{config_path} sudah ada (gunakan --force untuk menimpa)"
 msgid "Configuration par défaut écrite dans {config_path}"
 msgstr "Konfigurasi bawaan ditulis ke {config_path}"
 
-#: src/omega_serv/application/config/manage_option.py:20
+#: src/omega_serv/application/config/manage_option.py:36
 #, python-brace-format
 msgid "Option inconnue : {option_name} (connues : {value})"
 msgstr "Opsi tidak dikenal: {option_name} (yang dikenal: {value})"
 
-#: src/omega_serv/application/config/manage_option.py:30
+#: src/omega_serv/application/config/manage_option.py:53
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:307
 msgid "activée"
 msgstr "diaktifkan"
 
-#: src/omega_serv/application/config/manage_option.py:30
+#: src/omega_serv/application/config/manage_option.py:53
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:307
 msgid "désactivée"
 msgstr "dinonaktifkan"
 
-#: src/omega_serv/application/config/manage_option.py:31
+#: src/omega_serv/application/config/manage_option.py:54
 #, python-brace-format
 msgid "Option '{option_name}' {verb}."
 msgstr "Opsi '{option_name}' {verb}."
 
-#: src/omega_serv/application/config/validate_config.py:62
+#: src/omega_serv/application/config/manage_option.py:57
+#, python-brace-format
+msgid "{count} pack(s) de règles ajouté(s) (secure/waf/rules/). Mode {mode}"
+msgstr "{count} paket aturan ditambahkan (secure/waf/rules/). Mode {mode}"
+
+#: src/omega_serv/application/config/manage_option.py:60
+msgid " : rien n'est bloqué, les attaques sont seulement journalisées."
+msgstr ": tidak ada yang diblokir, serangan hanya dicatat."
+
+#: src/omega_serv/application/config/validate_config.py:63
 #, python-brace-format
 msgid "paths.webroot n'est pas un dossier existant : {webroot}"
 msgstr "paths.webroot bukan folder yang ada: {webroot}"
 
-#: src/omega_serv/application/config/validate_config.py:68
+#: src/omega_serv/application/config/validate_config.py:69
 #, python-brace-format
 msgid "paths.secure ({secure_dir}) est à l'intérieur de paths.webroot ({webroot}) - ne doit jamais être accessible depuis HTTP (spec §4.2)"
 msgstr "paths.secure ({secure_dir}) berada di dalam paths.webroot ({webroot}) - tidak boleh sekali pun dapat diakses lewat HTTP (spec §4.2)"
 
-#: src/omega_serv/application/config/validate_config.py:76
+#: src/omega_serv/application/config/validate_config.py:77
 #, python-brace-format
 msgid "paths.auth_file ({auth_file}) est à l'intérieur de paths.webroot - interdit (spec §4.2)"
 msgstr "paths.auth_file ({auth_file}) berada di dalam paths.webroot - dilarang (spec §4.2)"
 
-#: src/omega_serv/application/config/validate_config.py:115
+#: src/omega_serv/application/config/validate_config.py:122
+#: src/omega_serv/domain/config/validation.py:156
+#, python-brace-format
+msgid "options.aliases : {reason}"
+msgstr "options.aliases: {reason}"
+
+#: src/omega_serv/application/config/validate_config.py:137
 msgid "options.upload zone {url_prefix!r} : storage_path existe déjà et n'est pas un dossier : {storage_dir}"
 msgstr "options.upload zona {url_prefix!r}: storage_path sudah ada dan bukan folder: {storage_dir}"
 
-#: src/omega_serv/application/config/validate_config.py:132
+#: src/omega_serv/application/config/validate_config.py:154
 #, python-brace-format
 msgid "options.fastcgi : {e}"
 msgstr "options.fastcgi: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:141
+#: src/omega_serv/application/config/validate_config.py:163
 #, python-brace-format
 msgid "options.fastcgi.script_root ({script_root}) est à l'intérieur de paths.webroot ({webroot}) - interdit structurellement (spec §21, plan de développement §6)"
 msgstr "options.fastcgi.script_root ({script_root}) berada di dalam paths.webroot ({webroot}) - dilarang secara struktural (spec §21, rencana pengembangan §6)"
 
-#: src/omega_serv/application/config/validate_config.py:147
+#: src/omega_serv/application/config/validate_config.py:169
 #, python-brace-format
 msgid "options.fastcgi.script_root n'est pas un dossier existant : {script_root}"
 msgstr "options.fastcgi.script_root bukan folder yang ada: {script_root}"
 
-#: src/omega_serv/application/config/validate_config.py:151
+#: src/omega_serv/application/config/validate_config.py:173
 #, python-brace-format
 msgid "options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM démarré ?)"
 msgstr "options.fastcgi.socket_path tidak ditemukan: {socket_path} (PHP-FPM sudah berjalan?)"
 
-#: src/omega_serv/application/config/validate_config.py:172
+#: src/omega_serv/application/config/validate_config.py:194
 msgid "options.auth actif avec un bind non local, sans TLS direct actif ni mode 'behind_proxy' déclaré - Basic Auth transmettrait des identifiants en clair (spec §15.6, doc TLS §22)"
 msgstr "options.auth aktif dengan bind non-lokal, tanpa TLS langsung aktif maupun mode 'behind_proxy' - Basic Auth akan mengirim kredensial dalam teks biasa (spec §15.6, dok TLS §22)"
 
-#: src/omega_serv/application/config/validate_config.py:184
+#: src/omega_serv/application/config/validate_config.py:206
 #, python-brace-format
 msgid "paths.auth_zones : {e}"
 msgstr "paths.auth_zones: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:190
+#: src/omega_serv/application/config/validate_config.py:212
 #, python-brace-format
 msgid "paths.auth_zones : {reason}"
 msgstr "paths.auth_zones: {reason}"
 
-#: src/omega_serv/application/config/validate_config.py:198
+#: src/omega_serv/application/config/validate_config.py:220
 #, python-brace-format
 msgid "paths.auth_file : {e}"
 msgstr "paths.auth_file: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:204
+#: src/omega_serv/application/config/validate_config.py:226
 msgid "paths.auth_zones : zone {path_prefix!r} référence des utilisateurs inconnus : {value}"
 msgstr "paths.auth_zones: zona {path_prefix!r} merujuk pengguna yang tidak dikenal: {value}"
 
-#: src/omega_serv/application/config/validate_config.py:225
+#: src/omega_serv/application/config/validate_config.py:247
 #, python-brace-format
 msgid "tls.certificate.certificate_path introuvable : {cert_path}"
 msgstr "tls.certificate.certificate_path tidak ditemukan: {cert_path}"
 
-#: src/omega_serv/application/config/validate_config.py:227
+#: src/omega_serv/application/config/validate_config.py:249
 #, python-brace-format
 msgid "tls.certificate.private_key_path introuvable : {key_path}"
 msgstr "tls.certificate.private_key_path tidak ditemukan: {key_path}"
 
-#: src/omega_serv/application/config/validate_config.py:233
+#: src/omega_serv/application/config/validate_config.py:255
 #, python-brace-format
 msgid "tls.certificate.{label} ({path}) est à l'intérieur de paths.webroot - interdit (doc TLS §9.1)"
 msgstr "tls.certificate.{label} ({path}) berada di dalam paths.webroot - dilarang (dok TLS §9.1)"
 
-#: src/omega_serv/application/config/validate_config.py:246
+#: src/omega_serv/application/config/validate_config.py:268
 #: src/omega_serv/domain/config/validation.py:223
 #, python-brace-format
 msgid "tls : {e}"
 msgstr "tls: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:310
+#: src/omega_serv/application/config/validate_config.py:332
 msgid "{prefix} : l'entrée {entry!r} bloquerait la route {route!r} ({source}) - ajouter une exception '!' ou passer la liste en observation"
 msgstr "{prefix}: entri {entry!r} akan memblokir rute {route!r} ({source}) - tambahkan pengecualian '!' atau ubah daftar ke mode observasi"
 
-#: src/omega_serv/application/config/validate_config.py:323
+#: src/omega_serv/application/config/validate_config.py:345
 msgid "{prefix} : l'entrée {entry!r} bloquerait {relative!r}, qui existe dans le webroot - ajouter une exception '!' ou retirer l'entrée"
 msgstr "{prefix}: entri {entry!r} akan memblokir {relative!r}, yang ada di webroot - tambahkan pengecualian '!' atau lepas entri tersebut"
 
-#: src/omega_serv/application/config/validate_config.py:341
+#: src/omega_serv/application/config/validate_config.py:363
 #, python-brace-format
 msgid "options.waf : {e}"
 msgstr "options.waf: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:350
+#: src/omega_serv/application/config/validate_config.py:372
 #, python-brace-format
 msgid "options.waf.rules.paths : {e}"
 msgstr "options.waf.rules.paths: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:357
+#: src/omega_serv/application/config/validate_config.py:379
 msgid "options.waf.rules.keyword_lists[{id!r}] : {e}"
 msgstr "options.waf.rules.keyword_lists[{id!r}]: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:373
+#: src/omega_serv/application/config/validate_config.py:395
 #, python-brace-format
 msgid "options.waf.magnet : {e}"
 msgstr "options.waf.magnet: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:376
+#: src/omega_serv/application/config/validate_config.py:398
 msgid "options.waf.magnet : dépendance 'lupa' absente - installer l'extra optionnel avec `pip install -e \".[magnet]\"` (jamais installé par défaut, voir pyproject.toml)"
 msgstr "options.waf.magnet: dependensi 'lupa' tidak ada - pasang ekstra opsional dengan `pip install -e \".[magnet]\"` (tidak pernah dipasang secara bawaan, lihat pyproject.toml)"
 
@@ -685,7 +700,12 @@ msgid "Entrée ajoutée : {network} ({value})"
 msgstr "Entri ditambahkan: {network} ({value})"
 
 #: src/omega_serv/application/security/manage_blocklist.py:46
-#: src/omega_serv/interfaces/cli/main.py:721
+#, python-brace-format
+msgid "expire le {date}"
+msgstr "kedaluwarsa pada {date}"
+
+#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/interfaces/cli/main.py:723
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "permanen"
@@ -779,7 +799,7 @@ msgstr "Auth"
 
 #: src/omega_serv/application/server/engine_levels.py:65
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 msgid "WAF"
 msgstr "WAF"
 
@@ -955,9 +975,9 @@ msgid "{requested} demandé, {effective} effectif"
 msgstr "diminta {requested}, efektif {effective}"
 
 #: src/omega_serv/application/server/engine_status.py:109
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:712
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:759
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:727
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:765
 msgid "Processus"
 msgstr "Proses"
 
@@ -1007,7 +1027,7 @@ msgstr "dimulai"
 #: src/omega_serv/application/services/manage_service.py:40
 #: src/omega_serv/interfaces/cli/riposte_text.py:248
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:90
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:727
 msgid "arrêté"
 msgstr "dihentikan"
 
@@ -1293,11 +1313,6 @@ msgstr "logs.rotation.max_bytes harus lebih besar dari nol"
 msgid "logs.rotation.keep doit être strictement positif"
 msgstr "logs.rotation.keep harus lebih besar dari nol"
 
-#: src/omega_serv/domain/config/validation.py:156
-#, python-brace-format
-msgid "options.aliases : {reason}"
-msgstr "options.aliases: {reason}"
-
 #: src/omega_serv/domain/config/validation.py:163
 #, python-brace-format
 msgid "options.redirects : {reason}"
@@ -1453,7 +1468,7 @@ msgid "← Retourner sur Google en attendant :-) "
 msgstr "← Kembali ke Google sambil menunggu :-) "
 
 #: src/omega_serv/domain/http/error_pages.py:365
-#: src/omega_serv/interfaces/cli/main.py:157
+#: src/omega_serv/interfaces/cli/main.py:158
 msgid "Erreur"
 msgstr "Kesalahan"
 
@@ -1487,7 +1502,7 @@ msgstr "path_prefix harus diawali '/': {path_prefix!r}"
 msgid "verdict invalide (attendu allow/deny) : {verdict!r}"
 msgstr "verdict tidak valid (diharapkan allow/deny): {verdict!r}"
 
-#: src/omega_serv/domain/routing/alias.py:46
+#: src/omega_serv/domain/routing/alias.py:67
 #: src/omega_serv/domain/routing/fastcgi_zone.py:55
 #: src/omega_serv/domain/routing/proxy_zone.py:353
 #: src/omega_serv/domain/routing/redirect.py:37
@@ -1495,13 +1510,15 @@ msgstr "verdict tidak valid (diharapkan allow/deny): {verdict!r}"
 msgid "url_prefix doit commencer par '/' : {url_prefix!r}"
 msgstr "url_prefix harus diawali '/': {url_prefix!r}"
 
-#: src/omega_serv/domain/routing/alias.py:52
-msgid "alias vers un dossier interdit ({first_segment}/) : {target_path!r}"
-msgstr "alias ke folder terlarang ({first_segment}/): {target_path!r}"
-
-#: src/omega_serv/domain/routing/alias.py:56
+#: src/omega_serv/domain/routing/alias.py:73
+#: src/omega_serv/domain/routing/alias.py:88
 msgid "cible hors webroot sans allow_outside_webroot=true : {target_path!r}"
 msgstr "target di luar webroot tanpa allow_outside_webroot=true: {target_path!r}"
+
+#: src/omega_serv/domain/routing/alias.py:77
+#: src/omega_serv/domain/routing/alias.py:84
+msgid "alias vers un dossier interdit ({first_segment}/) : {target_path!r}"
+msgstr "alias ke folder terlarang ({first_segment}/): {target_path!r}"
 
 #: src/omega_serv/domain/routing/dirlisting.py:164
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:111
@@ -1533,6 +1550,22 @@ msgid "o"
 msgstr "B"
 
 #: src/omega_serv/domain/routing/dirlisting.py:231
+#: src/omega_serv/interfaces/cli/main.py:1699
+#: src/omega_serv/interfaces/cli/main.py:1703
+#: src/omega_serv/interfaces/cli/main.py:1715
+#: src/omega_serv/interfaces/cli/main.py:1718
+#: src/omega_serv/interfaces/cli/main.py:1842
+#: src/omega_serv/interfaces/cli/main.py:1851
+#: src/omega_serv/interfaces/cli/main.py:1941
+#: src/omega_serv/interfaces/cli/main.py:1946
+#: src/omega_serv/interfaces/cli/main.py:1950
+#: src/omega_serv/interfaces/cli/main.py:1958
+#: src/omega_serv/interfaces/cli/main.py:1989
+#: src/omega_serv/interfaces/cli/main.py:1994
+#: src/omega_serv/interfaces/cli/main.py:1999
+#: src/omega_serv/interfaces/cli/main.py:2001
+#: src/omega_serv/interfaces/cli/main.py:2009
+#: src/omega_serv/interfaces/cli/main.py:2021
 msgid "NOM"
 msgstr "NAMA"
 
@@ -3096,186 +3129,248 @@ msgstr "tidak dapat membaca {path}: {e}"
 msgid "Fichier de pack de règles introuvable : {path}"
 msgstr "Berkas paket aturan tidak ditemukan: {path}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:66
+#: src/omega_serv/interfaces/cli/command_tree.py:27
+#: src/omega_serv/interfaces/cli/main.py:1631
+#: src/omega_serv/interfaces/cli/main.py:2031
+msgid "COMMANDE"
+msgstr "PERINTAH"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:27
+#: src/omega_serv/interfaces/cli/main.py:1631
+msgid "commandes"
+msgstr "perintah"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:114
+#, python-brace-format
+msgid "Commande inconnue : {command}"
+msgstr "Perintah tidak dikenal: {command}"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:116
+msgid "Commandes d'omega-serv (détail d'une commande : omega-serv <commande> --help) :"
+msgstr "Perintah omega-serv (detail sebuah perintah: omega-serv <perintah> --help):"
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:67
 msgid "Non déclaré (aucune clé sur cette installation)."
 msgstr "Belum terdaftar (tidak ada kunci pada instalasi ini)."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:69
+#: src/omega_serv/interfaces/cli/declaration_commands.py:70
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:83
 msgid "chaque jour"
 msgstr "setiap hari"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:69
+#: src/omega_serv/interfaces/cli/declaration_commands.py:70
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:83
 msgid "une seule fois"
 msgstr "sekali"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:70
+#: src/omega_serv/interfaces/cli/declaration_commands.py:71
 #, python-brace-format
 msgid "Déclaré utilisateur anonyme depuis le {date}."
 msgstr "Terdaftar sebagai pengguna anonim sejak {date}."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:71
+#: src/omega_serv/interfaces/cli/declaration_commands.py:72
 #, python-brace-format
 msgid "Envoi : {mode}"
 msgstr "Pengiriman: {mode}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:72
+#: src/omega_serv/interfaces/cli/declaration_commands.py:73
 #, python-brace-format
 msgid "Clé : {key}"
 msgstr "Kunci: {key}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:73
+#: src/omega_serv/interfaces/cli/declaration_commands.py:74
 #, python-brace-format
 msgid "Continent : {continent}"
 msgstr "Benua: {continent}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:74
+#: src/omega_serv/interfaces/cli/declaration_commands.py:75
 #, python-brace-format
 msgid "Pays : {country}"
 msgstr "Negara: {country}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:75
+#: src/omega_serv/interfaces/cli/declaration_commands.py:76
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:86
 #, python-brace-format
 msgid "Dernier envoi réussi : {date}"
 msgstr "Pengiriman terakhir yang berhasil: {date}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:77
+#: src/omega_serv/interfaces/cli/declaration_commands.py:78
 #, python-brace-format
 msgid "Dernier essai : réception injoignable ({reason})."
 msgstr "Percobaan terakhir: penerima tidak dapat dijangkau ({reason})."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:79
+#: src/omega_serv/interfaces/cli/declaration_commands.py:80
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:91
 msgid "DO_NOT_TRACK est défini : aucun envoi automatique."
 msgstr "DO_NOT_TRACK diatur: tidak ada pengiriman otomatis."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:80
+#: src/omega_serv/interfaces/cli/declaration_commands.py:81
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:104
 #, python-brace-format
 msgid "Destination : {url}"
 msgstr "Tujuan: {url}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:91
+#: src/omega_serv/interfaces/cli/declaration_commands.py:92
 #, python-brace-format
 msgid "Message qui sera envoyé à {url} :"
 msgstr "Pesan yang akan dikirim ke {url}:"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:93
+#: src/omega_serv/interfaces/cli/declaration_commands.py:94
 msgid "Ajoutez --yes pour confirmer la déclaration."
 msgstr "Tambahkan --yes untuk mengonfirmasi pendaftaran."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:99
+#: src/omega_serv/interfaces/cli/declaration_commands.py:100
 #, python-brace-format
 msgid "Déclaration refusée : {error}"
 msgstr "Pendaftaran ditolak: {error}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:102
+#: src/omega_serv/interfaces/cli/declaration_commands.py:103
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:173
 msgid "Merci ! Vous êtes déclaré utilisateur anonyme."
 msgstr "Terima kasih! Anda terdaftar sebagai pengguna anonim."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:105
+#: src/omega_serv/interfaces/cli/declaration_commands.py:106
 #, python-brace-format
 msgid "Réception injoignable ({reason}) : votre accord est gardé, le serveur réessaiera dans 24 h."
 msgstr "Penerima tidak dapat dijangkau ({reason}): persetujuan Anda tetap disimpan, server akan mencoba lagi dalam 24 jam."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:108
+#: src/omega_serv/interfaces/cli/declaration_commands.py:109
 #, python-brace-format
 msgid "Réception injoignable ({reason}) : rien n'a été enregistré, réessayez plus tard."
 msgstr "Penerima tidak dapat dijangkau ({reason}): tidak ada yang dicatat, coba lagi nanti."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:116
+#: src/omega_serv/interfaces/cli/declaration_commands.py:117
 msgid "Non déclaré : rien à retirer."
 msgstr "Belum terdaftar: tidak ada yang perlu ditarik."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:119
+#: src/omega_serv/interfaces/cli/declaration_commands.py:120
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:141
 msgid "Vous n'êtes plus déclaré : votre entrée est supprimée et la clé effacée."
 msgstr "Anda tidak lagi terdaftar: entri Anda dihapus dan kunci dihapus."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:121
+#: src/omega_serv/interfaces/cli/declaration_commands.py:122
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:143
 msgid "Clé effacée. Réception injoignable : votre entrée y disparaîtra seule (90 jours en envoi quotidien, 1 an en envoi unique)."
 msgstr "Kunci dihapus. Penerima tidak dapat dijangkau: entri Anda di sana akan hilang dengan sendirinya (90 hari untuk pengiriman harian, 1 tahun untuk pengiriman sekali)."
 
-#: src/omega_serv/interfaces/cli/main.py:159
+#: src/omega_serv/interfaces/cli/declaration_commands.py:251
+msgid "Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut)."
+msgstr "Deklarasi pengguna anonim (sukarela, nonaktif secara bawaan)."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:252
+msgid "Affiche l'état de la déclaration."
+msgstr "Menampilkan status deklarasi."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:255
+msgid "Se déclarer utilisateur. Sans --yes, affiche seulement le message exact et sa destination."
+msgstr "Mendeklarasikan diri sebagai pengguna. Tanpa --yes, hanya menampilkan pesan persisnya dan tujuannya."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:257
+msgid "unique : une seule fois ; quotidien : chaque jour, envoyé par le serveur."
+msgstr "unique: satu kali saja; quotidien: setiap hari, dikirim oleh server."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:258
+#: src/omega_serv/interfaces/cli/declaration_commands.py:261
+#: src/omega_serv/interfaces/cli/main.py:1848
+msgid "CODE"
+msgstr "KODE"
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:259
+msgid "Continent (facultatif) : AF, AN, AS, EU, NA, OC, SA ou autre."
+msgstr "Benua (opsional): AF, AN, AS, EU, NA, OC, SA atau lainnya."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:261
+msgid "Pays (facultatif) : code à deux lettres (FR, BE...) ou autre."
+msgstr "Negara (opsional): kode dua huruf (FR, BE...) atau lainnya."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:262
+msgid "Confirme l'envoi."
+msgstr "Mengonfirmasi pengiriman."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:265
+msgid "Retire la déclaration (supprimée à la réception)."
+msgstr "Menarik deklarasi (dihapus saat diterima)."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:267
+msgid "Envoi quotidien, lancé par serve (pas à utiliser à la main)."
+msgstr "Pengiriman harian, dijalankan oleh serve (jangan dipakai manual)."
+
+#: src/omega_serv/interfaces/cli/main.py:160
 #, python-brace-format
 msgid "{prefix} : {error}"
 msgstr "{prefix}: {error}"
 
-#: src/omega_serv/interfaces/cli/main.py:229
+#: src/omega_serv/interfaces/cli/main.py:230
 msgid "Erreur de rechargement"
 msgstr "Kesalahan muat ulang"
 
-#: src/omega_serv/interfaces/cli/main.py:318
-#: src/omega_serv/interfaces/cli/main.py:435
+#: src/omega_serv/interfaces/cli/main.py:319
+#: src/omega_serv/interfaces/cli/main.py:436
 msgid "Erreur d'environnement"
 msgstr "Kesalahan lingkungan"
 
-#: src/omega_serv/interfaces/cli/main.py:425
-#: src/omega_serv/interfaces/cli/main.py:455
-#: src/omega_serv/interfaces/cli/main.py:1590
+#: src/omega_serv/interfaces/cli/main.py:426
+#: src/omega_serv/interfaces/cli/main.py:456
+#: src/omega_serv/interfaces/cli/main.py:1592
 msgid "Erreur de configuration"
 msgstr "Kesalahan konfigurasi"
 
-#: src/omega_serv/interfaces/cli/main.py:438
+#: src/omega_serv/interfaces/cli/main.py:439
 #, python-brace-format
 msgid "{config} : configuration valide."
 msgstr "{config}: konfigurasi valid."
 
-#: src/omega_serv/interfaces/cli/main.py:475
+#: src/omega_serv/interfaces/cli/main.py:476
 msgid "Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou clé privée TLS) jamais chiffres par défaut - ajoutez --confirm-secrets pour confirmer."
 msgstr "Cadangan ini akan menyertakan rahasia nyata (hash kata sandi dan/atau kunci privat TLS) yang tidak pernah dienkripsi secara bawaan - tambahkan --confirm-secrets untuk mengonfirmasi."
 
-#: src/omega_serv/interfaces/cli/main.py:494
+#: src/omega_serv/interfaces/cli/main.py:495
 msgid "Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le redémarrer."
 msgstr "Jalankan ulang dengan --stop-and-restart untuk menghentikan layanan, memulihkan, lalu memulainya ulang."
 
-#: src/omega_serv/interfaces/cli/main.py:501
+#: src/omega_serv/interfaces/cli/main.py:502
 msgid "Aucune sauvegarde."
 msgstr "Tidak ada cadangan."
 
-#: src/omega_serv/interfaces/cli/main.py:506
+#: src/omega_serv/interfaces/cli/main.py:507
 #, python-brace-format
 msgid "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} Ko  {value2}  {description}"
 msgstr "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} KB  {value2}  {description}"
 
-#: src/omega_serv/interfaces/cli/main.py:521
-#: src/omega_serv/interfaces/cli/main.py:539
-#: src/omega_serv/interfaces/cli/main.py:1064
-#: src/omega_serv/interfaces/cli/main.py:1092
-#: src/omega_serv/interfaces/cli/main.py:1129
-#: src/omega_serv/interfaces/cli/main.py:1154
-#: src/omega_serv/interfaces/cli/main.py:1175
-#: src/omega_serv/interfaces/cli/main.py:1193
-#: src/omega_serv/interfaces/cli/main.py:1242
+#: src/omega_serv/interfaces/cli/main.py:522
+#: src/omega_serv/interfaces/cli/main.py:540
+#: src/omega_serv/interfaces/cli/main.py:1066
+#: src/omega_serv/interfaces/cli/main.py:1094
+#: src/omega_serv/interfaces/cli/main.py:1131
+#: src/omega_serv/interfaces/cli/main.py:1156
+#: src/omega_serv/interfaces/cli/main.py:1177
+#: src/omega_serv/interfaces/cli/main.py:1195
+#: src/omega_serv/interfaces/cli/main.py:1244
 #, python-brace-format
 msgid "Erreur : {e}"
 msgstr "Kesalahan: {e}"
 
-#: src/omega_serv/interfaces/cli/main.py:523
+#: src/omega_serv/interfaces/cli/main.py:524
 #, python-brace-format
 msgid "Profil : {name}"
 msgstr "Profil: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:544
+#: src/omega_serv/interfaces/cli/main.py:545
 #, python-brace-format
 msgid "Profil de base choisi : {name}"
 msgstr "Profil dasar yang dipilih: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:546
+#: src/omega_serv/interfaces/cli/main.py:547
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:76
 msgid "Aucune modification."
 msgstr "Tidak ada perubahan."
 
-#: src/omega_serv/interfaces/cli/main.py:548
+#: src/omega_serv/interfaces/cli/main.py:549
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:78
 msgid "Modifications :"
 msgstr "Perubahan:"
 
-#: src/omega_serv/interfaces/cli/main.py:553
+#: src/omega_serv/interfaces/cli/main.py:554
 msgid ""
 "\n"
 "Conflits détectés :"
@@ -3283,16 +3378,16 @@ msgstr ""
 "\n"
 "Konflik terdeteksi:"
 
-#: src/omega_serv/interfaces/cli/main.py:555
+#: src/omega_serv/interfaces/cli/main.py:556
 #, python-brace-format
 msgid "  [{value}] {message}"
 msgstr "  [{value}] {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:558
+#: src/omega_serv/interfaces/cli/main.py:559
 msgid "Erreur de validation"
 msgstr "Kesalahan validasi"
 
-#: src/omega_serv/interfaces/cli/main.py:561
+#: src/omega_serv/interfaces/cli/main.py:562
 msgid ""
 "\n"
 "(--dry-run : aucune écriture effectuée)"
@@ -3300,7 +3395,7 @@ msgstr ""
 "\n"
 "(--dry-run: tidak ada yang ditulis)"
 
-#: src/omega_serv/interfaces/cli/main.py:565
+#: src/omega_serv/interfaces/cli/main.py:566
 msgid ""
 "\n"
 "Application refusée (problèmes bloquants, voir ci-dessus). Utiliser --force pour outrepasser."
@@ -3308,7 +3403,7 @@ msgstr ""
 "\n"
 "Penerapan ditolak (masalah yang menghalangi, lihat di atas). Gunakan --force untuk mengabaikan."
 
-#: src/omega_serv/interfaces/cli/main.py:569
+#: src/omega_serv/interfaces/cli/main.py:570
 #, python-brace-format
 msgid ""
 "\n"
@@ -3317,7 +3412,7 @@ msgstr ""
 "\n"
 "Konfigurasi diperbarui di {config} (profil '{name}' diterapkan)."
 
-#: src/omega_serv/interfaces/cli/main.py:580
+#: src/omega_serv/interfaces/cli/main.py:581
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:90
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
@@ -3325,507 +3420,507 @@ msgstr ""
 msgid "actif"
 msgstr "aktif"
 
-#: src/omega_serv/interfaces/cli/main.py:580
-#: src/omega_serv/interfaces/cli/main.py:801
+#: src/omega_serv/interfaces/cli/main.py:581
+#: src/omega_serv/interfaces/cli/main.py:803
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 #: src/omega_serv/interfaces/tui/screens/waf_rule_pack_picker_screen.py:89
 msgid "inactif"
 msgstr "nonaktif"
 
-#: src/omega_serv/interfaces/cli/main.py:581
+#: src/omega_serv/interfaces/cli/main.py:582
 #, python-brace-format
 msgid "{name} : {state}"
 msgstr "{name}: {state}"
 
-#: src/omega_serv/interfaces/cli/main.py:626
+#: src/omega_serv/interfaces/cli/main.py:628
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:73
 #, python-brace-format
 msgid "Méthode          : {method}"
 msgstr "Metode           : {method}"
 
-#: src/omega_serv/interfaces/cli/main.py:627
+#: src/omega_serv/interfaces/cli/main.py:629
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:74
 #, python-brace-format
 msgid "Chemin demandé   : {raw_path}"
 msgstr "Jalur diminta    : {raw_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:628
+#: src/omega_serv/interfaces/cli/main.py:630
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:75
 #, python-brace-format
 msgid "Chemin normalisé : {normalized_path}"
 msgstr "Jalur normal     : {normalized_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:629
+#: src/omega_serv/interfaces/cli/main.py:631
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:76
 #, python-brace-format
 msgid "Méthode autorisée: {method_allowed}"
 msgstr "Metode diizinkan : {method_allowed}"
 
-#: src/omega_serv/interfaces/cli/main.py:630
+#: src/omega_serv/interfaces/cli/main.py:632
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:77
 #, python-brace-format
 msgid "Refusé (règles)  : {denied_by_access_policy}"
 msgstr "Ditolak (aturan) : {denied_by_access_policy}"
 
-#: src/omega_serv/interfaces/cli/main.py:631
+#: src/omega_serv/interfaces/cli/main.py:633
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:78
 #, python-brace-format
 msgid "Fichier existe   : {file_exists}"
 msgstr "Berkas ada       : {file_exists}"
 
-#: src/omega_serv/interfaces/cli/main.py:632
+#: src/omega_serv/interfaces/cli/main.py:634
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:79
 #, python-brace-format
 msgid "Statut réponse   : {response_status}"
 msgstr "Status respons   : {response_status}"
 
-#: src/omega_serv/interfaces/cli/main.py:634
+#: src/omega_serv/interfaces/cli/main.py:636
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:82
 #, python-brace-format
 msgid "Motif de refus   : {rejection_reason}"
 msgstr "Alasan penolakan : {rejection_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:635
+#: src/omega_serv/interfaces/cli/main.py:637
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:83
 msgid "En-têtes attendus :"
 msgstr "Header yang diharapkan:"
 
-#: src/omega_serv/interfaces/cli/main.py:637
+#: src/omega_serv/interfaces/cli/main.py:639
 #, python-brace-format
 msgid "  {name}: {value}"
 msgstr "  {name}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:673
+#: src/omega_serv/interfaces/cli/main.py:675
 msgid "Erreur : options.waf absent de la configuration (exécuter 'omega-serv config init' ou ajouter la section waf)."
 msgstr "Kesalahan: options.waf tidak ada di konfigurasi (jalankan 'omega-serv config init' atau tambahkan bagian waf)."
 
-#: src/omega_serv/interfaces/cli/main.py:682
+#: src/omega_serv/interfaces/cli/main.py:684
 #, python-brace-format
 msgid "Décision native : {value} (score {score})"
 msgstr "Keputusan native: {value} (skor {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:684
+#: src/omega_serv/interfaces/cli/main.py:686
 #, python-brace-format
 msgid "Décision magnet : {value} (score {score})"
 msgstr "Keputusan magnet: {value} (skor {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:686
+#: src/omega_serv/interfaces/cli/main.py:688
 #, python-brace-format
 msgid "ATTENTION - le script magnet a levé une erreur sur cette requête : {magnet_error}"
 msgstr "PERINGATAN - skrip magnet memunculkan kesalahan pada permintaan ini: {magnet_error}"
 
-#: src/omega_serv/interfaces/cli/main.py:689
+#: src/omega_serv/interfaces/cli/main.py:691
 #, python-brace-format
 msgid "ATTENTION - le script magnet référence lighty.{{{value}}}, non supporte par ce pont (toujours nil - le script peut se comporter différemment qu'en Lighttpd réel)"
 msgstr "PERINGATAN - skrip magnet merujuk lighty.{{{value}}}, yang tidak didukung jembatan ini (selalu nil - skrip bisa berperilaku berbeda dari Lighttpd sebenarnya)"
 
-#: src/omega_serv/interfaces/cli/main.py:693
+#: src/omega_serv/interfaces/cli/main.py:695
 msgid "ATTENTION - options.waf.magnet.on_error='fail-closed' combiné à une incompatibilité détectée : toute requête future qui déclenche la même erreur sera BLOQUÉE (y compris du trafic légitime). Passer à 'ignore', ou corriger le script, avant d'activer ce script en production."
 msgstr "PERINGATAN - options.waf.magnet.on_error='fail-closed' digabung dengan ketidakcocokan yang terdeteksi: setiap permintaan berikutnya yang memicu kesalahan yang sama akan DIBLOKIR (termasuk lalu lintas sah). Ubah ke 'ignore', atau perbaiki skrip, sebelum mengaktifkan skrip ini di produksi."
 
-#: src/omega_serv/interfaces/cli/main.py:697
+#: src/omega_serv/interfaces/cli/main.py:699
 #, python-brace-format
 msgid "Décision finale : {value}"
 msgstr "Keputusan akhir: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:698
+#: src/omega_serv/interfaces/cli/main.py:700
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:83
 #, python-brace-format
 msgid "Statut : {value}"
 msgstr "Status: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:699
-#: src/omega_serv/interfaces/cli/main.py:832
+#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:834
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:84
 #, python-brace-format
 msgid "Score : {score}"
 msgstr "Skor: {score}"
 
-#: src/omega_serv/interfaces/cli/main.py:700
+#: src/omega_serv/interfaces/cli/main.py:702
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:85
 #, python-brace-format
 msgid "Règles : {value}"
 msgstr "Aturan: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:703
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:86
 #, python-brace-format
 msgid "Politique de zone : {zone_id}"
 msgstr "Kebijakan zona: {zone_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:702
+#: src/omega_serv/interfaces/cli/main.py:704
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:87
 #, python-brace-format
 msgid "Mode : {mode}"
 msgstr "Mode: {mode}"
 
-#: src/omega_serv/interfaces/cli/main.py:704
+#: src/omega_serv/interfaces/cli/main.py:706
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:90
 #, python-brace-format
 msgid "Motif : {blocked_reason}"
 msgstr "Alasan: {blocked_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:718
+#: src/omega_serv/interfaces/cli/main.py:720
 msgid "Aucune entrée."
 msgstr "Tidak ada entri."
 
-#: src/omega_serv/interfaces/cli/main.py:722
+#: src/omega_serv/interfaces/cli/main.py:724
 #, python-brace-format
 msgid "{network}\t{source}\t{expiry}\t{reason}"
 msgstr "{network}\t{source}\t{expiry}\t{reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:772
-#: src/omega_serv/interfaces/cli/main.py:795
+#: src/omega_serv/interfaces/cli/main.py:774
+#: src/omega_serv/interfaces/cli/main.py:797
 #, python-brace-format
 msgid "Erreur d'accès à la base Active Defense : {exc}."
 msgstr "Kesalahan akses ke basis data Active Defense: {exc}."
 
-#: src/omega_serv/interfaces/cli/main.py:774
+#: src/omega_serv/interfaces/cli/main.py:776
 msgid "Si l'appartenance à un groupe système a changé récemment, une nouvelle session (deconnexion/reconnexion) peut être nécessaire."
 msgstr "Jika keanggotaan grup sistem baru saja berubah, sesi baru (keluar/masuk ulang) mungkin diperlukan."
 
-#: src/omega_serv/interfaces/cli/main.py:780
+#: src/omega_serv/interfaces/cli/main.py:782
 msgid "Erreur : options.active_defense absent ou désactivé de la configuration."
 msgstr "Kesalahan: options.active_defense tidak ada atau dinonaktifkan di konfigurasi."
 
-#: src/omega_serv/interfaces/cli/main.py:798
+#: src/omega_serv/interfaces/cli/main.py:800
 msgid "Active Defense : désactivé (options.active_defense.enabled = false ou absent)."
 msgstr "Active Defense: nonaktif (options.active_defense.enabled = false atau tidak ada)."
 
-#: src/omega_serv/interfaces/cli/main.py:800
+#: src/omega_serv/interfaces/cli/main.py:802
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:57
 #, python-brace-format
 msgid "Active Defense : activé (mode={mode})"
 msgstr "Active Defense: aktif (mode={mode})"
 
-#: src/omega_serv/interfaces/cli/main.py:801
+#: src/omega_serv/interfaces/cli/main.py:803
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #, python-brace-format
 msgid "Mode guerre : {value}"
 msgstr "Mode perang: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:801
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:803
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "activé"
 msgstr "aktif"
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #, python-brace-format
 msgid "Deception : {value}"
 msgstr "Deception: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 msgid "inactive"
 msgstr "nonaktif"
 
-#: src/omega_serv/interfaces/cli/main.py:804
+#: src/omega_serv/interfaces/cli/main.py:806
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:60
 #, python-brace-format
 msgid "Sources suivies : {count}"
 msgstr "Sumber yang dipantau: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:815
+#: src/omega_serv/interfaces/cli/main.py:817
 msgid "Aucune menace suivie."
 msgstr "Tidak ada ancaman yang dipantau."
 
-#: src/omega_serv/interfaces/cli/main.py:818
+#: src/omega_serv/interfaces/cli/main.py:820
 #, python-brace-format
 msgid "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 msgstr "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:829
+#: src/omega_serv/interfaces/cli/main.py:831
 msgid "Aucune menace suivie pour {subject_id!r}."
 msgstr "Tidak ada ancaman yang dipantau untuk {subject_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:831
-#: src/omega_serv/interfaces/cli/main.py:869
+#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:871
 #, python-brace-format
 msgid "Source : {subject_id}"
 msgstr "Sumber: {subject_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:835
 #, python-brace-format
 msgid "Niveau : {level}"
 msgstr "Level: {level}"
 
-#: src/omega_serv/interfaces/cli/main.py:834
+#: src/omega_serv/interfaces/cli/main.py:836
 #, python-brace-format
 msgid "Mise à jour : {value}"
 msgstr "Pembaruan: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:835
+#: src/omega_serv/interfaces/cli/main.py:837
 #, python-brace-format
 msgid "Expiration : {value}"
 msgstr "Kedaluwarsa: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:836
+#: src/omega_serv/interfaces/cli/main.py:838
 #, python-brace-format
 msgid "Actions actives : {value}"
 msgstr "Tindakan aktif: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:851
+#: src/omega_serv/interfaces/cli/main.py:853
 msgid "Aucun incident."
 msgstr "Tidak ada insiden."
 
-#: src/omega_serv/interfaces/cli/main.py:855
+#: src/omega_serv/interfaces/cli/main.py:857
 #, python-brace-format
 msgid "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 msgstr "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 
-#: src/omega_serv/interfaces/cli/main.py:866
-#: src/omega_serv/interfaces/cli/main.py:912
-#: src/omega_serv/interfaces/cli/main.py:934
+#: src/omega_serv/interfaces/cli/main.py:868
+#: src/omega_serv/interfaces/cli/main.py:914
+#: src/omega_serv/interfaces/cli/main.py:936
 msgid "Incident introuvable : {incident_id!r}."
 msgstr "Insiden tidak ditemukan: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:868
+#: src/omega_serv/interfaces/cli/main.py:870
 #, python-brace-format
 msgid "Incident : {incident_id}"
 msgstr "Insiden: {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:870
+#: src/omega_serv/interfaces/cli/main.py:872
 #, python-brace-format
 msgid "Statut : {status}"
 msgstr "Status: {status}"
 
-#: src/omega_serv/interfaces/cli/main.py:871
+#: src/omega_serv/interfaces/cli/main.py:873
 #, python-brace-format
 msgid "Ouvert le : {value}"
 msgstr "Dibuka pada: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:872
+#: src/omega_serv/interfaces/cli/main.py:874
 #, python-brace-format
 msgid "Fermé le : {value}"
 msgstr "Ditutup pada: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:873
+#: src/omega_serv/interfaces/cli/main.py:875
 msgid "Chronologie :"
 msgstr "Kronologi:"
 
-#: src/omega_serv/interfaces/cli/main.py:875
+#: src/omega_serv/interfaces/cli/main.py:877
 #, python-brace-format
 msgid "  {value}\t{kind}\t{detail}"
 msgstr "  {value}\t{kind}\t{detail}"
 
-#: src/omega_serv/interfaces/cli/main.py:888
+#: src/omega_serv/interfaces/cli/main.py:890
 msgid "Incident introuvable ou déjà fermé : {incident_id!r}."
 msgstr "Insiden tidak ditemukan atau sudah ditutup: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:890
+#: src/omega_serv/interfaces/cli/main.py:892
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:202
 msgid "Incident {incident_id!r} fermé."
 msgstr "Insiden {incident_id!r} ditutup."
 
-#: src/omega_serv/interfaces/cli/main.py:901
+#: src/omega_serv/interfaces/cli/main.py:903
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:224
 #, python-brace-format
 msgid "Auto-export ({export_format}) : {path}"
 msgstr "Ekspor otomatis ({export_format}): {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:920
+#: src/omega_serv/interfaces/cli/main.py:922
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:243
 msgid "Format d'export inconnu : {export_format!r} (json, csv, stix ou misp)."
 msgstr "Format ekspor tidak dikenal: {export_format!r} (json, csv, stix, atau misp)."
 
-#: src/omega_serv/interfaces/cli/main.py:923
+#: src/omega_serv/interfaces/cli/main.py:925
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:245
 #, python-brace-format
 msgid "Exporté : {path}"
 msgstr "Diekspor: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:939
+#: src/omega_serv/interfaces/cli/main.py:941
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:257
 #, python-brace-format
 msgid "Rapport généré : {path}"
 msgstr "Laporan dibuat: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:950
+#: src/omega_serv/interfaces/cli/main.py:952
 msgid "Aucune affectation de leurre."
 msgstr "Tidak ada penetapan umpan."
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:956
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "active"
 msgstr "aktif"
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:956
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "expirée"
 msgstr "kedaluwarsa"
 
-#: src/omega_serv/interfaces/cli/main.py:956
+#: src/omega_serv/interfaces/cli/main.py:958
 #, python-brace-format
 msgid "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 msgstr "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:967
+#: src/omega_serv/interfaces/cli/main.py:969
 msgid "Affectation de leurre libérée pour {subject_id!r} (si elle existait)."
 msgstr "Penetapan umpan untuk {subject_id!r} dilepaskan (jika ada)."
 
-#: src/omega_serv/interfaces/cli/main.py:981
+#: src/omega_serv/interfaces/cli/main.py:983
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:79
 msgid "Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value})."
 msgstr "Kelas serangan tidak dikenal: {attack_class!r} (nilai yang mungkin: {value})."
 
-#: src/omega_serv/interfaces/cli/main.py:991
+#: src/omega_serv/interfaces/cli/main.py:993
 #, python-brace-format
 msgid "Source (simulée) : {subject_id}  (chemin observé : {path})"
 msgstr "Sumber (simulasi): {subject_id}  (jalur teramati: {path})"
 
-#: src/omega_serv/interfaces/cli/main.py:992
+#: src/omega_serv/interfaces/cli/main.py:994
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:98
 #, python-brace-format
 msgid "Score : {previous_score} -> {projected_score}"
 msgstr "Skor: {previous_score} -> {projected_score}"
 
-#: src/omega_serv/interfaces/cli/main.py:993
+#: src/omega_serv/interfaces/cli/main.py:995
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:99
 #, python-brace-format
 msgid "Niveau : {previous_level} -> {projected_level}"
 msgstr "Level: {previous_level} -> {projected_level}"
 
-#: src/omega_serv/interfaces/cli/main.py:995
+#: src/omega_serv/interfaces/cli/main.py:997
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:100
 #, python-brace-format
 msgid "  - {line}"
 msgstr "  - {line}"
 
-#: src/omega_serv/interfaces/cli/main.py:1012
+#: src/omega_serv/interfaces/cli/main.py:1014
 #, python-brace-format
 msgid "États de menace purgés : {purged_threat_states}"
 msgstr "Status ancaman dibersihkan: {purged_threat_states}"
 
-#: src/omega_serv/interfaces/cli/main.py:1013
+#: src/omega_serv/interfaces/cli/main.py:1015
 #, python-brace-format
 msgid "Incidents fermés automatiquement : {count}"
 msgstr "Insiden ditutup otomatis: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1015
+#: src/omega_serv/interfaces/cli/main.py:1017
 #, python-brace-format
 msgid "  - {incident_id}"
 msgstr "  - {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:1016
+#: src/omega_serv/interfaces/cli/main.py:1018
 #, python-brace-format
 msgid "Incidents fermés depuis plus de 90 jours supprimés : {count}"
 msgstr "Insiden yang ditutup lebih dari 90 hari lalu dihapus: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1030
+#: src/omega_serv/interfaces/cli/main.py:1032
 #, python-brace-format
 msgid "Export automatique impossible : {message}"
 msgstr "Ekspor otomatis tidak mungkin: {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1032
+#: src/omega_serv/interfaces/cli/main.py:1034
 #, python-brace-format
 msgid "Exports automatiques écrits : {count}"
 msgstr "Ekspor otomatis ditulis: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1074
+#: src/omega_serv/interfaces/cli/main.py:1076
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:139
 msgid "Erreur : les deux saisies de passphrase ne correspondent pas."
 msgstr "Kesalahan: kedua isian passphrase tidak cocok."
 
-#: src/omega_serv/interfaces/cli/main.py:1097
+#: src/omega_serv/interfaces/cli/main.py:1099
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 #, python-brace-format
 msgid "Importez {value} dans le magasin de confiance des clients (doc TLS §7.4)."
 msgstr "Impor {value} ke penyimpanan sertifikat tepercaya klien (dok TLS §7.4)."
 
-#: src/omega_serv/interfaces/cli/main.py:1097
+#: src/omega_serv/interfaces/cli/main.py:1099
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 msgid "root-ca.pem"
 msgstr "root-ca.pem"
 
-#: src/omega_serv/interfaces/cli/main.py:1134
+#: src/omega_serv/interfaces/cli/main.py:1136
 msgid "Redémarrage requis pour que le nouveau certificat soit pris en compte (`omega-serv service restart`)."
 msgstr "Mulai ulang diperlukan agar sertifikat baru berlaku (`omega-serv service restart`)."
 
-#: src/omega_serv/interfaces/cli/main.py:1202
+#: src/omega_serv/interfaces/cli/main.py:1204
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:79
 #, python-brace-format
 msgid "Sujet : {subject}"
 msgstr "Subjek: {subject}"
 
-#: src/omega_serv/interfaces/cli/main.py:1203
+#: src/omega_serv/interfaces/cli/main.py:1205
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:80
 #, python-brace-format
 msgid "Émetteur : {issuer}"
 msgstr "Penerbit: {issuer}"
 
-#: src/omega_serv/interfaces/cli/main.py:1204
+#: src/omega_serv/interfaces/cli/main.py:1206
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:81
 #, python-brace-format
 msgid "Début de validité : {value}"
 msgstr "Awal masa berlaku: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1205
+#: src/omega_serv/interfaces/cli/main.py:1207
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:82
 #, python-brace-format
 msgid "Fin de validité : {value}"
 msgstr "Akhir masa berlaku: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1206
+#: src/omega_serv/interfaces/cli/main.py:1208
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:83
 #, python-brace-format
 msgid "Jours restants : {days_remaining}"
 msgstr "Sisa hari: {days_remaining}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1209
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type}"
 msgstr "Jenis kunci: {key_type}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1209
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type} ({key_bits} bits)"
 msgstr "Jenis kunci: {key_type} ({key_bits} bit)"
 
-#: src/omega_serv/interfaces/cli/main.py:1208
+#: src/omega_serv/interfaces/cli/main.py:1210
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:85
 #, python-brace-format
 msgid "Algorithme de signature : {signature_algorithm}"
 msgstr "Algoritme tanda tangan: {signature_algorithm}"
 
-#: src/omega_serv/interfaces/cli/main.py:1210
+#: src/omega_serv/interfaces/cli/main.py:1212
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:88
 msgid "SAN :"
 msgstr "SAN:"
 
-#: src/omega_serv/interfaces/cli/main.py:1212
+#: src/omega_serv/interfaces/cli/main.py:1214
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:89
 #, python-brace-format
 msgid "  - DNS:{dns}"
 msgstr "  - DNS:{dns}"
 
-#: src/omega_serv/interfaces/cli/main.py:1214
+#: src/omega_serv/interfaces/cli/main.py:1216
 #, python-brace-format
 msgid "  - IP:{ip}"
 msgstr "  - IP:{ip}"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
 #: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/cli/main.py:1221
+#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 msgid "ERREUR"
 msgstr "KESALAHAN"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
 #: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/cli/main.py:1221
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1223
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
@@ -3833,375 +3928,1284 @@ msgstr "KESALAHAN"
 msgid "OK"
 msgstr "OK"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] Sertifikat {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "expiré"
 msgstr "kedaluwarsa"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "non expiré"
 msgstr "belum kedaluwarsa"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "NE correspond PAS"
 msgstr "TIDAK cocok"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #, python-brace-format
 msgid "[{value}] Clé privée {value2}"
 msgstr "[{value}] Kunci privat {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "correspondante"
 msgstr "cocok"
 
-#: src/omega_serv/interfaces/cli/main.py:1221
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 #, python-brace-format
 msgid "[{value}] Permissions clé privée : {value2}"
 msgstr "[{value}] Izin kunci privat: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1223
+#: src/omega_serv/interfaces/cli/main.py:1225
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:99
 msgid "[AVERTISSEMENT] Certificat auto-signé, non approuvé par défaut par les navigateurs"
 msgstr "[PERINGATAN] Sertifikat self-signed, tidak dipercaya browser secara bawaan"
 
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1227
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:101
 #, python-brace-format
 msgid "[AVERTISSEMENT] Certificat bientôt expiré ({days_remaining} jours restants)"
 msgstr "[PERINGATAN] Sertifikat segera kedaluwarsa ({days_remaining} hari tersisa)"
 
-#: src/omega_serv/interfaces/cli/main.py:1278
+#: src/omega_serv/interfaces/cli/main.py:1280
 #, python-brace-format
 msgid "TLS activé (mode {mode}) dans {config}."
 msgstr "TLS diaktifkan (mode {mode}) di {config}."
 
-#: src/omega_serv/interfaces/cli/main.py:1294
+#: src/omega_serv/interfaces/cli/main.py:1296
 #, python-brace-format
 msgid "TLS désactivé dans {config}."
 msgstr "TLS dinonaktifkan di {config}."
 
-#: src/omega_serv/interfaces/cli/main.py:1306
+#: src/omega_serv/interfaces/cli/main.py:1308
 msgid "Mot de passe : "
 msgstr "Kata sandi: "
 
-#: src/omega_serv/interfaces/cli/main.py:1318
+#: src/omega_serv/interfaces/cli/main.py:1320
 msgid "Passphrase de la CA : "
 msgstr "Passphrase CA: "
 
-#: src/omega_serv/interfaces/cli/main.py:1319
+#: src/omega_serv/interfaces/cli/main.py:1321
 msgid "Confirmer la passphrase : "
 msgstr "Konfirmasi passphrase: "
 
-#: src/omega_serv/interfaces/cli/main.py:1404
+#: src/omega_serv/interfaces/cli/main.py:1406
 msgid "Utilisateurs :"
 msgstr "Pengguna:"
 
-#: src/omega_serv/interfaces/cli/main.py:1406
+#: src/omega_serv/interfaces/cli/main.py:1408
 #, python-brace-format
 msgid "  - {username}"
 msgstr "  - {username}"
 
-#: src/omega_serv/interfaces/cli/main.py:1407
+#: src/omega_serv/interfaces/cli/main.py:1409
 msgid "Zones protégées :"
 msgstr "Zona terlindungi:"
 
-#: src/omega_serv/interfaces/cli/main.py:1409
+#: src/omega_serv/interfaces/cli/main.py:1411
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:112
 msgid "toutes"
 msgstr "semua"
 
-#: src/omega_serv/interfaces/cli/main.py:1410
+#: src/omega_serv/interfaces/cli/main.py:1412
 msgid "  - {path_prefix} (realm={realm!r}, utilisateurs={value}, methodes={methods})"
 msgstr "  - {path_prefix} (realm={realm!r}, pengguna={value}, metode={methods})"
 
-#: src/omega_serv/interfaces/cli/main.py:1425
+#: src/omega_serv/interfaces/cli/main.py:1427
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:272
 #, python-brace-format
 msgid "[INFO] {label} absent ({path})"
 msgstr "[INFO] {label} tidak ada ({path})"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 msgid "AVERTISSEMENT"
 msgstr "PERINGATAN"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #, python-brace-format
 msgid "[{value}] {label} permissions : {value2}"
 msgstr "[{value}] izin {label}: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1447
+#: src/omega_serv/interfaces/cli/main.py:1449
 msgid "Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce système."
 msgstr "Kesalahan: tidak ada pengelola layanan yang dikenali (systemd/OpenRC/runit) di sistem ini."
 
-#: src/omega_serv/interfaces/cli/main.py:1460
+#: src/omega_serv/interfaces/cli/main.py:1462
 #, python-brace-format
 msgid "{label} : {value}"
 msgstr "{label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1463
+#: src/omega_serv/interfaces/cli/main.py:1465
 msgid "Connecteurs (moteur natif) :"
 msgstr "Konektor (mesin native):"
 
-#: src/omega_serv/interfaces/cli/main.py:1465
+#: src/omega_serv/interfaces/cli/main.py:1467
 #, python-brace-format
 msgid "  {label} : {value}"
 msgstr "  {label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1475
+#: src/omega_serv/interfaces/cli/main.py:1477
 #, python-brace-format
 msgid "Service : {service_name}"
 msgstr "Layanan : {service_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1476
+#: src/omega_serv/interfaces/cli/main.py:1478
 #, python-brace-format
 msgid "Actif   : {active}"
 msgstr "Aktif   : {active}"
 
-#: src/omega_serv/interfaces/cli/main.py:1477
+#: src/omega_serv/interfaces/cli/main.py:1479
 #, python-brace-format
 msgid "Activé au démarrage : {enabled}"
 msgstr "Aktif saat boot: {enabled}"
 
-#: src/omega_serv/interfaces/cli/main.py:1478
+#: src/omega_serv/interfaces/cli/main.py:1480
 #, python-brace-format
 msgid "État    : {state} ({sub_state})"
 msgstr "Keadaan : {state} ({sub_state})"
 
-#: src/omega_serv/interfaces/cli/main.py:1480
+#: src/omega_serv/interfaces/cli/main.py:1482
 #, python-brace-format
 msgid "Description : {description}"
 msgstr "Deskripsi: {description}"
 
-#: src/omega_serv/interfaces/cli/main.py:1534
+#: src/omega_serv/interfaces/cli/main.py:1536
 #, python-brace-format
 msgid "Erreur : génération d'unité non supportée pour {value} (seul systemd est supporte en V1, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5)."
 msgstr "Kesalahan: pembuatan unit tidak didukung untuk {value} (hanya systemd yang didukung di V1, lihat OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5)."
 
-#: src/omega_serv/interfaces/cli/main.py:1534
-#: src/omega_serv/interfaces/cli/main.py:1560
+#: src/omega_serv/interfaces/cli/main.py:1536
+#: src/omega_serv/interfaces/cli/main.py:1562
 msgid "aucun gestionnaire détecté"
 msgstr "tidak ada pengelola terdeteksi"
 
-#: src/omega_serv/interfaces/cli/main.py:1560
+#: src/omega_serv/interfaces/cli/main.py:1562
 #, python-brace-format
 msgid "Erreur : désinstallation d'unité non supportée pour {value}."
 msgstr "Kesalahan: pencopotan unit tidak didukung untuk {value}."
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "CRITICAL"
 msgstr "CRITICAL"
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "HIGH"
 msgstr "HIGH"
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "MEDIUM"
 msgstr "MEDIUM"
 
-#: src/omega_serv/interfaces/cli/main.py:1572
+#: src/omega_serv/interfaces/cli/main.py:1574
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "INFO"
 msgstr "INFO"
 
-#: src/omega_serv/interfaces/cli/main.py:1572
+#: src/omega_serv/interfaces/cli/main.py:1574
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "LOW"
 msgstr "LOW"
 
-#: src/omega_serv/interfaces/cli/main.py:1578
+#: src/omega_serv/interfaces/cli/main.py:1580
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:104
 msgid "Aucun problème détecté."
 msgstr "Tidak ada masalah terdeteksi."
 
-#: src/omega_serv/interfaces/cli/main.py:1582
+#: src/omega_serv/interfaces/cli/main.py:1584
 #, python-brace-format
 msgid "[{label}] {rule_id} {rule_name}"
 msgstr "[{label}] {rule_id} {rule_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1584
+#: src/omega_serv/interfaces/cli/main.py:1586
 #, python-brace-format
 msgid "    -> {recommendation}"
 msgstr "    -> {recommendation}"
 
-#: src/omega_serv/interfaces/cli/main.py:1614
+#: src/omega_serv/interfaces/cli/main.py:1616
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:114
 #, python-brace-format
 msgid "Résumé : {critical} critical, {high} high, {medium} medium, {low} low, {info} info"
 msgstr "Ringkasan: {critical} critical, {high} high, {medium} medium, {low} low, {info} info"
 
-#: src/omega_serv/interfaces/cli/main.py:1615
+#: src/omega_serv/interfaces/cli/main.py:1617
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : NON SÉCURISÉ"
 msgstr "Status: TIDAK AMAN"
 
-#: src/omega_serv/interfaces/cli/main.py:1615
+#: src/omega_serv/interfaces/cli/main.py:1617
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : sécurisé"
 msgstr "Status: aman"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:50
+#: src/omega_serv/interfaces/cli/main.py:1625
+msgid "Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : interface interactive. Avec une commande : ligne de commande, scriptable."
+msgstr "Server web aman (WAF, TLS, RIPOSTE, Active Defense). Tanpa argumen: antarmuka interaktif. Dengan perintah: baris perintah, bisa dipakai dalam skrip."
+
+#: src/omega_serv/interfaces/cli/main.py:1627
+msgid "Toutes les commandes : omega-serv help. Manuel : man omega-serv."
+msgstr "Semua perintah: omega-serv help. Manual: man omega-serv."
+
+#: src/omega_serv/interfaces/cli/main.py:1629
+#: src/omega_serv/interfaces/cli/main.py:1655
+#: src/omega_serv/interfaces/cli/main.py:1657
+#: src/omega_serv/interfaces/cli/main.py:1885
+#: src/omega_serv/interfaces/cli/main.py:1886
+#: src/omega_serv/interfaces/cli/main.py:1891
+#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1898
+#: src/omega_serv/interfaces/cli/main.py:1899
+#: src/omega_serv/interfaces/cli/main.py:1905
+#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:1907
+#: src/omega_serv/interfaces/cli/main.py:1912
+#: src/omega_serv/interfaces/cli/main.py:1913
+#: src/omega_serv/interfaces/cli/main.py:1914
+#: src/omega_serv/interfaces/cli/main.py:1922
+#: src/omega_serv/interfaces/cli/main.py:1925
+#: src/omega_serv/interfaces/cli/main.py:1929
+#: src/omega_serv/interfaces/cli/main.py:1997
+#: src/omega_serv/interfaces/cli/main.py:2005
+#: src/omega_serv/interfaces/cli/main.py:2010
+#: src/omega_serv/interfaces/cli/main.py:2022
+msgid "FICHIER"
+msgstr "BERKAS"
+
+#: src/omega_serv/interfaces/cli/main.py:1630
+msgid "Fichier de configuration (défaut : config/omega-serve.json de l'installation)."
+msgstr "Berkas konfigurasi (bawaan: config/omega-serve.json dari instalasi)."
+
+#: src/omega_serv/interfaces/cli/main.py:1633
+msgid "Accepte un certificat auto-signé sur une adresse publique."
+msgstr "Menerima sertifikat yang ditandatangani sendiri pada alamat publik."
+
+#: src/omega_serv/interfaces/cli/main.py:1634
+msgid "Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau)."
+msgstr "Menerima zona berkata sandi tanpa TLS (kata sandi terbaca di jaringan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1635
+msgid "Méthode HTTP (défaut : GET)."
+msgstr "Metode HTTP (bawaan: GET)."
+
+#: src/omega_serv/interfaces/cli/main.py:1638
+msgid "Démarre le serveur au premier plan (c'est ce que lance le service système). Refuse de tourner en root."
+msgstr "Menjalankan server di latar depan (inilah yang dijalankan layanan sistem). Menolak berjalan sebagai root."
+
+#: src/omega_serv/interfaces/cli/main.py:1644
+msgid "Fichier de configuration : création, vérification, TLS, sauvegardes."
+msgstr "Berkas konfigurasi: pembuatan, pemeriksaan, TLS, cadangan."
+
+#: src/omega_serv/interfaces/cli/main.py:1645
+msgid "Crée le fichier de configuration par défaut."
+msgstr "Membuat berkas konfigurasi bawaan."
+
+#: src/omega_serv/interfaces/cli/main.py:1646
+msgid "Écrase le fichier existant."
+msgstr "Menimpa berkas yang ada."
+
+#: src/omega_serv/interfaces/cli/main.py:1649
+msgid "Vérifie la configuration et l'environnement (chemins, droits, certificats) sans démarrer."
+msgstr "Memeriksa konfigurasi dan lingkungan (jalur, izin, sertifikat) tanpa menjalankan."
+
+#: src/omega_serv/interfaces/cli/main.py:1653
+msgid "Affiche la configuration chargée, en JSON."
+msgstr "Menampilkan konfigurasi yang dimuat, dalam JSON."
+
+#: src/omega_serv/interfaces/cli/main.py:1654
+msgid "Active TLS dans la configuration."
+msgstr "Mengaktifkan TLS dalam konfigurasi."
+
+#: src/omega_serv/interfaces/cli/main.py:1656
+msgid "Certificat à utiliser (sinon celui déjà configuré)."
+msgstr "Sertifikat yang dipakai (jika tidak, yang sudah dikonfigurasi)."
+
+#: src/omega_serv/interfaces/cli/main.py:1658
+msgid "Clé privée à utiliser (sinon celle déjà configurée)."
+msgstr "Kunci privat yang dipakai (jika tidak, yang sudah dikonfigurasi)."
+
+#: src/omega_serv/interfaces/cli/main.py:1660
+msgid "direct : omega-serv chiffre lui-même ; behind_proxy : derrière un reverse proxy (défaut : direct)."
+msgstr "direct: omega-serv mengenkripsi sendiri; behind_proxy: di belakang reverse proxy (bawaan: direct)."
+
+#: src/omega_serv/interfaces/cli/main.py:1662
+msgid "Désactive TLS dans la configuration."
+msgstr "Menonaktifkan TLS dalam konfigurasi."
+
+#: src/omega_serv/interfaces/cli/main.py:1665
+msgid "Crée une sauvegarde : la configuration toujours, le reste selon les options --include-*."
+msgstr "Membuat cadangan: selalu konfigurasi, sisanya sesuai opsi --include-*."
+
+#: src/omega_serv/interfaces/cli/main.py:1666
+msgid "Ajoute les règles et listes du WAF."
+msgstr "Menambahkan aturan dan daftar WAF."
+
+#: src/omega_serv/interfaces/cli/main.py:1668
+msgid "Ajoute les utilisateurs et les zones protégées (secrets : demande --confirm-secrets)."
+msgstr "Menambahkan pengguna dan zona terlindungi (rahasia: memerlukan --confirm-secrets)."
+
+#: src/omega_serv/interfaces/cli/main.py:1670
+msgid "Ajoute les certificats et les clés TLS (secrets : demande --confirm-secrets)."
+msgstr "Menambahkan sertifikat dan kunci TLS (rahasia: memerlukan --confirm-secrets)."
+
+#: src/omega_serv/interfaces/cli/main.py:1672
+msgid "Ajoute la base Active Defense."
+msgstr "Menambahkan basis data Active Defense."
+
+#: src/omega_serv/interfaces/cli/main.py:1674
+msgid "Ajoute les pages d'erreur personnalisées."
+msgstr "Menambahkan halaman galat kustom."
+
+#: src/omega_serv/interfaces/cli/main.py:1676
+msgid "Ajoute les préférences de l'interface."
+msgstr "Menambahkan preferensi antarmuka."
+
+#: src/omega_serv/interfaces/cli/main.py:1678
+msgid "Ajoute la bibliothèque des journaux."
+msgstr "Menambahkan pustaka log."
+
+#: src/omega_serv/interfaces/cli/main.py:1679
+msgid "Ajoute la base RIPOSTE."
+msgstr "Menambahkan basis data RIPOSTE."
+
+#: src/omega_serv/interfaces/cli/main.py:1681
+msgid "Tout sauvegarder : toutes les options --include-* (secrets compris : demande --confirm-secrets)."
+msgstr "Cadangkan semuanya: semua opsi --include-* (termasuk rahasia: memerlukan --confirm-secrets)."
+
+#: src/omega_serv/interfaces/cli/main.py:1683
+msgid "Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés privées)."
+msgstr "Mengonfirmasi penambahan rahasia tanpa enkripsi (hash kata sandi, kunci privat)."
+
+#: src/omega_serv/interfaces/cli/main.py:1684
+#: src/omega_serv/interfaces/cli/main.py:1733
+#: src/omega_serv/interfaces/cli/main.py:1734
+#: src/omega_serv/interfaces/cli/main.py:1748
+#: src/omega_serv/interfaces/cli/main.py:1769
+#: src/omega_serv/interfaces/cli/main.py:1843
+#: src/omega_serv/interfaces/cli/main.py:1845
+#: src/omega_serv/interfaces/cli/main.py:1846
+#: src/omega_serv/interfaces/cli/main.py:1847
+#: src/omega_serv/interfaces/cli/main.py:1956
+#: src/omega_serv/interfaces/cli/main.py:1995
+msgid "TEXTE"
+msgstr "TEKS"
+
+#: src/omega_serv/interfaces/cli/main.py:1685
+msgid "Texte libre enregistré avec la sauvegarde."
+msgstr "Teks bebas yang disimpan bersama cadangan."
+
+#: src/omega_serv/interfaces/cli/main.py:1687
+msgid "Restaure une sauvegarde."
+msgstr "Memulihkan cadangan."
+
+#: src/omega_serv/interfaces/cli/main.py:1688
+#: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
+msgid "ID"
+msgstr "ID"
+
+#: src/omega_serv/interfaces/cli/main.py:1689
+msgid "Identifiant de la sauvegarde (voir config list-backups)."
+msgstr "Pengenal cadangan (lihat config list-backups)."
+
+#: src/omega_serv/interfaces/cli/main.py:1691
+msgid "Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne)."
+msgstr "Menghentikan layanan, memulihkan, lalu menjalankannya ulang (wajib jika layanan sedang berjalan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1693
+msgid "Liste les sauvegardes."
+msgstr "Menampilkan daftar cadangan."
+
+#: src/omega_serv/interfaces/cli/main.py:1695
+msgid "Profils de configuration prêts à l'emploi."
+msgstr "Profil konfigurasi siap pakai."
+
+#: src/omega_serv/interfaces/cli/main.py:1696
+msgid "Liste les profils disponibles."
+msgstr "Menampilkan daftar profil yang tersedia."
+
+#: src/omega_serv/interfaces/cli/main.py:1697
+msgid "Nom du profil (voir profile list)."
+msgstr "Nama profil (lihat profile list)."
+
+#: src/omega_serv/interfaces/cli/main.py:1698
+msgid "Affiche un profil et les valeurs qu'il fixe."
+msgstr "Menampilkan profil dan nilai yang ditetapkannya."
+
+#: src/omega_serv/interfaces/cli/main.py:1702
+msgid "Applique un profil à la configuration (modifications et conflits affichés d'abord)."
+msgstr "Menerapkan profil ke konfigurasi (perubahan dan konflik ditampilkan lebih dulu)."
+
+#: src/omega_serv/interfaces/cli/main.py:1705
+msgid "Montre seulement ce qui changerait, sans rien écrire."
+msgstr "Hanya menampilkan apa yang akan berubah, tanpa menulis apa pun."
+
+#: src/omega_serv/interfaces/cli/main.py:1706
+msgid "Applique malgré des problèmes bloquants."
+msgstr "Menerapkan meski ada masalah yang menghalangi."
+
+#: src/omega_serv/interfaces/cli/main.py:1710
+msgid "Modules optionnels (waf, fastcgi, active_defense, riposte...)."
+msgstr "Modul opsional (waf, fastcgi, active_defense, riposte...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1711
+msgid "Liste les options et leur état."
+msgstr "Menampilkan daftar opsi dan statusnya."
+
+#: src/omega_serv/interfaces/cli/main.py:1712
+msgid "Nom de l'option (voir option list)."
+msgstr "Nama opsi (lihat option list)."
+
+#: src/omega_serv/interfaces/cli/main.py:1713
+msgid "Active une option."
+msgstr "Mengaktifkan opsi."
+
+#: src/omega_serv/interfaces/cli/main.py:1714
+msgid "Première activation du WAF : tous les packs de secure/waf/rules/ sont ajoutés, en mode log-only."
+msgstr "Aktivasi WAF pertama: semua paket di secure/waf/rules/ ditambahkan, dalam mode log-only."
+
+#: src/omega_serv/interfaces/cli/main.py:1717
+msgid "Désactive une option."
+msgstr "Menonaktifkan opsi."
+
+#: src/omega_serv/interfaces/cli/main.py:1722
+msgid "Montre comment le serveur traiterait une requête (chemin, règles, statut, en-têtes), sans l'envoyer."
+msgstr "Menunjukkan bagaimana server akan menangani permintaan (jalur, aturan, status, header), tanpa mengirimnya."
+
+#: src/omega_serv/interfaces/cli/main.py:1724
+#: src/omega_serv/interfaces/cli/main.py:1732
+#: src/omega_serv/interfaces/cli/main.py:1767
+#: src/omega_serv/interfaces/cli/main.py:1955
+#: src/omega_serv/interfaces/cli/main.py:1965
+msgid "CHEMIN"
+msgstr "JALUR"
+
+#: src/omega_serv/interfaces/cli/main.py:1725
+msgid "Chemin demandé, par exemple /docs/index.html."
+msgstr "Jalur yang diminta, misalnya /docs/index.html."
+
+#: src/omega_serv/interfaces/cli/main.py:1728
+msgid "Pare-feu applicatif (WAF)."
+msgstr "Firewall aplikasi (WAF)."
+
+#: src/omega_serv/interfaces/cli/main.py:1730
+msgid "Soumet une requête fictive au WAF et affiche sa décision (règles, score, statut)."
+msgstr "Mengirim permintaan fiktif ke WAF dan menampilkan keputusannya (aturan, skor, status)."
+
+#: src/omega_serv/interfaces/cli/main.py:1732
+msgid "Chemin de la requête."
+msgstr "Jalur permintaan."
+
+#: src/omega_serv/interfaces/cli/main.py:1733
+msgid "Chaîne de requête, sans le « ? »."
+msgstr "String kueri, tanpa “?”."
+
+#: src/omega_serv/interfaces/cli/main.py:1734
+msgid "Corps de la requête."
+msgstr "Isi permintaan."
+
+#: src/omega_serv/interfaces/cli/main.py:1736
+msgid "Adresse du client simulé (défaut : 127.0.0.1)."
+msgstr "Alamat klien simulasi (bawaan: 127.0.0.1)."
+
+#: src/omega_serv/interfaces/cli/main.py:1739
+msgid "Affiche les réseaux jamais bannis automatiquement (lu par omega-jail)."
+msgstr "Menampilkan jaringan yang tidak pernah diblokir otomatis (dibaca oleh omega-jail)."
+
+#: src/omega_serv/interfaces/cli/main.py:1742
+msgid "Adresses bannies."
+msgstr "Alamat yang diblokir."
+
+#: src/omega_serv/interfaces/cli/main.py:1743
+msgid "Affiche les bans : réseau, origine, expiration, motif."
+msgstr "Menampilkan blokir: jaringan, asal, kedaluwarsa, alasan."
+
+#: src/omega_serv/interfaces/cli/main.py:1745
+msgid "Bannit une adresse ou un réseau."
+msgstr "Memblokir alamat atau jaringan."
+
+#: src/omega_serv/interfaces/cli/main.py:1746
+#: src/omega_serv/interfaces/cli/main.py:1754
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
+msgid "RESEAU"
+msgstr "JARINGAN"
+
+#: src/omega_serv/interfaces/cli/main.py:1747
+msgid "Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."
+msgstr "Alamat IP atau jaringan CIDR, misalnya 203.0.113.7 atau 203.0.113.0/24."
+
+#: src/omega_serv/interfaces/cli/main.py:1748
+msgid "Motif du ban."
+msgstr "Alasan blokir."
+
+#: src/omega_serv/interfaces/cli/main.py:1749
+#: src/omega_serv/interfaces/cli/main.py:2003
+msgid "SECONDES"
+msgstr "DETIK"
+
+#: src/omega_serv/interfaces/cli/main.py:1750
+msgid "Durée du ban. Sans durée, le ban est permanent et demande --confirm-permanent."
+msgstr "Durasi blokir. Tanpa durasi, blokir bersifat permanen dan memerlukan --confirm-permanent."
+
+#: src/omega_serv/interfaces/cli/main.py:1751
+msgid "Confirme un ban permanent."
+msgstr "Mengonfirmasi blokir permanen."
+
+#: src/omega_serv/interfaces/cli/main.py:1753
+msgid "Lève un ban."
+msgstr "Mencabut blokir."
+
+#: src/omega_serv/interfaces/cli/main.py:1755
+msgid "Adresse ou réseau, tel qu'affiché par blocklist list."
+msgstr "Alamat atau jaringan, seperti ditampilkan oleh blocklist list."
+
+#: src/omega_serv/interfaces/cli/main.py:1759
+msgid "Active Defense : état, simulation, purge (voir aussi threats, incidents, deception)."
+msgstr "Active Defense: status, simulasi, pembersihan (lihat juga threats, incidents, deception)."
+
+#: src/omega_serv/interfaces/cli/main.py:1762
+msgid "Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies."
+msgstr "Menampilkan status: mode, mode perang, umpan, jumlah sumber yang dipantau."
+
+#: src/omega_serv/interfaces/cli/main.py:1765
+msgid "Montre la décision qu'Active Defense prendrait pour une source, sans rien écrire."
+msgstr "Menunjukkan keputusan yang akan diambil Active Defense untuk sebuah sumber, tanpa menulis apa pun."
+
+#: src/omega_serv/interfaces/cli/main.py:1766
+msgid "Adresse de la source simulée."
+msgstr "Alamat sumber simulasi."
+
+#: src/omega_serv/interfaces/cli/main.py:1768
+msgid "Chemin observé (défaut : /)."
+msgstr "Jalur yang teramati (bawaan: /)."
+
+#: src/omega_serv/interfaces/cli/main.py:1770
+msgid "User-Agent de la source."
+msgstr "User-Agent sumber."
+
+#: src/omega_serv/interfaces/cli/main.py:1771
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:230
+msgid "CLASSE"
+msgstr "KELAS"
+
+#: src/omega_serv/interfaces/cli/main.py:1772
+msgid "Classe d'attaque (défaut : scan ; liste affichée si inconnue)."
+msgstr "Kelas serangan (bawaan: scan; daftar ditampilkan jika tidak dikenal)."
+
+#: src/omega_serv/interfaces/cli/main.py:1773
+msgid "POINTS"
+msgstr "POIN"
+
+#: src/omega_serv/interfaces/cli/main.py:1774
+msgid "Points ajoutés au score de menace (défaut : 10)."
+msgstr "Poin yang ditambahkan ke skor ancaman (bawaan: 10)."
+
+#: src/omega_serv/interfaces/cli/main.py:1777
+msgid "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les incidents fermés depuis plus de 90 jours."
+msgstr "Membersihkan ancaman kedaluwarsa, menutup insiden yang sudah tenang, menghapus insiden yang ditutup lebih dari 90 hari."
+
+#: src/omega_serv/interfaces/cli/main.py:1780
+msgid "Moteur HTTP (Python ou natif)."
+msgstr "Mesin HTTP (Python atau native)."
+
+#: src/omega_serv/interfaces/cli/main.py:1782
+msgid "Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel repli."
+msgstr "Menampilkan mesin yang diminta, yang sedang berjalan, dan alasan fallback jika ada."
+
+#: src/omega_serv/interfaces/cli/main.py:1786
+msgid "RIPOSTE : bans de plus en plus longs pour les récidivistes."
+msgstr "RIPOSTE: blokir yang makin lama bagi pelanggar berulang."
+
+#: src/omega_serv/interfaces/cli/main.py:1788
+msgid "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; utile au diagnostic)."
+msgstr "Menjalankan proses RIPOSTE di latar depan (biasanya dijalankan oleh serve; berguna untuk diagnosis)."
+
+#: src/omega_serv/interfaces/cli/main.py:1790
+msgid "Affiche l'état de RIPOSTE (lecture seule)."
+msgstr "Menampilkan status RIPOSTE (hanya baca)."
+
+#: src/omega_serv/interfaces/cli/main.py:1794
+msgid "Menaces suivies par Active Defense."
+msgstr "Ancaman yang dipantau Active Defense."
+
+#: src/omega_serv/interfaces/cli/main.py:1795
+msgid "Liste les sources suivies avec leur score et leur niveau."
+msgstr "Menampilkan daftar sumber yang dipantau beserta skor dan levelnya."
+
+#: src/omega_serv/interfaces/cli/main.py:1797
+msgid "Seulement ce niveau."
+msgstr "Hanya level ini."
+
+#: src/omega_serv/interfaces/cli/main.py:1799
+msgid "Affiche le détail d'une source suivie."
+msgstr "Menampilkan detail sumber yang dipantau."
+
+#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1834
+msgid "SOURCE"
+msgstr "SUMBER"
+
+#: src/omega_serv/interfaces/cli/main.py:1801
+msgid "Identifiant de la source, tel qu'affiché par threats list."
+msgstr "Pengenal sumber, seperti ditampilkan oleh threats list."
+
+#: src/omega_serv/interfaces/cli/main.py:1804
+msgid "Incidents Active Defense."
+msgstr "Insiden Active Defense."
+
+#: src/omega_serv/interfaces/cli/main.py:1805
+msgid "Identifiant de l'incident (voir incidents list)."
+msgstr "Pengenal insiden (lihat incidents list)."
+
+#: src/omega_serv/interfaces/cli/main.py:1806
+msgid "Liste les incidents."
+msgstr "Menampilkan daftar insiden."
+
+#: src/omega_serv/interfaces/cli/main.py:1808
+msgid "Seulement les incidents ouverts (open) ou fermés (closed)."
+msgstr "Hanya insiden terbuka (open) atau tertutup (closed)."
+
+#: src/omega_serv/interfaces/cli/main.py:1809
+msgid "HEURES"
+msgstr "JAM"
+
+#: src/omega_serv/interfaces/cli/main.py:1810
+msgid "Seulement les incidents des N dernières heures."
+msgstr "Hanya insiden dalam N jam terakhir."
+
+#: src/omega_serv/interfaces/cli/main.py:1812
+msgid "Affiche un incident et sa chronologie."
+msgstr "Menampilkan insiden dan kronologinya."
+
+#: src/omega_serv/interfaces/cli/main.py:1816
+msgid "Ferme un incident (et l'exporte si l'export automatique est activé)."
+msgstr "Menutup insiden (dan mengekspornya jika ekspor otomatis aktif)."
+
+#: src/omega_serv/interfaces/cli/main.py:1820
+msgid "Exporte les indicateurs de compromission (IoC) d'un incident."
+msgstr "Mengekspor indikator kompromi (IoC) sebuah insiden."
+
+#: src/omega_serv/interfaces/cli/main.py:1822
+msgid "FORMATS"
+msgstr "FORMAT"
+
+#: src/omega_serv/interfaces/cli/main.py:1823
+msgid "Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp (défaut : json)."
+msgstr "Satu atau beberapa format dipisahkan koma: json, csv, stix, misp (bawaan: json)."
+
+#: src/omega_serv/interfaces/cli/main.py:1826
+msgid "Écrit le rapport Markdown d'un incident."
+msgstr "Menulis laporan Markdown sebuah insiden."
+
+#: src/omega_serv/interfaces/cli/main.py:1830
+msgid "Leurres Active Defense."
+msgstr "Umpan Active Defense."
+
+#: src/omega_serv/interfaces/cli/main.py:1831
+msgid "Liste les sources envoyées vers un leurre."
+msgstr "Menampilkan daftar sumber yang dikirim ke umpan."
+
+#: src/omega_serv/interfaces/cli/main.py:1833
+msgid "Libère une source de son leurre."
+msgstr "Melepaskan sumber dari umpannya."
+
+#: src/omega_serv/interfaces/cli/main.py:1835
+msgid "Identifiant de la source, tel qu'affiché par deception list."
+msgstr "Pengenal sumber, seperti ditampilkan oleh deception list."
+
+#: src/omega_serv/interfaces/cli/main.py:1838
+msgid "Certificats TLS (via OpenSSL)."
+msgstr "Sertifikat TLS (melalui OpenSSL)."
+
+#: src/omega_serv/interfaces/cli/main.py:1844
+msgid "Organisation (défaut : OMEGA-SERV)."
+msgstr "Organisasi (bawaan: OMEGA-SERV)."
+
+#: src/omega_serv/interfaces/cli/main.py:1845
+msgid "Service ou département."
+msgstr "Unit atau departemen."
+
+#: src/omega_serv/interfaces/cli/main.py:1846
+msgid "Ville."
+msgstr "Kota."
+
+#: src/omega_serv/interfaces/cli/main.py:1847
+msgid "Région."
+msgstr "Provinsi atau wilayah."
+
+#: src/omega_serv/interfaces/cli/main.py:1848
+msgid "Pays, code à deux lettres (FR, BE...)."
+msgstr "Negara, kode dua huruf (FR, BE...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1852
+msgid "Noms de domaine supplémentaires couverts par le certificat."
+msgstr "Nama domain tambahan yang dicakup sertifikat."
+
+#: src/omega_serv/interfaces/cli/main.py:1854
+msgid "Adresses IP couvertes par le certificat."
+msgstr "Alamat IP yang dicakup sertifikat."
+
+#: src/omega_serv/interfaces/cli/main.py:1856
+msgid "Nom commun : le nom de domaine principal."
+msgstr "Nama umum: nama domain utama."
+
+#: src/omega_serv/interfaces/cli/main.py:1858
+msgid "Génère un certificat auto-signé aux chemins de la configuration (l'ancien est sauvegardé)."
+msgstr "Membuat sertifikat yang ditandatangani sendiri di jalur konfigurasi (yang lama dicadangkan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1861
+#: src/omega_serv/interfaces/cli/main.py:1872
+#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:1930
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:244
+msgid "JOURS"
+msgstr "HARI"
+
+#: src/omega_serv/interfaces/cli/main.py:1862
+#: src/omega_serv/interfaces/cli/main.py:1897
+msgid "Validité en jours (défaut : 365)."
+msgstr "Masa berlaku dalam hari (bawaan: 365)."
+
+#: src/omega_serv/interfaces/cli/main.py:1864
+#: src/omega_serv/interfaces/cli/main.py:1884
+msgid "Type de clé (défaut : rsa2048)."
+msgstr "Jenis kunci (bawaan: rsa2048)."
+
+#: src/omega_serv/interfaces/cli/main.py:1865
+#: src/omega_serv/interfaces/cli/main.py:1876
+#: src/omega_serv/interfaces/cli/main.py:1894
+#: src/omega_serv/interfaces/cli/main.py:1915
+#: src/omega_serv/interfaces/cli/main.py:1942
+#: src/omega_serv/interfaces/cli/main.py:1951
+msgid "MOT-DE-PASSE"
+msgstr "KATA-SANDI"
+
+#: src/omega_serv/interfaces/cli/main.py:1866
+msgid "Chiffre la clé privée avec ce mot de passe (facultatif)."
+msgstr "Mengenkripsi kunci privat dengan kata sandi ini (opsional)."
+
+#: src/omega_serv/interfaces/cli/main.py:1870
+msgid "Crée une autorité de certification locale dans secure/certificates/ca."
+msgstr "Membuat otoritas sertifikat lokal di secure/certificates/ca."
+
+#: src/omega_serv/interfaces/cli/main.py:1871
+msgid "Nom de l'autorité de certification."
+msgstr "Nama otoritas sertifikat."
+
+#: src/omega_serv/interfaces/cli/main.py:1873
+msgid "Validité en jours (défaut : 3650)."
+msgstr "Masa berlaku dalam hari (bawaan: 3650)."
+
+#: src/omega_serv/interfaces/cli/main.py:1875
+msgid "Type de clé (défaut : rsa4096)."
+msgstr "Jenis kunci (bawaan: rsa4096)."
+
+#: src/omega_serv/interfaces/cli/main.py:1877
+msgid "Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois au clavier (conseillé)."
+msgstr "Kata sandi kunci CA; tanpa opsi ini, kata sandi diminta dua kali lewat papan ketik (disarankan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1881
+msgid "Génère une clé et une demande de signature (CSR) à faire signer par une CA."
+msgstr "Membuat kunci dan permintaan tanda tangan (CSR) untuk ditandatangani oleh CA."
+
+#: src/omega_serv/interfaces/cli/main.py:1885
+msgid "Clé privée à créer."
+msgstr "Kunci privat yang akan dibuat."
+
+#: src/omega_serv/interfaces/cli/main.py:1886
+msgid "Demande de signature à créer."
+msgstr "Permintaan tanda tangan yang akan dibuat."
+
+#: src/omega_serv/interfaces/cli/main.py:1889
+msgid "Mot de passe de la clé de CA (sinon demandé au clavier, conseillé)."
+msgstr "Kata sandi kunci CA (jika tidak, diminta lewat papan ketik, disarankan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1890
+msgid "Signe une demande de signature (CSR) avec une CA."
+msgstr "Menandatangani permintaan tanda tangan (CSR) dengan CA."
+
+#: src/omega_serv/interfaces/cli/main.py:1891
+msgid "Demande de signature à signer."
+msgstr "Permintaan tanda tangan yang akan ditandatangani."
+
+#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1913
+msgid "Clé privée de la CA."
+msgstr "Kunci privat CA."
+
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1914
+msgid "Certificat de la CA."
+msgstr "Sertifikat CA."
+
+#: src/omega_serv/interfaces/cli/main.py:1898
+msgid "Certificat signé à écrire."
+msgstr "Sertifikat bertanda tangan yang akan ditulis."
+
+#: src/omega_serv/interfaces/cli/main.py:1900
+msgid "Écrit aussi la chaîne complète (certificat puis CA)."
+msgstr "Juga menulis rantai lengkap (sertifikat lalu CA)."
+
+#: src/omega_serv/interfaces/cli/main.py:1904
+msgid "Installe un certificat existant aux chemins de la configuration (Let's Encrypt, CA d'entreprise...)."
+msgstr "Memasang sertifikat yang sudah ada di jalur konfigurasi (Let's Encrypt, CA perusahaan...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1905
+msgid "Clé privée."
+msgstr "Kunci privat."
+
+#: src/omega_serv/interfaces/cli/main.py:1906
+msgid "Certificat."
+msgstr "Sertifikat."
+
+#: src/omega_serv/interfaces/cli/main.py:1908
+msgid "Chaîne des certificats intermédiaires (facultatif)."
+msgstr "Rantai sertifikat perantara (opsional)."
+
+#: src/omega_serv/interfaces/cli/main.py:1911
+msgid "Révoque un certificat émis par une CA locale."
+msgstr "Mencabut sertifikat yang diterbitkan CA lokal."
+
+#: src/omega_serv/interfaces/cli/main.py:1912
+msgid "Certificat à révoquer."
+msgstr "Sertifikat yang akan dicabut."
+
+#: src/omega_serv/interfaces/cli/main.py:1919
+msgid "Certificat à lire (défaut : celui de la configuration)."
+msgstr "Sertifikat yang akan dibaca (bawaan: yang ada di konfigurasi)."
+
+#: src/omega_serv/interfaces/cli/main.py:1921
+msgid "Vérifie un certificat : dates, correspondance avec la clé, droits de la clé. Code 1 s'il a expiré."
+msgstr "Memeriksa sertifikat: tanggal, kecocokan dengan kunci, izin kunci. Kode 1 jika sudah kedaluwarsa."
+
+#: src/omega_serv/interfaces/cli/main.py:1924
+msgid "Affiche le détail d'un certificat (même rapport que verify)."
+msgstr "Menampilkan detail sertifikat (laporan yang sama dengan verify)."
+
+#: src/omega_serv/interfaces/cli/main.py:1928
+msgid "Même rapport que verify, avec une alerte si l'expiration approche."
+msgstr "Laporan yang sama dengan verify, dengan peringatan jika kedaluwarsa sudah dekat."
+
+#: src/omega_serv/interfaces/cli/main.py:1931
+msgid "Seuil d'alerte en jours (défaut : 30)."
+msgstr "Ambang peringatan dalam hari (bawaan: 30)."
+
+#: src/omega_serv/interfaces/cli/main.py:1935
+msgid "Authentification HTTP Basic : utilisateurs et zones protégées."
+msgstr "Autentikasi HTTP Basic: pengguna dan zona terlindungi."
+
+#: src/omega_serv/interfaces/cli/main.py:1936
+msgid "Nom d'utilisateur."
+msgstr "Nama pengguna."
+
+#: src/omega_serv/interfaces/cli/main.py:1937
+msgid "Mot de passe (sinon demandé au clavier, conseillé : il resterait dans l'historique)."
+msgstr "Kata sandi (jika tidak, diminta lewat papan ketik, disarankan: kalau tidak akan tertinggal di riwayat)."
+
+#: src/omega_serv/interfaces/cli/main.py:1938
+msgid "Début de chemin protégé, par exemple /admin."
+msgstr "Awal jalur yang dilindungi, misalnya /admin."
+
+#: src/omega_serv/interfaces/cli/main.py:1940
+msgid "Crée un utilisateur."
+msgstr "Membuat pengguna."
+
+#: src/omega_serv/interfaces/cli/main.py:1945
+msgid "Supprime un utilisateur."
+msgstr "Menghapus pengguna."
+
+#: src/omega_serv/interfaces/cli/main.py:1949
+msgid "Change le mot de passe d'un utilisateur."
+msgstr "Mengubah kata sandi pengguna."
+
+#: src/omega_serv/interfaces/cli/main.py:1954
+msgid "Protège un chemin par mot de passe."
+msgstr "Melindungi jalur dengan kata sandi."
+
+#: src/omega_serv/interfaces/cli/main.py:1957
+msgid "Nom affiché par le navigateur dans la demande de connexion."
+msgstr "Nama yang ditampilkan peramban pada permintaan masuk."
+
+#: src/omega_serv/interfaces/cli/main.py:1959
+msgid "Utilisateurs autorisés dans la zone."
+msgstr "Pengguna yang diizinkan di zona."
+
+#: src/omega_serv/interfaces/cli/main.py:1960
+msgid "METHODE"
+msgstr "METODE"
+
+#: src/omega_serv/interfaces/cli/main.py:1961
+msgid "Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles que le serveur autorise)."
+msgstr "Hanya metode HTTP ini yang diterima di zona (bawaan: semua yang diizinkan server)."
+
+#: src/omega_serv/interfaces/cli/main.py:1964
+msgid "Retire la protection d'un chemin."
+msgstr "Menghapus perlindungan sebuah jalur."
+
+#: src/omega_serv/interfaces/cli/main.py:1968
+msgid "Liste les utilisateurs et les zones protégées."
+msgstr "Menampilkan daftar pengguna dan zona terlindungi."
+
+#: src/omega_serv/interfaces/cli/main.py:1970
+msgid "Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que par leur propriétaire."
+msgstr "Memeriksa bahwa berkas pengguna dan zona hanya bisa dibaca pemiliknya."
+
+#: src/omega_serv/interfaces/cli/main.py:1974
+msgid "Service système (systemd, OpenRC ou runit)."
+msgstr "Layanan sistem (systemd, OpenRC atau runit)."
+
+#: src/omega_serv/interfaces/cli/main.py:1975
+msgid "Nom du service (défaut : omega-serv)."
+msgstr "Nama layanan (bawaan: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:1976
+msgid "Fichier d'unité (défaut : /etc/systemd/system/<nom>.service)."
+msgstr "Berkas unit (bawaan: /etc/systemd/system/<nama>.service)."
+
+#: src/omega_serv/interfaces/cli/main.py:1979
+msgid "Affiche l'état du service."
+msgstr "Menampilkan status layanan."
+
+#: src/omega_serv/interfaces/cli/main.py:1980
+msgid "Démarre le service."
+msgstr "Menjalankan layanan."
+
+#: src/omega_serv/interfaces/cli/main.py:1981
+msgid "Arrête le service."
+msgstr "Menghentikan layanan."
+
+#: src/omega_serv/interfaces/cli/main.py:1982
+msgid "Redémarre le service (nécessaire après une mise à jour)."
+msgstr "Menjalankan ulang layanan (wajib setelah pembaruan)."
+
+#: src/omega_serv/interfaces/cli/main.py:1984
+msgid "Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur demandent un redémarrage."
+msgstr "Memuat ulang tanpa memutus: aturan WAF dan zona; bind, port, TLS, dan mesin memerlukan jalan ulang."
+
+#: src/omega_serv/interfaces/cli/main.py:1985
+msgid "Active le démarrage automatique au boot."
+msgstr "Mengaktifkan mulai otomatis saat boot."
+
+#: src/omega_serv/interfaces/cli/main.py:1986
+msgid "Désactive le démarrage automatique au boot."
+msgstr "Menonaktifkan mulai otomatis saat boot."
+
+#: src/omega_serv/interfaces/cli/main.py:1993
+msgid "Crée l'unité systemd du service (systemd seulement ; demande les droits administrateur)."
+msgstr "Membuat unit systemd untuk layanan (hanya systemd; memerlukan hak administrator)."
+
+#: src/omega_serv/interfaces/cli/main.py:1996
+msgid "Description de l'unité (défaut : OMEGA-SERV web server)."
+msgstr "Deskripsi unit (bawaan: OMEGA-SERV web server)."
+
+#: src/omega_serv/interfaces/cli/main.py:1998
+msgid "Python à utiliser (défaut : celui du .venv de l'installation)."
+msgstr "Python yang dipakai (bawaan: yang ada di .venv instalasi)."
+
+#: src/omega_serv/interfaces/cli/main.py:2000
+msgid "Compte système qui fait tourner le service (défaut : omega-serv)."
+msgstr "Akun sistem yang menjalankan layanan (bawaan: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:2002
+msgid "Groupe du service (défaut : omega-serv)."
+msgstr "Grup layanan (bawaan: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:2004
+msgid "Délai laissé à l'arrêt avant de forcer (défaut : 15)."
+msgstr "Waktu tunggu saat berhenti sebelum dipaksa (bawaan: 15)."
+
+#: src/omega_serv/interfaces/cli/main.py:2008
+msgid "Supprime l'unité du service."
+msgstr "Menghapus unit layanan."
+
+#: src/omega_serv/interfaces/cli/main.py:2013
+msgid "Audit de sécurité."
+msgstr "Audit keamanan."
+
+#: src/omega_serv/interfaces/cli/main.py:2015
+msgid "Audite l'installation : configuration, droits, TLS, service. Code 1 si critique, 2 si élevé, 3 si la configuration est illisible."
+msgstr "Mengaudit instalasi: konfigurasi, izin, TLS, layanan. Kode 1 jika kritis, 2 jika tinggi, 3 jika konfigurasi tidak terbaca."
+
+#: src/omega_serv/interfaces/cli/main.py:2018
+msgid "Format du rapport (défaut : text)."
+msgstr "Format laporan (bawaan: text)."
+
+#: src/omega_serv/interfaces/cli/main.py:2020
+msgid "N'affiche que ce niveau et les plus graves (défaut : info)."
+msgstr "Hanya menampilkan level ini dan yang lebih parah (bawaan: info)."
+
+#: src/omega_serv/interfaces/cli/main.py:2030
+msgid "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte)."
+msgstr "Menampilkan pohon semua perintah, atau satu cabang (mis.: omega-serv help riposte)."
+
+#: src/omega_serv/interfaces/cli/main.py:2031
+msgid "Branche à afficher (facultatif)."
+msgstr "Cabang yang ditampilkan (opsional)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:51
 #: src/omega_serv/interfaces/cli/riposte_commands.py:300
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:43
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:46
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:83
 msgid "Configuration illisible : "
 msgstr "Konfigurasi tidak terbaca: "
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:65
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:66
 #: src/omega_serv/interfaces/cli/riposte_commands.py:313
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:139
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:142
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:95
 msgid "RIPOSTE n'a encore jamais été lancé sur cette instance."
 msgstr "RIPOSTE belum pernah dijalankan di instans ini."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:68
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:69
 #: src/omega_serv/interfaces/cli/riposte_commands.py:316
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:141
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:144
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:97
 #, python-brace-format
 msgid "Base RIPOSTE illisible : {error}"
 msgstr "Basis data RIPOSTE tidak terbaca: {error}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:70
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:71
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:99
 msgid "Droits d'écriture sur la base requis (groupe du service omega-serv)."
 msgstr "Diperlukan hak tulis pada basis data (grup layanan omega-serv)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:81
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:82
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:120
 #, python-brace-format
 msgid "Commande non déposée : {error}"
 msgstr "Perintah tidak dikirim: {error}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:89
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:90
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:145
 msgid "RIPOSTE est arrêté : la commande sera exécutée à son prochain démarrage."
 msgstr "RIPOSTE berhenti: perintah akan dijalankan saat ia mulai berikutnya."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:103
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:104
 msgid "Commande déposée, pas encore exécutée : vérifier avec « riposte actions list »."
 msgstr "Perintah dikirim, belum dijalankan: periksa dengan « riposte actions list »."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:108
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:109
 #, python-brace-format
 msgid " palier {n}"
 msgstr " tingkat {n}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:110
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:111
 #, python-brace-format
 msgid "{id}  {ip}  {action}{tier}  [{policy}]  {state} - jusqu'au {end}"
 msgstr "{id}  {ip}  {action}{tier}  [{policy}]  {state} - hingga {end}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:125
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:125
 msgid "Aucune action en cours."
 msgstr "Tidak ada tindakan yang sedang berjalan."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:125
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:125
 msgid "Aucune action terminée."
 msgstr "Tidak ada tindakan yang selesai."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:128
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:129
 #: src/omega_serv/interfaces/cli/riposte_text.py:252
 msgid "Arrêt d'urgence : ACTIF"
 msgstr "Henti darurat: AKTIF"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:144
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:145
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:137
 #, python-brace-format
 msgid "Créée le {when} (événement {event})"
 msgstr "Dibuat pada {when} (peristiwa {event})"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:147
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:148
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:141
 #, python-brace-format
 msgid "Leurre {profile} pour : {subjects}"
 msgstr "Umpan {profile} untuk: {subjects}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:150
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:151
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:144
 #, python-brace-format
 msgid "Terminée le {when} : {by}"
 msgstr "Selesai pada {when}: {by}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:155
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:156
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:149
 msgid "Ne compte pas dans la récidive."
 msgstr "Tidak dihitung sebagai residivis."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:187
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:89
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:188
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:92
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:243
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:285
 #, python-brace-format
 msgid "Politique inconnue : {id}"
 msgstr "Kebijakan tidak dikenal: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:190
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:191
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:288
 msgid "Configuration RIPOSTE invalide : "
 msgstr "Konfigurasi RIPOSTE tidak valid: "
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:192
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:193
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:290
 #, python-brace-format
 msgid "Politique {id} activée."
 msgstr "Kebijakan {id} diaktifkan."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:192
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:193
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:245
 #, python-brace-format
 msgid "Politique {id} désactivée."
 msgstr "Kebijakan {id} dinonaktifkan."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:202
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:203
 msgid "Les actions déjà en cours de cette politique vont jusqu'à leur échéance (« --revoke » pour les lever)."
 msgstr "Tindakan kebijakan ini yang sudah berjalan berlangsung sampai tenggatnya (« --revoke » untuk mencabutnya)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:233
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:234
 msgid "Aucune exemption ajoutée (les exclusions de la configuration s'appliquent toujours)."
 msgstr "Tidak ada pengecualian yang ditambahkan (pengecualian dari konfigurasi selalu berlaku)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:235
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:236
 #, python-brace-format
 msgid "{network}  jusqu'au {until}  (action {action})"
 msgstr "{network}  hingga {until}  (tindakan {action})"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:237
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:238
 #: src/omega_serv/interfaces/tui/screens/riposte_settings_screen.py:136
 msgid "retrait manuel"
 msgstr "dicabut manual"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:260
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:261
 msgid "Arrêt d'urgence ACTIF : aucune nouvelle action, même après un redémarrage, jusqu'à « riposte resume »."
 msgstr "Henti darurat AKTIF: tidak ada tindakan baru, bahkan setelah mulai ulang, sampai « riposte resume »."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:263
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:264
 msgid "Les actions en cours vont jusqu'à leur échéance (« --revoke » pour les lever)."
 msgstr "Tindakan yang sedang berjalan berlangsung sampai tenggatnya (« --revoke » untuk mencabutnya)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:275
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:276
 #: src/omega_serv/interfaces/tui/screens/riposte_status_screen.py:197
 msgid "Arrêt d'urgence levé : RIPOSTE reprend ses décisions."
 msgstr "Henti darurat dicabut: RIPOSTE kembali mengambil keputusan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:282
+msgid "Identifiant de l'action (voir riposte actions list)."
+msgstr "Pengenal tindakan (lihat riposte actions list)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:283
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:224
+msgid "Identifiant de la politique (voir riposte policies list)."
+msgstr "Pengenal kebijakan (lihat riposte policies list)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:284
+msgid "Bans et leurres posés par RIPOSTE."
+msgstr "Blokir dan umpan yang dipasang RIPOSTE."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:285
+msgid "Une commande est exécutée par le processus RIPOSTE en moins d'une seconde, ou à son prochain démarrage s'il est arrêté."
+msgstr "Perintah dijalankan oleh proses RIPOSTE dalam waktu kurang dari satu detik, atau saat ia dijalankan berikutnya jika sedang berhenti."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:287
+msgid "Liste les actions en cours."
+msgstr "Menampilkan daftar tindakan yang sedang berlaku."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:288
+msgid "Liste les actions terminées à la place."
+msgstr "Menampilkan daftar tindakan yang sudah selesai sebagai gantinya."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:289
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:259
+msgid "Seulement cette adresse."
+msgstr "Hanya alamat ini."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:290
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:214
+msgid "Nombre maximal de lignes (défaut : 50)."
+msgstr "Jumlah baris maksimum (bawaan: 50)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:292
+msgid "Affiche le détail d'une action."
+msgstr "Menampilkan detail sebuah tindakan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:295
+msgid "Lève une action."
+msgstr "Mencabut sebuah tindakan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:298
+msgid "Exempte aussi l'adresse : 24 h, 7 jours ou jusqu'à levée manuelle (forever)."
+msgstr "Juga mengecualikan alamat: 24 jam, 7 hari, atau sampai dicabut manual (forever)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:300
+msgid "Ne compte pas cette action dans la récidive."
+msgstr "Tidak menghitung tindakan ini sebagai pelanggaran berulang."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:303
+msgid "Ne compte pas une action dans la récidive, sans la lever."
+msgstr "Tidak menghitung sebuah tindakan sebagai pelanggaran berulang, tanpa mencabutnya."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:307
+msgid "Active une politique."
+msgstr "Mengaktifkan kebijakan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:310
+msgid "Désactive une politique."
+msgstr "Menonaktifkan kebijakan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:312
+msgid "Lève aussi ses actions en cours."
+msgstr "Juga mencabut tindakannya yang sedang berlaku."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:315
+msgid "Efface la mémoire d'une source : ses récidives repartent de zéro."
+msgstr "Menghapus ingatan tentang sebuah sumber: pelanggaran berulangnya dihitung lagi dari nol."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:316
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:229
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:253
+msgid "Adresse de la source."
+msgstr "Alamat sumber."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:319
+msgid "Adresses exemptées de RIPOSTE."
+msgstr "Alamat yang dikecualikan dari RIPOSTE."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:320
+msgid "Liste les exemptions."
+msgstr "Menampilkan daftar pengecualian."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:321
+msgid "Retire une exemption."
+msgstr "Menghapus pengecualian."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
+msgid "Adresse ou réseau exempté."
+msgstr "Alamat atau jaringan yang dikecualikan."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:326
+msgid "Arrêt d'urgence : RIPOSTE ne décide plus rien, même après un redémarrage, jusqu'à riposte resume."
+msgstr "Henti darurat: RIPOSTE tidak memutuskan apa pun lagi, bahkan setelah jalan ulang, sampai riposte resume."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:327
+msgid "Lève aussi toutes les actions en cours."
+msgstr "Juga mencabut semua tindakan yang sedang berlaku."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:329
+msgid "Lève l'arrêt d'urgence."
+msgstr "Mencabut henti darurat."
 
 #: src/omega_serv/interfaces/cli/riposte_commands.py:304
 msgid "RIPOSTE est désactivé (options.riposte)."
@@ -4212,94 +5216,178 @@ msgstr "RIPOSTE nonaktif (options.riposte)."
 msgid "Activer le WAF pour les actions de ban : sans WAF, RIPOSTE ne voit aucune attaque."
 msgstr "Aktifkan WAF untuk tindakan blokir: tanpa WAF, RIPOSTE tidak melihat serangan apa pun."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:58
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:61
 #, python-brace-format
 msgid "Scénario inconnu : {id}"
 msgstr "Skenario tidak dikenal: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:61
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:64
 #, python-brace-format
 msgid "Pour qui : {text}"
 msgstr "Untuk siapa: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:62
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:65
 #, python-brace-format
 msgid "Ce qu'il fait : {text}"
 msgstr "Yang dilakukan: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:63
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:66
 #, python-brace-format
 msgid "Ce qu'il ne fait pas : {text}"
 msgstr "Yang tidak dilakukan: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:75
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:78
 msgid "Aucune politique. Voir « riposte scenarios list » pour partir d'un scénario prêt."
 msgstr "Tidak ada kebijakan. Lihat « riposte scenarios list » untuk memulai dari skenario siap pakai."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:106
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:109
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:127
 msgid "Simulation (rien n'est appliqué) :"
 msgstr "Simulasi (tidak ada yang diterapkan):"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:127
 #, python-brace-format
 msgid "Politique ou scénario inconnu : {id}"
 msgstr "Kebijakan atau skenario tidak dikenal: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:154
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:157
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:91
 msgid "Aucune source suivie pour l'instant."
 msgstr "Belum ada sumber yang dipantau."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:156
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:159
 #, python-brace-format
 msgid "{ip}  {episodes} épisode(s), {actions} action(s), dernière activité {when}"
 msgstr "{ip}  {episodes} episode, {actions} tindakan, aktivitas terakhir {when}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:171
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:174
 #: src/omega_serv/interfaces/cli/riposte_text.py:232
 #, python-brace-format
 msgid "Source inconnue de RIPOSTE : {ip}"
 msgstr "Sumber tidak dikenal oleh RIPOSTE: {ip}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:173
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:176
 #, python-brace-format
 msgid "Source {ip}"
 msgstr "Sumber {ip}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:175
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:178
 #, python-brace-format
 msgid "Épisode du {start} au {end} : {attacks} attaque(s) [{classes}], leurres {decoys}, refus blocklist {blocked}{level}{acted}"
 msgstr "Episode dari {start} hingga {end}: {attacks} serangan [{classes}], umpan {decoys}, penolakan blocklist {blocked}{level}{acted}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:180
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:183
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:121
 #, python-brace-format
 msgid ", niveau {level}"
 msgstr ", tingkat {level}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:181
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:184
 msgid ", action décidée"
 msgstr ", tindakan diputuskan"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:183
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:186
 #, python-brace-format
 msgid "Action {policy} palier {tier} du {start} au {end}"
 msgstr "Tindakan {policy} tingkat {tier} dari {start} hingga {end}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:198
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:201
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:95
 msgid "Aucune décision enregistrée."
 msgstr "Tidak ada keputusan yang tercatat."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:200
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:203
 #, python-brace-format
 msgid "{when}  {ip}  {status}{policy}{applied}"
 msgstr "{when}  {ip}  {status}{policy}{applied}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:203
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:206
 msgid "  (non appliquée)"
 msgstr "  (tidak diterapkan)"
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:215
+msgid "Scénarios prêts à l'emploi."
+msgstr "Skenario siap pakai."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:216
+msgid "Liste les scénarios."
+msgstr "Menampilkan daftar skenario."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:217
+msgid "Affiche un scénario et la politique qu'il propose."
+msgstr "Menampilkan skenario dan kebijakan yang diusulkannya."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:218
+msgid "Identifiant du scénario (voir riposte scenarios list)."
+msgstr "Pengenal skenario (lihat riposte scenarios list)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:221
+msgid "Politiques de la configuration."
+msgstr "Kebijakan dalam konfigurasi."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:222
+msgid "Liste les politiques et leur état."
+msgstr "Menampilkan daftar kebijakan dan statusnya."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:223
+msgid "Affiche une politique."
+msgstr "Menampilkan sebuah kebijakan."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:228
+msgid "Explique la décision de RIPOSTE pour une situation donnée, avec la configuration réelle ; rien n'est appliqué."
+msgstr "Menjelaskan keputusan RIPOSTE untuk situasi tertentu, dengan konfigurasi sebenarnya; tidak ada yang diterapkan."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:231
+msgid "Classe d'attaque (défaut : scan)."
+msgstr "Kelas serangan (bawaan: scan)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:233
+msgid "Niveau de menace Active Defense de la source."
+msgstr "Level ancaman Active Defense dari sumber."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:235
+msgid "Nombre de retours de la source (défaut : 1)."
+msgstr "Jumlah kembalinya sumber (bawaan: 1)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:237
+msgid "Nombre de leurres touchés (défaut : 0)."
+msgstr "Jumlah umpan yang tersentuh (bawaan: 0)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:241
+msgid "Mesure sur les journaux ce qu'une politique aurait décidé, sans rien appliquer."
+msgstr "Mengukur pada log apa yang akan diputuskan sebuah kebijakan, tanpa menerapkan apa pun."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:243
+msgid "Politique de la configuration, ou scenario:<id> pour mesurer un scénario avant de l'ajouter."
+msgstr "Kebijakan dalam konfigurasi, atau scenario:<id> untuk mengukur skenario sebelum menambahkannya."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:245
+msgid "Période mesurée en jours (défaut : 7 ; 0 = tout le journal)."
+msgstr "Periode yang diukur dalam hari (bawaan: 7; 0 = seluruh log)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:248
+msgid "Adresses mémorisées par RIPOSTE."
+msgstr "Alamat yang diingat RIPOSTE."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:249
+msgid "Liste les sources mémorisées."
+msgstr "Menampilkan daftar sumber yang diingat."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:252
+msgid "Affiche l'historique d'une source."
+msgstr "Menampilkan riwayat sebuah sumber."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:256
+msgid "Décisions prises par RIPOSTE."
+msgstr "Keputusan yang diambil RIPOSTE."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:257
+msgid "Liste les dernières décisions."
+msgstr "Menampilkan daftar keputusan terbaru."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:260
+msgid "Détaille le raisonnement de chaque décision."
+msgstr "Merinci penalaran setiap keputusan."
 
 #: src/omega_serv/interfaces/cli/riposte_text.py:19
 #, python-brace-format
@@ -4772,7 +5860,7 @@ msgstr "Tema berikutnya"
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:68
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:229
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:77
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/riposte_status_screen.py:63
@@ -5054,7 +6142,7 @@ msgstr "Membuka menu pengelolaan log."
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:75
 #: src/omega_serv/interfaces/tui/screens/home.py:82
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
 msgid "Service"
 msgstr "Layanan"
@@ -7621,8 +8709,8 @@ msgid "Affiche les 200 dernières lignes d'un log choisi dans la Bibliothèque e
 msgstr "Menampilkan 200 baris terakhir log yang dipilih dari Pustaka dan dapat mengikuti perkembangannya secara langsung."
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:217
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:51
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:110
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:111
 msgid "Suivre en direct"
 msgstr "Ikuti langsung"
 
@@ -8639,7 +9727,7 @@ msgid "Chaîne libre, ex: /new/."
 msgstr "Teks bebas, mis.: /new/."
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:72
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:63
 msgid "Code"
 msgstr "Kode"
@@ -11075,7 +12163,7 @@ msgstr "Membaca ulang status, baris log baru, dan sumber daya sistem."
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:164
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:182
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:79
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:231
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:237
 msgid "Simuler une requête"
 msgstr "Simulasikan permintaan"
 
@@ -12392,7 +13480,7 @@ msgstr "8/8 - Layanan"
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:59
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:60
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:61
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:575
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:581
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:47
 #: src/omega_serv/interfaces/tui/screens/upstream_editor_screen.py:72
 msgid "TLS"
@@ -12498,10 +13586,10 @@ msgstr "options.active_defense tidak ada atau dinonaktifkan di konfigurasi."
 #: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:66
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:88
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:83
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:45
 #: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:53
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
@@ -12510,7 +13598,7 @@ msgstr "options.active_defense tidak ada atau dinonaktifkan di konfigurasi."
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:90
 #: src/omega_serv/interfaces/tui/screens/renewal_schedule_screen.py:53
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:241
 #: src/omega_serv/interfaces/tui/screens/restore_log_archive_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_cache_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_screen.py:166
@@ -12757,7 +13845,7 @@ msgstr "Aturan kontrol akses diperbarui."
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:52
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:543
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:549
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:99
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
@@ -13000,7 +14088,7 @@ msgid "Fichier de journal enrichi (log_path)"
 msgstr "Berkas log terperinci (log_path)"
 
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:185
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:541
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:547
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
 msgid "Actif"
 msgstr "Aktif"
@@ -13565,11 +14653,6 @@ msgid "Date"
 msgstr "Tanggal"
 
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
-#: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
-msgid "ID"
-msgstr "ID"
-
-#: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:60
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/restore_log_archive_screen.py:44
@@ -13605,7 +14688,7 @@ msgstr "Hapus {selected_snapshot_id} secara permanen?"
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:173
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:155
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:66
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:567
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:573
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:105
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:156
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:55
@@ -14254,13 +15337,13 @@ msgid "Expire le"
 msgstr "Kedaluwarsa pada"
 
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:573
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:579
 msgid "Profil"
 msgstr "Profil"
 
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:81
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:80
@@ -14523,7 +15606,7 @@ msgstr "Kustom"
 #: src/omega_serv/interfaces/tui/screens/error_pages_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:81
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:514
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:520
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_upstream_status_screen.py:74
 #: src/omega_serv/interfaces/tui/widgets/capabilities_table.py:39
 msgid "Statut"
@@ -14972,7 +16055,7 @@ msgid "unité introuvable"
 msgstr "unit tidak ditemukan"
 
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:98
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:627
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:633
 #, python-brace-format
 msgid "{name} (courante)"
 msgstr "{name} (saat ini)"
@@ -15426,55 +16509,55 @@ msgstr "Otomatisasi tidak ditemukan."
 msgid "Automatisation supprimée."
 msgstr "Otomatisasi dihapus."
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:73
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:75
 #, python-brace-format
 msgid "VOIR LES LOGS - SIMPLE - {path}"
 msgstr "LIHAT LOG - SEDERHANA - {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 msgid "Heure"
 msgstr "Jam"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "IP"
 msgstr "IP"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:173
 msgid "Message"
 msgstr "Pesan"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Niveau"
 msgstr "Level"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 msgid "Timeout"
 msgstr "Timeout"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:133
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:135
 #, python-brace-format
 msgid "Suivi interrompu : {exc}"
 msgstr "Pengikutan terputus: {exc}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:164
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:166
 msgid "── RENDEMENT ──────────────\n"
 msgstr "── KINERJA ────────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:165
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:167
 #, python-brace-format
 msgid "{rps:.1f} req/s"
 msgstr "{rps:.1f} req/s"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:166
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:168
 #, python-brace-format
 msgid " ⚡ Débit        : {value}\n"
 msgstr " ⚡ Laju         : {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:168
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:172
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:170
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:174
 #, python-brace-format
 msgid ""
 " ⏱ Latence moy. : {value}\n"
@@ -15483,21 +16566,21 @@ msgstr ""
 " ⏱ Rata latensi : {value}\n"
 "\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:176
 msgid "── BANDE PASSANTE ─────────\n"
 msgstr "── BANDWIDTH ──────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:178
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:180
 #, python-brace-format
 msgid " 🌐 Débit réseau : {value}\n"
 msgstr " 🌐 Laju jaringan: {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:179
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:181
 #, python-brace-format
 msgid " 📦 Volume total : {value}\n"
 msgstr " 📦 Volume total : {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:180
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:182
 #, python-brace-format
 msgid ""
 " 🗜 Taille moy.  : {value}\n"
@@ -15506,102 +16589,104 @@ msgstr ""
 " 🗜 Rata ukuran  : {value}\n"
 "\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:182
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:184
 msgid "── STATUTS HTTP ───────────\n"
 msgstr "── STATUS HTTP ────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:183
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:185
 #, python-brace-format
 msgid " 📊 Requêtes     : {count}\n"
 msgstr " 📊 Permintaan   : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:184
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:186
 #, python-brace-format
 msgid " √  Succès 2xx   : {count}\n"
 msgstr " √  Sukses 2xx   : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:185
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:187
 #, python-brace-format
 msgid " ↔  Redir. 3xx   : {count}\n"
 msgstr " ↔  Alih 3xx     : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:186
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:188
 #, python-brace-format
 msgid " ⚠  Erreurs 4xx  : {count}\n"
 msgstr " ⚠  Galat 4xx    : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:187
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:189
 #, python-brace-format
 msgid " ❌ Erreurs 5xx  : {count}\n"
 msgstr " ❌ Galat 5xx    : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:188
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:190
 #, python-brace-format
 msgid " ⛔ Refus 403    : {count}\n"
 msgstr " ⛔ Tolak 403    : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:189
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:191
 #, python-brace-format
 msgid ""
 " ⏳ Refus 429    : {count}\n"
 "\n"
-msgstr " ⏳ Tolak 429    : {count}\n\n"
+msgstr ""
+" ⏳ Tolak 429    : {count}\n"
+"\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:191
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:193
 msgid "── CLIENTS & RÉSEAU ───────\n"
 msgstr "── KLIEN & JARINGAN ───────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:192
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:194
 #, python-brace-format
 msgid " 💻 IPs uniques  : {count}\n"
 msgstr " 💻 IP unik      : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:194
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:196
 msgid " 🖧 Top 5 IP     :\n"
 msgstr " 🖧 5 IP teratas :\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:197
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:199
 msgid "── CHEMINS DEMANDÉS ───────\n"
 msgstr "── JALUR DIMINTA ──────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:199
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:201
 msgid "── CHEMINS EN 404 ─────────\n"
 msgstr "── JALUR 404 ──────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:202
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:204
 msgid "── SANTÉ & TAMPON ─────────\n"
 msgstr "── KESEHATAN & BUFFER ─────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 msgid "CORRECT"
 msgstr "CUKUP"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 #: src/omega_serv/interfaces/tui/widgets/capabilities_table.py:22
 msgid "DÉGRADÉ"
 msgstr "TERDEGRADASI"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 msgid "EXCELLENT"
 msgstr "SANGAT BAIK"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:206
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:208
 #, python-brace-format
 msgid " 🌡 Santé        : {health}\n"
 msgstr " 🌡 Kesehatan    : {health}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:209
 #, python-brace-format
 msgid " ⚠  Taux d'erreur: {rate:.1f}%\n"
 msgstr " ⚠  Rasio galat  : {rate:.1f}%\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:208
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:210
 #, python-brace-format
 msgid " 📥 Tampon       : {count}/{size}"
 msgstr " 📥 Buffer       : {count}/{size}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:215
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:701
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:217
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:707
 #: src/omega_serv/interfaces/tui/screens/routing_rule_editor_screen.py:43
 #: src/omega_serv/interfaces/tui/screens/wizard_summary_screen.py:51
 msgid "(aucun)"
@@ -15693,30 +16778,30 @@ msgstr "Lihat (lnav)"
 msgid "Saisissez au moins un numéro de ligne."
 msgstr "Masukkan minimal satu nomor baris."
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:46
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:47
 #, python-brace-format
 msgid "VOIR / SUIVRE - {path}"
 msgstr "LIHAT / IKUTI - {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:75
 #, python-brace-format
 msgid "Fichier introuvable : {path}"
 msgstr "Berkas tidak ditemukan: {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:82
 #, python-brace-format
 msgid "Impossible de lire {path} : {exc}"
 msgstr "Tidak dapat membaca {path}: {exc}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:93
 msgid "Aucun fichier valide à suivre."
 msgstr "Tidak ada berkas valid untuk diikuti."
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:102
 msgid "Arrêter le suivi"
 msgstr "Hentikan pengikutan"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:122
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:123
 #, python-brace-format
 msgid "(suivi interrompu : {exc})"
 msgstr "(pengikutan terputus: {exc})"
@@ -15766,17 +16851,17 @@ msgstr "Opsi"
 msgid "Configuration introuvable ou invalide."
 msgstr "Konfigurasi tidak ditemukan atau tidak valid."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:110
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:113
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (un simple rechargement ne suffit pas pour une PREMIÈRE activation)."
 msgstr "{message} Memerlukan MULAI ULANG PENUH agar berlaku (muat ulang biasa tidak cukup untuk aktivasi PERTAMA)."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:118
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (Active Defense n'est JAMAIS rechargé à chaud, même pour la désactiver)."
 msgstr "{message} Memerlukan MULAI ULANG PENUH agar berlaku (Active Defense TIDAK PERNAH dimuat ulang saat berjalan, bahkan untuk menonaktifkannya)."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:123
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (le processus RIPOSTE est lancé ou arrêté au démarrage du serveur)."
 msgstr "{message} Memerlukan MULAI ULANG PENUH agar berlaku (proses RIPOSTE dijalankan atau dihentikan saat server mulai)."
@@ -16188,427 +17273,427 @@ msgstr "Pemeriksaan tidak tersedia di lingkungan ini."
 msgid "Configuration indisponible dans cet environnement."
 msgstr "Konfigurasi tidak tersedia di lingkungan ini."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:144
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:150
 #, python-brace-format
 msgid "{days} j {hours} h {minutes} min"
 msgstr "{days} h {hours} j {minutes} mnt"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:216
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:222
 msgid "ÉTAT & RESSOURCES"
 msgstr "STATUS & SUMBER DAYA"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:239
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:245
 msgid "Chargement..."
 msgstr "Memuat..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:240
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:246
 msgid "ÉTAT DU SERVEUR"
 msgstr "STATUS SERVER"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:242
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:248
 msgid "FLUX (LOG D'ACCÈS)"
 msgstr "ALIRAN (LOG AKSES)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:243
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:249
 msgid "RESSOURCES SYSTÈME"
 msgstr "SUMBER DAYA SISTEM"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:341
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:347
 #, python-brace-format
 msgid "({count} cœurs)"
 msgstr "({count} inti)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:391
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:439
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:397
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:445
 #, python-brace-format
 msgid "ERREUR INATTENDUE : {error}"
 msgstr "KESALAHAN TAK TERDUGA: {error}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:460
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:466
 #, python-brace-format
 msgid "{count} paq/s max"
 msgstr "maks {count} pkt/dtk"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:485
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:491
 msgid "mesure en cours..."
 msgstr "sedang mengukur..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:513
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:519
 msgid "PROCESSUS"
 msgstr "PROSES"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:519
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:525
 #, python-brace-format
 msgid "DÉMARRÉ (PID {pid})"
 msgstr "BERJALAN (PID {pid})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:521
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:527
 #, python-brace-format
 msgid "ARRÊTÉ (PID {pid} obsolète)"
 msgstr "BERHENTI (PID {pid} usang)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:524
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:530
 msgid "à confirmer (rien d'alarmant, normal juste après l'installation) - reconnectez votre session UNE SEULE FOIS pour que cet écran l'affiche ; vérifiez via SERVICE en attendant"
 msgstr "perlu dikonfirmasi (tidak mengkhawatirkan, normal setelah pemasangan) - masuk ulang ke sesi Anda SATU KALI agar layar ini menampilkannya; sementara itu periksa melalui SERVICE"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:529
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:535
 msgid "ARRÊTÉ (aucun fichier PID)"
 msgstr "BERHENTI (tidak ada berkas PID)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:532
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:538
 msgid "SERVICE SYSTÈME"
 msgstr "LAYANAN SISTEM"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:534
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:540
 msgid "Aucun gestionnaire de service reconnu"
 msgstr "Tidak ada pengelola layanan yang dikenali"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:542
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:548
 msgid "Démarrage auto"
 msgstr "Start otomatis"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:550
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:556
 msgid "ERREUR STATUT"
 msgstr "KESALAHAN STATUS"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:554
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:560
 msgid "SAUVEGARDE"
 msgstr "CADANGAN"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:558
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:564
 msgid "Dernière"
 msgstr "Terakhir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:559
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:616
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:565
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:622
 msgid "Nombre"
 msgstr "Jumlah"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:562
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:568
 msgid "Aucune sauvegarde"
 msgstr "Tidak ada cadangan"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:564
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:570
 msgid "CONFIGURATION ACTIVE"
 msgstr "KONFIGURASI AKTIF"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:571
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:577
 #, python-brace-format
 msgid "activé ({mode})"
 msgstr "aktif ({mode})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:571
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:577
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "désactivé"
 msgstr "nonaktif"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:574
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:580
 msgid "Écoute"
 msgstr "Dengar"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:579
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:585
 msgid "MOTEUR HTTP"
 msgstr "MESIN HTTP"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:587
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:593
 msgid "CONNECTEURS (NATIF)"
 msgstr "KONEKTOR (NATIVE)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:594
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:600
 msgid "CONFIGURATION OPTIONS"
 msgstr "KONFIGURASI OPSI"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:595
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:601
 #, python-brace-format
 msgid "Options actives ({enabled}/{known}) :"
 msgstr "Opsi aktif ({enabled}/{known}):"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:601
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:690
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:607
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:696
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:783
 msgid "(aucune)"
 msgstr "(tidak ada)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:607
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:613
 msgid "INSTANCE"
 msgstr "INSTANS"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:617
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:623
 msgid "Cette instance"
 msgstr "Instans ini"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:629
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:635
 #, python-brace-format
 msgid "PID {pid}"
 msgstr "PID {pid}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:631
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:637
 msgid "PID illisible"
 msgstr "PID tidak terbaca"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:633
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:639
 msgid "arrêtée"
 msgstr "berhenti"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:636
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:642
 #, python-brace-format
 msgid "+ {count} autre(s)"
 msgstr "+ {count} lainnya"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:641
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
 #, python-brace-format
 msgid "Depuis {time} (15 min relues à l'ouverture)"
 msgstr "Sejak {time} (15 menit dibaca ulang saat dibuka)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:643
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:649
 msgid "RENDEMENT"
 msgstr "KINERJA"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:645
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
 msgid "Dernière minute"
 msgstr "Menit terakhir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:645
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:646
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:652
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:653
 #, python-brace-format
 msgid "{rate:.2f} req/s"
 msgstr "{rate:.2f} req/s"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:646
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:652
 msgid "5 dernières min"
 msgstr "5 menit terakhir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:653
 msgid "Moyenne"
 msgstr "Rata-rata"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:648
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
 msgid "Volume"
 msgstr "Volume"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:648
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
 #, python-brace-format
 msgid "{size}/s"
 msgstr "{size}/s"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:657
 msgid "STATUTS HTTP"
 msgstr "STATUS HTTP"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:660
 msgid "Total"
 msgstr "Total"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:655
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:661
 msgid "Succès 2xx"
 msgstr "Sukses 2xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:656
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:662
 msgid "Redirections 3xx"
 msgstr "Pengalihan 3xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:657
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:663
 msgid "Erreurs 4xx"
 msgstr "Kesalahan 4xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:658
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:664
 msgid "Erreurs 5xx"
 msgstr "Kesalahan 5xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:659
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:665
 msgid "Taux d'erreur"
 msgstr "Rasio galat"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:660
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
 msgid "Taille moy."
 msgstr "Ukuran rata2"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:663
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:669
 msgid "SÉCURITÉ"
 msgstr "KEAMANAN"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:668
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:674
 msgid "Attaques bloquées"
 msgstr "Serangan diblokir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:670
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
 msgid "Refus liste blocage"
 msgstr "Penolakan daftar blokir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:671
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:677
 msgid "Limite de débit"
 msgstr "Batas laju"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:678
 msgid "Refus 403"
 msgstr "Penolakan 403"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:673
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:679
 msgid "Refus 429"
 msgstr "Penolakan 429"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:682
 msgid "IP bannies"
 msgstr "IP diblokir"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:682
 #, python-brace-format
 msgid "{count} (dont RIPOSTE : {riposte})"
 msgstr "{count} (di antaranya RIPOSTE: {riposte})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:679
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:685
 msgid "CLIENTS"
 msgstr "KLIEN"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:680
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:686
 msgid "IPs uniques"
 msgstr "IP unik"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:683
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:689
 msgid "CHEMINS LES PLUS DEMANDÉS"
 msgstr "JALUR PALING SERING DIMINTA"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:685
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:691
 msgid "CHEMINS EN 404"
 msgstr "JALUR DENGAN 404"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:688
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:694
 msgid "DERNIÈRES REQUÊTES"
 msgstr "PERMINTAAN TERAKHIR"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:709
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:715
 msgid "OMEGA-SERV"
 msgstr "OMEGA-SERV"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:712
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
 #, python-brace-format
 msgid "{count} (PID {pid})"
 msgstr "{count} (PID {pid})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:714
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:744
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:720
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:750
 msgid "CPU"
 msgstr "CPU"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:715
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:748
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:754
 msgid "RAM"
 msgstr "RAM"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:716
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:722
 msgid "Fils"
 msgstr "Thread"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:717
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
 msgid "Fichiers ouverts"
 msgstr "Berkas terbuka"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:724
 msgid "N/D (compte du service)"
 msgstr "T/A (akun layanan)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:719
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:725
 msgid "Lancé depuis"
 msgstr "Berjalan sejak"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
 msgid "Connexions"
 msgstr "Koneksi"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:770
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:776
 msgid "N/D"
 msgstr "T/A"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:725
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:731
 msgid "Envoyé"
 msgstr "Terkirim"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:726
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:732
 msgid "calcul en cours..."
 msgstr "menghitung..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:728
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:734
 msgid "(réponses depuis le démarrage)"
 msgstr "(respons sejak mulai)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:735
 msgid "Journaux"
 msgstr "Log"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:731
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:737
 msgid "Plus gros"
 msgstr "Terbesar"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:735
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:741
 msgid "Libre (var/)"
 msgstr "Kosong (var/)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:743
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:749
 msgid "MACHINE"
 msgstr "MESIN"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:747
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:753
 #, python-brace-format
 msgid "Temp. : {values}"
 msgstr "Suhu: {values}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:750
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:756
 msgid "Disque"
 msgstr "Disk"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:757
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:763
 msgid "Swap"
 msgstr "Swap"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:758
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:764
 #: src/omega_serv/interfaces/tui/screens/upstream_editor_screen.py:72
 msgid "Charge"
 msgstr "Beban"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:760
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:766
 msgid "Uptime"
 msgstr "Uptime"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:763
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:769
 msgid "RÉSEAU"
 msgstr "JARINGAN"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:766
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:772
 msgid "Débit"
 msgstr "Laju"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:768
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:774
 msgid "TCP établies"
 msgstr "TCP terhubung"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:769
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:775
 msgid "IP sortante"
 msgstr "IP keluar"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:770
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:776
 msgid "Passerelle"
 msgstr "Gateway"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:771
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
 msgid "Utilisateurs"
 msgstr "Pengguna"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:771
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:185
 msgid "aucun"
 msgstr "tidak ada"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:774
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:780
 msgid "INTERFACES"
 msgstr "ANTARMUKA"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:782
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:788
 msgid "déconnectée"
 msgstr "terputus"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:784
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:790
 msgid "sans IP"
 msgstr "tanpa IP"
 

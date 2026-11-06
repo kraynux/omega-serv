@@ -188,7 +188,7 @@ class RipostePolicyFormScreen(RiposteAccessMixin, OmegaScreen):
             return _("Durée invalide : un nombre suivi de s, m, h ou d (ex. 6h, 30d).")
         action = str(self.query_one("#policy-action", Select).value)
         profile_value = self.query_one("#policy-decoy-profile", Select).value
-        profile = str(profile_value) if action == "decoy" and profile_value not in (Select.BLANK, None, "") else None
+        profile = str(profile_value) if action == "decoy" and profile_value not in (Select.NULL, None, "") else None
         level = str(self.query_one("#policy-level", Select).value) or None
         return replace(
             self._policy,

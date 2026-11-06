@@ -1,0 +1,1258 @@
+.\" -*- coding: UTF-8 -*-
+.\" Genere par tools/cli_reference.py depuis le code : ne pas modifier a la main.
+.nr HY 0
+.ds AD l
+.TH OMEGA\-SERV 1 "" "omega\-serv 2.5.0" "Commandes utilisateur"
+.nh
+.ad l
+.SH NOM
+omega\-serv \- serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense)
+.SH SYNOPSIS
+.B omega\-serv
+.br
+.B omega\-serv
+[\fB\-\-config\fR \fIFICHIER\fR] \fICOMMANDE\fR [\fISOUS\-COMMANDE\fR] [\fIOPTIONS\fR]
+.br
+.B omega\-serv help
+[\fICOMMANDE\fR ...]
+.SH DESCRIPTION
+omega\-serv a deux visages :
+.PP
+.IP \(bu 2
+sans argument, il ouvre l'interface interactive (TUI), qui couvre tout ce qui suit et davantage ;
+.IP \(bu 2
+avec une commande, il travaille en ligne de commande, sans question, pour les scripts, les
+tâches planifiées et le service système.
+.PP
+Toute action de l'interface reste ainsi scriptable. Les commandes sont rangées en groupes
+(config, waf, riposte...) ; chaque groupe a ses sous\-commandes.
+.PP
+Lancement : \fBomega\-serv.sh\fR dans le dossier d'installation, ou l'alias \fBserv\fR ajouté par \fBinstall.sh\fR.
+.SH OPTION GÉNÉRALE
+.TP
+\fB\-\-config\fR \fIFICHIER\fR
+Fichier de configuration (défaut : config/omega\-serve.json de l'installation).
+.SH STRUCTURE
+.nf
+serve                   Démarre le serveur au premier plan (c'est ce que
+                        lance le service système). Refuse de tourner en
+                        root.
+config                  Fichier de configuration : création,
+                        vérification, TLS, sauvegardes.
+  init                  Crée le fichier de configuration par défaut.
+  check                 Vérifie la configuration et l'environnement
+                        (chemins, droits, certificats) sans démarrer.
+  show                  Affiche la configuration chargée, en JSON.
+  enable\-tls            Active TLS dans la configuration.
+  disable\-tls           Désactive TLS dans la configuration.
+  backup                Crée une sauvegarde : la configuration toujours,
+                        le reste selon les options \-\-include\-*.
+  restore               Restaure une sauvegarde.
+  list\-backups          Liste les sauvegardes.
+profile                 Profils de configuration prêts à l'emploi.
+  list                  Liste les profils disponibles.
+  show                  Affiche un profil et les valeurs qu'il fixe.
+  apply                 Applique un profil à la configuration
+                        (modifications et conflits affichés d'abord).
+option                  Modules optionnels (waf, fastcgi,
+                        active_defense, riposte...).
+  list                  Liste les options et leur état.
+  enable                Active une option.
+  disable               Désactive une option.
+simulate\-request        Montre comment le serveur traiterait une requête
+                        (chemin, règles, statut, en\-têtes), sans
+                        l'envoyer.
+waf                     Pare\-feu applicatif (WAF).
+  test                  Soumet une requête fictive au WAF et affiche sa
+                        décision (règles, score, statut).
+  never\-auto\-block      Affiche les réseaux jamais bannis
+                        automatiquement (lu par omega\-jail).
+blocklist               Adresses bannies.
+  list                  Affiche les bans : réseau, origine, expiration,
+                        motif.
+  add                   Bannit une adresse ou un réseau.
+  remove                Lève un ban.
+active\-defense          Active Defense : état, simulation, purge (voir
+                        aussi threats, incidents, deception).
+  status                Affiche l'état : mode, mode guerre, leurres,
+                        nombre de sources suivies.
+  simulate              Montre la décision qu'Active Defense prendrait
+                        pour une source, sans rien écrire.
+  purge                 Purge les menaces expirées, ferme les incidents
+                        redevenus calmes, supprime les incidents fermés
+                        depuis plus de 90 jours.
+engine                  Moteur HTTP (Python ou natif).
+  status                Affiche le moteur demandé, celui qui tourne et
+                        la raison d'un éventuel repli.
+riposte                 RIPOSTE : bans de plus en plus longs pour les
+                        récidivistes.
+  run                   Lance le processus RIPOSTE au premier plan
+                        (normalement lancé par serve ; utile au
+                        diagnostic).
+  status                Affiche l'état de RIPOSTE (lecture seule).
+  scenarios             Scénarios prêts à l'emploi.
+    list                Liste les scénarios.
+    show                Affiche un scénario et la politique qu'il
+                        propose.
+  policies              Politiques de la configuration.
+    list                Liste les politiques et leur état.
+    show                Affiche une politique.
+    enable              Active une politique.
+    disable             Désactive une politique.
+  simulate              Explique la décision de RIPOSTE pour une
+                        situation donnée, avec la configuration réelle ;
+                        rien n'est appliqué.
+  measure               Mesure sur les journaux ce qu'une politique
+                        aurait décidé, sans rien appliquer.
+  sources               Adresses mémorisées par RIPOSTE.
+    list                Liste les sources mémorisées.
+    show                Affiche l'historique d'une source.
+    forget              Efface la mémoire d'une source : ses récidives
+                        repartent de zéro.
+  decisions             Décisions prises par RIPOSTE.
+    list                Liste les dernières décisions.
+  actions               Bans et leurres posés par RIPOSTE.
+    list                Liste les actions en cours.
+    show                Affiche le détail d'une action.
+    revoke              Lève une action.
+    not\-recidive        Ne compte pas une action dans la récidive, sans
+                        la lever.
+  exemptions            Adresses exemptées de RIPOSTE.
+    list                Liste les exemptions.
+    remove              Retire une exemption.
+  stop                  Arrêt d'urgence : RIPOSTE ne décide plus rien,
+                        même après un redémarrage, jusqu'à riposte
+                        resume.
+  resume                Lève l'arrêt d'urgence.
+threats                 Menaces suivies par Active Defense.
+  list                  Liste les sources suivies avec leur score et
+                        leur niveau.
+  show                  Affiche le détail d'une source suivie.
+incidents               Incidents Active Defense.
+  list                  Liste les incidents.
+  show                  Affiche un incident et sa chronologie.
+  close                 Ferme un incident (et l'exporte si l'export
+                        automatique est activé).
+  export\-ioc            Exporte les indicateurs de compromission (IoC)
+                        d'un incident.
+  generate\-report       Écrit le rapport Markdown d'un incident.
+deception               Leurres Active Defense.
+  list                  Liste les sources envoyées vers un leurre.
+  release               Libère une source de son leurre.
+certs                   Certificats TLS (via OpenSSL).
+  generate\-self\-signed  Génère un certificat auto\-signé aux chemins de
+                        la configuration (l'ancien est sauvegardé).
+  generate\-ca           Crée une autorité de certification locale dans
+                        secure/certificates/ca.
+  generate\-csr          Génère une clé et une demande de signature (CSR)
+                        à faire signer par une CA.
+  sign\-csr              Signe une demande de signature (CSR) avec une
+                        CA.
+  import                Installe un certificat existant aux chemins de
+                        la configuration (Let's Encrypt, CA
+                        d'entreprise...).
+  revoke                Révoque un certificat émis par une CA locale.
+  verify                Vérifie un certificat : dates, correspondance
+                        avec la clé, droits de la clé. Code 1 s'il a
+                        expiré.
+  show                  Affiche le détail d'un certificat (même rapport
+                        que verify).
+  check\-expiry          Même rapport que verify, avec une alerte si
+                        l'expiration approche.
+auth                    Authentification HTTP Basic : utilisateurs et
+                        zones protégées.
+  add\-user              Crée un utilisateur.
+  remove\-user           Supprime un utilisateur.
+  change\-password       Change le mot de passe d'un utilisateur.
+  create\-zone           Protège un chemin par mot de passe.
+  remove\-zone           Retire la protection d'un chemin.
+  list                  Liste les utilisateurs et les zones protégées.
+  check\-permissions     Vérifie que les fichiers des utilisateurs et des
+                        zones ne sont lisibles que par leur
+                        propriétaire.
+service                 Service système (systemd, OpenRC ou runit).
+  status                Affiche l'état du service.
+  start                 Démarre le service.
+  stop                  Arrête le service.
+  restart               Redémarre le service (nécessaire après une mise
+                        à jour).
+  reload                Recharge sans couper : règles WAF et zones ;
+                        bind, port, TLS et moteur demandent un
+                        redémarrage.
+  enable                Active le démarrage automatique au boot.
+  disable               Désactive le démarrage automatique au boot.
+  install               Crée l'unité systemd du service (systemd
+                        seulement ; demande les droits administrateur).
+  uninstall             Supprime l'unité du service.
+audit                   Audit de sécurité.
+  security              Audite l'installation : configuration, droits,
+                        TLS, service. Code 1 si critique, 2 si élevé, 3
+                        si la configuration est illisible.
+declaration             Déclaration anonyme d'utilisateur (volontaire,
+                        désactivée par défaut).
+  status                Affiche l'état de la déclaration.
+  declare               Se déclarer utilisateur. Sans \-\-yes, affiche
+                        seulement le message exact et sa destination.
+  withdraw              Retire la déclaration (supprimée à la
+                        réception).
+  send\-scheduled        Envoi quotidien, lancé par serve (pas à utiliser
+                        à la main).
+help                    Affiche l'arbre de toutes les commandes, ou
+                        d'une branche (ex. : omega\-serv help riposte).
+.fi
+.SH COMMANDES
+.SS serve
+Démarre le serveur au premier plan (c'est ce que lance le service système). Refuse de tourner en root.
+.RS
+.TP
+\fB\-\-confirm\-self\-signed\-public\-bind\fR
+Accepte un certificat auto\-signé sur une adresse publique.
+.TP
+\fB\-\-confirm\-auth\-without\-tls\fR
+Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau).
+.RE
+.SS config
+Fichier de configuration : création, vérification, TLS, sauvegardes.
+.TP
+\fBconfig init\fR
+Crée le fichier de configuration par défaut.
+.RS
+.TP
+\fB\-\-force\fR
+Écrase le fichier existant.
+.RE
+.TP
+\fBconfig check\fR
+Vérifie la configuration et l'environnement (chemins, droits, certificats) sans démarrer.
+.RS
+.TP
+\fB\-\-confirm\-self\-signed\-public\-bind\fR
+Accepte un certificat auto\-signé sur une adresse publique.
+.TP
+\fB\-\-confirm\-auth\-without\-tls\fR
+Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau).
+.RE
+.TP
+\fBconfig show\fR
+Affiche la configuration chargée, en JSON.
+.TP
+\fBconfig enable\-tls\fR
+Active TLS dans la configuration.
+.RS
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat à utiliser (sinon celui déjà configuré).
+.TP
+\fB\-\-key\fR \fIFICHIER\fR
+Clé privée à utiliser (sinon celle déjà configurée).
+.TP
+\fB\-\-mode\fR \fI{direct,behind_proxy}\fR
+direct : omega\-serv chiffre lui\-même ; behind_proxy : derrière un reverse proxy (défaut : direct).
+.RE
+.TP
+\fBconfig disable\-tls\fR
+Désactive TLS dans la configuration.
+.TP
+\fBconfig backup\fR
+Crée une sauvegarde : la configuration toujours, le reste selon les options \-\-include\-*.
+.RS
+.TP
+\fB\-\-include\-waf\fR
+Ajoute les règles et listes du WAF.
+.TP
+\fB\-\-include\-auth\fR
+Ajoute les utilisateurs et les zones protégées (secrets : demande \-\-confirm\-secrets).
+.TP
+\fB\-\-include\-certificates\fR
+Ajoute les certificats et les clés TLS (secrets : demande \-\-confirm\-secrets).
+.TP
+\fB\-\-include\-active\-defense\fR
+Ajoute la base Active Defense.
+.TP
+\fB\-\-include\-error\-pages\fR
+Ajoute les pages d'erreur personnalisées.
+.TP
+\fB\-\-include\-preferences\fR
+Ajoute les préférences de l'interface.
+.TP
+\fB\-\-include\-logs\-library\fR
+Ajoute la bibliothèque des journaux.
+.TP
+\fB\-\-include\-riposte\fR
+Ajoute la base RIPOSTE.
+.TP
+\fB\-\-all\fR
+Tout sauvegarder : toutes les options \-\-include\-* (secrets compris : demande \-\-confirm\-secrets).
+.TP
+\fB\-\-confirm\-secrets\fR
+Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés privées).
+.TP
+\fB\-\-description\fR \fITEXTE\fR
+Texte libre enregistré avec la sauvegarde.
+.RE
+.TP
+\fBconfig restore\fR
+Restaure une sauvegarde.
+.RS
+.TP
+\fB\-\-snapshot\-id\fR \fIID\fR
+Identifiant de la sauvegarde (voir config list\-backups). (obligatoire)
+.TP
+\fB\-\-stop\-and\-restart\fR
+Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne).
+.RE
+.TP
+\fBconfig list\-backups\fR
+Liste les sauvegardes.
+.SS profile
+Profils de configuration prêts à l'emploi.
+.TP
+\fBprofile list\fR
+Liste les profils disponibles.
+.TP
+\fBprofile show\fR
+Affiche un profil et les valeurs qu'il fixe.
+.RS
+.TP
+\fBNOM\fR
+Nom du profil (voir profile list).
+.RE
+.TP
+\fBprofile apply\fR
+Applique un profil à la configuration (modifications et conflits affichés d'abord).
+.RS
+.TP
+\fBNOM\fR
+Nom du profil (voir profile list).
+.TP
+\fB\-\-dry\-run\fR
+Montre seulement ce qui changerait, sans rien écrire.
+.TP
+\fB\-\-force\fR
+Applique malgré des problèmes bloquants.
+.RE
+.SS option
+Modules optionnels (waf, fastcgi, active_defense, riposte...).
+.TP
+\fBoption list\fR
+Liste les options et leur état.
+.TP
+\fBoption enable\fR
+Active une option.
+.br
+Première activation du WAF : tous les packs de secure/waf/rules/ sont ajoutés, en mode log\-only.
+.RS
+.TP
+\fBNOM\fR
+Nom de l'option (voir option list).
+.RE
+.TP
+\fBoption disable\fR
+Désactive une option.
+.RS
+.TP
+\fBNOM\fR
+Nom de l'option (voir option list).
+.RE
+.SS simulate\-request
+Montre comment le serveur traiterait une requête (chemin, règles, statut, en\-têtes), sans l'envoyer.
+.RS
+.TP
+\fB\-\-method\fR \fIMETHOD\fR
+Méthode HTTP (défaut : GET).
+.TP
+\fB\-\-url\fR \fICHEMIN\fR
+Chemin demandé, par exemple /docs/index.html. (obligatoire)
+.RE
+.SS waf
+Pare\-feu applicatif (WAF).
+.TP
+\fBwaf test\fR
+Soumet une requête fictive au WAF et affiche sa décision (règles, score, statut).
+.RS
+.TP
+\fB\-\-method\fR \fIMETHOD\fR
+Méthode HTTP (défaut : GET).
+.TP
+\fB\-\-path\fR \fICHEMIN\fR
+Chemin de la requête. (obligatoire)
+.TP
+\fB\-\-query\fR \fITEXTE\fR
+Chaîne de requête, sans le « ? ».
+.TP
+\fB\-\-body\fR \fITEXTE\fR
+Corps de la requête.
+.TP
+\fB\-\-remote\-ip\fR \fIIP\fR
+Adresse du client simulé (défaut : 127.0.0.1).
+.RE
+.TP
+\fBwaf never\-auto\-block\fR
+Affiche les réseaux jamais bannis automatiquement (lu par omega\-jail).
+.SS blocklist
+Adresses bannies.
+.TP
+\fBblocklist list\fR
+Affiche les bans : réseau, origine, expiration, motif.
+.TP
+\fBblocklist add\fR
+Bannit une adresse ou un réseau.
+.RS
+.TP
+\fB\-\-network\fR \fIRESEAU\fR
+Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24. (obligatoire)
+.TP
+\fB\-\-reason\fR \fITEXTE\fR
+Motif du ban. (obligatoire)
+.TP
+\fB\-\-duration\-seconds\fR \fISECONDES\fR
+Durée du ban. Sans durée, le ban est permanent et demande \-\-confirm\-permanent.
+.TP
+\fB\-\-confirm\-permanent\fR
+Confirme un ban permanent.
+.RE
+.TP
+\fBblocklist remove\fR
+Lève un ban.
+.RS
+.TP
+\fB\-\-network\fR \fIRESEAU\fR
+Adresse ou réseau, tel qu'affiché par blocklist list. (obligatoire)
+.RE
+.SS active\-defense
+Active Defense : état, simulation, purge (voir aussi threats, incidents, deception).
+.TP
+\fBactive\-defense status\fR
+Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies.
+.TP
+\fBactive\-defense simulate\fR
+Montre la décision qu'Active Defense prendrait pour une source, sans rien écrire.
+.RS
+.TP
+\fB\-\-ip\fR \fIIP\fR
+Adresse de la source simulée. (obligatoire)
+.TP
+\fB\-\-path\fR \fICHEMIN\fR
+Chemin observé (défaut : /).
+.TP
+\fB\-\-user\-agent\fR \fITEXTE\fR
+User\-Agent de la source.
+.TP
+\fB\-\-attack\-class\fR \fICLASSE\fR
+Classe d'attaque (défaut : scan ; liste affichée si inconnue).
+.TP
+\fB\-\-score\fR \fIPOINTS\fR
+Points ajoutés au score de menace (défaut : 10).
+.RE
+.TP
+\fBactive\-defense purge\fR
+Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les incidents fermés depuis plus de 90 jours.
+.SS engine
+Moteur HTTP (Python ou natif).
+.TP
+\fBengine status\fR
+Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel repli.
+.SS riposte
+RIPOSTE : bans de plus en plus longs pour les récidivistes.
+.TP
+\fBriposte run\fR
+Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; utile au diagnostic).
+.TP
+\fBriposte status\fR
+Affiche l'état de RIPOSTE (lecture seule).
+.TP
+\fBriposte scenarios\fR
+Scénarios prêts à l'emploi.
+.TP
+\fBriposte scenarios list\fR
+Liste les scénarios.
+.TP
+\fBriposte scenarios show\fR
+Affiche un scénario et la politique qu'il propose.
+.RS
+.TP
+\fBID\fR
+Identifiant du scénario (voir riposte scenarios list).
+.RE
+.TP
+\fBriposte policies\fR
+Politiques de la configuration.
+.TP
+\fBriposte policies list\fR
+Liste les politiques et leur état.
+.TP
+\fBriposte policies show\fR
+Affiche une politique.
+.RS
+.TP
+\fBID\fR
+Identifiant de la politique (voir riposte policies list).
+.RE
+.TP
+\fBriposte policies enable\fR
+Active une politique.
+.RS
+.TP
+\fBID\fR
+Identifiant de la politique (voir riposte policies list).
+.RE
+.TP
+\fBriposte policies disable\fR
+Désactive une politique.
+.RS
+.TP
+\fBID\fR
+Identifiant de la politique (voir riposte policies list).
+.TP
+\fB\-\-revoke\fR
+Lève aussi ses actions en cours.
+.RE
+.TP
+\fBriposte simulate\fR
+Explique la décision de RIPOSTE pour une situation donnée, avec la configuration réelle ; rien n'est appliqué.
+.RS
+.TP
+\fB\-\-ip\fR \fIIP\fR
+Adresse de la source. (obligatoire)
+.TP
+\fB\-\-class\fR \fICLASSE\fR
+Classe d'attaque (défaut : scan).
+.TP
+\fB\-\-level\fR \fI{normal,suspicious,hostile,contained}\fR
+Niveau de menace Active Defense de la source.
+.TP
+\fB\-\-returns\fR \fIN\fR
+Nombre de retours de la source (défaut : 1).
+.TP
+\fB\-\-decoy\-hits\fR \fIN\fR
+Nombre de leurres touchés (défaut : 0).
+.RE
+.TP
+\fBriposte measure\fR
+Mesure sur les journaux ce qu'une politique aurait décidé, sans rien appliquer.
+.RS
+.TP
+\fBID\fR
+Politique de la configuration, ou scenario:<id> pour mesurer un scénario avant de l'ajouter.
+.TP
+\fB\-\-days\fR \fIJOURS\fR
+Période mesurée en jours (défaut : 7 ; 0 = tout le journal).
+.RE
+.TP
+\fBriposte sources\fR
+Adresses mémorisées par RIPOSTE.
+.TP
+\fBriposte sources list\fR
+Liste les sources mémorisées.
+.RS
+.TP
+\fB\-\-limit\fR \fIN\fR
+Nombre maximal de lignes (défaut : 50).
+.RE
+.TP
+\fBriposte sources show\fR
+Affiche l'historique d'une source.
+.RS
+.TP
+\fBIP\fR
+Adresse de la source.
+.RE
+.TP
+\fBriposte sources forget\fR
+Efface la mémoire d'une source : ses récidives repartent de zéro.
+.RS
+.TP
+\fBIP\fR
+Adresse de la source.
+.RE
+.TP
+\fBriposte decisions\fR
+Décisions prises par RIPOSTE.
+.TP
+\fBriposte decisions list\fR
+Liste les dernières décisions.
+.RS
+.TP
+\fB\-\-limit\fR \fIN\fR
+Nombre maximal de lignes (défaut : 50).
+.TP
+\fB\-\-ip\fR \fIIP\fR
+Seulement cette adresse.
+.TP
+\fB\-\-explain\fR
+Détaille le raisonnement de chaque décision.
+.RE
+.TP
+\fBriposte actions\fR
+Bans et leurres posés par RIPOSTE.
+.br
+Une commande est exécutée par le processus RIPOSTE en moins d'une seconde, ou à son prochain démarrage s'il est arrêté.
+.TP
+\fBriposte actions list\fR
+Liste les actions en cours.
+.RS
+.TP
+\fB\-\-finished\fR
+Liste les actions terminées à la place.
+.TP
+\fB\-\-ip\fR \fIIP\fR
+Seulement cette adresse.
+.TP
+\fB\-\-limit\fR \fIN\fR
+Nombre maximal de lignes (défaut : 50).
+.RE
+.TP
+\fBriposte actions show\fR
+Affiche le détail d'une action.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'action (voir riposte actions list).
+.RE
+.TP
+\fBriposte actions revoke\fR
+Lève une action.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'action (voir riposte actions list).
+.TP
+\fB\-\-exempt\fR \fI{24h,7d,forever}\fR
+Exempte aussi l'adresse : 24 h, 7 jours ou jusqu'à levée manuelle (forever).
+.TP
+\fB\-\-not\-recidive\fR
+Ne compte pas cette action dans la récidive.
+.RE
+.TP
+\fBriposte actions not\-recidive\fR
+Ne compte pas une action dans la récidive, sans la lever.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'action (voir riposte actions list).
+.RE
+.TP
+\fBriposte exemptions\fR
+Adresses exemptées de RIPOSTE.
+.TP
+\fBriposte exemptions list\fR
+Liste les exemptions.
+.TP
+\fBriposte exemptions remove\fR
+Retire une exemption.
+.RS
+.TP
+\fBRESEAU\fR
+Adresse ou réseau exempté.
+.RE
+.TP
+\fBriposte stop\fR
+Arrêt d'urgence : RIPOSTE ne décide plus rien, même après un redémarrage, jusqu'à riposte resume.
+.RS
+.TP
+\fB\-\-revoke\fR
+Lève aussi toutes les actions en cours.
+.RE
+.TP
+\fBriposte resume\fR
+Lève l'arrêt d'urgence.
+.SS threats
+Menaces suivies par Active Defense.
+.TP
+\fBthreats list\fR
+Liste les sources suivies avec leur score et leur niveau.
+.RS
+.TP
+\fB\-\-level\fR \fI{normal,suspicious,hostile,contained}\fR
+Seulement ce niveau.
+.RE
+.TP
+\fBthreats show\fR
+Affiche le détail d'une source suivie.
+.RS
+.TP
+\fBSOURCE\fR
+Identifiant de la source, tel qu'affiché par threats list.
+.RE
+.SS incidents
+Incidents Active Defense.
+.TP
+\fBincidents list\fR
+Liste les incidents.
+.RS
+.TP
+\fB\-\-status\fR \fI{open,closed}\fR
+Seulement les incidents ouverts (open) ou fermés (closed).
+.TP
+\fB\-\-since\-hours\fR \fIHEURES\fR
+Seulement les incidents des N dernières heures.
+.RE
+.TP
+\fBincidents show\fR
+Affiche un incident et sa chronologie.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'incident (voir incidents list).
+.RE
+.TP
+\fBincidents close\fR
+Ferme un incident (et l'exporte si l'export automatique est activé).
+.RS
+.TP
+\fBID\fR
+Identifiant de l'incident (voir incidents list).
+.RE
+.TP
+\fBincidents export\-ioc\fR
+Exporte les indicateurs de compromission (IoC) d'un incident.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'incident (voir incidents list).
+.TP
+\fB\-\-format\fR \fIFORMATS\fR
+Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp (défaut : json).
+.RE
+.TP
+\fBincidents generate\-report\fR
+Écrit le rapport Markdown d'un incident.
+.RS
+.TP
+\fBID\fR
+Identifiant de l'incident (voir incidents list).
+.RE
+.SS deception
+Leurres Active Defense.
+.TP
+\fBdeception list\fR
+Liste les sources envoyées vers un leurre.
+.TP
+\fBdeception release\fR
+Libère une source de son leurre.
+.RS
+.TP
+\fB\-\-subject\fR \fISOURCE\fR
+Identifiant de la source, tel qu'affiché par deception list. (obligatoire)
+.RE
+.SS certs
+Certificats TLS (via OpenSSL).
+.TP
+\fBcerts generate\-self\-signed\fR
+Génère un certificat auto\-signé aux chemins de la configuration (l'ancien est sauvegardé).
+.RS
+.TP
+\fB\-\-cn\fR \fINOM\fR
+Nom commun : le nom de domaine principal. (obligatoire)
+.TP
+\fB\-\-org\fR \fITEXTE\fR
+Organisation (défaut : OMEGA\-SERV).
+.TP
+\fB\-\-ou\fR \fITEXTE\fR
+Service ou département.
+.TP
+\fB\-\-city\fR \fITEXTE\fR
+Ville.
+.TP
+\fB\-\-region\fR \fITEXTE\fR
+Région.
+.TP
+\fB\-\-country\fR \fICODE\fR
+Pays, code à deux lettres (FR, BE...).
+.TP
+\fB\-\-san\-dns\fR \fINOM ...\fR
+Noms de domaine supplémentaires couverts par le certificat.
+.TP
+\fB\-\-san\-ip\fR \fIIP ...\fR
+Adresses IP couvertes par le certificat.
+.TP
+\fB\-\-days\fR \fIJOURS\fR
+Validité en jours (défaut : 365).
+.TP
+\fB\-\-key\-type\fR \fI{rsa2048,rsa4096,ecdsa\-p256,ecdsa\-p384}\fR
+Type de clé (défaut : rsa2048).
+.TP
+\fB\-\-password\fR \fIMOT\-DE\-PASSE\fR
+Chiffre la clé privée avec ce mot de passe (facultatif).
+.RE
+.TP
+\fBcerts generate\-ca\fR
+Crée une autorité de certification locale dans secure/certificates/ca.
+.RS
+.TP
+\fB\-\-cn\fR \fINOM\fR
+Nom de l'autorité de certification. (obligatoire)
+.TP
+\fB\-\-org\fR \fITEXTE\fR
+Organisation (défaut : OMEGA\-SERV).
+.TP
+\fB\-\-ou\fR \fITEXTE\fR
+Service ou département.
+.TP
+\fB\-\-city\fR \fITEXTE\fR
+Ville.
+.TP
+\fB\-\-region\fR \fITEXTE\fR
+Région.
+.TP
+\fB\-\-country\fR \fICODE\fR
+Pays, code à deux lettres (FR, BE...).
+.TP
+\fB\-\-days\fR \fIJOURS\fR
+Validité en jours (défaut : 3650).
+.TP
+\fB\-\-key\-type\fR \fI{rsa2048,rsa4096,ecdsa\-p256,ecdsa\-p384}\fR
+Type de clé (défaut : rsa4096).
+.TP
+\fB\-\-password\fR \fIMOT\-DE\-PASSE\fR
+Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois au clavier (conseillé).
+.RE
+.TP
+\fBcerts generate\-csr\fR
+Génère une clé et une demande de signature (CSR) à faire signer par une CA.
+.RS
+.TP
+\fB\-\-cn\fR \fINOM\fR
+Nom commun : le nom de domaine principal. (obligatoire)
+.TP
+\fB\-\-org\fR \fITEXTE\fR
+Organisation (défaut : OMEGA\-SERV).
+.TP
+\fB\-\-ou\fR \fITEXTE\fR
+Service ou département.
+.TP
+\fB\-\-city\fR \fITEXTE\fR
+Ville.
+.TP
+\fB\-\-region\fR \fITEXTE\fR
+Région.
+.TP
+\fB\-\-country\fR \fICODE\fR
+Pays, code à deux lettres (FR, BE...).
+.TP
+\fB\-\-san\-dns\fR \fINOM ...\fR
+Noms de domaine supplémentaires couverts par le certificat.
+.TP
+\fB\-\-san\-ip\fR \fIIP ...\fR
+Adresses IP couvertes par le certificat.
+.TP
+\fB\-\-key\-type\fR \fI{rsa2048,rsa4096,ecdsa\-p256,ecdsa\-p384}\fR
+Type de clé (défaut : rsa2048).
+.TP
+\fB\-\-key\-out\fR \fIFICHIER\fR
+Clé privée à créer. (obligatoire)
+.TP
+\fB\-\-csr\-out\fR \fIFICHIER\fR
+Demande de signature à créer. (obligatoire)
+.RE
+.TP
+\fBcerts sign\-csr\fR
+Signe une demande de signature (CSR) avec une CA.
+.RS
+.TP
+\fB\-\-csr\fR \fIFICHIER\fR
+Demande de signature à signer. (obligatoire)
+.TP
+\fB\-\-ca\-key\fR \fIFICHIER\fR
+Clé privée de la CA. (obligatoire)
+.TP
+\fB\-\-ca\-cert\fR \fIFICHIER\fR
+Certificat de la CA. (obligatoire)
+.TP
+\fB\-\-ca\-key\-password\fR \fIMOT\-DE\-PASSE\fR
+Mot de passe de la clé de CA (sinon demandé au clavier, conseillé).
+.TP
+\fB\-\-days\fR \fIJOURS\fR
+Validité en jours (défaut : 365).
+.TP
+\fB\-\-out\fR \fIFICHIER\fR
+Certificat signé à écrire. (obligatoire)
+.TP
+\fB\-\-fullchain\-out\fR \fIFICHIER\fR
+Écrit aussi la chaîne complète (certificat puis CA).
+.RE
+.TP
+\fBcerts import\fR
+Installe un certificat existant aux chemins de la configuration (Let's Encrypt, CA d'entreprise...).
+.RS
+.TP
+\fB\-\-key\fR \fIFICHIER\fR
+Clé privée. (obligatoire)
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat. (obligatoire)
+.TP
+\fB\-\-chain\fR \fIFICHIER\fR
+Chaîne des certificats intermédiaires (facultatif).
+.RE
+.TP
+\fBcerts revoke\fR
+Révoque un certificat émis par une CA locale.
+.RS
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat à révoquer. (obligatoire)
+.TP
+\fB\-\-ca\-key\fR \fIFICHIER\fR
+Clé privée de la CA. (obligatoire)
+.TP
+\fB\-\-ca\-cert\fR \fIFICHIER\fR
+Certificat de la CA. (obligatoire)
+.TP
+\fB\-\-ca\-key\-password\fR \fIMOT\-DE\-PASSE\fR
+Mot de passe de la clé de CA (sinon demandé au clavier, conseillé).
+.RE
+.TP
+\fBcerts verify\fR
+Vérifie un certificat : dates, correspondance avec la clé, droits de la clé. Code 1 s'il a expiré.
+.RS
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat à lire (défaut : celui de la configuration).
+.RE
+.TP
+\fBcerts show\fR
+Affiche le détail d'un certificat (même rapport que verify).
+.RS
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat à lire (défaut : celui de la configuration).
+.RE
+.TP
+\fBcerts check\-expiry\fR
+Même rapport que verify, avec une alerte si l'expiration approche.
+.RS
+.TP
+\fB\-\-cert\fR \fIFICHIER\fR
+Certificat à lire (défaut : celui de la configuration).
+.TP
+\fB\-\-warn\-days\fR \fIJOURS\fR
+Seuil d'alerte en jours (défaut : 30).
+.RE
+.SS auth
+Authentification HTTP Basic : utilisateurs et zones protégées.
+.TP
+\fBauth add\-user\fR
+Crée un utilisateur.
+.RS
+.TP
+\fB\-\-username\fR \fINOM\fR
+Nom d'utilisateur. (obligatoire)
+.TP
+\fB\-\-password\fR \fIMOT\-DE\-PASSE\fR
+Mot de passe (sinon demandé au clavier, conseillé : il resterait dans l'historique).
+.RE
+.TP
+\fBauth remove\-user\fR
+Supprime un utilisateur.
+.RS
+.TP
+\fB\-\-username\fR \fINOM\fR
+Nom d'utilisateur. (obligatoire)
+.RE
+.TP
+\fBauth change\-password\fR
+Change le mot de passe d'un utilisateur.
+.RS
+.TP
+\fB\-\-username\fR \fINOM\fR
+Nom d'utilisateur. (obligatoire)
+.TP
+\fB\-\-password\fR \fIMOT\-DE\-PASSE\fR
+Mot de passe (sinon demandé au clavier, conseillé : il resterait dans l'historique).
+.RE
+.TP
+\fBauth create\-zone\fR
+Protège un chemin par mot de passe.
+.RS
+.TP
+\fB\-\-path\-prefix\fR \fICHEMIN\fR
+Début de chemin protégé, par exemple /admin. (obligatoire)
+.TP
+\fB\-\-realm\fR \fITEXTE\fR
+Nom affiché par le navigateur dans la demande de connexion. (obligatoire)
+.TP
+\fB\-\-allowed\-users\fR \fINOM ...\fR
+Utilisateurs autorisés dans la zone. (obligatoire)
+.TP
+\fB\-\-allow\-methods\fR \fIMETHODE ...\fR
+Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles que le serveur autorise).
+.RE
+.TP
+\fBauth remove\-zone\fR
+Retire la protection d'un chemin.
+.RS
+.TP
+\fB\-\-path\-prefix\fR \fICHEMIN\fR
+Début de chemin protégé, par exemple /admin. (obligatoire)
+.RE
+.TP
+\fBauth list\fR
+Liste les utilisateurs et les zones protégées.
+.TP
+\fBauth check\-permissions\fR
+Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que par leur propriétaire.
+.SS service
+Service système (systemd, OpenRC ou runit).
+.TP
+\fBservice status\fR
+Affiche l'état du service.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice start\fR
+Démarre le service.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice stop\fR
+Arrête le service.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice restart\fR
+Redémarre le service (nécessaire après une mise à jour).
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice reload\fR
+Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur demandent un redémarrage.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice enable\fR
+Active le démarrage automatique au boot.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice disable\fR
+Désactive le démarrage automatique au boot.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.RE
+.TP
+\fBservice install\fR
+Crée l'unité systemd du service (systemd seulement ; demande les droits administrateur).
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.TP
+\fB\-\-description\fR \fITEXTE\fR
+Description de l'unité (défaut : OMEGA\-SERV web server).
+.TP
+\fB\-\-python\-executable\fR \fIFICHIER\fR
+Python à utiliser (défaut : celui du .venv de l'installation).
+.TP
+\fB\-\-user\fR \fINOM\fR
+Compte système qui fait tourner le service (défaut : omega\-serv).
+.TP
+\fB\-\-group\fR \fINOM\fR
+Groupe du service (défaut : omega\-serv).
+.TP
+\fB\-\-stop\-timeout\-seconds\fR \fISECONDES\fR
+Délai laissé à l'arrêt avant de forcer (défaut : 15).
+.TP
+\fB\-\-unit\-path\fR \fIFICHIER\fR
+Fichier d'unité (défaut : /etc/systemd/system/<nom>.service).
+.RE
+.TP
+\fBservice uninstall\fR
+Supprime l'unité du service.
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.TP
+\fB\-\-unit\-path\fR \fIFICHIER\fR
+Fichier d'unité (défaut : /etc/systemd/system/<nom>.service).
+.RE
+.SS audit
+Audit de sécurité.
+.TP
+\fBaudit security\fR
+Audite l'installation : configuration, droits, TLS, service. Code 1 si critique, 2 si élevé, 3 si la configuration est illisible.
+.RS
+.TP
+\fB\-\-format\fR \fI{text,json}\fR
+Format du rapport (défaut : text).
+.TP
+\fB\-\-min\-severity\fR \fI{critical,high,medium,low,info}\fR
+N'affiche que ce niveau et les plus graves (défaut : info).
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.TP
+\fB\-\-unit\-path\fR \fIFICHIER\fR
+Fichier d'unité (défaut : /etc/systemd/system/<nom>.service).
+.TP
+\fB\-\-confirm\-self\-signed\-public\-bind\fR
+Accepte un certificat auto\-signé sur une adresse publique.
+.TP
+\fB\-\-confirm\-auth\-without\-tls\fR
+Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau).
+.RE
+.SS declaration
+Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut).
+.TP
+\fBdeclaration status\fR
+Affiche l'état de la déclaration.
+.TP
+\fBdeclaration declare\fR
+Se déclarer utilisateur. Sans \-\-yes, affiche seulement le message exact et sa destination.
+.RS
+.TP
+\fB\-\-mode\fR \fI{unique,quotidien}\fR
+unique : une seule fois ; quotidien : chaque jour, envoyé par le serveur. (obligatoire)
+.TP
+\fB\-\-continent\fR \fICODE\fR
+Continent (facultatif) : AF, AN, AS, EU, NA, OC, SA ou autre.
+.TP
+\fB\-\-pays\fR \fICODE\fR
+Pays (facultatif) : code à deux lettres (FR, BE...) ou autre.
+.TP
+\fB\-\-yes\fR
+Confirme l'envoi.
+.RE
+.TP
+\fBdeclaration withdraw\fR
+Retire la déclaration (supprimée à la réception).
+.TP
+\fBdeclaration send\-scheduled\fR
+Envoi quotidien, lancé par serve (pas à utiliser à la main).
+.SS help
+Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega\-serv help riposte).
+.RS
+.TP
+\fBCOMMANDE\fR \fI\&...\fR
+Branche à afficher (facultatif).
+.RE
+.SH FICHIERS
+Chemins relatifs au dossier d'installation.
+.TP
+\fIconfig/omega\-serve.json\fR
+Configuration principale (créée par config init).
+.TP
+\fIconfig/profiles/\fR
+Profils prêts à l'emploi (profile list).
+.TP
+\fIsecure/auth/\fR
+Utilisateurs et zones protégées (droits 600).
+.TP
+\fIsecure/certificates/\fR
+Certificats et clés TLS, autorité de certification locale (ca/).
+.TP
+\fIsecure/waf/\fR
+Règles du WAF et scripts Magnet.
+.TP
+\fIvar/log/\fR
+Journaux : accès, erreurs, alertes du WAF.
+.TP
+\fIvar/lib/\fR
+État écrit par le serveur : liste des bans, bases Active Defense et RIPOSTE.
+.TP
+\fIvar/backups/\fR
+Sauvegardes (config backup) et anciens certificats.
+.TP
+\fIvar/exports/\fR
+Exports d'incidents (IoC, rapports).
+.TP
+\fIvar/run/omega\-serv.pid\fR
+PID du serveur en marche.
+.TP
+\fIwebroot/\fR
+Le site servi.
+.SH ENVIRONNEMENT
+.TP
+\fBOMEGA_SERV_LANG\fR
+Langue de l'interface pour ce lancement seulement (ex. OMEGA_SERV_LANG=fr serv). Sans effet sur serve, dont les messages restent en français.
+.TP
+\fBDO_NOT_TRACK\fR
+Toute valeur autre que 0 (ex. DO_NOT_TRACK=1) : aucun envoi automatique de la déclaration anonyme, même avec l'accord donné.
+.SH SIGNAUX
+.TP
+\fBSIGHUP\fR
+Recharge les règles WAF et les zones protégées sans couper (= service reload). Bind, port, TLS et moteur demandent un redémarrage.
+.TP
+\fBSIGTERM, SIGINT\fR
+Arrêt propre : les connexions en cours se terminent dans le délai de grâce.
+.SH CODES DE SORTIE
+.TP
+\fB0\fR
+Succès.
+.TP
+\fB1\fR
+Erreur (configuration invalide, élément introuvable, action refusée...). Pour certs verify/show/check\-expiry : certificat expiré.
+.TP
+\fB2\fR
+Erreur d'utilisation (commande ou option inconnue). Pour audit security : problème de niveau élevé.
+.TP
+\fB3\fR
+audit security : configuration illisible.
+.PP
+audit security renvoie 1 dès qu'un problème critique est trouvé.
+.SH EXEMPLES
+.PP
+Vérifier la configuration avant un redémarrage :
+.RS
+.nf
+serv config check
+.fi
+.RE
+.PP
+Tester une URL suspecte contre le WAF :
+.RS
+.nf
+serv waf test \-\-path /index.php \-\-query 'q=<script>alert(1)</script>'
+.fi
+.RE
+.PP
+Bannir une adresse pendant une heure :
+.RS
+.nf
+serv blocklist add \-\-network 203.0.113.7 \-\-reason scan \-\-duration\-seconds 3600
+.fi
+.RE
+.PP
+Tout sauvegarder, secrets compris :
+.RS
+.nf
+serv config backup \-\-all \-\-confirm\-secrets \-\-description "avant mise à jour"
+.fi
+.RE
+.PP
+Voir les dernières décisions de RIPOSTE, expliquées :
+.RS
+.nf
+serv riposte decisions list \-\-limit 10 \-\-explain
+.fi
+.RE
+.PP
+Audit de sécurité en JSON pour un script :
+.RS
+.nf
+serv audit security \-\-format json \-\-min\-severity high
+.fi
+.RE
+.SH VOIR AUSSI
+\fIdocs/HELP.md\fR, \fIdocs/guide.md\fR, \fIREADME.md\fR ; la touche F1 dans l'interface.

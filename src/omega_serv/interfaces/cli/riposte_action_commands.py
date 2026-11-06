@@ -32,6 +32,7 @@ from omega_serv.domain.security.riposte.actions import EXEMPT_DURATIONS, Riposte
 from omega_serv.domain.security.riposte.config import parse_riposte_config
 from omega_serv.infrastructure.persistence.sqlite_riposte_connection import open_riposte_connection
 from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
+from omega_serv.interfaces.cli.command_tree import add_command, add_group
 from omega_serv.interfaces.cli.riposte_text import (
     action_detail_label,
     action_label,
@@ -278,43 +279,51 @@ def cmd_riposte_resume(args: argparse.Namespace, container: DependencyContainer)
 
 def register(riposte_sub: argparse._SubParsersAction, policies: argparse._SubParsersAction,
              sources: argparse._SubParsersAction) -> None:
-    actions = riposte_sub.add_parser("actions").add_subparsers(dest="riposte_actions_command", required=True)
-    actions_list = actions.add_parser("list")
-    actions_list.add_argument("--finished", action="store_true")
-    actions_list.add_argument("--ip", default=None)
-    actions_list.add_argument("--limit", type=int, default=50)
+    action_id = _("Identifiant de l'action (voir riposte actions list).")
+    policy_id = _("Identifiant de la politique (voir riposte policies list).")
+    actions = add_group(riposte_sub, "actions", _("Bans et leurres posés par RIPOSTE."), "riposte_actions_command",
+                        _("Une commande est exécutée par le processus RIPOSTE en moins d'une seconde, ou à son "
+                          "prochain démarrage s'il est arrêté."))
+    actions_list = add_command(actions, "list", _("Liste les actions en cours."))
+    actions_list.add_argument("--finished", action="store_true", help=_("Liste les actions terminées à la place."))
+    actions_list.add_argument("--ip", default=None, metavar="IP", help=_("Seulement cette adresse."))
+    actions_list.add_argument("--limit", type=int, default=50, metavar="N", help=_("Nombre maximal de lignes (défaut : 50)."))
     actions_list.set_defaults(func=cmd_riposte_actions_list)
-    actions_show = actions.add_parser("show")
-    actions_show.add_argument("id")
+    actions_show = add_command(actions, "show", _("Affiche le détail d'une action."))
+    actions_show.add_argument("id", metavar="ID", help=action_id)
     actions_show.set_defaults(func=cmd_riposte_actions_show)
-    actions_revoke = actions.add_parser("revoke")
-    actions_revoke.add_argument("id")
-    actions_revoke.add_argument("--exempt", default=None, choices=tuple(EXEMPT_DURATIONS))
-    actions_revoke.add_argument("--not-recidive", action="store_true")
+    actions_revoke = add_command(actions, "revoke", _("Lève une action."))
+    actions_revoke.add_argument("id", metavar="ID", help=action_id)
+    actions_revoke.add_argument("--exempt", default=None, choices=tuple(EXEMPT_DURATIONS),
+                                help=_("Exempte aussi l'adresse : 24 h, 7 jours ou jusqu'à levée manuelle (forever)."))
+    actions_revoke.add_argument("--not-recidive", action="store_true",
+                                help=_("Ne compte pas cette action dans la récidive."))
     actions_revoke.set_defaults(func=cmd_riposte_actions_revoke)
-    actions_not_recidive = actions.add_parser("not-recidive")
-    actions_not_recidive.add_argument("id")
+    actions_not_recidive = add_command(actions, "not-recidive", _(
+        "Ne compte pas une action dans la récidive, sans la lever."))
+    actions_not_recidive.add_argument("id", metavar="ID", help=action_id)
     actions_not_recidive.set_defaults(func=cmd_riposte_actions_not_recidive)
 
-    enable = policies.add_parser("enable")
-    enable.add_argument("id")
+    enable = add_command(policies, "enable", _("Active une politique."))
+    enable.add_argument("id", metavar="ID", help=policy_id)
     enable.set_defaults(func=cmd_riposte_policies_enable)
-    disable = policies.add_parser("disable")
-    disable.add_argument("id")
-    disable.add_argument("--revoke", action="store_true")
+    disable = add_command(policies, "disable", _("Désactive une politique."))
+    disable.add_argument("id", metavar="ID", help=policy_id)
+    disable.add_argument("--revoke", action="store_true", help=_("Lève aussi ses actions en cours."))
     disable.set_defaults(func=cmd_riposte_policies_disable)
 
-    forget = sources.add_parser("forget")
-    forget.add_argument("ip")
+    forget = add_command(sources, "forget", _("Efface la mémoire d'une source : ses récidives repartent de zéro."))
+    forget.add_argument("ip", metavar="IP", help=_("Adresse de la source."))
     forget.set_defaults(func=cmd_riposte_sources_forget)
 
-    exemptions = riposte_sub.add_parser("exemptions").add_subparsers(dest="riposte_exemptions_command", required=True)
-    exemptions.add_parser("list").set_defaults(func=cmd_riposte_exemptions_list)
-    exemptions_remove = exemptions.add_parser("remove")
-    exemptions_remove.add_argument("network")
+    exemptions = add_group(riposte_sub, "exemptions", _("Adresses exemptées de RIPOSTE."), "riposte_exemptions_command")
+    add_command(exemptions, "list", _("Liste les exemptions.")).set_defaults(func=cmd_riposte_exemptions_list)
+    exemptions_remove = add_command(exemptions, "remove", _("Retire une exemption."))
+    exemptions_remove.add_argument("network", metavar=_("RESEAU"), help=_("Adresse ou réseau exempté."))
     exemptions_remove.set_defaults(func=cmd_riposte_exemptions_remove)
 
-    stop = riposte_sub.add_parser("stop")
-    stop.add_argument("--revoke", action="store_true")
+    stop = add_command(riposte_sub, "stop", _(
+        "Arrêt d'urgence : RIPOSTE ne décide plus rien, même après un redémarrage, jusqu'à riposte resume."))
+    stop.add_argument("--revoke", action="store_true", help=_("Lève aussi toutes les actions en cours."))
     stop.set_defaults(func=cmd_riposte_stop)
-    riposte_sub.add_parser("resume").set_defaults(func=cmd_riposte_resume)
+    add_command(riposte_sub, "resume", _("Lève l'arrêt d'urgence.")).set_defaults(func=cmd_riposte_resume)

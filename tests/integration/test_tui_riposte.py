@@ -12,7 +12,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from omega_serv.application.config.generate_config import generate_default_config
 from omega_serv.application.config.load_config import load_config
@@ -372,6 +372,24 @@ class TestTuiRiposte(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(policy["confirmed_risks"], ["long_duration"])
             self.assertFalse(policy["enabled"])
             self.assertEqual(policy["then"]["tiers_seconds"], [86400, 2592000])
+
+    async def test_decoy_without_profile_is_read_as_no_profile(self):
+        """Liste des profils laissee vide : Textual 8 renvoie Select.NULL (Select.BLANK vaut False) ; jamais
+        le texte « Select.NULL » comme nom de profil (corrige le 2026-11-06)."""
+        self._set_options(policies=())
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._open(pilot, "riposte-policies", RipostePoliciesScreen)
+            await self._press(pilot, "#add")
+            await self._choose(pilot, "custom")
+            form = pilot.app.screen
+            form.query_one("#policy-id", Input).value = "leurre"
+            form.query_one("#policy-name", Input).value = "Leurre"
+            form.query_one("#policy-action", Select).value = "decoy"
+            self.assertIs(form.query_one("#policy-decoy-profile", Select).value, Select.NULL)
+            policy = form._read()
+            self.assertNotIsInstance(policy, str)
+            self.assertIsNone(policy.decoy_profile)
 
     async def test_invalid_form_writes_nothing(self):
         self._set_options(policies=())

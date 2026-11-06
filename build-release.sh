@@ -111,7 +111,12 @@ info "Copie du projet omega-serv..."
 # de dossier dans l'archive remet ses droits a l'extraction par-dessus une
 # installation existante et casse le partage avec le compte du service.
 # install.sh les cree s'ils manquent, sans jamais toucher aux existants.
+# Jamais livres (retour utilisateur 2026-11-06, archive de 9 Mo) : tests Python et C++ (vecteurs
+# compris, ~7 Mo), build/ (reste de setuptools), HEADER.txt des listings (pages du site, pas du
+# programme). Le binaire livre est compile et teste depuis le projet (plus bas), et CMakeLists.txt
+# ne declare les cibles de test que si native/*/tests/ est present (compilation par install.sh).
 rsync -a \
+    --exclude='/tests/' --exclude='/build/' --exclude='native/*/tests/' --exclude='HEADER.txt' \
     --exclude='.venv/' --exclude='venv/' \
     --exclude='__pycache__/' --exclude='*.pyc' --exclude='*.egg-info/' \
     --exclude='.pytest_cache/' --exclude='.mypy_cache/' --exclude='.ruff_cache/' \
@@ -194,6 +199,7 @@ rsync -a \
     --exclude='.venv/' --exclude='__pycache__/' --exclude='*.pyc' \
     --exclude='.pytest_cache/' --exclude='.mypy_cache/' --exclude='.ruff_cache/' \
     --exclude='*.egg-info/' --exclude='.git/' --exclude='tests/' \
+    --exclude='*.po' --exclude='*.pot' \
     "$OMEGA_LIB_SRC/" "$DEST/vendor/omega-lib/"
 
 info "Archivage..."

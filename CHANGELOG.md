@@ -17,6 +17,16 @@ signalés explicitement, même mineurs.
 
 ### Ajouté
 
+- **Aide complète de la ligne de commande** : chaque commande et chaque option ont désormais un texte
+  d'aide (`omega-serv <commande> --help`, jusque-là les noms seuls). Nouvelle commande `omega-serv help`
+  (arbre de toutes les commandes, ou d'une branche : `omega-serv help riposte`), page de manuel
+  `man omega-serv` installée par `install.sh` dans `~/.local/share/man/man1/` (sans sudo) et référence
+  `docs/HELP.md`. La page de manuel et `docs/HELP.md` sont générées depuis le code
+  (`tools/cli_reference.py`) ; un test signale toute commande sans aide ou tout document en retard.
+  Textes d'aide, `omega-serv help` et les nouveaux messages (packs WAF ajoutés, « expire le » de
+  `blocklist add`) traduits dans les 16 langues (249 phrases) ; la page de manuel et `docs/HELP.md`
+  restent en français.
+
 - **État & Ressources plus complet** *FLUX* : relit à l'ouverture les 15 dernières minutes du journal d'accès (plus de cadre vide au
   départ), débits sur la dernière minute et les 5 dernières, top 5 des IP, des chemins demandés et des
   chemins en 404 (souvent des scanners), section *SÉCURITÉ* (attaques bloquées, refus de liste de blocage et
@@ -151,6 +161,11 @@ signalés explicitement, même mineurs.
 
 ### Modifié
 
+- **Archive allégée : 7,1 Mo au lieu de 9,0 Mo.** Les tests (Python et C++, vecteurs compris), un
+  reste de compilation (`build/`), les fichiers `HEADER.txt` et les sources de traduction d'omega-lib ne
+  sont plus livrés ; seuls ce qui sert à l'installation et à l'exécution reste. La compilation locale du
+  moteur natif par `install.sh` fonctionne sans les tests.
+
 - **Nombre de processus (`server.workers`) limité selon le moteur et le processeur** : avec le moteur Python, au plus
   un processus par **cœur physique** (auparavant : par CPU logique, hyperthreading compris — au-delà, les mesures
   ne montrent aucun gain) ; avec le moteur natif, 1, ou 2 à partir de 4 cœurs physiques. L'écran **Résistance et
@@ -194,6 +209,18 @@ signalés explicitement, même mineurs.
 
 ### Corrigé
 
+- **`option enable waf` donnait un WAF sans aucune règle** sur une configuration neuve : `config check` et
+  `serve` le refusaient ensuite (« rules.paths et keyword_lists ne peuvent pas être tous les deux vides »),
+  sans moyen de choisir les packs en ligne de commande. À la première activation, tous les packs présents
+  dans `secure/waf/rules/` sont désormais ajoutés, en mode log-only (rien n'est bloqué tant que le mode
+  n'est pas `block`, comme avant) ; des packs déjà choisis ne sont jamais remplacés. Même comportement
+  depuis l'écran Options.
+- **RIPOSTE : une politique « leurre » enregistrée sans profil choisi recevait le profil « Select.NULL »**
+  (nom inexistant) au lieu de « aucun profil ». Même cause, corrigée aussi : « Retirer l'épingle » de lnav
+  sans épingle choisie ne disait rien. Les listes déroulantes qui ont toujours une valeur (thème d'export,
+  action, journal et fréquence de la rotation) ne proposent plus de ligne vide.
+- **`blocklist add` affichait « (_(expire )2026-…) »** pour un ban à durée limitée : le message indique
+  désormais « (expire le 2026-…) ».
 - **État & Ressources : le « Débit » réseau affichait le total depuis le démarrage de la machine**, pas un
   débit. Il affiche désormais les octets reçus et envoyés par seconde, mesurés entre deux rafraîchissements.
 - **État & Ressources : un cadre trop long était coupé au lieu de défiler** (la fin du contenu restait

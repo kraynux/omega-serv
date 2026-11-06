@@ -788,6 +788,6 @@ class ResourceStatusScreen(OmegaScreen):
                 block.row(link["name"], f"○ {link['kind']}  " + _("déconnectée"), "dim")
             else:
                 block.row(link["name"], f"{'●' if active else '○'} {link['kind']}  {link['ip'] or _('sans IP')}",
-                          "bold green" if active else None)
+                          style="bold green" if active else None)
         block.render_into(content)
         return content

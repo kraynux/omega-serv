@@ -11,7 +11,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
-from omega_serv.application.config.manage_option import set_option_enabled
+from omega_serv.application.config.manage_option import set_option_enabled, waf_rule_packs_present
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -97,7 +97,10 @@ class OptionsScreen(OmegaScreen):
         # demarre ni ne l'arrete (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md §3.1).
         riposte_always_needs_restart = self._selected_name == "riposte"
 
-        result = set_option_enabled(load_result.config, self._selected_name, enabled)
+        result = set_option_enabled(
+            load_result.config, self._selected_name, enabled,
+            waf_rule_packs_present(self._container.filesystem, self._container.project_root),
+        )
         if not result.success:
             self.app.notify(result.message, severity="error")
             return

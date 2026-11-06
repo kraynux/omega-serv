@@ -40,7 +40,7 @@ from omega_serv.application.auth.manage_zones import add_zone, remove_zone
 from omega_serv.application.config.apply_profile import plan_profile_application
 from omega_serv.application.config.generate_config import generate_default_config
 from omega_serv.application.config.load_config import load_config
-from omega_serv.application.config.manage_option import set_option_enabled
+from omega_serv.application.config.manage_option import set_option_enabled, waf_rule_packs_present
 from omega_serv.application.config.validate_config import validate_config_environment
 from omega_serv.application.security.manage_blocklist import (
     add_blocklist_entry,
@@ -126,6 +126,7 @@ from omega_serv.infrastructure.services.runit_service_manager import RunitServic
 from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
 from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
 from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+from omega_serv.interfaces.cli.command_tree import add_command, add_group, cmd_help
 from omega_serv.interfaces.cli.declaration_commands import (
     ServeCompanions,
     add_declaration_parser,
@@ -589,7 +590,8 @@ def _cmd_option_set(args: argparse.Namespace, container: DependencyContainer, en
         return 1
     assert load_result.config is not None
 
-    result = set_option_enabled(load_result.config, args.name, enabled)
+    result = set_option_enabled(load_result.config, args.name, enabled,
+                                waf_rule_packs_present(container.filesystem, container.project_root))
     print(result.message)
     if not result.success:
         return 1
@@ -1618,308 +1620,416 @@ def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="omega-serv")
-    parser.add_argument("--config", type=Path, default=CONFIG_FILE)
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(
+        prog="omega-serv",
+        description=_("Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : interface "
+                      "interactive. Avec une commande : ligne de commande, scriptable."),
+        epilog=_("Toutes les commandes : omega-serv help. Manuel : man omega-serv."),
+    )
+    parser.add_argument("--config", type=Path, default=CONFIG_FILE, metavar=_("FICHIER"),
+                        help=_("Fichier de configuration (défaut : config/omega-serve.json de l'installation)."))
+    subparsers = parser.add_subparsers(dest="command", required=True, title=_("commandes"), metavar=_("COMMANDE"))
 
-    serve_parser = subparsers.add_parser("serve")
-    serve_parser.add_argument("--confirm-self-signed-public-bind", action="store_true")
-    serve_parser.add_argument("--confirm-auth-without-tls", action="store_true")
+    confirm_self_signed = _("Accepte un certificat auto-signé sur une adresse publique.")
+    confirm_auth_without_tls = _("Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau).")
+    method_help = _("Méthode HTTP (défaut : GET).")
+
+    serve_parser = add_command(subparsers, "serve", _(
+        "Démarre le serveur au premier plan (c'est ce que lance le service système). Refuse de tourner en root."))
+    serve_parser.add_argument("--confirm-self-signed-public-bind", action="store_true", help=confirm_self_signed)
+    serve_parser.add_argument("--confirm-auth-without-tls", action="store_true", help=confirm_auth_without_tls)
     serve_parser.set_defaults(func=cmd_serve)
 
-    config_parser = subparsers.add_parser("config")
-    config_sub = config_parser.add_subparsers(dest="config_command", required=True)
-    init_parser = config_sub.add_parser("init")
-    init_parser.add_argument("--force", action="store_true")
+    config_sub = add_group(subparsers, "config", _(
+        "Fichier de configuration : création, vérification, TLS, sauvegardes."), "config_command")
+    init_parser = add_command(config_sub, "init", _("Crée le fichier de configuration par défaut."))
+    init_parser.add_argument("--force", action="store_true", help=_("Écrase le fichier existant."))
     init_parser.set_defaults(func=cmd_config_init)
-    check_parser = config_sub.add_parser("check")
-    check_parser.add_argument("--confirm-self-signed-public-bind", action="store_true")
-    check_parser.add_argument("--confirm-auth-without-tls", action="store_true")
+    check_parser = add_command(config_sub, "check", _(
+        "Vérifie la configuration et l'environnement (chemins, droits, certificats) sans démarrer."))
+    check_parser.add_argument("--confirm-self-signed-public-bind", action="store_true", help=confirm_self_signed)
+    check_parser.add_argument("--confirm-auth-without-tls", action="store_true", help=confirm_auth_without_tls)
     check_parser.set_defaults(func=cmd_config_check)
-    config_sub.add_parser("show").set_defaults(func=cmd_config_show)
-    enable_tls_parser = config_sub.add_parser("enable-tls")
-    enable_tls_parser.add_argument("--cert", default="")
-    enable_tls_parser.add_argument("--key", default="")
-    enable_tls_parser.add_argument("--mode", choices=("direct", "behind_proxy"), default="direct")
+    add_command(config_sub, "show", _("Affiche la configuration chargée, en JSON.")).set_defaults(func=cmd_config_show)
+    enable_tls_parser = add_command(config_sub, "enable-tls", _("Active TLS dans la configuration."))
+    enable_tls_parser.add_argument("--cert", default="", metavar=_("FICHIER"),
+                                   help=_("Certificat à utiliser (sinon celui déjà configuré)."))
+    enable_tls_parser.add_argument("--key", default="", metavar=_("FICHIER"),
+                                   help=_("Clé privée à utiliser (sinon celle déjà configurée)."))
+    enable_tls_parser.add_argument("--mode", choices=("direct", "behind_proxy"), default="direct", help=_(
+        "direct : omega-serv chiffre lui-même ; behind_proxy : derrière un reverse proxy (défaut : direct)."))
     enable_tls_parser.set_defaults(func=cmd_config_enable_tls)
-    config_sub.add_parser("disable-tls").set_defaults(func=cmd_config_disable_tls)
-    backup_parser = config_sub.add_parser("backup")
-    backup_parser.add_argument("--include-waf", action="store_true")
-    backup_parser.add_argument("--include-auth", action="store_true")
-    backup_parser.add_argument("--include-certificates", action="store_true")
-    backup_parser.add_argument("--include-active-defense", action="store_true")
-    backup_parser.add_argument("--include-error-pages", action="store_true")
-    backup_parser.add_argument("--include-preferences", action="store_true")
-    backup_parser.add_argument("--include-logs-library", action="store_true")
-    backup_parser.add_argument("--include-riposte", action="store_true")
-    backup_parser.add_argument("--all", action="store_true")
-    backup_parser.add_argument("--confirm-secrets", action="store_true")
-    backup_parser.add_argument("--description", default="")
+    add_command(config_sub, "disable-tls", _("Désactive TLS dans la configuration.")).set_defaults(
+        func=cmd_config_disable_tls)
+    backup_parser = add_command(config_sub, "backup", _(
+        "Crée une sauvegarde : la configuration toujours, le reste selon les options --include-*."))
+    backup_parser.add_argument("--include-waf", action="store_true", help=_("Ajoute les règles et listes du WAF."))
+    backup_parser.add_argument("--include-auth", action="store_true", help=_(
+        "Ajoute les utilisateurs et les zones protégées (secrets : demande --confirm-secrets)."))
+    backup_parser.add_argument("--include-certificates", action="store_true", help=_(
+        "Ajoute les certificats et les clés TLS (secrets : demande --confirm-secrets)."))
+    backup_parser.add_argument("--include-active-defense", action="store_true",
+                               help=_("Ajoute la base Active Defense."))
+    backup_parser.add_argument("--include-error-pages", action="store_true",
+                               help=_("Ajoute les pages d'erreur personnalisées."))
+    backup_parser.add_argument("--include-preferences", action="store_true",
+                               help=_("Ajoute les préférences de l'interface."))
+    backup_parser.add_argument("--include-logs-library", action="store_true",
+                               help=_("Ajoute la bibliothèque des journaux."))
+    backup_parser.add_argument("--include-riposte", action="store_true", help=_("Ajoute la base RIPOSTE."))
+    backup_parser.add_argument("--all", action="store_true", help=_(
+        "Tout sauvegarder : toutes les options --include-* (secrets compris : demande --confirm-secrets)."))
+    backup_parser.add_argument("--confirm-secrets", action="store_true", help=_(
+        "Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés privées)."))
+    backup_parser.add_argument("--description", default="", metavar=_("TEXTE"),
+                               help=_("Texte libre enregistré avec la sauvegarde."))
     backup_parser.set_defaults(func=cmd_config_backup)
-    restore_parser = config_sub.add_parser("restore")
-    restore_parser.add_argument("--snapshot-id", required=True)
-    restore_parser.add_argument("--stop-and-restart", action="store_true")
+    restore_parser = add_command(config_sub, "restore", _("Restaure une sauvegarde."))
+    restore_parser.add_argument("--snapshot-id", required=True, metavar=_("ID"),
+                                help=_("Identifiant de la sauvegarde (voir config list-backups)."))
+    restore_parser.add_argument("--stop-and-restart", action="store_true", help=_(
+        "Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne)."))
     restore_parser.set_defaults(func=cmd_config_restore)
-    config_sub.add_parser("list-backups").set_defaults(func=cmd_config_list_backups)
+    add_command(config_sub, "list-backups", _("Liste les sauvegardes.")).set_defaults(func=cmd_config_list_backups)
 
-    profile_parser = subparsers.add_parser("profile")
-    profile_sub = profile_parser.add_subparsers(dest="profile_command", required=True)
-    profile_sub.add_parser("list").set_defaults(func=cmd_profile_list)
-    show_parser = profile_sub.add_parser("show")
-    show_parser.add_argument("name")
+    profile_sub = add_group(subparsers, "profile", _("Profils de configuration prêts à l'emploi."), "profile_command")
+    add_command(profile_sub, "list", _("Liste les profils disponibles.")).set_defaults(func=cmd_profile_list)
+    profile_name = _("Nom du profil (voir profile list).")
+    show_parser = add_command(profile_sub, "show", _("Affiche un profil et les valeurs qu'il fixe."))
+    show_parser.add_argument("name", metavar=_("NOM"), help=profile_name)
     show_parser.set_defaults(func=cmd_profile_show)
-    apply_parser = profile_sub.add_parser("apply")
-    apply_parser.add_argument("name")
-    apply_parser.add_argument("--dry-run", action="store_true")
-    apply_parser.add_argument("--force", action="store_true")
+    apply_parser = add_command(profile_sub, "apply", _(
+        "Applique un profil à la configuration (modifications et conflits affichés d'abord)."))
+    apply_parser.add_argument("name", metavar=_("NOM"), help=profile_name)
+    apply_parser.add_argument("--dry-run", action="store_true",
+                              help=_("Montre seulement ce qui changerait, sans rien écrire."))
+    apply_parser.add_argument("--force", action="store_true", help=_("Applique malgré des problèmes bloquants."))
     apply_parser.set_defaults(func=cmd_profile_apply)
 
-    option_parser = subparsers.add_parser("option")
-    option_sub = option_parser.add_subparsers(dest="option_command", required=True)
-    option_sub.add_parser("list").set_defaults(func=cmd_option_list)
-    enable_parser = option_sub.add_parser("enable")
-    enable_parser.add_argument("name")
+    option_sub = add_group(subparsers, "option", _(
+        "Modules optionnels (waf, fastcgi, active_defense, riposte...)."), "option_command")
+    add_command(option_sub, "list", _("Liste les options et leur état.")).set_defaults(func=cmd_option_list)
+    option_name = _("Nom de l'option (voir option list).")
+    enable_parser = add_command(option_sub, "enable", _("Active une option."), _(
+        "Première activation du WAF : tous les packs de secure/waf/rules/ sont ajoutés, en mode log-only."))
+    enable_parser.add_argument("name", metavar=_("NOM"), help=option_name)
     enable_parser.set_defaults(func=cmd_option_enable)
-    disable_parser = option_sub.add_parser("disable")
-    disable_parser.add_argument("name")
+    disable_parser = add_command(option_sub, "disable", _("Désactive une option."))
+    disable_parser.add_argument("name", metavar=_("NOM"), help=option_name)
     disable_parser.set_defaults(func=cmd_option_disable)
 
-    simulate_parser = subparsers.add_parser("simulate-request")
-    simulate_parser.add_argument("--method", default="GET")
-    simulate_parser.add_argument("--url", required=True)
+    simulate_parser = add_command(subparsers, "simulate-request", _(
+        "Montre comment le serveur traiterait une requête (chemin, règles, statut, en-têtes), sans l'envoyer."))
+    simulate_parser.add_argument("--method", default="GET", help=method_help)
+    simulate_parser.add_argument("--url", required=True, metavar=_("CHEMIN"),
+                                 help=_("Chemin demandé, par exemple /docs/index.html."))
     simulate_parser.set_defaults(func=cmd_simulate_request)
 
-    waf_parser = subparsers.add_parser("waf")
-    waf_sub = waf_parser.add_subparsers(dest="waf_command", required=True)
-    test_parser = waf_sub.add_parser("test")
-    test_parser.add_argument("--method", default="GET")
-    test_parser.add_argument("--path", required=True)
-    test_parser.add_argument("--query", default="")
-    test_parser.add_argument("--body", default="")
-    test_parser.add_argument("--remote-ip", default="127.0.0.1")
+    waf_sub = add_group(subparsers, "waf", _("Pare-feu applicatif (WAF)."), "waf_command")
+    test_parser = add_command(waf_sub, "test", _(
+        "Soumet une requête fictive au WAF et affiche sa décision (règles, score, statut)."))
+    test_parser.add_argument("--method", default="GET", help=method_help)
+    test_parser.add_argument("--path", required=True, metavar=_("CHEMIN"), help=_("Chemin de la requête."))
+    test_parser.add_argument("--query", default="", metavar=_("TEXTE"), help=_("Chaîne de requête, sans le « ? »."))
+    test_parser.add_argument("--body", default="", metavar=_("TEXTE"), help=_("Corps de la requête."))
+    test_parser.add_argument("--remote-ip", default="127.0.0.1", metavar="IP",
+                             help=_("Adresse du client simulé (défaut : 127.0.0.1)."))
     test_parser.set_defaults(func=cmd_waf_test)
-    waf_sub.add_parser("never-auto-block").set_defaults(func=cmd_waf_never_auto_block)
+    add_command(waf_sub, "never-auto-block", _(
+        "Affiche les réseaux jamais bannis automatiquement (lu par omega-jail).")).set_defaults(
+        func=cmd_waf_never_auto_block)
 
-    blocklist_parser = subparsers.add_parser("blocklist")
-    blocklist_sub = blocklist_parser.add_subparsers(dest="blocklist_command", required=True)
-    blocklist_sub.add_parser("list").set_defaults(func=cmd_blocklist_list)
-    add_parser = blocklist_sub.add_parser("add")
-    add_parser.add_argument("--network", required=True)
-    add_parser.add_argument("--reason", required=True)
-    add_parser.add_argument("--duration-seconds", type=int, default=None)
-    add_parser.add_argument("--confirm-permanent", action="store_true")
+    blocklist_sub = add_group(subparsers, "blocklist", _("Adresses bannies."), "blocklist_command")
+    add_command(blocklist_sub, "list", _("Affiche les bans : réseau, origine, expiration, motif.")).set_defaults(
+        func=cmd_blocklist_list)
+    add_parser = add_command(blocklist_sub, "add", _("Bannit une adresse ou un réseau."))
+    add_parser.add_argument("--network", required=True, metavar=_("RESEAU"),
+                            help=_("Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."))
+    add_parser.add_argument("--reason", required=True, metavar=_("TEXTE"), help=_("Motif du ban."))
+    add_parser.add_argument("--duration-seconds", type=int, default=None, metavar=_("SECONDES"),
+                            help=_("Durée du ban. Sans durée, le ban est permanent et demande --confirm-permanent."))
+    add_parser.add_argument("--confirm-permanent", action="store_true", help=_("Confirme un ban permanent."))
     add_parser.set_defaults(func=cmd_blocklist_add)
-    remove_parser = blocklist_sub.add_parser("remove")
-    remove_parser.add_argument("--network", required=True)
+    remove_parser = add_command(blocklist_sub, "remove", _("Lève un ban."))
+    remove_parser.add_argument("--network", required=True, metavar=_("RESEAU"),
+                               help=_("Adresse ou réseau, tel qu'affiché par blocklist list."))
     remove_parser.set_defaults(func=cmd_blocklist_remove)
 
-    active_defense_parser = subparsers.add_parser("active-defense")
-    active_defense_sub = active_defense_parser.add_subparsers(dest="active_defense_command", required=True)
-    active_defense_sub.add_parser("status").set_defaults(func=cmd_active_defense_status)
-    simulate_ad_parser = active_defense_sub.add_parser("simulate")
-    simulate_ad_parser.add_argument("--ip", required=True)
-    simulate_ad_parser.add_argument("--path", default="/")
-    simulate_ad_parser.add_argument("--user-agent", default="")
-    simulate_ad_parser.add_argument("--attack-class", default="scan")
-    simulate_ad_parser.add_argument("--score", type=int, default=10)
+    active_defense_sub = add_group(subparsers, "active-defense", _(
+        "Active Defense : état, simulation, purge (voir aussi threats, incidents, deception)."),
+        "active_defense_command")
+    add_command(active_defense_sub, "status", _(
+        "Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies.")).set_defaults(
+        func=cmd_active_defense_status)
+    simulate_ad_parser = add_command(active_defense_sub, "simulate", _(
+        "Montre la décision qu'Active Defense prendrait pour une source, sans rien écrire."))
+    simulate_ad_parser.add_argument("--ip", required=True, help=_("Adresse de la source simulée."))
+    simulate_ad_parser.add_argument("--path", default="/", metavar=_("CHEMIN"),
+                                    help=_("Chemin observé (défaut : /)."))
+    simulate_ad_parser.add_argument("--user-agent", default="", metavar=_("TEXTE"),
+                                    help=_("User-Agent de la source."))
+    simulate_ad_parser.add_argument("--attack-class", default="scan", metavar=_("CLASSE"),
+                                    help=_("Classe d'attaque (défaut : scan ; liste affichée si inconnue)."))
+    simulate_ad_parser.add_argument("--score", type=int, default=10, metavar=_("POINTS"),
+                                    help=_("Points ajoutés au score de menace (défaut : 10)."))
     simulate_ad_parser.set_defaults(func=cmd_active_defense_simulate)
-    active_defense_sub.add_parser("purge").set_defaults(func=cmd_active_defense_purge)
+    add_command(active_defense_sub, "purge", _(
+        "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les incidents fermés "
+        "depuis plus de 90 jours.")).set_defaults(func=cmd_active_defense_purge)
 
-    engine_parser = subparsers.add_parser("engine")
-    engine_sub = engine_parser.add_subparsers(dest="engine_command", required=True)
-    engine_sub.add_parser("status").set_defaults(func=cmd_engine_status)
+    engine_sub = add_group(subparsers, "engine", _("Moteur HTTP (Python ou natif)."), "engine_command")
+    add_command(engine_sub, "status", _(
+        "Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel repli.")).set_defaults(
+        func=cmd_engine_status)
 
-    riposte_parser = subparsers.add_parser("riposte")
-    riposte_sub = riposte_parser.add_subparsers(dest="riposte_command", required=True)
-    riposte_sub.add_parser("run").set_defaults(func=cmd_riposte_run)
-    riposte_sub.add_parser("status").set_defaults(func=cmd_riposte_status)
+    riposte_sub = add_group(subparsers, "riposte", _(
+        "RIPOSTE : bans de plus en plus longs pour les récidivistes."), "riposte_command")
+    add_command(riposte_sub, "run", _(
+        "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; utile au diagnostic).")).set_defaults(
+        func=cmd_riposte_run)
+    add_command(riposte_sub, "status", _("Affiche l'état de RIPOSTE (lecture seule).")).set_defaults(
+        func=cmd_riposte_status)
     register_riposte_queries(riposte_sub)
 
-    threats_parser = subparsers.add_parser("threats")
-    threats_sub = threats_parser.add_subparsers(dest="threats_command", required=True)
-    threats_list_parser = threats_sub.add_parser("list")
-    threats_list_parser.add_argument("--level", choices=("normal", "suspicious", "hostile", "contained"), default=None)
+    threats_sub = add_group(subparsers, "threats", _("Menaces suivies par Active Defense."), "threats_command")
+    threats_list_parser = add_command(threats_sub, "list", _("Liste les sources suivies avec leur score et leur niveau."))
+    threats_list_parser.add_argument("--level", choices=("normal", "suspicious", "hostile", "contained"), default=None,
+                                     help=_("Seulement ce niveau."))
     threats_list_parser.set_defaults(func=cmd_threats_list)
-    threats_show_parser = threats_sub.add_parser("show")
-    threats_show_parser.add_argument("subject_id")
+    threats_show_parser = add_command(threats_sub, "show", _("Affiche le détail d'une source suivie."))
+    threats_show_parser.add_argument("subject_id", metavar=_("SOURCE"),
+                                     help=_("Identifiant de la source, tel qu'affiché par threats list."))
     threats_show_parser.set_defaults(func=cmd_threats_show)
 
-    incidents_parser = subparsers.add_parser("incidents")
-    incidents_sub = incidents_parser.add_subparsers(dest="incidents_command", required=True)
-    incidents_list_parser = incidents_sub.add_parser("list")
-    incidents_list_parser.add_argument("--status", choices=("open", "closed"), default=None)
-    incidents_list_parser.add_argument("--since-hours", type=float, default=None)
+    incidents_sub = add_group(subparsers, "incidents", _("Incidents Active Defense."), "incidents_command")
+    incident_id = _("Identifiant de l'incident (voir incidents list).")
+    incidents_list_parser = add_command(incidents_sub, "list", _("Liste les incidents."))
+    incidents_list_parser.add_argument("--status", choices=("open", "closed"), default=None,
+                                       help=_("Seulement les incidents ouverts (open) ou fermés (closed)."))
+    incidents_list_parser.add_argument("--since-hours", type=float, default=None, metavar=_("HEURES"),
+                                       help=_("Seulement les incidents des N dernières heures."))
     incidents_list_parser.set_defaults(func=cmd_incidents_list)
-    incidents_show_parser = incidents_sub.add_parser("show")
-    incidents_show_parser.add_argument("incident_id")
+    incidents_show_parser = add_command(incidents_sub, "show", _("Affiche un incident et sa chronologie."))
+    incidents_show_parser.add_argument("incident_id", metavar="ID", help=incident_id)
     incidents_show_parser.set_defaults(func=cmd_incidents_show)
-    incidents_close_parser = incidents_sub.add_parser("close")
-    incidents_close_parser.add_argument("incident_id")
+    incidents_close_parser = add_command(incidents_sub, "close", _(
+        "Ferme un incident (et l'exporte si l'export automatique est activé)."))
+    incidents_close_parser.add_argument("incident_id", metavar="ID", help=incident_id)
     incidents_close_parser.set_defaults(func=cmd_incidents_close)
-    incidents_export_ioc_parser = incidents_sub.add_parser("export-ioc")
-    incidents_export_ioc_parser.add_argument("incident_id")
-    incidents_export_ioc_parser.add_argument("--format", default="json")
+    incidents_export_ioc_parser = add_command(incidents_sub, "export-ioc", _(
+        "Exporte les indicateurs de compromission (IoC) d'un incident."))
+    incidents_export_ioc_parser.add_argument("incident_id", metavar="ID", help=incident_id)
+    incidents_export_ioc_parser.add_argument("--format", default="json", metavar=_("FORMATS"), help=_(
+        "Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp (défaut : json)."))
     incidents_export_ioc_parser.set_defaults(func=cmd_incidents_export_ioc)
-    incidents_report_parser = incidents_sub.add_parser("generate-report")
-    incidents_report_parser.add_argument("incident_id")
+    incidents_report_parser = add_command(incidents_sub, "generate-report", _(
+        "Écrit le rapport Markdown d'un incident."))
+    incidents_report_parser.add_argument("incident_id", metavar="ID", help=incident_id)
     incidents_report_parser.set_defaults(func=cmd_incidents_generate_report)
 
-    deception_parser = subparsers.add_parser("deception")
-    deception_sub = deception_parser.add_subparsers(dest="deception_command", required=True)
-    deception_sub.add_parser("list").set_defaults(func=cmd_deception_list)
-    deception_release_parser = deception_sub.add_parser("release")
-    deception_release_parser.add_argument("--subject", dest="subject_id", required=True)
+    deception_sub = add_group(subparsers, "deception", _("Leurres Active Defense."), "deception_command")
+    add_command(deception_sub, "list", _("Liste les sources envoyées vers un leurre.")).set_defaults(
+        func=cmd_deception_list)
+    deception_release_parser = add_command(deception_sub, "release", _("Libère une source de son leurre."))
+    deception_release_parser.add_argument("--subject", dest="subject_id", required=True, metavar=_("SOURCE"),
+                                          help=_("Identifiant de la source, tel qu'affiché par deception list."))
     deception_release_parser.set_defaults(func=cmd_deception_release)
 
-    certs_parser = subparsers.add_parser("certs")
-    certs_sub = certs_parser.add_subparsers(dest="certs_command", required=True)
+    certs_sub = add_group(subparsers, "certs", _("Certificats TLS (via OpenSSL)."), "certs_command")
+    key_types = ("rsa2048", "rsa4096", "ecdsa-p256", "ecdsa-p384")
 
-    gen_parser = certs_sub.add_parser("generate-self-signed")
-    gen_parser.add_argument("--cn", required=True)
-    gen_parser.add_argument("--san-dns", nargs="*", default=[])
-    gen_parser.add_argument("--san-ip", nargs="*", default=[])
-    gen_parser.add_argument("--org", default="OMEGA-SERV")
-    gen_parser.add_argument("--ou", default="")
-    gen_parser.add_argument("--city", default="")
-    gen_parser.add_argument("--region", default="")
-    gen_parser.add_argument("--country", default="")
-    gen_parser.add_argument("--days", type=int, default=365)
-    gen_parser.add_argument("--key-type", choices=("rsa2048", "rsa4096", "ecdsa-p256", "ecdsa-p384"), default="rsa2048")
-    gen_parser.add_argument("--password", default=None)
+    def add_identity(command: argparse.ArgumentParser, cn_help: str) -> None:
+        command.add_argument("--cn", required=True, metavar=_("NOM"), help=cn_help)
+        command.add_argument("--org", default="OMEGA-SERV", metavar=_("TEXTE"),
+                             help=_("Organisation (défaut : OMEGA-SERV)."))
+        command.add_argument("--ou", default="", metavar=_("TEXTE"), help=_("Service ou département."))
+        command.add_argument("--city", default="", metavar=_("TEXTE"), help=_("Ville."))
+        command.add_argument("--region", default="", metavar=_("TEXTE"), help=_("Région."))
+        command.add_argument("--country", default="", metavar=_("CODE"), help=_("Pays, code à deux lettres (FR, BE...)."))
+
+    def add_san(command: argparse.ArgumentParser) -> None:
+        command.add_argument("--san-dns", nargs="*", default=[], metavar=_("NOM"),
+                             help=_("Noms de domaine supplémentaires couverts par le certificat."))
+        command.add_argument("--san-ip", nargs="*", default=[], metavar="IP",
+                             help=_("Adresses IP couvertes par le certificat."))
+
+    domain_cn = _("Nom commun : le nom de domaine principal.")
+    gen_parser = add_command(certs_sub, "generate-self-signed", _(
+        "Génère un certificat auto-signé aux chemins de la configuration (l'ancien est sauvegardé)."))
+    add_identity(gen_parser, domain_cn)
+    add_san(gen_parser)
+    gen_parser.add_argument("--days", type=int, default=365, metavar=_("JOURS"),
+                            help=_("Validité en jours (défaut : 365)."))
+    gen_parser.add_argument("--key-type", choices=key_types, default="rsa2048",
+                            help=_("Type de clé (défaut : rsa2048)."))
+    gen_parser.add_argument("--password", default=None, metavar=_("MOT-DE-PASSE"),
+                            help=_("Chiffre la clé privée avec ce mot de passe (facultatif)."))
     gen_parser.set_defaults(func=cmd_certs_generate_self_signed)
 
-    ca_parser = certs_sub.add_parser("generate-ca")
-    ca_parser.add_argument("--cn", required=True)
-    ca_parser.add_argument("--org", default="OMEGA-SERV")
-    ca_parser.add_argument("--ou", default="")
-    ca_parser.add_argument("--city", default="")
-    ca_parser.add_argument("--region", default="")
-    ca_parser.add_argument("--country", default="")
-    ca_parser.add_argument("--days", type=int, default=3650)
-    ca_parser.add_argument("--key-type", choices=("rsa2048", "rsa4096", "ecdsa-p256", "ecdsa-p384"), default="rsa4096")
-    ca_parser.add_argument("--password", default=None)
+    ca_parser = add_command(certs_sub, "generate-ca", _(
+        "Crée une autorité de certification locale dans secure/certificates/ca."))
+    add_identity(ca_parser, _("Nom de l'autorité de certification."))
+    ca_parser.add_argument("--days", type=int, default=3650, metavar=_("JOURS"),
+                           help=_("Validité en jours (défaut : 3650)."))
+    ca_parser.add_argument("--key-type", choices=key_types, default="rsa4096",
+                           help=_("Type de clé (défaut : rsa4096)."))
+    ca_parser.add_argument("--password", default=None, metavar=_("MOT-DE-PASSE"), help=_(
+        "Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois au clavier (conseillé)."))
     ca_parser.set_defaults(func=cmd_certs_generate_ca)
 
-    csr_parser = certs_sub.add_parser("generate-csr")
-    csr_parser.add_argument("--cn", required=True)
-    csr_parser.add_argument("--san-dns", nargs="*", default=[])
-    csr_parser.add_argument("--san-ip", nargs="*", default=[])
-    csr_parser.add_argument("--org", default="OMEGA-SERV")
-    csr_parser.add_argument("--ou", default="")
-    csr_parser.add_argument("--city", default="")
-    csr_parser.add_argument("--region", default="")
-    csr_parser.add_argument("--country", default="")
-    csr_parser.add_argument("--key-type", choices=("rsa2048", "rsa4096", "ecdsa-p256", "ecdsa-p384"), default="rsa2048")
-    csr_parser.add_argument("--key-out", required=True)
-    csr_parser.add_argument("--csr-out", required=True)
+    csr_parser = add_command(certs_sub, "generate-csr", _(
+        "Génère une clé et une demande de signature (CSR) à faire signer par une CA."))
+    add_identity(csr_parser, domain_cn)
+    add_san(csr_parser)
+    csr_parser.add_argument("--key-type", choices=key_types, default="rsa2048", help=_("Type de clé (défaut : rsa2048)."))
+    csr_parser.add_argument("--key-out", required=True, metavar=_("FICHIER"), help=_("Clé privée à créer."))
+    csr_parser.add_argument("--csr-out", required=True, metavar=_("FICHIER"), help=_("Demande de signature à créer."))
     csr_parser.set_defaults(func=cmd_certs_generate_csr)
 
-    sign_parser = certs_sub.add_parser("sign-csr")
-    sign_parser.add_argument("--csr", required=True)
-    sign_parser.add_argument("--ca-key", required=True)
-    sign_parser.add_argument("--ca-cert", required=True)
-    sign_parser.add_argument("--ca-key-password", dest="password", default=None)
-    sign_parser.add_argument("--days", type=int, default=365)
-    sign_parser.add_argument("--out", required=True)
-    sign_parser.add_argument("--fullchain-out", default=None)
+    ca_key_password = _("Mot de passe de la clé de CA (sinon demandé au clavier, conseillé).")
+    sign_parser = add_command(certs_sub, "sign-csr", _("Signe une demande de signature (CSR) avec une CA."))
+    sign_parser.add_argument("--csr", required=True, metavar=_("FICHIER"), help=_("Demande de signature à signer."))
+    sign_parser.add_argument("--ca-key", required=True, metavar=_("FICHIER"), help=_("Clé privée de la CA."))
+    sign_parser.add_argument("--ca-cert", required=True, metavar=_("FICHIER"), help=_("Certificat de la CA."))
+    sign_parser.add_argument("--ca-key-password", dest="password", default=None, metavar=_("MOT-DE-PASSE"),
+                             help=ca_key_password)
+    sign_parser.add_argument("--days", type=int, default=365, metavar=_("JOURS"),
+                             help=_("Validité en jours (défaut : 365)."))
+    sign_parser.add_argument("--out", required=True, metavar=_("FICHIER"), help=_("Certificat signé à écrire."))
+    sign_parser.add_argument("--fullchain-out", default=None, metavar=_("FICHIER"),
+                             help=_("Écrit aussi la chaîne complète (certificat puis CA)."))
     sign_parser.set_defaults(func=cmd_certs_sign_csr)
 
-    import_parser = certs_sub.add_parser("import")
-    import_parser.add_argument("--key", required=True)
-    import_parser.add_argument("--cert", required=True)
-    import_parser.add_argument("--chain", default=None)
+    import_parser = add_command(certs_sub, "import", _(
+        "Installe un certificat existant aux chemins de la configuration (Let's Encrypt, CA d'entreprise...)."))
+    import_parser.add_argument("--key", required=True, metavar=_("FICHIER"), help=_("Clé privée."))
+    import_parser.add_argument("--cert", required=True, metavar=_("FICHIER"), help=_("Certificat."))
+    import_parser.add_argument("--chain", default=None, metavar=_("FICHIER"),
+                               help=_("Chaîne des certificats intermédiaires (facultatif)."))
     import_parser.set_defaults(func=cmd_certs_import)
 
-    revoke_parser = certs_sub.add_parser("revoke")
-    revoke_parser.add_argument("--cert", required=True)
-    revoke_parser.add_argument("--ca-key", required=True)
-    revoke_parser.add_argument("--ca-cert", required=True)
-    revoke_parser.add_argument("--ca-key-password", dest="password", default=None)
+    revoke_parser = add_command(certs_sub, "revoke", _("Révoque un certificat émis par une CA locale."))
+    revoke_parser.add_argument("--cert", required=True, metavar=_("FICHIER"), help=_("Certificat à révoquer."))
+    revoke_parser.add_argument("--ca-key", required=True, metavar=_("FICHIER"), help=_("Clé privée de la CA."))
+    revoke_parser.add_argument("--ca-cert", required=True, metavar=_("FICHIER"), help=_("Certificat de la CA."))
+    revoke_parser.add_argument("--ca-key-password", dest="password", default=None, metavar=_("MOT-DE-PASSE"),
+                               help=ca_key_password)
     revoke_parser.set_defaults(func=cmd_certs_revoke)
 
-    verify_parser = certs_sub.add_parser("verify")
-    verify_parser.add_argument("--cert", default="")
+    inspected_cert = _("Certificat à lire (défaut : celui de la configuration).")
+    verify_parser = add_command(certs_sub, "verify", _(
+        "Vérifie un certificat : dates, correspondance avec la clé, droits de la clé. Code 1 s'il a expiré."))
+    verify_parser.add_argument("--cert", default="", metavar=_("FICHIER"), help=inspected_cert)
     verify_parser.set_defaults(func=cmd_certs_verify)
-
-    show_parser = certs_sub.add_parser("show")
-    show_parser.add_argument("--cert", default="")
+    show_parser = add_command(certs_sub, "show", _("Affiche le détail d'un certificat (même rapport que verify)."))
+    show_parser.add_argument("--cert", default="", metavar=_("FICHIER"), help=inspected_cert)
     show_parser.set_defaults(func=cmd_certs_show)
-
-    expiry_parser = certs_sub.add_parser("check-expiry")
-    expiry_parser.add_argument("--cert", default="")
-    expiry_parser.add_argument("--warn-days", type=int, default=30)
+    expiry_parser = add_command(certs_sub, "check-expiry", _(
+        "Même rapport que verify, avec une alerte si l'expiration approche."))
+    expiry_parser.add_argument("--cert", default="", metavar=_("FICHIER"), help=inspected_cert)
+    expiry_parser.add_argument("--warn-days", type=int, default=30, metavar=_("JOURS"),
+                               help=_("Seuil d'alerte en jours (défaut : 30)."))
     expiry_parser.set_defaults(func=cmd_certs_check_expiry)
 
-    auth_parser = subparsers.add_parser("auth")
-    auth_sub = auth_parser.add_subparsers(dest="auth_command", required=True)
+    auth_sub = add_group(subparsers, "auth", _(
+        "Authentification HTTP Basic : utilisateurs et zones protégées."), "auth_command")
+    username_help = _("Nom d'utilisateur.")
+    password_help = _("Mot de passe (sinon demandé au clavier, conseillé : il resterait dans l'historique).")
+    path_prefix_help = _("Début de chemin protégé, par exemple /admin.")
 
-    add_user_parser = auth_sub.add_parser("add-user")
-    add_user_parser.add_argument("--username", required=True)
-    add_user_parser.add_argument("--password", default=None)
+    add_user_parser = add_command(auth_sub, "add-user", _("Crée un utilisateur."))
+    add_user_parser.add_argument("--username", required=True, metavar=_("NOM"), help=username_help)
+    add_user_parser.add_argument("--password", default=None, metavar=_("MOT-DE-PASSE"), help=password_help)
     add_user_parser.set_defaults(func=cmd_auth_add_user)
 
-    remove_user_parser = auth_sub.add_parser("remove-user")
-    remove_user_parser.add_argument("--username", required=True)
+    remove_user_parser = add_command(auth_sub, "remove-user", _("Supprime un utilisateur."))
+    remove_user_parser.add_argument("--username", required=True, metavar=_("NOM"), help=username_help)
     remove_user_parser.set_defaults(func=cmd_auth_remove_user)
 
-    change_password_parser = auth_sub.add_parser("change-password")
-    change_password_parser.add_argument("--username", required=True)
-    change_password_parser.add_argument("--password", default=None)
+    change_password_parser = add_command(auth_sub, "change-password", _("Change le mot de passe d'un utilisateur."))
+    change_password_parser.add_argument("--username", required=True, metavar=_("NOM"), help=username_help)
+    change_password_parser.add_argument("--password", default=None, metavar=_("MOT-DE-PASSE"), help=password_help)
     change_password_parser.set_defaults(func=cmd_auth_change_password)
 
-    create_zone_parser = auth_sub.add_parser("create-zone")
-    create_zone_parser.add_argument("--path-prefix", required=True)
-    create_zone_parser.add_argument("--realm", required=True)
-    create_zone_parser.add_argument("--allowed-users", nargs="+", required=True)
-    create_zone_parser.add_argument("--allow-methods", nargs="*", default=[])
+    create_zone_parser = add_command(auth_sub, "create-zone", _("Protège un chemin par mot de passe."))
+    create_zone_parser.add_argument("--path-prefix", required=True, metavar=_("CHEMIN"), help=path_prefix_help)
+    create_zone_parser.add_argument("--realm", required=True, metavar=_("TEXTE"),
+                                    help=_("Nom affiché par le navigateur dans la demande de connexion."))
+    create_zone_parser.add_argument("--allowed-users", nargs="+", required=True, metavar=_("NOM"),
+                                    help=_("Utilisateurs autorisés dans la zone."))
+    create_zone_parser.add_argument("--allow-methods", nargs="*", default=[], metavar=_("METHODE"), help=_(
+        "Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles que le serveur autorise)."))
     create_zone_parser.set_defaults(func=cmd_auth_create_zone)
 
-    remove_zone_parser = auth_sub.add_parser("remove-zone")
-    remove_zone_parser.add_argument("--path-prefix", required=True)
+    remove_zone_parser = add_command(auth_sub, "remove-zone", _("Retire la protection d'un chemin."))
+    remove_zone_parser.add_argument("--path-prefix", required=True, metavar=_("CHEMIN"), help=path_prefix_help)
     remove_zone_parser.set_defaults(func=cmd_auth_remove_zone)
 
-    auth_sub.add_parser("list").set_defaults(func=cmd_auth_list)
-    auth_sub.add_parser("check-permissions").set_defaults(func=cmd_auth_check_permissions)
+    add_command(auth_sub, "list", _("Liste les utilisateurs et les zones protégées.")).set_defaults(func=cmd_auth_list)
+    add_command(auth_sub, "check-permissions", _(
+        "Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que par leur propriétaire.")).set_defaults(
+        func=cmd_auth_check_permissions)
 
-    service_parser = subparsers.add_parser("service")
-    service_sub = service_parser.add_subparsers(dest="service_command", required=True)
+    service_sub = add_group(subparsers, "service", _(
+        "Service système (systemd, OpenRC ou runit)."), "service_command")
+    service_name_help = _("Nom du service (défaut : omega-serv).")
+    unit_path_help = _("Fichier d'unité (défaut : /etc/systemd/system/<nom>.service).")
 
-    for verb, func in (
-        ("status", cmd_service_status), ("start", cmd_service_start), ("stop", cmd_service_stop),
-        ("restart", cmd_service_restart), ("reload", cmd_service_reload),
-        ("enable", cmd_service_enable), ("disable", cmd_service_disable),
+    for verb, func, text in (
+        ("status", cmd_service_status, _("Affiche l'état du service.")),
+        ("start", cmd_service_start, _("Démarre le service.")),
+        ("stop", cmd_service_stop, _("Arrête le service.")),
+        ("restart", cmd_service_restart, _("Redémarre le service (nécessaire après une mise à jour).")),
+        ("reload", cmd_service_reload, _(
+            "Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur demandent un redémarrage.")),
+        ("enable", cmd_service_enable, _("Active le démarrage automatique au boot.")),
+        ("disable", cmd_service_disable, _("Désactive le démarrage automatique au boot.")),
     ):
-        sub = service_sub.add_parser(verb)
-        sub.add_argument("--service-name", default="omega-serv")
+        sub = add_command(service_sub, verb, text)
+        sub.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
         sub.set_defaults(func=func)
 
-    install_parser = service_sub.add_parser("install")
-    install_parser.add_argument("--service-name", default="omega-serv")
-    install_parser.add_argument("--description", default="OMEGA-SERV web server")
-    install_parser.add_argument("--python-executable", default=None)
-    install_parser.add_argument("--user", default="omega-serv")
-    install_parser.add_argument("--group", default="omega-serv")
-    install_parser.add_argument("--stop-timeout-seconds", type=int, default=15)
-    install_parser.add_argument("--unit-path", default=None)
+    install_parser = add_command(service_sub, "install", _(
+        "Crée l'unité systemd du service (systemd seulement ; demande les droits administrateur)."))
+    install_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    install_parser.add_argument("--description", default="OMEGA-SERV web server", metavar=_("TEXTE"),
+                                help=_("Description de l'unité (défaut : OMEGA-SERV web server)."))
+    install_parser.add_argument("--python-executable", default=None, metavar=_("FICHIER"),
+                                help=_("Python à utiliser (défaut : celui du .venv de l'installation)."))
+    install_parser.add_argument("--user", default="omega-serv", metavar=_("NOM"),
+                                help=_("Compte système qui fait tourner le service (défaut : omega-serv)."))
+    install_parser.add_argument("--group", default="omega-serv", metavar=_("NOM"),
+                                help=_("Groupe du service (défaut : omega-serv)."))
+    install_parser.add_argument("--stop-timeout-seconds", type=int, default=15, metavar=_("SECONDES"),
+                                help=_("Délai laissé à l'arrêt avant de forcer (défaut : 15)."))
+    install_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
     install_parser.set_defaults(func=cmd_service_install)
 
-    uninstall_parser = service_sub.add_parser("uninstall")
-    uninstall_parser.add_argument("--service-name", default="omega-serv")
-    uninstall_parser.add_argument("--unit-path", default=None)
+    uninstall_parser = add_command(service_sub, "uninstall", _("Supprime l'unité du service."))
+    uninstall_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    uninstall_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
     uninstall_parser.set_defaults(func=cmd_service_uninstall)
 
-    audit_parser = subparsers.add_parser("audit")
-    audit_sub = audit_parser.add_subparsers(dest="audit_command", required=True)
-    security_parser = audit_sub.add_parser("security")
-    security_parser.add_argument("--format", choices=("text", "json"), default="text")
-    security_parser.add_argument("--min-severity", choices=("critical", "high", "medium", "low", "info"), default="info")
-    security_parser.add_argument("--service-name", default="omega-serv")
-    security_parser.add_argument("--unit-path", default=None)
-    security_parser.add_argument("--confirm-self-signed-public-bind", action="store_true")
-    security_parser.add_argument("--confirm-auth-without-tls", action="store_true")
+    audit_sub = add_group(subparsers, "audit", _("Audit de sécurité."), "audit_command")
+    security_parser = add_command(audit_sub, "security", _(
+        "Audite l'installation : configuration, droits, TLS, service. Code 1 si critique, 2 si élevé, "
+        "3 si la configuration est illisible."))
+    security_parser.add_argument("--format", choices=("text", "json"), default="text",
+                                 help=_("Format du rapport (défaut : text)."))
+    security_parser.add_argument("--min-severity", choices=("critical", "high", "medium", "low", "info"),
+                                 default="info", help=_("N'affiche que ce niveau et les plus graves (défaut : info)."))
+    security_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    security_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
+    security_parser.add_argument("--confirm-self-signed-public-bind", action="store_true", help=confirm_self_signed)
+    security_parser.add_argument("--confirm-auth-without-tls", action="store_true", help=confirm_auth_without_tls)
     security_parser.set_defaults(func=cmd_audit_security)
 
     add_declaration_parser(subparsers)
+
+    help_parser = add_command(subparsers, "help", _(
+        "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte)."))
+    help_parser.add_argument("branch", nargs="*", metavar=_("COMMANDE"), help=_("Branche à afficher (facultatif)."))
+    help_parser.set_defaults(func=lambda args, _container: cmd_help(parser, args))
 
     return parser
 

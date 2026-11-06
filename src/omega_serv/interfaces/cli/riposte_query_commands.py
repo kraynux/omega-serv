@@ -14,8 +14,10 @@ from omega_serv.application.riposte.console import (
     single_policy_config,
 )
 from omega_serv.application.riposte.measure import measure
-from omega_serv.application.services.resolve_current_service_name import resolve_current_service_name
 from omega_serv.application.riposte.safety import riposte_exempt_networks
+from omega_serv.application.services.resolve_current_service_name import (
+    resolve_current_service_name,
+)
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -27,6 +29,7 @@ from omega_serv.domain.security.riposte.scenarios import SCENARIOS, find_scenari
 from omega_serv.infrastructure.persistence.sqlite_riposte_connection import open_riposte_connection
 from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
 from omega_serv.infrastructure.riposte.journal_events import read_journal_events
+from omega_serv.interfaces.cli.command_tree import add_command, add_group
 from omega_serv.interfaces.cli.riposte_action_commands import register as register_actions
 from omega_serv.interfaces.cli.riposte_text import (
     action_label,
@@ -208,45 +211,53 @@ def cmd_riposte_decisions_list(args: argparse.Namespace, container: DependencyCo
 
 
 def register(riposte_sub: argparse._SubParsersAction) -> None:
-    scenarios = riposte_sub.add_parser("scenarios").add_subparsers(dest="riposte_scenarios_command", required=True)
-    scenarios.add_parser("list").set_defaults(func=cmd_riposte_scenarios_list)
-    show_scenario = scenarios.add_parser("show")
-    show_scenario.add_argument("id")
+    limit_help = _("Nombre maximal de lignes (défaut : 50).")
+    scenarios = add_group(riposte_sub, "scenarios", _("Scénarios prêts à l'emploi."), "riposte_scenarios_command")
+    add_command(scenarios, "list", _("Liste les scénarios.")).set_defaults(func=cmd_riposte_scenarios_list)
+    show_scenario = add_command(scenarios, "show", _("Affiche un scénario et la politique qu'il propose."))
+    show_scenario.add_argument("id", metavar="ID", help=_("Identifiant du scénario (voir riposte scenarios list)."))
     show_scenario.set_defaults(func=cmd_riposte_scenarios_show)
 
-    policies = riposte_sub.add_parser("policies").add_subparsers(dest="riposte_policies_command", required=True)
-    policies.add_parser("list").set_defaults(func=cmd_riposte_policies_list)
-    show_policy = policies.add_parser("show")
-    show_policy.add_argument("id")
+    policies = add_group(riposte_sub, "policies", _("Politiques de la configuration."), "riposte_policies_command")
+    add_command(policies, "list", _("Liste les politiques et leur état.")).set_defaults(func=cmd_riposte_policies_list)
+    show_policy = add_command(policies, "show", _("Affiche une politique."))
+    show_policy.add_argument("id", metavar="ID", help=_("Identifiant de la politique (voir riposte policies list)."))
     show_policy.set_defaults(func=cmd_riposte_policies_show)
 
-    simulate = riposte_sub.add_parser("simulate")
-    simulate.add_argument("--ip", required=True)
-    simulate.add_argument("--class", dest="attack_class", default="scan")
-    simulate.add_argument("--level", default=None, choices=("normal", "suspicious", "hostile", "contained"))
-    simulate.add_argument("--returns", type=int, default=1)
-    simulate.add_argument("--decoy-hits", type=int, default=0)
+    simulate = add_command(riposte_sub, "simulate", _(
+        "Explique la décision de RIPOSTE pour une situation donnée, avec la configuration réelle ; rien n'est appliqué."))
+    simulate.add_argument("--ip", required=True, help=_("Adresse de la source."))
+    simulate.add_argument("--class", dest="attack_class", default="scan", metavar=_("CLASSE"),
+                          help=_("Classe d'attaque (défaut : scan)."))
+    simulate.add_argument("--level", default=None, choices=("normal", "suspicious", "hostile", "contained"),
+                          help=_("Niveau de menace Active Defense de la source."))
+    simulate.add_argument("--returns", type=int, default=1, metavar="N",
+                          help=_("Nombre de retours de la source (défaut : 1)."))
+    simulate.add_argument("--decoy-hits", type=int, default=0, metavar="N",
+                          help=_("Nombre de leurres touchés (défaut : 0)."))
     simulate.set_defaults(func=cmd_riposte_simulate)
 
-    measure_parser = riposte_sub.add_parser("measure")
-    measure_parser.add_argument("id")
-    measure_parser.add_argument("--days", type=int, default=7)
+    measure_parser = add_command(riposte_sub, "measure", _(
+        "Mesure sur les journaux ce qu'une politique aurait décidé, sans rien appliquer."))
+    measure_parser.add_argument("id", metavar="ID", help=_(
+        "Politique de la configuration, ou scenario:<id> pour mesurer un scénario avant de l'ajouter."))
+    measure_parser.add_argument("--days", type=int, default=7, metavar=_("JOURS"),
+                                help=_("Période mesurée en jours (défaut : 7 ; 0 = tout le journal)."))
     measure_parser.set_defaults(func=cmd_riposte_measure)
 
-    sources = riposte_sub.add_parser("sources").add_subparsers(dest="riposte_sources_command", required=True)
-    sources_list = sources.add_parser("list")
-    sources_list.add_argument("--limit", type=int, default=50)
+    sources = add_group(riposte_sub, "sources", _("Adresses mémorisées par RIPOSTE."), "riposte_sources_command")
+    sources_list = add_command(sources, "list", _("Liste les sources mémorisées."))
+    sources_list.add_argument("--limit", type=int, default=50, metavar="N", help=limit_help)
     sources_list.set_defaults(func=cmd_riposte_sources_list)
-    sources_show = sources.add_parser("show")
-    sources_show.add_argument("ip")
+    sources_show = add_command(sources, "show", _("Affiche l'historique d'une source."))
+    sources_show.add_argument("ip", metavar="IP", help=_("Adresse de la source."))
     sources_show.set_defaults(func=cmd_riposte_sources_show)
 
-    decisions = riposte_sub.add_parser("decisions").add_subparsers(dest="riposte_decisions_command", required=True)
-    decisions_list = decisions.add_parser("list")
-    decisions_list.add_argument("--limit", type=int, default=50)
-    decisions_list.add_argument("--ip", default=None)
-    decisions_list.add_argument("--explain", action="store_true")
+    decisions = add_group(riposte_sub, "decisions", _("Décisions prises par RIPOSTE."), "riposte_decisions_command")
+    decisions_list = add_command(decisions, "list", _("Liste les dernières décisions."))
+    decisions_list.add_argument("--limit", type=int, default=50, metavar="N", help=limit_help)
+    decisions_list.add_argument("--ip", default=None, metavar="IP", help=_("Seulement cette adresse."))
+    decisions_list.add_argument("--explain", action="store_true", help=_("Détaille le raisonnement de chaque décision."))
     decisions_list.set_defaults(func=cmd_riposte_decisions_list)
 
     register_actions(riposte_sub, policies, sources)
-

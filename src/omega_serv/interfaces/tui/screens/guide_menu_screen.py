@@ -55,7 +55,7 @@ class GuideMenuScreen(OmegaScreen):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Contact et support"), id="contact-support")
             yield Select(
-                [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, id="export-theme-select",
+                [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False, id="export-theme-select",
             )
             yield DataTable(id="guide-menu-table")
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):

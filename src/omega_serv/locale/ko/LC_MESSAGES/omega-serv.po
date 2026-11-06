@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-05 17:09+0100\n"
+"POT-Creation-Date: 2026-11-06 06:56+0100\n"
 "PO-Revision-Date: 2026-10-23 23:55+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 한국어\n"
@@ -152,138 +152,153 @@ msgstr "{config_path}이(가) 이미 있습니다(덮어쓰려면 --force 사용
 msgid "Configuration par défaut écrite dans {config_path}"
 msgstr "기본 설정을 {config_path}에 기록했습니다"
 
-#: src/omega_serv/application/config/manage_option.py:20
+#: src/omega_serv/application/config/manage_option.py:36
 #, python-brace-format
 msgid "Option inconnue : {option_name} (connues : {value})"
 msgstr "알 수 없는 옵션: {option_name} (알려진 옵션: {value})"
 
-#: src/omega_serv/application/config/manage_option.py:30
+#: src/omega_serv/application/config/manage_option.py:53
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:307
 msgid "activée"
 msgstr "활성화"
 
-#: src/omega_serv/application/config/manage_option.py:30
+#: src/omega_serv/application/config/manage_option.py:53
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:307
 msgid "désactivée"
 msgstr "비활성화"
 
-#: src/omega_serv/application/config/manage_option.py:31
+#: src/omega_serv/application/config/manage_option.py:54
 #, python-brace-format
 msgid "Option '{option_name}' {verb}."
 msgstr "옵션 '{option_name}' {verb}됨."
 
-#: src/omega_serv/application/config/validate_config.py:62
+#: src/omega_serv/application/config/manage_option.py:57
+#, python-brace-format
+msgid "{count} pack(s) de règles ajouté(s) (secure/waf/rules/). Mode {mode}"
+msgstr "규칙 팩 {count}개를 추가했습니다(secure/waf/rules/). 모드 {mode}"
+
+#: src/omega_serv/application/config/manage_option.py:60
+msgid " : rien n'est bloqué, les attaques sont seulement journalisées."
+msgstr ": 아무것도 차단하지 않으며 공격은 기록만 됩니다."
+
+#: src/omega_serv/application/config/validate_config.py:63
 #, python-brace-format
 msgid "paths.webroot n'est pas un dossier existant : {webroot}"
 msgstr "paths.webroot가 존재하는 폴더가 아닙니다: {webroot}"
 
-#: src/omega_serv/application/config/validate_config.py:68
+#: src/omega_serv/application/config/validate_config.py:69
 #, python-brace-format
 msgid "paths.secure ({secure_dir}) est à l'intérieur de paths.webroot ({webroot}) - ne doit jamais être accessible depuis HTTP (spec §4.2)"
 msgstr "paths.secure({secure_dir})가 paths.webroot({webroot}) 안에 있습니다 - HTTP로 절대 접근할 수 없어야 합니다(spec §4.2)"
 
-#: src/omega_serv/application/config/validate_config.py:76
+#: src/omega_serv/application/config/validate_config.py:77
 #, python-brace-format
 msgid "paths.auth_file ({auth_file}) est à l'intérieur de paths.webroot - interdit (spec §4.2)"
 msgstr "paths.auth_file({auth_file})이 paths.webroot 안에 있습니다 - 금지(spec §4.2)"
 
-#: src/omega_serv/application/config/validate_config.py:115
+#: src/omega_serv/application/config/validate_config.py:122
+#: src/omega_serv/domain/config/validation.py:156
+#, python-brace-format
+msgid "options.aliases : {reason}"
+msgstr "options.aliases: {reason}"
+
+#: src/omega_serv/application/config/validate_config.py:137
 msgid "options.upload zone {url_prefix!r} : storage_path existe déjà et n'est pas un dossier : {storage_dir}"
 msgstr "options.upload 영역 {url_prefix!r}: storage_path가 이미 있으며 폴더가 아닙니다: {storage_dir}"
 
-#: src/omega_serv/application/config/validate_config.py:132
+#: src/omega_serv/application/config/validate_config.py:154
 #, python-brace-format
 msgid "options.fastcgi : {e}"
 msgstr "options.fastcgi: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:141
+#: src/omega_serv/application/config/validate_config.py:163
 #, python-brace-format
 msgid "options.fastcgi.script_root ({script_root}) est à l'intérieur de paths.webroot ({webroot}) - interdit structurellement (spec §21, plan de développement §6)"
 msgstr "options.fastcgi.script_root({script_root})가 paths.webroot({webroot}) 안에 있습니다 - 구조적으로 금지(spec §21, 개발 계획 §6)"
 
-#: src/omega_serv/application/config/validate_config.py:147
+#: src/omega_serv/application/config/validate_config.py:169
 #, python-brace-format
 msgid "options.fastcgi.script_root n'est pas un dossier existant : {script_root}"
 msgstr "options.fastcgi.script_root가 존재하는 폴더가 아닙니다: {script_root}"
 
-#: src/omega_serv/application/config/validate_config.py:151
+#: src/omega_serv/application/config/validate_config.py:173
 #, python-brace-format
 msgid "options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM démarré ?)"
 msgstr "options.fastcgi.socket_path를 찾을 수 없음: {socket_path} (PHP-FPM이 실행 중입니까?)"
 
-#: src/omega_serv/application/config/validate_config.py:172
+#: src/omega_serv/application/config/validate_config.py:194
 msgid "options.auth actif avec un bind non local, sans TLS direct actif ni mode 'behind_proxy' déclaré - Basic Auth transmettrait des identifiants en clair (spec §15.6, doc TLS §22)"
 msgstr "options.auth가 비로컬 bind에서 활성화되어 있으나 직접 TLS도 'behind_proxy' 모드도 없습니다 - Basic Auth가 자격 증명을 평문으로 전송합니다(spec §15.6, TLS 문서 §22)"
 
-#: src/omega_serv/application/config/validate_config.py:184
+#: src/omega_serv/application/config/validate_config.py:206
 #, python-brace-format
 msgid "paths.auth_zones : {e}"
 msgstr "paths.auth_zones: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:190
+#: src/omega_serv/application/config/validate_config.py:212
 #, python-brace-format
 msgid "paths.auth_zones : {reason}"
 msgstr "paths.auth_zones: {reason}"
 
-#: src/omega_serv/application/config/validate_config.py:198
+#: src/omega_serv/application/config/validate_config.py:220
 #, python-brace-format
 msgid "paths.auth_file : {e}"
 msgstr "paths.auth_file: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:204
+#: src/omega_serv/application/config/validate_config.py:226
 msgid "paths.auth_zones : zone {path_prefix!r} référence des utilisateurs inconnus : {value}"
 msgstr "paths.auth_zones: 영역 {path_prefix!r}이(가) 알 수 없는 사용자를 참조합니다: {value}"
 
-#: src/omega_serv/application/config/validate_config.py:225
+#: src/omega_serv/application/config/validate_config.py:247
 #, python-brace-format
 msgid "tls.certificate.certificate_path introuvable : {cert_path}"
 msgstr "tls.certificate.certificate_path를 찾을 수 없음: {cert_path}"
 
-#: src/omega_serv/application/config/validate_config.py:227
+#: src/omega_serv/application/config/validate_config.py:249
 #, python-brace-format
 msgid "tls.certificate.private_key_path introuvable : {key_path}"
 msgstr "tls.certificate.private_key_path를 찾을 수 없음: {key_path}"
 
-#: src/omega_serv/application/config/validate_config.py:233
+#: src/omega_serv/application/config/validate_config.py:255
 #, python-brace-format
 msgid "tls.certificate.{label} ({path}) est à l'intérieur de paths.webroot - interdit (doc TLS §9.1)"
 msgstr "tls.certificate.{label}({path})이(가) paths.webroot 안에 있습니다 - 금지(TLS 문서 §9.1)"
 
-#: src/omega_serv/application/config/validate_config.py:246
+#: src/omega_serv/application/config/validate_config.py:268
 #: src/omega_serv/domain/config/validation.py:223
 #, python-brace-format
 msgid "tls : {e}"
 msgstr "tls: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:310
+#: src/omega_serv/application/config/validate_config.py:332
 msgid "{prefix} : l'entrée {entry!r} bloquerait la route {route!r} ({source}) - ajouter une exception '!' ou passer la liste en observation"
 msgstr "{prefix}: 항목 {entry!r}이(가) 경로 {route!r}({source})을(를) 차단합니다 - 예외 '!'를 추가하거나 목록을 관찰 모드로 전환하십시오"
 
-#: src/omega_serv/application/config/validate_config.py:323
+#: src/omega_serv/application/config/validate_config.py:345
 msgid "{prefix} : l'entrée {entry!r} bloquerait {relative!r}, qui existe dans le webroot - ajouter une exception '!' ou retirer l'entrée"
 msgstr "{prefix}: 항목 {entry!r}이(가) webroot에 존재하는 {relative!r}을(를) 차단합니다 - 예외 '!'를 추가하거나 항목을 제외하십시오"
 
-#: src/omega_serv/application/config/validate_config.py:341
+#: src/omega_serv/application/config/validate_config.py:363
 #, python-brace-format
 msgid "options.waf : {e}"
 msgstr "options.waf: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:350
+#: src/omega_serv/application/config/validate_config.py:372
 #, python-brace-format
 msgid "options.waf.rules.paths : {e}"
 msgstr "options.waf.rules.paths: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:357
+#: src/omega_serv/application/config/validate_config.py:379
 msgid "options.waf.rules.keyword_lists[{id!r}] : {e}"
 msgstr "options.waf.rules.keyword_lists[{id!r}]: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:373
+#: src/omega_serv/application/config/validate_config.py:395
 #, python-brace-format
 msgid "options.waf.magnet : {e}"
 msgstr "options.waf.magnet: {e}"
 
-#: src/omega_serv/application/config/validate_config.py:376
+#: src/omega_serv/application/config/validate_config.py:398
 msgid "options.waf.magnet : dépendance 'lupa' absente - installer l'extra optionnel avec `pip install -e \".[magnet]\"` (jamais installé par défaut, voir pyproject.toml)"
 msgstr "options.waf.magnet: 의존성 'lupa'가 없습니다 - `pip install -e \".[magnet]\"`으로 선택적 extra를 설치하십시오(기본으로 설치되지 않음, pyproject.toml 참조)"
 
@@ -685,7 +700,12 @@ msgid "Entrée ajoutée : {network} ({value})"
 msgstr "항목 추가: {network} ({value})"
 
 #: src/omega_serv/application/security/manage_blocklist.py:46
-#: src/omega_serv/interfaces/cli/main.py:721
+#, python-brace-format
+msgid "expire le {date}"
+msgstr "{date}에 만료"
+
+#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/interfaces/cli/main.py:723
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "영구"
@@ -779,7 +799,7 @@ msgstr "인증"
 
 #: src/omega_serv/application/server/engine_levels.py:65
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 msgid "WAF"
 msgstr "WAF"
 
@@ -955,9 +975,9 @@ msgid "{requested} demandé, {effective} effectif"
 msgstr "요청 {requested}, 실제 {effective}"
 
 #: src/omega_serv/application/server/engine_status.py:109
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:712
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:759
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:727
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:765
 msgid "Processus"
 msgstr "프로세스"
 
@@ -1007,7 +1027,7 @@ msgstr "시작됨"
 #: src/omega_serv/application/services/manage_service.py:40
 #: src/omega_serv/interfaces/cli/riposte_text.py:248
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:90
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:727
 msgid "arrêté"
 msgstr "중지됨"
 
@@ -1293,11 +1313,6 @@ msgstr "logs.rotation.max_bytes는 양수여야 합니다"
 msgid "logs.rotation.keep doit être strictement positif"
 msgstr "logs.rotation.keep은 양수여야 합니다"
 
-#: src/omega_serv/domain/config/validation.py:156
-#, python-brace-format
-msgid "options.aliases : {reason}"
-msgstr "options.aliases: {reason}"
-
 #: src/omega_serv/domain/config/validation.py:163
 #, python-brace-format
 msgid "options.redirects : {reason}"
@@ -1453,7 +1468,7 @@ msgid "← Retourner sur Google en attendant :-) "
 msgstr "← 그동안 Google로 돌아가기 :-) "
 
 #: src/omega_serv/domain/http/error_pages.py:365
-#: src/omega_serv/interfaces/cli/main.py:157
+#: src/omega_serv/interfaces/cli/main.py:158
 msgid "Erreur"
 msgstr "오류"
 
@@ -1487,7 +1502,7 @@ msgstr "path_prefix는 '/'로 시작해야 합니다: {path_prefix!r}"
 msgid "verdict invalide (attendu allow/deny) : {verdict!r}"
 msgstr "verdict가 잘못되었습니다(allow/deny 예상): {verdict!r}"
 
-#: src/omega_serv/domain/routing/alias.py:46
+#: src/omega_serv/domain/routing/alias.py:67
 #: src/omega_serv/domain/routing/fastcgi_zone.py:55
 #: src/omega_serv/domain/routing/proxy_zone.py:353
 #: src/omega_serv/domain/routing/redirect.py:37
@@ -1495,13 +1510,15 @@ msgstr "verdict가 잘못되었습니다(allow/deny 예상): {verdict!r}"
 msgid "url_prefix doit commencer par '/' : {url_prefix!r}"
 msgstr "url_prefix는 '/'로 시작해야 합니다: {url_prefix!r}"
 
-#: src/omega_serv/domain/routing/alias.py:52
-msgid "alias vers un dossier interdit ({first_segment}/) : {target_path!r}"
-msgstr "금지된 폴더({first_segment}/)로의 별칭: {target_path!r}"
-
-#: src/omega_serv/domain/routing/alias.py:56
+#: src/omega_serv/domain/routing/alias.py:73
+#: src/omega_serv/domain/routing/alias.py:88
 msgid "cible hors webroot sans allow_outside_webroot=true : {target_path!r}"
 msgstr "allow_outside_webroot=true 없이 webroot 밖의 대상: {target_path!r}"
+
+#: src/omega_serv/domain/routing/alias.py:77
+#: src/omega_serv/domain/routing/alias.py:84
+msgid "alias vers un dossier interdit ({first_segment}/) : {target_path!r}"
+msgstr "금지된 폴더({first_segment}/)로의 별칭: {target_path!r}"
 
 #: src/omega_serv/domain/routing/dirlisting.py:164
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:111
@@ -1533,6 +1550,22 @@ msgid "o"
 msgstr "B"
 
 #: src/omega_serv/domain/routing/dirlisting.py:231
+#: src/omega_serv/interfaces/cli/main.py:1699
+#: src/omega_serv/interfaces/cli/main.py:1703
+#: src/omega_serv/interfaces/cli/main.py:1715
+#: src/omega_serv/interfaces/cli/main.py:1718
+#: src/omega_serv/interfaces/cli/main.py:1842
+#: src/omega_serv/interfaces/cli/main.py:1851
+#: src/omega_serv/interfaces/cli/main.py:1941
+#: src/omega_serv/interfaces/cli/main.py:1946
+#: src/omega_serv/interfaces/cli/main.py:1950
+#: src/omega_serv/interfaces/cli/main.py:1958
+#: src/omega_serv/interfaces/cli/main.py:1989
+#: src/omega_serv/interfaces/cli/main.py:1994
+#: src/omega_serv/interfaces/cli/main.py:1999
+#: src/omega_serv/interfaces/cli/main.py:2001
+#: src/omega_serv/interfaces/cli/main.py:2009
+#: src/omega_serv/interfaces/cli/main.py:2021
 msgid "NOM"
 msgstr "이름"
 
@@ -3096,186 +3129,248 @@ msgstr "{path}을(를) 읽을 수 없습니다: {e}"
 msgid "Fichier de pack de règles introuvable : {path}"
 msgstr "규칙 팩 파일을 찾을 수 없음: {path}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:66
+#: src/omega_serv/interfaces/cli/command_tree.py:27
+#: src/omega_serv/interfaces/cli/main.py:1631
+#: src/omega_serv/interfaces/cli/main.py:2031
+msgid "COMMANDE"
+msgstr "명령"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:27
+#: src/omega_serv/interfaces/cli/main.py:1631
+msgid "commandes"
+msgstr "명령"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:114
+#, python-brace-format
+msgid "Commande inconnue : {command}"
+msgstr "알 수 없는 명령: {command}"
+
+#: src/omega_serv/interfaces/cli/command_tree.py:116
+msgid "Commandes d'omega-serv (détail d'une commande : omega-serv <commande> --help) :"
+msgstr "omega-serv 명령(명령의 자세한 내용: omega-serv <명령> --help):"
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:67
 msgid "Non déclaré (aucune clé sur cette installation)."
 msgstr "등록되지 않음(이 설치에 키가 없습니다)."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:69
+#: src/omega_serv/interfaces/cli/declaration_commands.py:70
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:83
 msgid "chaque jour"
 msgstr "매일"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:69
+#: src/omega_serv/interfaces/cli/declaration_commands.py:70
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:83
 msgid "une seule fois"
 msgstr "한 번"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:70
+#: src/omega_serv/interfaces/cli/declaration_commands.py:71
 #, python-brace-format
 msgid "Déclaré utilisateur anonyme depuis le {date}."
 msgstr "{date}부터 익명 사용자로 등록됨."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:71
+#: src/omega_serv/interfaces/cli/declaration_commands.py:72
 #, python-brace-format
 msgid "Envoi : {mode}"
 msgstr "전송: {mode}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:72
+#: src/omega_serv/interfaces/cli/declaration_commands.py:73
 #, python-brace-format
 msgid "Clé : {key}"
 msgstr "키: {key}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:73
+#: src/omega_serv/interfaces/cli/declaration_commands.py:74
 #, python-brace-format
 msgid "Continent : {continent}"
 msgstr "대륙: {continent}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:74
+#: src/omega_serv/interfaces/cli/declaration_commands.py:75
 #, python-brace-format
 msgid "Pays : {country}"
 msgstr "국가: {country}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:75
+#: src/omega_serv/interfaces/cli/declaration_commands.py:76
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:86
 #, python-brace-format
 msgid "Dernier envoi réussi : {date}"
 msgstr "마지막 전송 성공: {date}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:77
+#: src/omega_serv/interfaces/cli/declaration_commands.py:78
 #, python-brace-format
 msgid "Dernier essai : réception injoignable ({reason})."
 msgstr "마지막 시도: 수신처에 연결할 수 없음({reason})."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:79
+#: src/omega_serv/interfaces/cli/declaration_commands.py:80
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:91
 msgid "DO_NOT_TRACK est défini : aucun envoi automatique."
 msgstr "DO_NOT_TRACK이 설정됨: 자동 전송하지 않습니다."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:80
+#: src/omega_serv/interfaces/cli/declaration_commands.py:81
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:104
 #, python-brace-format
 msgid "Destination : {url}"
 msgstr "대상: {url}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:91
+#: src/omega_serv/interfaces/cli/declaration_commands.py:92
 #, python-brace-format
 msgid "Message qui sera envoyé à {url} :"
 msgstr "{url}(으)로 전송될 메시지:"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:93
+#: src/omega_serv/interfaces/cli/declaration_commands.py:94
 msgid "Ajoutez --yes pour confirmer la déclaration."
 msgstr "등록을 확인하려면 --yes를 추가하세요."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:99
+#: src/omega_serv/interfaces/cli/declaration_commands.py:100
 #, python-brace-format
 msgid "Déclaration refusée : {error}"
 msgstr "등록 거부됨: {error}"
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:102
+#: src/omega_serv/interfaces/cli/declaration_commands.py:103
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:173
 msgid "Merci ! Vous êtes déclaré utilisateur anonyme."
 msgstr "감사합니다! 익명 사용자로 등록되었습니다."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:105
+#: src/omega_serv/interfaces/cli/declaration_commands.py:106
 #, python-brace-format
 msgid "Réception injoignable ({reason}) : votre accord est gardé, le serveur réessaiera dans 24 h."
 msgstr "수신처에 연결할 수 없음({reason}): 동의는 유지되며, 서버가 24시간 후에 다시 시도합니다."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:108
+#: src/omega_serv/interfaces/cli/declaration_commands.py:109
 #, python-brace-format
 msgid "Réception injoignable ({reason}) : rien n'a été enregistré, réessayez plus tard."
 msgstr "수신처에 연결할 수 없음({reason}): 아무것도 기록되지 않았습니다. 나중에 다시 시도하세요."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:116
+#: src/omega_serv/interfaces/cli/declaration_commands.py:117
 msgid "Non déclaré : rien à retirer."
 msgstr "등록되지 않음: 철회할 것이 없습니다."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:119
+#: src/omega_serv/interfaces/cli/declaration_commands.py:120
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:141
 msgid "Vous n'êtes plus déclaré : votre entrée est supprimée et la clé effacée."
 msgstr "더 이상 등록되어 있지 않습니다: 항목이 삭제되고 키가 지워졌습니다."
 
-#: src/omega_serv/interfaces/cli/declaration_commands.py:121
+#: src/omega_serv/interfaces/cli/declaration_commands.py:122
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:143
 msgid "Clé effacée. Réception injoignable : votre entrée y disparaîtra seule (90 jours en envoi quotidien, 1 an en envoi unique)."
 msgstr "키가 지워졌습니다. 수신처에 연결할 수 없음: 그곳의 항목은 저절로 사라집니다(매일 전송은 90일, 한 번 전송은 1년)."
 
-#: src/omega_serv/interfaces/cli/main.py:159
+#: src/omega_serv/interfaces/cli/declaration_commands.py:251
+msgid "Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut)."
+msgstr "익명 사용자 신고(자발적, 기본적으로 비활성화)."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:252
+msgid "Affiche l'état de la déclaration."
+msgstr "신고 상태를 표시합니다."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:255
+msgid "Se déclarer utilisateur. Sans --yes, affiche seulement le message exact et sa destination."
+msgstr "사용자로 신고합니다. --yes가 없으면 보낼 메시지와 수신처만 정확히 표시합니다."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:257
+msgid "unique : une seule fois ; quotidien : chaque jour, envoyé par le serveur."
+msgstr "unique: 한 번만; quotidien: 매일, 서버가 전송."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:258
+#: src/omega_serv/interfaces/cli/declaration_commands.py:261
+#: src/omega_serv/interfaces/cli/main.py:1848
+msgid "CODE"
+msgstr "코드"
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:259
+msgid "Continent (facultatif) : AF, AN, AS, EU, NA, OC, SA ou autre."
+msgstr "대륙(선택): AF, AN, AS, EU, NA, OC, SA 또는 기타."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:261
+msgid "Pays (facultatif) : code à deux lettres (FR, BE...) ou autre."
+msgstr "국가(선택): 두 글자 코드(FR, BE...) 또는 기타."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:262
+msgid "Confirme l'envoi."
+msgstr "전송을 확정합니다."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:265
+msgid "Retire la déclaration (supprimée à la réception)."
+msgstr "신고를 철회합니다(수신 시 삭제)."
+
+#: src/omega_serv/interfaces/cli/declaration_commands.py:267
+msgid "Envoi quotidien, lancé par serve (pas à utiliser à la main)."
+msgstr "매일 전송, serve가 실행(직접 사용하지 마세요)."
+
+#: src/omega_serv/interfaces/cli/main.py:160
 #, python-brace-format
 msgid "{prefix} : {error}"
 msgstr "{prefix}: {error}"
 
-#: src/omega_serv/interfaces/cli/main.py:229
+#: src/omega_serv/interfaces/cli/main.py:230
 msgid "Erreur de rechargement"
 msgstr "다시 로드 오류"
 
-#: src/omega_serv/interfaces/cli/main.py:318
-#: src/omega_serv/interfaces/cli/main.py:435
+#: src/omega_serv/interfaces/cli/main.py:319
+#: src/omega_serv/interfaces/cli/main.py:436
 msgid "Erreur d'environnement"
 msgstr "환경 오류"
 
-#: src/omega_serv/interfaces/cli/main.py:425
-#: src/omega_serv/interfaces/cli/main.py:455
-#: src/omega_serv/interfaces/cli/main.py:1590
+#: src/omega_serv/interfaces/cli/main.py:426
+#: src/omega_serv/interfaces/cli/main.py:456
+#: src/omega_serv/interfaces/cli/main.py:1592
 msgid "Erreur de configuration"
 msgstr "설정 오류"
 
-#: src/omega_serv/interfaces/cli/main.py:438
+#: src/omega_serv/interfaces/cli/main.py:439
 #, python-brace-format
 msgid "{config} : configuration valide."
 msgstr "{config}: 설정이 유효합니다."
 
-#: src/omega_serv/interfaces/cli/main.py:475
+#: src/omega_serv/interfaces/cli/main.py:476
 msgid "Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou clé privée TLS) jamais chiffres par défaut - ajoutez --confirm-secrets pour confirmer."
 msgstr "이 백업에는 실제 비밀 정보(비밀번호 해시 및/또는 TLS 개인 키)가 포함되며 기본적으로 암호화되지 않습니다 - 확인하려면 --confirm-secrets를 추가하십시오."
 
-#: src/omega_serv/interfaces/cli/main.py:494
+#: src/omega_serv/interfaces/cli/main.py:495
 msgid "Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le redémarrer."
 msgstr "--stop-and-restart를 붙여 다시 실행하면 서비스를 중지하고 복원한 뒤 다시 시작합니다."
 
-#: src/omega_serv/interfaces/cli/main.py:501
+#: src/omega_serv/interfaces/cli/main.py:502
 msgid "Aucune sauvegarde."
 msgstr "백업이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:506
+#: src/omega_serv/interfaces/cli/main.py:507
 #, python-brace-format
 msgid "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} Ko  {value2}  {description}"
 msgstr "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} KB  {value2}  {description}"
 
-#: src/omega_serv/interfaces/cli/main.py:521
-#: src/omega_serv/interfaces/cli/main.py:539
-#: src/omega_serv/interfaces/cli/main.py:1064
-#: src/omega_serv/interfaces/cli/main.py:1092
-#: src/omega_serv/interfaces/cli/main.py:1129
-#: src/omega_serv/interfaces/cli/main.py:1154
-#: src/omega_serv/interfaces/cli/main.py:1175
-#: src/omega_serv/interfaces/cli/main.py:1193
-#: src/omega_serv/interfaces/cli/main.py:1242
+#: src/omega_serv/interfaces/cli/main.py:522
+#: src/omega_serv/interfaces/cli/main.py:540
+#: src/omega_serv/interfaces/cli/main.py:1066
+#: src/omega_serv/interfaces/cli/main.py:1094
+#: src/omega_serv/interfaces/cli/main.py:1131
+#: src/omega_serv/interfaces/cli/main.py:1156
+#: src/omega_serv/interfaces/cli/main.py:1177
+#: src/omega_serv/interfaces/cli/main.py:1195
+#: src/omega_serv/interfaces/cli/main.py:1244
 #, python-brace-format
 msgid "Erreur : {e}"
 msgstr "오류: {e}"
 
-#: src/omega_serv/interfaces/cli/main.py:523
+#: src/omega_serv/interfaces/cli/main.py:524
 #, python-brace-format
 msgid "Profil : {name}"
 msgstr "프로필: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:544
+#: src/omega_serv/interfaces/cli/main.py:545
 #, python-brace-format
 msgid "Profil de base choisi : {name}"
 msgstr "선택한 기본 프로필: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:546
+#: src/omega_serv/interfaces/cli/main.py:547
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:76
 msgid "Aucune modification."
 msgstr "변경 사항이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:548
+#: src/omega_serv/interfaces/cli/main.py:549
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:78
 msgid "Modifications :"
 msgstr "변경 사항:"
 
-#: src/omega_serv/interfaces/cli/main.py:553
+#: src/omega_serv/interfaces/cli/main.py:554
 msgid ""
 "\n"
 "Conflits détectés :"
@@ -3283,16 +3378,16 @@ msgstr ""
 "\n"
 "감지된 충돌:"
 
-#: src/omega_serv/interfaces/cli/main.py:555
+#: src/omega_serv/interfaces/cli/main.py:556
 #, python-brace-format
 msgid "  [{value}] {message}"
 msgstr "  [{value}] {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:558
+#: src/omega_serv/interfaces/cli/main.py:559
 msgid "Erreur de validation"
 msgstr "검증 오류"
 
-#: src/omega_serv/interfaces/cli/main.py:561
+#: src/omega_serv/interfaces/cli/main.py:562
 msgid ""
 "\n"
 "(--dry-run : aucune écriture effectuée)"
@@ -3300,7 +3395,7 @@ msgstr ""
 "\n"
 "(--dry-run: 아무것도 기록하지 않음)"
 
-#: src/omega_serv/interfaces/cli/main.py:565
+#: src/omega_serv/interfaces/cli/main.py:566
 msgid ""
 "\n"
 "Application refusée (problèmes bloquants, voir ci-dessus). Utiliser --force pour outrepasser."
@@ -3308,7 +3403,7 @@ msgstr ""
 "\n"
 "적용 거부(방해 요소가 있음, 위 참조). 무시하려면 --force를 사용하십시오."
 
-#: src/omega_serv/interfaces/cli/main.py:569
+#: src/omega_serv/interfaces/cli/main.py:570
 #, python-brace-format
 msgid ""
 "\n"
@@ -3317,7 +3412,7 @@ msgstr ""
 "\n"
 "{config}의 설정을 업데이트했습니다(프로필 '{name}' 적용)."
 
-#: src/omega_serv/interfaces/cli/main.py:580
+#: src/omega_serv/interfaces/cli/main.py:581
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:90
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
@@ -3325,507 +3420,507 @@ msgstr ""
 msgid "actif"
 msgstr "활성"
 
-#: src/omega_serv/interfaces/cli/main.py:580
-#: src/omega_serv/interfaces/cli/main.py:801
+#: src/omega_serv/interfaces/cli/main.py:581
+#: src/omega_serv/interfaces/cli/main.py:803
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 #: src/omega_serv/interfaces/tui/screens/waf_rule_pack_picker_screen.py:89
 msgid "inactif"
 msgstr "비활성"
 
-#: src/omega_serv/interfaces/cli/main.py:581
+#: src/omega_serv/interfaces/cli/main.py:582
 #, python-brace-format
 msgid "{name} : {state}"
 msgstr "{name}: {state}"
 
-#: src/omega_serv/interfaces/cli/main.py:626
+#: src/omega_serv/interfaces/cli/main.py:628
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:73
 #, python-brace-format
 msgid "Méthode          : {method}"
 msgstr "메서드      : {method}"
 
-#: src/omega_serv/interfaces/cli/main.py:627
+#: src/omega_serv/interfaces/cli/main.py:629
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:74
 #, python-brace-format
 msgid "Chemin demandé   : {raw_path}"
 msgstr "요청 경로   : {raw_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:628
+#: src/omega_serv/interfaces/cli/main.py:630
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:75
 #, python-brace-format
 msgid "Chemin normalisé : {normalized_path}"
 msgstr "정규화 경로 : {normalized_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:629
+#: src/omega_serv/interfaces/cli/main.py:631
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:76
 #, python-brace-format
 msgid "Méthode autorisée: {method_allowed}"
 msgstr "허용 메서드 : {method_allowed}"
 
-#: src/omega_serv/interfaces/cli/main.py:630
+#: src/omega_serv/interfaces/cli/main.py:632
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:77
 #, python-brace-format
 msgid "Refusé (règles)  : {denied_by_access_policy}"
 msgstr "거부(규칙)  : {denied_by_access_policy}"
 
-#: src/omega_serv/interfaces/cli/main.py:631
+#: src/omega_serv/interfaces/cli/main.py:633
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:78
 #, python-brace-format
 msgid "Fichier existe   : {file_exists}"
 msgstr "파일 존재   : {file_exists}"
 
-#: src/omega_serv/interfaces/cli/main.py:632
+#: src/omega_serv/interfaces/cli/main.py:634
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:79
 #, python-brace-format
 msgid "Statut réponse   : {response_status}"
 msgstr "응답 상태   : {response_status}"
 
-#: src/omega_serv/interfaces/cli/main.py:634
+#: src/omega_serv/interfaces/cli/main.py:636
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:82
 #, python-brace-format
 msgid "Motif de refus   : {rejection_reason}"
 msgstr "거부 사유   : {rejection_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:635
+#: src/omega_serv/interfaces/cli/main.py:637
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:83
 msgid "En-têtes attendus :"
 msgstr "예상 헤더:"
 
-#: src/omega_serv/interfaces/cli/main.py:637
+#: src/omega_serv/interfaces/cli/main.py:639
 #, python-brace-format
 msgid "  {name}: {value}"
 msgstr "  {name}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:673
+#: src/omega_serv/interfaces/cli/main.py:675
 msgid "Erreur : options.waf absent de la configuration (exécuter 'omega-serv config init' ou ajouter la section waf)."
 msgstr "오류: 설정에 options.waf가 없습니다('omega-serv config init'을 실행하거나 waf 섹션을 추가하십시오)."
 
-#: src/omega_serv/interfaces/cli/main.py:682
+#: src/omega_serv/interfaces/cli/main.py:684
 #, python-brace-format
 msgid "Décision native : {value} (score {score})"
 msgstr "네이티브 판정: {value} (점수 {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:684
+#: src/omega_serv/interfaces/cli/main.py:686
 #, python-brace-format
 msgid "Décision magnet : {value} (score {score})"
 msgstr "magnet 판정: {value} (점수 {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:686
+#: src/omega_serv/interfaces/cli/main.py:688
 #, python-brace-format
 msgid "ATTENTION - le script magnet a levé une erreur sur cette requête : {magnet_error}"
 msgstr "경고 - magnet 스크립트가 이 요청에서 오류를 일으켰습니다: {magnet_error}"
 
-#: src/omega_serv/interfaces/cli/main.py:689
+#: src/omega_serv/interfaces/cli/main.py:691
 #, python-brace-format
 msgid "ATTENTION - le script magnet référence lighty.{{{value}}}, non supporte par ce pont (toujours nil - le script peut se comporter différemment qu'en Lighttpd réel)"
 msgstr "경고 - magnet 스크립트가 이 브리지에서 지원하지 않는 lighty.{{{value}}}을(를) 참조합니다(항상 nil - 실제 Lighttpd와 다르게 동작할 수 있음)"
 
-#: src/omega_serv/interfaces/cli/main.py:693
+#: src/omega_serv/interfaces/cli/main.py:695
 msgid "ATTENTION - options.waf.magnet.on_error='fail-closed' combiné à une incompatibilité détectée : toute requête future qui déclenche la même erreur sera BLOQUÉE (y compris du trafic légitime). Passer à 'ignore', ou corriger le script, avant d'activer ce script en production."
 msgstr "경고 - options.waf.magnet.on_error='fail-closed'와 감지된 비호환이 겹쳤습니다: 같은 오류를 일으키는 이후의 모든 요청이 차단됩니다(정상 트래픽 포함). 운영 환경에서 이 스크립트를 활성화하기 전에 'ignore'로 바꾸거나 스크립트를 수정하십시오."
 
-#: src/omega_serv/interfaces/cli/main.py:697
+#: src/omega_serv/interfaces/cli/main.py:699
 #, python-brace-format
 msgid "Décision finale : {value}"
 msgstr "최종 판정: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:698
+#: src/omega_serv/interfaces/cli/main.py:700
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:83
 #, python-brace-format
 msgid "Statut : {value}"
 msgstr "상태: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:699
-#: src/omega_serv/interfaces/cli/main.py:832
+#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:834
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:84
 #, python-brace-format
 msgid "Score : {score}"
 msgstr "점수: {score}"
 
-#: src/omega_serv/interfaces/cli/main.py:700
+#: src/omega_serv/interfaces/cli/main.py:702
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:85
 #, python-brace-format
 msgid "Règles : {value}"
 msgstr "규칙: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:703
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:86
 #, python-brace-format
 msgid "Politique de zone : {zone_id}"
 msgstr "영역 정책: {zone_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:702
+#: src/omega_serv/interfaces/cli/main.py:704
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:87
 #, python-brace-format
 msgid "Mode : {mode}"
 msgstr "모드: {mode}"
 
-#: src/omega_serv/interfaces/cli/main.py:704
+#: src/omega_serv/interfaces/cli/main.py:706
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:90
 #, python-brace-format
 msgid "Motif : {blocked_reason}"
 msgstr "사유: {blocked_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:718
+#: src/omega_serv/interfaces/cli/main.py:720
 msgid "Aucune entrée."
 msgstr "항목이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:722
+#: src/omega_serv/interfaces/cli/main.py:724
 #, python-brace-format
 msgid "{network}\t{source}\t{expiry}\t{reason}"
 msgstr "{network}\t{source}\t{expiry}\t{reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:772
-#: src/omega_serv/interfaces/cli/main.py:795
+#: src/omega_serv/interfaces/cli/main.py:774
+#: src/omega_serv/interfaces/cli/main.py:797
 #, python-brace-format
 msgid "Erreur d'accès à la base Active Defense : {exc}."
 msgstr "Active Defense 데이터베이스 접근 오류: {exc}."
 
-#: src/omega_serv/interfaces/cli/main.py:774
+#: src/omega_serv/interfaces/cli/main.py:776
 msgid "Si l'appartenance à un groupe système a changé récemment, une nouvelle session (deconnexion/reconnexion) peut être nécessaire."
 msgstr "시스템 그룹 소속이 최근에 바뀌었다면 새 세션(로그아웃/다시 로그인)이 필요할 수 있습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:780
+#: src/omega_serv/interfaces/cli/main.py:782
 msgid "Erreur : options.active_defense absent ou désactivé de la configuration."
 msgstr "오류: 설정에 options.active_defense가 없거나 비활성화되어 있습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:798
+#: src/omega_serv/interfaces/cli/main.py:800
 msgid "Active Defense : désactivé (options.active_defense.enabled = false ou absent)."
 msgstr "Active Defense: 비활성(options.active_defense.enabled = false 또는 없음)."
 
-#: src/omega_serv/interfaces/cli/main.py:800
+#: src/omega_serv/interfaces/cli/main.py:802
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:57
 #, python-brace-format
 msgid "Active Defense : activé (mode={mode})"
 msgstr "Active Defense: 활성(mode={mode})"
 
-#: src/omega_serv/interfaces/cli/main.py:801
+#: src/omega_serv/interfaces/cli/main.py:803
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #, python-brace-format
 msgid "Mode guerre : {value}"
 msgstr "전시 모드: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:801
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:803
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "activé"
 msgstr "활성"
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #, python-brace-format
 msgid "Deception : {value}"
 msgstr "Deception: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:804
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 msgid "inactive"
 msgstr "비활성"
 
-#: src/omega_serv/interfaces/cli/main.py:804
+#: src/omega_serv/interfaces/cli/main.py:806
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:60
 #, python-brace-format
 msgid "Sources suivies : {count}"
 msgstr "추적 중인 출처: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:815
+#: src/omega_serv/interfaces/cli/main.py:817
 msgid "Aucune menace suivie."
 msgstr "추적 중인 위협이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:818
+#: src/omega_serv/interfaces/cli/main.py:820
 #, python-brace-format
 msgid "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 msgstr "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:829
+#: src/omega_serv/interfaces/cli/main.py:831
 msgid "Aucune menace suivie pour {subject_id!r}."
 msgstr "{subject_id!r}에 대해 추적 중인 위협이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:831
-#: src/omega_serv/interfaces/cli/main.py:869
+#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:871
 #, python-brace-format
 msgid "Source : {subject_id}"
 msgstr "출처: {subject_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:835
 #, python-brace-format
 msgid "Niveau : {level}"
 msgstr "수준: {level}"
 
-#: src/omega_serv/interfaces/cli/main.py:834
+#: src/omega_serv/interfaces/cli/main.py:836
 #, python-brace-format
 msgid "Mise à jour : {value}"
 msgstr "업데이트: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:835
+#: src/omega_serv/interfaces/cli/main.py:837
 #, python-brace-format
 msgid "Expiration : {value}"
 msgstr "만료: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:836
+#: src/omega_serv/interfaces/cli/main.py:838
 #, python-brace-format
 msgid "Actions actives : {value}"
 msgstr "활성 동작: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:851
+#: src/omega_serv/interfaces/cli/main.py:853
 msgid "Aucun incident."
 msgstr "인시던트가 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:855
+#: src/omega_serv/interfaces/cli/main.py:857
 #, python-brace-format
 msgid "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 msgstr "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 
-#: src/omega_serv/interfaces/cli/main.py:866
-#: src/omega_serv/interfaces/cli/main.py:912
-#: src/omega_serv/interfaces/cli/main.py:934
+#: src/omega_serv/interfaces/cli/main.py:868
+#: src/omega_serv/interfaces/cli/main.py:914
+#: src/omega_serv/interfaces/cli/main.py:936
 msgid "Incident introuvable : {incident_id!r}."
 msgstr "인시던트를 찾을 수 없음: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:868
+#: src/omega_serv/interfaces/cli/main.py:870
 #, python-brace-format
 msgid "Incident : {incident_id}"
 msgstr "인시던트: {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:870
+#: src/omega_serv/interfaces/cli/main.py:872
 #, python-brace-format
 msgid "Statut : {status}"
 msgstr "상태: {status}"
 
-#: src/omega_serv/interfaces/cli/main.py:871
+#: src/omega_serv/interfaces/cli/main.py:873
 #, python-brace-format
 msgid "Ouvert le : {value}"
 msgstr "시작: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:872
+#: src/omega_serv/interfaces/cli/main.py:874
 #, python-brace-format
 msgid "Fermé le : {value}"
 msgstr "종료: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:873
+#: src/omega_serv/interfaces/cli/main.py:875
 msgid "Chronologie :"
 msgstr "타임라인:"
 
-#: src/omega_serv/interfaces/cli/main.py:875
+#: src/omega_serv/interfaces/cli/main.py:877
 #, python-brace-format
 msgid "  {value}\t{kind}\t{detail}"
 msgstr "  {value}\t{kind}\t{detail}"
 
-#: src/omega_serv/interfaces/cli/main.py:888
+#: src/omega_serv/interfaces/cli/main.py:890
 msgid "Incident introuvable ou déjà fermé : {incident_id!r}."
 msgstr "인시던트를 찾을 수 없거나 이미 종료되었습니다: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:890
+#: src/omega_serv/interfaces/cli/main.py:892
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:202
 msgid "Incident {incident_id!r} fermé."
 msgstr "인시던트 {incident_id!r}을(를) 종료했습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:901
+#: src/omega_serv/interfaces/cli/main.py:903
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:224
 #, python-brace-format
 msgid "Auto-export ({export_format}) : {path}"
 msgstr "자동 내보내기({export_format}): {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:920
+#: src/omega_serv/interfaces/cli/main.py:922
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:243
 msgid "Format d'export inconnu : {export_format!r} (json, csv, stix ou misp)."
 msgstr "알 수 없는 내보내기 형식: {export_format!r} (json, csv, stix 또는 misp)."
 
-#: src/omega_serv/interfaces/cli/main.py:923
+#: src/omega_serv/interfaces/cli/main.py:925
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:245
 #, python-brace-format
 msgid "Exporté : {path}"
 msgstr "내보냄: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:939
+#: src/omega_serv/interfaces/cli/main.py:941
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:257
 #, python-brace-format
 msgid "Rapport généré : {path}"
 msgstr "보고서 생성: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:950
+#: src/omega_serv/interfaces/cli/main.py:952
 msgid "Aucune affectation de leurre."
 msgstr "미끼 할당이 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:956
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "active"
 msgstr "활성"
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:956
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "expirée"
 msgstr "만료됨"
 
-#: src/omega_serv/interfaces/cli/main.py:956
+#: src/omega_serv/interfaces/cli/main.py:958
 #, python-brace-format
 msgid "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 msgstr "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:967
+#: src/omega_serv/interfaces/cli/main.py:969
 msgid "Affectation de leurre libérée pour {subject_id!r} (si elle existait)."
 msgstr "{subject_id!r}의 미끼 할당을 해제했습니다(있었다면)."
 
-#: src/omega_serv/interfaces/cli/main.py:981
+#: src/omega_serv/interfaces/cli/main.py:983
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:79
 msgid "Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value})."
 msgstr "알 수 없는 공격 유형: {attack_class!r} (가능한 값: {value})."
 
-#: src/omega_serv/interfaces/cli/main.py:991
+#: src/omega_serv/interfaces/cli/main.py:993
 #, python-brace-format
 msgid "Source (simulée) : {subject_id}  (chemin observé : {path})"
 msgstr "출처(시뮬레이션): {subject_id}  (관찰 경로: {path})"
 
-#: src/omega_serv/interfaces/cli/main.py:992
+#: src/omega_serv/interfaces/cli/main.py:994
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:98
 #, python-brace-format
 msgid "Score : {previous_score} -> {projected_score}"
 msgstr "점수: {previous_score} -> {projected_score}"
 
-#: src/omega_serv/interfaces/cli/main.py:993
+#: src/omega_serv/interfaces/cli/main.py:995
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:99
 #, python-brace-format
 msgid "Niveau : {previous_level} -> {projected_level}"
 msgstr "수준: {previous_level} -> {projected_level}"
 
-#: src/omega_serv/interfaces/cli/main.py:995
+#: src/omega_serv/interfaces/cli/main.py:997
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:100
 #, python-brace-format
 msgid "  - {line}"
 msgstr "  - {line}"
 
-#: src/omega_serv/interfaces/cli/main.py:1012
+#: src/omega_serv/interfaces/cli/main.py:1014
 #, python-brace-format
 msgid "États de menace purgés : {purged_threat_states}"
 msgstr "삭제한 위협 상태: {purged_threat_states}"
 
-#: src/omega_serv/interfaces/cli/main.py:1013
+#: src/omega_serv/interfaces/cli/main.py:1015
 #, python-brace-format
 msgid "Incidents fermés automatiquement : {count}"
 msgstr "자동 종료한 인시던트: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1015
+#: src/omega_serv/interfaces/cli/main.py:1017
 #, python-brace-format
 msgid "  - {incident_id}"
 msgstr "  - {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:1016
+#: src/omega_serv/interfaces/cli/main.py:1018
 #, python-brace-format
 msgid "Incidents fermés depuis plus de 90 jours supprimés : {count}"
 msgstr "90일보다 오래전에 닫힌 인시던트 삭제: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1030
+#: src/omega_serv/interfaces/cli/main.py:1032
 #, python-brace-format
 msgid "Export automatique impossible : {message}"
 msgstr "자동 내보내기 불가: {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1032
+#: src/omega_serv/interfaces/cli/main.py:1034
 #, python-brace-format
 msgid "Exports automatiques écrits : {count}"
 msgstr "작성된 자동 내보내기: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1074
+#: src/omega_serv/interfaces/cli/main.py:1076
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:139
 msgid "Erreur : les deux saisies de passphrase ne correspondent pas."
 msgstr "오류: 두 번 입력한 패스프레이즈가 일치하지 않습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:1097
+#: src/omega_serv/interfaces/cli/main.py:1099
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 #, python-brace-format
 msgid "Importez {value} dans le magasin de confiance des clients (doc TLS §7.4)."
 msgstr "{value}을(를) 클라이언트의 신뢰 저장소로 가져오십시오(TLS 문서 §7.4)."
 
-#: src/omega_serv/interfaces/cli/main.py:1097
+#: src/omega_serv/interfaces/cli/main.py:1099
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 msgid "root-ca.pem"
 msgstr "root-ca.pem"
 
-#: src/omega_serv/interfaces/cli/main.py:1134
+#: src/omega_serv/interfaces/cli/main.py:1136
 msgid "Redémarrage requis pour que le nouveau certificat soit pris en compte (`omega-serv service restart`)."
 msgstr "새 인증서를 적용하려면 재시작이 필요합니다(`omega-serv service restart`)."
 
-#: src/omega_serv/interfaces/cli/main.py:1202
+#: src/omega_serv/interfaces/cli/main.py:1204
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:79
 #, python-brace-format
 msgid "Sujet : {subject}"
 msgstr "주체: {subject}"
 
-#: src/omega_serv/interfaces/cli/main.py:1203
+#: src/omega_serv/interfaces/cli/main.py:1205
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:80
 #, python-brace-format
 msgid "Émetteur : {issuer}"
 msgstr "발급자: {issuer}"
 
-#: src/omega_serv/interfaces/cli/main.py:1204
+#: src/omega_serv/interfaces/cli/main.py:1206
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:81
 #, python-brace-format
 msgid "Début de validité : {value}"
 msgstr "유효 기간 시작: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1205
+#: src/omega_serv/interfaces/cli/main.py:1207
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:82
 #, python-brace-format
 msgid "Fin de validité : {value}"
 msgstr "유효 기간 끝: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1206
+#: src/omega_serv/interfaces/cli/main.py:1208
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:83
 #, python-brace-format
 msgid "Jours restants : {days_remaining}"
 msgstr "남은 일수: {days_remaining}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1209
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type}"
 msgstr "키 유형: {key_type}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1209
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type} ({key_bits} bits)"
 msgstr "키 유형: {key_type} ({key_bits}비트)"
 
-#: src/omega_serv/interfaces/cli/main.py:1208
+#: src/omega_serv/interfaces/cli/main.py:1210
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:85
 #, python-brace-format
 msgid "Algorithme de signature : {signature_algorithm}"
 msgstr "서명 알고리즘: {signature_algorithm}"
 
-#: src/omega_serv/interfaces/cli/main.py:1210
+#: src/omega_serv/interfaces/cli/main.py:1212
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:88
 msgid "SAN :"
 msgstr "SAN:"
 
-#: src/omega_serv/interfaces/cli/main.py:1212
+#: src/omega_serv/interfaces/cli/main.py:1214
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:89
 #, python-brace-format
 msgid "  - DNS:{dns}"
 msgstr "  - DNS:{dns}"
 
-#: src/omega_serv/interfaces/cli/main.py:1214
+#: src/omega_serv/interfaces/cli/main.py:1216
 #, python-brace-format
 msgid "  - IP:{ip}"
 msgstr "  - IP:{ip}"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
 #: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/cli/main.py:1221
+#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 msgid "ERREUR"
 msgstr "오류"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
 #: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/cli/main.py:1221
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1223
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
@@ -3833,375 +3928,1284 @@ msgstr "오류"
 msgid "OK"
 msgstr "OK"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] 인증서: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "expiré"
 msgstr "만료됨"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "non expiré"
 msgstr "만료되지 않음"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "NE correspond PAS"
 msgstr "일치하지 않음"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #, python-brace-format
 msgid "[{value}] Clé privée {value2}"
 msgstr "[{value}] 개인 키: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "correspondante"
 msgstr "일치"
 
-#: src/omega_serv/interfaces/cli/main.py:1221
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 #, python-brace-format
 msgid "[{value}] Permissions clé privée : {value2}"
 msgstr "[{value}] 개인 키 퍼미션: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1223
+#: src/omega_serv/interfaces/cli/main.py:1225
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:99
 msgid "[AVERTISSEMENT] Certificat auto-signé, non approuvé par défaut par les navigateurs"
 msgstr "[경고] 자체 서명 인증서이므로 기본적으로 브라우저가 신뢰하지 않습니다"
 
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1227
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:101
 #, python-brace-format
 msgid "[AVERTISSEMENT] Certificat bientôt expiré ({days_remaining} jours restants)"
 msgstr "[경고] 인증서가 곧 만료됩니다({days_remaining}일 남음)"
 
-#: src/omega_serv/interfaces/cli/main.py:1278
+#: src/omega_serv/interfaces/cli/main.py:1280
 #, python-brace-format
 msgid "TLS activé (mode {mode}) dans {config}."
 msgstr "{config}에서 TLS를 활성화했습니다(모드 {mode})."
 
-#: src/omega_serv/interfaces/cli/main.py:1294
+#: src/omega_serv/interfaces/cli/main.py:1296
 #, python-brace-format
 msgid "TLS désactivé dans {config}."
 msgstr "{config}에서 TLS를 비활성화했습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:1306
+#: src/omega_serv/interfaces/cli/main.py:1308
 msgid "Mot de passe : "
 msgstr "비밀번호: "
 
-#: src/omega_serv/interfaces/cli/main.py:1318
+#: src/omega_serv/interfaces/cli/main.py:1320
 msgid "Passphrase de la CA : "
 msgstr "CA 패스프레이즈: "
 
-#: src/omega_serv/interfaces/cli/main.py:1319
+#: src/omega_serv/interfaces/cli/main.py:1321
 msgid "Confirmer la passphrase : "
 msgstr "패스프레이즈 확인: "
 
-#: src/omega_serv/interfaces/cli/main.py:1404
+#: src/omega_serv/interfaces/cli/main.py:1406
 msgid "Utilisateurs :"
 msgstr "사용자:"
 
-#: src/omega_serv/interfaces/cli/main.py:1406
+#: src/omega_serv/interfaces/cli/main.py:1408
 #, python-brace-format
 msgid "  - {username}"
 msgstr "  - {username}"
 
-#: src/omega_serv/interfaces/cli/main.py:1407
+#: src/omega_serv/interfaces/cli/main.py:1409
 msgid "Zones protégées :"
 msgstr "보호 영역:"
 
-#: src/omega_serv/interfaces/cli/main.py:1409
+#: src/omega_serv/interfaces/cli/main.py:1411
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:112
 msgid "toutes"
 msgstr "모두"
 
-#: src/omega_serv/interfaces/cli/main.py:1410
+#: src/omega_serv/interfaces/cli/main.py:1412
 msgid "  - {path_prefix} (realm={realm!r}, utilisateurs={value}, methodes={methods})"
 msgstr "  - {path_prefix} (realm={realm!r}, 사용자={value}, 메서드={methods})"
 
-#: src/omega_serv/interfaces/cli/main.py:1425
+#: src/omega_serv/interfaces/cli/main.py:1427
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:272
 #, python-brace-format
 msgid "[INFO] {label} absent ({path})"
 msgstr "[INFO] {label} 없음({path})"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 msgid "AVERTISSEMENT"
 msgstr "경고"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1431
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #, python-brace-format
 msgid "[{value}] {label} permissions : {value2}"
 msgstr "[{value}] {label} 퍼미션: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1447
+#: src/omega_serv/interfaces/cli/main.py:1449
 msgid "Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce système."
 msgstr "오류: 이 시스템에서 인식된 서비스 관리자(systemd/OpenRC/runit)가 없습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:1460
+#: src/omega_serv/interfaces/cli/main.py:1462
 #, python-brace-format
 msgid "{label} : {value}"
 msgstr "{label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1463
+#: src/omega_serv/interfaces/cli/main.py:1465
 msgid "Connecteurs (moteur natif) :"
 msgstr "커넥터(네이티브 엔진):"
 
-#: src/omega_serv/interfaces/cli/main.py:1465
+#: src/omega_serv/interfaces/cli/main.py:1467
 #, python-brace-format
 msgid "  {label} : {value}"
 msgstr "  {label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1475
+#: src/omega_serv/interfaces/cli/main.py:1477
 #, python-brace-format
 msgid "Service : {service_name}"
 msgstr "서비스 : {service_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1476
+#: src/omega_serv/interfaces/cli/main.py:1478
 #, python-brace-format
 msgid "Actif   : {active}"
 msgstr "활성   : {active}"
 
-#: src/omega_serv/interfaces/cli/main.py:1477
+#: src/omega_serv/interfaces/cli/main.py:1479
 #, python-brace-format
 msgid "Activé au démarrage : {enabled}"
 msgstr "부팅 시 활성화: {enabled}"
 
-#: src/omega_serv/interfaces/cli/main.py:1478
+#: src/omega_serv/interfaces/cli/main.py:1480
 #, python-brace-format
 msgid "État    : {state} ({sub_state})"
 msgstr "상태   : {state} ({sub_state})"
 
-#: src/omega_serv/interfaces/cli/main.py:1480
+#: src/omega_serv/interfaces/cli/main.py:1482
 #, python-brace-format
 msgid "Description : {description}"
 msgstr "설명: {description}"
 
-#: src/omega_serv/interfaces/cli/main.py:1534
+#: src/omega_serv/interfaces/cli/main.py:1536
 #, python-brace-format
 msgid "Erreur : génération d'unité non supportée pour {value} (seul systemd est supporte en V1, voir OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5)."
 msgstr "오류: {value}에서는 유닛 생성이 지원되지 않습니다(V1은 systemd만 지원, OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5 참조)."
 
-#: src/omega_serv/interfaces/cli/main.py:1534
-#: src/omega_serv/interfaces/cli/main.py:1560
+#: src/omega_serv/interfaces/cli/main.py:1536
+#: src/omega_serv/interfaces/cli/main.py:1562
 msgid "aucun gestionnaire détecté"
 msgstr "감지된 관리자 없음"
 
-#: src/omega_serv/interfaces/cli/main.py:1560
+#: src/omega_serv/interfaces/cli/main.py:1562
 #, python-brace-format
 msgid "Erreur : désinstallation d'unité non supportée pour {value}."
 msgstr "오류: {value}에서는 유닛 제거가 지원되지 않습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "CRITICAL"
 msgstr "CRITICAL"
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "HIGH"
 msgstr "HIGH"
 
-#: src/omega_serv/interfaces/cli/main.py:1571
+#: src/omega_serv/interfaces/cli/main.py:1573
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "MEDIUM"
 msgstr "MEDIUM"
 
-#: src/omega_serv/interfaces/cli/main.py:1572
+#: src/omega_serv/interfaces/cli/main.py:1574
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "INFO"
 msgstr "INFO"
 
-#: src/omega_serv/interfaces/cli/main.py:1572
+#: src/omega_serv/interfaces/cli/main.py:1574
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "LOW"
 msgstr "LOW"
 
-#: src/omega_serv/interfaces/cli/main.py:1578
+#: src/omega_serv/interfaces/cli/main.py:1580
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:104
 msgid "Aucun problème détecté."
 msgstr "문제가 감지되지 않았습니다."
 
-#: src/omega_serv/interfaces/cli/main.py:1582
+#: src/omega_serv/interfaces/cli/main.py:1584
 #, python-brace-format
 msgid "[{label}] {rule_id} {rule_name}"
 msgstr "[{label}] {rule_id} {rule_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1584
+#: src/omega_serv/interfaces/cli/main.py:1586
 #, python-brace-format
 msgid "    -> {recommendation}"
 msgstr "    -> {recommendation}"
 
-#: src/omega_serv/interfaces/cli/main.py:1614
+#: src/omega_serv/interfaces/cli/main.py:1616
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:114
 #, python-brace-format
 msgid "Résumé : {critical} critical, {high} high, {medium} medium, {low} low, {info} info"
 msgstr "요약: {critical} critical, {high} high, {medium} medium, {low} low, {info} info"
 
-#: src/omega_serv/interfaces/cli/main.py:1615
+#: src/omega_serv/interfaces/cli/main.py:1617
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : NON SÉCURISÉ"
 msgstr "상태: 안전하지 않음"
 
-#: src/omega_serv/interfaces/cli/main.py:1615
+#: src/omega_serv/interfaces/cli/main.py:1617
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : sécurisé"
 msgstr "상태: 안전"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:50
+#: src/omega_serv/interfaces/cli/main.py:1625
+msgid "Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : interface interactive. Avec une commande : ligne de commande, scriptable."
+msgstr "보안 웹 서버(WAF, TLS, RIPOSTE, Active Defense). 인수 없이: 대화형 인터페이스. 명령과 함께: 명령줄, 스크립트에서 사용 가능."
+
+#: src/omega_serv/interfaces/cli/main.py:1627
+msgid "Toutes les commandes : omega-serv help. Manuel : man omega-serv."
+msgstr "모든 명령: omega-serv help. 설명서: man omega-serv."
+
+#: src/omega_serv/interfaces/cli/main.py:1629
+#: src/omega_serv/interfaces/cli/main.py:1655
+#: src/omega_serv/interfaces/cli/main.py:1657
+#: src/omega_serv/interfaces/cli/main.py:1885
+#: src/omega_serv/interfaces/cli/main.py:1886
+#: src/omega_serv/interfaces/cli/main.py:1891
+#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1898
+#: src/omega_serv/interfaces/cli/main.py:1899
+#: src/omega_serv/interfaces/cli/main.py:1905
+#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:1907
+#: src/omega_serv/interfaces/cli/main.py:1912
+#: src/omega_serv/interfaces/cli/main.py:1913
+#: src/omega_serv/interfaces/cli/main.py:1914
+#: src/omega_serv/interfaces/cli/main.py:1922
+#: src/omega_serv/interfaces/cli/main.py:1925
+#: src/omega_serv/interfaces/cli/main.py:1929
+#: src/omega_serv/interfaces/cli/main.py:1997
+#: src/omega_serv/interfaces/cli/main.py:2005
+#: src/omega_serv/interfaces/cli/main.py:2010
+#: src/omega_serv/interfaces/cli/main.py:2022
+msgid "FICHIER"
+msgstr "파일"
+
+#: src/omega_serv/interfaces/cli/main.py:1630
+msgid "Fichier de configuration (défaut : config/omega-serve.json de l'installation)."
+msgstr "설정 파일(기본값: 설치 위치의 config/omega-serve.json)."
+
+#: src/omega_serv/interfaces/cli/main.py:1633
+msgid "Accepte un certificat auto-signé sur une adresse publique."
+msgstr "공개 주소에서 자체 서명 인증서를 허용합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1634
+msgid "Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le réseau)."
+msgstr "TLS 없는 비밀번호 영역을 허용합니다(비밀번호가 네트워크에서 읽힘)."
+
+#: src/omega_serv/interfaces/cli/main.py:1635
+msgid "Méthode HTTP (défaut : GET)."
+msgstr "HTTP 메서드(기본값: GET)."
+
+#: src/omega_serv/interfaces/cli/main.py:1638
+msgid "Démarre le serveur au premier plan (c'est ce que lance le service système). Refuse de tourner en root."
+msgstr "서버를 포그라운드에서 시작합니다(시스템 서비스가 실행하는 것이 이것입니다). root로 실행하는 것은 거부합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1644
+msgid "Fichier de configuration : création, vérification, TLS, sauvegardes."
+msgstr "설정 파일: 생성, 검사, TLS, 백업."
+
+#: src/omega_serv/interfaces/cli/main.py:1645
+msgid "Crée le fichier de configuration par défaut."
+msgstr "기본 설정 파일을 만듭니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1646
+msgid "Écrase le fichier existant."
+msgstr "기존 파일을 덮어씁니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1649
+msgid "Vérifie la configuration et l'environnement (chemins, droits, certificats) sans démarrer."
+msgstr "시작하지 않고 설정과 환경(경로, 권한, 인증서)을 검사합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1653
+msgid "Affiche la configuration chargée, en JSON."
+msgstr "불러온 설정을 JSON으로 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1654
+msgid "Active TLS dans la configuration."
+msgstr "설정에서 TLS를 활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1656
+msgid "Certificat à utiliser (sinon celui déjà configuré)."
+msgstr "사용할 인증서(지정하지 않으면 이미 설정된 인증서)."
+
+#: src/omega_serv/interfaces/cli/main.py:1658
+msgid "Clé privée à utiliser (sinon celle déjà configurée)."
+msgstr "사용할 개인 키(지정하지 않으면 이미 설정된 키)."
+
+#: src/omega_serv/interfaces/cli/main.py:1660
+msgid "direct : omega-serv chiffre lui-même ; behind_proxy : derrière un reverse proxy (défaut : direct)."
+msgstr "direct: omega-serv가 직접 암호화; behind_proxy: 리버스 프록시 뒤(기본값: direct)."
+
+#: src/omega_serv/interfaces/cli/main.py:1662
+msgid "Désactive TLS dans la configuration."
+msgstr "설정에서 TLS를 비활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1665
+msgid "Crée une sauvegarde : la configuration toujours, le reste selon les options --include-*."
+msgstr "백업을 만듭니다: 설정은 항상 포함하고, 나머지는 --include-* 옵션에 따릅니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1666
+msgid "Ajoute les règles et listes du WAF."
+msgstr "WAF 규칙과 목록을 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1668
+msgid "Ajoute les utilisateurs et les zones protégées (secrets : demande --confirm-secrets)."
+msgstr "사용자와 보호 영역을 포함합니다(비밀 정보: --confirm-secrets 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1670
+msgid "Ajoute les certificats et les clés TLS (secrets : demande --confirm-secrets)."
+msgstr "TLS 인증서와 키를 포함합니다(비밀 정보: --confirm-secrets 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1672
+msgid "Ajoute la base Active Defense."
+msgstr "Active Defense 데이터베이스를 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1674
+msgid "Ajoute les pages d'erreur personnalisées."
+msgstr "사용자 지정 오류 페이지를 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1676
+msgid "Ajoute les préférences de l'interface."
+msgstr "인터페이스 환경설정을 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1678
+msgid "Ajoute la bibliothèque des journaux."
+msgstr "로그 라이브러리를 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1679
+msgid "Ajoute la base RIPOSTE."
+msgstr "RIPOSTE 데이터베이스를 포함합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1681
+msgid "Tout sauvegarder : toutes les options --include-* (secrets compris : demande --confirm-secrets)."
+msgstr "전부 백업: 모든 --include-* 옵션(비밀 정보 포함: --confirm-secrets 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1683
+msgid "Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés privées)."
+msgstr "암호화되지 않은 비밀 정보(비밀번호 해시, 개인 키)의 포함을 확정합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1684
+#: src/omega_serv/interfaces/cli/main.py:1733
+#: src/omega_serv/interfaces/cli/main.py:1734
+#: src/omega_serv/interfaces/cli/main.py:1748
+#: src/omega_serv/interfaces/cli/main.py:1769
+#: src/omega_serv/interfaces/cli/main.py:1843
+#: src/omega_serv/interfaces/cli/main.py:1845
+#: src/omega_serv/interfaces/cli/main.py:1846
+#: src/omega_serv/interfaces/cli/main.py:1847
+#: src/omega_serv/interfaces/cli/main.py:1956
+#: src/omega_serv/interfaces/cli/main.py:1995
+msgid "TEXTE"
+msgstr "텍스트"
+
+#: src/omega_serv/interfaces/cli/main.py:1685
+msgid "Texte libre enregistré avec la sauvegarde."
+msgstr "백업과 함께 저장하는 자유 텍스트."
+
+#: src/omega_serv/interfaces/cli/main.py:1687
+msgid "Restaure une sauvegarde."
+msgstr "백업을 복원합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1688
+#: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
+#: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
+msgid "ID"
+msgstr "ID"
+
+#: src/omega_serv/interfaces/cli/main.py:1689
+msgid "Identifiant de la sauvegarde (voir config list-backups)."
+msgstr "백업 식별자(config list-backups 참고)."
+
+#: src/omega_serv/interfaces/cli/main.py:1691
+msgid "Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne)."
+msgstr "서비스를 중지하고 복원한 뒤 다시 시작합니다(서비스가 실행 중이면 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1693
+msgid "Liste les sauvegardes."
+msgstr "백업 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1695
+msgid "Profils de configuration prêts à l'emploi."
+msgstr "바로 쓸 수 있는 설정 프로필."
+
+#: src/omega_serv/interfaces/cli/main.py:1696
+msgid "Liste les profils disponibles."
+msgstr "사용 가능한 프로필 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1697
+msgid "Nom du profil (voir profile list)."
+msgstr "프로필 이름(profile list 참고)."
+
+#: src/omega_serv/interfaces/cli/main.py:1698
+msgid "Affiche un profil et les valeurs qu'il fixe."
+msgstr "프로필과 그 프로필이 정하는 값을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1702
+msgid "Applique un profil à la configuration (modifications et conflits affichés d'abord)."
+msgstr "프로필을 설정에 적용합니다(변경 사항과 충돌을 먼저 표시)."
+
+#: src/omega_serv/interfaces/cli/main.py:1705
+msgid "Montre seulement ce qui changerait, sans rien écrire."
+msgstr "아무것도 쓰지 않고 바뀔 내용만 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1706
+msgid "Applique malgré des problèmes bloquants."
+msgstr "차단 문제가 있어도 적용합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1710
+msgid "Modules optionnels (waf, fastcgi, active_defense, riposte...)."
+msgstr "선택 모듈(waf, fastcgi, active_defense, riposte...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1711
+msgid "Liste les options et leur état."
+msgstr "옵션과 그 상태의 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1712
+msgid "Nom de l'option (voir option list)."
+msgstr "옵션 이름(option list 참고)."
+
+#: src/omega_serv/interfaces/cli/main.py:1713
+msgid "Active une option."
+msgstr "옵션을 활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1714
+msgid "Première activation du WAF : tous les packs de secure/waf/rules/ sont ajoutés, en mode log-only."
+msgstr "WAF 첫 활성화: secure/waf/rules/의 모든 팩이 log-only 모드로 추가됩니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1717
+msgid "Désactive une option."
+msgstr "옵션을 비활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1722
+msgid "Montre comment le serveur traiterait une requête (chemin, règles, statut, en-têtes), sans l'envoyer."
+msgstr "서버가 요청을 어떻게 처리할지(경로, 규칙, 상태, 헤더) 보내지 않고 보여 줍니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1724
+#: src/omega_serv/interfaces/cli/main.py:1732
+#: src/omega_serv/interfaces/cli/main.py:1767
+#: src/omega_serv/interfaces/cli/main.py:1955
+#: src/omega_serv/interfaces/cli/main.py:1965
+msgid "CHEMIN"
+msgstr "경로"
+
+#: src/omega_serv/interfaces/cli/main.py:1725
+msgid "Chemin demandé, par exemple /docs/index.html."
+msgstr "요청 경로, 예: /docs/index.html."
+
+#: src/omega_serv/interfaces/cli/main.py:1728
+msgid "Pare-feu applicatif (WAF)."
+msgstr "애플리케이션 방화벽(WAF)."
+
+#: src/omega_serv/interfaces/cli/main.py:1730
+msgid "Soumet une requête fictive au WAF et affiche sa décision (règles, score, statut)."
+msgstr "가상의 요청을 WAF에 보내고 그 판정(규칙, 점수, 상태)을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1732
+msgid "Chemin de la requête."
+msgstr "요청 경로."
+
+#: src/omega_serv/interfaces/cli/main.py:1733
+msgid "Chaîne de requête, sans le « ? »."
+msgstr "쿼리 문자열(“?” 제외)."
+
+#: src/omega_serv/interfaces/cli/main.py:1734
+msgid "Corps de la requête."
+msgstr "요청 본문."
+
+#: src/omega_serv/interfaces/cli/main.py:1736
+msgid "Adresse du client simulé (défaut : 127.0.0.1)."
+msgstr "모의 클라이언트의 주소(기본값: 127.0.0.1)."
+
+#: src/omega_serv/interfaces/cli/main.py:1739
+msgid "Affiche les réseaux jamais bannis automatiquement (lu par omega-jail)."
+msgstr "자동으로 차단되지 않는 네트워크를 표시합니다(omega-jail이 읽음)."
+
+#: src/omega_serv/interfaces/cli/main.py:1742
+msgid "Adresses bannies."
+msgstr "차단된 주소."
+
+#: src/omega_serv/interfaces/cli/main.py:1743
+msgid "Affiche les bans : réseau, origine, expiration, motif."
+msgstr "차단 목록을 표시합니다: 네트워크, 출처, 만료, 사유."
+
+#: src/omega_serv/interfaces/cli/main.py:1745
+msgid "Bannit une adresse ou un réseau."
+msgstr "주소나 네트워크를 차단합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1746
+#: src/omega_serv/interfaces/cli/main.py:1754
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
+msgid "RESEAU"
+msgstr "네트워크"
+
+#: src/omega_serv/interfaces/cli/main.py:1747
+msgid "Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."
+msgstr "IP 주소 또는 CIDR 네트워크, 예: 203.0.113.7 또는 203.0.113.0/24."
+
+#: src/omega_serv/interfaces/cli/main.py:1748
+msgid "Motif du ban."
+msgstr "차단 사유."
+
+#: src/omega_serv/interfaces/cli/main.py:1749
+#: src/omega_serv/interfaces/cli/main.py:2003
+msgid "SECONDES"
+msgstr "초"
+
+#: src/omega_serv/interfaces/cli/main.py:1750
+msgid "Durée du ban. Sans durée, le ban est permanent et demande --confirm-permanent."
+msgstr "차단 기간. 기간이 없으면 영구 차단이며 --confirm-permanent가 필요합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1751
+msgid "Confirme un ban permanent."
+msgstr "영구 차단을 확정합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1753
+msgid "Lève un ban."
+msgstr "차단을 해제합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1755
+msgid "Adresse ou réseau, tel qu'affiché par blocklist list."
+msgstr "blocklist list에 표시된 그대로의 주소나 네트워크."
+
+#: src/omega_serv/interfaces/cli/main.py:1759
+msgid "Active Defense : état, simulation, purge (voir aussi threats, incidents, deception)."
+msgstr "Active Defense: 상태, 시뮬레이션, 정리(threats, incidents, deception도 참고)."
+
+#: src/omega_serv/interfaces/cli/main.py:1762
+msgid "Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies."
+msgstr "상태를 표시합니다: 모드, 전시 모드, 미끼, 추적 중인 출처 수."
+
+#: src/omega_serv/interfaces/cli/main.py:1765
+msgid "Montre la décision qu'Active Defense prendrait pour une source, sans rien écrire."
+msgstr "Active Defense가 한 출처에 대해 내릴 판정을 아무것도 쓰지 않고 보여 줍니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1766
+msgid "Adresse de la source simulée."
+msgstr "모의 출처의 주소."
+
+#: src/omega_serv/interfaces/cli/main.py:1768
+msgid "Chemin observé (défaut : /)."
+msgstr "관찰된 경로(기본값: /)."
+
+#: src/omega_serv/interfaces/cli/main.py:1770
+msgid "User-Agent de la source."
+msgstr "출처의 User-Agent."
+
+#: src/omega_serv/interfaces/cli/main.py:1771
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:230
+msgid "CLASSE"
+msgstr "분류"
+
+#: src/omega_serv/interfaces/cli/main.py:1772
+msgid "Classe d'attaque (défaut : scan ; liste affichée si inconnue)."
+msgstr "공격 분류(기본값: scan; 알 수 없으면 목록 표시)."
+
+#: src/omega_serv/interfaces/cli/main.py:1773
+msgid "POINTS"
+msgstr "점수"
+
+#: src/omega_serv/interfaces/cli/main.py:1774
+msgid "Points ajoutés au score de menace (défaut : 10)."
+msgstr "위협 점수에 더할 점수(기본값: 10)."
+
+#: src/omega_serv/interfaces/cli/main.py:1777
+msgid "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les incidents fermés depuis plus de 90 jours."
+msgstr "만료된 위협을 정리하고, 잠잠해진 인시던트를 닫고, 닫힌 지 90일이 넘은 인시던트를 삭제합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1780
+msgid "Moteur HTTP (Python ou natif)."
+msgstr "HTTP 엔진(Python 또는 네이티브)."
+
+#: src/omega_serv/interfaces/cli/main.py:1782
+msgid "Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel repli."
+msgstr "요청한 엔진, 실행 중인 엔진, 그리고 대체 실행이 있었다면 그 이유를 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1786
+msgid "RIPOSTE : bans de plus en plus longs pour les récidivistes."
+msgstr "RIPOSTE: 재범자에게 점점 더 긴 차단."
+
+#: src/omega_serv/interfaces/cli/main.py:1788
+msgid "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; utile au diagnostic)."
+msgstr "RIPOSTE 프로세스를 포그라운드에서 실행합니다(보통 serve가 실행; 진단에 유용)."
+
+#: src/omega_serv/interfaces/cli/main.py:1790
+msgid "Affiche l'état de RIPOSTE (lecture seule)."
+msgstr "RIPOSTE 상태를 표시합니다(읽기 전용)."
+
+#: src/omega_serv/interfaces/cli/main.py:1794
+msgid "Menaces suivies par Active Defense."
+msgstr "Active Defense가 추적하는 위협."
+
+#: src/omega_serv/interfaces/cli/main.py:1795
+msgid "Liste les sources suivies avec leur score et leur niveau."
+msgstr "추적 중인 출처를 점수와 수준과 함께 나열합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1797
+msgid "Seulement ce niveau."
+msgstr "이 수준만."
+
+#: src/omega_serv/interfaces/cli/main.py:1799
+msgid "Affiche le détail d'une source suivie."
+msgstr "추적 중인 출처의 자세한 내용을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1834
+msgid "SOURCE"
+msgstr "출처"
+
+#: src/omega_serv/interfaces/cli/main.py:1801
+msgid "Identifiant de la source, tel qu'affiché par threats list."
+msgstr "threats list에 표시된 그대로의 출처 식별자."
+
+#: src/omega_serv/interfaces/cli/main.py:1804
+msgid "Incidents Active Defense."
+msgstr "Active Defense 인시던트."
+
+#: src/omega_serv/interfaces/cli/main.py:1805
+msgid "Identifiant de l'incident (voir incidents list)."
+msgstr "인시던트 식별자(incidents list 참고)."
+
+#: src/omega_serv/interfaces/cli/main.py:1806
+msgid "Liste les incidents."
+msgstr "인시던트 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1808
+msgid "Seulement les incidents ouverts (open) ou fermés (closed)."
+msgstr "열린(open) 또는 닫힌(closed) 인시던트만."
+
+#: src/omega_serv/interfaces/cli/main.py:1809
+msgid "HEURES"
+msgstr "시간"
+
+#: src/omega_serv/interfaces/cli/main.py:1810
+msgid "Seulement les incidents des N dernières heures."
+msgstr "최근 N시간의 인시던트만."
+
+#: src/omega_serv/interfaces/cli/main.py:1812
+msgid "Affiche un incident et sa chronologie."
+msgstr "인시던트와 그 타임라인을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1816
+msgid "Ferme un incident (et l'exporte si l'export automatique est activé)."
+msgstr "인시던트를 닫습니다(자동 내보내기가 켜져 있으면 내보내기도 함)."
+
+#: src/omega_serv/interfaces/cli/main.py:1820
+msgid "Exporte les indicateurs de compromission (IoC) d'un incident."
+msgstr "인시던트의 침해 지표(IoC)를 내보냅니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1822
+msgid "FORMATS"
+msgstr "형식"
+
+#: src/omega_serv/interfaces/cli/main.py:1823
+msgid "Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp (défaut : json)."
+msgstr "쉼표로 구분한 하나 이상의 형식: json, csv, stix, misp(기본값: json)."
+
+#: src/omega_serv/interfaces/cli/main.py:1826
+msgid "Écrit le rapport Markdown d'un incident."
+msgstr "인시던트의 Markdown 보고서를 작성합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1830
+msgid "Leurres Active Defense."
+msgstr "Active Defense 미끼."
+
+#: src/omega_serv/interfaces/cli/main.py:1831
+msgid "Liste les sources envoyées vers un leurre."
+msgstr "미끼로 보낸 출처 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1833
+msgid "Libère une source de son leurre."
+msgstr "출처를 미끼에서 풀어 줍니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1835
+msgid "Identifiant de la source, tel qu'affiché par deception list."
+msgstr "deception list에 표시된 그대로의 출처 식별자."
+
+#: src/omega_serv/interfaces/cli/main.py:1838
+msgid "Certificats TLS (via OpenSSL)."
+msgstr "TLS 인증서(OpenSSL 사용)."
+
+#: src/omega_serv/interfaces/cli/main.py:1844
+msgid "Organisation (défaut : OMEGA-SERV)."
+msgstr "조직(기본값: OMEGA-SERV)."
+
+#: src/omega_serv/interfaces/cli/main.py:1845
+msgid "Service ou département."
+msgstr "부서."
+
+#: src/omega_serv/interfaces/cli/main.py:1846
+msgid "Ville."
+msgstr "도시."
+
+#: src/omega_serv/interfaces/cli/main.py:1847
+msgid "Région."
+msgstr "시/도 또는 지역."
+
+#: src/omega_serv/interfaces/cli/main.py:1848
+msgid "Pays, code à deux lettres (FR, BE...)."
+msgstr "국가, 두 글자 코드(FR, BE...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1852
+msgid "Noms de domaine supplémentaires couverts par le certificat."
+msgstr "인증서가 포함하는 추가 도메인 이름."
+
+#: src/omega_serv/interfaces/cli/main.py:1854
+msgid "Adresses IP couvertes par le certificat."
+msgstr "인증서가 포함하는 IP 주소."
+
+#: src/omega_serv/interfaces/cli/main.py:1856
+msgid "Nom commun : le nom de domaine principal."
+msgstr "일반 이름: 주 도메인 이름."
+
+#: src/omega_serv/interfaces/cli/main.py:1858
+msgid "Génère un certificat auto-signé aux chemins de la configuration (l'ancien est sauvegardé)."
+msgstr "설정의 경로에 자체 서명 인증서를 생성합니다(이전 인증서는 백업됨)."
+
+#: src/omega_serv/interfaces/cli/main.py:1861
+#: src/omega_serv/interfaces/cli/main.py:1872
+#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:1930
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:244
+msgid "JOURS"
+msgstr "일수"
+
+#: src/omega_serv/interfaces/cli/main.py:1862
+#: src/omega_serv/interfaces/cli/main.py:1897
+msgid "Validité en jours (défaut : 365)."
+msgstr "유효 기간(일, 기본값: 365)."
+
+#: src/omega_serv/interfaces/cli/main.py:1864
+#: src/omega_serv/interfaces/cli/main.py:1884
+msgid "Type de clé (défaut : rsa2048)."
+msgstr "키 유형(기본값: rsa2048)."
+
+#: src/omega_serv/interfaces/cli/main.py:1865
+#: src/omega_serv/interfaces/cli/main.py:1876
+#: src/omega_serv/interfaces/cli/main.py:1894
+#: src/omega_serv/interfaces/cli/main.py:1915
+#: src/omega_serv/interfaces/cli/main.py:1942
+#: src/omega_serv/interfaces/cli/main.py:1951
+msgid "MOT-DE-PASSE"
+msgstr "비밀번호"
+
+#: src/omega_serv/interfaces/cli/main.py:1866
+msgid "Chiffre la clé privée avec ce mot de passe (facultatif)."
+msgstr "이 비밀번호로 개인 키를 암호화합니다(선택)."
+
+#: src/omega_serv/interfaces/cli/main.py:1870
+msgid "Crée une autorité de certification locale dans secure/certificates/ca."
+msgstr "secure/certificates/ca에 로컬 인증 기관을 만듭니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1871
+msgid "Nom de l'autorité de certification."
+msgstr "인증 기관의 이름."
+
+#: src/omega_serv/interfaces/cli/main.py:1873
+msgid "Validité en jours (défaut : 3650)."
+msgstr "유효 기간(일, 기본값: 3650)."
+
+#: src/omega_serv/interfaces/cli/main.py:1875
+msgid "Type de clé (défaut : rsa4096)."
+msgstr "키 유형(기본값: rsa4096)."
+
+#: src/omega_serv/interfaces/cli/main.py:1877
+msgid "Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois au clavier (conseillé)."
+msgstr "CA 키의 비밀번호. 이 옵션이 없으면 키보드로 두 번 묻습니다(권장)."
+
+#: src/omega_serv/interfaces/cli/main.py:1881
+msgid "Génère une clé et une demande de signature (CSR) à faire signer par une CA."
+msgstr "CA가 서명할 키와 서명 요청(CSR)을 생성합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1885
+msgid "Clé privée à créer."
+msgstr "만들 개인 키."
+
+#: src/omega_serv/interfaces/cli/main.py:1886
+msgid "Demande de signature à créer."
+msgstr "만들 서명 요청."
+
+#: src/omega_serv/interfaces/cli/main.py:1889
+msgid "Mot de passe de la clé de CA (sinon demandé au clavier, conseillé)."
+msgstr "CA 키의 비밀번호(지정하지 않으면 키보드로 물음, 권장)."
+
+#: src/omega_serv/interfaces/cli/main.py:1890
+msgid "Signe une demande de signature (CSR) avec une CA."
+msgstr "CA로 서명 요청(CSR)에 서명합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1891
+msgid "Demande de signature à signer."
+msgstr "서명할 서명 요청."
+
+#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1913
+msgid "Clé privée de la CA."
+msgstr "CA의 개인 키."
+
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1914
+msgid "Certificat de la CA."
+msgstr "CA의 인증서."
+
+#: src/omega_serv/interfaces/cli/main.py:1898
+msgid "Certificat signé à écrire."
+msgstr "작성할 서명된 인증서."
+
+#: src/omega_serv/interfaces/cli/main.py:1900
+msgid "Écrit aussi la chaîne complète (certificat puis CA)."
+msgstr "전체 체인(인증서, 그다음 CA)도 작성합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1904
+msgid "Installe un certificat existant aux chemins de la configuration (Let's Encrypt, CA d'entreprise...)."
+msgstr "기존 인증서를 설정의 경로에 설치합니다(Let's Encrypt, 회사 CA...)."
+
+#: src/omega_serv/interfaces/cli/main.py:1905
+msgid "Clé privée."
+msgstr "개인 키."
+
+#: src/omega_serv/interfaces/cli/main.py:1906
+msgid "Certificat."
+msgstr "인증서."
+
+#: src/omega_serv/interfaces/cli/main.py:1908
+msgid "Chaîne des certificats intermédiaires (facultatif)."
+msgstr "중간 인증서 체인(선택)."
+
+#: src/omega_serv/interfaces/cli/main.py:1911
+msgid "Révoque un certificat émis par une CA locale."
+msgstr "로컬 CA가 발급한 인증서를 폐기합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1912
+msgid "Certificat à révoquer."
+msgstr "폐기할 인증서."
+
+#: src/omega_serv/interfaces/cli/main.py:1919
+msgid "Certificat à lire (défaut : celui de la configuration)."
+msgstr "읽을 인증서(기본값: 설정의 인증서)."
+
+#: src/omega_serv/interfaces/cli/main.py:1921
+msgid "Vérifie un certificat : dates, correspondance avec la clé, droits de la clé. Code 1 s'il a expiré."
+msgstr "인증서를 검사합니다: 날짜, 키와의 일치, 키 권한. 만료되었으면 코드 1."
+
+#: src/omega_serv/interfaces/cli/main.py:1924
+msgid "Affiche le détail d'un certificat (même rapport que verify)."
+msgstr "인증서의 자세한 내용을 표시합니다(verify와 같은 보고서)."
+
+#: src/omega_serv/interfaces/cli/main.py:1928
+msgid "Même rapport que verify, avec une alerte si l'expiration approche."
+msgstr "verify와 같은 보고서에 만료가 다가오면 경고를 더합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1931
+msgid "Seuil d'alerte en jours (défaut : 30)."
+msgstr "경고 기준(일, 기본값: 30)."
+
+#: src/omega_serv/interfaces/cli/main.py:1935
+msgid "Authentification HTTP Basic : utilisateurs et zones protégées."
+msgstr "HTTP Basic 인증: 사용자와 보호 영역."
+
+#: src/omega_serv/interfaces/cli/main.py:1936
+msgid "Nom d'utilisateur."
+msgstr "사용자 이름."
+
+#: src/omega_serv/interfaces/cli/main.py:1937
+msgid "Mot de passe (sinon demandé au clavier, conseillé : il resterait dans l'historique)."
+msgstr "비밀번호(지정하지 않으면 키보드로 물음, 권장: 지정하면 기록에 남음)."
+
+#: src/omega_serv/interfaces/cli/main.py:1938
+msgid "Début de chemin protégé, par exemple /admin."
+msgstr "보호할 경로의 시작 부분, 예: /admin."
+
+#: src/omega_serv/interfaces/cli/main.py:1940
+msgid "Crée un utilisateur."
+msgstr "사용자를 만듭니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1945
+msgid "Supprime un utilisateur."
+msgstr "사용자를 삭제합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1949
+msgid "Change le mot de passe d'un utilisateur."
+msgstr "사용자의 비밀번호를 변경합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1954
+msgid "Protège un chemin par mot de passe."
+msgstr "경로를 비밀번호로 보호합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1957
+msgid "Nom affiché par le navigateur dans la demande de connexion."
+msgstr "로그인 요청 시 브라우저가 표시하는 이름."
+
+#: src/omega_serv/interfaces/cli/main.py:1959
+msgid "Utilisateurs autorisés dans la zone."
+msgstr "영역에 허용된 사용자."
+
+#: src/omega_serv/interfaces/cli/main.py:1960
+msgid "METHODE"
+msgstr "메서드"
+
+#: src/omega_serv/interfaces/cli/main.py:1961
+msgid "Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles que le serveur autorise)."
+msgstr "영역에서 이 HTTP 메서드만 허용합니다(기본값: 서버가 허용하는 모든 메서드)."
+
+#: src/omega_serv/interfaces/cli/main.py:1964
+msgid "Retire la protection d'un chemin."
+msgstr "경로의 보호를 해제합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1968
+msgid "Liste les utilisateurs et les zones protégées."
+msgstr "사용자와 보호 영역 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1970
+msgid "Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que par leur propriétaire."
+msgstr "사용자와 영역 파일을 소유자만 읽을 수 있는지 검사합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1974
+msgid "Service système (systemd, OpenRC ou runit)."
+msgstr "시스템 서비스(systemd, OpenRC 또는 runit)."
+
+#: src/omega_serv/interfaces/cli/main.py:1975
+msgid "Nom du service (défaut : omega-serv)."
+msgstr "서비스 이름(기본값: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:1976
+msgid "Fichier d'unité (défaut : /etc/systemd/system/<nom>.service)."
+msgstr "유닛 파일(기본값: /etc/systemd/system/<이름>.service)."
+
+#: src/omega_serv/interfaces/cli/main.py:1979
+msgid "Affiche l'état du service."
+msgstr "서비스 상태를 표시합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1980
+msgid "Démarre le service."
+msgstr "서비스를 시작합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1981
+msgid "Arrête le service."
+msgstr "서비스를 중지합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1982
+msgid "Redémarre le service (nécessaire après une mise à jour)."
+msgstr "서비스를 다시 시작합니다(업데이트 후 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1984
+msgid "Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur demandent un redémarrage."
+msgstr "중단 없이 다시 불러옵니다: WAF 규칙과 영역. bind, 포트, TLS, 엔진은 재시작이 필요합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1985
+msgid "Active le démarrage automatique au boot."
+msgstr "부팅 시 자동 시작을 활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1986
+msgid "Désactive le démarrage automatique au boot."
+msgstr "부팅 시 자동 시작을 비활성화합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:1993
+msgid "Crée l'unité systemd du service (systemd seulement ; demande les droits administrateur)."
+msgstr "서비스의 systemd 유닛을 만듭니다(systemd 전용; 관리자 권한 필요)."
+
+#: src/omega_serv/interfaces/cli/main.py:1996
+msgid "Description de l'unité (défaut : OMEGA-SERV web server)."
+msgstr "유닛 설명(기본값: OMEGA-SERV web server)."
+
+#: src/omega_serv/interfaces/cli/main.py:1998
+msgid "Python à utiliser (défaut : celui du .venv de l'installation)."
+msgstr "사용할 Python(기본값: 설치 위치 .venv의 Python)."
+
+#: src/omega_serv/interfaces/cli/main.py:2000
+msgid "Compte système qui fait tourner le service (défaut : omega-serv)."
+msgstr "서비스를 실행하는 시스템 계정(기본값: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:2002
+msgid "Groupe du service (défaut : omega-serv)."
+msgstr "서비스 그룹(기본값: omega-serv)."
+
+#: src/omega_serv/interfaces/cli/main.py:2004
+msgid "Délai laissé à l'arrêt avant de forcer (défaut : 15)."
+msgstr "강제 종료 전 중지에 주는 시간(기본값: 15)."
+
+#: src/omega_serv/interfaces/cli/main.py:2008
+msgid "Supprime l'unité du service."
+msgstr "서비스 유닛을 삭제합니다."
+
+#: src/omega_serv/interfaces/cli/main.py:2013
+msgid "Audit de sécurité."
+msgstr "보안 감사."
+
+#: src/omega_serv/interfaces/cli/main.py:2015
+msgid "Audite l'installation : configuration, droits, TLS, service. Code 1 si critique, 2 si élevé, 3 si la configuration est illisible."
+msgstr "설치를 감사합니다: 설정, 권한, TLS, 서비스. 치명이면 코드 1, 높음이면 2, 설정을 읽을 수 없으면 3."
+
+#: src/omega_serv/interfaces/cli/main.py:2018
+msgid "Format du rapport (défaut : text)."
+msgstr "보고서 형식(기본값: text)."
+
+#: src/omega_serv/interfaces/cli/main.py:2020
+msgid "N'affiche que ce niveau et les plus graves (défaut : info)."
+msgstr "이 수준과 더 심각한 수준만 표시합니다(기본값: info)."
+
+#: src/omega_serv/interfaces/cli/main.py:2030
+msgid "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte)."
+msgstr "모든 명령 또는 한 갈래의 트리를 표시합니다(예: omega-serv help riposte)."
+
+#: src/omega_serv/interfaces/cli/main.py:2031
+msgid "Branche à afficher (facultatif)."
+msgstr "표시할 갈래(선택)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:51
 #: src/omega_serv/interfaces/cli/riposte_commands.py:300
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:43
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:46
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:83
 msgid "Configuration illisible : "
 msgstr "설정을 읽을 수 없습니다: "
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:65
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:66
 #: src/omega_serv/interfaces/cli/riposte_commands.py:313
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:139
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:142
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:95
 msgid "RIPOSTE n'a encore jamais été lancé sur cette instance."
 msgstr "이 인스턴스에서 RIPOSTE가 아직 한 번도 시작되지 않았습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:68
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:69
 #: src/omega_serv/interfaces/cli/riposte_commands.py:316
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:141
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:144
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:97
 #, python-brace-format
 msgid "Base RIPOSTE illisible : {error}"
 msgstr "RIPOSTE 데이터베이스를 읽을 수 없습니다: {error}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:70
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:71
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:99
 msgid "Droits d'écriture sur la base requis (groupe du service omega-serv)."
 msgstr "데이터베이스 쓰기 권한이 필요합니다(omega-serv 서비스 그룹)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:81
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:82
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:120
 #, python-brace-format
 msgid "Commande non déposée : {error}"
 msgstr "명령을 등록할 수 없습니다: {error}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:89
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:90
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:145
 msgid "RIPOSTE est arrêté : la commande sera exécutée à son prochain démarrage."
 msgstr "RIPOSTE가 중지되어 있습니다: 명령은 다음 시작 시 실행됩니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:103
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:104
 msgid "Commande déposée, pas encore exécutée : vérifier avec « riposte actions list »."
 msgstr "명령이 등록되었지만 아직 실행되지 않았습니다: 'riposte actions list'로 확인하세요."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:108
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:109
 #, python-brace-format
 msgid " palier {n}"
 msgstr " 단계 {n}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:110
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:111
 #, python-brace-format
 msgid "{id}  {ip}  {action}{tier}  [{policy}]  {state} - jusqu'au {end}"
 msgstr "{id}  {ip}  {action}{tier}  [{policy}]  {state} - {end}까지"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:125
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:125
 msgid "Aucune action en cours."
 msgstr "진행 중인 조치가 없습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:125
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:125
 msgid "Aucune action terminée."
 msgstr "종료된 조치가 없습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:128
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:129
 #: src/omega_serv/interfaces/cli/riposte_text.py:252
 msgid "Arrêt d'urgence : ACTIF"
 msgstr "비상 정지: 활성"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:144
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:145
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:137
 #, python-brace-format
 msgid "Créée le {when} (événement {event})"
 msgstr "{when}에 생성(이벤트 {event})"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:147
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:148
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:141
 #, python-brace-format
 msgid "Leurre {profile} pour : {subjects}"
 msgstr "미끼 {profile} 대상: {subjects}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:150
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:151
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:144
 #, python-brace-format
 msgid "Terminée le {when} : {by}"
 msgstr "{when}에 종료: {by}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:155
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:156
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:149
 msgid "Ne compte pas dans la récidive."
 msgstr "재범으로 세지 않음."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:187
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:89
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:188
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:92
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:243
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:285
 #, python-brace-format
 msgid "Politique inconnue : {id}"
 msgstr "알 수 없는 정책: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:190
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:191
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:288
 msgid "Configuration RIPOSTE invalide : "
 msgstr "잘못된 RIPOSTE 설정: "
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:192
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:193
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:290
 #, python-brace-format
 msgid "Politique {id} activée."
 msgstr "정책 {id}을(를) 활성화했습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:192
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:193
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:245
 #, python-brace-format
 msgid "Politique {id} désactivée."
 msgstr "정책 {id}을(를) 비활성화했습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:202
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:203
 msgid "Les actions déjà en cours de cette politique vont jusqu'à leur échéance (« --revoke » pour les lever)."
 msgstr "이 정책의 이미 진행 중인 조치는 만료까지 계속됩니다(해제하려면 '--revoke')."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:233
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:234
 msgid "Aucune exemption ajoutée (les exclusions de la configuration s'appliquent toujours)."
 msgstr "추가된 예외가 없습니다(설정의 예외는 항상 적용됩니다)."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:235
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:236
 #, python-brace-format
 msgid "{network}  jusqu'au {until}  (action {action})"
 msgstr "{network}  {until}까지  (조치 {action})"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:237
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:238
 #: src/omega_serv/interfaces/tui/screens/riposte_settings_screen.py:136
 msgid "retrait manuel"
 msgstr "수동으로 삭제"
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:260
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:261
 msgid "Arrêt d'urgence ACTIF : aucune nouvelle action, même après un redémarrage, jusqu'à « riposte resume »."
 msgstr "비상 정지 활성: 재시작 후에도 'riposte resume' 전까지 새 조치가 없습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:263
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:264
 msgid "Les actions en cours vont jusqu'à leur échéance (« --revoke » pour les lever)."
 msgstr "진행 중인 조치는 만료까지 계속됩니다(해제하려면 '--revoke')."
 
-#: src/omega_serv/interfaces/cli/riposte_action_commands.py:275
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:276
 #: src/omega_serv/interfaces/tui/screens/riposte_status_screen.py:197
 msgid "Arrêt d'urgence levé : RIPOSTE reprend ses décisions."
 msgstr "비상 정지 해제: RIPOSTE가 다시 판단합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:282
+msgid "Identifiant de l'action (voir riposte actions list)."
+msgstr "조치 식별자(riposte actions list 참고)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:283
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:224
+msgid "Identifiant de la politique (voir riposte policies list)."
+msgstr "정책 식별자(riposte policies list 참고)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:284
+msgid "Bans et leurres posés par RIPOSTE."
+msgstr "RIPOSTE가 건 차단과 미끼."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:285
+msgid "Une commande est exécutée par le processus RIPOSTE en moins d'une seconde, ou à son prochain démarrage s'il est arrêté."
+msgstr "명령은 RIPOSTE 프로세스가 1초 안에 실행하며, 프로세스가 멈춰 있으면 다음 시작 때 실행합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:287
+msgid "Liste les actions en cours."
+msgstr "진행 중인 조치 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:288
+msgid "Liste les actions terminées à la place."
+msgstr "대신 끝난 조치 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:289
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:259
+msgid "Seulement cette adresse."
+msgstr "이 주소만."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:290
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:214
+msgid "Nombre maximal de lignes (défaut : 50)."
+msgstr "최대 줄 수(기본값: 50)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:292
+msgid "Affiche le détail d'une action."
+msgstr "조치의 자세한 내용을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:295
+msgid "Lève une action."
+msgstr "조치를 해제합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:298
+msgid "Exempte aussi l'adresse : 24 h, 7 jours ou jusqu'à levée manuelle (forever)."
+msgstr "주소도 예외로 둡니다: 24시간, 7일 또는 직접 해제할 때까지(forever)."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:300
+msgid "Ne compte pas cette action dans la récidive."
+msgstr "이 조치를 재범으로 세지 않습니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:303
+msgid "Ne compte pas une action dans la récidive, sans la lever."
+msgstr "조치를 해제하지 않고 재범으로 세지 않습니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:307
+msgid "Active une politique."
+msgstr "정책을 활성화합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:310
+msgid "Désactive une politique."
+msgstr "정책을 비활성화합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:312
+msgid "Lève aussi ses actions en cours."
+msgstr "진행 중인 조치도 해제합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:315
+msgid "Efface la mémoire d'une source : ses récidives repartent de zéro."
+msgstr "출처에 대한 기억을 지웁니다: 재범 횟수가 0부터 다시 시작합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:316
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:229
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:253
+msgid "Adresse de la source."
+msgstr "출처의 주소."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:319
+msgid "Adresses exemptées de RIPOSTE."
+msgstr "RIPOSTE에서 예외인 주소."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:320
+msgid "Liste les exemptions."
+msgstr "예외 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:321
+msgid "Retire une exemption."
+msgstr "예외를 제거합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
+msgid "Adresse ou réseau exempté."
+msgstr "예외로 둔 주소나 네트워크."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:326
+msgid "Arrêt d'urgence : RIPOSTE ne décide plus rien, même après un redémarrage, jusqu'à riposte resume."
+msgstr "비상 정지: riposte resume까지 재시작 후에도 RIPOSTE는 아무것도 판정하지 않습니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:327
+msgid "Lève aussi toutes les actions en cours."
+msgstr "진행 중인 모든 조치도 해제합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_action_commands.py:329
+msgid "Lève l'arrêt d'urgence."
+msgstr "비상 정지를 해제합니다."
 
 #: src/omega_serv/interfaces/cli/riposte_commands.py:304
 msgid "RIPOSTE est désactivé (options.riposte)."
@@ -4212,94 +5216,178 @@ msgstr "RIPOSTE가 비활성화되어 있습니다(options.riposte)."
 msgid "Activer le WAF pour les actions de ban : sans WAF, RIPOSTE ne voit aucune attaque."
 msgstr "차단 조치를 위해 WAF를 활성화하세요: WAF가 없으면 RIPOSTE는 공격을 보지 못합니다."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:58
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:61
 #, python-brace-format
 msgid "Scénario inconnu : {id}"
 msgstr "알 수 없는 시나리오: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:61
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:64
 #, python-brace-format
 msgid "Pour qui : {text}"
 msgstr "대상: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:62
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:65
 #, python-brace-format
 msgid "Ce qu'il fait : {text}"
 msgstr "하는 일: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:63
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:66
 #, python-brace-format
 msgid "Ce qu'il ne fait pas : {text}"
 msgstr "하지 않는 일: {text}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:75
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:78
 msgid "Aucune politique. Voir « riposte scenarios list » pour partir d'un scénario prêt."
 msgstr "정책이 없습니다. 준비된 시나리오에서 시작하려면 'riposte scenarios list'를 참고하세요."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:106
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:109
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:127
 msgid "Simulation (rien n'est appliqué) :"
 msgstr "시뮬레이션(아무것도 적용되지 않음):"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:124
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:127
 #, python-brace-format
 msgid "Politique ou scénario inconnu : {id}"
 msgstr "알 수 없는 정책 또는 시나리오: {id}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:154
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:157
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:91
 msgid "Aucune source suivie pour l'instant."
 msgstr "아직 추적 중인 출처가 없습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:156
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:159
 #, python-brace-format
 msgid "{ip}  {episodes} épisode(s), {actions} action(s), dernière activité {when}"
 msgstr "{ip}  에피소드 {episodes}개, 조치 {actions}개, 마지막 활동 {when}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:171
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:174
 #: src/omega_serv/interfaces/cli/riposte_text.py:232
 #, python-brace-format
 msgid "Source inconnue de RIPOSTE : {ip}"
 msgstr "RIPOSTE가 모르는 출처: {ip}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:173
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:176
 #, python-brace-format
 msgid "Source {ip}"
 msgstr "출처 {ip}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:175
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:178
 #, python-brace-format
 msgid "Épisode du {start} au {end} : {attacks} attaque(s) [{classes}], leurres {decoys}, refus blocklist {blocked}{level}{acted}"
 msgstr "에피소드 {start} ~ {end}: 공격 {attacks}건 [{classes}], 미끼 {decoys}, blocklist 거부 {blocked}{level}{acted}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:180
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:183
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:121
 #, python-brace-format
 msgid ", niveau {level}"
 msgstr ", 수준 {level}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:181
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:184
 msgid ", action décidée"
 msgstr ", 조치 결정됨"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:183
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:186
 #, python-brace-format
 msgid "Action {policy} palier {tier} du {start} au {end}"
 msgstr "조치 {policy} 단계 {tier}, {start} ~ {end}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:198
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:201
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:95
 msgid "Aucune décision enregistrée."
 msgstr "기록된 판단이 없습니다."
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:200
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:203
 #, python-brace-format
 msgid "{when}  {ip}  {status}{policy}{applied}"
 msgstr "{when}  {ip}  {status}{policy}{applied}"
 
-#: src/omega_serv/interfaces/cli/riposte_query_commands.py:203
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:206
 msgid "  (non appliquée)"
 msgstr "  (미적용)"
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:215
+msgid "Scénarios prêts à l'emploi."
+msgstr "바로 쓸 수 있는 시나리오."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:216
+msgid "Liste les scénarios."
+msgstr "시나리오 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:217
+msgid "Affiche un scénario et la politique qu'il propose."
+msgstr "시나리오와 그 시나리오가 제안하는 정책을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:218
+msgid "Identifiant du scénario (voir riposte scenarios list)."
+msgstr "시나리오 식별자(riposte scenarios list 참고)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:221
+msgid "Politiques de la configuration."
+msgstr "설정의 정책."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:222
+msgid "Liste les politiques et leur état."
+msgstr "정책과 그 상태의 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:223
+msgid "Affiche une politique."
+msgstr "정책을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:228
+msgid "Explique la décision de RIPOSTE pour une situation donnée, avec la configuration réelle ; rien n'est appliqué."
+msgstr "실제 설정으로 주어진 상황에서의 RIPOSTE 판정을 설명합니다. 아무것도 적용하지 않습니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:231
+msgid "Classe d'attaque (défaut : scan)."
+msgstr "공격 분류(기본값: scan)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:233
+msgid "Niveau de menace Active Defense de la source."
+msgstr "출처의 Active Defense 위협 수준."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:235
+msgid "Nombre de retours de la source (défaut : 1)."
+msgstr "출처가 다시 온 횟수(기본값: 1)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:237
+msgid "Nombre de leurres touchés (défaut : 0)."
+msgstr "건드린 미끼 수(기본값: 0)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:241
+msgid "Mesure sur les journaux ce qu'une politique aurait décidé, sans rien appliquer."
+msgstr "정책이 어떻게 판정했을지 로그로 측정합니다. 아무것도 적용하지 않습니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:243
+msgid "Politique de la configuration, ou scenario:<id> pour mesurer un scénario avant de l'ajouter."
+msgstr "설정의 정책, 또는 추가하기 전에 시나리오를 측정하려면 scenario:<id>."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:245
+msgid "Période mesurée en jours (défaut : 7 ; 0 = tout le journal)."
+msgstr "측정 기간(일, 기본값: 7; 0 = 로그 전체)."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:248
+msgid "Adresses mémorisées par RIPOSTE."
+msgstr "RIPOSTE가 기억하는 주소."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:249
+msgid "Liste les sources mémorisées."
+msgstr "기억된 출처 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:252
+msgid "Affiche l'historique d'une source."
+msgstr "출처의 기록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:256
+msgid "Décisions prises par RIPOSTE."
+msgstr "RIPOSTE가 내린 판정."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:257
+msgid "Liste les dernières décisions."
+msgstr "최근 판정 목록을 표시합니다."
+
+#: src/omega_serv/interfaces/cli/riposte_query_commands.py:260
+msgid "Détaille le raisonnement de chaque décision."
+msgstr "각 판정의 근거를 자세히 설명합니다."
 
 #: src/omega_serv/interfaces/cli/riposte_text.py:19
 #, python-brace-format
@@ -4772,7 +5860,7 @@ msgstr "다음 테마"
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:68
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:229
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:77
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/riposte_status_screen.py:63
@@ -5054,7 +6142,7 @@ msgstr "로그 관리 메뉴를 엽니다."
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:75
 #: src/omega_serv/interfaces/tui/screens/home.py:82
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
 msgid "Service"
 msgstr "서비스"
@@ -7621,8 +8709,8 @@ msgid "Affiche les 200 dernières lignes d'un log choisi dans la Bibliothèque e
 msgstr "라이브러리에서 고른 로그의 마지막 200행을 보여 주고 변화를 실시간으로 추적할 수 있습니다."
 
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:217
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:51
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:110
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:52
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:111
 msgid "Suivre en direct"
 msgstr "실시간 추적"
 
@@ -8639,7 +9727,7 @@ msgid "Chaîne libre, ex: /new/."
 msgstr "자유 문자열, 예: /new/."
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:72
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:63
 msgid "Code"
 msgstr "코드"
@@ -11075,7 +12163,7 @@ msgstr "상태, 새 로그 행, 시스템 리소스를 다시 읽습니다."
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:164
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:182
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:79
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:231
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:237
 msgid "Simuler une requête"
 msgstr "요청 시뮬레이션"
 
@@ -12392,7 +13480,7 @@ msgstr "8/8 - 서비스"
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:59
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:60
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:61
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:575
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:581
 #: src/omega_serv/interfaces/tui/screens/tls_menu_screen.py:47
 #: src/omega_serv/interfaces/tui/screens/upstream_editor_screen.py:72
 msgid "TLS"
@@ -12498,10 +13586,10 @@ msgstr "설정에 options.active_defense가 없거나 비활성화되어 있습�
 #: src/omega_serv/interfaces/tui/screens/log_favorites_screen.py:66
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:70
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:88
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:83
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:45
 #: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:53
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
@@ -12510,7 +13598,7 @@ msgstr "설정에 options.active_defense가 없거나 비활성화되어 있습�
 #: src/omega_serv/interfaces/tui/screens/redirects_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/remote_log_sources_screen.py:90
 #: src/omega_serv/interfaces/tui/screens/renewal_schedule_screen.py:53
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:241
 #: src/omega_serv/interfaces/tui/screens/restore_log_archive_screen.py:38
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_cache_screen.py:78
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_screen.py:166
@@ -12757,7 +13845,7 @@ msgstr "접근 제어 규칙을 업데이트했습니다."
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:91
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:52
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:543
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:549
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/riposte_policies_screen.py:99
 #: src/omega_serv/interfaces/tui/widgets/log_library_table.py:32
@@ -13000,7 +14088,7 @@ msgid "Fichier de journal enrichi (log_path)"
 msgstr "상세 로그 파일(log_path)"
 
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:185
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:541
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:547
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
 msgid "Actif"
 msgstr "활성"
@@ -13565,11 +14653,6 @@ msgid "Date"
 msgstr "날짜"
 
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
-#: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
-msgid "ID"
-msgstr "ID"
-
-#: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:60
 #: src/omega_serv/interfaces/tui/screens/purge_log_archives_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/restore_log_archive_screen.py:44
@@ -13605,7 +14688,7 @@ msgstr "{selected_snapshot_id}을(를) 영구 삭제하시겠습니까?"
 #: src/omega_serv/interfaces/tui/screens/limits_screen.py:173
 #: src/omega_serv/interfaces/tui/screens/log_rotation_screen.py:155
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:66
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:567
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:573
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:105
 #: src/omega_serv/interfaces/tui/screens/security_screen.py:156
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:55
@@ -14254,13 +15337,13 @@ msgid "Expire le"
 msgstr "만료 일시"
 
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:573
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:579
 msgid "Profil"
 msgstr "프로필"
 
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:81
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:80
@@ -14523,7 +15606,7 @@ msgstr "사용자 정의"
 #: src/omega_serv/interfaces/tui/screens/error_pages_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:81
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:70
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:514
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:520
 #: src/omega_serv/interfaces/tui/screens/reverse_proxy_upstream_status_screen.py:74
 #: src/omega_serv/interfaces/tui/widgets/capabilities_table.py:39
 msgid "Statut"
@@ -14972,7 +16055,7 @@ msgid "unité introuvable"
 msgstr "유닛을 찾을 수 없음"
 
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:98
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:627
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:633
 #, python-brace-format
 msgid "{name} (courante)"
 msgstr "{name}(현재)"
@@ -15426,55 +16509,55 @@ msgstr "자동화를 찾을 수 없습니다."
 msgid "Automatisation supprimée."
 msgstr "자동화를 삭제했습니다."
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:73
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:75
 #, python-brace-format
 msgid "VOIR LES LOGS - SIMPLE - {path}"
 msgstr "로그 보기 - 단순 - {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 msgid "Heure"
 msgstr "시각"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:75
 msgid "IP"
 msgstr "IP"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:173
 msgid "Message"
 msgstr "메시지"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Niveau"
 msgstr "수준"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:88
 msgid "Timeout"
 msgstr "Timeout"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:133
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:135
 #, python-brace-format
 msgid "Suivi interrompu : {exc}"
 msgstr "추적 중단: {exc}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:164
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:166
 msgid "── RENDEMENT ──────────────\n"
 msgstr "── 성능 ───────────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:165
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:167
 #, python-brace-format
 msgid "{rps:.1f} req/s"
 msgstr "{rps:.1f} req/s"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:166
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:168
 #, python-brace-format
 msgid " ⚡ Débit        : {value}\n"
 msgstr " ⚡ 속도         : {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:168
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:172
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:170
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:174
 #, python-brace-format
 msgid ""
 " ⏱ Latence moy. : {value}\n"
@@ -15483,21 +16566,21 @@ msgstr ""
 " ⏱ 평균 지연    : {value}\n"
 "\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:176
 msgid "── BANDE PASSANTE ─────────\n"
 msgstr "── 대역폭 ─────────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:178
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:180
 #, python-brace-format
 msgid " 🌐 Débit réseau : {value}\n"
 msgstr " 🌐 네트워크 속도: {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:179
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:181
 #, python-brace-format
 msgid " 📦 Volume total : {value}\n"
 msgstr " 📦 총 전송량    : {value}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:180
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:182
 #, python-brace-format
 msgid ""
 " 🗜 Taille moy.  : {value}\n"
@@ -15506,102 +16589,104 @@ msgstr ""
 " 🗜 평균 크기    : {value}\n"
 "\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:182
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:184
 msgid "── STATUTS HTTP ───────────\n"
 msgstr "── HTTP 상태 ──────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:183
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:185
 #, python-brace-format
 msgid " 📊 Requêtes     : {count}\n"
 msgstr " 📊 요청         : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:184
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:186
 #, python-brace-format
 msgid " √  Succès 2xx   : {count}\n"
 msgstr " √  성공 2xx     : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:185
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:187
 #, python-brace-format
 msgid " ↔  Redir. 3xx   : {count}\n"
 msgstr " ↔  리디렉션 3xx : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:186
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:188
 #, python-brace-format
 msgid " ⚠  Erreurs 4xx  : {count}\n"
 msgstr " ⚠  오류 4xx     : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:187
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:189
 #, python-brace-format
 msgid " ❌ Erreurs 5xx  : {count}\n"
 msgstr " ❌ 오류 5xx     : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:188
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:190
 #, python-brace-format
 msgid " ⛔ Refus 403    : {count}\n"
 msgstr " ⛔ 403 거부     : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:189
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:191
 #, python-brace-format
 msgid ""
 " ⏳ Refus 429    : {count}\n"
 "\n"
-msgstr " ⏳ 429 거부     : {count}\n\n"
+msgstr ""
+" ⏳ 429 거부     : {count}\n"
+"\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:191
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:193
 msgid "── CLIENTS & RÉSEAU ───────\n"
 msgstr "── 클라이언트·네트워크 ────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:192
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:194
 #, python-brace-format
 msgid " 💻 IPs uniques  : {count}\n"
 msgstr " 💻 고유 IP      : {count}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:194
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:196
 msgid " 🖧 Top 5 IP     :\n"
 msgstr " 🖧 상위 5 IP    :\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:197
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:199
 msgid "── CHEMINS DEMANDÉS ───────\n"
 msgstr "── 요청된 경로 ────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:199
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:201
 msgid "── CHEMINS EN 404 ─────────\n"
 msgstr "── 404 경로 ───────────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:202
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:204
 msgid "── SANTÉ & TAMPON ─────────\n"
 msgstr "── 상태 및 버퍼 ───────────\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 msgid "CORRECT"
 msgstr "양호"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 #: src/omega_serv/interfaces/tui/widgets/capabilities_table.py:22
 msgid "DÉGRADÉ"
 msgstr "저하됨"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:205
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
 msgid "EXCELLENT"
 msgstr "우수"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:206
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:208
 #, python-brace-format
 msgid " 🌡 Santé        : {health}\n"
 msgstr " 🌡 상태         : {health}\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:207
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:209
 #, python-brace-format
 msgid " ⚠  Taux d'erreur: {rate:.1f}%\n"
 msgstr " ⚠  오류율       : {rate:.1f}%\n"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:208
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:210
 #, python-brace-format
 msgid " 📥 Tampon       : {count}/{size}"
 msgstr " 📥 버퍼         : {count}/{size}"
 
-#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:215
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:701
+#: src/omega_serv/interfaces/tui/screens/log_simple_viewer_screen.py:217
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:707
 #: src/omega_serv/interfaces/tui/screens/routing_rule_editor_screen.py:43
 #: src/omega_serv/interfaces/tui/screens/wizard_summary_screen.py:51
 msgid "(aucun)"
@@ -15693,30 +16778,30 @@ msgstr "보기(lnav)"
 msgid "Saisissez au moins un numéro de ligne."
 msgstr "행 번호를 하나 이상 입력하십시오."
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:46
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:47
 #, python-brace-format
 msgid "VOIR / SUIVRE - {path}"
 msgstr "보기 / 추적 - {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:74
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:75
 #, python-brace-format
 msgid "Fichier introuvable : {path}"
 msgstr "파일을 찾을 수 없음: {path}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:82
 #, python-brace-format
 msgid "Impossible de lire {path} : {exc}"
 msgstr "{path}을(를) 읽을 수 없습니다: {exc}"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:93
 msgid "Aucun fichier valide à suivre."
 msgstr "추적할 유효한 파일이 없습니다."
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:101
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:102
 msgid "Arrêter le suivi"
 msgstr "추적 중지"
 
-#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:122
+#: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:123
 #, python-brace-format
 msgid "(suivi interrompu : {exc})"
 msgstr "(추적 중단: {exc})"
@@ -15766,17 +16851,17 @@ msgstr "옵션"
 msgid "Configuration introuvable ou invalide."
 msgstr "설정을 찾을 수 없거나 잘못되었습니다."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:110
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:113
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (un simple rechargement ne suffit pas pour une PREMIÈRE activation)."
 msgstr "{message} 적용하려면 완전 재시작이 필요합니다(최초 활성화에는 단순한 다시 로드로 부족함)."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:118
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (Active Defense n'est JAMAIS rechargé à chaud, même pour la désactiver)."
 msgstr "{message} 적용하려면 완전 재시작이 필요합니다(Active Defense는 비활성화할 때도 실행 중에 다시 로드되지 않음)."
 
-#: src/omega_serv/interfaces/tui/screens/options_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/options_screen.py:123
 #, python-brace-format
 msgid "{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (le processus RIPOSTE est lancé ou arrêté au démarrage du serveur)."
 msgstr "{message} 반영하려면 완전한 재시작이 필요합니다(RIPOSTE 프로세스는 서버 시작 시 시작되거나 중지됩니다)."
@@ -16188,427 +17273,427 @@ msgstr "이 환경에서는 확인을 사용할 수 없습니다."
 msgid "Configuration indisponible dans cet environnement."
 msgstr "이 환경에서는 설정을 사용할 수 없습니다."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:144
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:150
 #, python-brace-format
 msgid "{days} j {hours} h {minutes} min"
 msgstr "{days}일 {hours}시간 {minutes}분"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:216
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:222
 msgid "ÉTAT & RESSOURCES"
 msgstr "상태 및 리소스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:239
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:245
 msgid "Chargement..."
 msgstr "불러오는 중..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:240
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:246
 msgid "ÉTAT DU SERVEUR"
 msgstr "서버 상태"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:242
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:248
 msgid "FLUX (LOG D'ACCÈS)"
 msgstr "흐름(액세스 로그)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:243
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:249
 msgid "RESSOURCES SYSTÈME"
 msgstr "시스템 리소스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:341
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:347
 #, python-brace-format
 msgid "({count} cœurs)"
 msgstr "({count}코어)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:391
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:439
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:397
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:445
 #, python-brace-format
 msgid "ERREUR INATTENDUE : {error}"
 msgstr "예기치 않은 오류: {error}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:460
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:466
 #, python-brace-format
 msgid "{count} paq/s max"
 msgstr "최대 {count} 패킷/초"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:485
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:491
 msgid "mesure en cours..."
 msgstr "측정 중..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:513
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:519
 msgid "PROCESSUS"
 msgstr "프로세스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:519
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:525
 #, python-brace-format
 msgid "DÉMARRÉ (PID {pid})"
 msgstr "실행 중(PID {pid})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:521
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:527
 #, python-brace-format
 msgid "ARRÊTÉ (PID {pid} obsolète)"
 msgstr "중지됨(PID {pid} 오래됨)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:524
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:530
 msgid "à confirmer (rien d'alarmant, normal juste après l'installation) - reconnectez votre session UNE SEULE FOIS pour que cet écran l'affiche ; vérifiez via SERVICE en attendant"
 msgstr "확인 필요(걱정할 일 아님, 설치 직후에는 정상) - 이 화면에 표시되도록 세션에 한 번만 다시 로그인하십시오. 그때까지는 SERVICE에서 확인하십시오"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:529
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:535
 msgid "ARRÊTÉ (aucun fichier PID)"
 msgstr "중지됨(PID 파일 없음)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:532
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:538
 msgid "SERVICE SYSTÈME"
 msgstr "시스템 서비스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:534
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:540
 msgid "Aucun gestionnaire de service reconnu"
 msgstr "인식된 서비스 관리자가 없습니다"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:542
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:548
 msgid "Démarrage auto"
 msgstr "자동 시작"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:550
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:556
 msgid "ERREUR STATUT"
 msgstr "상태 오류"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:554
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:560
 msgid "SAUVEGARDE"
 msgstr "백업"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:558
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:564
 msgid "Dernière"
 msgstr "최근"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:559
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:616
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:565
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:622
 msgid "Nombre"
 msgstr "개수"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:562
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:568
 msgid "Aucune sauvegarde"
 msgstr "백업 없음"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:564
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:570
 msgid "CONFIGURATION ACTIVE"
 msgstr "활성 설정"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:571
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:577
 #, python-brace-format
 msgid "activé ({mode})"
 msgstr "활성({mode})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:571
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:577
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "désactivé"
 msgstr "비활성"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:574
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:580
 msgid "Écoute"
 msgstr "수신"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:579
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:585
 msgid "MOTEUR HTTP"
 msgstr "HTTP 엔진"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:587
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:593
 msgid "CONNECTEURS (NATIF)"
 msgstr "커넥터(네이티브)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:594
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:600
 msgid "CONFIGURATION OPTIONS"
 msgstr "옵션 구성"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:595
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:601
 #, python-brace-format
 msgid "Options actives ({enabled}/{known}) :"
 msgstr "활성 옵션({enabled}/{known}):"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:601
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:690
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:607
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:696
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:783
 msgid "(aucune)"
 msgstr "(없음)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:607
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:613
 msgid "INSTANCE"
 msgstr "인스턴스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:617
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:623
 msgid "Cette instance"
 msgstr "이 인스턴스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:629
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:635
 #, python-brace-format
 msgid "PID {pid}"
 msgstr "PID {pid}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:631
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:637
 msgid "PID illisible"
 msgstr "PID 읽기 불가"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:633
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:639
 msgid "arrêtée"
 msgstr "중지됨"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:636
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:642
 #, python-brace-format
 msgid "+ {count} autre(s)"
 msgstr "+ 외 {count}개"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:641
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
 #, python-brace-format
 msgid "Depuis {time} (15 min relues à l'ouverture)"
 msgstr "{time}부터(열 때 15분 다시 읽음)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:643
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:649
 msgid "RENDEMENT"
 msgstr "성능"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:645
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
 msgid "Dernière minute"
 msgstr "최근 1분"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:645
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:646
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:652
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:653
 #, python-brace-format
 msgid "{rate:.2f} req/s"
 msgstr "{rate:.2f} req/s"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:646
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:652
 msgid "5 dernières min"
 msgstr "최근 5분"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:647
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:653
 msgid "Moyenne"
 msgstr "평균"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:648
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
 msgid "Volume"
 msgstr "전송량"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:648
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
 #, python-brace-format
 msgid "{size}/s"
 msgstr "{size}/s"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:651
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:657
 msgid "STATUTS HTTP"
 msgstr "HTTP 상태"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:654
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:660
 msgid "Total"
 msgstr "합계"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:655
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:661
 msgid "Succès 2xx"
 msgstr "성공 2xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:656
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:662
 msgid "Redirections 3xx"
 msgstr "리디렉션 3xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:657
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:663
 msgid "Erreurs 4xx"
 msgstr "오류 4xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:658
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:664
 msgid "Erreurs 5xx"
 msgstr "오류 5xx"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:659
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:665
 msgid "Taux d'erreur"
 msgstr "오류율"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:660
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:666
 msgid "Taille moy."
 msgstr "평균 크기"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:663
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:669
 msgid "SÉCURITÉ"
 msgstr "보안"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:668
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:674
 msgid "Attaques bloquées"
 msgstr "차단된 공격"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:670
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
 msgid "Refus liste blocage"
 msgstr "차단 목록 거부"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:671
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:677
 msgid "Limite de débit"
 msgstr "속도 제한"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:678
 msgid "Refus 403"
 msgstr "403 거부"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:673
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:679
 msgid "Refus 429"
 msgstr "429 거부"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:682
 msgid "IP bannies"
 msgstr "차단된 IP"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:676
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:682
 #, python-brace-format
 msgid "{count} (dont RIPOSTE : {riposte})"
 msgstr "{count}(그중 RIPOSTE: {riposte})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:679
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:685
 msgid "CLIENTS"
 msgstr "클라이언트"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:680
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:686
 msgid "IPs uniques"
 msgstr "고유 IP"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:683
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:689
 msgid "CHEMINS LES PLUS DEMANDÉS"
 msgstr "가장 많이 요청된 경로"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:685
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:691
 msgid "CHEMINS EN 404"
 msgstr "404 경로"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:688
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:694
 msgid "DERNIÈRES REQUÊTES"
 msgstr "최근 요청"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:709
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:715
 msgid "OMEGA-SERV"
 msgstr "OMEGA-SERV"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:712
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
 #, python-brace-format
 msgid "{count} (PID {pid})"
 msgstr "{count}(PID {pid})"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:714
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:744
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:720
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:750
 msgid "CPU"
 msgstr "CPU"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:715
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:748
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:721
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:754
 msgid "RAM"
 msgstr "RAM"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:716
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:722
 msgid "Fils"
 msgstr "스레드"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:717
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
 msgid "Fichiers ouverts"
 msgstr "열린 파일"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:718
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:724
 msgid "N/D (compte du service)"
 msgstr "해당 없음(서비스 계정)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:719
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:725
 msgid "Lancé depuis"
 msgstr "가동 시간"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
 msgid "Connexions"
 msgstr "연결"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:723
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:770
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:776
 msgid "N/D"
 msgstr "N/A"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:725
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:731
 msgid "Envoyé"
 msgstr "전송됨"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:726
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:732
 msgid "calcul en cours..."
 msgstr "계산 중..."
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:728
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:734
 msgid "(réponses depuis le démarrage)"
 msgstr "(시작 이후 응답)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:729
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:735
 msgid "Journaux"
 msgstr "로그"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:731
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:737
 msgid "Plus gros"
 msgstr "가장 큼"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:735
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:741
 msgid "Libre (var/)"
 msgstr "여유 (var/)"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:743
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:749
 msgid "MACHINE"
 msgstr "머신"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:747
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:753
 #, python-brace-format
 msgid "Temp. : {values}"
 msgstr "온도: {values}"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:750
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:756
 msgid "Disque"
 msgstr "디스크"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:757
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:763
 msgid "Swap"
 msgstr "Swap"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:758
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:764
 #: src/omega_serv/interfaces/tui/screens/upstream_editor_screen.py:72
 msgid "Charge"
 msgstr "부하"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:760
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:766
 msgid "Uptime"
 msgstr "Uptime"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:763
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:769
 msgid "RÉSEAU"
 msgstr "네트워크"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:766
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:772
 msgid "Débit"
 msgstr "처리량"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:768
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:774
 msgid "TCP établies"
 msgstr "TCP 연결됨"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:769
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:775
 msgid "IP sortante"
 msgstr "나가는 IP"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:770
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:776
 msgid "Passerelle"
 msgstr "게이트웨이"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:771
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
 msgid "Utilisateurs"
 msgstr "사용자"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:771
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:777
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:185
 msgid "aucun"
 msgstr "없음"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:774
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:780
 msgid "INTERFACES"
 msgstr "인터페이스"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:782
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:788
 msgid "déconnectée"
 msgstr "연결 끊김"
 
-#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:784
+#: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:790
 msgid "sans IP"
 msgstr "IP 없음"
 

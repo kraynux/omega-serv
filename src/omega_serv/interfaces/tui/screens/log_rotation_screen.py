@@ -65,15 +65,15 @@ class LogRotationScreen(OmegaScreen):
             yield Static("", id="rotation-result", classes="omega-hint")
 
             yield Static(_("Action"), classes="omega-subtitle")
-            yield Select(_MODE_OPTIONS, value=_MODE_ROTATE, id="mode-select")
+            yield Select(_MODE_OPTIONS, value=_MODE_ROTATE, allow_blank=False, id="mode-select")
 
             yield Static(_("Log cible"), id="log-label", classes="omega-subtitle")
-            yield Select(_KNOWN_LOGS, value="access", id="log-select")
+            yield Select(_KNOWN_LOGS, value="access", allow_blank=False, id="log-select")
 
             yield Static(_("Fréquence"), id="freq-label", classes="omega-subtitle")
             yield Select(
                 [(label, key) for key, (_ignored, label) in _FREQ_OPTIONS.items()],
-                value="weekly", id="freq-select",
+                value="weekly", allow_blank=False, id="freq-select",
             )
 
             yield Static(_("Automatisations planifiées"), id="manage-label", classes="omega-subtitle")

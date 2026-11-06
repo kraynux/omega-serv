@@ -319,6 +319,19 @@ Préférences d'interface uniquement — jamais confondues avec `config/omega-se
 ./omega-serv.sh service status
 ```
 
+### Aide complète des commandes
+
+Les commandes ci-dessus ne sont qu'un échantillon. Pour toutes les commandes et leurs options :
+
+```bash
+./omega-serv.sh help                    # arbre complet des commandes
+./omega-serv.sh help riposte            # une seule branche
+./omega-serv.sh riposte actions --help  # détail d'une commande
+man omega-serv                          # page de manuel (installée par install.sh)
+```
+
+Référence complète : [docs/HELP.md](docs/HELP.md).
+
 ### Codes de sortie notables
 
 | Commande | Code | Signification |
