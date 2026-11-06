@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 06:56+0100\n"
+"POT-Creation-Date: 2026-11-06 09:44+0100\n"
 "PO-Revision-Date: 2026-10-22 18:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: हिन्दी\n"
@@ -705,7 +705,9 @@ msgid "expire le {date}"
 msgstr "{date} को समाप्त"
 
 #: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manual_intervention.py:168
 #: src/omega_serv/interfaces/cli/main.py:723
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:30
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "स्थायी"
@@ -719,6 +721,93 @@ msgstr "{network} के लिए कोई एंट्री नहीं"
 #, python-brace-format
 msgid "Entrée retirée : {network}"
 msgstr "एंट्री हटाई गई: {network}"
+
+#: src/omega_serv/application/security/manual_intervention.py:30
+msgid "Pour bannir un réseau : menu WAF → Modules → Liste de blocage."
+msgstr "नेटवर्क बैन करने के लिए: WAF मेनू → मॉड्यूल → ब्लॉकलिस्ट।"
+
+#: src/omega_serv/application/security/manual_intervention.py:64
+msgid "Adresse IP manquante."
+msgstr "IP पता नहीं दिया गया।"
+
+#: src/omega_serv/application/security/manual_intervention.py:66
+#, python-brace-format
+msgid "Une seule adresse IP, pas de réseau. {hint}"
+msgstr "केवल एक IP पता, नेटवर्क नहीं। {hint}"
+
+#: src/omega_serv/application/security/manual_intervention.py:67
+msgid "Adresse IP invalide."
+msgstr "अमान्य IP पता।"
+
+#: src/omega_serv/application/security/manual_intervention.py:78
+#, python-brace-format
+msgid "{ip} est une adresse locale, privée ou Tailscale : la bannir peut couper votre propre accès au site."
+msgstr "{ip} एक लोकल, प्राइवेट या Tailscale पता है: इसे बैन करने से साइट तक आपकी अपनी पहुँच कट सकती है।"
+
+#: src/omega_serv/application/security/manual_intervention.py:84
+#, python-brace-format
+msgid "Cette adresse est déjà bannie ({origin}) : ce ban sera remplacé par le vôtre."
+msgstr "यह पता पहले से बैन है ({origin}): वह बैन आपके बैन से बदल दिया जाएगा।"
+
+#: src/omega_serv/application/security/manual_intervention.py:87
+msgid "Ban permanent : il reste en place jusqu'à ce que vous le leviez dans Débannir."
+msgstr "स्थायी बैन: यह तब तक रहता है जब तक आप इसे बैन हटाएँ में नहीं हटाते।"
+
+#: src/omega_serv/application/security/manual_intervention.py:97
+#: src/omega_serv/domain/security/waf/manual_intervention.py:117
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:68
+msgid "Intervention manuelle"
+msgstr "मैनुअल हस्तक्षेप"
+
+#: src/omega_serv/application/security/manual_intervention.py:106
+#: src/omega_serv/application/security/manual_intervention.py:130
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:82
+#, python-brace-format
+msgid "Blocklist illisible ou non modifiable : {error}"
+msgstr "blocklist पढ़ी या बदली नहीं जा सकती: {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:109
+#, python-brace-format
+msgid "{ip} bannie (permanent)."
+msgstr "{ip} बैन किया गया (स्थायी)।"
+
+#: src/omega_serv/application/security/manual_intervention.py:110
+#, python-brace-format
+msgid "{ip} bannie jusqu'au {date}."
+msgstr "{ip} को {date} तक बैन किया गया।"
+
+#: src/omega_serv/application/security/manual_intervention.py:123
+#: src/omega_serv/application/security/manual_intervention.py:132
+#, python-brace-format
+msgid "Aucun ban pour {ip}."
+msgstr "{ip} के लिए कोई बैन नहीं।"
+
+#: src/omega_serv/application/security/manual_intervention.py:125
+msgid "Ce ban n'a pas été posé par l'intervention manuelle : levez-le là où il a été posé (WAF → Modules, RIPOSTE → Actions)."
+msgstr "यह बैन मैनुअल हस्तक्षेप से नहीं लगाया गया: इसे वहीं हटाएँ जहाँ लगाया गया था (WAF → मॉड्यूल, RIPOSTE → कार्रवाइयाँ)।"
+
+#: src/omega_serv/application/security/manual_intervention.py:133
+#, python-brace-format
+msgid "Ban levé : {ip}"
+msgstr "बैन हटाया गया: {ip}"
+
+#: src/omega_serv/application/security/manual_intervention.py:147
+#, python-brace-format
+msgid "Liste Magnet illisible ({path}) : {error}"
+msgstr "Magnet सूची पढ़ी नहीं जा सकती ({path}): {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+msgid "en vigueur"
+msgstr "लागू"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
+msgid "expiré"
+msgstr "समाप्त"
 
 #: src/omega_serv/application/security/path_list_tools.py:128
 msgid "corrigez d'abord les erreurs de la liste"
@@ -798,7 +887,7 @@ msgid "Auth"
 msgstr "प्रमाणीकरण"
 
 #: src/omega_serv/application/server/engine_levels.py:65
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 msgid "WAF"
 msgstr "WAF"
@@ -1215,18 +1304,18 @@ msgstr "इस ज़ोन के लिए फ़ाइलों की सं
 msgid "quota de volume total atteint pour cette zone"
 msgstr "इस ज़ोन के लिए कुल आकार का कोटा पूरा हो गया"
 
-#: src/omega_serv/bootstrap/container.py:508
+#: src/omega_serv/bootstrap/container.py:510
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:237
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:254
 msgid "Incident introuvable."
 msgstr "इंसिडेंट नहीं मिला।"
 
-#: src/omega_serv/bootstrap/container.py:511
+#: src/omega_serv/bootstrap/container.py:513
 #, python-brace-format
 msgid "Export dans la langue « {name} » impossible : {error}"
 msgstr "भाषा « {name} » में एक्सपोर्ट संभव नहीं: {error}"
 
-#: src/omega_serv/bootstrap/container.py:711
+#: src/omega_serv/bootstrap/container.py:719
 msgid "Aucun gestionnaire de service : arrêtez le serveur vous-même, puis restaurez."
 msgstr "कोई सेवा प्रबंधक नहीं: पुनर्स्थापना से पहले सर्वर स्वयं रोकें।"
 
@@ -2310,15 +2399,15 @@ msgstr "दी गई private key और सर्टिफ़िकेट म�
 msgid "le certificat fourni est déjà expiré depuis le {value}"
 msgstr "दिया गया सर्टिफ़िकेट {value} से पहले ही समाप्त हो चुका है"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:51
+#: src/omega_serv/domain/security/waf/blocklist.py:56
 msgid "network invalide (attendu une IP ou un CIDR) : {network!r}"
 msgstr "अमान्य network (IP या CIDR अपेक्षित): {network!r}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:53
+#: src/omega_serv/domain/security/waf/blocklist.py:58
 msgid "reason ne peut pas être vide"
 msgstr "reason खाली नहीं हो सकता"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:55
+#: src/omega_serv/domain/security/waf/blocklist.py:60
 msgid "source invalide : {source!r}"
 msgstr "अमान्य source: {source!r}"
 
@@ -2538,6 +2627,37 @@ msgstr "पाथ सूची ({count} एंट्री, {count2} अपव�
 #, python-brace-format
 msgid "Liste de mots-clefs ({count} entrée(s))"
 msgstr "कीवर्ड सूची ({count} एंट्री)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:119
+msgid "Auto-ban WAF (règles)"
+msgstr "WAF ऑटो-बैन (नियम)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+#, python-brace-format
+msgid "Auto-ban WAF (liste {name})"
+msgstr "WAF ऑटो-बैन (सूची {name})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+msgid "Auto-ban WAF (liste)"
+msgstr "WAF ऑटो-बैन (सूची)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:123
+#, python-brace-format
+msgid "RIPOSTE ({policy})"
+msgstr "RIPOSTE ({policy})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:125
+#, python-brace-format
+msgid "omega-jail ({jail})"
+msgstr "omega-jail ({jail})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:127
+msgid "Magnet (liste du script)"
+msgstr "Magnet (स्क्रिप्ट की सूची)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:128
+msgid "Manuel (WAF → Modules ou CLI)"
+msgstr "मैनुअल (WAF → मॉड्यूल या CLI)"
 
 #: src/omega_serv/domain/security/waf/reputation.py:103
 msgid "options.waf.reputation.never_auto_block : réseau invalide : {network!r}"
@@ -3933,11 +4053,6 @@ msgstr "OK"
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] सर्टिफ़िकेट {value2}"
-
-#: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
-msgid "expiré"
-msgstr "समाप्त"
 
 #: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
@@ -5856,10 +5971,12 @@ msgstr "अगली थीम"
 #: src/omega_serv/interfaces/tui/app.py:82
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:157
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:25
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:77
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:64
@@ -5870,8 +5987,8 @@ msgid "Rafraîchir"
 msgstr "रीफ़्रेश"
 
 #: src/omega_serv/interfaces/tui/app.py:83
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/home.py:90
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:167
 msgid "Aide"
@@ -6231,6 +6348,9 @@ msgstr "कोई प्रभाव नहीं (केवल पढ़ना,
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:104
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:105
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:106
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
 #: src/omega_serv/interfaces/tui/screens/home.py:89
 msgid "Active Sécurité"
 msgstr "एक्टिव सुरक्षा"
@@ -6312,7 +6432,7 @@ msgstr "सर्वर और परत-दर-परत विकल्पो�
 
 #: src/omega_serv/interfaces/tui/guide/content/configuration_base.py:19
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:18
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:18
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:19
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:15
 msgid "Aucune - purement navigation."
 msgstr "कोई नहीं - केवल नेविगेशन।"
@@ -7049,6 +7169,8 @@ msgstr "एनवायरनमेंट का पूरा स्कैन (�
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:16
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:436
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1023
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:43
 msgid "Thème d'export HTML"
@@ -7084,7 +7206,7 @@ msgstr "स्कैन फिर से चलाता है, या उस�
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:25
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:445
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
 msgid "Aucune saisie supplémentaire."
 msgstr "कोई अतिरिक्त इनपुट नहीं।"
 
@@ -7115,9 +7237,9 @@ msgstr "पहले से स्कैन की गई क्षमता क
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:39
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:299
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:329
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:501
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:197
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:330
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:502
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:171
 msgid "Purement consultatif."
 msgstr "केवल देखने के लिए।"
@@ -7423,7 +7545,7 @@ msgid "Restaurer écrase directement les fichiers vises, sans filet - la seule p
 msgstr "रिस्टोर लक्षित फ़ाइलों को बिना किसी सुरक्षा जाल के सीधे ओवरराइट करता है - एकमात्र सुरक्षा पहले माँगी गई पुष्टि है।"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:183
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:110
 msgid "Réglages de l'application"
 msgstr "एप्लिकेशन सेटिंग्स"
 
@@ -7554,7 +7676,7 @@ msgid "Ne touche jamais config/omega-serve.json - réglages purement locaux à c
 msgstr "config/omega-serve.json को कभी नहीं छूता - केवल इस इंटरफ़ेस की लोकल सेटिंग्स।"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:262
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
 #: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:56
 msgid "Contact et support"
 msgstr "संपर्क और सहायता"
@@ -7661,7 +7783,7 @@ msgid "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déc
 msgstr "भेजें (पंजीकरण फ़ॉर्म) या अब मेरा पंजीकरण न करें पर स्पष्ट क्लिक के बिना कुछ नहीं भेजा जाता।"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:305
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:80
@@ -7940,7 +8062,7 @@ msgid "Les 8 classes possibles et ce qu'elles ciblent concrètement : scan (sond
 msgstr "8 संभावित वर्ग और वे वास्तव में किसे लक्षित करते हैं: scan (URL/पोर्ट की जाँच, स्वचालित स्कैनर), credential_stuffing (लॉगिन फ़ॉर्म पर बड़े पैमाने पर पासवर्ड प्रयास), sqli (SQL इंजेक्शन प्रयास), xss (पैरामीटर में इंजेक्ट की गई स्क्रिप्ट), path_traversal (परोसे गए फ़ोल्डर से बाहर निकलने का प्रयास, उदा.: ../../etc/passwd), upload_probe (संदिग्ध फ़ाइल अपलोड), api_probe (/api/... endpoints की जाँच), unknown (जो कुछ भी पिछली किसी श्रेणी में नहीं आता - सामान्य सुरक्षा जाल)। उदाहरण: scan,credential_stuffing वर्गों वाली fake_admin नाम की प्रोफ़ाइल स्कैनरों और लॉगिन bruteforce प्रयासों को एक नकली प्रमाणीकरण पेज की ओर ले जाएगी। कई वर्ग कॉमा से अलग करके सूचीबद्ध किए जा सकते हैं।"
 
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:221
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:123
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:124
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:305
 msgid "Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan."
 msgstr "नई श्रेणी (2.1): command_injection (शेल कमांड इंजेक्शन, जैसे $(...), ; cat /etc/passwd)। WordPress जाँच (wp-login, xmlrpc.php) को scan में वर्गीकृत किया जाता है।"
@@ -8039,7 +8161,7 @@ msgstr "'सेव करें और लागू करें' के बा�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:400
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:853
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (बाहरी WAF इम्पोर्ट)"
@@ -8202,7 +8324,7 @@ msgstr "सबसे सामान्य कारण, जाँचने क�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:689
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:700
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:121
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
@@ -9213,7 +9335,7 @@ msgid "Une politique dit QUAND agir (classes d'attaque, nombre de retours dans u
 msgstr "एक नीति तय करती है कि कब कार्रवाई करनी है (हमला श्रेणी, अवधि में वापसी की संख्या, Active Defense स्तर, डिकॉय विज़िट) और कैसे (स्थानीय प्रतिबंध, स्थानीय + नेटवर्क प्रतिबंध, डिकॉय)। सक्रिय नीति हर कार्रवाई पर स्वीकृति के बिना स्वचालित रूप से काम करती है।"
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:54
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:524
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
 #: src/omega_serv/interfaces/tui/guide/content/services_avances.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/aliases_screen.py:48
@@ -9448,6 +9570,7 @@ msgid "Le registre des actions : en cours, ou terminées (échéance, levée par
 msgstr "कार्रवाइयों का रजिस्टर: जारी, या समाप्त (अवधि पूरी, उपयोगकर्ता ने हटाई, नियम निष्क्रिय, आपातकालीन रोक, RIPOSTE के बाहर हटाई गई, लागू नहीं)। कुछ भी गायब नहीं होता।"
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:141
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:184
 msgid "Lever"
@@ -9911,7 +10034,7 @@ msgid "Un préfixe par ligne, doit commencer par '/'."
 msgstr "प्रति पंक्ति एक प्रीफ़िक्स, '/' से शुरू होना चाहिए।"
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:180
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:141
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
 msgid "Ajouter/Supprimer une zone."
 msgstr "एक ज़ोन जोड़ें/हटाएँ।"
 
@@ -10043,10 +10166,10 @@ msgid "Chemin relatif au projet. Valeur par défaut : webroot/.errors."
 msgstr "प्रोजेक्ट के सापेक्ष पाथ। डिफ़ॉल्ट मान: webroot/.errors।"
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:276
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
 msgid "Enregistre au clic sur Enregistrer."
 msgstr "'सेव करें' पर क्लिक करने पर सेव करता है।"
 
@@ -10395,1523 +10518,1719 @@ msgid "Accueil -> Active Sécurité"
 msgstr "होम -> एक्टिव सुरक्षा"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:13
-msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent)."
-msgstr "हमले के क्रम में तीन ब्लॉक एक साथ: WAF (बचाव: मोड, पैक, blocklist, सीमाएँ), Active Defense (पहचान: खतरे, घटनाएँ, डिकॉय, अनुरोध के दौरान), RIPOSTE (समय के साथ जवाब: लौटने वाले स्रोतों पर बढ़ती अवधि के प्रतिबंध)।"
+msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent). En dessous, INTERVENTION MANUELLE : bannir ou débannir une adresse IP à la main, sans condition, et voir le statut de tous les bans."
+msgstr "हमले के क्रम में तीन ब्लॉक एक साथ: WAF (बचाव: मोड, पैक, blocklist, सीमाएँ), Active Defense (पहचान: खतरे, घटनाएँ, डिकॉय, अनुरोध के दौरान), RIPOSTE (समय के साथ जवाब: लौटने वाले स्रोतों पर बढ़ती अवधि के प्रतिबंध)। नीचे, मैनुअल हस्तक्षेप: किसी IP पते को हाथ से, बिना शर्त बैन करें या बैन हटाएँ, और सभी बैन की स्थिति देखें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:21
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:22
 msgid "Si un avertissement de groupe système apparaît en haut de cet écran, reconnectez votre session avant d'utiliser les sous-écrans - sinon ils resteront en erreur d'accès."
 msgstr "यदि इस स्क्रीन के ऊपर सिस्टम समूह की चेतावनी दिखे, तो उप-स्क्रीन उपयोग करने से पहले अपना सेशन फिर से लॉगिन करें - अन्यथा वे एक्सेस त्रुटि में रहेंगी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:25
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:26
 msgid "Activer l'option 'active_defense' (menu Options) ne suffit PAS à lui seul - voir la fiche 'Active Defense - État' et la FAQ 'Active Defense ne détecte jamais rien'."
 msgstr "केवल 'active_defense' विकल्प (विकल्प मेन्यू) सक्षम करना अपने आप में पर्याप्त नहीं - 'Active Defense - स्थिति' विवरण और FAQ 'Active Defense कभी कुछ नहीं पहचानता' देखें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:33
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
 msgid "Active Defense - État"
 msgstr "Active Defense - स्थिति"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
 msgid "Accueil -> Active Sécurité -> État (bloc Active Defense)"
 msgstr "होम -> एक्टिव सुरक्षा -> स्थिति (Active Defense खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:36
 msgid "Vue d'ensemble en lecture seule : mode, état du mode guerre, état de la deception, nombre de sources suivies."
 msgstr "केवल-पढ़ने वाला अवलोकन: मोड, वॉर मोड की स्थिति, deception की स्थिति, ट्रैक किए गए स्रोतों की संख्या।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:38
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:39
 msgid "Purement consultatif - mais la ligne 'Mode guerre' affichée ici est le seul endroit où vérifier le VRAI interrupteur qui déclenche quoi que ce soit (voir points de vigilance)."
 msgstr "केवल देखने के लिए - लेकिन यहाँ दिखाई गई 'वॉर मोड' पंक्ति ही वह एकमात्र जगह है जहाँ कुछ भी ट्रिगर करने वाले असली स्विच की जाँच हो सकती है (सावधानियाँ देखें)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:42
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:43
 msgid "L'activation de l'option active_defense se fait dans le menu Options, jamais ici."
 msgstr "active_defense विकल्प विकल्प मेन्यू में सक्षम किया जाता है, यहाँ कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:44
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:45
 msgid "PIÈGE RÉEL VÉRIFIÉ DANS LE CODE : activer l'option 'active_defense' seule ne déclenche RIEN. Un second interrupteur, `war_mode.enabled` (Active Defense - Réglages), vaut FALSE par défaut. Tant qu'il reste à false, les écrans Menaces/Incidents/Leurres restent fonctionnels mais ne se peuplent jamais, même avec un trafic hostile réel."
 msgstr "कोड में जाँचा गया वास्तविक जाल: केवल 'active_defense' विकल्प सक्षम करने से कुछ भी ट्रिगर नहीं होता। दूसरा स्विच, `war_mode.enabled` (Active Defense - सेटिंग्स), डिफ़ॉल्ट रूप से FALSE है। जब तक यह false रहता है, खतरे/इंसिडेंट/डिकॉय स्क्रीन काम करती रहती हैं लेकिन कभी भरती नहीं, वास्तविक शत्रुतापूर्ण ट्रैफ़िक होने पर भी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:51
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:52
 msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterministe, sans aucune intervention manuelle : chaque décision WAF déjà calculée alimente un score cumulé par source (IP + User-Agent hache, avec décroissance dans le temps), qui franchit des seuils configurables (normal/suspicious/hostile/contained) déclenchant des actions automatiques (redirection vers un leurre, journalisation enrichie, ralentissement, création d'incident)."
 msgstr "`war_mode.enabled=true` होने के बाद सब कुछ स्वचालित और निर्धारित हो जाता है, बिना किसी हाथ के हस्तक्षेप के: पहले से गणना किया गया हर WAF निर्णय प्रति स्रोत एक संचित स्कोर बनाता है (IP + hash किया गया User-Agent, समय के साथ घटता), जो कॉन्फ़िगर करने योग्य सीमाएँ (normal/suspicious/hostile/contained) पार करके स्वचालित एक्शन ट्रिगर करता है (डिकॉय की ओर रीडायरेक्ट, विस्तृत लॉगिंग, धीमा करना, इंसिडेंट बनाना)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:63
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - सेटिंग्स"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:65
 msgid "Accueil -> Active Sécurité -> Réglages (bloc Active Defense)"
 msgstr "होम -> एक्टिव सुरक्षा -> सेटिंग्स (Active Defense खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:66
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:67
 msgid "Configure l'intégralité d'Active Defense (mode guerre, deception/leurres, IoC, stockage, journalisation) - AUCUNE édition manuelle de config/omega-serve.json n'est plus nécessaire pour ces réglages."
 msgstr "पूरा Active Defense कॉन्फ़िगर करता है (वॉर मोड, deception/डिकॉय, IoC, स्टोरेज, लॉगिंग) - इन सेटिंग्स के लिए config/omega-serve.json को हाथ से संपादित करने की अब कोई आवश्यकता नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:72
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:345
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:306
 msgid "Mode"
 msgstr "मोड"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
 msgid "Mode global d'Active Defense."
 msgstr "Active Defense का वैश्विक मोड।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
 msgid "monitor (observe uniquement) ou enforce. Valeur par défaut : monitor."
 msgstr "monitor (केवल निगरानी) या enforce। डिफ़ॉल्ट मान: monitor।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
 msgid "Enregistre au clic sur Enregistrer, après validation."
 msgstr "जाँच के बाद, 'सेव करें' पर क्लिक करने पर सेव करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:77
 msgid "REDÉMARRAGE COMPLET toujours nécessaire - active_defense n'est jamais rechargé à chaud."
 msgstr "हमेशा पूर्ण रीस्टार्ट आवश्यक - active_defense कभी हॉट रीलोड नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:79
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
 msgid "Mode guerre actif (war_mode.enabled)"
 msgstr "वॉर मोड सक्रिय (war_mode.enabled)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
 msgid "LE VRAI INTERRUPTEUR qui déclenche l'observation et les actions automatiques."
 msgstr "निगरानी और स्वचालित एक्शन ट्रिगर करने वाला असली स्विच।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
 msgid "oui/non. Valeur par défaut : non - RIEN ne se déclenche tant qu'il reste à 'non'."
 msgstr "हाँ/नहीं। डिफ़ॉल्ट मान: नहीं - जब तक यह 'नहीं' रहता है, कुछ भी ट्रिगर नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
 msgid "Enregistre avec le reste des réglages généraux."
 msgstr "बाकी सामान्य सेटिंग्स के साथ सेव करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:84
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:96
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:103
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:127
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:143
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:150
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:157
 msgid "REDÉMARRAGE COMPLET toujours nécessaire."
 msgstr "हमेशा पूर्ण रीस्टार्ट आवश्यक।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:86
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
 msgid "Portée / Actions autorisées / Seuils / Ralentissement / Limite de requêtes"
 msgstr "दायरा / अनुमत एक्शन / सीमाएँ / धीमा करना / अनुरोध सीमा"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:88
 msgid "Réglages fins du mode guerre : à qui s'appliquent les actions, lesquelles, à quel score, et leurs paramètres."
 msgstr "वॉर मोड की बारीक सेटिंग्स: एक्शन किस पर लागू होते हैं, कौन से, किस स्कोर पर, और उनके पैरामीटर।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:89
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:90
 msgid "Portée : source/instance. Actions : liste parmi observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc. Seuils : 4 entiers croissants (suspect <= hostile <= incident, confine >= hostile). Ralentissement et limite de requêtes : bornes en millisecondes/secondes."
 msgstr "दायरा: source/instance। एक्शन: observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc में से सूची। सीमाएँ: 4 बढ़ते पूर्णांक (suspect <= hostile <= incident, contained >= hostile)। धीमा करना और अनुरोध सीमा: मिलीसेकंड/सेकंड में सीमाएँ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:94
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
 msgid "Valides par les mêmes règles que le domaine (`validate_active_defense_config`) avant tout enregistrement."
 msgstr "किसी भी सेव से पहले domain जैसे ही नियमों (`validate_active_defense_config`) से जाँचे जाते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:98
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
 msgid "Deception (actif, comportement par défaut, durée de vie d'une affectation)"
 msgstr "Deception (सक्रिय, डिफ़ॉल्ट व्यवहार, असाइनमेंट की अवधि)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
 msgid "Active ou non le routage vers des leurres, et ce qui se passe si aucun profil ne correspond à l'attaque."
 msgstr "डिकॉय की ओर रूटिंग सक्रिय करता है या नहीं, और यदि कोई प्रोफ़ाइल हमले से मेल न खाए तो क्या होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
 msgid "actif : oui/non. Comportement : pass_through (laisse passer) ou reject."
 msgstr "सक्रिय: हाँ/नहीं। व्यवहार: pass_through (जाने देता है) या reject।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:105
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
 msgid "Profils de leurre (table)"
 msgstr "डिकॉय प्रोफ़ाइल (तालिका)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:107
 msgid "Associe une classe d'attaque à un niveau d'isolation - le premier profil actif qui correspond est utilisé."
 msgstr "एक हमला वर्ग को एक अलगाव स्तर से जोड़ता है - मेल खाने वाली पहली सक्रिय प्रोफ़ाइल उपयोग होती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:108
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:109
 msgid "Nom : si Isolation = fixture, DOIT être exactement fake_admin, fake_cms, fake_api ou fake_secrets (les 4 seules fixtures réellement implémentées) - tout autre nom fait que le leurre ne se déclenche JAMAIS, sans aucune erreur visible (bloqué désormais à l'enregistrement par validate_active_defense_config). Libre si Isolation = proxy. Classes d'attaque visées (séparées par virgules) : scan (sondage d'URLs/ports), credential_stuffing (essais massifs de mots de passe), sqli (injection SQL), xss (script injecté), path_traversal (ex : ../../etc/passwd), upload_probe (upload de fichier suspect), api_probe (sondage d'endpoints /api/...), unknown (tout le reste, filet de sécurité). Exemple concret : un profil fake_admin avec scan,credential_stuffing intercepte les scanners et les tentatives de bruteforce de login. Isolation : fixture (simulation interne, rapide, sans risque) ou proxy (redirigé vers un vrai serveur isolé que vous faites tourner, voir Zones de leurre ci-dessous). Zone de leurre associée : requise si Isolation = proxy, doit correspondre à un nom de la table Zones de leurre."
 msgstr "नाम: यदि अलगाव = fixture, तो ठीक-ठीक fake_admin, fake_cms, fake_api या fake_secrets होना चाहिए (वास्तव में लागू केवल 4 fixtures) - कोई भी अन्य नाम डिकॉय को कभी ट्रिगर नहीं होने देता, बिना किसी दिखने वाली त्रुटि के (अब validate_active_defense_config द्वारा सेव करते समय रोका जाता है)। अलगाव = proxy होने पर मुक्त। लक्षित हमला वर्ग (कॉमा से अलग): scan (URL/पोर्ट जाँच), credential_stuffing (बड़े पैमाने पर पासवर्ड प्रयास), sqli (SQL इंजेक्शन), xss (इंजेक्ट की गई स्क्रिप्ट), path_traversal (उदा.: ../../etc/passwd), upload_probe (संदिग्ध फ़ाइल अपलोड), api_probe (/api/... endpoints जाँच), unknown (बाकी सब, सुरक्षा जाल)। ठोस उदाहरण: scan,credential_stuffing वाली fake_admin प्रोफ़ाइल स्कैनरों और लॉगिन bruteforce प्रयासों को रोकती है। अलगाव: fixture (आंतरिक सिमुलेशन, तेज़, जोखिम रहित) या proxy (आपके द्वारा चलाए जा रहे असली अलग सर्वर की ओर रीडायरेक्ट, नीचे डिकॉय ज़ोन देखें)। संबद्ध डिकॉय ज़ोन: अलगाव = proxy होने पर आवश्यक, डिकॉय ज़ोन तालिका के किसी नाम से मेल खाना चाहिए।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:125
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
 msgid "Ajouter/Supprimer un profil."
 msgstr "एक प्रोफ़ाइल जोड़ें/हटाएँ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:129
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
 msgid "Zones de leurre (table, Niveau 2)"
 msgstr "डिकॉय ज़ोन (तालिका, स्तर 2)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:131
 msgid "Backends réellement isolés vers lesquels un profil 'proxy' peut rediriger - jamais confondues avec les zones de reverse_proxy de production."
 msgstr "वास्तव में अलग बैकएंड जिनकी ओर 'proxy' प्रोफ़ाइल रीडायरेक्ट कर सकती है - प्रोडक्शन reverse_proxy ज़ोन से कभी भ्रमित नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:132
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:133
 msgid "Nom : un simple identifiant (pas une URL, pas un dossier) référence depuis un profil de leurre en Isolation = proxy. Upstreams (host:port, séparés par virgules) : adresse(s) d'un serveur DÉJÀ EN COURS D'EXÉCUTION que vous contrôlez - rien n'est créé automatiquement ici, aucun dossier n'est généré, et l'enregistrement n'exige PAS que la zone existe déjà ou réponde. Exemple : 127.0.0.1:9001. Si au moment d'une vraie requête rien n'écoute à cette adresse, l'attaquant reçoit simplement une erreur HTTP 502 Bad Gateway - jamais de crash, jamais de création silencieuse."
 msgstr "नाम: एक साधारण पहचानकर्ता (URL नहीं, फ़ोल्डर नहीं) जिसे अलगाव = proxy वाली डिकॉय प्रोफ़ाइल संदर्भित करती है। Upstreams (host:port, कॉमा से अलग): आपके नियंत्रण वाले पहले से चल रहे सर्वर का/के पता - यहाँ कुछ भी स्वचालित रूप से नहीं बनता, कोई फ़ोल्डर नहीं बनता, और सेव करने के लिए ज़ोन का पहले से मौजूद होना या जवाब देना आवश्यक नहीं। उदाहरण: 127.0.0.1:9001। यदि वास्तविक अनुरोध के समय उस पते पर कुछ नहीं सुन रहा, तो हमलावर को बस HTTP 502 Bad Gateway त्रुटि मिलती है - कभी क्रैश नहीं, कभी चुपचाप कुछ नहीं बनता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:145
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
 msgid "IoC (export d'indicateurs de compromission)"
 msgstr "IoC (समझौता संकेतकों का एक्सपोर्ट)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
 msgid "Contrôle l'export automatique d'indicateurs à la fermeture d'un incident."
 msgstr "इंसिडेंट बंद होने पर संकेतकों के स्वचालित एक्सपोर्ट को नियंत्रित करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
 msgid "Formats : json, csv, markdown, stix (bundle STIX 2.1) et misp (événement MISP à importer par son interface) - fichiers locaux, jamais envoyés. Marquage TLP des exports STIX et MISP : amber par défaut (white, green, amber, red). Politique de partage : local_only ou manual_export."
 msgstr "फ़ॉर्मेट: json, csv, markdown, stix (STIX 2.1 बंडल) और misp (MISP इवेंट, जिसे उसके इंटरफ़ेस से इम्पोर्ट करें) - केवल स्थानीय फ़ाइलें, कभी भेजी नहीं जातीं। STIX और MISP एक्सपोर्ट का TLP चिह्न: डिफ़ॉल्ट amber (white, green, amber, red)। साझा करने की नीति: local_only या manual_export।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:152
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
 msgid "Stockage et journalisation"
 msgstr "स्टोरेज और लॉगिंग"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
 msgid "Emplacement de la base de données, du répertoire d'export, et paramètres de capture enrichie (corps de requête, champs masques)."
 msgstr "डेटाबेस का स्थान, एक्सपोर्ट डायरेक्टरी, और विस्तृत कैप्चर के पैरामीटर (अनुरोध बॉडी, छिपाए जाने वाले फ़ील्ड)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
 msgid "Chemins relatifs au projet ; capture du corps de requête désactivée par défaut (données potentiellement sensibles)."
 msgstr "प्रोजेक्ट के सापेक्ष पाथ; अनुरोध बॉडी का कैप्चर डिफ़ॉल्ट रूप से अक्षम (संभावित रूप से संवेदनशील डेटा)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:160
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:161
 msgid "TOUT changement ici exige un redémarrage complet, sans aucune exception - active_defense n'est jamais rechargé à chaud, contrairement à la plupart des autres options."
 msgstr "यहाँ हर बदलाव के लिए पूर्ण रीस्टार्ट आवश्यक है, बिना किसी अपवाद के - अधिकांश अन्य विकल्पों के विपरीत, active_defense कभी हॉट रीलोड नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:165
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:166
 msgid "Sans activer 'war_mode.enabled' ICI, activer seulement l'option 'active_defense' (menu Options) ne sert à rien - voir la FAQ dédiée."
 msgstr "यहाँ 'war_mode.enabled' सक्षम किए बिना, केवल 'active_defense' विकल्प (विकल्प मेन्यू) सक्षम करने का कोई लाभ नहीं - समर्पित FAQ देखें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:169
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:170
 msgid "Un profil de leurre en Isolation = fixture dont le nom n'est pas exactement fake_admin, fake_cms, fake_api ou fake_secrets ne se déclenchera JAMAIS - l'enregistrement le refuse désormais avec un message explicite."
 msgstr "अलगाव = fixture वाली डिकॉय प्रोफ़ाइल जिसका नाम ठीक-ठीक fake_admin, fake_cms, fake_api या fake_secrets नहीं है, कभी ट्रिगर नहीं होगी - सेव करना अब स्पष्ट संदेश के साथ इसे अस्वीकार करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:174
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:175
 msgid "Un profil refusé n'est pas enregistré : le formulaire se referme et la raison s'affiche EN HAUT de cet écran - remontez pour la lire, puis ressaisissez le profil (causes fréquentes : FAQ)."
 msgstr "अस्वीकार की गई प्रोफ़ाइल सहेजी नहीं जाती: फ़ॉर्म बंद हो जाता है और कारण इस स्क्रीन में सबसे ऊपर दिखता है - उसे पढ़ने के लिए ऊपर स्क्रॉल करें, फिर प्रोफ़ाइल दोबारा भरें (आम कारण: FAQ)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:178
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:179
 msgid "Une zone de leurre n'est jamais créée automatiquement et son existence n'est pas vérifiée à l'enregistrement - si rien n'écoute à l'adresse indiquée, l'attaquant reçoit une erreur 502 au moment de la requête, pas avant."
 msgstr "डिकॉय ज़ोन कभी स्वचालित रूप से नहीं बनता और सेव करते समय उसके अस्तित्व की जाँच नहीं होती - यदि बताए गए पते पर कुछ नहीं सुन रहा, तो हमलावर को अनुरोध के समय 502 त्रुटि मिलती है, उससे पहले नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:187
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - खतरे"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
 msgid "Accueil -> Active Sécurité -> Menaces"
 msgstr "होम -> एक्टिव सुरक्षा -> खतरे"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:190
 msgid "Liste toutes les sources actuellement suivies par Active Defense, avec leur score et niveau de menace."
 msgstr "Active Defense द्वारा वर्तमान में ट्रैक किए गए सभी स्रोत, उनके स्कोर और खतरे के स्तर के साथ सूचीबद्ध करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:192
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
 msgid "Table des menaces"
 msgstr "खतरों की तालिका"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
 msgid "Une ligne par source suivie (IP, score, niveau, dernière mise à jour, expiration)."
 msgstr "हर ट्रैक किए गए स्रोत के लिए एक पंक्ति (IP, स्कोर, स्तर, अंतिम अपडेट, समाप्ति)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
 msgid "Sélectionner une ligne affiche son détail complet."
 msgstr "एक पंक्ति चुनने पर उसका पूरा विवरण दिखता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
 msgid "Aucune action mutante sur cet écran."
 msgstr "इस स्क्रीन पर कोई बदलने वाला एक्शन नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:199
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:200
 msgid "Aucune modification possible depuis cet écran."
 msgstr "इस स्क्रीन से कोई बदलाव संभव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:204
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - इंसिडेंट"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
 msgid "Accueil -> Active Sécurité -> Incidents"
 msgstr "होम -> एक्टिव सुरक्षा -> इंसिडेंट"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:207
 msgid "Liste les incidents de sécurité ouverts/fermes, permet de les fermer et d'exporter des indicateurs de compromission (IoC)."
 msgstr "खुले/बंद सुरक्षा इंसिडेंट सूचीबद्ध करता है, उन्हें बंद करने और समझौता संकेतक (IoC) एक्सपोर्ट करने की सुविधा देता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:209
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
 msgid "Ouverts / Fermés / Tous"
 msgstr "अनसुलझी / सुलझी / सभी"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
 msgid "Filtre de la liste, avec le nombre d'incidents de chaque sorte."
 msgstr "सूची फ़िल्टर। हर प्रकार में घटनाओं की संख्या दिखाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:212
 msgid "« Ouverts » est affiché par défaut ; un incident fermé quitte cette vue et reste consultable et exportable dans « Fermés »."
 msgstr "डिफ़ॉल्ट रूप से 'अनसुलझी' दिखाता है। बंद घटनाएँ इस दृश्य से हट जाती हैं और 'सुलझी' में देखी व निर्यात की जा सकती हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:213
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
 msgid "Change seulement l'affichage."
 msgstr "केवल दृश्य बदलता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:215
 msgid "Les incidents fermés depuis plus de 90 jours sont supprimés automatiquement, avec leur historique (jamais un incident ouvert) ; les exports et rapports déjà écrits restent."
 msgstr "90 दिन से पहले बंद हुई घटनाएँ इतिहास सहित अपने आप हटाई जाती हैं (अनसुलझी घटनाएँ कभी नहीं हटतीं)। लिखे गए निर्यात और रिपोर्ट रहती हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:218
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:64
 msgid "Purger maintenant"
 msgstr "अभी साफ़ करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:220
 msgid "Fait tout de suite ce que le serveur fait seul régulièrement : ferme les incidents dont la menace est effacée, supprime les incidents fermés depuis plus de 90 jours et les états de menace expirés."
 msgstr "सर्वर जो नियमित रूप से अपने आप करता है वह अभी चलाता है: जिन घटनाओं का खतरा समाप्त हो गया है उन्हें बंद करता है, 90 दिन से पहले बंद घटनाएँ और समाप्त खतरा स्थितियाँ हटाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:222
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
 msgid "Bouton, avec confirmation ; même action que la commande « active-defense purge »."
 msgstr "पुष्टि वाला बटन। 'active-defense purge' कमांड जैसा ही व्यवहार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
 msgid "Un incident fermé quitte la vue « Ouverts » ; un bilan s'affiche."
 msgstr "बंद घटनाएँ 'अनसुलझी' दृश्य से हट जाती हैं; परिणाम का सारांश दिखता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:225
 msgid "L'export automatique à la fermeture (activé par défaut) s'applique aussi à ces incidents."
 msgstr "बंद होने पर स्वचालित निर्यात (डिफ़ॉल्ट रूप से सक्रिय) इन घटनाओं पर भी लागू होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:227
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:69
 msgid "Fermer l'incident"
 msgstr "इंसिडेंट बंद करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
 msgid "Marque un incident comme fermé."
 msgstr "एक इंसिडेंट को बंद के रूप में चिह्नित करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
 msgid "Sélectionner un incident, puis confirmer."
 msgstr "एक इंसिडेंट चुनें, फिर पुष्टि करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:231
 msgid "Ferme l'incident immédiatement."
 msgstr "इंसिडेंट तुरंत बंद करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:232
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:233
 msgid "Peut déclencher un export IoC/rapport AUTOMATIQUE si ioc.auto_export_on_close est activé dans la configuration d'Active Defense."
 msgstr "यदि Active Defense कॉन्फ़िगरेशन में ioc.auto_export_on_close सक्षम है तो स्वचालित IoC/रिपोर्ट एक्सपोर्ट ट्रिगर कर सकता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:237
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:71
 msgid "Exporter IoC"
 msgstr "IoC एक्सपोर्ट करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
 msgid "Exporte les indicateurs de compromission de l'incident sélectionné."
 msgstr "चुने गए इंसिडेंट के समझौता संकेतक एक्सपोर्ट करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
 msgid "Format : json, csv, stix (bundle STIX 2.1) ou misp (événement MISP à importer par son interface)."
 msgstr "फ़ॉर्मेट: json, csv, stix (STIX 2.1 बंडल) या misp (MISP इवेंट, जिसे उसके इंटरफ़ेस से इम्पोर्ट करें)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
 msgid "Écrit un fichier dans le répertoire d'export configuré."
 msgstr "कॉन्फ़िगर की गई एक्सपोर्ट डायरेक्टरी में एक फ़ाइल लिखता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:242
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:249
 msgid "Écriture réelle sur disque immédiate."
 msgstr "डिस्क पर तत्काल वास्तविक लेखन।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:244
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:73
 msgid "Générer rapport"
 msgstr "रिपोर्ट बनाएँ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
 msgid "Génère un rapport Markdown complet de l'incident sélectionné."
 msgstr "चुने गए इंसिडेंट की पूरी Markdown रिपोर्ट बनाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
 msgid "Écrit un fichier Markdown dans le répertoire d'export configuré."
 msgstr "कॉन्फ़िगर की गई एक्सपोर्ट डायरेक्टरी में एक Markdown फ़ाइल लिखता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:251
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:252
 msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports (écriture disque)."
 msgstr "केवल देखने के लिए, इंसिडेंट बंद करने (अपरिवर्तनीय) और एक्सपोर्ट (डिस्क लेखन) को छोड़कर।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:256
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - डिकॉय"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
 msgid "Accueil -> Active Sécurité -> Deception"
 msgstr "होम -> एक्टिव सुरक्षा -> Deception"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:259
 msgid "Liste les affectations actives (et expirées non libérées) vers les leurres de deception, permet de les libérer."
 msgstr "deception डिकॉय की ओर सक्रिय असाइनमेंट (और समाप्त लेकिन मुक्त न किए गए) सूचीबद्ध करता है, उन्हें मुक्त करने की सुविधा देता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:261
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:41
 msgid "Libérer"
 msgstr "मुक्त करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
 msgid "Retire l'affectation d'une source vers son leurre."
 msgstr "किसी स्रोत का उसके डिकॉय की ओर असाइनमेंट हटाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
 msgid "Sélectionner une ligne, puis confirmer."
 msgstr "एक पंक्ति चुनें, फिर पुष्टि करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
 msgid "Libère immédiatement l'affectation."
 msgstr "असाइनमेंट को तुरंत मुक्त करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:266
 msgid "Effet immédiat - la source n'est plus redirigée vers le leurre à la prochaine requête."
 msgstr "तत्काल प्रभाव - अगले अनुरोध पर स्रोत अब डिकॉय की ओर रीडायरेक्ट नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:269
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:270
 msgid "Les affectations expirées mais jamais libérées restent visibles avec l'état 'expirée' - distinct d'une libération manuelle."
 msgstr "समाप्त लेकिन कभी मुक्त न किए गए असाइनमेंट 'समाप्त' स्थिति के साथ दिखते रहते हैं - हाथ से मुक्त करने से अलग।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:276
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - सिम्युलेट करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
 msgid "Accueil -> Active Sécurité -> Simuler"
 msgstr "होम -> एक्टिव सुरक्षा -> सिम्युलेट करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:279
 msgid "Simule une décision Active Defense (score, classe d'attaque) SANS aucun effet réel - dry-run complet."
 msgstr "Active Defense निर्णय (स्कोर, हमला वर्ग) को बिना किसी वास्तविक प्रभाव के सिम्युलेट करता है - पूरा dry-run।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:281
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
 msgid "IP simulée"
 msgstr "सिम्युलेटेड IP"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
 msgid "Adresse IP source utilisée pour la simulation."
 msgstr "सिमुलेशन के लिए उपयोग किया जाने वाला स्रोत IP पता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
 msgid "Une IP quelconque. Valeur par défaut : 203.0.113.42."
 msgstr "कोई भी IP। डिफ़ॉल्ट मान: 203.0.113.42।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
-#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
-msgid "Utilisée au clic sur Simuler."
-msgstr "'सिम्युलेट करें' पर क्लिक करने पर उपयोग होता है।"
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:285
-msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
-msgstr "कोई वास्तविक प्रभाव नहीं - कोई लेखन नहीं, कोई नेटवर्क प्रभाव नहीं।"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:288
-msgid "Chemin simulé"
-msgstr "सिम्युलेटेड पाथ"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
-msgid "Chemin de la requête simulée."
-msgstr "सिम्युलेटेड अनुरोध का पाथ।"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
-msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
-msgstr "मुक्त टेक्स्ट। डिफ़ॉल्ट मान: /wp-login.php।"
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:292
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:299
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:306
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:313
+#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
+msgid "Utilisée au clic sur Simuler."
+msgstr "'सिम्युलेट करें' पर क्लिक करने पर उपयोग होता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:286
+msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
+msgstr "कोई वास्तविक प्रभाव नहीं - कोई लेखन नहीं, कोई नेटवर्क प्रभाव नहीं।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
+msgid "Chemin simulé"
+msgstr "सिम्युलेटेड पाथ"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
+msgid "Chemin de la requête simulée."
+msgstr "सिम्युलेटेड अनुरोध का पाथ।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
+msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
+msgstr "मुक्त टेक्स्ट। डिफ़ॉल्ट मान: /wp-login.php।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:293
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:300
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:307
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:314
 msgid "Aucun effet réel."
 msgstr "कोई वास्तविक प्रभाव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:295
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
 msgid "User-Agent"
 msgstr "User-Agent"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
 msgid "User-Agent simulé (participe au calcul de l'identifiant de source simulé)."
 msgstr "सिम्युलेटेड User-Agent (सिम्युलेटेड स्रोत पहचानकर्ता की गणना में भाग लेता है)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
 msgid "Chaîne libre, optionnelle."
 msgstr "मुक्त टेक्स्ट, वैकल्पिक।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:302
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:55
 msgid "Classe d'attaque"
 msgstr "हमला वर्ग"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
 msgid "Type d'attaque simulé."
 msgstr "सिम्युलेटेड हमले का प्रकार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
 msgid "Doit être une classe connue (ex: scan). Valeur par défaut : scan."
 msgstr "एक ज्ञात वर्ग होना चाहिए (उदा.: scan)। डिफ़ॉल्ट मान: scan।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:309
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Score"
 msgstr "स्कोर"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
 msgid "Delta de score appliqué à la simulation."
 msgstr "सिमुलेशन पर लागू स्कोर delta।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
 msgid "Entier. Valeur par défaut : 10."
 msgstr "पूर्णांक। डिफ़ॉल्ट मान: 10।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:316
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:317
 msgid "Aucune - dry-run complet, jamais d'écriture (aucun repository.save()/create() appelé)."
 msgstr "कोई नहीं - पूरा dry-run, कभी लेखन नहीं (कोई repository.save()/create() नहीं बुलाया जाता)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:321
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
 msgid "WAF - État"
 msgstr "WAF - स्थिति"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:323
 msgid "Accueil -> Active Sécurité -> État (bloc WAF)"
 msgstr "होम -> एक्टिव सुरक्षा -> स्थिति (WAF खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:324
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:325
 msgid "Vue d'ensemble en lecture seule : mode, comportement en cas d'erreur interne, packs de règles référencés, taille de la blocklist. Avec le moteur natif, aussi : combien de règles il évalue lui-même, s'il sert seul les requêtes sans correspondance (sinon pourquoi), et le contrôle 1/N."
 msgstr "केवल-पढ़ने वाला अवलोकन: मोड, आंतरिक त्रुटि पर व्यवहार, संदर्भित नियम पैक, ब्लॉकलिस्ट का आकार। नेटिव इंजन के साथ यह भी: वह कितने नियम खुद जाँचता है, क्या वह बिना मेल वाले अनुरोध अकेले परोसता है (नहीं तो क्यों), और 1/N जाँच।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:332
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:333
 msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter même actif - l'écran l'indique explicitement, corrige un vrai trou signalé par l'utilisateur."
 msgstr "यदि कोई नियम पैक संदर्भित नहीं है, तो WAF सक्रिय होने पर भी कुछ नहीं पहचान सकता - स्क्रीन इसे स्पष्ट रूप से बताती है, उपयोगकर्ता द्वारा बताई गई एक वास्तविक कमी को ठीक करती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:340
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modules"
 msgstr "WAF - मॉड्यूल"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
 msgid "Accueil -> Active Sécurité -> Modules (bloc WAF)"
 msgstr "होम -> एक्टिव सुरक्षा -> मॉड्यूल (WAF खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:343
 msgid "Trois sections : mode/comportement d'erreur, gestion des packs de règles actifs, gestion de la liste de blocage."
 msgstr "तीन अनुभाग: मोड/त्रुटि व्यवहार, सक्रिय नियम पैक का प्रबंधन, ब्लॉकलिस्ट का प्रबंधन।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
 msgid "Comportement du WAF face à une requête jugée malveillante."
 msgstr "दुर्भावनापूर्ण माने गए अनुरोध पर WAF का व्यवहार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
 msgid "log-only (journalise sans bloquer) ou block (bloque réellement)."
 msgstr "log-only (ब्लॉक किए बिना लॉग करता है) या block (वास्तव में ब्लॉक करता है)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:350
 msgid "Rechargement AUTOMATIQUE déclenché des l'enregistrement si un service actif existe."
 msgstr "सक्रिय सर्विस होने पर सेव करते ही स्वचालित रीलोड ट्रिगर होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:352
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
 msgid "Comportement en cas d'erreur interne"
 msgstr "आंतरिक त्रुटि पर व्यवहार"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
 msgid "Que faire si le moteur WAF rencontre une erreur inattendue en analysant une requête."
 msgstr "अनुरोध का विश्लेषण करते समय WAF इंजन को अप्रत्याशित त्रुटि मिलने पर क्या करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
 msgid "fail-open (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "fail-open (जाने देता है) या fail-closed (सावधानी के लिए ब्लॉक करता है)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:319
 msgid "Enregistre avec le mode."
 msgstr "मोड के साथ सेव करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:357
 msgid "Rechargement automatique."
 msgstr "स्वचालित रीलोड।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:359
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:360
 msgid "Contrôle du moteur natif (native_check_every)"
 msgstr "नेटिव इंजन की जाँच (native_check_every)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:361
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:362
 msgid "Avec le moteur natif, une requête sur laquelle aucune règle ne correspond est servie sans passer par Python. Ce réglage en soumet quand même une sur N à Python, pour vérifier que les deux donnent le même verdict."
 msgstr "नेटिव इंजन के साथ, जिस अनुरोध पर कोई भी नियम लागू नहीं होता, वह Python से गुज़रे बिना परोसा जाता है। यह सेटिंग फिर भी ऐसे N में से एक अनुरोध Python को भेजती है, यह जाँचने के लिए कि दोनों एक ही फ़ैसला देते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:366
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:367
 msgid "Entier de 0 à 1000000. 0 (par défaut) = jamais ; 1000 = une requête propre sur mille, un coût négligeable. Sans effet avec le moteur Python."
 msgstr "0 से 1000000 तक पूर्णांक। 0 (डिफ़ॉल्ट) = कभी नहीं; 1000 = हज़ार साफ़ अनुरोधों में से एक, नगण्य लागत। Python इंजन के साथ कोई असर नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:369
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:370
 msgid "Enregistre dans options.waf.native_check_every, avec le mode."
 msgstr "मोड के साथ options.waf.native_check_every में सहेजता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:371
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:372
 msgid "Rechargement automatique. La requête contrôlée reçoit le verdict de Python ; un désaccord est écrit dans le journal d'erreurs."
 msgstr "अपने-आप रीलोड। जाँचे गए अनुरोध को Python का फ़ैसला मिलता है; असहमति त्रुटि लॉग में लिखी जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:376
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:82
 msgid "Packs de règles (rule_paths)"
 msgstr "नियम पैक (rule_paths)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
 msgid "Fichiers de règles réellement charges par le WAF - sans au moins un pack, rien n'est détecté."
 msgstr "WAF द्वारा वास्तव में लोड की गई नियम फ़ाइलें - कम से कम एक पैक के बिना कुछ भी नहीं पहचाना जाता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
 msgid "Ajouter ouvre un sélecteur des packs présents sous secure/waf/rules/ non déjà référencés."
 msgstr "'जोड़ें' secure/waf/rules/ के अंतर्गत मौजूद, अभी तक संदर्भित न किए गए पैक का चयनकर्ता खोलता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
 msgid "Ajoute/retire une référence de pack."
 msgstr "पैक संदर्भ जोड़ता/हटाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:381
 msgid "Rechargement automatique déclenché immédiatement (recompile les règles en mémoire)."
 msgstr "तुरंत स्वचालित रीलोड ट्रिगर होता है (मेमोरी में नियम फिर से compile होते हैं)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:383
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:384
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:91
 msgid "Liste de blocage"
 msgstr "ब्लॉकलिस्ट"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:385
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:386
 msgid "IP/reseaux bannis, avec motif et expiration optionnelle. Fichier par défaut : var/lib/waf/blocklist.json (sous var/, le seul dossier où le service systemd peut écrire ses auto-bans). Un ancien secure/waf/blocklist.json est repris une fois au démarrage et laissé en place comme sauvegarde."
 msgstr "बैन किए गए IP/नेटवर्क, कारण और वैकल्पिक समाप्ति के साथ। डिफ़ॉल्ट फ़ाइल: var/lib/waf/blocklist.json (var/ के अंतर्गत, एकमात्र फ़ोल्डर जहाँ systemd सर्विस अपने ऑटो-बैन लिख सकती है)। पुरानी secure/waf/blocklist.json स्टार्ट पर एक बार ली जाती है और बैकअप के रूप में वहीं छोड़ दी जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:390
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
 msgid "Réseau (CIDR), motif, durée en secondes (vide = permanent, confirmation requise dans ce cas)."
 msgstr "नेटवर्क (CIDR), कारण, सेकंड में अवधि (खाली = स्थायी, इस स्थिति में पुष्टि आवश्यक)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:392
 msgid "Ajoute/retire une entrée."
 msgstr "एक एंट्री जोड़ता/हटाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:393
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:394
 msgid "EFFET IMMÉDIAT, sans rechargement nécessaire - la blocklist est relue depuis le disque à CHAQUE requête, jamais mise en cache en mémoire (contrairement au mode et aux packs de règles)."
 msgstr "तत्काल प्रभाव, रीलोड आवश्यक नहीं - ब्लॉकलिस्ट हर अनुरोध पर डिस्क से फिर से पढ़ी जाती है, मेमोरी में कभी कैश नहीं होती (मोड और नियम पैक के विपरीत)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:400
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:401
 msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement pour s'appliquer (automatique si un service actif existe). La liste de blocage, elle, s'applique instantanément sans aucune action supplémentaire."
 msgstr "मोड/त्रुटि व्यवहार/नियम पैक लागू होने के लिए रीलोड आवश्यक है (सक्रिय सर्विस होने पर स्वचालित)। ब्लॉकलिस्ट, इसके विपरीत, बिना किसी अतिरिक्त एक्शन के तुरंत लागू होती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:408
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - सीमाएँ (छूटें और दर सीमा)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:410
 msgid "Accueil -> Active Sécurité -> Limitations (bloc WAF)"
 msgstr "होम -> सक्रिय सुरक्षा -> सीमाएँ (WAF ब्लॉक)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:411
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:412
 msgid "Règle la limite de débit (rate limit) du WAF natif : la limite globale, des règles par dossier et des règles par IP/réseau, ainsi que les exclusions d'inspection. Sert surtout aux pages lourdes (une galerie d'images, par exemple) qui dépassent la limite globale et reçoivent une erreur 429."
 msgstr "नेटिव WAF की दर सीमा (rate limit) सेट करता है: वैश्विक सीमा, फ़ोल्डर के अनुसार नियम और IP/नेटवर्क के अनुसार नियम, साथ ही जाँच के अपवाद। मुख्य रूप से भारी पेजों (जैसे इमेज गैलरी) के लिए उपयोगी, जो वैश्विक सीमा पार करके 429 त्रुटि पाते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:418
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:83
 msgid "Limite globale"
 msgstr "वैश्विक सीमा"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
 msgid "Nombre de requêtes autorisées par IP et par fenêtre, pour tout ce qui n'a pas de règle spécifique."
 msgstr "हर उस चीज़ के लिए जिसका कोई विशेष नियम नहीं है, प्रति IP और प्रति विंडो अनुमत अनुरोधों की संख्या।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
 msgid "Rate limit actif (oui/non), nombre de requêtes, fenêtre en secondes."
 msgstr "rate limit सक्रिय (हाँ/नहीं), अनुरोधों की संख्या, सेकंड में विंडो।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:423
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:868
 msgid "Rechargement automatique déclenché si un service actif existe."
 msgstr "सक्रिय सर्विस होने पर स्वचालित रीलोड ट्रिगर होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:425
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:426
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:93
 msgid "Règles par dossier"
 msgstr "फ़ोल्डर के अनुसार नियम"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:427
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:428
 msgid "Une règle REMPLACE la limite globale pour ce dossier et a son propre compteur : les requêtes sur ce dossier ne consomment plus la limite globale. 0 = illimité. Si plusieurs dossiers correspondent, le plus long gagne. /images couvre /images/a.png mais jamais /images2."
 msgstr "नियम उस फ़ोल्डर के लिए वैश्विक सीमा की जगह लेता है और उसका अपना काउंटर होता है: इस फ़ोल्डर के अनुरोध अब वैश्विक सीमा खर्च नहीं करते। 0 = असीमित। कई फ़ोल्डर मेल खाएँ तो सबसे लंबा जीतता है। /images में /images/a.png आता है, पर /images2 कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:432
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
 msgid "Ajouter / Modifier : dossier, requêtes par fenêtre, fenêtre en secondes. Sélectionner une ligne pour la modifier ou la retirer."
 msgstr "जोड़ें / बदलें: फ़ोल्डर, प्रति विंडो अनुरोध, सेकंड में विंडो। बदलने या हटाने के लिए एक पंक्ति चुनें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:451
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:434
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:452
 msgid "Enregistré dès la validation du formulaire."
 msgstr "फ़ॉर्म की पुष्टि होते ही सेव हो जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:435
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:436
 msgid "Rechargement automatique. Une IP publique qui dépasse une règle de dossier est toujours journalisée comme un blocage, donc bannissable par omega-jail."
 msgstr "स्वचालित रीलोड। फ़ोल्डर नियम पार करने वाला सार्वजनिक IP अब भी ब्लॉक के रूप में लॉग होता है, इसलिए omega-jail उसे बैन कर सकता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:440
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:441
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:108
 msgid "Règles par IP / réseau"
 msgstr "IP / नेटवर्क के अनुसार नियम"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:442
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:443
 msgid "Même principe pour une IP ou un réseau (ex. le réseau Tailscale 100.64.0.0/10). Une règle de dossier passe avant une règle IP/réseau ; entre deux réseaux, le plus précis gagne."
 msgstr "IP या नेटवर्क के लिए भी यही सिद्धांत (जैसे Tailscale नेटवर्क 100.64.0.0/10)। फ़ोल्डर नियम IP/नेटवर्क नियम से पहले आता है; दो नेटवर्कों में अधिक सटीक वाला जीतता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:447
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:448
 msgid "IP ou réseau (CIDR), requêtes, fenêtre, Source sûre (oui/non). Une source sûre qui dépasse la limite reçoit toujours le 429, mais la ligne est journalisée « throttle » : jamais bannissable."
 msgstr "IP या नेटवर्क (CIDR), अनुरोध, विंडो, सुरक्षित स्रोत (हाँ/नहीं)। सीमा पार करने वाले सुरक्षित स्रोत को भी 429 मिलता है, पर पंक्ति « throttle » के रूप में लॉग होती है: कभी बैन नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:453
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:454
 msgid "Les réseaux never_auto_block (affichés au-dessus du tableau) sont toujours sûrs d'office. Sans proxy de confiance actif, une règle couvrant 127.0.0.1/::1 est ignorée."
 msgstr "never_auto_block नेटवर्क (तालिका के ऊपर दिखाए गए) हमेशा डिफ़ॉल्ट रूप से सुरक्षित हैं। सक्रिय विश्वसनीय प्रॉक्सी न होने पर 127.0.0.1/::1 को कवर करने वाला नियम अनदेखा किया जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:459
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:119
 msgid "Exclusions d'inspection"
 msgstr "जाँच के अपवाद"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
 msgid "Dossiers et extensions jamais inspectés par le WAF natif ni par magnet, et dossiers dont seul le corps n'est pas inspecté."
 msgstr "फ़ोल्डर और एक्सटेंशन जिनकी जाँच न नेटिव WAF करता है न magnet, और वे फ़ोल्डर जिनकी केवल बॉडी की जाँच नहीं होती।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
 msgid "Valeurs séparées par des virgules ; un dossier commence par « / »."
 msgstr "कॉमा से अलग मान; फ़ोल्डर « / » से शुरू होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:464
 msgid "Le rate limit s'applique toujours à ces chemins : une exclusion ne règle jamais un 429."
 msgstr "इन पाथ पर rate limit अब भी लागू होता है: अपवाद से 429 कभी हल नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:466
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:467
 msgid "Une règle de débit ne désactive jamais l'inspection : une attaque sur un dossier à débit élevé reste détectée et bloquée."
 msgstr "दर नियम जाँच को कभी बंद नहीं करता: ऊँची दर वाले फ़ोल्डर पर हमला अब भी पकड़ा और ब्लॉक किया जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:469
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:470
 msgid "Un dossier en illimité (0) ne protège plus contre un robot qui le martèle depuis une IP publique : préférer une valeur haute (ex. 600 / 60 s) à l'illimité."
 msgstr "असीमित (0) फ़ोल्डर अब सार्वजनिक IP से लगातार अनुरोध भेजने वाले बॉट से नहीं बचाता: असीमित के बजाय ऊँचा मान (जैसे 600 / 60 सेकंड) चुनें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:473
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:474
 msgid "Sans rapport avec « Requêtes max par connexion keep-alive » (Configuration détaillée -> Résistance et limites) : ce réglage ferme seulement une connexion après N requêtes, le navigateur en rouvre une aussitôt. Il ne renvoie jamais 429 et ne compte rien par IP : c'est la limite de débit, ici, qui produit le 429."
 msgstr "« प्रति keep-alive कनेक्शन अधिकतम अनुरोध » (विस्तृत कॉन्फ़िगरेशन -> मज़बूती और सीमाएँ) से इसका कोई संबंध नहीं: वह सेटिंग केवल N अनुरोधों के बाद कनेक्शन बंद करती है, और ब्राउज़र तुरंत नया खोल लेता है। वह कभी 429 नहीं लौटाती और प्रति IP कुछ नहीं गिनती: यहाँ 429 दर सीमा से ही आता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:479
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:480
 msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une détection, donc ne mène jamais à l'auto-ban. Sur une requête couverte par une règle de dossier ou d'IP/réseau ci-dessus, c'est cette règle qui fait foi : le 429 de magnet est ignoré (ses signatures d'attaque restent appliquées)."
 msgstr "magnet स्क्रिप्ट: उसकी अपनी rate limit (429) कभी पहचान के रूप में नहीं गिनी जाती, इसलिए कभी स्वचालित बैन नहीं होता। ऊपर के किसी फ़ोल्डर या IP/नेटवर्क नियम के दायरे वाले अनुरोध पर वही नियम लागू होता है: magnet का 429 अनदेखा किया जाता है (उसके हमला-हस्ताक्षर लागू रहते हैं)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:489
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Tester une requête"
 msgstr "WAF - अनुरोध टेस्ट करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
 msgid "Accueil -> Active Sécurité -> Tester (bloc WAF)"
 msgstr "होम -> एक्टिव सुरक्षा -> टेस्ट (WAF खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:492
 msgid "Teste une requête simulée contre les règles WAF ACTUELLEMENT ENREGISTRÉES (pas nécessairement celles réellement chargées par un serveur déjà lancé), sans requête réseau."
 msgstr "एक सिम्युलेटेड अनुरोध को वर्तमान में सेव किए गए WAF नियमों (ज़रूरी नहीं कि पहले से चल रहे सर्वर द्वारा वास्तव में लोड किए गए) के विरुद्ध टेस्ट करता है, बिना नेटवर्क अनुरोध के।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:494
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
 msgid "Méthode / Chemin / Query / Body / IP distante"
 msgstr "मेथड / पाथ / Query / Body / रिमोट IP"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
 msgid "Composants de la requête HTTP simulée."
 msgstr "सिम्युलेटेड HTTP अनुरोध के घटक।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
 msgid "Valeurs libres - méthode et chemin pré-remplis (GET, /)."
 msgstr "मुक्त मान - मेथड और पाथ पहले से भरे (GET, /)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
 msgid "Utilisés au clic sur Tester."
 msgstr "'टेस्ट करें' पर क्लिक करने पर उपयोग होते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:499
 msgid "Aucun effet réel, aucune requête réseau."
 msgstr "कोई वास्तविक प्रभाव नहीं, कोई नेटवर्क अनुरोध नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:504
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:505
 msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur disque à chaque test - si un serveur déjà lancé n'a pas encore été rechargé après un changement de règles, ce test peut refléter un comportement différent de ce que ce serveur applique réellement pour l'instant."
 msgstr "हर टेस्ट पर डिस्क पर सेव किए गए कॉन्फ़िगरेशन से WAF इंजन फिर से बनाता है - यदि पहले से चल रहा सर्वर नियम बदलने के बाद अभी तक रीलोड नहीं हुआ है, तो यह टेस्ट उस सर्वर द्वारा अभी वास्तव में लागू व्यवहार से अलग व्यवहार दिखा सकता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:514
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - कस्टम नियम और सूचियाँ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:516
 msgid "Accueil -> Active Sécurité -> Custom (bloc WAF)"
 msgstr "होम -> एक्टिव सुरक्षा -> Custom (WAF खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:517
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:518
 msgid "Un seul tableau pour les RÈGLES (écrites dans secure/waf/rules/custom.json, pack référence automatiquement) et les LISTES (fichiers texte de secure/waf/rules/keywords/, chargées explicitement par l'assistant). La colonne Type fait la différence : une liste n'est pas une règle de custom.json."
 msgstr "नियमों (secure/waf/rules/custom.json में लिखे, पैक स्वचालित रूप से संदर्भित) और सूचियों (secure/waf/rules/keywords/ की टेक्स्ट फ़ाइलें, विज़ार्ड द्वारा स्पष्ट रूप से लोड) के लिए एक ही तालिका। प्रकार कॉलम अंतर बताता है: सूची custom.json का नियम नहीं है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
 msgid "Ouvre l'assistant : une règle simple, ou CHARGER une liste (voir sa fiche)."
 msgstr "विज़ार्ड खोलता है: एक साधारण नियम, या एक सूची लोड करें (उसका विवरण देखें)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
 msgid "Clic, puis suivre l'assistant."
 msgstr "क्लिक करें, फिर विज़ार्ड का पालन करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
 msgid "Règle : écrite dans custom.json. Liste : ajoutée à options.waf.rules.keyword_lists."
 msgstr "नियम: custom.json में लिखा जाता है। सूची: options.waf.rules.keyword_lists में जोड़ी जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:712
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:529
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:713
 msgid "Rechargement automatique déclenché immédiatement si un service actif existe."
 msgstr "सक्रिय सर्विस होने पर तुरंत स्वचालित रीलोड ट्रिगर होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:531
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
 msgid "Colonne Détail (listes)"
 msgstr "विवरण कॉलम (सूचियाँ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:533
 msgid "Nombre d'entrées du fichier, ou un avertissement."
 msgstr "फ़ाइल की एंट्री की संख्या, या एक चेतावनी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:534
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:535
 msgid "'fichier absent', 'illisible par le service' ou 'emplacement refusé' : la liste n'est pas chargeable telle quelle - ouvrez-la avec Éditer la liste."
 msgstr "'फ़ाइल अनुपस्थित', 'सर्विस द्वारा अपठनीय' या 'स्थान अस्वीकृत': सूची जैसी है वैसी लोड नहीं हो सकती - इसे 'सूची संपादित करें' से खोलें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:537
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
 msgid "Recalculé à chaque affichage du tableau."
 msgstr "हर बार तालिका दिखाने पर फिर से गणना।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:539
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:546
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:617
 msgid "Aucun effet en lui-même."
 msgstr "स्वयं कोई प्रभाव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:541
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
 msgid "Colonne Gravité (listes)"
 msgstr "गंभीरता कॉलम (सूचियाँ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
 msgid "Observation, Faible, Moyen, Élevé ou Critique, suivie de la récidive propre à la liste."
 msgstr "निगरानी, कम, मध्यम, उच्च या गंभीर, उसके बाद सूची का अपना दोहराव।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
 msgid "Ex. 'Élevé, 2 en 10 min -> ban 24 h'."
 msgstr "उदा. 'उच्च, 10 मिनट में 2 -> 24 घंटे बैन'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
 msgid "Se change avec Modifier."
 msgstr "'बदलें' से बदला जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:548
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
 msgid "Modifier (listes)"
 msgstr "बदलें (सूचियाँ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
 msgid "Change gravité, récidive, zone de recherche et nom affiché d'une liste déjà chargée."
 msgstr "पहले से लोड की गई सूची की गंभीरता, दोहराव, खोज क्षेत्र और दिखाया गया नाम बदलता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:551
 msgid "Sélectionner une ligne Liste, puis Modifier."
 msgstr "एक सूची पंक्ति चुनें, फिर 'बदलें'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:552
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:553
 msgid "Vérifie la nouvelle configuration comme au chargement : rendre bloquante une liste qui toucherait une route du site est refusé avec la raison."
 msgstr "नए कॉन्फ़िगरेशन की जाँच लोड करने जैसी ही करता है: साइट के किसी रूट को प्रभावित करने वाली सूची को ब्लॉक करने वाला बनाना कारण सहित अस्वीकार होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:555
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:556
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:570
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:577
 msgid "Rechargement automatique déclenché immédiatement."
 msgstr "तुरंत स्वचालित रीलोड ट्रिगर होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:558
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:89
 msgid "Éditer la liste"
 msgstr "सूची संपादित करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
 msgid "Ouvre l'éditeur intégré sur le fichier de la liste (voir sa fiche)."
 msgstr "सूची फ़ाइल को बिल्ट-इन एडिटर में खोलता है (उसका विवरण देखें)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
 msgid "Sélectionner une ligne Liste, puis Éditer la liste."
 msgstr "एक सूची पंक्ति चुनें, फिर 'सूची संपादित करें'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
 msgid "Aucune écriture tant que l'éditeur n'a pas enregistré."
 msgstr "जब तक एडिटर ने सेव न किया हो, कोई लेखन नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:563
 msgid "Le tableau est rafraîchi à la fermeture de l'éditeur."
 msgstr "एडिटर बंद होने पर तालिका रीफ़्रेश होती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:565
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:91
 msgid "Activer/Desactiver"
 msgstr "सक्षम/अक्षम"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
 msgid "Bascule une règle ou une liste sans la supprimer."
 msgstr "किसी नियम या सूची को हटाए बिना चालू/बंद करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
 msgid "Sélectionner une ligne, puis cliquer."
 msgstr "एक पंक्ति चुनें, फिर क्लिक करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
 msgid "Règle : champ enabled de custom.json. Liste : champ enabled de keyword_lists."
 msgstr "नियम: custom.json का enabled फ़ील्ड। सूची: keyword_lists का enabled फ़ील्ड।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:572
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
 msgid "Supprimer / Retirer"
 msgstr "हटाएँ / निकालें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
 msgid "Supprimer une règle, ou Retirer une liste du WAF."
 msgstr "एक नियम हटाएँ, या WAF से एक सूची निकालें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
 msgid "Règle : retirée de custom.json. Liste : retirée de la configuration, FICHIER CONSERVÉ."
 msgstr "नियम: custom.json से हटाया जाता है। सूची: कॉन्फ़िगरेशन से हटाई जाती है, फ़ाइल रखी जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:580
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:581
 msgid "Une règle ou une liste refusée par la validation est refusée ICI de la même façon qu'elle le serait au chargement réel - jamais une double logique de validation divergente."
 msgstr "जाँच द्वारा अस्वीकृत नियम या सूची यहाँ भी उसी तरह अस्वीकृत होती है जैसे वास्तविक लोड पर होती - दो अलग-अलग जाँच तर्क कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:585
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:586
 msgid "Piège déjà rencontré par un utilisateur : ajouter le PACK via 'Modules' n'est pas la même chose que créer une RÈGLE ici - cet écran fait désormais les deux à la fois automatiquement."
 msgstr "एक उपयोगकर्ता के साथ पहले हुआ जाल: 'मॉड्यूल' से पैक जोड़ना यहाँ नियम बनाने के समान नहीं है - यह स्क्रीन अब दोनों काम एक साथ स्वचालित रूप से करती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:590
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:591
 msgid "Retirer une liste ne supprime jamais son fichier : il reste proposé par l'assistant, prêt à être rechargé."
 msgstr "सूची निकालने से उसकी फ़ाइल कभी नहीं हटती: वह विज़ार्ड में दिखती रहती है, फिर से लोड होने के लिए तैयार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:598
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
 msgid "WAF - Assistant règle personnalisée / chargement de liste"
 msgstr "WAF - कस्टम नियम विज़ार्ड / सूची लोड करना"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:600
 msgid "WAF - Règles et listes personnalisées -> Ajouter"
 msgstr "WAF - कस्टम नियम और सूचियाँ -> जोड़ें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:601
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:602
 msgid "Questionnaire en langage clair pour construire une règle WAF sans connaître les expressions régulières (4 scénarios courants + mode Avance), OU pour CHARGER une liste de chemins / de mots-clés depuis un fichier texte. Le chargement d'une liste est une action explicite : rien n'est actif avant le clic sur Charger."
 msgstr "regular expressions जाने बिना WAF नियम बनाने के लिए सरल भाषा में प्रश्नावली (4 सामान्य परिदृश्य + उन्नत मोड), या टेक्स्ट फ़ाइल से पाथ/कीवर्ड सूची लोड करने के लिए। सूची लोड करना एक स्पष्ट एक्शन है: 'लोड करें' पर क्लिक करने से पहले कुछ भी सक्रिय नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:608
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:140
 msgid "Que voulez-vous détecter ?"
 msgstr "आप क्या पहचानना चाहते हैं?"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:610
 msgid "Choisit le scénario de détection."
 msgstr "पहचान परिदृश्य चुनता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:611
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:612
 msgid "Un chemin précis visite, un mot-clé dans l'adresse/parametres, un mot-clé envoyé en formulaire (POST), un outil de scan connu (User-Agent), Avance (regex/portee libres), CHARGER une liste de chemins, CHARGER une liste de mots-clés."
 msgstr "देखा गया कोई विशेष पाथ, पते/पैरामीटर में कीवर्ड, फ़ॉर्म (POST) में भेजा गया कीवर्ड, कोई ज्ञात स्कैन टूल (User-Agent), उन्नत (मुक्त regex/दायरा), पाथ सूची लोड करें, कीवर्ड सूची लोड करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:615
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
 msgid "Change les champs affiches en dessous et leur indice."
 msgstr "नीचे दिखाए गए फ़ील्ड और उनके संकेत बदलता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:619
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:144
 msgid "Valeur à détecter (mode simple)"
 msgstr "पहचाना जाने वाला मान (सरल मोड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
 msgid "Le texte à repérer, saisi en clair (jamais une regex à écrire)."
 msgstr "खोजा जाने वाला टेक्स्ट, सीधे दर्ज किया गया (कभी regex लिखना नहीं)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
 msgid "Un mot ou un chemin, selon le scénario choisi ci-dessus."
 msgstr "ऊपर चुने गए परिदृश्य के अनुसार एक शब्द या एक पाथ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
 msgid "La regex réelle est CONSTRUITE automatiquement par le code (caractères spéciaux jamais interprétés)."
 msgstr "वास्तविक regex कोड द्वारा स्वचालित रूप से बनाया जाता है (विशेष कैरेक्टर कभी व्याख्यायित नहीं होते)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:624
 msgid "Aucun effet avant validation sur l'écran précédent (WafCustomRuleScreen)."
 msgstr "पिछली स्क्रीन (WafCustomRuleScreen) पर पुष्टि से पहले कोई प्रभाव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:626
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
 msgid "Portée / Motif (mode Avance)"
 msgstr "दायरा / पैटर्न (उन्नत मोड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
 msgid "Portée et expression régulière écrites directement."
 msgstr "सीधे लिखे गए दायरा और regular expression।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
 msgid "Portée : path, query, body, headers, user_agent, referer (séparés par des virgules)."
 msgstr "दायरा: path, query, body, headers, user_agent, referer (कॉमा से अलग)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
 msgid "Utilisé tel quel si Avance est choisi."
 msgstr "उन्नत चुने जाने पर जैसा है वैसा उपयोग होता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:631
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:638
 msgid "Aucun effet avant validation sur l'écran précédent."
 msgstr "पिछली स्क्रीन पर पुष्टि से पहले कोई प्रभाव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:633
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
 msgid "Gravité (règle)"
 msgstr "गंभीरता (नियम)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
 msgid "Poids de la règle dans le calcul du score de menace."
 msgstr "खतरा स्कोर की गणना में नियम का भार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
 msgid "Faible/Moyen/Eleve/Critique (1/3/6/9)."
 msgstr "कम/मध्यम/उच्च/गंभीर (1/3/6/9)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
 msgid "Inclus dans la règle produite."
 msgstr "बनाए गए नियम में शामिल।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:640
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
 msgid "Fichier de liste (CHARGER)"
 msgstr "सूची फ़ाइल (लोड करें)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:642
 msgid "Le fichier texte qui contient la liste."
 msgstr "सूची वाली टेक्स्ट फ़ाइल।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:643
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:644
 msgid "Vos fichiers .txt de secure/waf/rules/keywords/ (avec leur nombre d'entrées), les références livrées avec omega-serv (sensitive-paths-hostile, sensitive-paths-probe) pas encore copiées, ou 'Nouveau fichier...' (nom en lettres, chiffres et '-')."
 msgstr "secure/waf/rules/keywords/ की आपकी .txt फ़ाइलें (उनकी एंट्री की संख्या के साथ), omega-serv के साथ दी गई संदर्भ सूचियाँ (sensitive-paths-hostile, sensitive-paths-probe) जो अभी कॉपी नहीं हुईं, या 'नई फ़ाइल...' (नाम में अक्षर, अंक और '-')।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:648
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:649
 msgid "Une référence est COPIÉE dans keywords/ au chargement : c'est cette copie locale que vous modifiez, une mise à jour d'omega-serv ne l'écrase jamais. Choisir une référence pré-remplit tous les réglages conseillés."
 msgstr "संदर्भ सूची लोड करते समय keywords/ में कॉपी की जाती है: आप इसी लोकल कॉपी को बदलते हैं, omega-serv का अपडेट इसे कभी ओवरराइट नहीं करता। संदर्भ चुनने पर सभी अनुशंसित सेटिंग्स पहले से भर जाती हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:652
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:693
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:653
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:663
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:670
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:681
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:694
 msgid "Aucun effet avant Charger."
 msgstr "'लोड करें' से पहले कोई प्रभाव नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:655
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
 msgid "Où chercher (liste de chemins)"
 msgstr "कहाँ खोजें (पाथ सूची)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:657
 msgid "N'importe où dans l'adresse, ou seulement au début."
 msgstr "पते में कहीं भी, या केवल शुरुआत में।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:658
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:659
 msgid "Partout attrape /blog/.env ; au début seulement est plus prudent pour des chemins qu'un vrai site peut servir (/api, /admin)."
 msgstr "'कहीं भी' /blog/.env पकड़ता है; ऐसे पाथ के लिए जिन्हें असली साइट परोस सकती है (/api, /admin), 'केवल शुरुआत में' अधिक सुरक्षित है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:661
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
 msgid "Champ anchor de la liste (any_segment / root)."
 msgstr "सूची का anchor फ़ील्ड (any_segment / root)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:665
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
 msgid "Dans quelle partie de la requête (liste de mots-clés)"
 msgstr "अनुरोध का कौन सा हिस्सा (कीवर्ड सूची)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
 msgid "Où chercher les mots-clés."
 msgstr "कीवर्ड कहाँ खोजें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
 msgid "L'adresse et ses paramètres, un formulaire envoyé (POST), le User-Agent, ou le Referer."
 msgstr "पता और उसके पैरामीटर, भेजा गया फ़ॉर्म (POST), User-Agent, या Referer।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
 msgid "Champ scope de la liste."
 msgstr "सूची का scope फ़ील्ड।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:672
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
 msgid "Gravité (liste)"
 msgstr "गंभीरता (सूची)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:674
 msgid "Observation, Faible (1), Moyen (3), Élevé (6), Critique (9)."
 msgstr "निगरानी, कम (1), मध्यम (3), उच्च (6), गंभीर (9)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:675
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:676
 msgid "Observation (conseillé au premier chargement) : alertes journalisées, AUCUN blocage, aucune récidive. Élevé (6) atteint le seuil de blocage : 403 dès le premier accès. Moyen (3) ne bloque jamais seul."
 msgstr "निगरानी (पहली बार लोड करते समय अनुशंसित): अलर्ट लॉग होते हैं, कोई ब्लॉक नहीं, कोई दोहराव नहीं। उच्च (6) ब्लॉक सीमा तक पहुँचता है: पहले ही एक्सेस पर 403। मध्यम (3) अकेले कभी ब्लॉक नहीं करता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:679
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
 msgid "Champs weight et observe_only de la liste."
 msgstr "सूची के weight और observe_only फ़ील्ड।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:683
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
 msgid "Récidive"
 msgstr "दोहराव"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:685
 msgid "Bannir après N accès à CETTE liste en M minutes, pendant une durée choisie."
 msgstr "M मिनट में इस सूची पर N एक्सेस के बाद, चुनी गई अवधि के लिए बैन करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:686
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:687
 msgid "'pas de récidive propre' = compteur commun du WAF. Références : hostile 2 accès en 10 min -> 24 h, sondage 5 en 10 min -> 1 h. Grise en Observation."
 msgstr "'अपना कोई दोहराव नहीं' = WAF का साझा काउंटर। संदर्भ: hostile 10 मिनट में 2 एक्सेस -> 24 घंटे, जाँच 10 मिनट में 5 -> 1 घंटा। निगरानी में धूसर।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:690
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:691
 msgid "Ban applicatif temporaire (blocklist, réponse 451), jamais pour l'hôte local (derrière un proxy de confiance), Tailscale ou le réseau local."
 msgstr "अस्थायी एप्लिकेशन बैन (ब्लॉकलिस्ट, 451 रिस्पॉन्स), लोकल होस्ट (विश्वसनीय प्रॉक्सी के पीछे), Tailscale या लोकल नेटवर्क के लिए कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:696
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:170
 msgid "Ouvrir l'éditeur"
 msgstr "एडिटर खोलें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
 msgid "Ouvre le fichier choisi dans l'éditeur intégré (ou la référence si pas encore copiée)."
 msgstr "चुनी गई फ़ाइल को बिल्ट-इन एडिटर में खोलता है (या संदर्भ, यदि अभी कॉपी नहीं हुई)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
 msgid "Pour vérifier ou adapter la liste AVANT de la charger."
 msgstr "लोड करने से पहले सूची की जाँच या अनुकूलन के लिए।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
 msgid "Rien n'est chargé dans le WAF depuis l'éditeur."
 msgstr "एडिटर से WAF में कुछ भी लोड नहीं होता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:701
 msgid "Les nombres d'entrées sont rafraîchis à la fermeture."
 msgstr "बंद करने पर एंट्री की संख्या रीफ़्रेश होती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:703
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:270
 msgid "Charger"
 msgstr "लोड करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
 msgid "Charge la liste dans le WAF."
 msgstr "सूची को WAF में लोड करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:706
 msgid "Dernier clic de l'assistant."
 msgstr "विज़ार्ड का अंतिम क्लिक।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:707
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:708
 msgid "Vérifie, dans l'ordre : nom de fichier, syntaxe (numéro de ligne en cas d'erreur), lisibilité par le compte du service, absence de doublon, conflits avec les routes du site. Si une seule vérification échoue, la configuration n'est PAS modifiée. Active ensuite la réputation et l'auto-ban s'ils étaient éteints (avec un message)."
 msgstr "क्रम से जाँचता है: फ़ाइल नाम, सिंटैक्स (त्रुटि होने पर पंक्ति संख्या), सर्विस अकाउंट द्वारा पठनीयता, डुप्लिकेट की अनुपस्थिति, साइट के रूट के साथ टकराव। यदि एक भी जाँच विफल हो, तो कॉन्फ़िगरेशन नहीं बदला जाता। इसके बाद रेप्युटेशन और ऑटो-बैन बंद हों तो उन्हें सक्षम करता है (एक संदेश के साथ)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:716
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:717
 msgid "Règle : ne fait qu'assembler les valeurs, l'écriture a lieu sur l'écran WAF - Règles et listes personnalisées. Liste : rien n'est actif tant que Charger n'a pas réussi."
 msgstr "नियम: केवल मानों को जोड़ता है, लेखन WAF - कस्टम नियम और सूचियाँ स्क्रीन पर होता है। सूची: 'लोड करें' सफल होने तक कुछ भी सक्रिय नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:721
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:722
 msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route réellement servie (alias, reverse proxy, zone Auth, fichier du webroot) est refusée : ajoutez une exception '!/chemin' dans la liste, ou chargez-la en Observation."
 msgstr "अकेले ब्लॉक करने वाली (गंभीरता >= 5) और वास्तव में परोसे जा रहे किसी रूट (alias, रिवर्स प्रॉक्सी, Auth ज़ोन, webroot की फ़ाइल) को प्रभावित करने वाली सूची अस्वीकृत होती है: सूची में '!/पाथ' अपवाद जोड़ें, या इसे निगरानी में लोड करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:730
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - सूची एडिटर"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:732
 msgid "WAF - Règles et listes personnalisées -> Éditer la liste (ou Assistant -> Ouvrir l'éditeur)"
 msgstr "WAF - कस्टम नियम और सूचियाँ -> सूची संपादित करें (या विज़ार्ड -> एडिटर खोलें)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:733
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:734
 msgid "Éditeur de texte intégré, sans éditeur externe, pour une liste de chemins ou de mots-clés. Tout se fait à la SOURIS : aucun raccourci clavier, le clavier ne sert qu'à la saisie (caractères, Entrée, flèches, Debut/Fin, Page prec./suiv., Retour arrière, Suppr)."
 msgstr "पाथ या कीवर्ड सूची के लिए बिल्ट-इन टेक्स्ट एडिटर, बाहरी एडिटर के बिना। सब कुछ माउस से होता है: कोई कीबोर्ड शॉर्टकट नहीं, कीबोर्ड केवल लिखने के लिए (कैरेक्टर, Enter, तीर, Home/End, Page Up/Down, Backspace, Delete)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:739
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
 msgid "Syntaxe d'une liste de chemins"
 msgstr "पाथ सूची का सिंटैक्स"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:741
 msgid "Une entrée par ligne, '#' = commentaire."
 msgstr "प्रति पंक्ति एक एंट्री, '#' = टिप्पणी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:742
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:743
 msgid "/admin -> /admin et /admin/xxx (jamais /administrator) ; /.git/ -> tout ce qui est sous /.git/ ; /*.bak -> fichiers finissant par .bak ; !/api/v1 -> exception, toujours prioritaire sur les entrées, quel que soit l'ordre des lignes."
 msgstr "/admin -> /admin और /admin/xxx (कभी /administrator नहीं) ; /.git/ -> /.git/ के अंतर्गत सब कुछ ; /*.bak -> .bak पर समाप्त होने वाली फ़ाइलें ; !/api/v1 -> अपवाद, एंट्री पर हमेशा प्राथमिकता, पंक्तियों का क्रम चाहे जो हो।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:746
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
 msgid "Analysée en direct (compteur d'entrées, d'exceptions, d'erreurs et d'avertissements)."
 msgstr "लाइव विश्लेषित (एंट्री, अपवाद, त्रुटियों और चेतावनियों का काउंटर)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:748
 msgid "Les erreurs s'affichent avec leur numéro de ligne ; cliquer une erreur place le curseur dessus."
 msgstr "त्रुटियाँ अपनी पंक्ति संख्या के साथ दिखती हैं; किसी त्रुटि पर क्लिक करने से कर्सर वहाँ चला जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:750
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
 msgid "Barre d'outils"
 msgstr "टूलबार"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
 msgid "Annuler la modif, Rétablir, Couper, Copier, Coller, Sélectionner la ligne, Tout sélectionner, Supprimer la ligne."
 msgstr "बदलाव पूर्ववत करें, फिर से करें, काटें, कॉपी करें, पेस्ट करें, पंक्ति चुनें, सब चुनें, पंक्ति हटाएँ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
 msgid "Clic. Le collage du terminal (clic du milieu, menu du terminal) fonctionne aussi."
 msgstr "क्लिक। टर्मिनल का पेस्ट (मध्य क्लिक, टर्मिनल मेन्यू) भी काम करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
 msgid "Modifie le texte affiché, jamais le fichier."
 msgstr "दिखाया गया टेक्स्ट बदलता है, फ़ाइल कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:755
 msgid "Toujours annulable."
 msgstr "हमेशा पूर्ववत किया जा सकता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:757
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:148
 msgid "Rechercher"
 msgstr "खोजें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
 msgid "Trouve un texte dans la liste (casse ignorée)."
 msgstr "सूची में टेक्स्ट खोजता है (केस अनदेखा)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
 msgid "Taper le texte, puis Précédent / Suivant."
 msgstr "टेक्स्ट टाइप करें, फिर पिछला / अगला।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
 msgid "Sélectionne l'occurrence trouvée."
 msgstr "मिली हुई घटना को चुनता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:762
 msgid "Recommence au début après la dernière occurrence."
 msgstr "अंतिम घटना के बाद शुरू से फिर खोजता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:764
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
 msgid "Tester (liste de chemins)"
 msgstr "टेस्ट (पाथ सूची)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
 msgid "Indique ce que ferait la liste EN COURS d'édition d'un chemin donné."
 msgstr "बताता है कि संपादित की जा रही सूची किसी दिए गए पाथ के साथ क्या करेगी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
 msgid "Taper un chemin (ex. /blog/.env), puis Tester."
 msgstr "एक पाथ टाइप करें (उदा. /blog/.env), फिर 'टेस्ट करें'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
 msgid "Même normalisation que le WAF (paramètres retirés, décodage URL)."
 msgstr "WAF जैसा ही सामान्यीकरण (पैरामीटर हटाए, URL डिकोड)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:769
 msgid "'DÉTECTÉ par la ligne N', 'AUTORISÉ : exception ligne N', ou 'aucune ligne ne correspond'."
 msgstr "'पंक्ति N द्वारा पहचाना गया', 'अनुमत: पंक्ति N का अपवाद', या 'कोई पंक्ति मेल नहीं खाती'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:771
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
 msgid "Vérifier contre mes logs (liste de chemins)"
 msgstr "मेरे लॉग से जाँचें (पाथ सूची)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
 msgid "Rejoue les requêtes RÉUSSIES (2xx/3xx) du journal d'accès contre la liste."
 msgstr "access लॉग के सफल अनुरोधों (2xx/3xx) को सूची के विरुद्ध फिर से चलाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
 msgid "Chaque ligne de la liste qui aurait touché une requête probablement légitime est montrée avec un exemple."
 msgstr "सूची की हर वह पंक्ति जो संभवतः वैध अनुरोध को प्रभावित करती, एक उदाहरण के साथ दिखाई जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
 msgid "Cliquer une ligne : exception pour ce chemin, exception pour son dossier, ou suppression de la ligne."
 msgstr "एक पंक्ति पर क्लिक करें: इस पाथ के लिए अपवाद, इसके फ़ोल्डर के लिए अपवाद, या पंक्ति हटाना।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:776
 msgid "Modifie le texte affiché (annulable), jamais le fichier avant Enregistrer."
 msgstr "दिखाया गया टेक्स्ट बदलता है (पूर्ववत योग्य), 'सेव करें' से पहले फ़ाइल कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:778
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:131
 msgid "Nouveautés de la référence"
 msgstr "संदर्भ सूची में नया"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
 msgid "Entrées de la référence livrée absentes de votre liste."
 msgstr "दी गई संदर्भ सूची की वे एंट्री जो आपकी सूची में नहीं हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:781
 msgid "Cocher celles à ajouter, puis Ajouter la sélection."
 msgstr "जोड़ी जाने वाली एंट्री चेक करें, फिर 'चयन जोड़ें'।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:782
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:783
 msgid "Rien n'est ajouté sans être coché. Une ligne de la référence que vous supprimez est marquée '#retire: /x' à l'enregistrement et n'est plus jamais reproposée."
 msgstr "बिना चेक किए कुछ नहीं जुड़ता। संदर्भ की जो पंक्ति आप हटाते हैं वह सेव करते समय '#retire: /x' के रूप में चिह्नित होती है और फिर कभी सुझाई नहीं जाती।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:785
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:786
 msgid "Modifie le texte affiché."
 msgstr "दिखाया गया टेक्स्ट बदलता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:788
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:132
 msgid "Corriger les droits"
 msgstr "अनुमतियाँ ठीक करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
 msgid "Rend le fichier lisible par le compte du service (omega-serv)."
 msgstr "फ़ाइल को सर्विस अकाउंट (omega-serv) द्वारा पठनीय बनाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:791
 msgid "Proposé seulement si l'état signale que le service ne peut pas lire le fichier."
 msgstr "केवल तभी दिया जाता है जब स्थिति बताती है कि सर्विस फ़ाइल नहीं पढ़ सकती।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:792
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:793
 msgid "Liste chaque changement de droits avant de l'appliquer, uniquement sur ce qui vous appartient - jamais via sudo."
 msgstr "लागू करने से पहले हर अनुमति बदलाव सूचीबद्ध करता है, केवल आपके स्वामित्व वाली चीज़ों पर - कभी sudo से नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:795
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:796
 msgid "L'état est recalculé."
 msgstr "स्थिति फिर से गणना की जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:798
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:165
 msgid "Enregistrer et appliquer"
 msgstr "सेव करें और लागू करें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
 msgid "Écrit le fichier, puis recharge le serveur si la liste est chargée."
 msgstr "फ़ाइल लिखता है, फिर सूची लोड हो तो सर्वर रीलोड करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:801
 msgid "Refusé tant qu'il reste une erreur."
 msgstr "जब तक कोई त्रुटि बची है, अस्वीकृत।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:802
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:803
 msgid "Écriture sûre : droits et groupe conservés, nouveau fichier en 0644, refus si le fichier a été modifié ailleurs depuis l'ouverture, ou si c'est un lien symbolique."
 msgstr "सुरक्षित लेखन: अनुमतियाँ और समूह बनाए रखे जाते हैं, नई फ़ाइल 0644 में, यदि खोलने के बाद फ़ाइल कहीं और बदली गई हो, या वह सिम्बॉलिक लिंक हो, तो अस्वीकार।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:806
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:807
 msgid "Le rechargement n'est déclenché que si la vérification de la liste réussit - sinon la raison est affichée et le serveur garde ses règles actuelles."
 msgstr "रीलोड केवल तभी ट्रिगर होता है जब सूची की जाँच सफल हो - अन्यथा कारण दिखाया जाता है और सर्वर अपने वर्तमान नियम रखता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:811
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
 msgid "Fermer / Aide"
 msgstr "बंद करें / सहायता"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
 msgid "Fermer l'éditeur, ou ouvrir cette fiche."
 msgstr "एडिटर बंद करें, या यह विवरण खोलें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
 msgid "Clic."
 msgstr "क्लिक।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
 msgid "Fermer demande une confirmation s'il reste des modifications non enregistrées."
 msgstr "बिना सेव किए बदलाव बचे हों तो बंद करने पर पुष्टि माँगी जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:816
 msgid "Retour à l'écran précédent."
 msgstr "पिछली स्क्रीन पर वापसी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:819
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:820
 msgid "Le fichier n'est jamais modifié avant Enregistrer. Un fichier non modifiable par votre compte s'ouvre en LECTURE SEULE, avec la raison."
 msgstr "'सेव करें' से पहले फ़ाइल कभी नहीं बदलती। आपके अकाउंट द्वारा न बदली जा सकने वाली फ़ाइल केवल-पढ़ने में खुलती है, कारण के साथ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:824
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:825
 msgid "Échap et F1 ne font rien ici, volontairement (aucun raccourci) : utilisez Fermer et Aide. Seul ctrl+q reste actif pour quitter l'application, avec confirmation."
 msgstr "Esc और F1 यहाँ जानबूझकर कुछ नहीं करते (कोई शॉर्टकट नहीं): 'बंद करें' और 'सहायता' का उपयोग करें। केवल ctrl+q एप्लिकेशन से बाहर निकलने के लिए सक्रिय रहता है, पुष्टि के साथ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:828
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:829
 msgid "L'état en bas de l'écran indique si le compte du service peut lire le fichier : un fichier illisible ferait échouer le prochain rechargement."
 msgstr "स्क्रीन के नीचे की स्थिति बताती है कि सर्विस अकाउंट फ़ाइल पढ़ सकता है या नहीं: अपठनीय फ़ाइल अगले रीलोड को विफल कर देगी।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:836
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "WAF - Modifier une liste"
 msgstr "WAF - सूची बदलें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
 msgid "WAF - Règles et listes personnalisées -> Modifier (ligne Liste)"
 msgstr "WAF - कस्टम नियम और सूचियाँ -> बदलें (सूची पंक्ति)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:839
 msgid "Change les réglages d'une liste déjà chargée, sans toucher à son fichier."
 msgstr "पहले से लोड की गई सूची की सेटिंग्स बदलता है, उसकी फ़ाइल को छुए बिना।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:841
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
 msgid "Nom affiché / Où chercher / Gravité / Récidive"
 msgstr "दिखाया गया नाम / कहाँ खोजें / गंभीरता / दोहराव"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
 msgid "Mêmes choix que dans l'assistant (voir sa fiche)."
 msgstr "विज़ार्ड जैसे ही विकल्प (उसका विवरण देखें)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
 msgid "Passer d'Observation à une gravité bloquante une fois les alertes lues."
 msgstr "अलर्ट पढ़ने के बाद निगरानी से ब्लॉक करने वाली गंभीरता पर जाएँ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
 msgid "Vérifie la nouvelle configuration avant de l'écrire."
 msgstr "लिखने से पहले नए कॉन्फ़िगरेशन की जाँच करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:846
 msgid "Rechargement automatique ; refus affiché avec sa raison si la vérification échoue."
 msgstr "स्वचालित रीलोड; जाँच विफल होने पर कारण सहित इनकार दिखाया जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:848
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:849
 msgid "Rendre une liste bloquante réactive la réputation et l'auto-ban s'ils avaient été éteints."
 msgstr "सूची को ब्लॉक करने वाला बनाने से रेप्युटेशन और ऑटो-बैन बंद किए गए हों तो फिर से सक्षम हो जाते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:855
 msgid "Accueil -> Active Sécurité -> Magnet (bloc WAF)"
 msgstr "होम -> एक्टिव सुरक्षा -> Magnet (WAF खंड)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:856
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:857
 msgid "Importe un script WAF mod_magnet Lighttpd EXISTANT (écrit pour un autre site) sans le réécrire, comme renfort additif au WAF natif - il ne peut jamais lever un blocage déjà décidé par le natif. Seuls les chemins personnels du script (fichiers de log/blocage) se dissocient ici, jamais la logique du script lui-même."
 msgstr "पहले से मौजूद Lighttpd mod_magnet WAF स्क्रिप्ट (किसी अन्य साइट के लिए लिखी गई) को दोबारा लिखे बिना इम्पोर्ट करता है, मूल WAF के अतिरिक्त सहायक के रूप में - यह मूल WAF द्वारा पहले से तय किए गए ब्लॉक को कभी हटा नहीं सकती। यहाँ केवल स्क्रिप्ट के व्यक्तिगत पाथ (लॉग/ब्लॉक फ़ाइलें) अलग किए जाते हैं, स्क्रिप्ट का तर्क कभी नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:863
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:295
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:65
 msgid "Actif (oui/non)"
 msgstr "सक्रिय (हाँ/नहीं)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
 msgid "Active ou désactive le script magnet."
 msgstr "magnet स्क्रिप्ट सक्षम या अक्षम करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
 msgid "oui ou non."
 msgstr "हाँ या नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:870
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:67
 msgid "Script (chemin relatif au projet)"
 msgstr "स्क्रिप्ट (प्रोजेक्ट के सापेक्ष पाथ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
 msgid "Le fichier Lua à importer - une liste des scripts trouves sous secure/waf/scripts/ est affichée en indice."
 msgstr "इम्पोर्ट की जाने वाली Lua फ़ाइल - secure/waf/scripts/ के अंतर्गत मिली स्क्रिप्ट की सूची संकेत में दिखाई जाती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
 msgid "Chemin relatif au projet, ex. secure/waf/scripts/waf.lua."
 msgstr "प्रोजेक्ट के सापेक्ष पाथ, उदा. secure/waf/scripts/waf.lua।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
 msgid "Enregistre avec Actif."
 msgstr "'सक्रिय' के साथ सेव करता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:875
 msgid "Aucun effet avant Enregistrer - utiliser Vérifier la compatibilité pour tester sans rien écrire."
 msgstr "'सेव करें' से पहले कोई प्रभाव नहीं - कुछ भी लिखे बिना टेस्ट करने के लिए 'संगतता जाँचें' का उपयोग करें।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:877
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
 msgid "Délai maximum par appel (ms) / Comportement en cas d'erreur"
 msgstr "प्रति कॉल अधिकतम समय (ms) / त्रुटि पर व्यवहार"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
 msgid "Borne le temps d'exécution du script par requête, et la décision prise si le script plante ou dépasse ce délai."
 msgstr "प्रति अनुरोध स्क्रिप्ट के निष्पादन समय की सीमा, और स्क्रिप्ट क्रैश होने या यह समय पार करने पर लिया जाने वाला निर्णय।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
 msgid "Délai en millisecondes ; ignore (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "मिलीसेकंड में समय; ignore (जाने देता है) या fail-closed (सावधानी के लिए ब्लॉक करता है)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:882
 msgid "fail-closed combiné à une incompatibilité détectée peut bloquer du trafic légitime - avertissement explicite affiché par Vérifier la compatibilité dans ce cas."
 msgstr "fail-closed और पाई गई असंगति एक साथ वैध ट्रैफ़िक ब्लॉक कर सकते हैं - इस स्थिति में 'संगतता जाँचें' स्पष्ट चेतावनी दिखाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:884
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:885
 msgid "Chemins personnels dissociés"
 msgstr "अलग किए गए व्यक्तिगत पाथ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:886
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:887
 msgid "5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine - propre à chaque script importe, jamais un contrat générique. Blocklist par défaut : var/lib/waf/magnet-blocklist.txt (le script y ÉCRIT ; un ancien secure/waf/magnet-blocklist.txt est repris une fois). Un chemin choisi à la main doit rester inscriptible par le compte du service, sinon les bans sont perdus sans message."
 msgstr "5 पाथ (ब्लॉकलिस्ट, नियम फ़ोल्डर, 2 लॉग, rate limiting की persistence फ़ाइल) स्क्रिप्ट में उसके मूल हार्डकोड पाथ की जगह डाले जाते हैं - हर इम्पोर्ट की गई स्क्रिप्ट के अपने, कभी सामान्य अनुबंध नहीं। डिफ़ॉल्ट ब्लॉकलिस्ट: var/lib/waf/magnet-blocklist.txt (स्क्रिप्ट इसमें लिखती है; पुरानी secure/waf/magnet-blocklist.txt एक बार ली जाती है)। हाथ से चुना गया पाथ सर्विस अकाउंट द्वारा लिखने योग्य रहना चाहिए, अन्यथा बैन बिना संदेश के खो जाते हैं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:893
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
 msgid "Vide = le script garde son propre chemin en dur (aucune injection pour ce champ)."
 msgstr "खाली = स्क्रिप्ट अपना हार्डकोड पाथ रखती है (इस फ़ील्ड के लिए कुछ नहीं डाला जाता)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:896
 msgid "Les dossiers parents sont créés automatiquement à l'usage réel (jamais lors d'un simple 'config check')."
 msgstr "पैरेंट फ़ोल्डर वास्तविक उपयोग पर स्वचालित रूप से बनते हैं (साधारण 'config check' पर कभी नहीं)।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:898
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:87
 msgid "Vérifier la compatibilité"
 msgstr "संगतता जाँचें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
 msgid "Exécute RÉELLEMENT le script avec les valeurs du formulaire EN COURS DE SAISIE, pas seulement celles déjà enregistrées."
 msgstr "स्क्रिप्ट को वास्तव में फ़ॉर्म में अभी भरे जा रहे मानों के साथ चलाता है, केवल पहले से सेव किए गए मानों के साथ नहीं।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
 msgid "À utiliser avant d'activer un script importe en production - répond à 'ce script est-il compatible ?'."
 msgstr "इम्पोर्ट की गई स्क्रिप्ट को प्रोडक्शन में सक्षम करने से पहले उपयोग करें - 'क्या यह स्क्रिप्ट संगत है?' का उत्तर देता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
 msgid "Scan statique (membres lighty.* non supportes) + exécution réelle sur une requête de test bénigne."
 msgstr "स्थैतिक स्कैन (असमर्थित lighty.* सदस्य) + एक हानिरहित टेस्ट अनुरोध पर वास्तविक निष्पादन।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:903
 msgid "Aucun effet sur le serveur ni sur la configuration enregistrée - purement diagnostique."
 msgstr "सर्वर या सेव किए गए कॉन्फ़िगरेशन पर कोई प्रभाव नहीं - केवल निदान।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:905
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:906
 msgid "Le natif reste toujours actif en parallèle - le magnet ne peut qu'ajouter un blocage, jamais en lever un."
 msgstr "मूल WAF हमेशा समानांतर में सक्रिय रहता है - magnet केवल ब्लॉक जोड़ सकता है, कभी हटा नहीं सकता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:908
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:909
 msgid "Un script importe peut référencer une fonctionnalité lighty.* non supportée par ce pont (toujours nil côté Lua) - toujours lancer Vérifier la compatibilité avant d'activer un nouveau script en production, surtout avec on_error=fail-closed."
 msgstr "इम्पोर्ट की गई स्क्रिप्ट इस ब्रिज द्वारा असमर्थित lighty.* सुविधा को संदर्भित कर सकती है (Lua में हमेशा nil) - नई स्क्रिप्ट को प्रोडक्शन में सक्षम करने से पहले हमेशा 'संगतता जाँचें' चलाएँ, विशेष रूप से on_error=fail-closed के साथ।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:917
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - नियम पैक चुनें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
 msgid "WAF - Modules -> Ajouter un pack"
 msgstr "WAF - मॉड्यूल -> पैक जोड़ें"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:920
 msgid "Liste RÉELLE des packs de règles présents sous secure/waf/rules/, exclut ceux déjà référencés - jamais de doublon proposé."
 msgstr "secure/waf/rules/ के अंतर्गत मौजूद नियम पैक की वास्तविक सूची, पहले से संदर्भित को छोड़कर - कभी डुप्लिकेट नहीं सुझाया जाता।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:922
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
 msgid "Sélection du pack"
 msgstr "पैक का चयन"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
 msgid "Choisit un pack parmi ceux disponibles et non déjà référencés."
 msgstr "उपलब्ध और अभी तक संदर्भित न किए गए पैक में से एक चुनता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
 msgid "Un menu déroulant, avec la description du pack (nombre de règles, état par défaut) affichée en dessous."
 msgstr "एक ड्रॉपडाउन मेन्यू, नीचे पैक का विवरण (नियमों की संख्या, डिफ़ॉल्ट स्थिति) दिखाया जाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
 msgid "Confirmer renvoie le chemin choisi à l'écran Modules."
 msgstr "'पुष्टि करें' चुना गया पाथ मॉड्यूल स्क्रीन को लौटाता है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:927
 msgid "Aucun effet ici - la référence réelle est ajoutée par l'écran appelant."
 msgstr "यहाँ कोई प्रभाव नहीं - वास्तविक संदर्भ बुलाने वाली स्क्रीन जोड़ती है।"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:929
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:930
 msgid "Aucune modification directe - purement une aide de sélection."
 msgstr "कोई सीधा बदलाव नहीं - केवल चयन में सहायता।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:935
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+msgid "Intervention manuelle - Bannir"
+msgstr "मैनुअल हस्तक्षेप - बैन करें"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:936
+msgid "Accueil -> Active Sécurité -> Bannir (cadre INTERVENTION MANUELLE)"
+msgstr "होम -> एक्टिव सुरक्षा -> बैन करें (मैनुअल हस्तक्षेप फ़्रेम)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:938
+msgid "Bannit une adresse IP sans condition : aucune règle, aucun seuil. L'adresse est ajoutée à la blocklist du WAF et reçoit la page 451 sur tout le site, avant le routage - les backends (reverse proxy, FastCGI) ne la voient jamais. Aucun droit administrateur n'est nécessaire."
+msgstr "किसी IP पते को बिना शर्त बैन करता है: कोई नियम नहीं, कोई सीमा नहीं। पता WAF की blocklist में जोड़ा जाता है और रूटिंग से पहले पूरी साइट पर 451 पेज पाता है - बैकएंड (reverse proxy, FastCGI) उसे कभी नहीं देखते। व्यवस्थापक अधिकारों की ज़रूरत नहीं।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:944
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Adresse IP"
+msgstr "IP पता"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:945
+msgid "L'adresse à bannir, IPv4 ou IPv6."
+msgstr "बैन करने वाला पता, IPv4 या IPv6।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:946
+msgid "Une seule adresse (ex. 203.0.113.7 ou 2001:db8::7). Un réseau (/24...) est refusé : il se bannit dans WAF -> Modules -> Liste de blocage."
+msgstr "केवल एक पता (उदा. 203.0.113.7 या 2001:db8::7)। नेटवर्क (/24...) अस्वीकार होता है: उसे WAF -> मॉड्यूल -> ब्लॉकलिस्ट में बैन करें।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:948
+msgid "Vérifiée au clic sur Bannir."
+msgstr "बैन करें पर क्लिक करने पर जाँचा जाता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:949
+msgid "Adresse invalide ou réseau : message d'erreur, rien n'est écrit."
+msgstr "अमान्य पता या नेटवर्क: त्रुटि संदेश, कुछ भी नहीं लिखा जाता।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:952
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
+msgid "Motif du ban"
+msgstr "बैन का कारण"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:953
+msgid "Texte libre gardé avec le ban, affiché dans Débannir et Statut des bans."
+msgstr "बैन के साथ रखा गया मुक्त टेक्स्ट, बैन हटाएँ और बैन स्थिति में दिखता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:954
+msgid "Facultatif : « Intervention manuelle » par défaut."
+msgstr "वैकल्पिक: डिफ़ॉल्ट « मैनुअल हस्तक्षेप »।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:955
+msgid "Enregistré avec le ban."
+msgstr "बैन के साथ सहेजा जाता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:956
+msgid "Visible dans Statut des bans et dans les exports."
+msgstr "बैन स्थिति और एक्सपोर्ट में दिखता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:959
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:69
+msgid "Durée"
+msgstr "अवधि"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:960
+msgid "Combien de temps le ban reste en place."
+msgstr "बैन कितने समय तक रहता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:961
+msgid "1 h, 6 h, 24 h, 7 jours, 30 jours, une durée libre en heures, ou permanent."
+msgstr "1 घंटा, 6 घंटे, 24 घंटे, 7 दिन, 30 दिन, घंटों में मुक्त अवधि, या स्थायी।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:962
+msgid "Calculée au moment du ban."
+msgstr "बैन के समय गणना की जाती है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:963
+msgid "À l'échéance, l'adresse est de nouveau acceptée, sans rien faire. Un ban permanent demande une confirmation et reste jusqu'à Débannir."
+msgstr "समाप्ति पर, पता बिना कुछ किए फिर से स्वीकार होता है। स्थायी बैन पुष्टि माँगता है और बैन हटाएँ तक रहता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:968
+msgid "Effet immédiat, sans redémarrage ni rechargement : le serveur relit la blocklist dès qu'elle change, avec le moteur Python comme avec le moteur natif. Le ban ne compte jamais dans la récidive RIPOSTE et n'a aucun lien avec Active Defense."
+msgstr "तुरंत असर, बिना रीस्टार्ट या रीलोड के: blocklist बदलते ही सर्वर उसे फिर पढ़ता है, Python इंजन और नेटिव इंजन दोनों में। यह बैन RIPOSTE के दोहराव में कभी नहीं गिना जाता और Active Defense से इसका कोई संबंध नहीं।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:973
+msgid "WAF désactivé : la blocklist n'est pas consultée, le ban n'aurait aucun effet - l'écran l'indique en haut. En mode log-only, le ban s'applique quand même."
+msgstr "WAF बंद: blocklist नहीं देखी जाती, बैन का कोई असर नहीं होगा - स्क्रीन ऊपर यह बताती है। log-only मोड में बैन फिर भी लागू होता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:975
+msgid "Adresse locale, privée ou Tailscale : une confirmation est demandée, vous pourriez couper votre propre accès."
+msgstr "लोकल, प्राइवेट या Tailscale पता: पुष्टि माँगी जाती है, आप अपनी ही पहुँच काट सकते हैं।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:977
+msgid "Si l'adresse est déjà bannie par une autre origine (auto-ban, RIPOSTE, omega-jail), votre ban la remplace après confirmation ; un automate ne le remplacera jamais."
+msgstr "यदि पता पहले से किसी दूसरे स्रोत (ऑटो-बैन, RIPOSTE, omega-jail) से बैन है, तो पुष्टि के बाद आपका बैन उसकी जगह लेता है; कोई स्वचालित प्रक्रिया आपके बैन को कभी नहीं बदलेगी।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:984
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+msgid "Intervention manuelle - Débannir"
+msgstr "मैनुअल हस्तक्षेप - बैन हटाएँ"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:985
+msgid "Accueil -> Active Sécurité -> Débannir (cadre INTERVENTION MANUELLE)"
+msgstr "होम -> एक्टिव सुरक्षा -> बैन हटाएँ (मैनुअल हस्तक्षेप फ़्रेम)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:986
+msgid "Liste les bans posés par Bannir, et seulement eux, pour les lever."
+msgstr "बैन करें से लगाए गए बैन, और केवल वही, हटाने के लिए दिखाता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:989
+msgid "Tableau des bans manuels"
+msgstr "मैनुअल बैन की तालिका"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:990
+msgid "Adresse, motif, date de pose, expiration, état (en vigueur ou expiré)."
+msgstr "पता, कारण, लगाने की तारीख, समाप्ति, स्थिति (लागू या समाप्त)।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:991
+msgid "Sélectionnez une ligne, puis Lever."
+msgstr "एक पंक्ति चुनें, फिर हटाएँ।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:992
+msgid "Lever demande une confirmation."
+msgstr "हटाएँ पुष्टि माँगता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:993
+msgid "L'adresse est retirée de la blocklist : elle accède de nouveau au site, immédiatement."
+msgstr "पता blocklist से हटा दिया जाता है: वह तुरंत फिर से साइट तक पहुँच सकता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:996
+msgid "Retire l'entrée de la blocklist du WAF ; rien d'autre n'est touché."
+msgstr "WAF की blocklist से प्रविष्टि हटाता है; और कुछ नहीं बदलता।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:998
+msgid "Les autres bans se lèvent là où ils ont été posés : WAF -> Modules (réseaux, auto-bans, CLI, omega-jail), RIPOSTE -> Actions. Un ban levé ici peut revenir si une règle automatique bannit de nouveau l'adresse."
+msgstr "बाकी बैन वहीं हटाए जाते हैं जहाँ लगाए गए थे: WAF -> मॉड्यूल (नेटवर्क, ऑटो-बैन, CLI, omega-jail), RIPOSTE -> कार्रवाइयाँ। यहाँ हटाया गया बैन लौट सकता है यदि कोई स्वचालित नियम पते को फिर बैन करे।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1005
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+msgid "Intervention manuelle - Statut des bans"
+msgstr "मैनुअल हस्तक्षेप - बैन स्थिति"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1006
+msgid "Accueil -> Active Sécurité -> Statut des bans (cadre INTERVENTION MANUELLE)"
+msgstr "होम -> एक्टिव सुरक्षा -> बैन स्थिति (मैनुअल हस्तक्षेप फ़्रेम)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1008
+msgid "Tous les bans de la blocklist du WAF, avec leur origine : intervention manuelle, manuel (WAF -> Modules ou CLI), auto-ban WAF (règles ou liste), RIPOSTE (politique), omega-jail (jail), et la liste du script Magnet s'il est actif. Lecture seule."
+msgstr "WAF की blocklist के सभी बैन, उनके स्रोत के साथ: मैनुअल हस्तक्षेप, मैनुअल (WAF -> मॉड्यूल या CLI), WAF ऑटो-बैन (नियम या सूची), RIPOSTE (नीति), omega-jail (jail), और Magnet स्क्रिप्ट सक्रिय हो तो उसकी सूची। केवल पढ़ने के लिए।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1014
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:78
+msgid "Format d'export"
+msgstr "एक्सपोर्ट फ़ॉर्मैट"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1015
+msgid "JSON ou HTML de tous les bans, ou TXT d'injection."
+msgstr "सभी बैन का JSON या HTML, या इंपोर्ट के लिए TXT।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1016
+msgid "TXT : bans actifs ou toute la liste. Une adresse par ligne, en-tête en commentaires « # » - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire, omega-fire ne lisant que des adresses."
+msgstr "TXT: लागू बैन या पूरी सूची। हर पंक्ति में एक पता, हेडर « # » टिप्पणियों में - omega-fire में जैसा है वैसा इंपोर्ट होता है (IP की सूची ब्लॉक करें)। नेटवर्क केवल टिप्पणी के रूप में आता है, क्योंकि omega-fire केवल पते पढ़ता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1019
+msgid "Exporter écrit le fichier dans le dossier d'exports."
+msgstr "एक्सपोर्ट फ़ाइल को एक्सपोर्ट फ़ोल्डर में लिखता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1020
+msgid "Le chemin du fichier écrit est affiché."
+msgstr "लिखी गई फ़ाइल का पाथ दिखाया जाता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1024
+msgid "Palette de couleurs de l'export HTML."
+msgstr "HTML एक्सपोर्ट का रंग-संयोजन।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1025
+msgid "Seulement pour le format HTML."
+msgstr "केवल HTML फ़ॉर्मैट के लिए।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1026
+msgid "Appliqué à l'export."
+msgstr "एक्सपोर्ट पर लागू होता है।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1027
+msgid "Même choix de thèmes que les autres exports."
+msgstr "दूसरे एक्सपोर्ट जैसी ही थीम का चुनाव।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1030
+msgid "Aucune - consultation et export seulement."
+msgstr "कोई नहीं - केवल देखना और एक्सपोर्ट।"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1032
+msgid "Le fichier TXT n'est jamais traduit : c'est un format lu par d'autres outils."
+msgstr "TXT फ़ाइल कभी अनुवादित नहीं होती: यह दूसरे टूल द्वारा पढ़ा जाने वाला फ़ॉर्मैट है।"
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:12
 msgid "Accueil -> Configuration détaillée -> Voir options actives"
@@ -13550,7 +13869,7 @@ msgstr "कॉन्फ़िगरेशन में options.active_defense �
 
 #: src/omega_serv/interfaces/tui/screens/_base.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:71
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:146
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:43
@@ -13559,6 +13878,7 @@ msgstr "कॉन्फ़िगरेशन में options.active_defense �
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/cache_screen.py:77
@@ -13591,6 +13911,8 @@ msgstr "कॉन्फ़िगरेशन में options.active_defense �
 #: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:61
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
@@ -13653,6 +13975,22 @@ msgstr "भाषा « {name} » में एक्सपोर्ट जा�
 #: src/omega_serv/interfaces/tui/screens/_export_worker.py:35
 msgid "Export HTML indisponible dans cet environnement."
 msgstr "इस एनवायरनमेंट में HTML एक्सपोर्ट उपलब्ध नहीं।"
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:23
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
+#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
+#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
+msgid "Erreur de configuration."
+msgstr "कॉन्फ़िगरेशन त्रुटि।"
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:26
+msgid "Blocklist indisponible dans cet environnement."
+msgstr "इस परिवेश में blocklist उपलब्ध नहीं।"
 
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:91
 msgid "RIPOSTE indisponible dans cet environnement."
@@ -13750,6 +14088,7 @@ msgstr "6 घंटे"
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:203
 msgid "7 jours"
@@ -13840,10 +14179,12 @@ msgstr "कॉन्फ़िगरेशन त्रुटि - सेव न�
 msgid "Règles de contrôle d'accès mises à jour."
 msgstr "एक्सेस नियंत्रण नियम अपडेट किए गए।"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:73
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:82
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:91
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:549
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
@@ -13852,82 +14193,99 @@ msgstr "एक्सेस नियंत्रण नियम अपडेट
 msgid "État"
 msgstr "स्थिति"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:74
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:99
 msgid "Réglages"
 msgstr "सेटिंग्स"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:75
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
 msgid "Menaces"
 msgstr "खतरे"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:79
 msgid "Incidents"
 msgstr "इंसिडेंट"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:80
 msgid "Deception"
 msgstr "Deception"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:98
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:40
 msgid "Simuler"
 msgstr "सिम्युलेट करें"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
 msgid "Modules"
 msgstr "मॉड्यूल"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:84
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
 msgid "Limitations"
 msgstr "सीमाएँ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:154
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:156
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:39
 msgid "Tester"
 msgstr "टेस्ट"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:89
 msgid "Custom"
 msgstr "Custom"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:90
 msgid "Magnet"
 msgstr "Magnet"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
 msgid "Politiques"
 msgstr "नीतियाँ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:93
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:72
 msgid "Actions"
 msgstr "कार्रवाइयाँ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:97
 msgid "Récidives"
 msgstr "पुनरावृत्ति"
 
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:107
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:75
+msgid "Bannir"
+msgstr "बैन करें"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:108
+msgid "Débannir"
+msgstr "बैन हटाएँ"
+
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:109
+msgid "Statut des bans"
+msgstr "बैन स्थिति"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:122
 msgid "ACTIVE SÉCURITÉ"
 msgstr "एक्टिव सुरक्षा"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "') avant d'utiliser les sous-écrans ci-dessous, sinon ils resteront en erreur d'accès."
 msgstr "') नीचे की उप-स्क्रीन उपयोग करने से पहले, अन्यथा वे एक्सेस त्रुटि में रहेंगी।"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "Le service système dédié ({DEFAULT_SYSTEM_GROUP!r}) est installé, mais cette session n'a pas encore pris en compte votre appartenance à ce groupe - deconnectez-vous/reconnectez-vous (ou 'newgrp "
 msgstr "समर्पित सिस्टम सर्विस ({DEFAULT_SYSTEM_GROUP!r}) इंस्टॉल है, लेकिन इस सेशन ने अभी इस समूह में आपकी सदस्यता को ध्यान में नहीं लिया है - लॉगआउट/लॉगिन करें (या 'newgrp "
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 msgid "ACTIVE DEFENSE"
 msgstr "ACTIVE DEFENSE"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:144
+msgid "INTERVENTION MANUELLE"
+msgstr "मैनुअल हस्तक्षेप"
 
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:138
@@ -14513,17 +14871,6 @@ msgstr "Realm"
 msgid "Utilisateurs autorisés"
 msgstr "अनुमत उपयोगकर्ता"
 
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
-#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
-#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
-#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
-#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
-msgid "Erreur de configuration."
-msgstr "कॉन्फ़िगरेशन त्रुटि।"
-
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:135
 msgid "AJOUTER UN UTILISATEUR"
 msgstr "उपयोगकर्ता जोड़ें"
@@ -14728,6 +15075,86 @@ msgstr "बैकअप नहीं मिला: {selected_snapshot_id}"
 #, python-brace-format
 msgid "Sauvegarde supprimée : {selected_snapshot_id}"
 msgstr "बैकअप हटाया गया: {selected_snapshot_id}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:49
+msgid "JSON - tous les bans"
+msgstr "JSON - सभी बैन"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:50
+msgid "HTML - tous les bans (thème ci-dessous)"
+msgstr "HTML - सभी बैन (थीम नीचे)"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:51
+msgid "TXT injection - bans actifs"
+msgstr "TXT इंपोर्ट - लागू बैन"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:52
+msgid "TXT injection - toute la liste"
+msgstr "TXT इंपोर्ट - पूरी सूची"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:69
+msgid "STATUT DES BANS"
+msgstr "बैन स्थिति"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:71
+msgid "Tous les bans de la blocklist du WAF, avec leur origine. Lecture seule : chaque ban se lève là où il a été posé (Débannir pour l'intervention manuelle, WAF → Modules, RIPOSTE → Actions)."
+msgstr "WAF की blocklist के सभी बैन, उनके स्रोत के साथ। केवल पढ़ने के लिए: हर बैन वहीं हटाया जाता है जहाँ लगाया गया था (मैनुअल हस्तक्षेप के लिए बैन हटाएँ, WAF → मॉड्यूल, RIPOSTE → कार्रवाइयाँ)।"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:81
+msgid "TXT injection : une adresse par ligne, lignes « # » ignorées - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire."
+msgstr "TXT इंपोर्ट: हर पंक्ति में एक पता, « # » पंक्तियाँ अनदेखी - omega-fire में जैसा है वैसा इंपोर्ट होता है (IP की सूची ब्लॉक करें)। नेटवर्क केवल टिप्पणी के रूप में आता है।"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
+msgid "Exporter"
+msgstr "एक्सपोर्ट"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Adresse / réseau"
+msgstr "पता / नेटवर्क"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+msgid "Expiration"
+msgstr "समाप्ति"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Origine"
+msgstr "स्रोत"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Posé le"
+msgstr "लगाया गया"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:128
+msgid "Aucun ban dans la blocklist."
+msgstr "blocklist में कोई बैन नहीं।"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:131
+#, python-brace-format
+msgid "{label} : {count}"
+msgstr "{label}: {count}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:132
+#, python-brace-format
+msgid "{active} ban(s) actif(s) sur {total}"
+msgstr "{total} में से {active} बैन लागू"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:172
+#, python-brace-format
+msgid "Export impossible : {error}"
+msgstr "एक्सपोर्ट नहीं हो सका: {error}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
+#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
+#, python-brace-format
+msgid "Export écrit : {export_path}"
+msgstr "एक्सपोर्ट लिखा गया: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:54
 msgid "CONFIGURATION DE BASE"
@@ -15032,13 +15459,6 @@ msgstr "HTML एक्सपोर्ट करें"
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:84
 msgid "Analyse en cours..."
 msgstr "विश्लेषण चल रहा है..."
-
-#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
-#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
-#, python-brace-format
-msgid "Export écrit : {export_path}"
-msgstr "एक्सपोर्ट लिखा गया: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/capability_detail_screen.py:22
 msgid "Cette capacité est pleinement opérationnelle et disponible."
@@ -16693,12 +17113,14 @@ msgid "(aucun)"
 msgstr "(कोई नहीं)"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:202
 msgid "24 heures"
 msgstr "24 घंटे"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 दिन"
@@ -16814,10 +17236,6 @@ msgstr "रोटेशन / आर्काइव"
 msgid "Purger les archives"
 msgstr "आर्काइव साफ़ करें"
 
-#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
-msgid "Exporter"
-msgstr "एक्सपोर्ट"
-
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:65
 msgid "GESTION DES LOGS"
 msgstr "लॉग प्रबंधन"
@@ -16825,6 +17243,73 @@ msgstr "लॉग प्रबंधन"
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:76
 msgid "MAINTENANCE"
 msgstr "रखरखाव"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:38
+msgid "1 heure"
+msgstr "1 घंटा"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:39
+msgid "6 heures"
+msgstr "6 घंटे"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:43
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:71
+msgid "Durée libre (heures)"
+msgstr "मुक्त अवधि (घंटे)"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:44
+msgid "Permanent"
+msgstr "स्थायी"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:56
+msgid "BANNIR UNE ADRESSE IP"
+msgstr "IP पता बैन करें"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:58
+msgid "Ban sans condition : l'adresse reçoit la page 451 sur tout le site, avant les backends. Aucun lien avec Active Defense ni RIPOSTE (jamais compté dans la récidive) ; il se lève dans Débannir."
+msgstr "बिना शर्त बैन: पता बैकएंड से पहले पूरी साइट पर 451 पेज पाता है। Active Defense या RIPOSTE से कोई संबंध नहीं (कभी दोहराव नहीं गिना जाता); इसे बैन हटाएँ में हटाया जाता है।"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:66
+msgid "ex. 203.0.113.7 ou 2001:db8::7"
+msgstr "उदा. 203.0.113.7 या 2001:db8::7"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:72
+msgid "ex. 48"
+msgstr "उदा. 48"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:87
+msgid "WAF désactivé : la blocklist n'est pas consultée, un ban posé ici n'aurait aucun effet. Activez l'option waf (menu Options)."
+msgstr "WAF बंद: blocklist नहीं देखी जाती, यहाँ लगाए गए बैन का कोई असर नहीं होगा। waf विकल्प सक्रिय करें (विकल्प मेनू)।"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:116
+msgid "Durée libre invalide : un nombre d'heures entier, supérieur à 0."
+msgstr "अमान्य मुक्त अवधि: 0 से बड़ी, घंटों की पूर्ण संख्या।"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:134
+#, python-brace-format
+msgid "Confirmer le ban de {ip}"
+msgstr "{ip} के बैन की पुष्टि करें"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:46
+msgid "DÉBANNIR UNE ADRESSE IP"
+msgstr "IP पते का बैन हटाएँ"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:48
+msgid "Seuls les bans posés par l'intervention manuelle apparaissent ici. Les autres se lèvent là où ils ont été posés : WAF → Modules (réseaux, auto-bans, omega-jail), RIPOSTE → Actions."
+msgstr "यहाँ केवल मैनुअल हस्तक्षेप से लगाए गए बैन दिखते हैं। बाकी वहीं हटाए जाते हैं जहाँ लगाए गए थे: WAF → मॉड्यूल (नेटवर्क, ऑटो-बैन, omega-jail), RIPOSTE → कार्रवाइयाँ।"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:92
+msgid "Aucun ban posé par l'intervention manuelle."
+msgstr "मैनुअल हस्तक्षेप से लगाया गया कोई बैन नहीं।"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:113
+msgid "Lever le ban"
+msgstr "बैन हटाएँ"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:114
+#, python-brace-format
+msgid "Lever le ban de {ip} ? Elle pourra de nouveau accéder au site."
+msgstr "{ip} का बैन हटाएँ? यह फिर से साइट तक पहुँच सकेगा।"
 
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:37
 msgid "OPTIONS"
@@ -18784,8 +19269,6 @@ msgid "En-tête"
 msgstr "हेडर"
 
 #: src/omega_serv/interfaces/tui/screens/routing_rule_editor_screen.py:64
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
 msgid "Motif"
 msgstr "पैटर्न"
 
@@ -19224,11 +19707,6 @@ msgstr "बिना सेव किए बदलाव खो जाएँग�
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:33
 msgid "MENACES SUIVIES"
 msgstr "ट्रैक किए गए खतरे"
-
-#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-msgid "Expiration"
-msgstr "समाप्ति"
 
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Mise à jour"
@@ -20376,15 +20854,21 @@ msgstr "हाँ"
 msgid "non"
 msgstr "नहीं"
 
-#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
 #, python-brace-format
-msgid "Généré le {date} · {count} capacité(s)"
-msgstr "{date} को बनाया गया · {count} क्षमताएँ"
+msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
+msgstr "{date} को बनाया गया · {count} बैन, जिनमें से {active} लागू"
 
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
 msgstr "रिपोर्ट बनाने वाला"
+
+#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#, python-brace-format
+msgid "Généré le {date} · {count} capacité(s)"
+msgstr "{date} को बनाया गया · {count} क्षमताएँ"
 
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:6
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:60

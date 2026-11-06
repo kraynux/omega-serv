@@ -56,7 +56,7 @@ class LocalFilesystem:
     def write_text(self, path: Path, content: str) -> None:
         path.write_text(content, encoding="utf-8")
 
-    def atomic_write_text(self, path: Path, content: str) -> None:
+    def atomic_write_text(self, path: Path, content: str, min_mode: int | None = None) -> None:
         # Nom temporaire UNIQUE par appel (2026-09-29, incident reel :
         # boucle de crash systemd, PermissionError persistante sur
         # var/run/omega-serv.pid.tmp malgre var/ deja partage avec le
@@ -78,9 +78,22 @@ class LocalFilesystem:
         # jamais une troncature d'un fichier existant potentiellement
         # possede par un autre compte.
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}-{threading.get_ident()}.tmp")
+        existing = os.stat(path) if min_mode is not None and path.exists() else None
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(content)
             f.flush()
+            if min_mode is not None:
+                # Incident reel du 2026-11-06 (craftdark) : `blocklist add` lance par le pont omega-jail sous
+                # umask 077 recreait blocklist.json en 600 :omega-serv - illisible par le service, plus aucun
+                # ban applique (451) ni enregistre. Droits fixes AVANT le remplacement, quel que soit l'umask.
+                mode = min_mode
+                if existing is not None:
+                    mode |= stat.S_IMODE(existing.st_mode)
+                    try:
+                        os.fchown(f.fileno(), -1, existing.st_gid)
+                    except PermissionError:
+                        pass  # groupe pas a nous : celui du dossier (setgid) reste
+                os.fchmod(f.fileno(), mode)  # APRES fchown : un changement de groupe peut effacer setgid
             os.fsync(f.fileno())
         os.replace(tmp_path, path)
 

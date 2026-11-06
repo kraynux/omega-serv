@@ -62,6 +62,19 @@ CONTACT ET SUPPORT
   avant l'envoi, et vous pouvez vous retirer à tout moment.
 
 
+INTERVENTION MANUELLE (ACTIVE SÉCURITÉ)
+---------------------------------------
+- Nouveau cadre sous WAF / Active Defense / RIPOSTE : Bannir, Débannir, Statut des bans.
+- Bannir : une adresse IP, sans condition, page 451 sur tout le site avant les backends.
+  Durée de 1 h à 30 jours, libre ou permanente. Effet immédiat, sans droits root.
+- Aucun lien avec Active Defense ni RIPOSTE : un ban manuel ne compte jamais dans la
+  récidive, et aucun automate ne le remplace. Confirmation demandée pour une adresse
+  locale, privée ou Tailscale. Un réseau se bannit dans WAF → Modules.
+- Débannir : seulement les bans posés ici.
+- Statut des bans : tous les bans et leur origine (manuel, auto-ban, RIPOSTE, omega-jail,
+  Magnet), export JSON, HTML ou TXT importable dans omega-fire.
+
+
 TOUTES LES COMMANDES EXPLIQUÉES
 -------------------------------
 - Chaque commande et chaque option de la ligne de commande ont maintenant leur aide :
@@ -92,6 +105,9 @@ UN SERVEUR PLUS SÛR ET PLUS JUSTE
 
 CORRECTIONS
 -----------
+- Une adresse bannie par omega-jail recevait encore 403/404 au lieu de la page 451, et
+  les auto-bans du WAF étaient refusés : la liste des bans devenait illisible pour le
+  service. Elle reste maintenant toujours lisible par lui, qui que soit l'auteur du ban.
 - Le débit réseau du tableau de bord affichait un total depuis le démarrage de la
   machine : il affiche maintenant un vrai débit par seconde.
 - Les alias peuvent viser un dossier du système sous /var (ex. /var/www/html) : ils
@@ -108,6 +124,11 @@ CORRECTIONS
   ressaisir.
 - Incidents ouverts et fermés séparés, et plus aucune ligne de journal perdue après
   « Voir et traiter IP ».
+- Exports HTML (capacités, archives de logs, guide) : les textes sont maintenant
+  échappés ; dans le guide exporté, les emplacements comme <nom-archive> ne
+  disparaissent plus.
+- WAF → Modules → Liste de blocage : le motif d'un ban s'affichait « Pattern » dans les
+  autres langues ; il s'appelle désormais « Motif du ban ».
 
 
 APRÈS LA MISE À JOUR

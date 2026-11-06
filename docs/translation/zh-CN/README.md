@@ -30,6 +30,13 @@
 
 **OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有默认启用的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。可选的原生 C++ 引擎可以代替 Python 引擎处理请求，安全检查完全相同（见 §6b）。它是 `omega-` 工具套件中的第七个工具，但有意**不纳入未来的 `omega-suite` 集成**（它作用于托管它的本机，而不是远程目标 —— 与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/D.png" width="24%" />
+</p>
+
 ## 1. 愿景与范围
 
 明确的优先级是**首先保证 HTTP 核心的稳固与安全** —— WAF 和 TLS 是叠加在其上的可选模块，绝不是前提条件。一个只做一件事（提供文件，或许还有 PHP）但把它做好、拥有真正无法绕过的协议加固的服务器，胜过一个样样都做却样样不精的服务器。
@@ -211,7 +218,7 @@ serv
 - **能力清单** —— 只读系统探测（init 系统、所配置的端口是否已被占用、是否存在 `openssl`/`logrotate`/`tailscale`/`lnav`、磁盘空间、描述符上限……），可导出 JSON/HTML。
 - **配置档案** —— 与 CLI 中 `profile` 相同的用例（§5），写入前始终显示 diff。
 - **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/认证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、生成自签名证书、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用 —— 参见 §9）；第二个框 **选项与检查** 集中了指向 **选项**（`option` CLI，§7）和 **检查配置**（`config check` CLI，§10）的快捷入口 —— 与"先调整设置再检查"的流程一致，这两个屏幕不再能从主菜单直接打开。WAF 不再位于此处（参见下方"主动安全"）：它主要展示不断变化的运行状态，而不是简单的静态配置表单。每次保存都会系统地指明后续步骤：若服务正在运行，则自动静默热重新加载（目录列表、访问、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、用户/认证区域）；若修改涉及监听套接字、TLS 或 Active Defense，则显式确认完整重启 —— 再也没有任何屏幕让您去猜是否需要重启服务器。
-- **主动安全** —— 单一屏幕，两个并排的区块：**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置，参见 §11）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表（参见 §11b）、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）—— 参见 §11。 **RIPOSTE**:第三个区块(WAF → Active Defense → RIPOSTE,即攻击的顺序)——随时间推移的分级响应,见 §11d。
+- **主动安全** —— 单一屏幕，两个并排的区块：**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置，参见 §11）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表（参见 §11b）、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）—— 参见 §11。 **RIPOSTE**:第三个区块(WAF → Active Defense → RIPOSTE,即攻击的顺序)——随时间推移的分级响应,见 §11d。 三个区块下方是 **手动干预**：手动封禁或解除封禁 IP 地址，查看所有封禁的状态 — 见 §11e。
 - **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 §7 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/全部，可移除某个 IP）。**维护** 栏（未变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（声明式 —— 参见下方说明）、恢复/清理归档、导出列表。
 - **服务** —— 与 CLI 中 `service` 相同的操作（§12），每个操作单独临时提权 `sudo`，绝不让整个应用以 root 身份运行。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），附每个实例的 systemd 状态；可直接在界面中创建新实例（复制目录树、独立的虚拟环境和依赖、带独立端口的全新配置、检查嵌套和端口冲突）。只有一个安装时该按钮几乎不可见（一旦已知实例达到 2 个，"多实例"标签就会变为"实例 (N)"）；可完整切换到另一个实例（`os.execv`，显式确认，重启时显示专门的切换启动画面）；可完整卸载实例（移除 unit、若不再被其他实例使用则移除专用系统账户，并可选删除目录，但绝不默认删除）。
@@ -310,6 +317,19 @@ serv
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### 完整的命令帮助
+
+以上命令只是示例。查看所有命令及其选项：
+
+```bash
+./omega-serv.sh help                    # 完整命令树
+./omega-serv.sh help riposte            # 单个分支
+./omega-serv.sh riposte actions --help  # 某个命令的详情
+man omega-serv                          # 手册页（由 install.sh 安装）
+```
+
+完整参考： [docs/HELP.md](../../HELP.md).
 
 ### 重要的退出码
 
@@ -512,6 +532,15 @@ WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 
 - **安全措施**:与 WAF 相同的排除项(本机、Tailscale、本地网络),从不覆盖手动或更长的封禁,每个事件段只执行一个操作,同时封禁数量有上限。
 - **本地封禁与网络封禁**：本地封禁由 omega-serv 写入 WAF 的封禁列表——在整个封禁期间，该地址的所有请求都会收到 451 页面“您的 IP 已被封禁”。网络封禁通过 omega-jail 的 jail 交给 fail2ban（`<service>-riposte-1h/6h/24h/7d`，每个实例一组）；当连接经由本地代理（Tailscale Funnel）到达时，它不起作用，此时只有本地封禁能提供保护。
 - **界面**:主动安全中的六个界面(状态、策略、操作、再犯、模拟、设置),以及相同的命令行命令(`riposte …`)。备份:`config backup --include-riposte`。
+
+## 11e. 手动干预（主动安全）
+
+位于主动安全三个区块下方的 **手动干预** 框，用于在不编写配置规则的情况下手动操作：无条件封禁一个 IP 地址、解除封禁、查看所有当前封禁。
+
+- **封禁**：一个 IPv4 或 IPv6 地址、一个原因、一个时长（1 小时到 30 天，自定义或永久）。封禁通过 WAF 的封禁列表实现：在整个网站上返回 451 页面，发生在路由之前 — 后端永远看不到该地址。两种引擎下都立即生效，无需 root 权限。网络在 WAF → 模块 中封禁。
+- **独立**：与 Active Defense 和 RIPOSTE 无关 — 手动封禁从不计为再犯，也不会被任何自动机制取代。对本地、私有或 Tailscale 地址需要确认。
+- **解除封禁**：仅限在此设置的封禁；其他封禁在设置它们的地方解除（WAF → 模块，RIPOSTE → 操作）。
+- **封禁状态**：所有封禁及其来源（手动、WAF 自动封禁、RIPOSTE、omega-jail、Magnet），可导出为 JSON、HTML 或 TXT — 每行一个地址，可原样导入 omega-fire。
 
 ## 12. 服务与运维
 

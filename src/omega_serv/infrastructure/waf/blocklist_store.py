@@ -32,6 +32,10 @@ from omega_serv.infrastructure.filesystem.file_lock import exclusive_file_lock
 from omega_serv.ports.clock_port import ClockPort
 from omega_serv.ports.filesystem_port import FilesystemPort
 
+# Ecrite par le service ET par la CLI sous un autre compte (pont omega-jail, RIPOSTE, `blocklist add`) : lecture et
+# ecriture pour le groupe du service, quel que soit l'umask de celui qui ecrit (incident craftdark 2026-11-06).
+SHARED_BLOCKLIST_MODE = 0o660
+
 
 class BlocklistUnreadableError(OSError):
     """Le fichier de blocklist existe mais ne peut pas etre lu : toute ECRITURE
@@ -145,7 +149,7 @@ class JsonBlocklistStore:
 
     def _save(self, entries: list[BlocklistEntry]) -> None:
         content = json.dumps(serialize_blocklist(entries), indent=2, ensure_ascii=False) + "\n"
-        self._fs.atomic_write_text(self._path, content)
+        self._fs.atomic_write_text(self._path, content, min_mode=SHARED_BLOCKLIST_MODE)
         self._cache = entries
         self._cache_mtime = self._fs.file_mtime(self._path)
 

@@ -23,6 +23,7 @@ def parse_blocklist(data: dict[str, Any]) -> list[BlocklistEntry]:
             created_at=item["created_at"],
             expires_at=item.get("expires_at"),
             source=item.get("source", "manual"),
+            origin=item.get("origin"),
         )
         for item in data.get("entries", [])
     ]
@@ -31,17 +32,21 @@ def parse_blocklist(data: dict[str, Any]) -> list[BlocklistEntry]:
 def serialize_blocklist(entries: list[BlocklistEntry]) -> dict[str, Any]:
     return {
         "version": 1,
-        "entries": [
-            {
-                "network": e.network,
-                "reason": e.reason,
-                "created_at": e.created_at,
-                "expires_at": e.expires_at,
-                "source": e.source,
-            }
-            for e in entries
-        ],
+        "entries": [_serialize_entry(e) for e in entries],
     }
+
+
+def _serialize_entry(e: BlocklistEntry) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "network": e.network,
+        "reason": e.reason,
+        "created_at": e.created_at,
+        "expires_at": e.expires_at,
+        "source": e.source,
+    }
+    if e.origin is not None:  # seulement si present : fichier inchange pour toutes les autres entrees
+        item["origin"] = e.origin
+    return item
 
 
 def validate_blocklist_entry(entry: BlocklistEntry) -> str | None:
@@ -63,6 +68,14 @@ def _is_expired(entry: BlocklistEntry, now: datetime) -> bool:
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     return now >= expires
+
+
+def is_expired(entry: BlocklistEntry, now: datetime) -> bool:
+    """Date illisible : tenue pour active (jamais un ban libere par une date abimee)."""
+    try:
+        return _is_expired(entry, now)
+    except ValueError:
+        return False
 
 
 def is_stronger_entry(existing: BlocklistEntry, candidate: BlocklistEntry, now: datetime) -> bool:

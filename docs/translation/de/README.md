@@ -30,6 +30,13 @@ Vorschau: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screens
 
 **OMEGA-SERV** ist ein in reinem Python geschriebener HTTP/1.1-Server (für den Serverkern ausschließlich die Standardbibliothek), gedacht für statische Inhalte und optional PHP-FPM, mit einer standardmäßig aktiven Protokollhärtung und Sicherheitsmodulen (WAF, TLS, Authentifizierung), die sich aufschichten lassen, statt aufgezwungen zu werden. Eine optionale native C++-Engine kann die Anfragen anstelle der Python-Engine bedienen, mit denselben Sicherheitsprüfungen (siehe §6b). Siebtes Werkzeug der `omega-`-Suite, aber bewusst **außerhalb der künftigen `omega-suite`-Integration** (es wirkt auf die lokale Maschine, die es beherbergt, nicht auf entfernte Ziele — gleiche Familie wie `omega-fire`); aufgebaut nach Clean Architecture, wobei `bootstrap/` als Kompositionswurzel dient.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/D.png" width="24%" />
+</p>
+
 ## 1. Vision und Umfang
 
 Die erklärte Priorität ist **zuerst die Robustheit/Sicherheit des HTTP-Kerns** — WAF und TLS sind optionale Module, die darüber gelegt werden, niemals Voraussetzungen. Ein Server, der nur eine Sache tut (Dateien ausliefern, eventuell PHP), diese aber richtig, mit einer echten, nicht umgehbaren Protokollhärtung — statt eines Servers, der vieles nur halb tut.
@@ -211,7 +218,7 @@ Der Hilfe-Leitfaden (Taste `a`) bietet einen Bildschirm **Kontakt und Support**:
 - **Fähigkeitsregister** — schreibgeschützte Systemsonde (Init-System, konfigurierter Port bereits belegt oder nicht, `openssl`/`logrotate`/`tailscale`/`lnav` vorhanden, Festplattenplatz, Deskriptorgrenze...), JSON/HTML-Export.
 - **Profile** — derselbe Anwendungsfall wie `profile` in der CLI (§5), Diff wird vor dem Schreiben immer angezeigt.
 - **Detaillierte Konfiguration des Servers** — vollständiges CRUD für Aliase/Weiterleitungen/Rewrites/Verzeichnisliste/vertrauenswürdige Proxys/ausgehenden Reverse Proxy/FastCGI/Cache/Authentifizierung/Zugriffskontrolle/Fehlerseiten, dazu das Untermenü **TLS** (Status, selbstsignierte Erzeugung, Assistent lokale CA, Let's-Encrypt/Certbot-Assistent, automatische Erneuerung, Widerruf, aktivieren/deaktivieren — siehe §9); ein zweiter Rahmen **OPTIONEN UND PRÜFUNG** bündelt dort die Verknüpfungen zu **Optionen** (`option` CLI, §7) und **Konfiguration prüfen** (`config check` CLI, §10) — derselbe Ablauf wie Einstellungen anpassen und dann prüfen; diese beiden Bildschirme sind nicht mehr direkt vom Hauptmenü aus erreichbar. Der WAF wohnt nicht mehr hier (siehe „Aktive Sicherheit“ unten): Er zeigt vor allem fortlaufend wechselnden Betriebszustand, kein einfaches statisches Konfigurationsformular. Jedes Speichern nennt systematisch den nächsten Schritt: automatisches und stilles Neuladen im laufenden Betrieb, wenn ein Dienst aktiv ist (Verzeichnisliste, Zugriff, Aliase/Weiterleitungen/Rewrites, Cache, Fehlerseiten, vertrauenswürdige Proxys, Reverse-Proxy-/FastCGI-Zonen, Benutzer/Authentifizierungszonen), oder explizite Bestätigung eines vollständigen Neustarts, wenn die Änderung den Listen-Socket, TLS oder Active Defense betrifft — kein Bildschirm lässt mehr raten, ob der Server neu gestartet werden muss.
-- **Aktive Sicherheit** — ein einziger Bildschirm mit zwei nebeneinander liegenden Blöcken: **Active Defense** (Status, Verfolgte Bedrohungen mit Punktzahl/Stufe, Vorfälle mit Chronologie/IoC-Export/Bericht, Deception-Zuweisungen, Entscheidung im Dry-Run simulieren, **Einstellungen** — vollständige Konfiguration, ohne jemals `config/omega-serve.json` von Hand zu bearbeiten, siehe §11) und **WAF** (Status, Module — Modus/Regelpakete/Sperrliste, Anfrage testen, Custom — Erstellen eigener Regeln und Laden mausbearbeitbarer Pfad-/Stichwortlisten (siehe §11b), Magnet — ein externes `mod_magnet`-Skript importieren, mit Kompatibilitätsprüfung vor der Aktivierung) — siehe §11. **RIPOSTE**: dritter Block (WAF → Active Defense → RIPOSTE, die Reihenfolge eines Angriffs) — abgestufte Reaktionen über die Zeit, siehe §11d.
+- **Aktive Sicherheit** — ein einziger Bildschirm mit zwei nebeneinander liegenden Blöcken: **Active Defense** (Status, Verfolgte Bedrohungen mit Punktzahl/Stufe, Vorfälle mit Chronologie/IoC-Export/Bericht, Deception-Zuweisungen, Entscheidung im Dry-Run simulieren, **Einstellungen** — vollständige Konfiguration, ohne jemals `config/omega-serve.json` von Hand zu bearbeiten, siehe §11) und **WAF** (Status, Module — Modus/Regelpakete/Sperrliste, Anfrage testen, Custom — Erstellen eigener Regeln und Laden mausbearbeitbarer Pfad-/Stichwortlisten (siehe §11b), Magnet — ein externes `mod_magnet`-Skript importieren, mit Kompatibilitätsprüfung vor der Aktivierung) — siehe §11. **RIPOSTE**: dritter Block (WAF → Active Defense → RIPOSTE, die Reihenfolge eines Angriffs) — abgestufte Reaktionen über die Zeit, siehe §11d. Unter den drei Blöcken **MANUELLER EINGRIFF**: eine IP-Adresse von Hand sperren oder entsperren, Status aller Sperren — siehe §11e.
 - **Log-Verwaltung** — Menü in zwei Spalten. Spalte **Bibliothek**: zentraler Hub, der jedes zu bearbeitende Log referenziert (manuelle Befüllung, ein Klick fügt automatisch die instanzeigenen Logs hinzu — access/error/nativer WAF, + Magnet-Skript §7, falls aktiv —, oder eine über SSH abgerufene **entfernte Quelle**, siehe unten); **Favoriten** (unter einem Namen gespeicherte Kombination aus Logs + Viewer, Direktstart); **Logs ansehen** mit 3 Viewern zur Wahl je nach Anzahl der ausgewählten Logs — Einfach (Live-tail + generische Statistiken zu IPs/Fehlern/HTTP-Codes für jedes Format), Klassisch (Lesen + Verfolgen), zusammengeführtes `lnav` (echte Terminaldarstellung in der Oberfläche, Magnet-Logs automatisch enthalten + manuelle, **angeheftete** Pfade, um sie zwischen Sitzungen zu behalten); **IP ansehen und bearbeiten** (Top-IPs aus einem oder mehreren gewählten Logs, Zeitraum 24h/7T/30T/alles, Entfernen einer IP). Spalte **Wartung** (unverändert): manuelle oder automatische Rotation/Archivierung ab einer Größenschwelle, sofortige Sicherung, Einrichtung/Verwaltung geplanter Automatisierungen (deklarativ — siehe Hinweis unten), Archiv wiederherstellen/bereinigen, Export der Liste.
 - **Dienst** — dieselben Aktionen wie `service` in der CLI (§12), punktuelle `sudo`-Erhöhung pro Aktion, niemals die ganze Anwendung als root gestartet.
 - **Multi-Instanz** — globales Register (`~/.config/omega-serv/instances.json`, außerhalb jedes Projektverzeichnisses) der auf der Maschine bekannten Installationen, mit dem systemd-Status jeder einzelnen; Erstellung einer neuen Instanz (Kopie des Verzeichnisbaums, eigene virtuelle Umgebung und Abhängigkeiten, frische Konfiguration mit eigenem Port, Prüfung auf Verschachtelung und Portkonflikt) direkt aus der Oberfläche. Schaltfläche bei einer Einzelinstallation praktisch unsichtbar (die Bezeichnung „Multi-Instanz“ wird ab 2 bekannten zu „Instanzen (N)“); vollständiger Wechsel zu einer anderen Instanz (`os.execv`, explizite Bestätigung, eigener Splash, der den Wechsel beim Neustart ankündigt); vollständige Deinstallation einer Instanz (Entfernen der Unit, des dedizierten Systemkontos, falls von keiner anderen Instanz mehr genutzt, und optionales Löschen des Verzeichnisses, niemals standardmäßig).
@@ -310,6 +317,19 @@ Nur Oberflächeneinstellungen — niemals mit `config/omega-serve.json` (Serverk
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Vollständige Befehlshilfe
+
+Die obigen Befehle sind nur eine Auswahl. Für alle Befehle und ihre Optionen:
+
+```bash
+./omega-serv.sh help                    # vollständiger Befehlsbaum
+./omega-serv.sh help riposte            # nur ein Zweig
+./omega-serv.sh riposte actions --help  # Details zu einem Befehl
+man omega-serv                          # Handbuchseite (von install.sh installiert)
+```
+
+Vollständige Referenz: [docs/HELP.md](../../HELP.md).
 
 ### Wichtige Exit-Codes
 
@@ -512,6 +532,15 @@ Optionales Modul (`option enable riposte`, standardmäßig deaktiviert, vollstä
 - **Schutzmechanismen**: dieselben Ausnahmen wie der WAF (lokaler Host, Tailscale, lokales Netz), nie über einer manuellen oder längeren Sperre, eine Aktion pro Episode, Obergrenze gleichzeitiger Sperren.
 - **Lokale Sperre und Netzwerksperre**: Die lokale Sperre setzt omega-serv in der Sperrliste des WAF – die Adresse erhält bei all ihren Anfragen die 451-Seite „Ihre IP wurde gesperrt“, während der gesamten Sperrdauer. Die Netzwerksperre übernimmt fail2ban über die Jails von omega-jail (`<service>-riposte-1h/6h/24h/7d`, ein Satz pro Instanz); sie bleibt wirkungslos, wenn die Verbindungen über einen lokalen Proxy (Tailscale Funnel) ankommen, wo nur die lokale Sperre schützt.
 - **Oberfläche**: sechs Bildschirme in Aktive Sicherheit (Status, Richtlinien, Aktionen, Rückfälle, Simulieren, Einstellungen) und dieselben Befehle auf der Kommandozeile (`riposte …`). Sicherung: `config backup --include-riposte`.
+
+## 11e. Manueller Eingriff (Aktive Sicherheit)
+
+Ein Rahmen **MANUELLER EINGRIFF** unter den drei Blöcken der Aktiven Sicherheit, um von Hand zu handeln, ohne eine Konfigurationsregel zu schreiben: eine IP-Adresse ohne Bedingung sperren, entsperren und alle aktuellen Sperren ansehen.
+
+- **Sperren**: eine IPv4- oder IPv6-Adresse, ein Grund, eine Dauer (1 h bis 30 Tage, frei oder dauerhaft). Die Sperre läuft über die Sperrliste der WAF: Seite 451 auf der ganzen Website, vor dem Routing — die Backends sehen die Adresse nie. Sofortige Wirkung mit beiden Engines, ohne Root-Rechte. Ein Netz wird unter WAF → Module gesperrt.
+- **Unabhängig**: kein Bezug zu Active Defense oder RIPOSTE — eine manuelle Sperre zählt nie als Wiederholung, und kein Automat ersetzt sie. Für eine lokale, private oder Tailscale-Adresse wird eine Bestätigung verlangt.
+- **Entsperren**: nur die hier gesetzten Sperren; die anderen werden dort aufgehoben, wo sie gesetzt wurden (WAF → Module, RIPOSTE → Aktionen).
+- **Sperrstatus**: alle Sperren mit ihrer Herkunft (manuell, WAF-Auto-Sperre, RIPOSTE, omega-jail, Magnet), exportierbar als JSON, HTML oder TXT — eine Adresse pro Zeile, unverändert in omega-fire importierbar.
 
 ## 12. Dienste und Betrieb
 

@@ -160,3 +160,6 @@ class BlocklistEntry:
     expires_at: str | None = None
     source: Literal["manual", "auto", "riposte"] = "manual"
     """`riposte` : ban pose par le processus RIPOSTE (raison `riposte:<id_action> ...`), retire par lui seul."""
+    origin: str | None = None
+    """`intervention` : ban pose par Active Securite -> INTERVENTION MANUELLE (source `manual`, donc jamais ecrase par
+    un automate) - seul ce menu le leve. Absent pour toute autre entree ; ignore par le moteur natif."""

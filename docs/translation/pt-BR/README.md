@@ -30,6 +30,13 @@ Prévia: [Capturas de tela](https://kraynux.snake-mackarel.ts.net/omega-serv/scr
 
 **OMEGA-SERV** é um servidor HTTP/1.1 escrito em Python puro (apenas a biblioteca padrão no núcleo do servidor), pensado para servir conteúdo estático e, opcionalmente, PHP-FPM, com um endurecimento do protocolo ativo por padrão e módulos de segurança (WAF, TLS, autenticação) que se sobrepõem em vez de serem impostos. Um motor nativo C++ opcional pode servir as requisições no lugar do motor Python, com os mesmos controles de segurança (ver §6b). Sétima ferramenta da suíte `omega-`, mas deliberadamente **fora da futura integração `omega-suite`** (atua sobre a máquina local que o hospeda, não sobre alvos remotos — mesma família do `omega-fire`); estruturado em Clean Architecture, com `bootstrap/` como raiz de composição.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/pt-BR/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/pt-BR/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/pt-BR/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/pt-BR/D.png" width="24%" />
+</p>
+
 ## 1. Visão e escopo
 
 A prioridade declarada é **a solidez/segurança do núcleo HTTP em primeiro lugar** — WAF e TLS são módulos opcionais colocados por cima, nunca pré-requisitos. Um servidor que faz uma só coisa (servir arquivos, eventualmente PHP), mas a faz corretamente, com um endurecimento de protocolo real e impossível de contornar, em vez de um servidor que faz muitas coisas pela metade.
@@ -211,7 +218,7 @@ O guia de ajuda (tecla `a`) oferece uma tela **Contato e suporte**: *Pagar um ca
 - **Registro de capacidades** — sonda do sistema em somente leitura (sistema de init, porta configurada já ocupada ou não, presença de `openssl`/`logrotate`/`tailscale`/`lnav`, espaço em disco, limite de descritores...), exportação JSON/HTML.
 - **Perfis** — mesmo caso de uso que `profile` na CLI (§5), diff sempre exibido antes da gravação.
 - **Configuração detalhada do servidor** — CRUD completo sobre aliases/redirecionamentos/reescritas/listagem de diretório/proxies confiáveis/reverse proxy de saída/FastCGI/cache/autenticação/controle de acesso/páginas de erro, além do submenu **TLS** (status, geração autoassinada, assistente de CA local, assistente Let's Encrypt/Certbot, renovação automática, revogação, ativar/desativar — veja §9); um segundo quadro, **OPÇÕES E VERIFICAÇÃO**, agrupa os atalhos para **Opções** (`option` CLI, §7) e **Verificar a configuração** (`config check` CLI, §10) — o mesmo percurso de ajustar e depois verificar; essas duas telas não são mais acessíveis diretamente pelo menu principal. O WAF não fica mais ali (veja "Segurança ativa" abaixo): ele expõe sobretudo um estado operacional que muda continuamente, não um simples formulário de configuração estático. Cada salvamento indica sistematicamente o que vem a seguir: recarga a quente automática e silenciosa se houver um serviço ativo (listagem de diretório, acesso, aliases/redirecionamentos/reescritas, cache, páginas de erro, proxies confiáveis, zonas de reverse proxy/FastCGI, usuários/zonas de autenticação), ou confirmação explícita de reinício completo quando a mudança afeta o socket de escuta, o TLS ou o Active Defense — nenhuma tela deixa mais você adivinhando se é preciso reiniciar o servidor.
-- **Segurança ativa** — tela única que agrupa dois blocos lado a lado: **Active Defense** (Status, Ameaças monitoradas com pontuação/nível, Incidentes com cronologia/exportação IoC/relatório, atribuições de Deception, Simular uma decisão em dry-run, **Configurações** — configuração completa sem nunca editar `config/omega-serve.json` à mão, veja §11) e **WAF** (Status, Módulos — modo/pacotes de regras/lista de bloqueio, Testar uma requisição, Custom — criação de regras personalizadas e carregamento de listas de caminhos/palavras-chave editáveis com o mouse (veja §11b), Magnet — importar um script `mod_magnet` externo com verificação de compatibilidade antes da ativação) — veja §11. **RIPOSTE**: terceiro bloco (WAF → Active Defense → RIPOSTE, a ordem de um ataque) — respostas graduais ao longo do tempo, veja §11d.
+- **Segurança ativa** — tela única que agrupa dois blocos lado a lado: **Active Defense** (Status, Ameaças monitoradas com pontuação/nível, Incidentes com cronologia/exportação IoC/relatório, atribuições de Deception, Simular uma decisão em dry-run, **Configurações** — configuração completa sem nunca editar `config/omega-serve.json` à mão, veja §11) e **WAF** (Status, Módulos — modo/pacotes de regras/lista de bloqueio, Testar uma requisição, Custom — criação de regras personalizadas e carregamento de listas de caminhos/palavras-chave editáveis com o mouse (veja §11b), Magnet — importar um script `mod_magnet` externo com verificação de compatibilidade antes da ativação) — veja §11. **RIPOSTE**: terceiro bloco (WAF → Active Defense → RIPOSTE, a ordem de um ataque) — respostas graduais ao longo do tempo, veja §11d. Abaixo dos três blocos, **INTERVENÇÃO MANUAL**: banir ou desbanir um endereço IP manualmente, status de todos os bans — veja §11e.
 - **Gerenciamento de logs** — menu em duas colunas. Coluna **Biblioteca**: central que referencia todo log a tratar (alimentação manual, um clique adiciona de ofício os logs próprios da instância — access/error/WAF nativo, + script magnet §7 se ativo —, ou uma **origem remota** recuperada via SSH, veja abaixo); **Favoritos** (combinação logs + visualizador salva com um nome, abertura direta); **Ver os logs** com 3 visualizadores à escolha conforme o número de logs selecionados — Simples (tail ao vivo + estatísticas genéricas IP/erros/códigos HTTP em qualquer formato), Clássico (leitura + acompanhamento), `lnav` mesclado (renderização de terminal real dentro da interface, logs magnet incluídos de ofício + caminhos manuais **fixados** para mantê-los entre sessões); **Ver e tratar IP** (top IPs em um ou vários logs à escolha, período 24 h/7 d/30 d/tudo, remoção de um IP). Coluna **Manutenção** (sem alterações): rotação/arquivamento manual ou automático por limite de tamanho, criação imediata de backup, configuração/gerenciamento de automações agendadas (declarativas — veja a nota abaixo), restaurar/limpar um arquivo, exportação da lista.
 - **Serviço** — mesmas ações que `service` na CLI (§12), elevação `sudo` pontual por ação, nunca o aplicativo inteiro executado como root.
 - **Multi-instância** — registro global (`~/.config/omega-serv/instances.json`, fora de qualquer diretório de projeto) das instalações conhecidas na máquina, com o status systemd de cada uma; criação de uma nova instância (cópia da árvore, ambiente virtual e dependências próprios, configuração nova com porta distinta, verificação de não aninhamento e de conflito de porta) diretamente pela interface. Botão praticamente invisível para uma instalação única (o rótulo "Multi-instância" passa a "Instâncias (N)" assim que 2 forem conhecidas); troca completa para outra instância (`os.execv`, confirmação explícita, splash dedicado anunciando a troca no reinício); desinstalação completa de uma instância (remoção da unidade, da conta de sistema dedicada se nenhuma outra instância a usar, e exclusão opcional do diretório, nunca por padrão).
@@ -310,6 +317,19 @@ Apenas preferências da interface — nunca confundidas com `config/omega-serve.
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Ajuda completa dos comandos
+
+Os comandos acima são apenas uma amostra. Para todos os comandos e suas opções:
+
+```bash
+./omega-serv.sh help                    # árvore completa de comandos
+./omega-serv.sh help riposte            # um único ramo
+./omega-serv.sh riposte actions --help  # detalhes de um comando
+man omega-serv                          # página de manual (instalada pelo install.sh)
+```
+
+Referência completa: [docs/HELP.md](../../HELP.md).
 
 ### Códigos de saída relevantes
 
@@ -512,6 +532,15 @@ Módulo opcional (`option enable riposte`, desativado por padrão, exige reiníc
 - **Salvaguardas**: as mesmas exclusões do WAF (host local, Tailscale, rede local), nunca acima de um ban manual ou mais longo, uma ação por episódio, limite de bans simultâneos.
 - **Ban local e ban de rede**: o ban local é aplicado pelo omega-serv na lista de bloqueio do WAF; o endereço recebe a página 451 “Seu IP foi banido” em todas as suas requisições, durante todo o ban. O ban de rede é confiado ao fail2ban pelos jails do omega-jail (`<service>-riposte-1h/6h/24h/7d`, um conjunto por instância); ele não tem efeito quando as conexões chegam por um proxy local (Tailscale Funnel), onde só o ban local protege.
 - **Interface**: seis telas em Segurança ativa (Estado, Políticas, Ações, Reincidências, Simular, Ajustes) e os mesmos comandos de linha (`riposte …`). Backup: `config backup --include-riposte`.
+
+## 11e. Intervenção manual (Segurança ativa)
+
+Um quadro **INTERVENÇÃO MANUAL**, abaixo dos três blocos da Segurança ativa, para agir manualmente sem escrever uma regra de configuração: banir um endereço IP sem condições, desbani-lo, ver todos os bans em andamento.
+
+- **Banir**: um endereço IPv4 ou IPv6, um motivo, uma duração (1 h a 30 dias, livre ou permanente). O ban passa pela lista de bloqueio do WAF: página 451 em todo o site, antes do roteamento — os backends nunca veem o endereço. Efeito imediato com os dois motores, sem direitos de root. Uma rede é banida em WAF → Módulos.
+- **Independente**: nenhuma relação com o Active Defense nem com o RIPOSTE — um ban manual nunca conta como reincidência, e nenhum automatismo o substitui. Pede-se confirmação para um endereço local, privado ou do Tailscale.
+- **Desbanir**: somente os bans aplicados aqui; os outros são revogados onde foram aplicados (WAF → Módulos, RIPOSTE → Ações).
+- **Status dos bans**: todos os bans com sua origem (manual, auto-ban do WAF, RIPOSTE, omega-jail, Magnet), exportáveis em JSON, HTML ou TXT — um endereço por linha, importável como está no omega-fire.
 
 ## 12. Serviços e operação
 

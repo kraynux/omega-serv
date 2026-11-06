@@ -30,6 +30,13 @@ Vista previa: [Capturas de pantalla](https://kraynux.snake-mackarel.ts.net/omega
 
 **OMEGA-SERV** es un servidor HTTP/1.1 escrito en Python puro (solo biblioteca estándar para el núcleo del servidor), pensado para servir contenido estático y, opcionalmente, PHP-FPM, con un endurecimiento del protocolo activo por defecto y módulos de seguridad (WAF, TLS, autenticación) que se superponen en lugar de imponerse. Un motor nativo C++ opcional puede servir las peticiones en lugar del motor Python, con los mismos controles de seguridad (véase §6b). Séptima herramienta de la suite `omega-`, pero deliberadamente **fuera de la futura integración `omega-suite`** (actúa sobre la máquina local que lo aloja, no sobre objetivos remotos — misma familia que `omega-fire`); estructurado en Clean Architecture, con `bootstrap/` como raíz de composición.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/es/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/es/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/es/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/es/D.png" width="24%" />
+</p>
+
 ## 1. Visión y alcance
 
 La prioridad declarada es **la solidez/seguridad del núcleo HTTP primero** — WAF y TLS son módulos opcionales colocados encima, nunca requisitos previos. Un servidor que hace una sola cosa (servir archivos, eventualmente PHP) pero la hace correctamente, con un endurecimiento de protocolo real e imposible de eludir, en lugar de un servidor que hace muchas cosas a medias.
@@ -211,7 +218,7 @@ La guía de ayuda (tecla `a`) ofrece una pantalla **Contacto y soporte**: *Invit
 - **Registro de capacidades** — sonda del sistema en solo lectura (sistema de init, puerto configurado ya ocupado o no, presencia de `openssl`/`logrotate`/`tailscale`/`lnav`, espacio en disco, límite de descriptores...), exportación JSON/HTML.
 - **Perfiles** — mismo caso de uso que `profile` en la CLI (§5), diff siempre mostrado antes de escribir.
 - **Configuración detallada del servidor** — CRUD completo sobre alias/redirecciones/reescrituras/listado de directorio/proxies de confianza/reverse proxy saliente/FastCGI/caché/autenticación/control de acceso/páginas de error, más el submenú **TLS** (estado, generación autofirmada, asistente de CA local, asistente Let's Encrypt/Certbot, renovación automática, revocación, activar/desactivar — vea §9); un segundo marco, **OPCIONES Y VERIFICACIÓN**, agrupa los accesos directos a **Opciones** (`option` CLI, §7) y **Comprobar la configuración** (`config check` CLI, §10) — el mismo recorrido que ajustar y luego verificar; estas dos pantallas ya no son accesibles directamente desde el menú principal. El WAF ya no vive ahí (vea "Seguridad activa" más abajo): expone sobre todo un estado operativo que cambia continuamente, no un simple formulario de configuración estático. Cada guardado indica sistemáticamente lo que sigue: recarga en caliente automática y silenciosa si hay un servicio activo (listado de directorio, acceso, alias/redirecciones/reescrituras, caché, páginas de error, proxies de confianza, zonas de reverse proxy/FastCGI, usuarios/zonas de autenticación), o confirmación explícita de reinicio completo cuando el cambio afecta al socket de escucha, a TLS o a Active Defense — ninguna pantalla deja ya adivinar si hay que reiniciar el servidor.
-- **Seguridad activa** — pantalla única que agrupa dos bloques uno al lado del otro: **Active Defense** (Estado, Amenazas seguidas con puntuación/nivel, Incidentes con cronología/exportación IoC/informe, asignaciones de Deception, Simular una decisión en dry-run, **Ajustes** — configuración completa sin editar nunca `config/omega-serve.json` a mano, vea §11) y **WAF** (Estado, Módulos — modo/paquetes de reglas/lista de bloqueo, Probar una petición, Custom — autoría de reglas personalizadas y carga de listas de rutas/palabras clave editables con el ratón (vea §11b), Magnet — importar un script `mod_magnet` externo con comprobación de compatibilidad antes de activarlo) — vea §11. **RIPOSTE**: tercer bloque (WAF → Active Defense → RIPOSTE, el orden de un ataque) — respuestas graduales en el tiempo, ver §11d.
+- **Seguridad activa** — pantalla única que agrupa dos bloques uno al lado del otro: **Active Defense** (Estado, Amenazas seguidas con puntuación/nivel, Incidentes con cronología/exportación IoC/informe, asignaciones de Deception, Simular una decisión en dry-run, **Ajustes** — configuración completa sin editar nunca `config/omega-serve.json` a mano, vea §11) y **WAF** (Estado, Módulos — modo/paquetes de reglas/lista de bloqueo, Probar una petición, Custom — autoría de reglas personalizadas y carga de listas de rutas/palabras clave editables con el ratón (vea §11b), Magnet — importar un script `mod_magnet` externo con comprobación de compatibilidad antes de activarlo) — vea §11. **RIPOSTE**: tercer bloque (WAF → Active Defense → RIPOSTE, el orden de un ataque) — respuestas graduales en el tiempo, ver §11d. Bajo los tres bloques, **INTERVENCIÓN MANUAL**: banear o desbanear una dirección IP a mano, estado de todos los baneos — ver §11e.
 - **Gestión de logs** — menú en dos columnas. Columna **Biblioteca**: centro que referencia todo log a tratar (alimentación manual, un clic añade de oficio los logs propios de la instancia — access/error/WAF nativo, + script magnet §7 si está activo —, o una **fuente remota** recuperada por SSH, vea más abajo); **Favoritos** (combinación logs + visor guardada con un nombre, lanzamiento directo); **Ver los logs** con 3 visores a elegir según el número de logs seleccionados — Simple (tail en directo + estadísticas genéricas IP/errores/códigos HTTP sobre cualquier formato), Clásico (lectura + seguimiento), `lnav` fusionado (renderizado de terminal real dentro de la interfaz, logs magnet incluidos de oficio + rutas manuales **fijadas** para conservarlas entre sesiones); **Ver y tratar IP** (top de IP en uno o varios logs a elegir, periodo 24 h/7 d/30 d/todo, eliminación de una IP). Columna **Mantenimiento** (sin cambios): rotación/archivado manual o automático por umbral de tamaño, creación inmediata de copia de seguridad, configuración/gestión de automatizaciones planificadas (declarativas — vea la nota más abajo), restaurar/purgar un archivo, exportación de la lista.
 - **Servicio** — mismas acciones que `service` en la CLI (§12), elevación `sudo` puntual por acción, nunca la aplicación entera lanzada como root.
 - **Multi-instancia** — registro global (`~/.config/omega-serv/instances.json`, fuera de cualquier directorio de proyecto) de las instalaciones conocidas en la máquina, con el estado systemd de cada una; creación de una nueva instancia (copia del árbol, entorno virtual y dependencias propias, configuración nueva con un puerto distinto, comprobación de no anidamiento y de conflicto de puertos) directamente desde la interfaz. Botón prácticamente invisible para una instalación única (la etiqueta "Multi-instancia" pasa a "Instancias (N)" en cuanto se conocen 2); cambio completo a otra instancia (`os.execv`, confirmación explícita, splash dedicado que anuncia el cambio al reiniciar); desinstalación completa de una instancia (retirada de la unidad, de la cuenta de sistema dedicada si ninguna otra instancia la usa, y eliminación opcional del directorio, nunca por defecto).
@@ -310,6 +317,19 @@ Solo preferencias de la interfaz — nunca confundidas con `config/omega-serve.j
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Ayuda completa de los comandos
+
+Los comandos anteriores son solo una muestra. Para todos los comandos y sus opciones:
+
+```bash
+./omega-serv.sh help                    # árbol completo de comandos
+./omega-serv.sh help riposte            # una sola rama
+./omega-serv.sh riposte actions --help  # detalle de un comando
+man omega-serv                          # página de manual (instalada por install.sh)
+```
+
+Referencia completa: [docs/HELP.md](../../HELP.md).
 
 ### Códigos de salida notables
 
@@ -512,6 +532,15 @@ Módulo opcional (`option enable riposte`, desactivado por defecto, requiere un 
 - **Salvaguardas**: las mismas exclusiones que el WAF (host local, Tailscale, red local), nunca por encima de un bloqueo manual o más largo, una acción por episodio, límite de bloqueos simultáneos.
 - **Ban local y ban de red**: omega-serv aplica el ban local en la lista de bloqueo del WAF; la dirección recibe la página 451 «Su IP ha sido baneada» en todas sus peticiones, durante todo el ban. El ban de red se confía a fail2ban mediante los jails de omega-jail (`<service>-riposte-1h/6h/24h/7d`, un juego por instancia); no tiene efecto cuando las conexiones llegan a través de un proxy local (Tailscale Funnel), donde solo protege el ban local.
 - **Interfaz**: seis pantallas en Seguridad activa (Estado, Políticas, Acciones, Reincidencias, Simular, Ajustes) y los mismos comandos en línea (`riposte …`). Copia de seguridad: `config backup --include-riposte`.
+
+## 11e. Intervención manual (Seguridad activa)
+
+Un marco **INTERVENCIÓN MANUAL**, bajo los tres bloques de Seguridad activa, para actuar a mano sin escribir una regla de configuración: banear una dirección IP sin condiciones, desbanearla, ver todos los baneos en curso.
+
+- **Banear**: una dirección IPv4 o IPv6, un motivo, una duración (1 h a 30 días, libre o permanente). El baneo pasa por la lista de bloqueo del WAF: página 451 en todo el sitio, antes del enrutamiento — los backends nunca ven la dirección. Efecto inmediato con ambos motores, sin derechos root. Una red se banea en WAF → Módulos.
+- **Independiente**: sin relación con Active Defense ni RIPOSTE — un baneo manual nunca cuenta como reincidencia, y ningún automatismo lo sustituye. Se pide confirmación para una dirección local, privada o de Tailscale.
+- **Desbanear**: solo los baneos puestos aquí; los demás se levantan donde se pusieron (WAF → Módulos, RIPOSTE → Acciones).
+- **Estado de baneos**: todos los baneos con su origen (manual, auto-baneo WAF, RIPOSTE, omega-jail, Magnet), exportables en JSON, HTML o TXT — una dirección por línea, importable tal cual en omega-fire.
 
 ## 12. Servicios y explotación
 

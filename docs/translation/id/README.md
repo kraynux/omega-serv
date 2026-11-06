@@ -30,6 +30,13 @@ Pratinjau: [Tangkapan layar](https://kraynux.snake-mackarel.ts.net/omega-serv/sc
 
 **OMEGA-SERV** adalah server HTTP/1.1 yang ditulis dalam Python murni (hanya pustaka standar untuk inti server), dirancang untuk menyajikan konten statis dan, secara opsional, PHP-FPM, dengan pengerasan protokol yang aktif secara bawaan serta modul keamanan (WAF, TLS, autentikasi) yang dapat ditumpuk alih-alih dipaksakan. Mesin native C++ opsional dapat melayani permintaan sebagai pengganti mesin Python, dengan pemeriksaan keamanan yang sama (lihat §6b). Alat ketujuh dari rangkaian `omega-` tetapi sengaja **berada di luar integrasi `omega-suite` mendatang** (ia bekerja pada mesin lokal yang menjalankannya, bukan pada target jarak jauh — keluarga yang sama dengan `omega-fire`); disusun dengan Clean Architecture, dengan `bootstrap/` sebagai akar komposisi (composition root).
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/D.png" width="24%" />
+</p>
+
 ## 1. Visi dan cakupan
 
 Prioritas yang dinyatakan adalah **kekokohan/keamanan inti HTTP terlebih dahulu** — WAF dan TLS adalah modul opsional yang ditempatkan di atasnya, tidak pernah menjadi prasyarat. Server yang hanya melakukan satu hal (menyajikan berkas, mungkin juga PHP) tetapi melakukannya dengan benar, dengan pengerasan protokol yang benar-benar tidak dapat dilewati, lebih baik daripada server yang melakukan banyak hal setengah-setengah.
@@ -211,7 +218,7 @@ Panduan bantuan (tombol `a`) menyediakan layar **Kontak dan dukungan**: *Traktir
 - **Registri kapabilitas** — penyelidikan sistem hanya-baca (sistem init, apakah port yang dikonfigurasi sudah dipakai, ada/tidaknya `openssl`/`logrotate`/`tailscale`/`lnav`, ruang disk, batas deskriptor berkas...), ekspor JSON/HTML.
 - **Profil** — kasus penggunaan yang sama dengan `profile` di CLI (§5), diff selalu ditampilkan sebelum penulisan.
 - **Konfigurasi terperinci server** — CRUD lengkap untuk alias/pengalihan/rewrite/dirlisting/proxy tepercaya/reverse proxy keluar/FastCGI/cache/autentikasi/kontrol akses/halaman kesalahan, ditambah submenu **TLS** (status, pembuatan swatanda, asisten CA lokal, asisten Let's Encrypt/Certbot, perpanjangan otomatis, pencabutan, aktifkan/nonaktifkan — lihat §9); bingkai kedua **OPSI DAN PEMERIKSAAN** mengelompokkan pintasan ke **Opsi** (`option` di CLI, §7) dan **Periksa konfigurasi** (`config check` di CLI, §10) — alur yang sama seperti menyesuaikan pengaturan lalu memeriksa, kedua layar ini tidak lagi dapat diakses langsung dari menu utama. WAF tidak lagi berada di sini (lihat "Keamanan Aktif" di bawah): ia terutama menampilkan status operasional yang terus berubah, bukan formulir konfigurasi statis sederhana. Setiap penyimpanan selalu menyebutkan langkah berikutnya: muat ulang panas otomatis dan senyap jika ada layanan aktif (dirlisting, akses, alias/pengalihan/rewrite, cache, halaman kesalahan, proxy tepercaya, zona reverse proxy/FastCGI, pengguna/zona autentikasi), atau konfirmasi eksplisit mulai ulang penuh ketika perubahan menyentuh soket pendengar, TLS, atau Active Defense — tidak ada lagi layar yang membuat Anda menebak apakah server harus dijalankan ulang.
-- **Keamanan Aktif** — layar tunggal yang mengelompokkan dua blok berdampingan: **Active Defense** (Status, Ancaman yang dilacak dengan skor/tingkat, Insiden dengan kronologi/ekspor IoC/laporan, penugasan Deception, Simulasikan keputusan dalam dry-run, **Pengaturan** — konfigurasi lengkap tanpa pernah mengedit `config/omega-serve.json` secara manual, lihat §11) dan **WAF** (Status, Modul — mode/paket aturan/daftar blokir, Uji permintaan, Custom — penulis aturan khusus dan pemuatan daftar jalur/kata kunci yang dapat diedit dengan tetikus (lihat §11b), Magnet — impor skrip `mod_magnet` eksternal dengan pemeriksaan kompatibilitas sebelum aktivasi) — lihat §11. **RIPOSTE**: blok ketiga (WAF → Active Defense → RIPOSTE, urutan sebuah serangan) — respons bertingkat dari waktu ke waktu, lihat §11d.
+- **Keamanan Aktif** — layar tunggal yang mengelompokkan dua blok berdampingan: **Active Defense** (Status, Ancaman yang dilacak dengan skor/tingkat, Insiden dengan kronologi/ekspor IoC/laporan, penugasan Deception, Simulasikan keputusan dalam dry-run, **Pengaturan** — konfigurasi lengkap tanpa pernah mengedit `config/omega-serve.json` secara manual, lihat §11) dan **WAF** (Status, Modul — mode/paket aturan/daftar blokir, Uji permintaan, Custom — penulis aturan khusus dan pemuatan daftar jalur/kata kunci yang dapat diedit dengan tetikus (lihat §11b), Magnet — impor skrip `mod_magnet` eksternal dengan pemeriksaan kompatibilitas sebelum aktivasi) — lihat §11. **RIPOSTE**: blok ketiga (WAF → Active Defense → RIPOSTE, urutan sebuah serangan) — respons bertingkat dari waktu ke waktu, lihat §11d. Di bawah tiga blok, **INTERVENSI MANUAL**: memblokir atau membuka blokir alamat IP secara manual, status semua blokir — lihat §11e.
 - **Pengelolaan log** — menu dua kolom. Kolom **Pustaka**: pusat yang merujuk setiap log yang perlu ditangani (penambahan manual, satu klik langsung menambahkan log milik instans — access/error/WAF bawaan, + skrip magnet §7 jika aktif —, atau **sumber jarak jauh** yang diambil melalui SSH, lihat di bawah); **Favorit** (kombinasi log + penampil yang disimpan dengan sebuah nama, dibuka langsung); **Lihat log** dengan 3 penampil pilihan menurut jumlah log yang dipilih — Sederhana (tail langsung + statistik umum IP/galat/kode HTTP pada format apa pun), Klasik (baca + ikuti), `lnav` gabungan (tampilan terminal nyata di antarmuka, log magnet otomatis disertakan + jalur manual yang **disematkan** agar tetap tersimpan antarsesi); **Lihat dan tangani IP** (IP teratas pada satu atau beberapa log pilihan, periode 24 jam/7 hari/30 hari/semua, penghapusan IP). Kolom **Pemeliharaan** (tidak berubah): rotasi/pengarsipan manual atau otomatis berdasarkan ambang ukuran, pembuatan cadangan seketika, konfigurasi/pengelolaan otomatisasi terjadwal (deklaratif — lihat catatan di bawah), pulihkan/bersihkan arsip, ekspor daftar.
 - **Layanan** — tindakan yang sama dengan `service` di CLI (§12), elevasi `sudo` sesekali per tindakan, tidak pernah seluruh aplikasi dijalankan sebagai root.
 - **Multi-instans** — registri global (`~/.config/omega-serv/instances.json`, di luar direktori proyek mana pun) dari instalasi yang dikenal di mesin, dengan status systemd masing-masing; pembuatan instans baru (salinan pohon direktori, lingkungan virtual dan dependensi tersendiri, konfigurasi baru dengan port berbeda, pemeriksaan tidak bertingkat dan tidak ada konflik port) langsung dari antarmuka. Tombol ini praktis tak terlihat untuk satu instalasi (label "Multi-instans" menjadi "Instances (N)" begitu 2 instans dikenal); peralihan penuh ke instans lain (`os.execv`, konfirmasi eksplisit, splash khusus yang mengumumkan peralihan saat mulai ulang); pencopotan lengkap sebuah instans (penghapusan unit, akun sistem khusus jika tidak lagi dipakai instans lain, dan penghapusan direktori secara opsional, tidak pernah secara bawaan).
@@ -310,6 +317,19 @@ Hanya preferensi antarmuka — tidak pernah dicampur dengan `config/omega-serve.
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Bantuan lengkap perintah
+
+Perintah di atas hanyalah contoh. Untuk semua perintah dan opsinya:
+
+```bash
+./omega-serv.sh help                    # pohon perintah lengkap
+./omega-serv.sh help riposte            # satu cabang saja
+./omega-serv.sh riposte actions --help  # detail sebuah perintah
+man omega-serv                          # halaman manual (dipasang oleh install.sh)
+```
+
+Referensi lengkap: [docs/HELP.md](../../HELP.md).
 
 ### Kode keluar penting
 
@@ -512,6 +532,15 @@ Modul opsional (`option enable riposte`, nonaktif secara bawaan, perlu mulai ula
 - **Pengaman**: pengecualian yang sama dengan WAF (host lokal, Tailscale, jaringan lokal), tidak pernah menimpa blokir manual atau yang lebih lama, satu tindakan per episode, batas blokir serentak.
 - **Ban lokal dan ban jaringan**: ban lokal dipasang omega-serv di daftar blokir WAF — alamat menerima halaman 451 “IP Anda telah di-ban” untuk semua permintaannya, selama ban berlangsung. Ban jaringan diserahkan ke fail2ban melalui jail omega-jail (`<service>-riposte-1h/6h/24h/7d`, satu set per instans); ban ini tidak berpengaruh saat koneksi datang melalui proxy lokal (Tailscale Funnel), di mana hanya ban lokal yang melindungi.
 - **Antarmuka**: enam layar di Keamanan aktif (Status, Kebijakan, Tindakan, Residivis, Simulasi, Pengaturan) dan perintah baris yang sama (`riposte …`). Cadangan: `config backup --include-riposte`.
+
+## 11e. Intervensi manual (Keamanan Aktif)
+
+Bingkai **INTERVENSI MANUAL**, di bawah tiga blok Keamanan Aktif, untuk bertindak secara manual tanpa menulis aturan konfigurasi: memblokir alamat IP tanpa syarat, membuka blokirnya, melihat semua blokir yang berlaku.
+
+- **Blokir**: satu alamat IPv4 atau IPv6, satu alasan, satu durasi (1 jam hingga 30 hari, bebas atau permanen). Blokir melalui daftar blokir WAF: halaman 451 di seluruh situs, sebelum perutean — backend tidak pernah melihat alamat itu. Langsung berlaku dengan kedua mesin, tanpa hak root. Jaringan diblokir di WAF → Modul.
+- **Independen**: tidak terkait dengan Active Defense maupun RIPOSTE — blokir manual tidak pernah dihitung sebagai pelanggaran berulang, dan tidak ada otomatisasi yang menggantikannya. Konfirmasi diminta untuk alamat lokal, privat, atau Tailscale.
+- **Buka blokir**: hanya blokir yang dipasang di sini; yang lain dicabut di tempat ia dipasang (WAF → Modul, RIPOSTE → Tindakan).
+- **Status blokir**: semua blokir beserta asalnya (manual, blokir otomatis WAF, RIPOSTE, omega-jail, Magnet), dapat diekspor ke JSON, HTML, atau TXT — satu alamat per baris, bisa diimpor apa adanya ke omega-fire.
 
 ## 12. Layanan dan operasi
 

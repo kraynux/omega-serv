@@ -17,6 +17,17 @@ signalés explicitement, même mineurs.
 
 ### Ajouté
 
+- **Active Sécurité → INTERVENTION MANUELLE** : un 4e cadre sous les colonnes WAF / Active Defense / RIPOSTE, avec
+  trois boutons. *Bannir* bannit une adresse IP sans condition (aucune règle, aucun seuil) dans la blocklist du WAF :
+  page 451 sur tout le site, avant le routage, donc jamais vue par les backends ; sans droits root, effet immédiat
+  avec les deux moteurs ; durée 1 h à 30 jours, libre ou permanente (confirmée). Un réseau est refusé (il se bannit
+  dans WAF → Modules) ; adresse locale, privée ou Tailscale : confirmation. *Débannir* ne montre et ne lève que ces
+  bans manuels. *Statut des bans* liste tous les bans avec leur origine (intervention manuelle, manuel, auto-ban WAF
+  règles ou liste, RIPOSTE, omega-jail, Magnet) et les exporte en JSON, HTML (thèmes) ou TXT d'injection (bans actifs
+  ou toute la liste, une adresse par ligne, en-tête « # » : importable tel quel dans omega-fire). Sans lien avec
+  Active Defense ni RIPOSTE : un ban manuel ne compte jamais dans la récidive, et aucun automate ne le remplace.
+  Fiches F1, 16 langues.
+
 - **Aide complète de la ligne de commande** : chaque commande et chaque option ont désormais un texte
   d'aide (`omega-serv <commande> --help`, jusque-là les noms seuls). Nouvelle commande `omega-serv help`
   (arbre de toutes les commandes, ou d'une branche : `omega-serv help riposte`), page de manuel
@@ -208,6 +219,22 @@ signalés explicitement, même mineurs.
     garde 78 à 95 % de son débit sans WAF. Un 2e processus de sécurité n'apporte plus rien au trafic ordinaire.
 
 ### Corrigé
+
+- **Exports HTML jamais échappés** (registre des capacités, archives de logs, guide d'aide) : le réglage
+  d'échappement ne reconnaissait pas l'extension `.html.j2` des modèles. Dans l'export du guide, les emplacements
+  comme `<nom-archive>` ou `<adresse>` disparaissaient (pris pour des balises) ; un texte venu de l'extérieur aurait pu
+  injecter du HTML. Tous les exports sont désormais échappés.
+
+- **WAF → Modules → Liste de blocage** : la colonne et le champ « Motif » d'un ban s'affichaient « Pattern » (et
+  l'équivalent dans les autres langues), traduits comme le motif d'une règle ; ils s'appellent désormais « Motif du ban ».
+
+- **Bans ignorés après un ban d'omega-jail** (constaté en production) : `omega-serv blocklist add`, lancé par
+  le pont omega-jail sous un umask 077, recréait `var/lib/waf/blocklist.json` en `600` - illisible par le
+  service. Les adresses bannies continuaient de recevoir 403/404 au lieu de la page 451, et les auto-bans du
+  WAF étaient refusés (« blocklist illisible » dans journalctl). La blocklist est désormais toujours écrite
+  lisible et modifiable par le groupe du service (660 au minimum, groupe conservé), quel que soit l'umask de
+  celui qui écrit (CLI, omega-jail, RIPOSTE, auto-ban) ; un fichier déjà resté en 600 est réparé à la
+  prochaine écriture.
 
 - **`option enable waf` donnait un WAF sans aucune règle** sur une configuration neuve : `config check` et
   `serve` le refusaient ensuite (« rules.paths et keyword_lists ne peuvent pas être tous les deux vides »),

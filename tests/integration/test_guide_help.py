@@ -11,6 +11,7 @@ lieu de declencher l'aide). F1 est une touche fonction, jamais
 consommee par un champ de texte."""
 from __future__ import annotations
 
+import html
 import shutil
 import tempfile
 import unittest
@@ -219,7 +220,8 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
 
         exports = list(container.default_exports_dir.glob("guide-export.*.html"))
         self.assertEqual(len(exports), 1)
-        content = exports[0].read_text(encoding="utf-8")
+        # Texte tel qu'affiche : l'export est echappe (apostrophe -> &#39;).
+        content = html.unescape(exports[0].read_text(encoding="utf-8"))
         self.assertIn("Guide d'aide complet", content)
         self.assertIn("CONFIGURATION DE BASE", content.upper())
         self.assertIn("Pourquoi mon option activ", content)

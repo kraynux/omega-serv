@@ -360,6 +360,12 @@ def _export_log_archives_html(archives: Sequence[dict], theme_name: str) -> str:
     return export_log_archives_html(archives, theme_name)
 
 
+def _export_bans_html(bans: Sequence[dict], active_count: int, theme_name: str) -> str:
+    from omega_serv.infrastructure.exporters.html_exporter import export_bans_html
+
+    return export_bans_html(bans, active_count, theme_name)
+
+
 def _export_guide_html(screen_guides: Sequence[dict], faq_entries: Sequence[dict], theme_name: str) -> str:
     from omega_serv.infrastructure.exporters.html_exporter import export_guide_html
 
@@ -406,6 +412,22 @@ def _render_html_export_here(kind: str, theme_name: str) -> str | None:
     if kind == "log-archives":
         store = container.build_archive_store(container.project_root / "var" / "backups" / "logs")
         return _export_log_archives_html([store.get_archive_info(p) for p in store.list_archives()], theme_name)
+    if kind == "bans":
+        from omega_serv.application.security.manual_intervention import (
+            ban_rows_for_display,
+            collect_ban_rows,
+            magnet_list_path,
+        )
+
+        load_result = load_config(container.configuration, container.config_file)
+        if not load_result.success or load_result.config is None:
+            sys.stderr.write("; ".join(load_result.errors))
+            return None
+        port = _build_blocklist_port(load_result.config, container.filesystem, container.project_root, container.clock)
+        rows, _warning = collect_ban_rows(port, container.filesystem,
+                                          magnet_list_path(load_result.config, container.project_root),
+                                          container.clock.now())
+        return _export_bans_html(ban_rows_for_display(rows), sum(1 for r in rows if r.active), theme_name)
     if kind == "capabilities":
         load_result = load_config(container.configuration, container.config_file)
         if not load_result.success or load_result.config is None:
@@ -440,7 +462,7 @@ def _write_report_here(incident_id: str) -> Path | None:
 
 
 def _run_export_child_command(argv: list[str]) -> int:
-    """`_export-html <guide|capabilities|log-archives> <theme>` : HTML sur stdout.
+    """`_export-html <guide|capabilities|log-archives|bans> <theme>` : HTML sur stdout.
     `_export-report <incident_id>` : chemin du rapport ecrit sur stdout. Commandes internes,
     lancees uniquement par `_run_export_in_language` (absentes de --help)."""
     if argv[0] == EXPORT_HTML_CHILD_COMMAND and len(argv) == 3:
@@ -562,6 +584,7 @@ def main(argv: list[str] | None = None) -> int:
             export_capabilities_html_fn=_export_capabilities_html,
             export_log_archives_html_fn=_export_log_archives_html,
             export_guide_html_fn=_export_guide_html,
+            export_bans_html_fn=_export_bans_html,
             export_in_language_runner=_run_export_in_language,
             serve_foreground_runner=_run_serve_foreground,
             riposte_store_factory=_open_riposte_store,

@@ -1,5 +1,5 @@
 """Fiches guide : Active Securite - menu + 5 Active Defense + 4 WAF + 2
-modaux (plan guide d'aide, Phase 8)."""
+modaux (plan guide d'aide, Phase 8) + 3 INTERVENTION MANUELLE (2026-11-06)."""
 from __future__ import annotations
 
 from omega_serv.core.i18n import _
@@ -12,7 +12,8 @@ ACTIVE_DEFENSE_MENU_SCREEN = ScreenGuide(
     definition=(
         _("Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), "
           "Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la "
-          "durée : bans de plus en plus longs pour les sources qui reviennent).")
+          "durée : bans de plus en plus longs pour les sources qui reviennent). En dessous, INTERVENTION MANUELLE : "
+          "bannir ou débannir une adresse IP à la main, sans condition, et voir le statut de tous les bans.")
     ),
     fields=(),
     consequences=_("Aucune - purement navigation."),
@@ -929,6 +930,110 @@ WAF_RULE_PACK_PICKER_SCREEN = ScreenGuide(
     consequences=_("Aucune modification directe - purement une aide de sélection."),
 )
 
+MANUAL_BAN_SCREEN = ScreenGuide(
+    screen_class_name="ManualBanScreen",
+    title=_("Intervention manuelle - Bannir"),
+    acces=_("Accueil -> Active Sécurité -> Bannir (cadre INTERVENTION MANUELLE)"),
+    definition=(
+        _("Bannit une adresse IP sans condition : aucune règle, aucun seuil. L'adresse est ajoutée à la blocklist du "
+          "WAF et reçoit la page 451 sur tout le site, avant le routage - les backends (reverse proxy, FastCGI) ne la "
+          "voient jamais. Aucun droit administrateur n'est nécessaire.")
+    ),
+    fields=(
+        FieldGuide(
+            label=_("Adresse IP"),
+            definition=_("L'adresse à bannir, IPv4 ou IPv6."),
+            utilisation=_("Une seule adresse (ex. 203.0.113.7 ou 2001:db8::7). Un réseau (/24...) est refusé : il se "
+                          "bannit dans WAF -> Modules -> Liste de blocage."),
+            action=_("Vérifiée au clic sur Bannir."),
+            reaction=_("Adresse invalide ou réseau : message d'erreur, rien n'est écrit."),
+        ),
+        FieldGuide(
+            label=_("Motif du ban"),
+            definition=_("Texte libre gardé avec le ban, affiché dans Débannir et Statut des bans."),
+            utilisation=_("Facultatif : « Intervention manuelle » par défaut."),
+            action=_("Enregistré avec le ban."),
+            reaction=_("Visible dans Statut des bans et dans les exports."),
+        ),
+        FieldGuide(
+            label=_("Durée"),
+            definition=_("Combien de temps le ban reste en place."),
+            utilisation=_("1 h, 6 h, 24 h, 7 jours, 30 jours, une durée libre en heures, ou permanent."),
+            action=_("Calculée au moment du ban."),
+            reaction=_("À l'échéance, l'adresse est de nouveau acceptée, sans rien faire. Un ban permanent demande une "
+                        "confirmation et reste jusqu'à Débannir."),
+        ),
+    ),
+    consequences=(
+        _("Effet immédiat, sans redémarrage ni rechargement : le serveur relit la blocklist dès qu'elle change, avec le "
+          "moteur Python comme avec le moteur natif. Le ban ne compte jamais dans la récidive RIPOSTE et n'a aucun lien "
+          "avec Active Defense.")
+    ),
+    points_de_vigilance=(
+        _("WAF désactivé : la blocklist n'est pas consultée, le ban n'aurait aucun effet - l'écran l'indique en haut. "
+          "En mode log-only, le ban s'applique quand même."),
+        _("Adresse locale, privée ou Tailscale : une confirmation est demandée, vous pourriez couper votre propre "
+          "accès."),
+        _("Si l'adresse est déjà bannie par une autre origine (auto-ban, RIPOSTE, omega-jail), votre ban la remplace "
+          "après confirmation ; un automate ne le remplacera jamais."),
+    ),
+)
+
+MANUAL_UNBAN_SCREEN = ScreenGuide(
+    screen_class_name="ManualUnbanScreen",
+    title=_("Intervention manuelle - Débannir"),
+    acces=_("Accueil -> Active Sécurité -> Débannir (cadre INTERVENTION MANUELLE)"),
+    definition=_("Liste les bans posés par Bannir, et seulement eux, pour les lever."),
+    fields=(
+        FieldGuide(
+            label=_("Tableau des bans manuels"),
+            definition=_("Adresse, motif, date de pose, expiration, état (en vigueur ou expiré)."),
+            utilisation=_("Sélectionnez une ligne, puis Lever."),
+            action=_("Lever demande une confirmation."),
+            reaction=_("L'adresse est retirée de la blocklist : elle accède de nouveau au site, immédiatement."),
+        ),
+    ),
+    consequences=_("Retire l'entrée de la blocklist du WAF ; rien d'autre n'est touché."),
+    points_de_vigilance=(
+        _("Les autres bans se lèvent là où ils ont été posés : WAF -> Modules (réseaux, auto-bans, CLI, omega-jail), "
+          "RIPOSTE -> Actions. Un ban levé ici peut revenir si une règle automatique bannit de nouveau l'adresse."),
+    ),
+)
+
+BAN_STATUS_SCREEN = ScreenGuide(
+    screen_class_name="BanStatusScreen",
+    title=_("Intervention manuelle - Statut des bans"),
+    acces=_("Accueil -> Active Sécurité -> Statut des bans (cadre INTERVENTION MANUELLE)"),
+    definition=(
+        _("Tous les bans de la blocklist du WAF, avec leur origine : intervention manuelle, manuel (WAF -> Modules ou "
+          "CLI), auto-ban WAF (règles ou liste), RIPOSTE (politique), omega-jail (jail), et la liste du script Magnet "
+          "s'il est actif. Lecture seule.")
+    ),
+    fields=(
+        FieldGuide(
+            label=_("Format d'export"),
+            definition=_("JSON ou HTML de tous les bans, ou TXT d'injection."),
+            utilisation=_("TXT : bans actifs ou toute la liste. Une adresse par ligne, en-tête en commentaires « # » - "
+                          "importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en "
+                          "commentaire, omega-fire ne lisant que des adresses."),
+            action=_("Exporter écrit le fichier dans le dossier d'exports."),
+            reaction=_("Le chemin du fichier écrit est affiché."),
+        ),
+        FieldGuide(
+            label=_("Thème d'export HTML"),
+            definition=_("Palette de couleurs de l'export HTML."),
+            utilisation=_("Seulement pour le format HTML."),
+            action=_("Appliqué à l'export."),
+            reaction=_("Même choix de thèmes que les autres exports."),
+        ),
+    ),
+    consequences=_("Aucune - consultation et export seulement."),
+    points_de_vigilance=(
+        _("Le fichier TXT n'est jamais traduit : c'est un format lu par d'autres outils."),
+    ),
+)
+
+
 ALL_ACTIVE_SECURITY_GUIDES: tuple[ScreenGuide, ...] = (
     ACTIVE_DEFENSE_MENU_SCREEN,
     ACTIVE_DEFENSE_STATUS_SCREEN,
@@ -947,4 +1052,8 @@ ALL_ACTIVE_SECURITY_GUIDES: tuple[ScreenGuide, ...] = (
     KEYWORD_LIST_SETTINGS_SCREEN,
     WAF_RULE_PACK_PICKER_SCREEN,
     WAF_MAGNET_SCREEN,
+    MANUAL_BAN_SCREEN,
+    MANUAL_UNBAN_SCREEN,
+    BAN_STATUS_SCREEN,
 )
+

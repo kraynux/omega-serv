@@ -30,6 +30,13 @@ Voorbeeld: [Screenshots](https://kraynux.snake-mackarel.ts.net/omega-serv/screen
 
 **OMEGA-SERV** is een HTTP/1.1-server geschreven in puur Python (voor de serverkern alleen de standaardbibliotheek), bedoeld om statische inhoud en optioneel PHP-FPM te serveren, met een standaard actieve protocolverharding en beveiligingsmodules (WAF, TLS, authenticatie) die u kunt stapelen in plaats van dat ze worden opgelegd. Een optionele native C++-engine kan de verzoeken afhandelen in plaats van de Python-engine, met dezelfde beveiligingscontroles (zie §6b). Zevende tool van de `omega-`-suite, maar bewust **buiten de toekomstige `omega-suite`-integratie** (hij werkt op de lokale machine die hem host, niet op externe doelen — dezelfde familie als `omega-fire`); opgebouwd volgens Clean Architecture, waarbij `bootstrap/` dienstdoet als compositiewortel.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/D.png" width="24%" />
+</p>
+
 ## 1. Visie en reikwijdte
 
 De uitgesproken prioriteit is **eerst de robuustheid/veiligheid van de HTTP-kern** — WAF en TLS zijn optionele modules die erbovenop komen, nooit voorwaarden. Een server die maar één ding doet (bestanden serveren, eventueel PHP), maar dat goed doet, met een echte, niet te omzeilen protocolverharding — in plaats van een server die veel dingen half doet.
@@ -211,7 +218,7 @@ De hulpgids (toets `a`) biedt een scherm **Contact en ondersteuning**: *Trakteer
 - **Capaciteitenregister** — alleen-lezen systeemscan (init-systeem, geconfigureerde poort al bezet of niet, `openssl`/`logrotate`/`tailscale`/`lnav` aanwezig, schijfruimte, limiet van descriptors...), export naar JSON/HTML.
 - **Profielen** — dezelfde use-case als `profile` in de CLI (§5), diff altijd getoond vóór het schrijven.
 - **Gedetailleerde configuratie van de server** — volledige CRUD op aliassen/omleidingen/herschrijvingen/mapoverzicht/vertrouwde proxy's/uitgaande reverse proxy/FastCGI/cache/authenticatie/toegangscontrole/foutpagina's, plus het submenu **TLS** (status, zelfondertekende generatie, assistent lokale CA, Let's Encrypt/Certbot-assistent, automatische vernieuwing, intrekking, in-/uitschakelen — zie §9); een tweede kader **OPTIES EN CONTROLE** bundelt daar de snelkoppelingen naar **Opties** (`option` CLI, §7) en **Configuratie controleren** (`config check` CLI, §10) — hetzelfde traject als instellingen aanpassen en daarna controleren; deze twee schermen zijn niet meer rechtstreeks vanuit het hoofdmenu bereikbaar. De WAF woont hier niet meer (zie "Actieve beveiliging" hieronder): hij toont vooral operationele status die voortdurend verandert, geen eenvoudig statisch configuratieformulier. Elke opslag vermeldt systematisch de volgende stap: automatische en stille herlading tijdens bedrijf als er een dienst actief is (mapoverzicht, toegang, aliassen/omleidingen/herschrijvingen, cache, foutpagina's, vertrouwde proxy's, reverse-proxy-/FastCGI-zones, gebruikers/authenticatiezones), of expliciete bevestiging van een volledige herstart wanneer de wijziging de luistersocket, TLS of Active Defense raakt — geen enkel scherm laat u nog raden of de server opnieuw gestart moet worden.
-- **Actieve beveiliging** — één scherm met twee blokken naast elkaar: **Active Defense** (Status, Gevolgde dreigingen met score/niveau, Incidenten met tijdlijn/IoC-export/rapport, toewijzingen van Deception, Een beslissing simuleren in dry-run, **Instellingen** — volledige configuratie zonder ooit `config/omega-serve.json` met de hand te bewerken, zie §11) en **WAF** (Status, Modules — modus/regelpakketten/blokkeerlijst, Een verzoek testen, Custom — eigen regels opstellen en met de muis bewerkbare lijsten van paden/trefwoorden laden (zie §11b), Magnet — een extern `mod_magnet`-script importeren met compatibiliteitscontrole vóór activering) — zie §11. **RIPOSTE**: derde blok (WAF → Active Defense → RIPOSTE, de volgorde van een aanval) — getrapte reacties over de tijd, zie §11d.
+- **Actieve beveiliging** — één scherm met twee blokken naast elkaar: **Active Defense** (Status, Gevolgde dreigingen met score/niveau, Incidenten met tijdlijn/IoC-export/rapport, toewijzingen van Deception, Een beslissing simuleren in dry-run, **Instellingen** — volledige configuratie zonder ooit `config/omega-serve.json` met de hand te bewerken, zie §11) en **WAF** (Status, Modules — modus/regelpakketten/blokkeerlijst, Een verzoek testen, Custom — eigen regels opstellen en met de muis bewerkbare lijsten van paden/trefwoorden laden (zie §11b), Magnet — een extern `mod_magnet`-script importeren met compatibiliteitscontrole vóór activering) — zie §11. **RIPOSTE**: derde blok (WAF → Active Defense → RIPOSTE, de volgorde van een aanval) — getrapte reacties over de tijd, zie §11d. Onder de drie blokken **HANDMATIGE INGREEP**: een IP-adres met de hand verbannen of de ban opheffen, status van alle bans — zie §11e.
 - **Logbeheer** — menu in twee kolommen. Kolom **Bibliotheek**: centrale hub die elke te behandelen log refereert (handmatige vulling, één klik voegt automatisch de eigen logs van de instantie toe — access/error/native WAF, + magnet-script §7 indien actief —, of een via SSH opgehaalde **externe bron**, zie hieronder); **Favorieten** (combinatie van logs + viewer opgeslagen onder een naam, directe start); **Logs bekijken** met 3 viewers naar keuze afhankelijk van het aantal geselecteerde logs — Eenvoudig (live tail + generieke statistieken IP's/fouten/HTTP-codes voor elk formaat), Klassiek (lezen + volgen), samengevoegde `lnav` (echte terminalweergave in de interface, magnet-logs automatisch inbegrepen + handmatige paden die u **vastzet** om ze tussen sessies te bewaren); **IP bekijken en behandelen** (top-IP's uit één of meer gekozen logs, periode 24u/7d/30d/alles, verwijderen van een IP). Kolom **Onderhoud** (ongewijzigd): handmatige of automatische rotatie/archivering op groottedrempel, direct een back-up maken, instellen/beheren van geplande automatiseringen (declaratief — zie opmerking hieronder), een archief herstellen/opschonen, export van de lijst.
 - **Dienst** — dezelfde acties als `service` in de CLI (§12), eenmalige `sudo`-verhoging per actie, nooit de hele applicatie als root gestart.
 - **Multi-instantie** — globaal register (`~/.config/omega-serv/instances.json`, buiten elke projectmap) van de op de machine bekende installaties, met de systemd-status van elk; aanmaak van een nieuwe instantie (kopie van de mapstructuur, eigen virtuele omgeving en afhankelijkheden, verse configuratie met aparte poort, controle op nesting en poortconflict) rechtstreeks vanuit de interface. Knop praktisch onzichtbaar bij een enkele installatie (het label "Multi-instantie" wordt "Instanties (N)" zodra er 2 bekend zijn); volledige overschakeling naar een andere instantie (`os.execv`, expliciete bevestiging, eigen splash die de overschakeling bij het herstarten aankondigt); volledige verwijdering van een instantie (verwijderen van de unit, van het speciale systeemaccount als geen andere instantie het nog gebruikt, en optioneel verwijderen van de map, nooit standaard).
@@ -310,6 +317,19 @@ Alleen interfacevoorkeuren — nooit te verwarren met `config/omega-serve.json` 
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Volledige opdrachthulp
+
+De opdrachten hierboven zijn slechts een voorbeeld. Voor alle opdrachten en hun opties:
+
+```bash
+./omega-serv.sh help                    # volledige opdrachtenboom
+./omega-serv.sh help riposte            # één tak
+./omega-serv.sh riposte actions --help  # details van een opdracht
+man omega-serv                          # handleidingpagina (geïnstalleerd door install.sh)
+```
+
+Volledige referentie: [docs/HELP.md](../../HELP.md).
 
 ### Belangrijke exitcodes
 
@@ -512,6 +532,15 @@ Optionele module (`option enable riposte`, standaard uitgeschakeld, volledige he
 - **Waarborgen**: dezelfde uitzonderingen als de WAF (lokale host, Tailscale, lokaal netwerk), nooit boven een handmatige of langere ban, één actie per episode, een plafond voor gelijktijdige bans.
 - **Lokale ban en netwerkban**: de lokale ban legt omega-serv op in de blokkeerlijst van de WAF – het adres krijgt de 451-pagina „Uw IP is geband” op al zijn verzoeken, zolang de ban duurt. De netwerkban wordt via de jails van omega-jail aan fail2ban overgelaten (`<service>-riposte-1h/6h/24h/7d`, één set per instantie); hij heeft geen effect wanneer verbindingen via een lokale proxy binnenkomen (Tailscale Funnel), waar alleen de lokale ban beschermt.
 - **Interface**: zes schermen in Actieve beveiliging (Status, Beleidsregels, Acties, Recidive, Simuleren, Instellingen) en dezelfde opdrachten op de opdrachtregel (`riposte …`). Back-up: `config backup --include-riposte`.
+
+## 11e. Handmatige ingreep (Actieve beveiliging)
+
+Een kader **HANDMATIGE INGREEP**, onder de drie blokken van Actieve beveiliging, om met de hand in te grijpen zonder een configuratieregel te schrijven: een IP-adres zonder voorwaarde verbannen, de ban opheffen, alle huidige bans bekijken.
+
+- **Verbannen**: een IPv4- of IPv6-adres, een reden, een duur (1 u tot 30 dagen, vrij of permanent). De ban loopt via de blokkeerlijst van de WAF: pagina 451 op de hele site, vóór de routering — de backends zien het adres nooit. Onmiddellijk effect met beide engines, zonder rootrechten. Een netwerk verbant u in WAF → Modules.
+- **Onafhankelijk**: geen verband met Active Defense of RIPOSTE — een handmatige ban telt nooit als herhaling, en geen automatisme vervangt hem. Bevestiging gevraagd voor een lokaal, privé- of Tailscale-adres.
+- **Ban opheffen**: alleen de hier ingestelde bans; de andere worden opgeheven waar ze zijn ingesteld (WAF → Modules, RIPOSTE → Acties).
+- **Banstatus**: alle bans met hun herkomst (handmatig, auto-ban WAF, RIPOSTE, omega-jail, Magnet), te exporteren als JSON, HTML of TXT — één adres per regel, zo te importeren in omega-fire.
 
 ## 12. Diensten en beheer
 

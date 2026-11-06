@@ -28,7 +28,10 @@ _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 _env = Environment(
     loader=FileSystemLoader(_TEMPLATES_DIR),
-    autoescape=select_autoescape(["html"]),
+    # Modeles nommes `*.html.j2` : "html" seul ne les reconnaissait pas (select_autoescape compare la fin du nom),
+    # aucun export n'etait echappe - un « <nom-archive> » du guide disparaissait dans le navigateur, un motif de ban
+    # pouvait injecter du HTML (corrige 2026-11-06).
+    autoescape=select_autoescape(["html", "html.j2"]),
 )
 # Exports dans la langue de l'interface (retour utilisateur 2026-10-21, plan i18n lot 4) :
 # `{{ _("...") }}` dans les modeles, `<html lang="{{ html_lang() }}">`.
@@ -76,6 +79,21 @@ def export_guide_html(
     return template.render(
         screen_guides=screen_guides,
         faq_entries=faq_entries,
+        generated_at=datetime.now(timezone.utc).isoformat(),
+        palette=palette,
+    )
+
+
+def export_bans_html(bans: Sequence[dict], active_count: int, theme_name: str = DEFAULT_EXPORT_THEME) -> str:
+    """Statut des bans (Active Securite -> INTERVENTION MANUELLE -> Statut) : `bans` deja traduits par
+    application/security/manual_intervention.py::ban_rows_for_display."""
+    from omega_serv.infrastructure.exporters.html_theme_resolver import resolve_export_palette
+
+    template = _env.get_template("bans_report.html.j2")
+    palette = resolve_export_palette(theme_name)
+    return template.render(
+        bans=bans,
+        active_count=active_count,
         generated_at=datetime.now(timezone.utc).isoformat(),
         palette=palette,
     )

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 06:56+0100\n"
+"POT-Creation-Date: 2026-11-06 09:44+0100\n"
 "PO-Revision-Date: 2026-10-23 10:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Português (Brasil)\n"
@@ -705,7 +705,9 @@ msgid "expire le {date}"
 msgstr "expira em {date}"
 
 #: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manual_intervention.py:168
 #: src/omega_serv/interfaces/cli/main.py:723
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:30
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "permanente"
@@ -719,6 +721,93 @@ msgstr "Nenhuma entrada para {network}"
 #, python-brace-format
 msgid "Entrée retirée : {network}"
 msgstr "Entrada removida: {network}"
+
+#: src/omega_serv/application/security/manual_intervention.py:30
+msgid "Pour bannir un réseau : menu WAF → Modules → Liste de blocage."
+msgstr "Para banir uma rede: menu WAF → Módulos → Lista de bloqueio."
+
+#: src/omega_serv/application/security/manual_intervention.py:64
+msgid "Adresse IP manquante."
+msgstr "Endereço IP ausente."
+
+#: src/omega_serv/application/security/manual_intervention.py:66
+#, python-brace-format
+msgid "Une seule adresse IP, pas de réseau. {hint}"
+msgstr "Um único endereço IP, não uma rede. {hint}"
+
+#: src/omega_serv/application/security/manual_intervention.py:67
+msgid "Adresse IP invalide."
+msgstr "Endereço IP inválido."
+
+#: src/omega_serv/application/security/manual_intervention.py:78
+#, python-brace-format
+msgid "{ip} est une adresse locale, privée ou Tailscale : la bannir peut couper votre propre accès au site."
+msgstr "{ip} é um endereço local, privado ou do Tailscale: bani-lo pode cortar seu próprio acesso ao site."
+
+#: src/omega_serv/application/security/manual_intervention.py:84
+#, python-brace-format
+msgid "Cette adresse est déjà bannie ({origin}) : ce ban sera remplacé par le vôtre."
+msgstr "Este endereço já está banido ({origin}): esse ban será substituído pelo seu."
+
+#: src/omega_serv/application/security/manual_intervention.py:87
+msgid "Ban permanent : il reste en place jusqu'à ce que vous le leviez dans Débannir."
+msgstr "Ban permanente: permanece até que você o revogue em Desbanir."
+
+#: src/omega_serv/application/security/manual_intervention.py:97
+#: src/omega_serv/domain/security/waf/manual_intervention.py:117
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:68
+msgid "Intervention manuelle"
+msgstr "Intervenção manual"
+
+#: src/omega_serv/application/security/manual_intervention.py:106
+#: src/omega_serv/application/security/manual_intervention.py:130
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:82
+#, python-brace-format
+msgid "Blocklist illisible ou non modifiable : {error}"
+msgstr "Blocklist ilegível ou não modificável: {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:109
+#, python-brace-format
+msgid "{ip} bannie (permanent)."
+msgstr "{ip} banido (permanente)."
+
+#: src/omega_serv/application/security/manual_intervention.py:110
+#, python-brace-format
+msgid "{ip} bannie jusqu'au {date}."
+msgstr "{ip} banido até {date}."
+
+#: src/omega_serv/application/security/manual_intervention.py:123
+#: src/omega_serv/application/security/manual_intervention.py:132
+#, python-brace-format
+msgid "Aucun ban pour {ip}."
+msgstr "Nenhum ban para {ip}."
+
+#: src/omega_serv/application/security/manual_intervention.py:125
+msgid "Ce ban n'a pas été posé par l'intervention manuelle : levez-le là où il a été posé (WAF → Modules, RIPOSTE → Actions)."
+msgstr "Este ban não foi aplicado pela intervenção manual: revogue-o onde foi aplicado (WAF → Módulos, RIPOSTE → Ações)."
+
+#: src/omega_serv/application/security/manual_intervention.py:133
+#, python-brace-format
+msgid "Ban levé : {ip}"
+msgstr "Ban revogado: {ip}"
+
+#: src/omega_serv/application/security/manual_intervention.py:147
+#, python-brace-format
+msgid "Liste Magnet illisible ({path}) : {error}"
+msgstr "Lista do Magnet ilegível ({path}): {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+msgid "en vigueur"
+msgstr "em vigor"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
+msgid "expiré"
+msgstr "expirado"
 
 #: src/omega_serv/application/security/path_list_tools.py:128
 msgid "corrigez d'abord les erreurs de la liste"
@@ -798,7 +887,7 @@ msgid "Auth"
 msgstr "Auth"
 
 #: src/omega_serv/application/server/engine_levels.py:65
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 msgid "WAF"
 msgstr "WAF"
@@ -1215,18 +1304,18 @@ msgstr "cota de número de arquivos atingida para esta zona"
 msgid "quota de volume total atteint pour cette zone"
 msgstr "cota de volume total atingida para esta zona"
 
-#: src/omega_serv/bootstrap/container.py:508
+#: src/omega_serv/bootstrap/container.py:510
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:237
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:254
 msgid "Incident introuvable."
 msgstr "Incidente não encontrado."
 
-#: src/omega_serv/bootstrap/container.py:511
+#: src/omega_serv/bootstrap/container.py:513
 #, python-brace-format
 msgid "Export dans la langue « {name} » impossible : {error}"
 msgstr "Exportação no idioma « {name} » impossível: {error}"
 
-#: src/omega_serv/bootstrap/container.py:711
+#: src/omega_serv/bootstrap/container.py:719
 msgid "Aucun gestionnaire de service : arrêtez le serveur vous-même, puis restaurez."
 msgstr "Nenhum gerenciador de serviços: pare você mesmo o servidor e depois restaure."
 
@@ -2310,15 +2399,15 @@ msgstr "a chave privada e o certificado fornecidos não correspondem"
 msgid "le certificat fourni est déjà expiré depuis le {value}"
 msgstr "o certificado fornecido já expirou em {value}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:51
+#: src/omega_serv/domain/security/waf/blocklist.py:56
 msgid "network invalide (attendu une IP ou un CIDR) : {network!r}"
 msgstr "network inválido (esperado um IP ou um CIDR): {network!r}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:53
+#: src/omega_serv/domain/security/waf/blocklist.py:58
 msgid "reason ne peut pas être vide"
 msgstr "reason não pode ficar vazio"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:55
+#: src/omega_serv/domain/security/waf/blocklist.py:60
 msgid "source invalide : {source!r}"
 msgstr "source inválido: {source!r}"
 
@@ -2538,6 +2627,37 @@ msgstr "Lista de caminhos ({count} entrada(s), {count2} exceção(ões))"
 #, python-brace-format
 msgid "Liste de mots-clefs ({count} entrée(s))"
 msgstr "Lista de palavras-chave ({count} entrada(s))"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:119
+msgid "Auto-ban WAF (règles)"
+msgstr "Auto-ban do WAF (regras)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+#, python-brace-format
+msgid "Auto-ban WAF (liste {name})"
+msgstr "Auto-ban do WAF (lista {name})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+msgid "Auto-ban WAF (liste)"
+msgstr "Auto-ban do WAF (lista)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:123
+#, python-brace-format
+msgid "RIPOSTE ({policy})"
+msgstr "RIPOSTE ({policy})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:125
+#, python-brace-format
+msgid "omega-jail ({jail})"
+msgstr "omega-jail ({jail})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:127
+msgid "Magnet (liste du script)"
+msgstr "Magnet (lista do script)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:128
+msgid "Manuel (WAF → Modules ou CLI)"
+msgstr "Manual (WAF → Módulos ou CLI)"
 
 #: src/omega_serv/domain/security/waf/reputation.py:103
 msgid "options.waf.reputation.never_auto_block : réseau invalide : {network!r}"
@@ -3933,11 +4053,6 @@ msgstr "OK"
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] Certificado {value2}"
-
-#: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
-msgid "expiré"
-msgstr "expirado"
 
 #: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
@@ -5856,10 +5971,12 @@ msgstr "Próximo tema"
 #: src/omega_serv/interfaces/tui/app.py:82
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:157
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:25
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:77
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:64
@@ -5870,8 +5987,8 @@ msgid "Rafraîchir"
 msgstr "Atualizar"
 
 #: src/omega_serv/interfaces/tui/app.py:83
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/home.py:90
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:167
 msgid "Aide"
@@ -6231,6 +6348,9 @@ msgstr "Nenhum efeito (leitura, atualizada automaticamente a cada 2 segundos)."
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:104
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:105
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:106
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
 #: src/omega_serv/interfaces/tui/screens/home.py:89
 msgid "Active Sécurité"
 msgstr "Segurança ativa"
@@ -6312,7 +6432,7 @@ msgstr "Submenu que reúne todas as telas de configuração do servidor e das op
 
 #: src/omega_serv/interfaces/tui/guide/content/configuration_base.py:19
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:18
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:18
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:19
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:15
 msgid "Aucune - purement navigation."
 msgstr "Nenhuma - somente navegação."
@@ -7049,6 +7169,8 @@ msgstr "Varredura completa do ambiente (porta livre, openssl presente, PHP-FPM s
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:16
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:436
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1023
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:43
 msgid "Thème d'export HTML"
@@ -7084,7 +7206,7 @@ msgstr "Executa a varredura de novo, ou exporta o resultado."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:25
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:445
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
 msgid "Aucune saisie supplémentaire."
 msgstr "Nenhuma entrada adicional."
 
@@ -7115,9 +7237,9 @@ msgstr "Detalhe completo de uma capacidade já verificada (nunca uma nova varred
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:39
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:299
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:329
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:501
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:197
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:330
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:502
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:171
 msgid "Purement consultatif."
 msgstr "Somente consulta."
@@ -7423,7 +7545,7 @@ msgid "Restaurer écrase directement les fichiers vises, sans filet - la seule p
 msgstr "Restaurar sobrescreve diretamente os arquivos afetados, sem rede de segurança - a única proteção é a confirmação pedida antes."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:183
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:110
 msgid "Réglages de l'application"
 msgstr "Configurações do aplicativo"
 
@@ -7554,7 +7676,7 @@ msgid "Ne touche jamais config/omega-serve.json - réglages purement locaux à c
 msgstr "Nunca toca em config/omega-serve.json - configurações puramente locais desta interface."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:262
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
 #: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:56
 msgid "Contact et support"
 msgstr "Contato e suporte"
@@ -7661,7 +7783,7 @@ msgid "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déc
 msgstr "Nada é enviado sem um clique explícito em Enviar (formulário de declaração) ou em Não me declarar mais."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:305
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:80
@@ -7940,7 +8062,7 @@ msgid "Les 8 classes possibles et ce qu'elles ciblent concrètement : scan (sond
 msgstr "As 8 classes possíveis e o que elas visam concretamente: scan (sondagem de URLs/portas, scanners automatizados), credential_stuffing (tentativas em massa de senhas em um formulário de login), sqli (tentativa de injeção SQL), xss (script injetado em um parâmetro), path_traversal (tentativa de sair da pasta servida, ex.: ../../etc/passwd), upload_probe (upload de arquivo suspeito), api_probe (sondagem de endpoints /api/...), unknown (tudo o que não corresponde a nenhuma das categorias anteriores - uma rede de segurança genérica). Exemplo: um perfil chamado fake_admin com as classes scan,credential_stuffing atrairá os scanners e as tentativas de força bruta de login para uma falsa página de autenticação. Várias classes podem ser listadas, separadas por vírgulas."
 
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:221
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:123
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:124
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:305
 msgid "Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan."
 msgstr "Nova classe (2.1): command_injection (injeção de comandos shell, ex.: $(...), ; cat /etc/passwd). As sondas do WordPress (wp-login, xmlrpc.php) são classificadas como scan."
@@ -8039,7 +8161,7 @@ msgstr "A mensagem exibida após 'Salvar e aplicar' dá o motivo: (1) a lista ai
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:400
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:853
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (importação de um WAF externo)"
@@ -8202,7 +8324,7 @@ msgstr "As causas mais frequentes, na ordem em que verificar: (1) a porta 80 nã
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:689
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:700
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:121
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
@@ -9213,7 +9335,7 @@ msgid "Une politique dit QUAND agir (classes d'attaque, nombre de retours dans u
 msgstr "Uma política diz QUANDO agir (classes de ataque, número de retornos em uma janela, nível do Active Defense, visitas a iscas) e COMO (ban local, ban local + de rede, isca). Uma política ativa age automaticamente, sem aprovação ação por ação."
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:54
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:524
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
 #: src/omega_serv/interfaces/tui/guide/content/services_avances.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/aliases_screen.py:48
@@ -9448,6 +9570,7 @@ msgid "Le registre des actions : en cours, ou terminées (échéance, levée par
 msgstr "O registro de ações: em andamento ou concluídas (prazo, revogada pelo usuário, regra desativada, parada de emergência, removida fora do RIPOSTE, não aplicada). Nada desaparece."
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:141
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:184
 msgid "Lever"
@@ -9911,7 +10034,7 @@ msgid "Un préfixe par ligne, doit commencer par '/'."
 msgstr "Um prefixo por linha, deve começar com '/'."
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:180
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:141
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
 msgid "Ajouter/Supprimer une zone."
 msgstr "Adicionar/Excluir uma zona."
 
@@ -10043,10 +10166,10 @@ msgid "Chemin relatif au projet. Valeur par défaut : webroot/.errors."
 msgstr "Caminho relativo ao projeto. Valor padrão: webroot/.errors."
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:276
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
 msgid "Enregistre au clic sur Enregistrer."
 msgstr "Grava ao clicar em Salvar."
 
@@ -10395,1523 +10518,1719 @@ msgid "Accueil -> Active Sécurité"
 msgstr "Início -> Segurança ativa"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:13
-msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent)."
-msgstr "Reúne três blocos, na ordem de um ataque: WAF (proteger: modo, pacotes, blocklist, limitações), Active Defense (detectar: ameaças, incidentes, iscas, durante a requisição) e RIPOSTE (revidar ao longo do tempo: bans cada vez mais longos para as origens que voltam)."
+msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent). En dessous, INTERVENTION MANUELLE : bannir ou débannir une adresse IP à la main, sans condition, et voir le statut de tous les bans."
+msgstr "Reúne três blocos, na ordem de um ataque: WAF (proteger: modo, pacotes, blocklist, limitações), Active Defense (detectar: ameaças, incidentes, iscas, durante a requisição) e RIPOSTE (revidar ao longo do tempo: bans cada vez mais longos para as origens que voltam). Abaixo, INTERVENÇÃO MANUAL: banir ou desbanir um endereço IP manualmente, sem condições, e ver o status de todos os bans."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:21
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:22
 msgid "Si un avertissement de groupe système apparaît en haut de cet écran, reconnectez votre session avant d'utiliser les sous-écrans - sinon ils resteront en erreur d'accès."
 msgstr "Se um aviso de grupo do sistema aparecer no topo desta tela, reconecte sua sessão antes de usar as subtelas - caso contrário, elas continuarão com erro de acesso."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:25
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:26
 msgid "Activer l'option 'active_defense' (menu Options) ne suffit PAS à lui seul - voir la fiche 'Active Defense - État' et la FAQ 'Active Defense ne détecte jamais rien'."
 msgstr "Ativar a opção 'active_defense' (menu Opções) NÃO basta sozinho - veja a ficha 'Active Defense - Status' e a FAQ 'Active Defense nunca detecta nada'."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:33
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
 msgid "Active Defense - État"
 msgstr "Active Defense - Status"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
 msgid "Accueil -> Active Sécurité -> État (bloc Active Defense)"
 msgstr "Início -> Segurança ativa -> Status (bloco Active Defense)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:36
 msgid "Vue d'ensemble en lecture seule : mode, état du mode guerre, état de la deception, nombre de sources suivies."
 msgstr "Visão geral somente leitura: modo, estado do modo de guerra, estado da deception, número de origens monitoradas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:38
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:39
 msgid "Purement consultatif - mais la ligne 'Mode guerre' affichée ici est le seul endroit où vérifier le VRAI interrupteur qui déclenche quoi que ce soit (voir points de vigilance)."
 msgstr "Somente consulta - mas a linha 'Modo de guerra' exibida aqui é o único lugar para verificar o VERDADEIRO interruptor que dispara qualquer coisa (veja os pontos de atenção)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:42
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:43
 msgid "L'activation de l'option active_defense se fait dans le menu Options, jamais ici."
 msgstr "A ativação da opção active_defense é feita no menu Opções, nunca aqui."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:44
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:45
 msgid "PIÈGE RÉEL VÉRIFIÉ DANS LE CODE : activer l'option 'active_defense' seule ne déclenche RIEN. Un second interrupteur, `war_mode.enabled` (Active Defense - Réglages), vaut FALSE par défaut. Tant qu'il reste à false, les écrans Menaces/Incidents/Leurres restent fonctionnels mais ne se peuplent jamais, même avec un trafic hostile réel."
 msgstr "ARMADILHA REAL VERIFICADA NO CÓDIGO: ativar somente a opção 'active_defense' NÃO dispara NADA. Um segundo interruptor, `war_mode.enabled` (Active Defense - Configurações), vale FALSE por padrão. Enquanto ele continuar false, as telas Ameaças/Incidentes/Iscas continuam funcionando, mas nunca são preenchidas, mesmo com tráfego hostil real."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:51
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:52
 msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterministe, sans aucune intervention manuelle : chaque décision WAF déjà calculée alimente un score cumulé par source (IP + User-Agent hache, avec décroissance dans le temps), qui franchit des seuils configurables (normal/suspicious/hostile/contained) déclenchant des actions automatiques (redirection vers un leurre, journalisation enrichie, ralentissement, création d'incident)."
 msgstr "Com `war_mode.enabled=true`, tudo fica automático e determinístico, sem nenhuma intervenção manual: cada decisão WAF já calculada alimenta uma pontuação acumulada por origem (IP + User-Agent com hash, com decaimento no tempo), que ultrapassa limites configuráveis (normal/suspicious/hostile/contained) que disparam ações automáticas (redirecionamento para uma isca, registro enriquecido, desaceleração, criação de incidente)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:63
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - Configurações"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:65
 msgid "Accueil -> Active Sécurité -> Réglages (bloc Active Defense)"
 msgstr "Início -> Segurança ativa -> Configurações (bloco Active Defense)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:66
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:67
 msgid "Configure l'intégralité d'Active Defense (mode guerre, deception/leurres, IoC, stockage, journalisation) - AUCUNE édition manuelle de config/omega-serve.json n'est plus nécessaire pour ces réglages."
 msgstr "Configura todo o Active Defense (modo de guerra, deception/iscas, IoC, armazenamento, registro) - NENHUMA edição manual de config/omega-serve.json é mais necessária para essas configurações."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:72
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:345
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:306
 msgid "Mode"
 msgstr "Modo"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
 msgid "Mode global d'Active Defense."
 msgstr "Modo global do Active Defense."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
 msgid "monitor (observe uniquement) ou enforce. Valeur par défaut : monitor."
 msgstr "monitor (apenas observa) ou enforce. Valor padrão: monitor."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
 msgid "Enregistre au clic sur Enregistrer, après validation."
 msgstr "Grava ao clicar em Salvar, após a validação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:77
 msgid "REDÉMARRAGE COMPLET toujours nécessaire - active_defense n'est jamais rechargé à chaud."
 msgstr "REINICIALIZAÇÃO COMPLETA sempre necessária - active_defense nunca é recarregado a quente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:79
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
 msgid "Mode guerre actif (war_mode.enabled)"
 msgstr "Modo de guerra ativo (war_mode.enabled)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
 msgid "LE VRAI INTERRUPTEUR qui déclenche l'observation et les actions automatiques."
 msgstr "O VERDADEIRO INTERRUPTOR que dispara a observação e as ações automáticas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
 msgid "oui/non. Valeur par défaut : non - RIEN ne se déclenche tant qu'il reste à 'non'."
 msgstr "sim/não. Valor padrão: não - NADA é disparado enquanto ele continuar em 'não'."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
 msgid "Enregistre avec le reste des réglages généraux."
 msgstr "Grava junto com o resto das configurações gerais."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:84
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:96
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:103
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:127
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:143
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:150
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:157
 msgid "REDÉMARRAGE COMPLET toujours nécessaire."
 msgstr "REINICIALIZAÇÃO COMPLETA sempre necessária."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:86
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
 msgid "Portée / Actions autorisées / Seuils / Ralentissement / Limite de requêtes"
 msgstr "Escopo / Ações permitidas / Limites / Desaceleração / Limite de requisições"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:88
 msgid "Réglages fins du mode guerre : à qui s'appliquent les actions, lesquelles, à quel score, et leurs paramètres."
 msgstr "Ajustes finos do modo de guerra: a quem se aplicam as ações, quais, com qual pontuação e os parâmetros delas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:89
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:90
 msgid "Portée : source/instance. Actions : liste parmi observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc. Seuils : 4 entiers croissants (suspect <= hostile <= incident, confine >= hostile). Ralentissement et limite de requêtes : bornes en millisecondes/secondes."
 msgstr "Escopo: source/instance. Ações: lista entre observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc. Limites: 4 inteiros crescentes (suspeito <= hostil <= incidente, contido >= hostil). Desaceleração e limite de requisições: limites em milissegundos/segundos."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:94
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
 msgid "Valides par les mêmes règles que le domaine (`validate_active_defense_config`) avant tout enregistrement."
 msgstr "Validados pelas mesmas regras do domínio (`validate_active_defense_config`) antes de qualquer gravação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:98
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
 msgid "Deception (actif, comportement par défaut, durée de vie d'une affectation)"
 msgstr "Deception (ativa, comportamento padrão, duração de uma atribuição)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
 msgid "Active ou non le routage vers des leurres, et ce qui se passe si aucun profil ne correspond à l'attaque."
 msgstr "Ativa ou não o roteamento para iscas, e o que acontece se nenhum perfil corresponder ao ataque."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
 msgid "actif : oui/non. Comportement : pass_through (laisse passer) ou reject."
 msgstr "ativa: sim/não. Comportamento: pass_through (deixa passar) ou reject."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:105
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
 msgid "Profils de leurre (table)"
 msgstr "Perfis de isca (tabela)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:107
 msgid "Associe une classe d'attaque à un niveau d'isolation - le premier profil actif qui correspond est utilisé."
 msgstr "Associa uma classe de ataque a um nível de isolamento - o primeiro perfil ativo correspondente é usado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:108
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:109
 msgid "Nom : si Isolation = fixture, DOIT être exactement fake_admin, fake_cms, fake_api ou fake_secrets (les 4 seules fixtures réellement implémentées) - tout autre nom fait que le leurre ne se déclenche JAMAIS, sans aucune erreur visible (bloqué désormais à l'enregistrement par validate_active_defense_config). Libre si Isolation = proxy. Classes d'attaque visées (séparées par virgules) : scan (sondage d'URLs/ports), credential_stuffing (essais massifs de mots de passe), sqli (injection SQL), xss (script injecté), path_traversal (ex : ../../etc/passwd), upload_probe (upload de fichier suspect), api_probe (sondage d'endpoints /api/...), unknown (tout le reste, filet de sécurité). Exemple concret : un profil fake_admin avec scan,credential_stuffing intercepte les scanners et les tentatives de bruteforce de login. Isolation : fixture (simulation interne, rapide, sans risque) ou proxy (redirigé vers un vrai serveur isolé que vous faites tourner, voir Zones de leurre ci-dessous). Zone de leurre associée : requise si Isolation = proxy, doit correspondre à un nom de la table Zones de leurre."
 msgstr "Nome: se Isolamento = fixture, DEVE ser exatamente fake_admin, fake_cms, fake_api ou fake_secrets (as 4 únicas fixtures realmente implementadas) - qualquer outro nome faz a isca NUNCA disparar, sem nenhum erro visível (agora bloqueado ao salvar por validate_active_defense_config). Livre se Isolamento = proxy. Classes de ataque visadas (separadas por vírgulas): scan (sondagem de URLs/portas), credential_stuffing (tentativas em massa de senhas), sqli (injeção SQL), xss (script injetado), path_traversal (ex.: ../../etc/passwd), upload_probe (upload de arquivo suspeito), api_probe (sondagem de endpoints /api/...), unknown (todo o resto, rede de segurança). Exemplo concreto: um perfil fake_admin com scan,credential_stuffing intercepta os scanners e as tentativas de força bruta de login. Isolamento: fixture (simulação interna, rápida, sem risco) ou proxy (redirecionado para um servidor isolado real que você executa, veja Zonas de isca abaixo). Zona de isca associada: obrigatória se Isolamento = proxy, deve corresponder a um nome da tabela Zonas de isca."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:125
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
 msgid "Ajouter/Supprimer un profil."
 msgstr "Adicionar/Excluir um perfil."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:129
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
 msgid "Zones de leurre (table, Niveau 2)"
 msgstr "Zonas de isca (tabela, Nível 2)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:131
 msgid "Backends réellement isolés vers lesquels un profil 'proxy' peut rediriger - jamais confondues avec les zones de reverse_proxy de production."
 msgstr "Backends realmente isolados para os quais um perfil 'proxy' pode redirecionar - nunca confundidos com as zonas reverse_proxy de produção."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:132
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:133
 msgid "Nom : un simple identifiant (pas une URL, pas un dossier) référence depuis un profil de leurre en Isolation = proxy. Upstreams (host:port, séparés par virgules) : adresse(s) d'un serveur DÉJÀ EN COURS D'EXÉCUTION que vous contrôlez - rien n'est créé automatiquement ici, aucun dossier n'est généré, et l'enregistrement n'exige PAS que la zone existe déjà ou réponde. Exemple : 127.0.0.1:9001. Si au moment d'une vraie requête rien n'écoute à cette adresse, l'attaquant reçoit simplement une erreur HTTP 502 Bad Gateway - jamais de crash, jamais de création silencieuse."
 msgstr "Nome: um simples identificador (não uma URL, não uma pasta) referenciado por um perfil de isca com Isolamento = proxy. Upstreams (host:port, separados por vírgulas): endereço(s) de um servidor JÁ EM EXECUÇÃO que você controla - nada é criado automaticamente aqui, nenhuma pasta é gerada, e salvar NÃO exige que a zona já exista ou responda. Exemplo: 127.0.0.1:9001. Se, no momento de uma requisição real, nada escutar nesse endereço, o atacante recebe simplesmente um erro HTTP 502 Bad Gateway - nunca uma queda, nunca uma criação silenciosa."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:145
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
 msgid "IoC (export d'indicateurs de compromission)"
 msgstr "IoC (exportação de indicadores de comprometimento)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
 msgid "Contrôle l'export automatique d'indicateurs à la fermeture d'un incident."
 msgstr "Controla a exportação automática de indicadores no fechamento de um incidente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
 msgid "Formats : json, csv, markdown, stix (bundle STIX 2.1) et misp (événement MISP à importer par son interface) - fichiers locaux, jamais envoyés. Marquage TLP des exports STIX et MISP : amber par défaut (white, green, amber, red). Politique de partage : local_only ou manual_export."
 msgstr "Formatos: json, csv, markdown, stix (bundle STIX 2.1) e misp (evento MISP a importar pela interface dele): arquivos locais, nunca enviados. Marcação TLP das exportações STIX e MISP: amber por padrão (white, green, amber, red). Política de compartilhamento: local_only ou manual_export."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:152
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
 msgid "Stockage et journalisation"
 msgstr "Armazenamento e registro"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
 msgid "Emplacement de la base de données, du répertoire d'export, et paramètres de capture enrichie (corps de requête, champs masques)."
 msgstr "Local do banco de dados, do diretório de exportação e parâmetros de captura enriquecida (corpo da requisição, campos mascarados)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
 msgid "Chemins relatifs au projet ; capture du corps de requête désactivée par défaut (données potentiellement sensibles)."
 msgstr "Caminhos relativos ao projeto; captura do corpo da requisição desativada por padrão (dados potencialmente sensíveis)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:160
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:161
 msgid "TOUT changement ici exige un redémarrage complet, sans aucune exception - active_defense n'est jamais rechargé à chaud, contrairement à la plupart des autres options."
 msgstr "QUALQUER alteração aqui exige uma reinicialização completa, sem nenhuma exceção - active_defense nunca é recarregado a quente, ao contrário da maioria das outras opções."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:165
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:166
 msgid "Sans activer 'war_mode.enabled' ICI, activer seulement l'option 'active_defense' (menu Options) ne sert à rien - voir la FAQ dédiée."
 msgstr "Sem ativar 'war_mode.enabled' AQUI, ativar somente a opção 'active_defense' (menu Opções) não serve para nada - veja a FAQ dedicada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:169
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:170
 msgid "Un profil de leurre en Isolation = fixture dont le nom n'est pas exactement fake_admin, fake_cms, fake_api ou fake_secrets ne se déclenchera JAMAIS - l'enregistrement le refuse désormais avec un message explicite."
 msgstr "Um perfil de isca com Isolamento = fixture cujo nome não seja exatamente fake_admin, fake_cms, fake_api ou fake_secrets NUNCA vai disparar - salvar agora o recusa com uma mensagem explícita."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:174
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:175
 msgid "Un profil refusé n'est pas enregistré : le formulaire se referme et la raison s'affiche EN HAUT de cet écran - remontez pour la lire, puis ressaisissez le profil (causes fréquentes : FAQ)."
 msgstr "Um perfil recusado não é salvo: o formulário se fecha e o motivo aparece NO TOPO desta tela - role para cima para lê-lo e depois digite o perfil de novo (causas frequentes: FAQ)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:178
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:179
 msgid "Une zone de leurre n'est jamais créée automatiquement et son existence n'est pas vérifiée à l'enregistrement - si rien n'écoute à l'adresse indiquée, l'attaquant reçoit une erreur 502 au moment de la requête, pas avant."
 msgstr "Uma zona de isca nunca é criada automaticamente e a existência dela não é verificada ao salvar - se nada escutar no endereço indicado, o atacante recebe um erro 502 no momento da requisição, não antes."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:187
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - Ameaças"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
 msgid "Accueil -> Active Sécurité -> Menaces"
 msgstr "Início -> Segurança ativa -> Ameaças"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:190
 msgid "Liste toutes les sources actuellement suivies par Active Defense, avec leur score et niveau de menace."
 msgstr "Lista todas as origens monitoradas atualmente pelo Active Defense, com a pontuação e o nível de ameaça delas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:192
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
 msgid "Table des menaces"
 msgstr "Tabela de ameaças"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
 msgid "Une ligne par source suivie (IP, score, niveau, dernière mise à jour, expiration)."
 msgstr "Uma linha por origem monitorada (IP, pontuação, nível, última atualização, expiração)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
 msgid "Sélectionner une ligne affiche son détail complet."
 msgstr "Selecionar uma linha mostra o detalhe completo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
 msgid "Aucune action mutante sur cet écran."
 msgstr "Nenhuma ação de modificação nesta tela."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:199
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:200
 msgid "Aucune modification possible depuis cet écran."
 msgstr "Nenhuma alteração possível a partir desta tela."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:204
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - Incidentes"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
 msgid "Accueil -> Active Sécurité -> Incidents"
 msgstr "Início -> Segurança ativa -> Incidentes"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:207
 msgid "Liste les incidents de sécurité ouverts/fermes, permet de les fermer et d'exporter des indicateurs de compromission (IoC)."
 msgstr "Lista os incidentes de segurança abertos/fechados, permite fechá-los e exportar indicadores de comprometimento (IoC)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:209
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
 msgid "Ouverts / Fermés / Tous"
 msgstr "Abertos / Fechados / Todos"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
 msgid "Filtre de la liste, avec le nombre d'incidents de chaque sorte."
 msgstr "Filtro da lista, com o número de incidentes de cada tipo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:212
 msgid "« Ouverts » est affiché par défaut ; un incident fermé quitte cette vue et reste consultable et exportable dans « Fermés »."
 msgstr "« Abertos » é exibido por padrão; um incidente fechado sai desta visão e continua consultável e exportável em « Fechados »."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:213
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
 msgid "Change seulement l'affichage."
 msgstr "Muda apenas a exibição."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:215
 msgid "Les incidents fermés depuis plus de 90 jours sont supprimés automatiquement, avec leur historique (jamais un incident ouvert) ; les exports et rapports déjà écrits restent."
 msgstr "Os incidentes fechados há mais de 90 dias são excluídos automaticamente, com seu histórico (nunca um incidente aberto); as exportações e relatórios já gravados permanecem."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:218
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:64
 msgid "Purger maintenant"
 msgstr "Limpar agora"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:220
 msgid "Fait tout de suite ce que le serveur fait seul régulièrement : ferme les incidents dont la menace est effacée, supprime les incidents fermés depuis plus de 90 jours et les états de menace expirés."
 msgstr "Faz agora o que o servidor faz sozinho regularmente: fecha os incidentes cuja ameaça sumiu, exclui os incidentes fechados há mais de 90 dias e os estados de ameaça expirados."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:222
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
 msgid "Bouton, avec confirmation ; même action que la commande « active-defense purge »."
 msgstr "Botão, com confirmação; mesma ação que o comando « active-defense purge »."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
 msgid "Un incident fermé quitte la vue « Ouverts » ; un bilan s'affiche."
 msgstr "Um incidente fechado sai da visão « Abertos »; um resumo é exibido."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:225
 msgid "L'export automatique à la fermeture (activé par défaut) s'applique aussi à ces incidents."
 msgstr "A exportação automática ao fechar (ativada por padrão) também se aplica a esses incidentes."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:227
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:69
 msgid "Fermer l'incident"
 msgstr "Fechar o incidente"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
 msgid "Marque un incident comme fermé."
 msgstr "Marca um incidente como fechado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
 msgid "Sélectionner un incident, puis confirmer."
 msgstr "Selecione um incidente e, depois, confirme."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:231
 msgid "Ferme l'incident immédiatement."
 msgstr "Fecha o incidente imediatamente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:232
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:233
 msgid "Peut déclencher un export IoC/rapport AUTOMATIQUE si ioc.auto_export_on_close est activé dans la configuration d'Active Defense."
 msgstr "Pode disparar uma exportação AUTOMÁTICA de IoC/relatório se ioc.auto_export_on_close estiver ativado na configuração do Active Defense."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:237
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:71
 msgid "Exporter IoC"
 msgstr "Exportar IoC"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
 msgid "Exporte les indicateurs de compromission de l'incident sélectionné."
 msgstr "Exporta os indicadores de comprometimento do incidente selecionado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
 msgid "Format : json, csv, stix (bundle STIX 2.1) ou misp (événement MISP à importer par son interface)."
 msgstr "Formato: json, csv, stix (bundle STIX 2.1) ou misp (evento MISP a importar pela interface dele)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
 msgid "Écrit un fichier dans le répertoire d'export configuré."
 msgstr "Grava um arquivo no diretório de exportação configurado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:242
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:249
 msgid "Écriture réelle sur disque immédiate."
 msgstr "Gravação real e imediata no disco."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:244
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:73
 msgid "Générer rapport"
 msgstr "Gerar relatório"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
 msgid "Génère un rapport Markdown complet de l'incident sélectionné."
 msgstr "Gera um relatório Markdown completo do incidente selecionado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
 msgid "Écrit un fichier Markdown dans le répertoire d'export configuré."
 msgstr "Grava um arquivo Markdown no diretório de exportação configurado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:251
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:252
 msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports (écriture disque)."
 msgstr "Somente consulta, exceto o fechamento de incidente (irreversível) e as exportações (gravação no disco)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:256
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - Iscas"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
 msgid "Accueil -> Active Sécurité -> Deception"
 msgstr "Início -> Segurança ativa -> Deception"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:259
 msgid "Liste les affectations actives (et expirées non libérées) vers les leurres de deception, permet de les libérer."
 msgstr "Lista as atribuições ativas (e expiradas não liberadas) para as iscas de deception, permite liberá-las."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:261
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:41
 msgid "Libérer"
 msgstr "Liberar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
 msgid "Retire l'affectation d'une source vers son leurre."
 msgstr "Remove a atribuição de uma origem à sua isca."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
 msgid "Sélectionner une ligne, puis confirmer."
 msgstr "Selecione uma linha e, depois, confirme."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
 msgid "Libère immédiatement l'affectation."
 msgstr "Libera a atribuição imediatamente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:266
 msgid "Effet immédiat - la source n'est plus redirigée vers le leurre à la prochaine requête."
 msgstr "Efeito imediato - a origem deixa de ser redirecionada para a isca na próxima requisição."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:269
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:270
 msgid "Les affectations expirées mais jamais libérées restent visibles avec l'état 'expirée' - distinct d'une libération manuelle."
 msgstr "As atribuições expiradas, mas nunca liberadas, continuam visíveis com o estado 'expirada' - diferente de uma liberação manual."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:276
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - Simular"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
 msgid "Accueil -> Active Sécurité -> Simuler"
 msgstr "Início -> Segurança ativa -> Simular"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:279
 msgid "Simule une décision Active Defense (score, classe d'attaque) SANS aucun effet réel - dry-run complet."
 msgstr "Simula uma decisão do Active Defense (pontuação, classe de ataque) SEM nenhum efeito real - dry-run completo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:281
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
 msgid "IP simulée"
 msgstr "IP simulado"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
 msgid "Adresse IP source utilisée pour la simulation."
 msgstr "Endereço IP de origem usado para a simulação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
 msgid "Une IP quelconque. Valeur par défaut : 203.0.113.42."
 msgstr "Qualquer IP. Valor padrão: 203.0.113.42."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
-#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
-msgid "Utilisée au clic sur Simuler."
-msgstr "Usado ao clicar em Simular."
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:285
-msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
-msgstr "Nenhum efeito real - nenhuma gravação, nenhum impacto de rede."
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:288
-msgid "Chemin simulé"
-msgstr "Caminho simulado"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
-msgid "Chemin de la requête simulée."
-msgstr "Caminho da requisição simulada."
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
-msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
-msgstr "Texto livre. Valor padrão: /wp-login.php."
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:292
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:299
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:306
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:313
+#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
+msgid "Utilisée au clic sur Simuler."
+msgstr "Usado ao clicar em Simular."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:286
+msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
+msgstr "Nenhum efeito real - nenhuma gravação, nenhum impacto de rede."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
+msgid "Chemin simulé"
+msgstr "Caminho simulado"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
+msgid "Chemin de la requête simulée."
+msgstr "Caminho da requisição simulada."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
+msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
+msgstr "Texto livre. Valor padrão: /wp-login.php."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:293
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:300
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:307
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:314
 msgid "Aucun effet réel."
 msgstr "Nenhum efeito real."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:295
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
 msgid "User-Agent"
 msgstr "User-Agent"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
 msgid "User-Agent simulé (participe au calcul de l'identifiant de source simulé)."
 msgstr "User-Agent simulado (participa do cálculo do identificador de origem simulado)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
 msgid "Chaîne libre, optionnelle."
 msgstr "Texto livre, opcional."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:302
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:55
 msgid "Classe d'attaque"
 msgstr "Classe de ataque"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
 msgid "Type d'attaque simulé."
 msgstr "Tipo de ataque simulado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
 msgid "Doit être une classe connue (ex: scan). Valeur par défaut : scan."
 msgstr "Deve ser uma classe conhecida (ex.: scan). Valor padrão: scan."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:309
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Score"
 msgstr "Pontuação"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
 msgid "Delta de score appliqué à la simulation."
 msgstr "Delta de pontuação aplicado à simulação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
 msgid "Entier. Valeur par défaut : 10."
 msgstr "Inteiro. Valor padrão: 10."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:316
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:317
 msgid "Aucune - dry-run complet, jamais d'écriture (aucun repository.save()/create() appelé)."
 msgstr "Nenhuma - dry-run completo, nunca uma gravação (nenhum repository.save()/create() chamado)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:321
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
 msgid "WAF - État"
 msgstr "WAF - Status"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:323
 msgid "Accueil -> Active Sécurité -> État (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Status (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:324
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:325
 msgid "Vue d'ensemble en lecture seule : mode, comportement en cas d'erreur interne, packs de règles référencés, taille de la blocklist. Avec le moteur natif, aussi : combien de règles il évalue lui-même, s'il sert seul les requêtes sans correspondance (sinon pourquoi), et le contrôle 1/N."
 msgstr "Visão geral somente leitura: modo, comportamento em caso de erro interno, packs de regras referenciados, tamanho da blocklist. Com o motor nativo, também: quantas regras ele mesmo avalia, se ele serve sozinho as requisições sem correspondência (senão, por quê) e o controle 1/N."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:332
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:333
 msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter même actif - l'écran l'indique explicitement, corrige un vrai trou signalé par l'utilisateur."
 msgstr "Se nenhum pack de regras for referenciado, o WAF não consegue detectar NADA, mesmo ativo - a tela indica isso explicitamente, o que corrige uma falha real apontada pelo usuário."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:340
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modules"
 msgstr "WAF - Módulos"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
 msgid "Accueil -> Active Sécurité -> Modules (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Módulos (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:343
 msgid "Trois sections : mode/comportement d'erreur, gestion des packs de règles actifs, gestion de la liste de blocage."
 msgstr "Três seções: modo/comportamento em caso de erro, gerenciamento dos packs de regras ativos, gerenciamento da lista de bloqueio."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
 msgid "Comportement du WAF face à une requête jugée malveillante."
 msgstr "Comportamento do WAF diante de uma requisição considerada maliciosa."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
 msgid "log-only (journalise sans bloquer) ou block (bloque réellement)."
 msgstr "log-only (registra sem bloquear) ou block (bloqueia de fato)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:350
 msgid "Rechargement AUTOMATIQUE déclenché des l'enregistrement si un service actif existe."
 msgstr "Recarga AUTOMÁTICA disparada ao salvar se houver um serviço ativo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:352
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
 msgid "Comportement en cas d'erreur interne"
 msgstr "Comportamento em caso de erro interno"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
 msgid "Que faire si le moteur WAF rencontre une erreur inattendue en analysant une requête."
 msgstr "O que fazer se o motor WAF encontrar um erro inesperado ao analisar uma requisição."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
 msgid "fail-open (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "fail-open (deixa passar) ou fail-closed (bloqueia por prudência)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:319
 msgid "Enregistre avec le mode."
 msgstr "Grava junto com o modo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:357
 msgid "Rechargement automatique."
 msgstr "Recarga automática."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:359
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:360
 msgid "Contrôle du moteur natif (native_check_every)"
 msgstr "Controle do motor nativo (native_check_every)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:361
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:362
 msgid "Avec le moteur natif, une requête sur laquelle aucune règle ne correspond est servie sans passer par Python. Ce réglage en soumet quand même une sur N à Python, pour vérifier que les deux donnent le même verdict."
 msgstr "Com o motor nativo, uma requisição à qual nenhuma regra corresponde é servida sem passar pelo Python. Esta configuração ainda envia uma a cada N ao Python, para verificar que os dois dão o mesmo veredito."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:366
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:367
 msgid "Entier de 0 à 1000000. 0 (par défaut) = jamais ; 1000 = une requête propre sur mille, un coût négligeable. Sans effet avec le moteur Python."
 msgstr "Inteiro de 0 a 1000000. 0 (padrão) = nunca; 1000 = uma requisição limpa a cada mil, um custo desprezível. Sem efeito com o motor Python."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:369
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:370
 msgid "Enregistre dans options.waf.native_check_every, avec le mode."
 msgstr "Grava em options.waf.native_check_every, junto com o modo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:371
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:372
 msgid "Rechargement automatique. La requête contrôlée reçoit le verdict de Python ; un désaccord est écrit dans le journal d'erreurs."
 msgstr "Recarga automática. A requisição controlada recebe o veredito do Python; uma divergência é gravada no log de erros."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:376
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:82
 msgid "Packs de règles (rule_paths)"
 msgstr "Packs de regras (rule_paths)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
 msgid "Fichiers de règles réellement charges par le WAF - sans au moins un pack, rien n'est détecté."
 msgstr "Arquivos de regras realmente carregados pelo WAF - sem pelo menos um pack, nada é detectado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
 msgid "Ajouter ouvre un sélecteur des packs présents sous secure/waf/rules/ non déjà référencés."
 msgstr "Adicionar abre um seletor dos packs presentes em secure/waf/rules/ ainda não referenciados."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
 msgid "Ajoute/retire une référence de pack."
 msgstr "Adiciona/remove uma referência de pack."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:381
 msgid "Rechargement automatique déclenché immédiatement (recompile les règles en mémoire)."
 msgstr "Recarga automática disparada imediatamente (recompila as regras na memória)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:383
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:384
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:91
 msgid "Liste de blocage"
 msgstr "Lista de bloqueio"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:385
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:386
 msgid "IP/reseaux bannis, avec motif et expiration optionnelle. Fichier par défaut : var/lib/waf/blocklist.json (sous var/, le seul dossier où le service systemd peut écrire ses auto-bans). Un ancien secure/waf/blocklist.json est repris une fois au démarrage et laissé en place comme sauvegarde."
 msgstr "IPs/redes banidos, com motivo e expiração opcional. Arquivo padrão: var/lib/waf/blocklist.json (em var/, a única pasta onde o serviço systemd pode gravar seus auto-banimentos). Um antigo secure/waf/blocklist.json é retomado uma vez na inicialização e deixado no lugar como backup."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:390
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
 msgid "Réseau (CIDR), motif, durée en secondes (vide = permanent, confirmation requise dans ce cas)."
 msgstr "Rede (CIDR), motivo, duração em segundos (vazio = permanente, confirmação exigida nesse caso)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:392
 msgid "Ajoute/retire une entrée."
 msgstr "Adiciona/remove uma entrada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:393
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:394
 msgid "EFFET IMMÉDIAT, sans rechargement nécessaire - la blocklist est relue depuis le disque à CHAQUE requête, jamais mise en cache en mémoire (contrairement au mode et aux packs de règles)."
 msgstr "EFEITO IMEDIATO, sem recarga necessária - a blocklist é relida do disco a CADA requisição, nunca mantida em cache na memória (ao contrário do modo e dos packs de regras)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:400
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:401
 msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement pour s'appliquer (automatique si un service actif existe). La liste de blocage, elle, s'applique instantanément sans aucune action supplémentaire."
 msgstr "Modo/comportamento em caso de erro/packs de regras precisam de uma recarga para serem aplicados (automática se houver um serviço ativo). Já a lista de bloqueio se aplica instantaneamente, sem nenhuma ação adicional."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:408
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - Limitações (exclusões e limite de taxa)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:410
 msgid "Accueil -> Active Sécurité -> Limitations (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Limitações (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:411
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:412
 msgid "Règle la limite de débit (rate limit) du WAF natif : la limite globale, des règles par dossier et des règles par IP/réseau, ainsi que les exclusions d'inspection. Sert surtout aux pages lourdes (une galerie d'images, par exemple) qui dépassent la limite globale et reçoivent une erreur 429."
 msgstr "Ajusta o limite de taxa (rate limit) do WAF nativo: o limite global, regras por pasta e regras por IP/rede, além das exclusões de inspeção. Serve sobretudo para páginas pesadas (uma galeria de imagens, por exemplo) que ultrapassam o limite global e recebem um erro 429."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:418
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:83
 msgid "Limite globale"
 msgstr "Limite global"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
 msgid "Nombre de requêtes autorisées par IP et par fenêtre, pour tout ce qui n'a pas de règle spécifique."
 msgstr "Número de requisições permitidas por IP e por janela, para tudo o que não tem regra específica."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
 msgid "Rate limit actif (oui/non), nombre de requêtes, fenêtre en secondes."
 msgstr "Rate limit ativo (sim/não), número de requisições, janela em segundos."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:423
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:868
 msgid "Rechargement automatique déclenché si un service actif existe."
 msgstr "Recarga automática disparada se houver um serviço ativo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:425
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:426
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:93
 msgid "Règles par dossier"
 msgstr "Regras por pasta"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:427
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:428
 msgid "Une règle REMPLACE la limite globale pour ce dossier et a son propre compteur : les requêtes sur ce dossier ne consomment plus la limite globale. 0 = illimité. Si plusieurs dossiers correspondent, le plus long gagne. /images couvre /images/a.png mais jamais /images2."
 msgstr "Uma regra SUBSTITUI o limite global para essa pasta e tem seu próprio contador: as requisições a essa pasta não consomem mais o limite global. 0 = ilimitado. Se várias pastas corresponderem, a mais longa vence. /images cobre /images/a.png mas nunca /images2."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:432
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
 msgid "Ajouter / Modifier : dossier, requêtes par fenêtre, fenêtre en secondes. Sélectionner une ligne pour la modifier ou la retirer."
 msgstr "Adicionar / Editar: pasta, requisições por janela, janela em segundos. Selecione uma linha para editá-la ou removê-la."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:451
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:434
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:452
 msgid "Enregistré dès la validation du formulaire."
 msgstr "Gravado assim que o formulário é confirmado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:435
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:436
 msgid "Rechargement automatique. Une IP publique qui dépasse une règle de dossier est toujours journalisée comme un blocage, donc bannissable par omega-jail."
 msgstr "Recarga automática. Um IP público que ultrapassa uma regra de pasta continua registrado como um bloqueio, portanto pode ser banido pelo omega-jail."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:440
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:441
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:108
 msgid "Règles par IP / réseau"
 msgstr "Regras por IP / rede"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:442
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:443
 msgid "Même principe pour une IP ou un réseau (ex. le réseau Tailscale 100.64.0.0/10). Une règle de dossier passe avant une règle IP/réseau ; entre deux réseaux, le plus précis gagne."
 msgstr "Mesmo princípio para um IP ou uma rede (ex.: a rede Tailscale 100.64.0.0/10). Uma regra de pasta vem antes de uma regra de IP/rede; entre duas redes, a mais precisa vence."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:447
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:448
 msgid "IP ou réseau (CIDR), requêtes, fenêtre, Source sûre (oui/non). Une source sûre qui dépasse la limite reçoit toujours le 429, mais la ligne est journalisée « throttle » : jamais bannissable."
 msgstr "IP ou rede (CIDR), requisições, janela, Fonte segura (sim/não). Uma fonte segura que ultrapassa o limite continua recebendo o 429, mas a linha é registrada como « throttle »: nunca banível."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:453
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:454
 msgid "Les réseaux never_auto_block (affichés au-dessus du tableau) sont toujours sûrs d'office. Sans proxy de confiance actif, une règle couvrant 127.0.0.1/::1 est ignorée."
 msgstr "As redes never_auto_block (exibidas acima da tabela) são sempre seguras por padrão. Sem um proxy de confiança ativo, uma regra que cubra 127.0.0.1/::1 é ignorada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:459
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:119
 msgid "Exclusions d'inspection"
 msgstr "Exclusões de inspeção"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
 msgid "Dossiers et extensions jamais inspectés par le WAF natif ni par magnet, et dossiers dont seul le corps n'est pas inspecté."
 msgstr "Pastas e extensões nunca inspecionadas pelo WAF nativo nem pelo magnet, e pastas das quais só o corpo não é inspecionado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
 msgid "Valeurs séparées par des virgules ; un dossier commence par « / »."
 msgstr "Valores separados por vírgulas; uma pasta começa com « / »."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:464
 msgid "Le rate limit s'applique toujours à ces chemins : une exclusion ne règle jamais un 429."
 msgstr "O rate limit continua valendo para esses caminhos: uma exclusão nunca resolve um 429."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:466
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:467
 msgid "Une règle de débit ne désactive jamais l'inspection : une attaque sur un dossier à débit élevé reste détectée et bloquée."
 msgstr "Uma regra de taxa nunca desativa a inspeção: um ataque a uma pasta de taxa alta continua sendo detectado e bloqueado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:469
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:470
 msgid "Un dossier en illimité (0) ne protège plus contre un robot qui le martèle depuis une IP publique : préférer une valeur haute (ex. 600 / 60 s) à l'illimité."
 msgstr "Uma pasta ilimitada (0) não protege mais contra um robô que a martela a partir de um IP público: prefira um valor alto (ex.: 600 / 60 s) ao ilimitado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:473
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:474
 msgid "Sans rapport avec « Requêtes max par connexion keep-alive » (Configuration détaillée -> Résistance et limites) : ce réglage ferme seulement une connexion après N requêtes, le navigateur en rouvre une aussitôt. Il ne renvoie jamais 429 et ne compte rien par IP : c'est la limite de débit, ici, qui produit le 429."
 msgstr "Sem relação com « Requisições máx. por conexão keep-alive » (Configuração detalhada -> Resistência e limites): esse ajuste só fecha uma conexão após N requisições, e o navegador abre outra na hora. Ele nunca retorna 429 e não conta nada por IP: aqui, é o limite de taxa que produz o 429."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:479
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:480
 msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une détection, donc ne mène jamais à l'auto-ban. Sur une requête couverte par une règle de dossier ou d'IP/réseau ci-dessus, c'est cette règle qui fait foi : le 429 de magnet est ignoré (ses signatures d'attaque restent appliquées)."
 msgstr "Script magnet: o rate limit próprio dele (429) nunca conta como uma detecção, portanto nunca leva ao banimento automático. Numa requisição coberta por uma regra de pasta ou de IP/rede acima, essa regra prevalece: o 429 do magnet é ignorado (as assinaturas de ataque dele continuam valendo)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:489
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Tester une requête"
 msgstr "WAF - Testar uma requisição"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
 msgid "Accueil -> Active Sécurité -> Tester (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Testar (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:492
 msgid "Teste une requête simulée contre les règles WAF ACTUELLEMENT ENREGISTRÉES (pas nécessairement celles réellement chargées par un serveur déjà lancé), sans requête réseau."
 msgstr "Testa uma requisição simulada contra as regras WAF ATUALMENTE SALVAS (não necessariamente as realmente carregadas por um servidor já iniciado), sem requisição de rede."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:494
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
 msgid "Méthode / Chemin / Query / Body / IP distante"
 msgstr "Método / Caminho / Query / Body / IP remoto"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
 msgid "Composants de la requête HTTP simulée."
 msgstr "Componentes da requisição HTTP simulada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
 msgid "Valeurs libres - méthode et chemin pré-remplis (GET, /)."
 msgstr "Valores livres - método e caminho pré-preenchidos (GET, /)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
 msgid "Utilisés au clic sur Tester."
 msgstr "Usados ao clicar em Testar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:499
 msgid "Aucun effet réel, aucune requête réseau."
 msgstr "Nenhum efeito real, nenhuma requisição de rede."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:504
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:505
 msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur disque à chaque test - si un serveur déjà lancé n'a pas encore été rechargé après un changement de règles, ce test peut refléter un comportement différent de ce que ce serveur applique réellement pour l'instant."
 msgstr "Reconstrói o motor WAF a partir da configuração SALVA no disco a cada teste - se um servidor já iniciado ainda não tiver sido recarregado após uma mudança de regras, este teste pode refletir um comportamento diferente do que esse servidor aplica de fato no momento."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:514
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - Regras e listas personalizadas"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:516
 msgid "Accueil -> Active Sécurité -> Custom (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Custom (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:517
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:518
 msgid "Un seul tableau pour les RÈGLES (écrites dans secure/waf/rules/custom.json, pack référence automatiquement) et les LISTES (fichiers texte de secure/waf/rules/keywords/, chargées explicitement par l'assistant). La colonne Type fait la différence : une liste n'est pas une règle de custom.json."
 msgstr "Uma única tabela para as REGRAS (gravadas em secure/waf/rules/custom.json, pack referenciado automaticamente) e as LISTAS (arquivos de texto de secure/waf/rules/keywords/, carregadas explicitamente pelo assistente). A coluna Tipo faz a diferença: uma lista não é uma regra de custom.json."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
 msgid "Ouvre l'assistant : une règle simple, ou CHARGER une liste (voir sa fiche)."
 msgstr "Abre o assistente: uma regra simples, ou CARREGAR uma lista (veja a ficha dele)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
 msgid "Clic, puis suivre l'assistant."
 msgstr "Clique e, depois, siga o assistente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
 msgid "Règle : écrite dans custom.json. Liste : ajoutée à options.waf.rules.keyword_lists."
 msgstr "Regra: gravada em custom.json. Lista: adicionada a options.waf.rules.keyword_lists."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:712
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:529
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:713
 msgid "Rechargement automatique déclenché immédiatement si un service actif existe."
 msgstr "Recarga automática disparada imediatamente se houver um serviço ativo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:531
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
 msgid "Colonne Détail (listes)"
 msgstr "Coluna Detalhe (listas)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:533
 msgid "Nombre d'entrées du fichier, ou un avertissement."
 msgstr "Número de entradas do arquivo, ou um aviso."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:534
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:535
 msgid "'fichier absent', 'illisible par le service' ou 'emplacement refusé' : la liste n'est pas chargeable telle quelle - ouvrez-la avec Éditer la liste."
 msgstr "'arquivo ausente', 'ilegível pelo serviço' ou 'local recusado': a lista não pode ser carregada como está - abra-a com Editar a lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:537
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
 msgid "Recalculé à chaque affichage du tableau."
 msgstr "Recalculado a cada exibição da tabela."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:539
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:546
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:617
 msgid "Aucun effet en lui-même."
 msgstr "Nenhum efeito por si só."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:541
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
 msgid "Colonne Gravité (listes)"
 msgstr "Coluna Gravidade (listas)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
 msgid "Observation, Faible, Moyen, Élevé ou Critique, suivie de la récidive propre à la liste."
 msgstr "Observação, Baixa, Média, Alta ou Crítica, seguida da reincidência própria da lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
 msgid "Ex. 'Élevé, 2 en 10 min -> ban 24 h'."
 msgstr "Ex.: 'Alta, 2 em 10 min -> banimento 24 h'."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
 msgid "Se change avec Modifier."
 msgstr "Muda-se com Editar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:548
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
 msgid "Modifier (listes)"
 msgstr "Editar (listas)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
 msgid "Change gravité, récidive, zone de recherche et nom affiché d'une liste déjà chargée."
 msgstr "Muda a gravidade, a reincidência, a zona de busca e o nome exibido de uma lista já carregada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:551
 msgid "Sélectionner une ligne Liste, puis Modifier."
 msgstr "Selecione uma linha Lista e, depois, Editar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:552
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:553
 msgid "Vérifie la nouvelle configuration comme au chargement : rendre bloquante une liste qui toucherait une route du site est refusé avec la raison."
 msgstr "Verifica a nova configuração como no carregamento: tornar bloqueante uma lista que afetaria uma rota do site é recusado, com o motivo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:555
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:556
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:570
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:577
 msgid "Rechargement automatique déclenché immédiatement."
 msgstr "Recarga automática disparada imediatamente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:558
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:89
 msgid "Éditer la liste"
 msgstr "Editar a lista"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
 msgid "Ouvre l'éditeur intégré sur le fichier de la liste (voir sa fiche)."
 msgstr "Abre o editor integrado no arquivo da lista (veja a ficha dele)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
 msgid "Sélectionner une ligne Liste, puis Éditer la liste."
 msgstr "Selecione uma linha Lista e, depois, Editar a lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
 msgid "Aucune écriture tant que l'éditeur n'a pas enregistré."
 msgstr "Nenhuma gravação enquanto o editor não tiver salvado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:563
 msgid "Le tableau est rafraîchi à la fermeture de l'éditeur."
 msgstr "A tabela é atualizada ao fechar o editor."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:565
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:91
 msgid "Activer/Desactiver"
 msgstr "Ativar/Desativar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
 msgid "Bascule une règle ou une liste sans la supprimer."
 msgstr "Alterna uma regra ou uma lista sem excluí-la."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
 msgid "Sélectionner une ligne, puis cliquer."
 msgstr "Selecione uma linha e, depois, clique."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
 msgid "Règle : champ enabled de custom.json. Liste : champ enabled de keyword_lists."
 msgstr "Regra: campo enabled de custom.json. Lista: campo enabled de keyword_lists."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:572
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
 msgid "Supprimer / Retirer"
 msgstr "Excluir / Remover"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
 msgid "Supprimer une règle, ou Retirer une liste du WAF."
 msgstr "Excluir uma regra, ou Remover uma lista do WAF."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
 msgid "Règle : retirée de custom.json. Liste : retirée de la configuration, FICHIER CONSERVÉ."
 msgstr "Regra: removida de custom.json. Lista: removida da configuração, ARQUIVO MANTIDO."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:580
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:581
 msgid "Une règle ou une liste refusée par la validation est refusée ICI de la même façon qu'elle le serait au chargement réel - jamais une double logique de validation divergente."
 msgstr "Uma regra ou lista recusada pela validação é recusada AQUI da mesma forma que seria no carregamento real - nunca duas lógicas de validação divergentes."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:585
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:586
 msgid "Piège déjà rencontré par un utilisateur : ajouter le PACK via 'Modules' n'est pas la même chose que créer une RÈGLE ici - cet écran fait désormais les deux à la fois automatiquement."
 msgstr "Armadilha já encontrada por um usuário: adicionar o PACK em 'Módulos' não é o mesmo que criar uma REGRA aqui - esta tela agora faz as duas coisas ao mesmo tempo, automaticamente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:590
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:591
 msgid "Retirer une liste ne supprime jamais son fichier : il reste proposé par l'assistant, prêt à être rechargé."
 msgstr "Remover uma lista nunca exclui o arquivo dela: ele continua sendo oferecido pelo assistente, pronto para ser carregado de novo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:598
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
 msgid "WAF - Assistant règle personnalisée / chargement de liste"
 msgstr "WAF - Assistente de regra personalizada / carregamento de lista"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:600
 msgid "WAF - Règles et listes personnalisées -> Ajouter"
 msgstr "WAF - Regras e listas personalizadas -> Adicionar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:601
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:602
 msgid "Questionnaire en langage clair pour construire une règle WAF sans connaître les expressions régulières (4 scénarios courants + mode Avance), OU pour CHARGER une liste de chemins / de mots-clés depuis un fichier texte. Le chargement d'une liste est une action explicite : rien n'est actif avant le clic sur Charger."
 msgstr "Questionário em linguagem clara para montar uma regra WAF sem conhecer expressões regulares (4 cenários comuns + modo Avançado), OU para CARREGAR uma lista de caminhos / de palavras-chave a partir de um arquivo de texto. O carregamento de uma lista é uma ação explícita: nada fica ativo antes do clique em Carregar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:608
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:140
 msgid "Que voulez-vous détecter ?"
 msgstr "O que você quer detectar?"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:610
 msgid "Choisit le scénario de détection."
 msgstr "Escolhe o cenário de detecção."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:611
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:612
 msgid "Un chemin précis visite, un mot-clé dans l'adresse/parametres, un mot-clé envoyé en formulaire (POST), un outil de scan connu (User-Agent), Avance (regex/portee libres), CHARGER une liste de chemins, CHARGER une liste de mots-clés."
 msgstr "Um caminho específico visitado, uma palavra-chave no endereço/parâmetros, uma palavra-chave enviada em formulário (POST), uma ferramenta de varredura conhecida (User-Agent), Avançado (regex/escopo livres), CARREGAR uma lista de caminhos, CARREGAR uma lista de palavras-chave."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:615
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
 msgid "Change les champs affiches en dessous et leur indice."
 msgstr "Muda os campos exibidos abaixo e a dica deles."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:619
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:144
 msgid "Valeur à détecter (mode simple)"
 msgstr "Valor a detectar (modo simples)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
 msgid "Le texte à repérer, saisi en clair (jamais une regex à écrire)."
 msgstr "O texto a localizar, digitado em claro (nunca uma regex a escrever)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
 msgid "Un mot ou un chemin, selon le scénario choisi ci-dessus."
 msgstr "Uma palavra ou um caminho, conforme o cenário escolhido acima."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
 msgid "La regex réelle est CONSTRUITE automatiquement par le code (caractères spéciaux jamais interprétés)."
 msgstr "A regex real é CONSTRUÍDA automaticamente pelo código (caracteres especiais nunca interpretados)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:624
 msgid "Aucun effet avant validation sur l'écran précédent (WafCustomRuleScreen)."
 msgstr "Nenhum efeito antes da validação na tela anterior (WafCustomRuleScreen)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:626
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
 msgid "Portée / Motif (mode Avance)"
 msgstr "Escopo / Padrão (modo Avançado)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
 msgid "Portée et expression régulière écrites directement."
 msgstr "Escopo e expressão regular escritos diretamente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
 msgid "Portée : path, query, body, headers, user_agent, referer (séparés par des virgules)."
 msgstr "Escopo: path, query, body, headers, user_agent, referer (separados por vírgulas)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
 msgid "Utilisé tel quel si Avance est choisi."
 msgstr "Usado como está se Avançado for escolhido."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:631
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:638
 msgid "Aucun effet avant validation sur l'écran précédent."
 msgstr "Nenhum efeito antes da validação na tela anterior."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:633
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
 msgid "Gravité (règle)"
 msgstr "Gravidade (regra)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
 msgid "Poids de la règle dans le calcul du score de menace."
 msgstr "Peso da regra no cálculo da pontuação de ameaça."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
 msgid "Faible/Moyen/Eleve/Critique (1/3/6/9)."
 msgstr "Baixa/Média/Alta/Crítica (1/3/6/9)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
 msgid "Inclus dans la règle produite."
 msgstr "Incluído na regra produzida."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:640
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
 msgid "Fichier de liste (CHARGER)"
 msgstr "Arquivo de lista (CARREGAR)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:642
 msgid "Le fichier texte qui contient la liste."
 msgstr "O arquivo de texto que contém a lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:643
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:644
 msgid "Vos fichiers .txt de secure/waf/rules/keywords/ (avec leur nombre d'entrées), les références livrées avec omega-serv (sensitive-paths-hostile, sensitive-paths-probe) pas encore copiées, ou 'Nouveau fichier...' (nom en lettres, chiffres et '-')."
 msgstr "Seus arquivos .txt de secure/waf/rules/keywords/ (com o número de entradas), as referências fornecidas com o omega-serv (sensitive-paths-hostile, sensitive-paths-probe) ainda não copiadas, ou 'Novo arquivo...' (nome com letras, números e '-')."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:648
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:649
 msgid "Une référence est COPIÉE dans keywords/ au chargement : c'est cette copie locale que vous modifiez, une mise à jour d'omega-serv ne l'écrase jamais. Choisir une référence pré-remplit tous les réglages conseillés."
 msgstr "Uma referência é COPIADA em keywords/ no carregamento: é essa cópia local que você modifica, e uma atualização do omega-serv nunca a sobrescreve. Escolher uma referência pré-preenche todas as configurações recomendadas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:652
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:693
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:653
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:663
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:670
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:681
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:694
 msgid "Aucun effet avant Charger."
 msgstr "Nenhum efeito antes de Carregar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:655
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
 msgid "Où chercher (liste de chemins)"
 msgstr "Onde procurar (lista de caminhos)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:657
 msgid "N'importe où dans l'adresse, ou seulement au début."
 msgstr "Em qualquer lugar do endereço, ou só no início."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:658
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:659
 msgid "Partout attrape /blog/.env ; au début seulement est plus prudent pour des chemins qu'un vrai site peut servir (/api, /admin)."
 msgstr "Em qualquer lugar pega /blog/.env; só no início é mais prudente para caminhos que um site real pode servir (/api, /admin)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:661
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
 msgid "Champ anchor de la liste (any_segment / root)."
 msgstr "Campo anchor da lista (any_segment / root)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:665
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
 msgid "Dans quelle partie de la requête (liste de mots-clés)"
 msgstr "Em qual parte da requisição (lista de palavras-chave)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
 msgid "Où chercher les mots-clés."
 msgstr "Onde procurar as palavras-chave."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
 msgid "L'adresse et ses paramètres, un formulaire envoyé (POST), le User-Agent, ou le Referer."
 msgstr "O endereço e seus parâmetros, um formulário enviado (POST), o User-Agent ou o Referer."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
 msgid "Champ scope de la liste."
 msgstr "Campo scope da lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:672
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
 msgid "Gravité (liste)"
 msgstr "Gravidade (lista)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:674
 msgid "Observation, Faible (1), Moyen (3), Élevé (6), Critique (9)."
 msgstr "Observação, Baixa (1), Média (3), Alta (6), Crítica (9)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:675
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:676
 msgid "Observation (conseillé au premier chargement) : alertes journalisées, AUCUN blocage, aucune récidive. Élevé (6) atteint le seuil de blocage : 403 dès le premier accès. Moyen (3) ne bloque jamais seul."
 msgstr "Observação (recomendado no primeiro carregamento): alertas registrados, NENHUM bloqueio, nenhuma reincidência. Alta (6) atinge o limite de bloqueio: 403 desde o primeiro acesso. Média (3) nunca bloqueia sozinha."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:679
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
 msgid "Champs weight et observe_only de la liste."
 msgstr "Campos weight e observe_only da lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:683
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
 msgid "Récidive"
 msgstr "Reincidência"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:685
 msgid "Bannir après N accès à CETTE liste en M minutes, pendant une durée choisie."
 msgstr "Banir após N acessos a ESTA lista em M minutos, por um tempo escolhido."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:686
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:687
 msgid "'pas de récidive propre' = compteur commun du WAF. Références : hostile 2 accès en 10 min -> 24 h, sondage 5 en 10 min -> 1 h. Grise en Observation."
 msgstr "'sem reincidência própria' = contador comum do WAF. Referências: hostil 2 acessos em 10 min -> 24 h, sondagem 5 em 10 min -> 1 h. Cinza em Observação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:690
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:691
 msgid "Ban applicatif temporaire (blocklist, réponse 451), jamais pour l'hôte local (derrière un proxy de confiance), Tailscale ou le réseau local."
 msgstr "Banimento de aplicação temporário (blocklist, resposta 451), nunca para o host local (atrás de um proxy confiável), Tailscale ou a rede local."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:696
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:170
 msgid "Ouvrir l'éditeur"
 msgstr "Abrir o editor"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
 msgid "Ouvre le fichier choisi dans l'éditeur intégré (ou la référence si pas encore copiée)."
 msgstr "Abre o arquivo escolhido no editor integrado (ou a referência, se ainda não copiada)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
 msgid "Pour vérifier ou adapter la liste AVANT de la charger."
 msgstr "Para verificar ou adaptar a lista ANTES de carregá-la."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
 msgid "Rien n'est chargé dans le WAF depuis l'éditeur."
 msgstr "Nada é carregado no WAF a partir do editor."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:701
 msgid "Les nombres d'entrées sont rafraîchis à la fermeture."
 msgstr "Os números de entradas são atualizados ao fechar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:703
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:270
 msgid "Charger"
 msgstr "Carregar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
 msgid "Charge la liste dans le WAF."
 msgstr "Carrega a lista no WAF."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:706
 msgid "Dernier clic de l'assistant."
 msgstr "Último clique do assistente."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:707
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:708
 msgid "Vérifie, dans l'ordre : nom de fichier, syntaxe (numéro de ligne en cas d'erreur), lisibilité par le compte du service, absence de doublon, conflits avec les routes du site. Si une seule vérification échoue, la configuration n'est PAS modifiée. Active ensuite la réputation et l'auto-ban s'ils étaient éteints (avec un message)."
 msgstr "Verifica, nesta ordem: nome do arquivo, sintaxe (número da linha em caso de erro), legibilidade pela conta do serviço, ausência de duplicata, conflitos com as rotas do site. Se uma única verificação falhar, a configuração NÃO é modificada. Em seguida, ativa a reputação e o auto-banimento se estavam desligados (com uma mensagem)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:716
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:717
 msgid "Règle : ne fait qu'assembler les valeurs, l'écriture a lieu sur l'écran WAF - Règles et listes personnalisées. Liste : rien n'est actif tant que Charger n'a pas réussi."
 msgstr "Regra: apenas monta os valores, a gravação ocorre na tela WAF - Regras e listas personalizadas. Lista: nada fica ativo enquanto Carregar não tiver tido sucesso."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:721
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:722
 msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route réellement servie (alias, reverse proxy, zone Auth, fichier du webroot) est refusée : ajoutez une exception '!/chemin' dans la liste, ou chargez-la en Observation."
 msgstr "Uma lista que bloqueia sozinha (gravidade >= 5) e que afetaria uma rota realmente servida (alias, reverse proxy, zona Auth, arquivo do webroot) é recusada: adicione uma exceção '!/caminho' na lista, ou carregue-a em Observação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:730
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - Editor de lista"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:732
 msgid "WAF - Règles et listes personnalisées -> Éditer la liste (ou Assistant -> Ouvrir l'éditeur)"
 msgstr "WAF - Regras e listas personalizadas -> Editar a lista (ou Assistente -> Abrir o editor)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:733
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:734
 msgid "Éditeur de texte intégré, sans éditeur externe, pour une liste de chemins ou de mots-clés. Tout se fait à la SOURIS : aucun raccourci clavier, le clavier ne sert qu'à la saisie (caractères, Entrée, flèches, Debut/Fin, Page prec./suiv., Retour arrière, Suppr)."
 msgstr "Editor de texto integrado, sem editor externo, para uma lista de caminhos ou de palavras-chave. Tudo se faz com o MOUSE: nenhum atalho de teclado, o teclado serve apenas para digitar (caracteres, Enter, setas, Home/End, Page Up/Page Down, Backspace, Delete)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:739
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
 msgid "Syntaxe d'une liste de chemins"
 msgstr "Sintaxe de uma lista de caminhos"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:741
 msgid "Une entrée par ligne, '#' = commentaire."
 msgstr "Uma entrada por linha, '#' = comentário."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:742
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:743
 msgid "/admin -> /admin et /admin/xxx (jamais /administrator) ; /.git/ -> tout ce qui est sous /.git/ ; /*.bak -> fichiers finissant par .bak ; !/api/v1 -> exception, toujours prioritaire sur les entrées, quel que soit l'ordre des lignes."
 msgstr "/admin -> /admin e /admin/xxx (nunca /administrator); /.git/ -> tudo o que está sob /.git/; /*.bak -> arquivos que terminam em .bak; !/api/v1 -> exceção, sempre prioritária sobre as entradas, qualquer que seja a ordem das linhas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:746
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
 msgid "Analysée en direct (compteur d'entrées, d'exceptions, d'erreurs et d'avertissements)."
 msgstr "Analisada ao vivo (contador de entradas, exceções, erros e avisos)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:748
 msgid "Les erreurs s'affichent avec leur numéro de ligne ; cliquer une erreur place le curseur dessus."
 msgstr "Os erros são exibidos com o número da linha; clicar em um erro coloca o cursor sobre ele."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:750
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
 msgid "Barre d'outils"
 msgstr "Barra de ferramentas"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
 msgid "Annuler la modif, Rétablir, Couper, Copier, Coller, Sélectionner la ligne, Tout sélectionner, Supprimer la ligne."
 msgstr "Desfazer, Refazer, Recortar, Copiar, Colar, Selecionar a linha, Selecionar tudo, Excluir a linha."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
 msgid "Clic. Le collage du terminal (clic du milieu, menu du terminal) fonctionne aussi."
 msgstr "Clique. Colar pelo terminal (clique do meio, menu do terminal) também funciona."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
 msgid "Modifie le texte affiché, jamais le fichier."
 msgstr "Modifica o texto exibido, nunca o arquivo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:755
 msgid "Toujours annulable."
 msgstr "Sempre pode ser desfeito."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:757
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:148
 msgid "Rechercher"
 msgstr "Procurar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
 msgid "Trouve un texte dans la liste (casse ignorée)."
 msgstr "Encontra um texto na lista (sem diferenciar maiúsculas)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
 msgid "Taper le texte, puis Précédent / Suivant."
 msgstr "Digite o texto e, depois, Anterior / Próximo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
 msgid "Sélectionne l'occurrence trouvée."
 msgstr "Seleciona a ocorrência encontrada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:762
 msgid "Recommence au début après la dernière occurrence."
 msgstr "Recomeça do início após a última ocorrência."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:764
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
 msgid "Tester (liste de chemins)"
 msgstr "Testar (lista de caminhos)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
 msgid "Indique ce que ferait la liste EN COURS d'édition d'un chemin donné."
 msgstr "Indica o que a lista EM EDIÇÃO faria com um caminho dado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
 msgid "Taper un chemin (ex. /blog/.env), puis Tester."
 msgstr "Digite um caminho (ex.: /blog/.env) e, depois, Testar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
 msgid "Même normalisation que le WAF (paramètres retirés, décodage URL)."
 msgstr "Mesma normalização do WAF (parâmetros removidos, decodificação de URL)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:769
 msgid "'DÉTECTÉ par la ligne N', 'AUTORISÉ : exception ligne N', ou 'aucune ligne ne correspond'."
 msgstr "'DETECTADO pela linha N', 'PERMITIDO: exceção na linha N' ou 'nenhuma linha corresponde'."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:771
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
 msgid "Vérifier contre mes logs (liste de chemins)"
 msgstr "Verificar contra meus logs (lista de caminhos)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
 msgid "Rejoue les requêtes RÉUSSIES (2xx/3xx) du journal d'accès contre la liste."
 msgstr "Reproduz as requisições BEM-SUCEDIDAS (2xx/3xx) do log de acesso contra a lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
 msgid "Chaque ligne de la liste qui aurait touché une requête probablement légitime est montrée avec un exemple."
 msgstr "Cada linha da lista que teria afetado uma requisição provavelmente legítima é mostrada com um exemplo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
 msgid "Cliquer une ligne : exception pour ce chemin, exception pour son dossier, ou suppression de la ligne."
 msgstr "Clique em uma linha: exceção para esse caminho, exceção para a pasta dele ou exclusão da linha."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:776
 msgid "Modifie le texte affiché (annulable), jamais le fichier avant Enregistrer."
 msgstr "Modifica o texto exibido (pode ser desfeito), nunca o arquivo antes de Salvar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:778
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:131
 msgid "Nouveautés de la référence"
 msgstr "Novidades da referência"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
 msgid "Entrées de la référence livrée absentes de votre liste."
 msgstr "Entradas da referência fornecida ausentes da sua lista."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:781
 msgid "Cocher celles à ajouter, puis Ajouter la sélection."
 msgstr "Marque as que quer adicionar e, depois, Adicionar a seleção."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:782
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:783
 msgid "Rien n'est ajouté sans être coché. Une ligne de la référence que vous supprimez est marquée '#retire: /x' à l'enregistrement et n'est plus jamais reproposée."
 msgstr "Nada é adicionado sem ser marcado. Uma linha da referência que você excluir é marcada '#retire: /x' ao salvar e nunca mais é oferecida."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:785
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:786
 msgid "Modifie le texte affiché."
 msgstr "Modifica o texto exibido."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:788
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:132
 msgid "Corriger les droits"
 msgstr "Corrigir permissões"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
 msgid "Rend le fichier lisible par le compte du service (omega-serv)."
 msgstr "Torna o arquivo legível pela conta do serviço (omega-serv)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:791
 msgid "Proposé seulement si l'état signale que le service ne peut pas lire le fichier."
 msgstr "Oferecido somente se o estado indicar que o serviço não consegue ler o arquivo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:792
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:793
 msgid "Liste chaque changement de droits avant de l'appliquer, uniquement sur ce qui vous appartient - jamais via sudo."
 msgstr "Lista cada mudança de permissões antes de aplicá-la, somente no que pertence a você - nunca via sudo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:795
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:796
 msgid "L'état est recalculé."
 msgstr "O estado é recalculado."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:798
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:165
 msgid "Enregistrer et appliquer"
 msgstr "Salvar e aplicar"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
 msgid "Écrit le fichier, puis recharge le serveur si la liste est chargée."
 msgstr "Grava o arquivo e, depois, recarrega o servidor se a lista estiver carregada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:801
 msgid "Refusé tant qu'il reste une erreur."
 msgstr "Recusado enquanto houver um erro."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:802
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:803
 msgid "Écriture sûre : droits et groupe conservés, nouveau fichier en 0644, refus si le fichier a été modifié ailleurs depuis l'ouverture, ou si c'est un lien symbolique."
 msgstr "Gravação segura: permissões e grupo mantidos, arquivo novo em 0644, recusa se o arquivo tiver sido modificado em outro lugar desde a abertura, ou se for um link simbólico."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:806
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:807
 msgid "Le rechargement n'est déclenché que si la vérification de la liste réussit - sinon la raison est affichée et le serveur garde ses règles actuelles."
 msgstr "A recarga só é disparada se a verificação da lista for bem-sucedida - caso contrário, o motivo é exibido e o servidor mantém suas regras atuais."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:811
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
 msgid "Fermer / Aide"
 msgstr "Fechar / Ajuda"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
 msgid "Fermer l'éditeur, ou ouvrir cette fiche."
 msgstr "Fechar o editor, ou abrir esta ficha."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
 msgid "Clic."
 msgstr "Clique."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
 msgid "Fermer demande une confirmation s'il reste des modifications non enregistrées."
 msgstr "Fechar pede confirmação se houver alterações não salvas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:816
 msgid "Retour à l'écran précédent."
 msgstr "Volta à tela anterior."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:819
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:820
 msgid "Le fichier n'est jamais modifié avant Enregistrer. Un fichier non modifiable par votre compte s'ouvre en LECTURE SEULE, avec la raison."
 msgstr "O arquivo nunca é modificado antes de Salvar. Um arquivo não modificável pela sua conta abre em SOMENTE LEITURA, com o motivo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:824
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:825
 msgid "Échap et F1 ne font rien ici, volontairement (aucun raccourci) : utilisez Fermer et Aide. Seul ctrl+q reste actif pour quitter l'application, avec confirmation."
 msgstr "Esc e F1 não fazem nada aqui, de propósito (nenhum atalho): use Fechar e Ajuda. Somente ctrl+q continua ativo para sair do aplicativo, com confirmação."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:828
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:829
 msgid "L'état en bas de l'écran indique si le compte du service peut lire le fichier : un fichier illisible ferait échouer le prochain rechargement."
 msgstr "O estado na parte de baixo da tela indica se a conta do serviço consegue ler o arquivo: um arquivo ilegível faria a próxima recarga falhar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:836
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "WAF - Modifier une liste"
 msgstr "WAF - Editar uma lista"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
 msgid "WAF - Règles et listes personnalisées -> Modifier (ligne Liste)"
 msgstr "WAF - Regras e listas personalizadas -> Editar (linha Lista)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:839
 msgid "Change les réglages d'une liste déjà chargée, sans toucher à son fichier."
 msgstr "Muda as configurações de uma lista já carregada, sem tocar no arquivo dela."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:841
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
 msgid "Nom affiché / Où chercher / Gravité / Récidive"
 msgstr "Nome exibido / Onde procurar / Gravidade / Reincidência"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
 msgid "Mêmes choix que dans l'assistant (voir sa fiche)."
 msgstr "As mesmas opções do assistente (veja a ficha dele)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
 msgid "Passer d'Observation à une gravité bloquante une fois les alertes lues."
 msgstr "Passar de Observação para uma gravidade bloqueante depois de ler os alertas."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
 msgid "Vérifie la nouvelle configuration avant de l'écrire."
 msgstr "Verifica a nova configuração antes de gravá-la."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:846
 msgid "Rechargement automatique ; refus affiché avec sa raison si la vérification échoue."
 msgstr "Recarga automática; recusa exibida com o motivo se a verificação falhar."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:848
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:849
 msgid "Rendre une liste bloquante réactive la réputation et l'auto-ban s'ils avaient été éteints."
 msgstr "Tornar uma lista bloqueante reativa a reputação e o auto-banimento se tinham sido desligados."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:855
 msgid "Accueil -> Active Sécurité -> Magnet (bloc WAF)"
 msgstr "Início -> Segurança ativa -> Magnet (bloco WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:856
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:857
 msgid "Importe un script WAF mod_magnet Lighttpd EXISTANT (écrit pour un autre site) sans le réécrire, comme renfort additif au WAF natif - il ne peut jamais lever un blocage déjà décidé par le natif. Seuls les chemins personnels du script (fichiers de log/blocage) se dissocient ici, jamais la logique du script lui-même."
 msgstr "Importa um script WAF mod_magnet do Lighttpd JÁ EXISTENTE (escrito para outro site) sem reescrevê-lo, como reforço adicional ao WAF nativo - ele nunca pode suspender um bloqueio já decidido pelo nativo. Somente os caminhos pessoais do script (arquivos de log/bloqueio) são dissociados aqui, nunca a lógica do próprio script."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:863
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:295
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:65
 msgid "Actif (oui/non)"
 msgstr "Ativo (sim/não)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
 msgid "Active ou désactive le script magnet."
 msgstr "Ativa ou desativa o script magnet."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
 msgid "oui ou non."
 msgstr "sim ou não."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:870
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:67
 msgid "Script (chemin relatif au projet)"
 msgstr "Script (caminho relativo ao projeto)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
 msgid "Le fichier Lua à importer - une liste des scripts trouves sous secure/waf/scripts/ est affichée en indice."
 msgstr "O arquivo Lua a importar - uma lista dos scripts encontrados em secure/waf/scripts/ é exibida como dica."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
 msgid "Chemin relatif au projet, ex. secure/waf/scripts/waf.lua."
 msgstr "Caminho relativo ao projeto, ex.: secure/waf/scripts/waf.lua."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
 msgid "Enregistre avec Actif."
 msgstr "Grava junto com Ativo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:875
 msgid "Aucun effet avant Enregistrer - utiliser Vérifier la compatibilité pour tester sans rien écrire."
 msgstr "Nenhum efeito antes de Salvar - use Verificar a compatibilidade para testar sem gravar nada."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:877
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
 msgid "Délai maximum par appel (ms) / Comportement en cas d'erreur"
 msgstr "Tempo máximo por chamada (ms) / Comportamento em caso de erro"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
 msgid "Borne le temps d'exécution du script par requête, et la décision prise si le script plante ou dépasse ce délai."
 msgstr "Limita o tempo de execução do script por requisição, e a decisão tomada se o script falhar ou ultrapassar esse tempo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
 msgid "Délai en millisecondes ; ignore (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "Tempo em milissegundos; ignore (deixa passar) ou fail-closed (bloqueia por prudência)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:882
 msgid "fail-closed combiné à une incompatibilité détectée peut bloquer du trafic légitime - avertissement explicite affiché par Vérifier la compatibilité dans ce cas."
 msgstr "fail-closed combinado com uma incompatibilidade detectada pode bloquear tráfego legítimo - nesse caso, Verificar a compatibilidade exibe um aviso explícito."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:884
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:885
 msgid "Chemins personnels dissociés"
 msgstr "Caminhos pessoais dissociados"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:886
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:887
 msgid "5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine - propre à chaque script importe, jamais un contrat générique. Blocklist par défaut : var/lib/waf/magnet-blocklist.txt (le script y ÉCRIT ; un ancien secure/waf/magnet-blocklist.txt est repris une fois). Un chemin choisi à la main doit rester inscriptible par le compte du service, sinon les bans sont perdus sans message."
 msgstr "5 caminhos (blocklist, pasta de regras, 2 logs, arquivo de persistência da limitação de taxa) injetados no script no lugar dos seus caminhos fixos originais - próprios de cada script importado, nunca um contrato genérico. Blocklist padrão: var/lib/waf/magnet-blocklist.txt (o script GRAVA nela; um antigo secure/waf/magnet-blocklist.txt é retomado uma vez). Um caminho escolhido manualmente deve continuar gravável pela conta do serviço; caso contrário, os banimentos são perdidos sem mensagem."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:893
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
 msgid "Vide = le script garde son propre chemin en dur (aucune injection pour ce champ)."
 msgstr "Vazio = o script mantém seu próprio caminho fixo (nenhuma injeção para este campo)."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:896
 msgid "Les dossiers parents sont créés automatiquement à l'usage réel (jamais lors d'un simple 'config check')."
 msgstr "As pastas pai são criadas automaticamente no uso real (nunca durante um simples 'config check')."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:898
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:87
 msgid "Vérifier la compatibilité"
 msgstr "Verificar a compatibilidade"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
 msgid "Exécute RÉELLEMENT le script avec les valeurs du formulaire EN COURS DE SAISIE, pas seulement celles déjà enregistrées."
 msgstr "Executa DE VERDADE o script com os valores do formulário EM EDIÇÃO, não só com os já salvos."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
 msgid "À utiliser avant d'activer un script importe en production - répond à 'ce script est-il compatible ?'."
 msgstr "Para usar antes de ativar um script importado em produção - responde a 'este script é compatível?'."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
 msgid "Scan statique (membres lighty.* non supportes) + exécution réelle sur une requête de test bénigne."
 msgstr "Varredura estática (membros lighty.* não suportados) + execução real em uma requisição de teste inofensiva."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:903
 msgid "Aucun effet sur le serveur ni sur la configuration enregistrée - purement diagnostique."
 msgstr "Nenhum efeito no servidor nem na configuração salva - apenas diagnóstico."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:905
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:906
 msgid "Le natif reste toujours actif en parallèle - le magnet ne peut qu'ajouter un blocage, jamais en lever un."
 msgstr "O nativo continua sempre ativo em paralelo - o magnet só pode adicionar um bloqueio, nunca suspendê-lo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:908
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:909
 msgid "Un script importe peut référencer une fonctionnalité lighty.* non supportée par ce pont (toujours nil côté Lua) - toujours lancer Vérifier la compatibilité avant d'activer un nouveau script en production, surtout avec on_error=fail-closed."
 msgstr "Um script importado pode referenciar uma funcionalidade lighty.* não suportada por esta ponte (sempre nil no lado Lua) - sempre execute Verificar a compatibilidade antes de ativar um novo script em produção, sobretudo com on_error=fail-closed."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:917
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - Escolha de um pack de regras"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
 msgid "WAF - Modules -> Ajouter un pack"
 msgstr "WAF - Módulos -> Adicionar um pack"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:920
 msgid "Liste RÉELLE des packs de règles présents sous secure/waf/rules/, exclut ceux déjà référencés - jamais de doublon proposé."
 msgstr "Lista REAL dos packs de regras presentes em secure/waf/rules/, exclui os já referenciados - nunca uma duplicata oferecida."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:922
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
 msgid "Sélection du pack"
 msgstr "Seleção do pack"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
 msgid "Choisit un pack parmi ceux disponibles et non déjà référencés."
 msgstr "Escolhe um pack entre os disponíveis e ainda não referenciados."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
 msgid "Un menu déroulant, avec la description du pack (nombre de règles, état par défaut) affichée en dessous."
 msgstr "Um menu suspenso, com a descrição do pack (número de regras, estado padrão) exibida abaixo."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
 msgid "Confirmer renvoie le chemin choisi à l'écran Modules."
 msgstr "Confirmar devolve o caminho escolhido à tela Módulos."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:927
 msgid "Aucun effet ici - la référence réelle est ajoutée par l'écran appelant."
 msgstr "Nenhum efeito aqui - a referência real é adicionada pela tela que chamou."
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:929
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:930
 msgid "Aucune modification directe - purement une aide de sélection."
 msgstr "Nenhuma alteração direta - apenas uma ajuda de seleção."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:935
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+msgid "Intervention manuelle - Bannir"
+msgstr "Intervenção manual - Banir"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:936
+msgid "Accueil -> Active Sécurité -> Bannir (cadre INTERVENTION MANUELLE)"
+msgstr "Início -> Segurança ativa -> Banir (quadro INTERVENÇÃO MANUAL)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:938
+msgid "Bannit une adresse IP sans condition : aucune règle, aucun seuil. L'adresse est ajoutée à la blocklist du WAF et reçoit la page 451 sur tout le site, avant le routage - les backends (reverse proxy, FastCGI) ne la voient jamais. Aucun droit administrateur n'est nécessaire."
+msgstr "Bane um endereço IP sem condições: nenhuma regra, nenhum limite. O endereço é adicionado à blocklist do WAF e recebe a página 451 em todo o site, antes do roteamento - os backends (proxy reverso, FastCGI) nunca o veem. Não são necessários direitos de administrador."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:944
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Adresse IP"
+msgstr "Endereço IP"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:945
+msgid "L'adresse à bannir, IPv4 ou IPv6."
+msgstr "O endereço a banir, IPv4 ou IPv6."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:946
+msgid "Une seule adresse (ex. 203.0.113.7 ou 2001:db8::7). Un réseau (/24...) est refusé : il se bannit dans WAF -> Modules -> Liste de blocage."
+msgstr "Um único endereço (ex. 203.0.113.7 ou 2001:db8::7). Uma rede (/24...) é recusada: ela é banida em WAF -> Módulos -> Lista de bloqueio."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:948
+msgid "Vérifiée au clic sur Bannir."
+msgstr "Verificado ao clicar em Banir."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:949
+msgid "Adresse invalide ou réseau : message d'erreur, rien n'est écrit."
+msgstr "Endereço inválido ou rede: mensagem de erro, nada é gravado."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:952
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
+msgid "Motif du ban"
+msgstr "Motivo do ban"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:953
+msgid "Texte libre gardé avec le ban, affiché dans Débannir et Statut des bans."
+msgstr "Texto livre guardado com o ban, exibido em Desbanir e Status dos bans."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:954
+msgid "Facultatif : « Intervention manuelle » par défaut."
+msgstr "Opcional: « Intervenção manual » por padrão."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:955
+msgid "Enregistré avec le ban."
+msgstr "Gravado com o ban."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:956
+msgid "Visible dans Statut des bans et dans les exports."
+msgstr "Visível em Status dos bans e nas exportações."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:959
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:69
+msgid "Durée"
+msgstr "Duração"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:960
+msgid "Combien de temps le ban reste en place."
+msgstr "Quanto tempo o ban permanece."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:961
+msgid "1 h, 6 h, 24 h, 7 jours, 30 jours, une durée libre en heures, ou permanent."
+msgstr "1 h, 6 h, 24 h, 7 dias, 30 dias, uma duração livre em horas, ou permanente."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:962
+msgid "Calculée au moment du ban."
+msgstr "Calculada no momento do ban."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:963
+msgid "À l'échéance, l'adresse est de nouveau acceptée, sans rien faire. Un ban permanent demande une confirmation et reste jusqu'à Débannir."
+msgstr "No vencimento, o endereço volta a ser aceito, sem fazer nada. Um ban permanente pede confirmação e permanece até Desbanir."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:968
+msgid "Effet immédiat, sans redémarrage ni rechargement : le serveur relit la blocklist dès qu'elle change, avec le moteur Python comme avec le moteur natif. Le ban ne compte jamais dans la récidive RIPOSTE et n'a aucun lien avec Active Defense."
+msgstr "Efeito imediato, sem reinício nem recarga: o servidor relê a blocklist assim que ela muda, com o motor Python e com o motor nativo. O ban nunca conta na reincidência do RIPOSTE e não tem relação com o Active Defense."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:973
+msgid "WAF désactivé : la blocklist n'est pas consultée, le ban n'aurait aucun effet - l'écran l'indique en haut. En mode log-only, le ban s'applique quand même."
+msgstr "WAF desativado: a blocklist não é consultada, o ban não teria efeito - a tela indica isso no topo. No modo log-only, o ban é aplicado mesmo assim."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:975
+msgid "Adresse locale, privée ou Tailscale : une confirmation est demandée, vous pourriez couper votre propre accès."
+msgstr "Endereço local, privado ou do Tailscale: uma confirmação é pedida, você poderia cortar seu próprio acesso."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:977
+msgid "Si l'adresse est déjà bannie par une autre origine (auto-ban, RIPOSTE, omega-jail), votre ban la remplace après confirmation ; un automate ne le remplacera jamais."
+msgstr "Se o endereço já estiver banido por outra origem (auto-ban, RIPOSTE, omega-jail), seu ban o substitui após confirmação; um automatismo nunca o substituirá."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:984
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+msgid "Intervention manuelle - Débannir"
+msgstr "Intervenção manual - Desbanir"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:985
+msgid "Accueil -> Active Sécurité -> Débannir (cadre INTERVENTION MANUELLE)"
+msgstr "Início -> Segurança ativa -> Desbanir (quadro INTERVENÇÃO MANUAL)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:986
+msgid "Liste les bans posés par Bannir, et seulement eux, pour les lever."
+msgstr "Lista os bans aplicados por Banir, e somente eles, para revogá-los."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:989
+msgid "Tableau des bans manuels"
+msgstr "Tabela dos bans manuais"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:990
+msgid "Adresse, motif, date de pose, expiration, état (en vigueur ou expiré)."
+msgstr "Endereço, motivo, data de aplicação, vencimento, estado (em vigor ou expirado)."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:991
+msgid "Sélectionnez une ligne, puis Lever."
+msgstr "Selecione uma linha e depois Revogar."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:992
+msgid "Lever demande une confirmation."
+msgstr "Revogar pede confirmação."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:993
+msgid "L'adresse est retirée de la blocklist : elle accède de nouveau au site, immédiatement."
+msgstr "O endereço é retirado da blocklist: ele volta a acessar o site, imediatamente."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:996
+msgid "Retire l'entrée de la blocklist du WAF ; rien d'autre n'est touché."
+msgstr "Retira a entrada da blocklist do WAF; nada mais é alterado."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:998
+msgid "Les autres bans se lèvent là où ils ont été posés : WAF -> Modules (réseaux, auto-bans, CLI, omega-jail), RIPOSTE -> Actions. Un ban levé ici peut revenir si une règle automatique bannit de nouveau l'adresse."
+msgstr "Os outros bans são revogados onde foram aplicados: WAF -> Módulos (redes, auto-bans, CLI, omega-jail), RIPOSTE -> Ações. Um ban revogado aqui pode voltar se uma regra automática banir o endereço de novo."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1005
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+msgid "Intervention manuelle - Statut des bans"
+msgstr "Intervenção manual - Status dos bans"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1006
+msgid "Accueil -> Active Sécurité -> Statut des bans (cadre INTERVENTION MANUELLE)"
+msgstr "Início -> Segurança ativa -> Status dos bans (quadro INTERVENÇÃO MANUAL)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1008
+msgid "Tous les bans de la blocklist du WAF, avec leur origine : intervention manuelle, manuel (WAF -> Modules ou CLI), auto-ban WAF (règles ou liste), RIPOSTE (politique), omega-jail (jail), et la liste du script Magnet s'il est actif. Lecture seule."
+msgstr "Todos os bans da blocklist do WAF, com sua origem: intervenção manual, manual (WAF -> Módulos ou CLI), auto-ban do WAF (regras ou lista), RIPOSTE (política), omega-jail (jail), e a lista do script Magnet se ele estiver ativo. Somente leitura."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1014
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:78
+msgid "Format d'export"
+msgstr "Formato de exportação"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1015
+msgid "JSON ou HTML de tous les bans, ou TXT d'injection."
+msgstr "JSON ou HTML de todos os bans, ou TXT de injeção."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1016
+msgid "TXT : bans actifs ou toute la liste. Une adresse par ligne, en-tête en commentaires « # » - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire, omega-fire ne lisant que des adresses."
+msgstr "TXT: bans ativos ou a lista inteira. Um endereço por linha, cabeçalho em comentários « # » - importável como está no omega-fire (Banir uma lista de IPs). Uma rede só aparece como comentário, pois o omega-fire só lê endereços."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1019
+msgid "Exporter écrit le fichier dans le dossier d'exports."
+msgstr "Exportar grava o arquivo na pasta de exportações."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1020
+msgid "Le chemin du fichier écrit est affiché."
+msgstr "O caminho do arquivo gravado é exibido."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1024
+msgid "Palette de couleurs de l'export HTML."
+msgstr "Paleta de cores da exportação HTML."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1025
+msgid "Seulement pour le format HTML."
+msgstr "Somente para o formato HTML."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1026
+msgid "Appliqué à l'export."
+msgstr "Aplicado à exportação."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1027
+msgid "Même choix de thèmes que les autres exports."
+msgstr "A mesma escolha de temas das outras exportações."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1030
+msgid "Aucune - consultation et export seulement."
+msgstr "Nenhuma - apenas consulta e exportação."
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1032
+msgid "Le fichier TXT n'est jamais traduit : c'est un format lu par d'autres outils."
+msgstr "O arquivo TXT nunca é traduzido: é um formato lido por outras ferramentas."
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:12
 msgid "Accueil -> Configuration détaillée -> Voir options actives"
@@ -13550,7 +13869,7 @@ msgstr "options.active_defense ausente ou desativado na configuração."
 
 #: src/omega_serv/interfaces/tui/screens/_base.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:71
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:146
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:43
@@ -13559,6 +13878,7 @@ msgstr "options.active_defense ausente ou desativado na configuração."
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/cache_screen.py:77
@@ -13591,6 +13911,8 @@ msgstr "options.active_defense ausente ou desativado na configuração."
 #: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:61
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
@@ -13653,6 +13975,22 @@ msgstr "Exportação em andamento no idioma « {name} »…"
 #: src/omega_serv/interfaces/tui/screens/_export_worker.py:35
 msgid "Export HTML indisponible dans cet environnement."
 msgstr "Exportação HTML indisponível neste ambiente."
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:23
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
+#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
+#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
+msgid "Erreur de configuration."
+msgstr "Erro de configuração."
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:26
+msgid "Blocklist indisponible dans cet environnement."
+msgstr "Blocklist indisponível neste ambiente."
 
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:91
 msgid "RIPOSTE indisponible dans cet environnement."
@@ -13750,6 +14088,7 @@ msgstr "6 h"
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:203
 msgid "7 jours"
@@ -13840,10 +14179,12 @@ msgstr "Erro de configuração - não foi possível salvar."
 msgid "Règles de contrôle d'accès mises à jour."
 msgstr "Regras de controle de acesso atualizadas."
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:73
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:82
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:91
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:549
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
@@ -13852,82 +14193,99 @@ msgstr "Regras de controle de acesso atualizadas."
 msgid "État"
 msgstr "Status"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:74
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:99
 msgid "Réglages"
 msgstr "Configurações"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:75
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
 msgid "Menaces"
 msgstr "Ameaças"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:79
 msgid "Incidents"
 msgstr "Incidentes"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:80
 msgid "Deception"
 msgstr "Deception"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:98
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:40
 msgid "Simuler"
 msgstr "Simular"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
 msgid "Modules"
 msgstr "Módulos"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:84
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
 msgid "Limitations"
 msgstr "Limitações"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:154
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:156
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:39
 msgid "Tester"
 msgstr "Testar"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:89
 msgid "Custom"
 msgstr "Custom"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:90
 msgid "Magnet"
 msgstr "Magnet"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
 msgid "Politiques"
 msgstr "Políticas"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:93
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:72
 msgid "Actions"
 msgstr "Ações"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:97
 msgid "Récidives"
 msgstr "Reincidências"
 
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:107
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:75
+msgid "Bannir"
+msgstr "Banir"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:108
+msgid "Débannir"
+msgstr "Desbanir"
+
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:109
+msgid "Statut des bans"
+msgstr "Status dos bans"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:122
 msgid "ACTIVE SÉCURITÉ"
 msgstr "SEGURANÇA ATIVA"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "') avant d'utiliser les sous-écrans ci-dessous, sinon ils resteront en erreur d'accès."
 msgstr "') antes de usar as subtelas abaixo; caso contrário, elas continuarão com erro de acesso."
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "Le service système dédié ({DEFAULT_SYSTEM_GROUP!r}) est installé, mais cette session n'a pas encore pris en compte votre appartenance à ce groupe - deconnectez-vous/reconnectez-vous (ou 'newgrp "
 msgstr "O serviço do sistema dedicado ({DEFAULT_SYSTEM_GROUP!r}) está instalado, mas esta sessão ainda não levou em conta a sua participação nesse grupo - saia e entre novamente (ou 'newgrp "
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 msgid "ACTIVE DEFENSE"
 msgstr "ACTIVE DEFENSE"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:144
+msgid "INTERVENTION MANUELLE"
+msgstr "INTERVENÇÃO MANUAL"
 
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:138
@@ -14513,17 +14871,6 @@ msgstr "Realm"
 msgid "Utilisateurs autorisés"
 msgstr "Usuários permitidos"
 
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
-#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
-#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
-#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
-#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
-msgid "Erreur de configuration."
-msgstr "Erro de configuração."
-
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:135
 msgid "AJOUTER UN UTILISATEUR"
 msgstr "ADICIONAR UM USUÁRIO"
@@ -14728,6 +15075,86 @@ msgstr "Backup não encontrado: {selected_snapshot_id}"
 #, python-brace-format
 msgid "Sauvegarde supprimée : {selected_snapshot_id}"
 msgstr "Backup excluído: {selected_snapshot_id}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:49
+msgid "JSON - tous les bans"
+msgstr "JSON - todos os bans"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:50
+msgid "HTML - tous les bans (thème ci-dessous)"
+msgstr "HTML - todos os bans (tema abaixo)"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:51
+msgid "TXT injection - bans actifs"
+msgstr "TXT injeção - bans ativos"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:52
+msgid "TXT injection - toute la liste"
+msgstr "TXT injeção - lista inteira"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:69
+msgid "STATUT DES BANS"
+msgstr "STATUS DOS BANS"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:71
+msgid "Tous les bans de la blocklist du WAF, avec leur origine. Lecture seule : chaque ban se lève là où il a été posé (Débannir pour l'intervention manuelle, WAF → Modules, RIPOSTE → Actions)."
+msgstr "Todos os bans da blocklist do WAF, com sua origem. Somente leitura: cada ban é revogado onde foi aplicado (Desbanir para a intervenção manual, WAF → Módulos, RIPOSTE → Ações)."
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:81
+msgid "TXT injection : une adresse par ligne, lignes « # » ignorées - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire."
+msgstr "TXT injeção: um endereço por linha, linhas « # » ignoradas - importável como está no omega-fire (Banir uma lista de IPs). Uma rede só aparece como comentário."
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
+msgid "Exporter"
+msgstr "Exportar"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Adresse / réseau"
+msgstr "Endereço / rede"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+msgid "Expiration"
+msgstr "Expiração"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Origine"
+msgstr "Origem"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Posé le"
+msgstr "Aplicado em"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:128
+msgid "Aucun ban dans la blocklist."
+msgstr "Nenhum ban na blocklist."
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:131
+#, python-brace-format
+msgid "{label} : {count}"
+msgstr "{label}: {count}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:132
+#, python-brace-format
+msgid "{active} ban(s) actif(s) sur {total}"
+msgstr "{active} ban(s) ativo(s) de {total}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:172
+#, python-brace-format
+msgid "Export impossible : {error}"
+msgstr "Exportação impossível: {error}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
+#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
+#, python-brace-format
+msgid "Export écrit : {export_path}"
+msgstr "Exportação gravada: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:54
 msgid "CONFIGURATION DE BASE"
@@ -15032,13 +15459,6 @@ msgstr "Exportar HTML"
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:84
 msgid "Analyse en cours..."
 msgstr "Análise em andamento..."
-
-#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
-#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
-#, python-brace-format
-msgid "Export écrit : {export_path}"
-msgstr "Exportação gravada: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/capability_detail_screen.py:22
 msgid "Cette capacité est pleinement opérationnelle et disponible."
@@ -16693,12 +17113,14 @@ msgid "(aucun)"
 msgstr "(nenhum)"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:202
 msgid "24 heures"
 msgstr "24 horas"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 dias"
@@ -16814,10 +17236,6 @@ msgstr "Rotação / arquivamento"
 msgid "Purger les archives"
 msgstr "Limpar os arquivos compactados"
 
-#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
-msgid "Exporter"
-msgstr "Exportar"
-
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:65
 msgid "GESTION DES LOGS"
 msgstr "GERENCIAMENTO DE LOGS"
@@ -16825,6 +17243,73 @@ msgstr "GERENCIAMENTO DE LOGS"
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:76
 msgid "MAINTENANCE"
 msgstr "MANUTENÇÃO"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:38
+msgid "1 heure"
+msgstr "1 hora"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:39
+msgid "6 heures"
+msgstr "6 horas"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:43
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:71
+msgid "Durée libre (heures)"
+msgstr "Duração livre (horas)"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:44
+msgid "Permanent"
+msgstr "Permanente"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:56
+msgid "BANNIR UNE ADRESSE IP"
+msgstr "BANIR UM ENDEREÇO IP"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:58
+msgid "Ban sans condition : l'adresse reçoit la page 451 sur tout le site, avant les backends. Aucun lien avec Active Defense ni RIPOSTE (jamais compté dans la récidive) ; il se lève dans Débannir."
+msgstr "Ban sem condições: o endereço recebe a página 451 em todo o site, antes dos backends. Nenhuma relação com o Active Defense nem com o RIPOSTE (nunca conta como reincidência); é revogado em Desbanir."
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:66
+msgid "ex. 203.0.113.7 ou 2001:db8::7"
+msgstr "ex. 203.0.113.7 ou 2001:db8::7"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:72
+msgid "ex. 48"
+msgstr "ex. 48"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:87
+msgid "WAF désactivé : la blocklist n'est pas consultée, un ban posé ici n'aurait aucun effet. Activez l'option waf (menu Options)."
+msgstr "WAF desativado: a blocklist não é consultada, um ban aplicado aqui não teria efeito. Ative a opção waf (menu Opções)."
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:116
+msgid "Durée libre invalide : un nombre d'heures entier, supérieur à 0."
+msgstr "Duração livre inválida: um número inteiro de horas, maior que 0."
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:134
+#, python-brace-format
+msgid "Confirmer le ban de {ip}"
+msgstr "Confirmar o ban de {ip}"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:46
+msgid "DÉBANNIR UNE ADRESSE IP"
+msgstr "DESBANIR UM ENDEREÇO IP"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:48
+msgid "Seuls les bans posés par l'intervention manuelle apparaissent ici. Les autres se lèvent là où ils ont été posés : WAF → Modules (réseaux, auto-bans, omega-jail), RIPOSTE → Actions."
+msgstr "Aparecem aqui apenas os bans aplicados pela intervenção manual. Os outros são revogados onde foram aplicados: WAF → Módulos (redes, auto-bans, omega-jail), RIPOSTE → Ações."
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:92
+msgid "Aucun ban posé par l'intervention manuelle."
+msgstr "Nenhum ban aplicado pela intervenção manual."
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:113
+msgid "Lever le ban"
+msgstr "Revogar o ban"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:114
+#, python-brace-format
+msgid "Lever le ban de {ip} ? Elle pourra de nouveau accéder au site."
+msgstr "Revogar o ban de {ip}? Ele poderá acessar o site novamente."
 
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:37
 msgid "OPTIONS"
@@ -18784,8 +19269,6 @@ msgid "En-tête"
 msgstr "Cabeçalho"
 
 #: src/omega_serv/interfaces/tui/screens/routing_rule_editor_screen.py:64
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
 msgid "Motif"
 msgstr "Padrão"
 
@@ -19224,11 +19707,6 @@ msgstr "As alterações não salvas serão perdidas."
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:33
 msgid "MENACES SUIVIES"
 msgstr "AMEAÇAS MONITORADAS"
-
-#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-msgid "Expiration"
-msgstr "Expiração"
 
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Mise à jour"
@@ -20376,15 +20854,21 @@ msgstr "sim"
 msgid "non"
 msgstr "não"
 
-#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
 #, python-brace-format
-msgid "Généré le {date} · {count} capacité(s)"
-msgstr "Gerado em {date} · {count} capacidade(s)"
+msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
+msgstr "Gerado em {date} · {count} ban(s), dos quais {active} ativo(s)"
 
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
 msgstr "Relatório gerado por"
+
+#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#, python-brace-format
+msgid "Généré le {date} · {count} capacité(s)"
+msgstr "Gerado em {date} · {count} capacidade(s)"
 
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:6
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:60

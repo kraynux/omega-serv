@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 06:56+0100\n"
+"POT-Creation-Date: 2026-11-06 09:44+0100\n"
 "PO-Revision-Date: 2026-10-23 23:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: ไทย\n"
@@ -705,7 +705,9 @@ msgid "expire le {date}"
 msgstr "หมดอายุ {date}"
 
 #: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manual_intervention.py:168
 #: src/omega_serv/interfaces/cli/main.py:723
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:30
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "ถาวร"
@@ -719,6 +721,93 @@ msgstr "ไม่มีรายการสำหรับ {network}"
 #, python-brace-format
 msgid "Entrée retirée : {network}"
 msgstr "นำรายการออกแล้ว: {network}"
+
+#: src/omega_serv/application/security/manual_intervention.py:30
+msgid "Pour bannir un réseau : menu WAF → Modules → Liste de blocage."
+msgstr "หากต้องการแบนเครือข่าย: เมนู WAF → โมดูล → รายการบล็อก"
+
+#: src/omega_serv/application/security/manual_intervention.py:64
+msgid "Adresse IP manquante."
+msgstr "ไม่มีที่อยู่ IP"
+
+#: src/omega_serv/application/security/manual_intervention.py:66
+#, python-brace-format
+msgid "Une seule adresse IP, pas de réseau. {hint}"
+msgstr "ที่อยู่ IP เดียวเท่านั้น ไม่ใช่เครือข่าย {hint}"
+
+#: src/omega_serv/application/security/manual_intervention.py:67
+msgid "Adresse IP invalide."
+msgstr "ที่อยู่ IP ไม่ถูกต้อง"
+
+#: src/omega_serv/application/security/manual_intervention.py:78
+#, python-brace-format
+msgid "{ip} est une adresse locale, privée ou Tailscale : la bannir peut couper votre propre accès au site."
+msgstr "{ip} เป็นที่อยู่ภายในเครื่อง ส่วนตัว หรือ Tailscale: การแบนอาจตัดการเข้าถึงเว็บไซต์ของคุณเอง"
+
+#: src/omega_serv/application/security/manual_intervention.py:84
+#, python-brace-format
+msgid "Cette adresse est déjà bannie ({origin}) : ce ban sera remplacé par le vôtre."
+msgstr "ที่อยู่นี้ถูกแบนอยู่แล้ว ({origin}): การแบนนั้นจะถูกแทนที่ด้วยของคุณ"
+
+#: src/omega_serv/application/security/manual_intervention.py:87
+msgid "Ban permanent : il reste en place jusqu'à ce que vous le leviez dans Débannir."
+msgstr "แบนถาวร: มีผลจนกว่าคุณจะยกเลิกในเมนู ยกเลิกแบน"
+
+#: src/omega_serv/application/security/manual_intervention.py:97
+#: src/omega_serv/domain/security/waf/manual_intervention.py:117
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:68
+msgid "Intervention manuelle"
+msgstr "การแทรกแซงด้วยตนเอง"
+
+#: src/omega_serv/application/security/manual_intervention.py:106
+#: src/omega_serv/application/security/manual_intervention.py:130
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:118
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:82
+#, python-brace-format
+msgid "Blocklist illisible ou non modifiable : {error}"
+msgstr "อ่านหรือแก้ไข blocklist ไม่ได้: {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:109
+#, python-brace-format
+msgid "{ip} bannie (permanent)."
+msgstr "แบน {ip} แล้ว (ถาวร)"
+
+#: src/omega_serv/application/security/manual_intervention.py:110
+#, python-brace-format
+msgid "{ip} bannie jusqu'au {date}."
+msgstr "แบน {ip} จนถึง {date}"
+
+#: src/omega_serv/application/security/manual_intervention.py:123
+#: src/omega_serv/application/security/manual_intervention.py:132
+#, python-brace-format
+msgid "Aucun ban pour {ip}."
+msgstr "ไม่มีการแบนสำหรับ {ip}"
+
+#: src/omega_serv/application/security/manual_intervention.py:125
+msgid "Ce ban n'a pas été posé par l'intervention manuelle : levez-le là où il a été posé (WAF → Modules, RIPOSTE → Actions)."
+msgstr "การแบนนี้ไม่ได้ตั้งโดยการแทรกแซงด้วยตนเอง: ให้ยกเลิกในที่ที่ตั้งไว้ (WAF → โมดูล, RIPOSTE → การดำเนินการ)"
+
+#: src/omega_serv/application/security/manual_intervention.py:133
+#, python-brace-format
+msgid "Ban levé : {ip}"
+msgstr "ยกเลิกการแบนแล้ว: {ip}"
+
+#: src/omega_serv/application/security/manual_intervention.py:147
+#, python-brace-format
+msgid "Liste Magnet illisible ({path}) : {error}"
+msgstr "อ่านรายการ Magnet ไม่ได้ ({path}): {error}"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+msgid "en vigueur"
+msgstr "มีผลอยู่"
+
+#: src/omega_serv/application/security/manual_intervention.py:169
+#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
+#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
+msgid "expiré"
+msgstr "หมดอายุแล้ว"
 
 #: src/omega_serv/application/security/path_list_tools.py:128
 msgid "corrigez d'abord les erreurs de la liste"
@@ -798,7 +887,7 @@ msgid "Auth"
 msgstr "การยืนยันตัวตน"
 
 #: src/omega_serv/application/server/engine_levels.py:65
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
 msgid "WAF"
 msgstr "WAF"
@@ -1215,18 +1304,18 @@ msgstr "ถึงโควตาจำนวนไฟล์ของโซนน
 msgid "quota de volume total atteint pour cette zone"
 msgstr "ถึงโควตาปริมาณรวมของโซนนี้แล้ว"
 
-#: src/omega_serv/bootstrap/container.py:508
+#: src/omega_serv/bootstrap/container.py:510
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:237
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:254
 msgid "Incident introuvable."
 msgstr "ไม่พบเหตุการณ์"
 
-#: src/omega_serv/bootstrap/container.py:511
+#: src/omega_serv/bootstrap/container.py:513
 #, python-brace-format
 msgid "Export dans la langue « {name} » impossible : {error}"
 msgstr "ส่งออกเป็นภาษา « {name} » ไม่ได้: {error}"
 
-#: src/omega_serv/bootstrap/container.py:711
+#: src/omega_serv/bootstrap/container.py:719
 msgid "Aucun gestionnaire de service : arrêtez le serveur vous-même, puis restaurez."
 msgstr "ไม่มีตัวจัดการบริการ: หยุดเซิร์ฟเวอร์ด้วยตนเองแล้วจึงกู้คืน"
 
@@ -2310,15 +2399,15 @@ msgstr "คีย์ส่วนตัวและใบรับรองที
 msgid "le certificat fourni est déjà expiré depuis le {value}"
 msgstr "ใบรับรองที่ให้มาหมดอายุแล้วตั้งแต่ {value}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:51
+#: src/omega_serv/domain/security/waf/blocklist.py:56
 msgid "network invalide (attendu une IP ou un CIDR) : {network!r}"
 msgstr "network ไม่ถูกต้อง (ที่คาดไว้คือ IP หรือ CIDR): {network!r}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:53
+#: src/omega_serv/domain/security/waf/blocklist.py:58
 msgid "reason ne peut pas être vide"
 msgstr "reason ต้องไม่ว่าง"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:55
+#: src/omega_serv/domain/security/waf/blocklist.py:60
 msgid "source invalide : {source!r}"
 msgstr "source ไม่ถูกต้อง: {source!r}"
 
@@ -2538,6 +2627,37 @@ msgstr "รายการพาธ ({count} รายการ, {count2} ข้
 #, python-brace-format
 msgid "Liste de mots-clefs ({count} entrée(s))"
 msgstr "รายการคำสำคัญ ({count} รายการ)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:119
+msgid "Auto-ban WAF (règles)"
+msgstr "แบนอัตโนมัติ WAF (กฎ)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+#, python-brace-format
+msgid "Auto-ban WAF (liste {name})"
+msgstr "แบนอัตโนมัติ WAF (รายการ {name})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:121
+msgid "Auto-ban WAF (liste)"
+msgstr "แบนอัตโนมัติ WAF (รายการ)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:123
+#, python-brace-format
+msgid "RIPOSTE ({policy})"
+msgstr "RIPOSTE ({policy})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:125
+#, python-brace-format
+msgid "omega-jail ({jail})"
+msgstr "omega-jail ({jail})"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:127
+msgid "Magnet (liste du script)"
+msgstr "Magnet (รายการของสคริปต์)"
+
+#: src/omega_serv/domain/security/waf/manual_intervention.py:128
+msgid "Manuel (WAF → Modules ou CLI)"
+msgstr "ด้วยตนเอง (WAF → โมดูล หรือ CLI)"
 
 #: src/omega_serv/domain/security/waf/reputation.py:103
 msgid "options.waf.reputation.never_auto_block : réseau invalide : {network!r}"
@@ -3933,11 +4053,6 @@ msgstr "OK"
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] ใบรับรอง{value2}"
-
-#: src/omega_serv/interfaces/cli/main.py:1218
-#: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
-msgid "expiré"
-msgstr "หมดอายุแล้ว"
 
 #: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
@@ -5856,10 +5971,12 @@ msgstr "ธีมถัดไป"
 #: src/omega_serv/interfaces/tui/app.py:82
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:157
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:25
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:49
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/log_library_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:235
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:77
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:64
@@ -5870,8 +5987,8 @@ msgid "Rafraîchir"
 msgstr "รีเฟรช"
 
 #: src/omega_serv/interfaces/tui/app.py:83
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/home.py:90
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:167
 msgid "Aide"
@@ -6231,6 +6348,9 @@ msgstr "ไม่มีผลใด (อ่าน รีเฟรชอัตโ
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:104
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:105
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:106
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
 #: src/omega_serv/interfaces/tui/screens/home.py:89
 msgid "Active Sécurité"
 msgstr "ความปลอดภัยเชิงรุก"
@@ -6312,7 +6432,7 @@ msgstr "เมนูย่อยที่รวมหน้าจอการต
 
 #: src/omega_serv/interfaces/tui/guide/content/configuration_base.py:19
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:18
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:18
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:19
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:15
 msgid "Aucune - purement navigation."
 msgstr "ไม่มี - เป็นการนำทางล้วนๆ"
@@ -7049,6 +7169,8 @@ msgstr "สแกนสภาพแวดล้อมแบบเต็ม (พ�
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:16
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:436
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1023
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:85
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:43
 msgid "Thème d'export HTML"
@@ -7084,7 +7206,7 @@ msgstr "สแกนใหม่ หรือส่งออกผลลัพ�
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:25
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:445
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
 msgid "Aucune saisie supplémentaire."
 msgstr "ไม่ต้องป้อนข้อมูลเพิ่มเติม"
 
@@ -7115,9 +7237,9 @@ msgstr "รายละเอียดทั้งหมดของความ
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:39
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:299
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:329
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:501
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:197
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:330
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:502
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:171
 msgid "Purement consultatif."
 msgstr "ดูข้อมูลเท่านั้น"
@@ -7423,7 +7545,7 @@ msgid "Restaurer écrase directement les fichiers vises, sans filet - la seule p
 msgstr "การกู้คืนเขียนทับไฟล์เป้าหมายโดยตรง ไม่มีตาข่ายรองรับ - การป้องกันเดียวคือการยืนยันที่ขอไว้ก่อน"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:183
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:110
 msgid "Réglages de l'application"
 msgstr "การตั้งค่าแอปพลิเคชัน"
 
@@ -7554,7 +7676,7 @@ msgid "Ne touche jamais config/omega-serve.json - réglages purement locaux à c
 msgstr "ไม่แตะ config/omega-serve.json เลย - เป็นการตั้งค่าเฉพาะของอินเทอร์เฟซนี้"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:262
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:111
 #: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:56
 msgid "Contact et support"
 msgstr "ติดต่อและสนับสนุน"
@@ -7661,7 +7783,7 @@ msgid "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déc
 msgstr "จะไม่มีการส่งอะไรเลยหากไม่ได้คลิก ส่ง (แบบฟอร์มลงทะเบียน) หรือ ไม่ต้องลงทะเบียนฉันอีก อย่างชัดแจ้ง"
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:305
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:112
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:51
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:80
@@ -7940,7 +8062,7 @@ msgid "Les 8 classes possibles et ce qu'elles ciblent concrètement : scan (sond
 msgstr "ประเภทที่เป็นไปได้ 8 แบบและเป้าหมายจริง: scan (การสำรวจ URL/พอร์ต เครื่องสแกนอัตโนมัติ), credential_stuffing (การลองรหัสผ่านจำนวนมากบนฟอร์มเข้าสู่ระบบ), sqli (ความพยายาม SQL injection), xss (สคริปต์ที่แทรกในพารามิเตอร์), path_traversal (ความพยายามออกนอกโฟลเดอร์ที่ให้บริการ เช่น ../../etc/passwd), upload_probe (อัปโหลดไฟล์ที่น่าสงสัย), api_probe (การสำรวจ endpoint /api/...), unknown (ทุกอย่างที่ไม่ตรงกับหมวดหมู่ก่อนหน้า - ตาข่ายนิรภัยทั่วไป) ตัวอย่าง: โปรไฟล์ชื่อ fake_admin ที่มีประเภท scan,credential_stuffing จะดึงเครื่องสแกนและความพยายาม bruteforce การเข้าสู่ระบบไปยังหน้ายืนยันตัวตนปลอม ระบุได้หลายประเภท คั่นด้วยจุลภาค"
 
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:221
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:123
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:124
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:305
 msgid "Nouvelle classe (2.1) : command_injection (injection de commandes shell, ex : $(...), ; cat /etc/passwd). Les sondes WordPress (wp-login, xmlrpc.php) sont classées scan."
 msgstr "คลาสใหม่ (2.1): command_injection (การฉีดคำสั่งเชลล์ เช่น $(...), ; cat /etc/passwd) การสำรวจ WordPress (wp-login, xmlrpc.php) จัดเป็น scan"
@@ -8039,7 +8161,7 @@ msgstr "ข้อความที่แสดงหลัง 'บันทึ�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:400
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:853
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (นำเข้า WAF ภายนอก)"
@@ -8202,7 +8324,7 @@ msgstr "สาเหตุที่พบบ่อยที่สุด เร�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:689
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:700
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:121
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
@@ -9213,7 +9335,7 @@ msgid "Une politique dit QUAND agir (classes d'attaque, nombre de retours dans u
 msgstr "นโยบายกำหนดว่าจะทำงานเมื่อใด (คลาสการโจมตี จำนวนการกลับมาในช่วงเวลา ระดับ Active Defense การเข้าชมเหยื่อล่อ) และทำอย่างไร (แบนในเครื่อง แบนในเครื่อง + เครือข่าย เหยื่อล่อ) นโยบายที่เปิดใช้งานทำงานอัตโนมัติโดยไม่ต้องอนุมัติทีละการดำเนินการ"
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:54
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:524
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
 #: src/omega_serv/interfaces/tui/guide/content/services_avances.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:65
 #: src/omega_serv/interfaces/tui/screens/aliases_screen.py:48
@@ -9448,6 +9570,7 @@ msgid "Le registre des actions : en cours, ou terminées (échéance, levée par
 msgstr "ทะเบียนการดำเนินการ: กำลังทำ หรือสิ้นสุด (หมดอายุ ผู้ใช้ยกเลิก ปิดใช้งานกฎ หยุดฉุกเฉิน ลบนอก RIPOSTE ไม่ได้นำไปใช้) ไม่มีอะไรหายไป"
 
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:141
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:184
 msgid "Lever"
@@ -9911,7 +10034,7 @@ msgid "Un préfixe par ligne, doit commencer par '/'."
 msgstr "หนึ่ง prefix ต่อบรรทัด ต้องขึ้นต้นด้วย '/'"
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:180
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:141
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
 msgid "Ajouter/Supprimer une zone."
 msgstr "เพิ่ม/ลบโซน"
 
@@ -10043,10 +10166,10 @@ msgid "Chemin relatif au projet. Valeur par défaut : webroot/.errors."
 msgstr "พาธสัมพัทธ์กับโปรเจกต์ ค่าเริ่มต้น: webroot/.errors"
 
 #: src/omega_serv/interfaces/tui/guide/content/routage.py:276
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
 msgid "Enregistre au clic sur Enregistrer."
 msgstr "บันทึกเมื่อคลิกบันทึก"
 
@@ -10395,1523 +10518,1719 @@ msgid "Accueil -> Active Sécurité"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:13
-msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent)."
-msgstr "รวมสามบล็อกตามลำดับการโจมตี: WAF (ป้องกัน: โหมด แพ็ก blocklist ข้อจำกัด), Active Defense (ตรวจจับ: ภัยคุกคาม เหตุการณ์ เหยื่อล่อ ระหว่างคำขอ), RIPOSTE (ตอบโต้ตามเวลา: แบนที่นานขึ้นเรื่อย ๆ สำหรับแหล่งที่มาที่กลับมา)"
+msgid "Regroupe trois blocs, dans l'ordre d'une attaque : WAF (protéger : mode, packs, blocklist, limitations), Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la durée : bans de plus en plus longs pour les sources qui reviennent). En dessous, INTERVENTION MANUELLE : bannir ou débannir une adresse IP à la main, sans condition, et voir le statut de tous les bans."
+msgstr "รวมสามบล็อกตามลำดับการโจมตี: WAF (ป้องกัน: โหมด แพ็ก blocklist ข้อจำกัด), Active Defense (ตรวจจับ: ภัยคุกคาม เหตุการณ์ เหยื่อล่อ ระหว่างคำขอ), RIPOSTE (ตอบโต้ตามเวลา: แบนที่นานขึ้นเรื่อย ๆ สำหรับแหล่งที่มาที่กลับมา) ด้านล่างคือ การแทรกแซงด้วยตนเอง: แบนหรือยกเลิกแบนที่อยู่ IP ด้วยตนเองโดยไม่มีเงื่อนไข และดูสถานะของการแบนทั้งหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:21
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:22
 msgid "Si un avertissement de groupe système apparaît en haut de cet écran, reconnectez votre session avant d'utiliser les sous-écrans - sinon ils resteront en erreur d'accès."
 msgstr "หากมีคำเตือนเรื่องกลุ่มระบบที่ด้านบนของหน้าจอนี้ ให้เข้าสู่ระบบใหม่ก่อนใช้หน้าจอย่อย - มิฉะนั้นจะยังเกิดข้อผิดพลาดในการเข้าถึง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:25
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:26
 msgid "Activer l'option 'active_defense' (menu Options) ne suffit PAS à lui seul - voir la fiche 'Active Defense - État' et la FAQ 'Active Defense ne détecte jamais rien'."
 msgstr "การเปิดตัวเลือก 'active_defense' (เมนูตัวเลือก) อย่างเดียวไม่เพียงพอ - ดูหัวข้อ 'Active Defense - สถานะ' และคำถามพบบ่อย 'Active Defense ไม่ตรวจพบอะไรเลย'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:33
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
 msgid "Active Defense - État"
 msgstr "Active Defense - สถานะ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:34
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
 msgid "Accueil -> Active Sécurité -> État (bloc Active Defense)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> สถานะ (บล็อก Active Defense)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:35
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:36
 msgid "Vue d'ensemble en lecture seule : mode, état du mode guerre, état de la deception, nombre de sources suivies."
 msgstr "ภาพรวมแบบอ่านอย่างเดียว: โหมด สถานะโหมดสงคราม สถานะ deception จำนวนแหล่งที่มาที่ติดตาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:38
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:39
 msgid "Purement consultatif - mais la ligne 'Mode guerre' affichée ici est le seul endroit où vérifier le VRAI interrupteur qui déclenche quoi que ce soit (voir points de vigilance)."
 msgstr "ดูข้อมูลเท่านั้น - แต่บรรทัด 'โหมดสงคราม' ที่แสดงที่นี่เป็นที่เดียวที่ตรวจสอบสวิตช์จริงที่ทำให้เกิดการทำงานใดๆ (ดูข้อควรระวัง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:42
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:43
 msgid "L'activation de l'option active_defense se fait dans le menu Options, jamais ici."
 msgstr "การเปิดตัวเลือก active_defense ทำในเมนูตัวเลือก ไม่ใช่ที่นี่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:44
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:45
 msgid "PIÈGE RÉEL VÉRIFIÉ DANS LE CODE : activer l'option 'active_defense' seule ne déclenche RIEN. Un second interrupteur, `war_mode.enabled` (Active Defense - Réglages), vaut FALSE par défaut. Tant qu'il reste à false, les écrans Menaces/Incidents/Leurres restent fonctionnels mais ne se peuplent jamais, même avec un trafic hostile réel."
 msgstr "กับดักจริงที่ตรวจสอบในโค้ดแล้ว: การเปิดตัวเลือก 'active_defense' อย่างเดียวไม่ทำให้เกิดอะไรเลย สวิตช์ที่สอง `war_mode.enabled` (Active Defense - การตั้งค่า) เป็น FALSE โดยค่าเริ่มต้น ตราบใดที่ยังเป็น false หน้าจอภัยคุกคาม/เหตุการณ์/เหยื่อล่อจะยังใช้งานได้แต่ไม่มีข้อมูลเลย แม้มีทราฟฟิกที่เป็นอันตรายจริง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:51
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:52
 msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterministe, sans aucune intervention manuelle : chaque décision WAF déjà calculée alimente un score cumulé par source (IP + User-Agent hache, avec décroissance dans le temps), qui franchit des seuils configurables (normal/suspicious/hostile/contained) déclenchant des actions automatiques (redirection vers un leurre, journalisation enrichie, ralentissement, création d'incident)."
 msgstr "เมื่อ `war_mode.enabled=true` ทุกอย่างจะเป็นอัตโนมัติและกำหนดได้แน่นอน โดยไม่ต้องทำอะไรด้วยมือ: ทุกการตัดสินของ WAF ที่คำนวณไว้แล้วจะเพิ่มคะแนนสะสมต่อแหล่งที่มา (IP + User-Agent ที่แฮชแล้ว ลดลงตามเวลา) ซึ่งเมื่อข้ามเกณฑ์ที่ตั้งค่าได้ (normal/suspicious/hostile/contained) จะทำให้เกิดการดำเนินการอัตโนมัติ (เปลี่ยนเส้นทางไปยังเหยื่อล่อ บันทึกล็อกแบบละเอียด การหน่วงเวลา การสร้างเหตุการณ์)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:63
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - การตั้งค่า"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:65
 msgid "Accueil -> Active Sécurité -> Réglages (bloc Active Defense)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> การตั้งค่า (บล็อก Active Defense)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:66
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:67
 msgid "Configure l'intégralité d'Active Defense (mode guerre, deception/leurres, IoC, stockage, journalisation) - AUCUNE édition manuelle de config/omega-serve.json n'est plus nécessaire pour ces réglages."
 msgstr "ตั้งค่า Active Defense ทั้งหมด (โหมดสงคราม deception/เหยื่อล่อ IoC การจัดเก็บ การบันทึกล็อก) - ไม่ต้องแก้ไข config/omega-serve.json ด้วยมือสำหรับการตั้งค่าเหล่านี้อีก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:72
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:345
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:306
 msgid "Mode"
 msgstr "โหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:73
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
 msgid "Mode global d'Active Defense."
 msgstr "โหมดรวมของ Active Defense"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:74
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
 msgid "monitor (observe uniquement) ou enforce. Valeur par défaut : monitor."
 msgstr "monitor (เฝ้าดูอย่างเดียว) หรือ enforce ค่าเริ่มต้น: monitor"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:75
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
 msgid "Enregistre au clic sur Enregistrer, après validation."
 msgstr "บันทึกเมื่อคลิกบันทึก หลังการตรวจสอบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:76
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:77
 msgid "REDÉMARRAGE COMPLET toujours nécessaire - active_defense n'est jamais rechargé à chaud."
 msgstr "ต้องรีสตาร์ทเต็มรูปแบบเสมอ - active_defense ไม่โหลดใหม่ขณะทำงาน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:79
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
 msgid "Mode guerre actif (war_mode.enabled)"
 msgstr "เปิดโหมดสงคราม (war_mode.enabled)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:80
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
 msgid "LE VRAI INTERRUPTEUR qui déclenche l'observation et les actions automatiques."
 msgstr "สวิตช์จริงที่ทำให้เกิดการเฝ้าดูและการดำเนินการอัตโนมัติ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:81
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
 msgid "oui/non. Valeur par défaut : non - RIEN ne se déclenche tant qu'il reste à 'non'."
 msgstr "ใช่/ไม่ ค่าเริ่มต้น: ไม่ - ไม่มีอะไรทำงานตราบใดที่ยังเป็น 'ไม่'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:82
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
 msgid "Enregistre avec le reste des réglages généraux."
 msgstr "บันทึกพร้อมการตั้งค่าทั่วไปอื่นๆ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:83
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:102
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:142
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:149
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:156
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:84
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:96
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:103
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:127
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:143
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:150
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:157
 msgid "REDÉMARRAGE COMPLET toujours nécessaire."
 msgstr "ต้องรีสตาร์ทเต็มรูปแบบเสมอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:86
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
 msgid "Portée / Actions autorisées / Seuils / Ralentissement / Limite de requêtes"
 msgstr "ขอบเขต / การดำเนินการที่อนุญาต / เกณฑ์ / การหน่วงเวลา / ขีดจำกัดคำขอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:87
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:88
 msgid "Réglages fins du mode guerre : à qui s'appliquent les actions, lesquelles, à quel score, et leurs paramètres."
 msgstr "การปรับละเอียดของโหมดสงคราม: การดำเนินการใช้กับใคร อะไรบ้าง ที่คะแนนเท่าใด และพารามิเตอร์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:89
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:90
 msgid "Portée : source/instance. Actions : liste parmi observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc. Seuils : 4 entiers croissants (suspect <= hostile <= incident, confine >= hostile). Ralentissement et limite de requêtes : bornes en millisecondes/secondes."
 msgstr "ขอบเขต: source/instance การดำเนินการ: รายการจาก observe, enrich_log, delay, rate_limit, redirect_to_decoy, create_incident, export_ioc เกณฑ์: จำนวนเต็ม 4 ค่าเรียงจากน้อยไปมาก (suspicious <= hostile <= incident, contained >= hostile) การหน่วงเวลาและขีดจำกัดคำขอ: ขอบเขตเป็นมิลลิวินาที/วินาที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:94
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:95
 msgid "Valides par les mêmes règles que le domaine (`validate_active_defense_config`) avant tout enregistrement."
 msgstr "ตรวจสอบด้วยกฎเดียวกับโดเมน (`validate_active_defense_config`) ก่อนบันทึกทุกครั้ง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:98
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
 msgid "Deception (actif, comportement par défaut, durée de vie d'une affectation)"
 msgstr "Deception (เปิด พฤติกรรมเริ่มต้น อายุของการกำหนด)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:99
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
 msgid "Active ou non le routage vers des leurres, et ce qui se passe si aucun profil ne correspond à l'attaque."
 msgstr "เปิดหรือปิดการส่งไปยังเหยื่อล่อ และสิ่งที่เกิดขึ้นหากไม่มีโปรไฟล์ใดตรงกับการโจมตี"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:100
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:101
 msgid "actif : oui/non. Comportement : pass_through (laisse passer) ou reject."
 msgstr "เปิด: ใช่/ไม่ พฤติกรรม: pass_through (ปล่อยผ่าน) หรือ reject"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:105
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
 msgid "Profils de leurre (table)"
 msgstr "โปรไฟล์เหยื่อล่อ (ตาราง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:106
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:107
 msgid "Associe une classe d'attaque à un niveau d'isolation - le premier profil actif qui correspond est utilisé."
 msgstr "จับคู่ประเภทการโจมตีกับระดับการแยก - ใช้โปรไฟล์ที่ทำงานอยู่ตัวแรกที่ตรงกัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:108
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:109
 msgid "Nom : si Isolation = fixture, DOIT être exactement fake_admin, fake_cms, fake_api ou fake_secrets (les 4 seules fixtures réellement implémentées) - tout autre nom fait que le leurre ne se déclenche JAMAIS, sans aucune erreur visible (bloqué désormais à l'enregistrement par validate_active_defense_config). Libre si Isolation = proxy. Classes d'attaque visées (séparées par virgules) : scan (sondage d'URLs/ports), credential_stuffing (essais massifs de mots de passe), sqli (injection SQL), xss (script injecté), path_traversal (ex : ../../etc/passwd), upload_probe (upload de fichier suspect), api_probe (sondage d'endpoints /api/...), unknown (tout le reste, filet de sécurité). Exemple concret : un profil fake_admin avec scan,credential_stuffing intercepte les scanners et les tentatives de bruteforce de login. Isolation : fixture (simulation interne, rapide, sans risque) ou proxy (redirigé vers un vrai serveur isolé que vous faites tourner, voir Zones de leurre ci-dessous). Zone de leurre associée : requise si Isolation = proxy, doit correspondre à un nom de la table Zones de leurre."
 msgstr "ชื่อ: หาก Isolation = fixture ต้องเป็น fake_admin, fake_cms, fake_api หรือ fake_secrets ทุกตัวอักษร (4 fixture เดียวที่มีอยู่จริง) - ชื่ออื่นใดทำให้เหยื่อล่อไม่ทำงานเลยโดยไม่มีข้อผิดพลาดที่มองเห็น (ตอนนี้ถูกบล็อกตอนบันทึกโดย validate_active_defense_config) ตั้งชื่ออิสระได้หาก Isolation = proxy ประเภทการโจมตีเป้าหมาย (คั่นด้วยจุลภาค): scan (การสำรวจ URL/พอร์ต), credential_stuffing (การลองรหัสผ่านจำนวนมาก), sqli (SQL injection), xss (สคริปต์ที่แทรก), path_traversal (เช่น ../../etc/passwd), upload_probe (อัปโหลดไฟล์ที่น่าสงสัย), api_probe (การสำรวจ endpoint /api/...), unknown (ที่เหลือทั้งหมด ตาข่ายนิรภัย) ตัวอย่าง: โปรไฟล์ fake_admin ที่มี scan,credential_stuffing จะดักเครื่องสแกนและความพยายาม bruteforce การเข้าสู่ระบบ Isolation: fixture (การจำลองภายใน รวดเร็ว ไม่มีความเสี่ยง) หรือ proxy (เปลี่ยนเส้นทางไปยังเซิร์ฟเวอร์ที่แยกจริงซึ่งคุณเป็นผู้รัน ดูโซนเหยื่อล่อด้านล่าง) โซนเหยื่อล่อที่เกี่ยวข้อง: จำเป็นหาก Isolation = proxy ต้องตรงกับชื่อในตารางโซนเหยื่อล่อ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:125
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:126
 msgid "Ajouter/Supprimer un profil."
 msgstr "เพิ่ม/ลบโปรไฟล์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:129
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
 msgid "Zones de leurre (table, Niveau 2)"
 msgstr "โซนเหยื่อล่อ (ตาราง ระดับ 2)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:130
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:131
 msgid "Backends réellement isolés vers lesquels un profil 'proxy' peut rediriger - jamais confondues avec les zones de reverse_proxy de production."
 msgstr "แบ็กเอนด์ที่แยกจริงซึ่งโปรไฟล์ 'proxy' สามารถเปลี่ยนเส้นทางไปได้ - ไม่ปะปนกับโซน reverse_proxy ของ production"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:132
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:133
 msgid "Nom : un simple identifiant (pas une URL, pas un dossier) référence depuis un profil de leurre en Isolation = proxy. Upstreams (host:port, séparés par virgules) : adresse(s) d'un serveur DÉJÀ EN COURS D'EXÉCUTION que vous contrôlez - rien n'est créé automatiquement ici, aucun dossier n'est généré, et l'enregistrement n'exige PAS que la zone existe déjà ou réponde. Exemple : 127.0.0.1:9001. Si au moment d'une vraie requête rien n'écoute à cette adresse, l'attaquant reçoit simplement une erreur HTTP 502 Bad Gateway - jamais de crash, jamais de création silencieuse."
 msgstr "ชื่อ: เป็นเพียงตัวระบุ (ไม่ใช่ URL ไม่ใช่โฟลเดอร์) ที่อ้างอิงจากโปรไฟล์เหยื่อล่อที่ Isolation = proxy Upstreams (host:port คั่นด้วยจุลภาค): ที่อยู่ของเซิร์ฟเวอร์ที่ทำงานอยู่แล้วซึ่งคุณควบคุม - ไม่มีการสร้างสิ่งใดอัตโนมัติที่นี่ ไม่มีการสร้างโฟลเดอร์ และการบันทึกไม่ต้องการให้โซนมีอยู่แล้วหรือตอบสนอง ตัวอย่าง: 127.0.0.1:9001 หากเมื่อมีคำขอจริงไม่มีสิ่งใดรับฟังที่ที่อยู่นี้ ผู้โจมตีจะได้รับข้อผิดพลาด HTTP 502 Bad Gateway - ไม่ล่ม ไม่สร้างสิ่งใดแบบเงียบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:145
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
 msgid "IoC (export d'indicateurs de compromission)"
 msgstr "IoC (การส่งออกตัวบ่งชี้การบุกรุก)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:146
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
 msgid "Contrôle l'export automatique d'indicateurs à la fermeture d'un incident."
 msgstr "ควบคุมการส่งออกตัวบ่งชี้อัตโนมัติเมื่อปิดเหตุการณ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:147
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:148
 msgid "Formats : json, csv, markdown, stix (bundle STIX 2.1) et misp (événement MISP à importer par son interface) - fichiers locaux, jamais envoyés. Marquage TLP des exports STIX et MISP : amber par défaut (white, green, amber, red). Politique de partage : local_only ou manual_export."
 msgstr "รูปแบบ: json, csv, markdown, stix (ชุด STIX 2.1) และ misp (เหตุการณ์ MISP สำหรับนำเข้าผ่านหน้าจอของ MISP) - เป็นไฟล์ในเครื่องเท่านั้น ไม่มีการส่งออกไปที่ใด ป้าย TLP ของการส่งออก STIX และ MISP: ค่าเริ่มต้น amber (white, green, amber, red) นโยบายการแบ่งปัน: local_only หรือ manual_export"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:152
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
 msgid "Stockage et journalisation"
 msgstr "การจัดเก็บและการบันทึกล็อก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:153
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
 msgid "Emplacement de la base de données, du répertoire d'export, et paramètres de capture enrichie (corps de requête, champs masques)."
 msgstr "ตำแหน่งของฐานข้อมูล ไดเรกทอรีส่งออก และพารามิเตอร์การเก็บข้อมูลแบบละเอียด (เนื้อหาคำขอ ฟิลด์ที่ปิดบัง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:154
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:155
 msgid "Chemins relatifs au projet ; capture du corps de requête désactivée par défaut (données potentiellement sensibles)."
 msgstr "พาธสัมพัทธ์กับโปรเจกต์ การเก็บเนื้อหาคำขอปิดโดยค่าเริ่มต้น (ข้อมูลที่อาจละเอียดอ่อน)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:160
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:161
 msgid "TOUT changement ici exige un redémarrage complet, sans aucune exception - active_defense n'est jamais rechargé à chaud, contrairement à la plupart des autres options."
 msgstr "การเปลี่ยนแปลงทุกอย่างที่นี่ต้องรีสตาร์ทเต็มรูปแบบ ไม่มีข้อยกเว้น - active_defense ไม่โหลดใหม่ขณะทำงาน ต่างจากตัวเลือกอื่นส่วนใหญ่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:165
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:166
 msgid "Sans activer 'war_mode.enabled' ICI, activer seulement l'option 'active_defense' (menu Options) ne sert à rien - voir la FAQ dédiée."
 msgstr "หากไม่เปิด 'war_mode.enabled' ที่นี่ การเปิดเพียงตัวเลือก 'active_defense' (เมนูตัวเลือก) ไม่มีประโยชน์ - ดูคำถามพบบ่อยที่เกี่ยวข้อง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:169
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:170
 msgid "Un profil de leurre en Isolation = fixture dont le nom n'est pas exactement fake_admin, fake_cms, fake_api ou fake_secrets ne se déclenchera JAMAIS - l'enregistrement le refuse désormais avec un message explicite."
 msgstr "โปรไฟล์เหยื่อล่อที่ Isolation = fixture ซึ่งชื่อไม่ตรงกับ fake_admin, fake_cms, fake_api หรือ fake_secrets ทุกตัวอักษรจะไม่ทำงานเลย - ตอนนี้การบันทึกจะปฏิเสธพร้อมข้อความที่ชัดเจน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:174
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:175
 msgid "Un profil refusé n'est pas enregistré : le formulaire se referme et la raison s'affiche EN HAUT de cet écran - remontez pour la lire, puis ressaisissez le profil (causes fréquentes : FAQ)."
 msgstr "โปรไฟล์ที่ถูกปฏิเสธจะไม่ถูกบันทึก: แบบฟอร์มจะปิดลงและเหตุผลจะแสดงที่ด้านบนสุดของหน้าจอนี้ - เลื่อนขึ้นเพื่ออ่าน แล้วกรอกโปรไฟล์ใหม่ (สาเหตุที่พบบ่อย: FAQ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:178
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:179
 msgid "Une zone de leurre n'est jamais créée automatiquement et son existence n'est pas vérifiée à l'enregistrement - si rien n'écoute à l'adresse indiquée, l'attaquant reçoit une erreur 502 au moment de la requête, pas avant."
 msgstr "โซนเหยื่อล่อไม่ถูกสร้างอัตโนมัติและไม่มีการตรวจสอบการมีอยู่ตอนบันทึก - หากไม่มีสิ่งใดรับฟังที่ที่อยู่ที่ระบุ ผู้โจมตีจะได้รับข้อผิดพลาด 502 ตอนมีคำขอ ไม่ใช่ก่อนหน้านั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:187
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - ภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
 msgid "Accueil -> Active Sécurité -> Menaces"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> ภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:189
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:190
 msgid "Liste toutes les sources actuellement suivies par Active Defense, avec leur score et niveau de menace."
 msgstr "แสดงแหล่งที่มาทั้งหมดที่ Active Defense ติดตามอยู่ พร้อมคะแนนและระดับภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:192
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
 msgid "Table des menaces"
 msgstr "ตารางภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:193
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
 msgid "Une ligne par source suivie (IP, score, niveau, dernière mise à jour, expiration)."
 msgstr "หนึ่งบรรทัดต่อแหล่งที่มาที่ติดตาม (IP คะแนน ระดับ อัปเดตล่าสุด วันหมดอายุ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:194
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
 msgid "Sélectionner une ligne affiche son détail complet."
 msgstr "การเลือกบรรทัดจะแสดงรายละเอียดทั้งหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:195
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:196
 msgid "Aucune action mutante sur cet écran."
 msgstr "ไม่มีการดำเนินการที่เปลี่ยนแปลงข้อมูลบนหน้าจอนี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:199
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:200
 msgid "Aucune modification possible depuis cet écran."
 msgstr "ไม่สามารถแก้ไขสิ่งใดจากหน้าจอนี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:204
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - เหตุการณ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
 msgid "Accueil -> Active Sécurité -> Incidents"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> เหตุการณ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:206
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:207
 msgid "Liste les incidents de sécurité ouverts/fermes, permet de les fermer et d'exporter des indicateurs de compromission (IoC)."
 msgstr "แสดงเหตุการณ์ด้านความปลอดภัยที่เปิด/ปิด ให้ปิดเหตุการณ์และส่งออกตัวบ่งชี้การบุกรุก (IoC) ได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:209
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
 msgid "Ouverts / Fermés / Tous"
 msgstr "ยังไม่แก้ / แก้แล้ว / ทั้งหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:210
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
 msgid "Filtre de la liste, avec le nombre d'incidents de chaque sorte."
 msgstr "ตัวกรองรายการ แสดงจำนวนเหตุการณ์ในแต่ละประเภท"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:211
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:212
 msgid "« Ouverts » est affiché par défaut ; un incident fermé quitte cette vue et reste consultable et exportable dans « Fermés »."
 msgstr "ค่าเริ่มต้นแสดง 'ยังไม่แก้' เหตุการณ์ที่ปิดแล้วหายจากมุมมองนี้ ดูและส่งออกได้ใน 'แก้แล้ว'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:213
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
 msgid "Change seulement l'affichage."
 msgstr "เปลี่ยนเฉพาะมุมมอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:214
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:215
 msgid "Les incidents fermés depuis plus de 90 jours sont supprimés automatiquement, avec leur historique (jamais un incident ouvert) ; les exports et rapports déjà écrits restent."
 msgstr "เหตุการณ์ที่ปิดไปนานกว่า 90 วันจะถูกลบอัตโนมัติพร้อมประวัติ (เหตุการณ์ที่ยังไม่แก้ไม่ถูกลบเลย) การส่งออกและรายงานที่เขียนแล้วยังอยู่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:218
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:64
 msgid "Purger maintenant"
 msgstr "จัดระเบียบตอนนี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:219
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:220
 msgid "Fait tout de suite ce que le serveur fait seul régulièrement : ferme les incidents dont la menace est effacée, supprime les incidents fermés depuis plus de 90 jours et les états de menace expirés."
 msgstr "เรียกใช้สิ่งที่เซิร์ฟเวอร์ทำอัตโนมัติเป็นระยะทันที: ปิดเหตุการณ์ที่ภัยคุกคามหายไป ลบเหตุการณ์ที่ปิดไปนานกว่า 90 วันและสถานะภัยคุกคามที่หมดอายุ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:222
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
 msgid "Bouton, avec confirmation ; même action que la commande « active-defense purge »."
 msgstr "ปุ่มพร้อมการยืนยัน ทำงานเหมือนคำสั่ง 'active-defense purge'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:223
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
 msgid "Un incident fermé quitte la vue « Ouverts » ; un bilan s'affiche."
 msgstr "เหตุการณ์ที่ปิดแล้วหายจากมุมมอง 'ยังไม่แก้' และแสดงสรุปผล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:224
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:225
 msgid "L'export automatique à la fermeture (activé par défaut) s'applique aussi à ces incidents."
 msgstr "การส่งออกอัตโนมัติเมื่อปิด (เปิดเป็นค่าเริ่มต้น) มีผลกับเหตุการณ์เหล่านี้ด้วย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:227
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:69
 msgid "Fermer l'incident"
 msgstr "ปิดเหตุการณ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:228
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
 msgid "Marque un incident comme fermé."
 msgstr "ทำเครื่องหมายเหตุการณ์ว่าปิดแล้ว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:229
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
 msgid "Sélectionner un incident, puis confirmer."
 msgstr "เลือกเหตุการณ์ แล้วยืนยัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:230
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:231
 msgid "Ferme l'incident immédiatement."
 msgstr "ปิดเหตุการณ์ทันที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:232
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:233
 msgid "Peut déclencher un export IoC/rapport AUTOMATIQUE si ioc.auto_export_on_close est activé dans la configuration d'Active Defense."
 msgstr "อาจทำให้เกิดการส่งออก IoC/รายงานอัตโนมัติ หากเปิด ioc.auto_export_on_close ในการตั้งค่าของ Active Defense"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:237
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:71
 msgid "Exporter IoC"
 msgstr "ส่งออก IoC"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:238
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
 msgid "Exporte les indicateurs de compromission de l'incident sélectionné."
 msgstr "ส่งออกตัวบ่งชี้การบุกรุกของเหตุการณ์ที่เลือก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:239
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
 msgid "Format : json, csv, stix (bundle STIX 2.1) ou misp (événement MISP à importer par son interface)."
 msgstr "รูปแบบ: json, csv, stix (ชุด STIX 2.1) หรือ misp (เหตุการณ์ MISP สำหรับนำเข้าผ่านหน้าจอของ MISP)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:240
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
 msgid "Écrit un fichier dans le répertoire d'export configuré."
 msgstr "เขียนไฟล์ในไดเรกทอรีส่งออกที่ตั้งค่าไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:241
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:242
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:249
 msgid "Écriture réelle sur disque immédiate."
 msgstr "เขียนลงดิสก์จริงทันที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:244
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:73
 msgid "Générer rapport"
 msgstr "สร้างรายงาน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:245
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:246
 msgid "Génère un rapport Markdown complet de l'incident sélectionné."
 msgstr "สร้างรายงาน Markdown ฉบับเต็มของเหตุการณ์ที่เลือก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:247
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:248
 msgid "Écrit un fichier Markdown dans le répertoire d'export configuré."
 msgstr "เขียนไฟล์ Markdown ในไดเรกทอรีส่งออกที่ตั้งค่าไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:251
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:252
 msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports (écriture disque)."
 msgstr "ดูข้อมูลเท่านั้น ยกเว้นการปิดเหตุการณ์ (ย้อนกลับไม่ได้) และการส่งออก (เขียนลงดิสก์)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:256
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - เหยื่อล่อ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
 msgid "Accueil -> Active Sécurité -> Deception"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> Deception"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:258
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:259
 msgid "Liste les affectations actives (et expirées non libérées) vers les leurres de deception, permet de les libérer."
 msgstr "แสดงการกำหนดที่ใช้งานอยู่ (และที่หมดอายุแต่ยังไม่ปล่อย) ไปยังเหยื่อล่อของ deception และให้ปล่อยได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:261
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:41
 msgid "Libérer"
 msgstr "ปล่อย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:262
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
 msgid "Retire l'affectation d'une source vers son leurre."
 msgstr "นำการกำหนดของแหล่งที่มาไปยังเหยื่อล่อออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:263
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
 msgid "Sélectionner une ligne, puis confirmer."
 msgstr "เลือกบรรทัด แล้วยืนยัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:264
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
 msgid "Libère immédiatement l'affectation."
 msgstr "ปล่อยการกำหนดทันที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:265
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:266
 msgid "Effet immédiat - la source n'est plus redirigée vers le leurre à la prochaine requête."
 msgstr "มีผลทันที - แหล่งที่มาจะไม่ถูกเปลี่ยนเส้นทางไปยังเหยื่อล่อในคำขอถัดไป"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:269
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:270
 msgid "Les affectations expirées mais jamais libérées restent visibles avec l'état 'expirée' - distinct d'une libération manuelle."
 msgstr "การกำหนดที่หมดอายุแต่ไม่เคยปล่อยจะยังมองเห็นได้ในสถานะ 'หมดอายุ' - ต่างจากการปล่อยด้วยมือ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:276
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - จำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
 msgid "Accueil -> Active Sécurité -> Simuler"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> จำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:278
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:279
 msgid "Simule une décision Active Defense (score, classe d'attaque) SANS aucun effet réel - dry-run complet."
 msgstr "จำลองการตัดสินของ Active Defense (คะแนน ประเภทการโจมตี) โดยไม่มีผลจริงใดๆ - dry-run เต็มรูปแบบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:281
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
 msgid "IP simulée"
 msgstr "IP ที่จำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:282
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
 msgid "Adresse IP source utilisée pour la simulation."
 msgstr "ที่อยู่ IP ต้นทางที่ใช้ในการจำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:283
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
 msgid "Une IP quelconque. Valeur par défaut : 203.0.113.42."
 msgstr "IP ใดก็ได้ ค่าเริ่มต้น: 203.0.113.42"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:284
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
-#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
-msgid "Utilisée au clic sur Simuler."
-msgstr "ใช้เมื่อคลิกจำลอง"
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:285
-msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
-msgstr "ไม่มีผลจริง - ไม่มีการเขียน ไม่มีผลกระทบทางเครือข่าย"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:288
-msgid "Chemin simulé"
-msgstr "พาธที่จำลอง"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
-msgid "Chemin de la requête simulée."
-msgstr "พาธของคำขอที่จำลอง"
-
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
-msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
-msgstr "ข้อความอิสระ ค่าเริ่มต้น: /wp-login.php"
-
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:292
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:299
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:306
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:313
+#: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:193
+msgid "Utilisée au clic sur Simuler."
+msgstr "ใช้เมื่อคลิกจำลอง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:286
+msgid "Aucun effet réel - aucune écriture, aucun impact réseau."
+msgstr "ไม่มีผลจริง - ไม่มีการเขียน ไม่มีผลกระทบทางเครือข่าย"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:289
+msgid "Chemin simulé"
+msgstr "พาธที่จำลอง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:290
+msgid "Chemin de la requête simulée."
+msgstr "พาธของคำขอที่จำลอง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:291
+msgid "Chaîne libre. Valeur par défaut : /wp-login.php."
+msgstr "ข้อความอิสระ ค่าเริ่มต้น: /wp-login.php"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:293
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:300
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:307
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:314
 msgid "Aucun effet réel."
 msgstr "ไม่มีผลจริง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:295
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
 msgid "User-Agent"
 msgstr "User-Agent"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:296
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
 msgid "User-Agent simulé (participe au calcul de l'identifiant de source simulé)."
 msgstr "User-Agent ที่จำลอง (ใช้ในการคำนวณตัวระบุแหล่งที่มาที่จำลอง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:297
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:298
 msgid "Chaîne libre, optionnelle."
 msgstr "ข้อความอิสระ ไม่บังคับ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:302
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:55
 msgid "Classe d'attaque"
 msgstr "ประเภทการโจมตี"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:303
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
 msgid "Type d'attaque simulé."
 msgstr "ประเภทการโจมตีที่จำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:304
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:305
 msgid "Doit être une classe connue (ex: scan). Valeur par défaut : scan."
 msgstr "ต้องเป็นประเภทที่รู้จัก (เช่น scan) ค่าเริ่มต้น: scan"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:309
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Score"
 msgstr "คะแนน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:310
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
 msgid "Delta de score appliqué à la simulation."
 msgstr "ค่าคะแนนที่เพิ่มในการจำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:311
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:312
 msgid "Entier. Valeur par défaut : 10."
 msgstr "จำนวนเต็ม ค่าเริ่มต้น: 10"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:316
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:317
 msgid "Aucune - dry-run complet, jamais d'écriture (aucun repository.save()/create() appelé)."
 msgstr "ไม่มี - dry-run เต็มรูปแบบ ไม่มีการเขียน (ไม่เรียก repository.save()/create())"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:321
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
 msgid "WAF - État"
 msgstr "WAF - สถานะ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:322
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:323
 msgid "Accueil -> Active Sécurité -> État (bloc WAF)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> สถานะ (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:324
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:325
 msgid "Vue d'ensemble en lecture seule : mode, comportement en cas d'erreur interne, packs de règles référencés, taille de la blocklist. Avec le moteur natif, aussi : combien de règles il évalue lui-même, s'il sert seul les requêtes sans correspondance (sinon pourquoi), et le contrôle 1/N."
 msgstr "ภาพรวมแบบอ่านอย่างเดียว: โหมด พฤติกรรมเมื่อเกิดข้อผิดพลาดภายใน แพ็กกฎที่อ้างอิง ขนาดของ blocklist เมื่อใช้เอนจินเนทีฟ ยังแสดง: จำนวนกฎที่เอนจินประเมินเอง การให้บริการคำขอที่ไม่ตรงกับกฎด้วยตัวเองหรือไม่ (หากไม่ใช่ เพราะเหตุใด) และการตรวจ 1/N"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:332
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:333
 msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter même actif - l'écran l'indique explicitement, corrige un vrai trou signalé par l'utilisateur."
 msgstr "หากไม่มีการอ้างอิงแพ็กกฎใดเลย WAF จะตรวจจับอะไรไม่ได้แม้ทำงานอยู่ - หน้าจอแจ้งเรื่องนี้อย่างชัดเจน ซึ่งแก้ช่องโหว่จริงที่ผู้ใช้รายงานมา"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:340
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modules"
 msgstr "WAF - โมดูล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
 msgid "Accueil -> Active Sécurité -> Modules (bloc WAF)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> โมดูล (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:342
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:343
 msgid "Trois sections : mode/comportement d'erreur, gestion des packs de règles actifs, gestion de la liste de blocage."
 msgstr "สามส่วน: โหมด/พฤติกรรมเมื่อเกิดข้อผิดพลาด การจัดการแพ็กกฎที่ใช้งาน การจัดการรายการบล็อก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:346
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
 msgid "Comportement du WAF face à une requête jugée malveillante."
 msgstr "พฤติกรรมของ WAF เมื่อพบคำขอที่ถือว่าเป็นอันตราย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:347
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:348
 msgid "log-only (journalise sans bloquer) ou block (bloque réellement)."
 msgstr "log-only (บันทึกล็อกโดยไม่บล็อก) หรือ block (บล็อกจริง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:349
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:350
 msgid "Rechargement AUTOMATIQUE déclenché des l'enregistrement si un service actif existe."
 msgstr "โหลดใหม่อัตโนมัติทันทีที่บันทึก หากมีบริการที่ทำงานอยู่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:352
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
 msgid "Comportement en cas d'erreur interne"
 msgstr "พฤติกรรมเมื่อเกิดข้อผิดพลาดภายใน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:353
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
 msgid "Que faire si le moteur WAF rencontre une erreur inattendue en analysant une requête."
 msgstr "สิ่งที่ต้องทำหากเอนจิน WAF พบข้อผิดพลาดที่ไม่คาดคิดขณะวิเคราะห์คำขอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:354
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
 msgid "fail-open (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "fail-open (ปล่อยผ่าน) หรือ fail-closed (บล็อกเพื่อความปลอดภัย)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:355
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
 #: src/omega_serv/interfaces/tui/guide/content/tls.py:319
 msgid "Enregistre avec le mode."
 msgstr "บันทึกพร้อมโหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:356
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:357
 msgid "Rechargement automatique."
 msgstr "โหลดใหม่อัตโนมัติ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:359
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:360
 msgid "Contrôle du moteur natif (native_check_every)"
 msgstr "การตรวจของเอนจินเนทีฟ (native_check_every)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:361
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:362
 msgid "Avec le moteur natif, une requête sur laquelle aucune règle ne correspond est servie sans passer par Python. Ce réglage en soumet quand même une sur N à Python, pour vérifier que les deux donnent le même verdict."
 msgstr "เมื่อใช้เอนจินเนทีฟ คำขอที่ไม่ตรงกับกฎใดเลยจะได้รับการตอบโดยไม่ผ่าน Python การตั้งค่านี้ยังคงส่งคำขอดังกล่าว 1 ใน N ให้ Python เพื่อตรวจว่าทั้งสองให้ผลตัดสินเหมือนกัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:366
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:367
 msgid "Entier de 0 à 1000000. 0 (par défaut) = jamais ; 1000 = une requête propre sur mille, un coût négligeable. Sans effet avec le moteur Python."
 msgstr "จำนวนเต็มตั้งแต่ 0 ถึง 1000000 0 (ค่าเริ่มต้น) = ไม่ตรวจเลย; 1000 = ตรวจหนึ่งคำขอที่สะอาดจากหนึ่งพัน ค่าใช้จ่ายน้อยมาก ไม่มีผลกับเอนจิน Python"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:369
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:370
 msgid "Enregistre dans options.waf.native_check_every, avec le mode."
 msgstr "บันทึกลงใน options.waf.native_check_every พร้อมกับโหมด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:371
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:372
 msgid "Rechargement automatique. La requête contrôlée reçoit le verdict de Python ; un désaccord est écrit dans le journal d'erreurs."
 msgstr "โหลดใหม่อัตโนมัติ คำขอที่ถูกตรวจจะได้รับผลตัดสินของ Python ความไม่ตรงกันจะถูกเขียนลงบันทึกข้อผิดพลาด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:376
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:82
 msgid "Packs de règles (rule_paths)"
 msgstr "แพ็กกฎ (rule_paths)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:377
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
 msgid "Fichiers de règles réellement charges par le WAF - sans au moins un pack, rien n'est détecté."
 msgstr "ไฟล์กฎที่ WAF โหลดจริง - หากไม่มีแพ็กอย่างน้อยหนึ่งแพ็ก จะตรวจจับอะไรไม่ได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:378
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
 msgid "Ajouter ouvre un sélecteur des packs présents sous secure/waf/rules/ non déjà référencés."
 msgstr "ปุ่มเพิ่มจะเปิดตัวเลือกแพ็กที่มีอยู่ใน secure/waf/rules/ ซึ่งยังไม่ถูกอ้างอิง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:379
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
 msgid "Ajoute/retire une référence de pack."
 msgstr "เพิ่ม/นำการอ้างอิงแพ็กออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:380
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:381
 msgid "Rechargement automatique déclenché immédiatement (recompile les règles en mémoire)."
 msgstr "โหลดใหม่อัตโนมัติทันที (คอมไพล์กฎในหน่วยความจำใหม่)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:383
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:384
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:91
 msgid "Liste de blocage"
 msgstr "รายการบล็อก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:385
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:386
 msgid "IP/reseaux bannis, avec motif et expiration optionnelle. Fichier par défaut : var/lib/waf/blocklist.json (sous var/, le seul dossier où le service systemd peut écrire ses auto-bans). Un ancien secure/waf/blocklist.json est repris une fois au démarrage et laissé en place comme sauvegarde."
 msgstr "IP/เครือข่ายที่ถูกแบน พร้อมเหตุผลและวันหมดอายุ (ไม่บังคับ) ไฟล์เริ่มต้น: var/lib/waf/blocklist.json (อยู่ใต้ var/ ซึ่งเป็นโฟลเดอร์เดียวที่บริการ systemd เขียนการแบนอัตโนมัติได้) ไฟล์ secure/waf/blocklist.json เก่าจะถูกนำเข้าหนึ่งครั้งตอนเริ่มต้นและเก็บไว้เป็นข้อมูลสำรอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:390
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
 msgid "Réseau (CIDR), motif, durée en secondes (vide = permanent, confirmation requise dans ce cas)."
 msgstr "เครือข่าย (CIDR) เหตุผล ระยะเวลาเป็นวินาที (ว่าง = ถาวร ซึ่งต้องยืนยันในกรณีนี้)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:391
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:392
 msgid "Ajoute/retire une entrée."
 msgstr "เพิ่ม/นำรายการออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:393
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:394
 msgid "EFFET IMMÉDIAT, sans rechargement nécessaire - la blocklist est relue depuis le disque à CHAQUE requête, jamais mise en cache en mémoire (contrairement au mode et aux packs de règles)."
 msgstr "มีผลทันที ไม่ต้องโหลดใหม่ - blocklist ถูกอ่านใหม่จากดิสก์ในทุกคำขอ ไม่แคชในหน่วยความจำ (ต่างจากโหมดและแพ็กกฎ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:400
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:401
 msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement pour s'appliquer (automatique si un service actif existe). La liste de blocage, elle, s'applique instantanément sans aucune action supplémentaire."
 msgstr "โหมด/พฤติกรรมเมื่อเกิดข้อผิดพลาด/แพ็กกฎต้องโหลดใหม่จึงจะมีผล (อัตโนมัติหากมีบริการที่ทำงานอยู่) ส่วนรายการบล็อกมีผลทันทีโดยไม่ต้องทำอะไรเพิ่ม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:408
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - ข้อจำกัด (ข้อยกเว้นและการจำกัดอัตรา)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:410
 msgid "Accueil -> Active Sécurité -> Limitations (bloc WAF)"
 msgstr "หน้าแรก -> ความปลอดภัยเชิงรุก -> ข้อจำกัด (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:411
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:412
 msgid "Règle la limite de débit (rate limit) du WAF natif : la limite globale, des règles par dossier et des règles par IP/réseau, ainsi que les exclusions d'inspection. Sert surtout aux pages lourdes (une galerie d'images, par exemple) qui dépassent la limite globale et reçoivent une erreur 429."
 msgstr "ตั้งค่าการจำกัดอัตรา (rate limit) ของ WAF ดั้งเดิม: ขีดจำกัดรวม กฎตามโฟลเดอร์ และกฎตาม IP/เครือข่าย รวมถึงข้อยกเว้นการตรวจสอบ ใช้เป็นหลักกับหน้าที่หนัก (เช่น แกลเลอรีรูปภาพ) ซึ่งเกินขีดจำกัดรวมและได้รับข้อผิดพลาด 429"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:418
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:83
 msgid "Limite globale"
 msgstr "ขีดจำกัดรวม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:419
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
 msgid "Nombre de requêtes autorisées par IP et par fenêtre, pour tout ce qui n'a pas de règle spécifique."
 msgstr "จำนวนคำขอที่อนุญาตต่อ IP ต่อช่วงเวลา สำหรับทุกอย่างที่ไม่มีกฎเฉพาะ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:420
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:421
 msgid "Rate limit actif (oui/non), nombre de requêtes, fenêtre en secondes."
 msgstr "เปิดใช้ rate limit (ใช่/ไม่), จำนวนคำขอ, ช่วงเวลาเป็นวินาที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:422
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:867
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:423
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:868
 msgid "Rechargement automatique déclenché si un service actif existe."
 msgstr "โหลดใหม่อัตโนมัติหากมีบริการที่ทำงานอยู่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:425
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:426
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:93
 msgid "Règles par dossier"
 msgstr "กฎตามโฟลเดอร์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:427
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:428
 msgid "Une règle REMPLACE la limite globale pour ce dossier et a son propre compteur : les requêtes sur ce dossier ne consomment plus la limite globale. 0 = illimité. Si plusieurs dossiers correspondent, le plus long gagne. /images couvre /images/a.png mais jamais /images2."
 msgstr "กฎจะแทนที่ขีดจำกัดรวมสำหรับโฟลเดอร์นั้นและมีตัวนับของตัวเอง: คำขอไปยังโฟลเดอร์นี้จะไม่ใช้ขีดจำกัดรวมอีก 0 = ไม่จำกัด หากหลายโฟลเดอร์ตรงกัน โฟลเดอร์ที่ยาวที่สุดชนะ /images ครอบคลุม /images/a.png แต่ไม่ครอบคลุม /images2"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:432
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
 msgid "Ajouter / Modifier : dossier, requêtes par fenêtre, fenêtre en secondes. Sélectionner une ligne pour la modifier ou la retirer."
 msgstr "เพิ่ม / แก้ไข: โฟลเดอร์ คำขอต่อช่วงเวลา ช่วงเวลาเป็นวินาที เลือกแถวเพื่อแก้ไขหรือนำออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:433
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:451
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:434
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:452
 msgid "Enregistré dès la validation du formulaire."
 msgstr "บันทึกทันทีเมื่อยืนยันแบบฟอร์ม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:435
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:436
 msgid "Rechargement automatique. Une IP publique qui dépasse une règle de dossier est toujours journalisée comme un blocage, donc bannissable par omega-jail."
 msgstr "โหลดใหม่อัตโนมัติ IP สาธารณะที่เกินกฎโฟลเดอร์ยังคงถูกบันทึกเป็นการบล็อก จึงถูก omega-jail แบนได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:440
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:441
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:108
 msgid "Règles par IP / réseau"
 msgstr "กฎตาม IP / เครือข่าย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:442
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:443
 msgid "Même principe pour une IP ou un réseau (ex. le réseau Tailscale 100.64.0.0/10). Une règle de dossier passe avant une règle IP/réseau ; entre deux réseaux, le plus précis gagne."
 msgstr "หลักการเดียวกันสำหรับ IP หรือเครือข่าย (เช่น เครือข่าย Tailscale 100.64.0.0/10) กฎโฟลเดอร์มาก่อนกฎ IP/เครือข่าย ระหว่างสองเครือข่าย เครือข่ายที่เจาะจงกว่าชนะ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:447
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:448
 msgid "IP ou réseau (CIDR), requêtes, fenêtre, Source sûre (oui/non). Une source sûre qui dépasse la limite reçoit toujours le 429, mais la ligne est journalisée « throttle » : jamais bannissable."
 msgstr "IP หรือเครือข่าย (CIDR), คำขอ, ช่วงเวลา, แหล่งที่ปลอดภัย (ใช่/ไม่) แหล่งที่ปลอดภัยที่เกินขีดจำกัดยังคงได้รับ 429 แต่บรรทัดจะถูกบันทึกเป็น « throttle »: ไม่มีวันถูกแบน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:453
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:454
 msgid "Les réseaux never_auto_block (affichés au-dessus du tableau) sont toujours sûrs d'office. Sans proxy de confiance actif, une règle couvrant 127.0.0.1/::1 est ignorée."
 msgstr "เครือข่าย never_auto_block (แสดงเหนือตาราง) ปลอดภัยโดยค่าเริ่มต้นเสมอ หากไม่มีพร็อกซีที่เชื่อถือได้ทำงานอยู่ กฎที่ครอบคลุม 127.0.0.1/::1 จะถูกละเว้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:459
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
 #: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:119
 msgid "Exclusions d'inspection"
 msgstr "ข้อยกเว้นการตรวจสอบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:460
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
 msgid "Dossiers et extensions jamais inspectés par le WAF natif ni par magnet, et dossiers dont seul le corps n'est pas inspecté."
 msgstr "โฟลเดอร์และนามสกุลที่ไม่เคยถูกตรวจโดย WAF ดั้งเดิมหรือ magnet และโฟลเดอร์ที่ไม่ตรวจเฉพาะเนื้อหาคำขอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:461
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:462
 msgid "Valeurs séparées par des virgules ; un dossier commence par « / »."
 msgstr "ค่าคั่นด้วยจุลภาค โฟลเดอร์ขึ้นต้นด้วย « / »"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:463
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:464
 msgid "Le rate limit s'applique toujours à ces chemins : une exclusion ne règle jamais un 429."
 msgstr "rate limit ยังคงใช้กับเส้นทางเหล่านี้: ข้อยกเว้นไม่เคยแก้ปัญหา 429"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:466
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:467
 msgid "Une règle de débit ne désactive jamais l'inspection : une attaque sur un dossier à débit élevé reste détectée et bloquée."
 msgstr "กฎอัตราไม่เคยปิดการตรวจสอบ: การโจมตีโฟลเดอร์ที่มีอัตราสูงยังคงถูกตรวจพบและบล็อก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:469
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:470
 msgid "Un dossier en illimité (0) ne protège plus contre un robot qui le martèle depuis une IP publique : préférer une valeur haute (ex. 600 / 60 s) à l'illimité."
 msgstr "โฟลเดอร์ที่ไม่จำกัด (0) จะไม่ป้องกันบอตที่ยิงคำขอถี่ๆ จาก IP สาธารณะอีกต่อไป: ควรใช้ค่าสูง (เช่น 600 / 60 วินาที) แทนการไม่จำกัด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:473
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:474
 msgid "Sans rapport avec « Requêtes max par connexion keep-alive » (Configuration détaillée -> Résistance et limites) : ce réglage ferme seulement une connexion après N requêtes, le navigateur en rouvre une aussitôt. Il ne renvoie jamais 429 et ne compte rien par IP : c'est la limite de débit, ici, qui produit le 429."
 msgstr "ไม่เกี่ยวกับ « คำขอสูงสุดต่อการเชื่อมต่อ keep-alive » (การตั้งค่าโดยละเอียด -> ความทนทานและขีดจำกัด): การตั้งค่านั้นเพียงปิดการเชื่อมต่อหลังจาก N คำขอ และเบราว์เซอร์จะเปิดใหม่ทันที ไม่เคยส่ง 429 และไม่นับอะไรต่อ IP: ที่นี่ การจำกัดอัตราคือสิ่งที่ทำให้เกิด 429"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:479
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:480
 msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une détection, donc ne mène jamais à l'auto-ban. Sur une requête couverte par une règle de dossier ou d'IP/réseau ci-dessus, c'est cette règle qui fait foi : le 429 de magnet est ignoré (ses signatures d'attaque restent appliquées)."
 msgstr "สคริปต์ magnet: rate limit ของตัวเอง (429) ไม่นับเป็นการตรวจพบ จึงไม่นำไปสู่การแบนอัตโนมัติ สำหรับคำขอที่อยู่ในกฎโฟลเดอร์หรือ IP/เครือข่ายด้านบน กฎนั้นมีผลเหนือกว่า: 429 ของ magnet จะถูกละเว้น (ลายเซ็นการโจมตีของมันยังคงใช้อยู่)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:489
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Tester une requête"
 msgstr "WAF - ทดสอบคำขอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
 msgid "Accueil -> Active Sécurité -> Tester (bloc WAF)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> ทดสอบ (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:491
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:492
 msgid "Teste une requête simulée contre les règles WAF ACTUELLEMENT ENREGISTRÉES (pas nécessairement celles réellement chargées par un serveur déjà lancé), sans requête réseau."
 msgstr "ทดสอบคำขอจำลองกับกฎ WAF ที่บันทึกไว้ในปัจจุบัน (ไม่จำเป็นต้องเป็นกฎที่เซิร์ฟเวอร์ที่ทำงานอยู่โหลดไว้จริง) โดยไม่มีคำขอทางเครือข่าย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:494
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
 msgid "Méthode / Chemin / Query / Body / IP distante"
 msgstr "เมธอด / พาธ / Query / Body / IP ระยะไกล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:495
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
 msgid "Composants de la requête HTTP simulée."
 msgstr "ส่วนประกอบของคำขอ HTTP ที่จำลอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:496
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
 msgid "Valeurs libres - méthode et chemin pré-remplis (GET, /)."
 msgstr "ค่าอิสระ - เมธอดและพาธกรอกไว้ล่วงหน้า (GET, /)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:497
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
 msgid "Utilisés au clic sur Tester."
 msgstr "ใช้เมื่อคลิกทดสอบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:498
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:499
 msgid "Aucun effet réel, aucune requête réseau."
 msgstr "ไม่มีผลจริง ไม่มีคำขอทางเครือข่าย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:504
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:505
 msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur disque à chaque test - si un serveur déjà lancé n'a pas encore été rechargé après un changement de règles, ce test peut refléter un comportement différent de ce que ce serveur applique réellement pour l'instant."
 msgstr "สร้างเอนจิน WAF ใหม่จากการตั้งค่าที่บันทึกบนดิสก์ทุกครั้งที่ทดสอบ - หากเซิร์ฟเวอร์ที่ทำงานอยู่ยังไม่ได้โหลดใหม่หลังเปลี่ยนกฎ การทดสอบนี้อาจแสดงพฤติกรรมที่ต่างจากที่เซิร์ฟเวอร์ใช้อยู่จริงในขณะนี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:514
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - กฎและรายการแบบกำหนดเอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:516
 msgid "Accueil -> Active Sécurité -> Custom (bloc WAF)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> Custom (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:517
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:518
 msgid "Un seul tableau pour les RÈGLES (écrites dans secure/waf/rules/custom.json, pack référence automatiquement) et les LISTES (fichiers texte de secure/waf/rules/keywords/, chargées explicitement par l'assistant). La colonne Type fait la différence : une liste n'est pas une règle de custom.json."
 msgstr "ตารางเดียวสำหรับกฎ (เขียนลงใน secure/waf/rules/custom.json แพ็กถูกอ้างอิงอัตโนมัติ) และรายการ (ไฟล์ข้อความใน secure/waf/rules/keywords/ โหลดอย่างชัดเจนผ่านตัวช่วย) คอลัมน์ประเภทบอกความต่าง: รายการไม่ใช่กฎของ custom.json"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:525
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
 msgid "Ouvre l'assistant : une règle simple, ou CHARGER une liste (voir sa fiche)."
 msgstr "เปิดตัวช่วย: กฎแบบง่าย หรือโหลดรายการ (ดูหัวข้อของหน้าจอนั้น)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:526
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
 msgid "Clic, puis suivre l'assistant."
 msgstr "คลิก แล้วทำตามตัวช่วย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:527
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
 msgid "Règle : écrite dans custom.json. Liste : ajoutée à options.waf.rules.keyword_lists."
 msgstr "กฎ: เขียนลงใน custom.json รายการ: เพิ่มลงใน options.waf.rules.keyword_lists"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:528
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:712
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:529
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:713
 msgid "Rechargement automatique déclenché immédiatement si un service actif existe."
 msgstr "โหลดใหม่อัตโนมัติทันทีหากมีบริการที่ทำงานอยู่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:531
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
 msgid "Colonne Détail (listes)"
 msgstr "คอลัมน์รายละเอียด (รายการ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:532
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:533
 msgid "Nombre d'entrées du fichier, ou un avertissement."
 msgstr "จำนวนรายการในไฟล์ หรือคำเตือน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:534
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:535
 msgid "'fichier absent', 'illisible par le service' ou 'emplacement refusé' : la liste n'est pas chargeable telle quelle - ouvrez-la avec Éditer la liste."
 msgstr "'ไม่มีไฟล์' 'บริการอ่านไม่ได้' หรือ 'ปฏิเสธตำแหน่ง': รายการนี้โหลดตามเดิมไม่ได้ - เปิดด้วยแก้ไขรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:537
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
 msgid "Recalculé à chaque affichage du tableau."
 msgstr "คำนวณใหม่ทุกครั้งที่แสดงตาราง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:538
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:539
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:546
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:617
 msgid "Aucun effet en lui-même."
 msgstr "ไม่มีผลในตัวเอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:541
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
 msgid "Colonne Gravité (listes)"
 msgstr "คอลัมน์ความรุนแรง (รายการ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:542
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
 msgid "Observation, Faible, Moyen, Élevé ou Critique, suivie de la récidive propre à la liste."
 msgstr "เฝ้าดู ต่ำ ปานกลาง สูง หรือ วิกฤต ตามด้วยการกระทำซ้ำของรายการนั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:543
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
 msgid "Ex. 'Élevé, 2 en 10 min -> ban 24 h'."
 msgstr "เช่น 'สูง, 2 ครั้งใน 10 นาที -> แบน 24 ชม.'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:544
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:545
 msgid "Se change avec Modifier."
 msgstr "เปลี่ยนได้ด้วยแก้ไข"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:548
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
 msgid "Modifier (listes)"
 msgstr "แก้ไข (รายการ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:549
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
 msgid "Change gravité, récidive, zone de recherche et nom affiché d'une liste déjà chargée."
 msgstr "เปลี่ยนความรุนแรง การกระทำซ้ำ ส่วนที่ค้นหา และชื่อที่แสดงของรายการที่โหลดแล้ว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:550
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:551
 msgid "Sélectionner une ligne Liste, puis Modifier."
 msgstr "เลือกบรรทัดรายการ แล้วแก้ไข"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:552
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:553
 msgid "Vérifie la nouvelle configuration comme au chargement : rendre bloquante une liste qui toucherait une route du site est refusé avec la raison."
 msgstr "ตรวจสอบการตั้งค่าใหม่เหมือนตอนโหลด: การทำให้รายการที่จะกระทบเส้นทางของเว็บไซต์เป็นแบบบล็อกจะถูกปฏิเสธพร้อมเหตุผล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:555
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:556
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:570
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:577
 msgid "Rechargement automatique déclenché immédiatement."
 msgstr "โหลดใหม่อัตโนมัติทันที"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:558
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:89
 msgid "Éditer la liste"
 msgstr "แก้ไขรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:559
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
 msgid "Ouvre l'éditeur intégré sur le fichier de la liste (voir sa fiche)."
 msgstr "เปิดตัวแก้ไขในตัวกับไฟล์ของรายการ (ดูหัวข้อของหน้าจอนั้น)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:560
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
 msgid "Sélectionner une ligne Liste, puis Éditer la liste."
 msgstr "เลือกบรรทัดรายการ แล้วแก้ไขรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:561
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
 msgid "Aucune écriture tant que l'éditeur n'a pas enregistré."
 msgstr "ไม่มีการเขียนจนกว่าตัวแก้ไขจะบันทึก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:562
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:563
 msgid "Le tableau est rafraîchi à la fermeture de l'éditeur."
 msgstr "ตารางจะรีเฟรชเมื่อปิดตัวแก้ไข"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:565
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:91
 msgid "Activer/Desactiver"
 msgstr "เปิด/ปิดใช้งาน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:566
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
 msgid "Bascule une règle ou une liste sans la supprimer."
 msgstr "สลับกฎหรือรายการโดยไม่ลบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:567
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
 msgid "Sélectionner une ligne, puis cliquer."
 msgstr "เลือกบรรทัด แล้วคลิก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:568
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:569
 msgid "Règle : champ enabled de custom.json. Liste : champ enabled de keyword_lists."
 msgstr "กฎ: ฟิลด์ enabled ของ custom.json รายการ: ฟิลด์ enabled ของ keyword_lists"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:572
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
 msgid "Supprimer / Retirer"
 msgstr "ลบ / นำออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:573
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:574
 msgid "Supprimer une règle, ou Retirer une liste du WAF."
 msgstr "ลบกฎ หรือนำรายการออกจาก WAF"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:575
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:576
 msgid "Règle : retirée de custom.json. Liste : retirée de la configuration, FICHIER CONSERVÉ."
 msgstr "กฎ: นำออกจาก custom.json รายการ: นำออกจากการตั้งค่า แต่เก็บไฟล์ไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:580
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:581
 msgid "Une règle ou une liste refusée par la validation est refusée ICI de la même façon qu'elle le serait au chargement réel - jamais une double logique de validation divergente."
 msgstr "กฎหรือรายการที่ไม่ผ่านการตรวจสอบจะถูกปฏิเสธที่นี่แบบเดียวกับตอนโหลดจริง - ไม่มีตรรกะการตรวจสอบสองชุดที่ต่างกัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:585
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:586
 msgid "Piège déjà rencontré par un utilisateur : ajouter le PACK via 'Modules' n'est pas la même chose que créer une RÈGLE ici - cet écran fait désormais les deux à la fois automatiquement."
 msgstr "กับดักที่ผู้ใช้เคยเจอ: การเพิ่มแพ็กผ่าน 'โมดูล' ไม่เหมือนกับการสร้างกฎที่นี่ - ตอนนี้หน้าจอนี้ทำทั้งสองอย่างพร้อมกันโดยอัตโนมัติ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:590
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:591
 msgid "Retirer une liste ne supprime jamais son fichier : il reste proposé par l'assistant, prêt à être rechargé."
 msgstr "การนำรายการออกไม่ลบไฟล์: ตัวช่วยยังเสนอไฟล์นั้น พร้อมให้โหลดใหม่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:598
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
 msgid "WAF - Assistant règle personnalisée / chargement de liste"
 msgstr "WAF - ตัวช่วยกฎแบบกำหนดเอง / โหลดรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:599
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:600
 msgid "WAF - Règles et listes personnalisées -> Ajouter"
 msgstr "WAF - กฎและรายการแบบกำหนดเอง -> เพิ่ม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:601
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:602
 msgid "Questionnaire en langage clair pour construire une règle WAF sans connaître les expressions régulières (4 scénarios courants + mode Avance), OU pour CHARGER une liste de chemins / de mots-clés depuis un fichier texte. Le chargement d'une liste est une action explicite : rien n'est actif avant le clic sur Charger."
 msgstr "แบบสอบถามภาษาง่ายๆ เพื่อสร้างกฎ WAF โดยไม่ต้องรู้ regular expression (4 สถานการณ์ทั่วไป + โหมดขั้นสูง) หรือเพื่อโหลดรายการพาธ/คำสำคัญจากไฟล์ข้อความ การโหลดรายการเป็นการกระทำที่ชัดเจน: ไม่มีสิ่งใดทำงานก่อนคลิกโหลด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:608
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:140
 msgid "Que voulez-vous détecter ?"
 msgstr "ต้องการตรวจจับอะไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:609
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:610
 msgid "Choisit le scénario de détection."
 msgstr "เลือกสถานการณ์การตรวจจับ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:611
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:612
 msgid "Un chemin précis visite, un mot-clé dans l'adresse/parametres, un mot-clé envoyé en formulaire (POST), un outil de scan connu (User-Agent), Avance (regex/portee libres), CHARGER une liste de chemins, CHARGER une liste de mots-clés."
 msgstr "พาธที่เข้าชมโดยเฉพาะ คำสำคัญในที่อยู่/พารามิเตอร์ คำสำคัญที่ส่งในฟอร์ม (POST) เครื่องมือสแกนที่รู้จัก (User-Agent) ขั้นสูง (regex/ขอบเขตอิสระ) โหลดรายการพาธ โหลดรายการคำสำคัญ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:615
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:616
 msgid "Change les champs affiches en dessous et leur indice."
 msgstr "เปลี่ยนฟิลด์ที่แสดงด้านล่างและคำแนะนำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:619
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:144
 msgid "Valeur à détecter (mode simple)"
 msgstr "ค่าที่จะตรวจจับ (โหมดง่าย)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:620
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
 msgid "Le texte à repérer, saisi en clair (jamais une regex à écrire)."
 msgstr "ข้อความที่จะค้นหา พิมพ์ตามจริง (ไม่ต้องเขียน regex)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:621
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
 msgid "Un mot ou un chemin, selon le scénario choisi ci-dessus."
 msgstr "คำหรือพาธ ตามสถานการณ์ที่เลือกด้านบน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:622
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
 msgid "La regex réelle est CONSTRUITE automatiquement par le code (caractères spéciaux jamais interprétés)."
 msgstr "regex จริงถูกสร้างอัตโนมัติโดยโค้ด (อักขระพิเศษไม่ถูกตีความ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:623
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:624
 msgid "Aucun effet avant validation sur l'écran précédent (WafCustomRuleScreen)."
 msgstr "ไม่มีผลก่อนยืนยันบนหน้าจอก่อนหน้า (WafCustomRuleScreen)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:626
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
 msgid "Portée / Motif (mode Avance)"
 msgstr "ขอบเขต / รูปแบบ (โหมดขั้นสูง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:627
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
 msgid "Portée et expression régulière écrites directement."
 msgstr "ขอบเขตและ regular expression ที่เขียนโดยตรง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:628
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
 msgid "Portée : path, query, body, headers, user_agent, referer (séparés par des virgules)."
 msgstr "ขอบเขต: path, query, body, headers, user_agent, referer (คั่นด้วยจุลภาค)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:629
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
 msgid "Utilisé tel quel si Avance est choisi."
 msgstr "ใช้ตามเดิมหากเลือกขั้นสูง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:630
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:631
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:638
 msgid "Aucun effet avant validation sur l'écran précédent."
 msgstr "ไม่มีผลก่อนยืนยันบนหน้าจอก่อนหน้า"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:633
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
 msgid "Gravité (règle)"
 msgstr "ความรุนแรง (กฎ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:634
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
 msgid "Poids de la règle dans le calcul du score de menace."
 msgstr "น้ำหนักของกฎในการคำนวณคะแนนภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:635
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
 msgid "Faible/Moyen/Eleve/Critique (1/3/6/9)."
 msgstr "ต่ำ/ปานกลาง/สูง/วิกฤต (1/3/6/9)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:636
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:637
 msgid "Inclus dans la règle produite."
 msgstr "รวมอยู่ในกฎที่สร้าง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:640
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
 msgid "Fichier de liste (CHARGER)"
 msgstr "ไฟล์รายการ (โหลด)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:641
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:642
 msgid "Le fichier texte qui contient la liste."
 msgstr "ไฟล์ข้อความที่มีรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:643
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:644
 msgid "Vos fichiers .txt de secure/waf/rules/keywords/ (avec leur nombre d'entrées), les références livrées avec omega-serv (sensitive-paths-hostile, sensitive-paths-probe) pas encore copiées, ou 'Nouveau fichier...' (nom en lettres, chiffres et '-')."
 msgstr "ไฟล์ .txt ของคุณใน secure/waf/rules/keywords/ (พร้อมจำนวนรายการ) ต้นแบบที่มาพร้อม omega-serv (sensitive-paths-hostile, sensitive-paths-probe) ที่ยังไม่ได้คัดลอก หรือ 'ไฟล์ใหม่...' (ชื่อเป็นตัวอักษร ตัวเลข และ '-')"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:648
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:649
 msgid "Une référence est COPIÉE dans keywords/ au chargement : c'est cette copie locale que vous modifiez, une mise à jour d'omega-serv ne l'écrase jamais. Choisir une référence pré-remplit tous les réglages conseillés."
 msgstr "ต้นแบบจะถูกคัดลอกลงใน keywords/ ตอนโหลด: สำเนาภายในเครื่องนี้คือสิ่งที่คุณแก้ไข การอัปเดต omega-serv จะไม่เขียนทับ การเลือกต้นแบบจะกรอกการตั้งค่าที่แนะนำทั้งหมดไว้ล่วงหน้า"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:652
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:693
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:653
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:663
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:670
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:681
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:694
 msgid "Aucun effet avant Charger."
 msgstr "ไม่มีผลก่อนโหลด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:655
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
 msgid "Où chercher (liste de chemins)"
 msgstr "ค้นหาที่ไหน (รายการพาธ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:656
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:657
 msgid "N'importe où dans l'adresse, ou seulement au début."
 msgstr "ที่ใดก็ได้ในที่อยู่ หรือเฉพาะตอนต้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:658
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:659
 msgid "Partout attrape /blog/.env ; au début seulement est plus prudent pour des chemins qu'un vrai site peut servir (/api, /admin)."
 msgstr "ทุกที่จะจับ /blog/.env ได้ เฉพาะตอนต้นปลอดภัยกว่าสำหรับพาธที่เว็บไซต์จริงอาจให้บริการ (/api, /admin)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:661
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:662
 msgid "Champ anchor de la liste (any_segment / root)."
 msgstr "ฟิลด์ anchor ของรายการ (any_segment / root)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:665
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
 msgid "Dans quelle partie de la requête (liste de mots-clés)"
 msgstr "ส่วนใดของคำขอ (รายการคำสำคัญ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:666
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
 msgid "Où chercher les mots-clés."
 msgstr "ที่ที่จะค้นหาคำสำคัญ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:667
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
 msgid "L'adresse et ses paramètres, un formulaire envoyé (POST), le User-Agent, ou le Referer."
 msgstr "ที่อยู่และพารามิเตอร์ ฟอร์มที่ส่ง (POST) User-Agent หรือ Referer"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:668
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:669
 msgid "Champ scope de la liste."
 msgstr "ฟิลด์ scope ของรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:672
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
 msgid "Gravité (liste)"
 msgstr "ความรุนแรง (รายการ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:673
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:674
 msgid "Observation, Faible (1), Moyen (3), Élevé (6), Critique (9)."
 msgstr "เฝ้าดู ต่ำ (1) ปานกลาง (3) สูง (6) วิกฤต (9)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:675
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:676
 msgid "Observation (conseillé au premier chargement) : alertes journalisées, AUCUN blocage, aucune récidive. Élevé (6) atteint le seuil de blocage : 403 dès le premier accès. Moyen (3) ne bloque jamais seul."
 msgstr "เฝ้าดู (แนะนำสำหรับการโหลดครั้งแรก): บันทึกการแจ้งเตือนลงล็อก ไม่บล็อก ไม่มีการกระทำซ้ำ สูง (6) ถึงเกณฑ์การบล็อก: 403 ตั้งแต่การเข้าถึงครั้งแรก ปานกลาง (3) ไม่บล็อกด้วยตัวเอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:679
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:680
 msgid "Champs weight et observe_only de la liste."
 msgstr "ฟิลด์ weight และ observe_only ของรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:683
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
 msgid "Récidive"
 msgstr "การกระทำซ้ำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:684
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:685
 msgid "Bannir après N accès à CETTE liste en M minutes, pendant une durée choisie."
 msgstr "แบนหลังเข้าถึงรายการนี้ N ครั้งใน M นาที เป็นระยะเวลาที่เลือก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:686
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:687
 msgid "'pas de récidive propre' = compteur commun du WAF. Références : hostile 2 accès en 10 min -> 24 h, sondage 5 en 10 min -> 1 h. Grise en Observation."
 msgstr "'ไม่มีการกระทำซ้ำเฉพาะ' = ตัวนับร่วมของ WAF ต้นแบบ: hostile 2 ครั้งใน 10 นาที -> 24 ชม. การสำรวจ 5 ครั้งใน 10 นาที -> 1 ชม. เป็นสีเทาในโหมดเฝ้าดู"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:690
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:691
 msgid "Ban applicatif temporaire (blocklist, réponse 451), jamais pour l'hôte local (derrière un proxy de confiance), Tailscale ou le réseau local."
 msgstr "การแบนชั่วคราวระดับแอปพลิเคชัน (blocklist ตอบกลับ 451) ไม่ใช้กับ localhost (หลังพร็อกซีที่เชื่อถือ) Tailscale หรือเครือข่ายภายใน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:696
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:170
 msgid "Ouvrir l'éditeur"
 msgstr "เปิดตัวแก้ไข"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:697
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
 msgid "Ouvre le fichier choisi dans l'éditeur intégré (ou la référence si pas encore copiée)."
 msgstr "เปิดไฟล์ที่เลือกในตัวแก้ไขในตัว (หรือต้นแบบหากยังไม่ได้คัดลอก)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:698
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
 msgid "Pour vérifier ou adapter la liste AVANT de la charger."
 msgstr "เพื่อตรวจสอบหรือปรับรายการก่อนโหลด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:699
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
 msgid "Rien n'est chargé dans le WAF depuis l'éditeur."
 msgstr "ไม่มีการโหลดสิ่งใดเข้า WAF จากตัวแก้ไข"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:700
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:701
 msgid "Les nombres d'entrées sont rafraîchis à la fermeture."
 msgstr "จำนวนรายการจะรีเฟรชเมื่อปิด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:703
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_wizard_screen.py:270
 msgid "Charger"
 msgstr "โหลด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:704
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
 msgid "Charge la liste dans le WAF."
 msgstr "โหลดรายการเข้า WAF"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:705
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:706
 msgid "Dernier clic de l'assistant."
 msgstr "คลิกสุดท้ายของตัวช่วย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:707
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:708
 msgid "Vérifie, dans l'ordre : nom de fichier, syntaxe (numéro de ligne en cas d'erreur), lisibilité par le compte du service, absence de doublon, conflits avec les routes du site. Si une seule vérification échoue, la configuration n'est PAS modifiée. Active ensuite la réputation et l'auto-ban s'ils étaient éteints (avec un message)."
 msgstr "ตรวจสอบตามลำดับ: ชื่อไฟล์ ไวยากรณ์ (หมายเลขบรรทัดหากผิดพลาด) บัญชีของบริการอ่านได้หรือไม่ ไม่ซ้ำ ไม่ขัดแย้งกับเส้นทางของเว็บไซต์ หากการตรวจสอบใดล้มเหลว การตั้งค่าจะไม่ถูกแก้ไข จากนั้นจะเปิดชื่อเสียงและการแบนอัตโนมัติหากปิดอยู่ (พร้อมข้อความแจ้ง)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:716
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:717
 msgid "Règle : ne fait qu'assembler les valeurs, l'écriture a lieu sur l'écran WAF - Règles et listes personnalisées. Liste : rien n'est actif tant que Charger n'a pas réussi."
 msgstr "กฎ: เพียงประกอบค่าเข้าด้วยกัน การเขียนเกิดขึ้นบนหน้าจอ WAF - กฎและรายการแบบกำหนดเอง รายการ: ไม่มีสิ่งใดทำงานจนกว่าการโหลดจะสำเร็จ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:721
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:722
 msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route réellement servie (alias, reverse proxy, zone Auth, fichier du webroot) est refusée : ajoutez une exception '!/chemin' dans la liste, ou chargez-la en Observation."
 msgstr "รายการที่บล็อกด้วยตัวเอง (ความรุนแรง >= 5) และจะกระทบเส้นทางที่ให้บริการจริง (alias, reverse proxy, โซน Auth, ไฟล์ใน webroot) จะถูกปฏิเสธ: เพิ่มข้อยกเว้น '!/พาธ' ในรายการ หรือโหลดในโหมดเฝ้าดู"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:730
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - ตัวแก้ไขรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:732
 msgid "WAF - Règles et listes personnalisées -> Éditer la liste (ou Assistant -> Ouvrir l'éditeur)"
 msgstr "WAF - กฎและรายการแบบกำหนดเอง -> แก้ไขรายการ (หรือตัวช่วย -> เปิดตัวแก้ไข)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:733
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:734
 msgid "Éditeur de texte intégré, sans éditeur externe, pour une liste de chemins ou de mots-clés. Tout se fait à la SOURIS : aucun raccourci clavier, le clavier ne sert qu'à la saisie (caractères, Entrée, flèches, Debut/Fin, Page prec./suiv., Retour arrière, Suppr)."
 msgstr "ตัวแก้ไขข้อความในตัว ไม่ต้องใช้ตัวแก้ไขภายนอก สำหรับรายการพาธหรือคำสำคัญ ทุกอย่างทำด้วยเมาส์: ไม่มีปุ่มลัด แป้นพิมพ์ใช้เพื่อพิมพ์เท่านั้น (อักขระ Enter ลูกศร Home/End Page Up/Down Backspace Delete)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:739
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
 msgid "Syntaxe d'une liste de chemins"
 msgstr "ไวยากรณ์ของรายการพาธ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:740
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:741
 msgid "Une entrée par ligne, '#' = commentaire."
 msgstr "หนึ่งรายการต่อบรรทัด '#' = ความคิดเห็น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:742
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:743
 msgid "/admin -> /admin et /admin/xxx (jamais /administrator) ; /.git/ -> tout ce qui est sous /.git/ ; /*.bak -> fichiers finissant par .bak ; !/api/v1 -> exception, toujours prioritaire sur les entrées, quel que soit l'ordre des lignes."
 msgstr "/admin -> /admin และ /admin/xxx (ไม่รวม /administrator) /.git/ -> ทุกอย่างใต้ /.git/ /*.bak -> ไฟล์ที่ลงท้ายด้วย .bak !/api/v1 -> ข้อยกเว้น มีผลเหนือรายการอื่นเสมอ ไม่ว่าบรรทัดจะอยู่ลำดับใด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:746
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
 msgid "Analysée en direct (compteur d'entrées, d'exceptions, d'erreurs et d'avertissements)."
 msgstr "วิเคราะห์แบบสด (ตัวนับรายการ ข้อยกเว้น ข้อผิดพลาด และคำเตือน)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:747
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:748
 msgid "Les erreurs s'affichent avec leur numéro de ligne ; cliquer une erreur place le curseur dessus."
 msgstr "ข้อผิดพลาดแสดงพร้อมหมายเลขบรรทัด คลิกข้อผิดพลาดเพื่อวางเคอร์เซอร์ที่บรรทัดนั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:750
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
 msgid "Barre d'outils"
 msgstr "แถบเครื่องมือ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:751
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
 msgid "Annuler la modif, Rétablir, Couper, Copier, Coller, Sélectionner la ligne, Tout sélectionner, Supprimer la ligne."
 msgstr "เลิกทำ ทำซ้ำ ตัด คัดลอก วาง เลือกบรรทัด เลือกทั้งหมด ลบบรรทัด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:752
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
 msgid "Clic. Le collage du terminal (clic du milieu, menu du terminal) fonctionne aussi."
 msgstr "คลิก การวางจากเทอร์มินัล (คลิกกลาง เมนูของเทอร์มินัล) ก็ใช้ได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:753
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
 msgid "Modifie le texte affiché, jamais le fichier."
 msgstr "แก้ไขข้อความที่แสดง ไม่ใช่ไฟล์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:754
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:755
 msgid "Toujours annulable."
 msgstr "เลิกทำได้เสมอ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:757
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:148
 msgid "Rechercher"
 msgstr "ค้นหา"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:758
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
 msgid "Trouve un texte dans la liste (casse ignorée)."
 msgstr "ค้นหาข้อความในรายการ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:759
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
 msgid "Taper le texte, puis Précédent / Suivant."
 msgstr "พิมพ์ข้อความ แล้วก่อนหน้า / ถัดไป"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:760
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
 msgid "Sélectionne l'occurrence trouvée."
 msgstr "เลือกตำแหน่งที่พบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:761
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:762
 msgid "Recommence au début après la dernière occurrence."
 msgstr "เริ่มใหม่ตั้งแต่ต้นหลังตำแหน่งสุดท้าย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:764
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
 msgid "Tester (liste de chemins)"
 msgstr "ทดสอบ (รายการพาธ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:765
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
 msgid "Indique ce que ferait la liste EN COURS d'édition d'un chemin donné."
 msgstr "แสดงว่ารายการที่กำลังแก้ไขจะทำอะไรกับพาธที่กำหนด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:766
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
 msgid "Taper un chemin (ex. /blog/.env), puis Tester."
 msgstr "พิมพ์พาธ (เช่น /blog/.env) แล้วกดทดสอบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:767
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
 msgid "Même normalisation que le WAF (paramètres retirés, décodage URL)."
 msgstr "การปรับรูปแบบเดียวกับ WAF (นำพารามิเตอร์ออก ถอดรหัส URL)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:768
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:769
 msgid "'DÉTECTÉ par la ligne N', 'AUTORISÉ : exception ligne N', ou 'aucune ligne ne correspond'."
 msgstr "'ตรวจพบโดยบรรทัด N' 'อนุญาต: ข้อยกเว้นบรรทัด N' หรือ 'ไม่มีบรรทัดใดตรงกัน'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:771
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
 msgid "Vérifier contre mes logs (liste de chemins)"
 msgstr "ตรวจกับล็อกของฉัน (รายการพาธ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:772
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
 msgid "Rejoue les requêtes RÉUSSIES (2xx/3xx) du journal d'accès contre la liste."
 msgstr "เล่นคำขอที่สำเร็จ (2xx/3xx) จากล็อกการเข้าถึงกับรายการอีกครั้ง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:773
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
 msgid "Chaque ligne de la liste qui aurait touché une requête probablement légitime est montrée avec un exemple."
 msgstr "แต่ละบรรทัดของรายการที่จะกระทบคำขอที่น่าจะถูกต้องจะแสดงพร้อมตัวอย่าง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:774
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
 msgid "Cliquer une ligne : exception pour ce chemin, exception pour son dossier, ou suppression de la ligne."
 msgstr "คลิกบรรทัด: ข้อยกเว้นสำหรับพาธนี้ ข้อยกเว้นสำหรับโฟลเดอร์ของมัน หรือลบบรรทัด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:775
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:776
 msgid "Modifie le texte affiché (annulable), jamais le fichier avant Enregistrer."
 msgstr "แก้ไขข้อความที่แสดง (เลิกทำได้) ไม่แก้ไฟล์ก่อนบันทึก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:778
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:131
 msgid "Nouveautés de la référence"
 msgstr "รายการใหม่ในต้นแบบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:779
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
 msgid "Entrées de la référence livrée absentes de votre liste."
 msgstr "รายการของต้นแบบที่มาพร้อมซึ่งไม่มีในรายการของคุณ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:780
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:781
 msgid "Cocher celles à ajouter, puis Ajouter la sélection."
 msgstr "ทำเครื่องหมายรายการที่จะเพิ่ม แล้วเพิ่มรายการที่เลือก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:782
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:783
 msgid "Rien n'est ajouté sans être coché. Une ligne de la référence que vous supprimez est marquée '#retire: /x' à l'enregistrement et n'est plus jamais reproposée."
 msgstr "ไม่มีการเพิ่มหากไม่ได้ทำเครื่องหมาย บรรทัดของต้นแบบที่คุณลบจะถูกทำเครื่องหมาย '#retire: /x' ตอนบันทึก และจะไม่ถูกเสนออีก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:785
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:786
 msgid "Modifie le texte affiché."
 msgstr "แก้ไขข้อความที่แสดง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:788
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
 #: src/omega_serv/interfaces/tui/screens/path_list_editor_screen.py:132
 msgid "Corriger les droits"
 msgstr "แก้ไขสิทธิ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:789
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
 msgid "Rend le fichier lisible par le compte du service (omega-serv)."
 msgstr "ทำให้บัญชีของบริการ (omega-serv) อ่านไฟล์ได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:790
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:791
 msgid "Proposé seulement si l'état signale que le service ne peut pas lire le fichier."
 msgstr "เสนอเฉพาะเมื่อสถานะแจ้งว่าบริการอ่านไฟล์ไม่ได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:792
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:793
 msgid "Liste chaque changement de droits avant de l'appliquer, uniquement sur ce qui vous appartient - jamais via sudo."
 msgstr "แสดงการเปลี่ยนสิทธิ์แต่ละรายการก่อนใช้ เฉพาะกับสิ่งที่เป็นของคุณ - ไม่ผ่าน sudo"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:795
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:796
 msgid "L'état est recalculé."
 msgstr "สถานะจะถูกคำนวณใหม่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:798
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:165
 msgid "Enregistrer et appliquer"
 msgstr "บันทึกและใช้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:799
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
 msgid "Écrit le fichier, puis recharge le serveur si la liste est chargée."
 msgstr "เขียนไฟล์ แล้วโหลดเซิร์ฟเวอร์ใหม่หากรายการถูกโหลดไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:800
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:801
 msgid "Refusé tant qu'il reste une erreur."
 msgstr "ปฏิเสธตราบใดที่ยังมีข้อผิดพลาด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:802
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:803
 msgid "Écriture sûre : droits et groupe conservés, nouveau fichier en 0644, refus si le fichier a été modifié ailleurs depuis l'ouverture, ou si c'est un lien symbolique."
 msgstr "การเขียนที่ปลอดภัย: คงสิทธิ์และกลุ่มเดิม ไฟล์ใหม่เป็น 0644 ปฏิเสธหากไฟล์ถูกแก้ไขที่อื่นตั้งแต่เปิด หรือหากเป็นลิงก์สัญลักษณ์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:806
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:807
 msgid "Le rechargement n'est déclenché que si la vérification de la liste réussit - sinon la raison est affichée et le serveur garde ses règles actuelles."
 msgstr "การโหลดใหม่จะเกิดขึ้นเฉพาะเมื่อการตรวจสอบรายการสำเร็จ - มิฉะนั้นจะแสดงเหตุผลและเซิร์ฟเวอร์จะคงกฎปัจจุบันไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:811
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
 msgid "Fermer / Aide"
 msgstr "ปิด / ช่วยเหลือ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:812
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
 msgid "Fermer l'éditeur, ou ouvrir cette fiche."
 msgstr "ปิดตัวแก้ไข หรือเปิดหัวข้อนี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:813
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
 msgid "Clic."
 msgstr "คลิก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:814
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
 msgid "Fermer demande une confirmation s'il reste des modifications non enregistrées."
 msgstr "การปิดจะขอยืนยันหากยังมีการเปลี่ยนแปลงที่ไม่ได้บันทึก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:815
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:816
 msgid "Retour à l'écran précédent."
 msgstr "กลับไปหน้าจอก่อนหน้า"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:819
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:820
 msgid "Le fichier n'est jamais modifié avant Enregistrer. Un fichier non modifiable par votre compte s'ouvre en LECTURE SEULE, avec la raison."
 msgstr "ไฟล์จะไม่ถูกแก้ไขก่อนบันทึก ไฟล์ที่บัญชีของคุณแก้ไขไม่ได้จะเปิดแบบอ่านอย่างเดียว พร้อมเหตุผล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:824
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:825
 msgid "Échap et F1 ne font rien ici, volontairement (aucun raccourci) : utilisez Fermer et Aide. Seul ctrl+q reste actif pour quitter l'application, avec confirmation."
 msgstr "Esc และ F1 ไม่ทำอะไรที่นี่โดยตั้งใจ (ไม่มีปุ่มลัด): ใช้ปิดและช่วยเหลือ มีเพียง ctrl+q ที่ยังใช้ออกจากแอปพลิเคชันได้ พร้อมยืนยัน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:828
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:829
 msgid "L'état en bas de l'écran indique si le compte du service peut lire le fichier : un fichier illisible ferait échouer le prochain rechargement."
 msgstr "สถานะที่ด้านล่างของหน้าจอแสดงว่าบัญชีของบริการอ่านไฟล์ได้หรือไม่: ไฟล์ที่อ่านไม่ได้จะทำให้การโหลดใหม่ครั้งถัดไปล้มเหลว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:836
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "WAF - Modifier une liste"
 msgstr "WAF - แก้ไขรายการ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
 msgid "WAF - Règles et listes personnalisées -> Modifier (ligne Liste)"
 msgstr "WAF - กฎและรายการแบบกำหนดเอง -> แก้ไข (บรรทัดรายการ)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:838
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:839
 msgid "Change les réglages d'une liste déjà chargée, sans toucher à son fichier."
 msgstr "เปลี่ยนการตั้งค่าของรายการที่โหลดแล้ว โดยไม่แตะไฟล์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:841
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
 msgid "Nom affiché / Où chercher / Gravité / Récidive"
 msgstr "ชื่อที่แสดง / ค้นหาที่ไหน / ความรุนแรง / การกระทำซ้ำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:842
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
 msgid "Mêmes choix que dans l'assistant (voir sa fiche)."
 msgstr "ตัวเลือกเดียวกับในตัวช่วย (ดูหัวข้อของหน้าจอนั้น)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:843
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
 msgid "Passer d'Observation à une gravité bloquante une fois les alertes lues."
 msgstr "เปลี่ยนจากเฝ้าดูเป็นความรุนแรงที่บล็อกหลังอ่านการแจ้งเตือนแล้ว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:844
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
 msgid "Vérifie la nouvelle configuration avant de l'écrire."
 msgstr "ตรวจสอบการตั้งค่าใหม่ก่อนเขียน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:845
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:846
 msgid "Rechargement automatique ; refus affiché avec sa raison si la vérification échoue."
 msgstr "โหลดใหม่อัตโนมัติ แสดงการปฏิเสธพร้อมเหตุผลหากการตรวจสอบล้มเหลว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:848
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:849
 msgid "Rendre une liste bloquante réactive la réputation et l'auto-ban s'ils avaient été éteints."
 msgstr "การทำให้รายการเป็นแบบบล็อกจะเปิดชื่อเสียงและการแบนอัตโนมัติอีกครั้งหากถูกปิดไว้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:855
 msgid "Accueil -> Active Sécurité -> Magnet (bloc WAF)"
 msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> Magnet (บล็อก WAF)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:856
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:857
 msgid "Importe un script WAF mod_magnet Lighttpd EXISTANT (écrit pour un autre site) sans le réécrire, comme renfort additif au WAF natif - il ne peut jamais lever un blocage déjà décidé par le natif. Seuls les chemins personnels du script (fichiers de log/blocage) se dissocient ici, jamais la logique du script lui-même."
 msgstr "นำเข้าสคริปต์ WAF mod_magnet ของ Lighttpd ที่มีอยู่แล้ว (เขียนสำหรับเว็บไซต์อื่น) โดยไม่ต้องเขียนใหม่ เป็นการเสริมเพิ่มให้ WAF native - ไม่สามารถยกเลิกการบล็อกที่ native ตัดสินไปแล้ว ที่นี่แยกเฉพาะพาธส่วนตัวของสคริปต์ (ไฟล์ล็อก/การบล็อก) ไม่แตะตรรกะของสคริปต์"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:863
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:295
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:65
 msgid "Actif (oui/non)"
 msgstr "เปิดใช้งาน (ใช่/ไม่)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:864
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
 msgid "Active ou désactive le script magnet."
 msgstr "เปิดหรือปิดสคริปต์ magnet"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:865
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:866
 msgid "oui ou non."
 msgstr "ใช่ หรือ ไม่"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:870
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:67
 msgid "Script (chemin relatif au projet)"
 msgstr "สคริปต์ (พาธสัมพัทธ์กับโปรเจกต์)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:871
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
 msgid "Le fichier Lua à importer - une liste des scripts trouves sous secure/waf/scripts/ est affichée en indice."
 msgstr "ไฟล์ Lua ที่จะนำเข้า - รายการสคริปต์ที่พบใน secure/waf/scripts/ แสดงเป็นคำแนะนำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:872
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
 msgid "Chemin relatif au projet, ex. secure/waf/scripts/waf.lua."
 msgstr "พาธสัมพัทธ์กับโปรเจกต์ เช่น secure/waf/scripts/waf.lua"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:873
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
 msgid "Enregistre avec Actif."
 msgstr "บันทึกพร้อมเปิดใช้งาน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:874
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:875
 msgid "Aucun effet avant Enregistrer - utiliser Vérifier la compatibilité pour tester sans rien écrire."
 msgstr "ไม่มีผลก่อนบันทึก - ใช้ตรวจสอบความเข้ากันได้เพื่อทดสอบโดยไม่เขียนอะไร"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:877
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
 msgid "Délai maximum par appel (ms) / Comportement en cas d'erreur"
 msgstr "เวลาสูงสุดต่อการเรียก (ms) / พฤติกรรมเมื่อเกิดข้อผิดพลาด"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:878
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
 msgid "Borne le temps d'exécution du script par requête, et la décision prise si le script plante ou dépasse ce délai."
 msgstr "จำกัดเวลาการทำงานของสคริปต์ต่อคำขอ และการตัดสินเมื่อสคริปต์ล่มหรือเกินเวลานี้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:879
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:880
 msgid "Délai en millisecondes ; ignore (laisse passer) ou fail-closed (bloque par prudence)."
 msgstr "เวลาเป็นมิลลิวินาที ignore (ปล่อยผ่าน) หรือ fail-closed (บล็อกเพื่อความปลอดภัย)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:881
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:882
 msgid "fail-closed combiné à une incompatibilité détectée peut bloquer du trafic légitime - avertissement explicite affiché par Vérifier la compatibilité dans ce cas."
 msgstr "fail-closed ร่วมกับความไม่เข้ากันที่ตรวจพบอาจบล็อกทราฟฟิกที่ถูกต้อง - ในกรณีนี้ตรวจสอบความเข้ากันได้จะแสดงคำเตือนชัดเจน"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:884
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:885
 msgid "Chemins personnels dissociés"
 msgstr "พาธส่วนตัวที่แยกออก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:886
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:887
 msgid "5 chemins (blocklist, dossier de règles, 2 journaux, fichier de persistance du rate limiting) injectés dans le script à la place de ses chemins en dur d'origine - propre à chaque script importe, jamais un contrat générique. Blocklist par défaut : var/lib/waf/magnet-blocklist.txt (le script y ÉCRIT ; un ancien secure/waf/magnet-blocklist.txt est repris une fois). Un chemin choisi à la main doit rester inscriptible par le compte du service, sinon les bans sont perdus sans message."
 msgstr "5 พาธ (blocklist โฟลเดอร์กฎ ล็อก 2 ไฟล์ ไฟล์คงสถานะของ rate limiting) ที่ส่งเข้าสคริปต์แทนพาธเดิมที่ฝังไว้ - เฉพาะของแต่ละสคริปต์ที่นำเข้า ไม่ใช่ข้อตกลงทั่วไป blocklist เริ่มต้น: var/lib/waf/magnet-blocklist.txt (สคริปต์เขียนลงที่นี่ ไฟล์ secure/waf/magnet-blocklist.txt เก่าจะถูกนำเข้าหนึ่งครั้ง) พาธที่เลือกเองต้องให้บัญชีของบริการเขียนได้ มิฉะนั้นการแบนจะหายไปโดยไม่มีข้อความแจ้ง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:893
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:894
 msgid "Vide = le script garde son propre chemin en dur (aucune injection pour ce champ)."
 msgstr "ว่าง = สคริปต์ใช้พาธที่ฝังไว้ของตัวเอง (ไม่ส่งค่าสำหรับฟิลด์นี้)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:895
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:896
 msgid "Les dossiers parents sont créés automatiquement à l'usage réel (jamais lors d'un simple 'config check')."
 msgstr "โฟลเดอร์แม่จะถูกสร้างอัตโนมัติเมื่อใช้งานจริง (ไม่ใช่ตอน 'config check' ธรรมดา)"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:898
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
 #: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:87
 msgid "Vérifier la compatibilité"
 msgstr "ตรวจสอบความเข้ากันได้"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:899
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
 msgid "Exécute RÉELLEMENT le script avec les valeurs du formulaire EN COURS DE SAISIE, pas seulement celles déjà enregistrées."
 msgstr "เรียกใช้สคริปต์จริงด้วยค่าในฟอร์มที่กำลังกรอก ไม่ใช่แค่ค่าที่บันทึกไว้แล้ว"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:900
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
 msgid "À utiliser avant d'activer un script importe en production - répond à 'ce script est-il compatible ?'."
 msgstr "ใช้ก่อนเปิดสคริปต์ที่นำเข้าใน production - ตอบคำถาม 'สคริปต์นี้เข้ากันได้หรือไม่?'"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:901
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
 msgid "Scan statique (membres lighty.* non supportes) + exécution réelle sur une requête de test bénigne."
 msgstr "สแกนแบบสถิต (สมาชิก lighty.* ที่ไม่รองรับ) + เรียกใช้จริงกับคำขอทดสอบที่ไม่เป็นอันตราย"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:902
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:903
 msgid "Aucun effet sur le serveur ni sur la configuration enregistrée - purement diagnostique."
 msgstr "ไม่มีผลต่อเซิร์ฟเวอร์หรือการตั้งค่าที่บันทึกไว้ - เพื่อการวินิจฉัยเท่านั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:905
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:906
 msgid "Le natif reste toujours actif en parallèle - le magnet ne peut qu'ajouter un blocage, jamais en lever un."
 msgstr "native ยังทำงานคู่ขนานเสมอ - magnet ทำได้เพียงเพิ่มการบล็อก ไม่ยกเลิก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:908
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:909
 msgid "Un script importe peut référencer une fonctionnalité lighty.* non supportée par ce pont (toujours nil côté Lua) - toujours lancer Vérifier la compatibilité avant d'activer un nouveau script en production, surtout avec on_error=fail-closed."
 msgstr "สคริปต์ที่นำเข้าอาจอ้างถึงฟังก์ชัน lighty.* ที่สะพานนี้ไม่รองรับ (เป็น nil เสมอฝั่ง Lua) - เรียกตรวจสอบความเข้ากันได้ทุกครั้งก่อนเปิดสคริปต์ใหม่ใน production โดยเฉพาะกับ on_error=fail-closed"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:917
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - เลือกแพ็กกฎ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
 msgid "WAF - Modules -> Ajouter un pack"
 msgstr "WAF - โมดูล -> เพิ่มแพ็ก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:919
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:920
 msgid "Liste RÉELLE des packs de règles présents sous secure/waf/rules/, exclut ceux déjà référencés - jamais de doublon proposé."
 msgstr "รายการจริงของแพ็กกฎที่มีใน secure/waf/rules/ ไม่รวมที่อ้างอิงแล้ว - ไม่เสนอรายการซ้ำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:922
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
 msgid "Sélection du pack"
 msgstr "การเลือกแพ็ก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:923
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
 msgid "Choisit un pack parmi ceux disponibles et non déjà référencés."
 msgstr "เลือกแพ็กจากที่มีและยังไม่ถูกอ้างอิง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:924
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
 msgid "Un menu déroulant, avec la description du pack (nombre de règles, état par défaut) affichée en dessous."
 msgstr "เมนูแบบเลื่อนลง พร้อมคำอธิบายแพ็ก (จำนวนกฎ สถานะเริ่มต้น) แสดงด้านล่าง"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:925
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
 msgid "Confirmer renvoie le chemin choisi à l'écran Modules."
 msgstr "ยืนยันจะส่งพาธที่เลือกกลับไปยังหน้าจอโมดูล"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:926
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:927
 msgid "Aucun effet ici - la référence réelle est ajoutée par l'écran appelant."
 msgstr "ไม่มีผลที่นี่ - การอ้างอิงจริงถูกเพิ่มโดยหน้าจอที่เรียก"
 
-#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:929
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:930
 msgid "Aucune modification directe - purement une aide de sélection."
 msgstr "ไม่มีการแก้ไขโดยตรง - เป็นเพียงตัวช่วยเลือก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:935
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:107
+msgid "Intervention manuelle - Bannir"
+msgstr "การแทรกแซงด้วยตนเอง - แบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:936
+msgid "Accueil -> Active Sécurité -> Bannir (cadre INTERVENTION MANUELLE)"
+msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> แบน (กรอบ การแทรกแซงด้วยตนเอง)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:938
+msgid "Bannit une adresse IP sans condition : aucune règle, aucun seuil. L'adresse est ajoutée à la blocklist du WAF et reçoit la page 451 sur tout le site, avant le routage - les backends (reverse proxy, FastCGI) ne la voient jamais. Aucun droit administrateur n'est nécessaire."
+msgstr "แบนที่อยู่ IP โดยไม่มีเงื่อนไข: ไม่มีกฎ ไม่มีเกณฑ์ ที่อยู่จะถูกเพิ่มลงใน blocklist ของ WAF และได้รับหน้า 451 ทั่วทั้งเว็บไซต์ ก่อนการกำหนดเส้นทาง - แบ็กเอนด์ (reverse proxy, FastCGI) จะไม่เห็นเลย ไม่ต้องใช้สิทธิ์ผู้ดูแลระบบ"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:944
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:65
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Adresse IP"
+msgstr "ที่อยู่ IP"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:945
+msgid "L'adresse à bannir, IPv4 ou IPv6."
+msgstr "ที่อยู่ที่จะแบน IPv4 หรือ IPv6"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:946
+msgid "Une seule adresse (ex. 203.0.113.7 ou 2001:db8::7). Un réseau (/24...) est refusé : il se bannit dans WAF -> Modules -> Liste de blocage."
+msgstr "ที่อยู่เดียว (เช่น 203.0.113.7 หรือ 2001:db8::7) เครือข่าย (/24...) จะถูกปฏิเสธ: ให้แบนใน WAF -> โมดูล -> รายการบล็อก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:948
+msgid "Vérifiée au clic sur Bannir."
+msgstr "ตรวจสอบเมื่อคลิก แบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:949
+msgid "Adresse invalide ou réseau : message d'erreur, rien n'est écrit."
+msgstr "ที่อยู่ไม่ถูกต้องหรือเป็นเครือข่าย: แสดงข้อความผิดพลาด ไม่มีการเขียนใด ๆ"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:952
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
+msgid "Motif du ban"
+msgstr "เหตุผลการแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:953
+msgid "Texte libre gardé avec le ban, affiché dans Débannir et Statut des bans."
+msgstr "ข้อความอิสระที่เก็บไว้กับการแบน แสดงใน ยกเลิกแบน และ สถานะการแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:954
+msgid "Facultatif : « Intervention manuelle » par défaut."
+msgstr "ไม่บังคับ: ค่าเริ่มต้นคือ « การแทรกแซงด้วยตนเอง »"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:955
+msgid "Enregistré avec le ban."
+msgstr "บันทึกพร้อมกับการแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:956
+msgid "Visible dans Statut des bans et dans les exports."
+msgstr "แสดงใน สถานะการแบน และในไฟล์ส่งออก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:959
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:69
+msgid "Durée"
+msgstr "ระยะเวลา"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:960
+msgid "Combien de temps le ban reste en place."
+msgstr "การแบนมีผลนานเท่าใด"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:961
+msgid "1 h, 6 h, 24 h, 7 jours, 30 jours, une durée libre en heures, ou permanent."
+msgstr "1 ชม. 6 ชม. 24 ชม. 7 วัน 30 วัน ระยะเวลาอิสระเป็นชั่วโมง หรือถาวร"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:962
+msgid "Calculée au moment du ban."
+msgstr "คำนวณ ณ เวลาที่แบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:963
+msgid "À l'échéance, l'adresse est de nouveau acceptée, sans rien faire. Un ban permanent demande une confirmation et reste jusqu'à Débannir."
+msgstr "เมื่อหมดเวลา ที่อยู่จะกลับมาได้รับการยอมรับโดยไม่ต้องทำอะไร การแบนถาวรต้องยืนยันและมีผลจนกว่าจะ ยกเลิกแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:968
+msgid "Effet immédiat, sans redémarrage ni rechargement : le serveur relit la blocklist dès qu'elle change, avec le moteur Python comme avec le moteur natif. Le ban ne compte jamais dans la récidive RIPOSTE et n'a aucun lien avec Active Defense."
+msgstr "มีผลทันที ไม่ต้องรีสตาร์ตหรือโหลดใหม่: เซิร์ฟเวอร์อ่าน blocklist ใหม่ทันทีที่มีการเปลี่ยนแปลง ทั้งกับเอนจิน Python และเอนจินเนทีฟ การแบนนี้ไม่นับรวมในการกระทำซ้ำของ RIPOSTE และไม่เกี่ยวข้องกับ Active Defense"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:973
+msgid "WAF désactivé : la blocklist n'est pas consultée, le ban n'aurait aucun effet - l'écran l'indique en haut. En mode log-only, le ban s'applique quand même."
+msgstr "WAF ปิดอยู่: ไม่มีการตรวจ blocklist การแบนจะไม่มีผล - หน้าจอแจ้งไว้ด้านบน ในโหมด log-only การแบนยังคงมีผล"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:975
+msgid "Adresse locale, privée ou Tailscale : une confirmation est demandée, vous pourriez couper votre propre accès."
+msgstr "ที่อยู่ภายในเครื่อง ส่วนตัว หรือ Tailscale: ต้องยืนยัน คุณอาจตัดการเข้าถึงของตัวเอง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:977
+msgid "Si l'adresse est déjà bannie par une autre origine (auto-ban, RIPOSTE, omega-jail), votre ban la remplace après confirmation ; un automate ne le remplacera jamais."
+msgstr "หากที่อยู่ถูกแบนโดยแหล่งอื่นอยู่แล้ว (แบนอัตโนมัติ, RIPOSTE, omega-jail) การแบนของคุณจะแทนที่หลังยืนยัน; ระบบอัตโนมัติจะไม่แทนที่การแบนของคุณเลย"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:984
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:108
+msgid "Intervention manuelle - Débannir"
+msgstr "การแทรกแซงด้วยตนเอง - ยกเลิกแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:985
+msgid "Accueil -> Active Sécurité -> Débannir (cadre INTERVENTION MANUELLE)"
+msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> ยกเลิกแบน (กรอบ การแทรกแซงด้วยตนเอง)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:986
+msgid "Liste les bans posés par Bannir, et seulement eux, pour les lever."
+msgstr "แสดงรายการการแบนที่ตั้งผ่าน แบน และเฉพาะรายการเหล่านั้น เพื่อยกเลิก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:989
+msgid "Tableau des bans manuels"
+msgstr "ตารางการแบนด้วยตนเอง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:990
+msgid "Adresse, motif, date de pose, expiration, état (en vigueur ou expiré)."
+msgstr "ที่อยู่ เหตุผล วันที่ตั้ง วันหมดอายุ สถานะ (มีผลอยู่หรือหมดอายุแล้ว)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:991
+msgid "Sélectionnez une ligne, puis Lever."
+msgstr "เลือกแถว แล้วกด ยกเลิก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:992
+msgid "Lever demande une confirmation."
+msgstr "ยกเลิก ต้องยืนยัน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:993
+msgid "L'adresse est retirée de la blocklist : elle accède de nouveau au site, immédiatement."
+msgstr "ที่อยู่ถูกลบออกจาก blocklist: เข้าถึงเว็บไซต์ได้อีกครั้งทันที"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:996
+msgid "Retire l'entrée de la blocklist du WAF ; rien d'autre n'est touché."
+msgstr "ลบรายการออกจาก blocklist ของ WAF; ไม่แตะต้องสิ่งอื่น"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:998
+msgid "Les autres bans se lèvent là où ils ont été posés : WAF -> Modules (réseaux, auto-bans, CLI, omega-jail), RIPOSTE -> Actions. Un ban levé ici peut revenir si une règle automatique bannit de nouveau l'adresse."
+msgstr "การแบนอื่นยกเลิกในที่ที่ตั้งไว้: WAF -> โมดูล (เครือข่าย แบนอัตโนมัติ CLI omega-jail), RIPOSTE -> การดำเนินการ การแบนที่ยกเลิกที่นี่อาจกลับมาหากกฎอัตโนมัติแบนที่อยู่นั้นอีกครั้ง"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1005
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:109
+msgid "Intervention manuelle - Statut des bans"
+msgstr "การแทรกแซงด้วยตนเอง - สถานะการแบน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1006
+msgid "Accueil -> Active Sécurité -> Statut des bans (cadre INTERVENTION MANUELLE)"
+msgstr "หน้าหลัก -> ความปลอดภัยเชิงรุก -> สถานะการแบน (กรอบ การแทรกแซงด้วยตนเอง)"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1008
+msgid "Tous les bans de la blocklist du WAF, avec leur origine : intervention manuelle, manuel (WAF -> Modules ou CLI), auto-ban WAF (règles ou liste), RIPOSTE (politique), omega-jail (jail), et la liste du script Magnet s'il est actif. Lecture seule."
+msgstr "การแบนทั้งหมดใน blocklist ของ WAF พร้อมที่มา: การแทรกแซงด้วยตนเอง ด้วยตนเอง (WAF -> โมดูล หรือ CLI) แบนอัตโนมัติ WAF (กฎหรือรายการ) RIPOSTE (นโยบาย) omega-jail (jail) และรายการของสคริปต์ Magnet หากเปิดใช้งาน อ่านอย่างเดียว"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1014
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:78
+msgid "Format d'export"
+msgstr "รูปแบบการส่งออก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1015
+msgid "JSON ou HTML de tous les bans, ou TXT d'injection."
+msgstr "JSON หรือ HTML ของการแบนทั้งหมด หรือ TXT สำหรับนำเข้า"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1016
+msgid "TXT : bans actifs ou toute la liste. Une adresse par ligne, en-tête en commentaires « # » - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire, omega-fire ne lisant que des adresses."
+msgstr "TXT: การแบนที่มีผลอยู่หรือทั้งรายการ หนึ่งที่อยู่ต่อบรรทัด ส่วนหัวเป็นความคิดเห็น « # » - นำเข้าได้ทันทีใน omega-fire (บล็อกรายการ IP) เครือข่ายจะปรากฏเป็นความคิดเห็นเท่านั้น เพราะ omega-fire อ่านเฉพาะที่อยู่"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1019
+msgid "Exporter écrit le fichier dans le dossier d'exports."
+msgstr "ส่งออก จะเขียนไฟล์ลงในโฟลเดอร์ส่งออก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1020
+msgid "Le chemin du fichier écrit est affiché."
+msgstr "แสดงพาธของไฟล์ที่เขียน"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1024
+msgid "Palette de couleurs de l'export HTML."
+msgstr "ชุดสีของการส่งออก HTML"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1025
+msgid "Seulement pour le format HTML."
+msgstr "สำหรับรูปแบบ HTML เท่านั้น"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1026
+msgid "Appliqué à l'export."
+msgstr "ใช้กับการส่งออก"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1027
+msgid "Même choix de thèmes que les autres exports."
+msgstr "ตัวเลือกธีมเดียวกับการส่งออกอื่น"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1030
+msgid "Aucune - consultation et export seulement."
+msgstr "ไม่มี - ดูและส่งออกเท่านั้น"
+
+#: src/omega_serv/interfaces/tui/guide/content/securite_active.py:1032
+msgid "Le fichier TXT n'est jamais traduit : c'est un format lu par d'autres outils."
+msgstr "ไฟล์ TXT จะไม่ถูกแปลเลย: เป็นรูปแบบที่เครื่องมืออื่นอ่าน"
 
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:12
 msgid "Accueil -> Configuration détaillée -> Voir options actives"
@@ -13550,7 +13869,7 @@ msgstr "ไม่มี options.active_defense ในการตั้งค่
 
 #: src/omega_serv/interfaces/tui/screens/_base.py:107
 #: src/omega_serv/interfaces/tui/screens/access_control_screen.py:71
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:146
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:179
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:43
@@ -13559,6 +13878,7 @@ msgstr "ไม่มี options.active_defense ในการตั้งค่
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:71
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:68
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:73
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/cache_screen.py:77
@@ -13591,6 +13911,8 @@ msgstr "ไม่มี options.active_defense ในการตั้งค่
 #: src/omega_serv/interfaces/tui/screens/log_view_screen.py:64
 #: src/omega_serv/interfaces/tui/screens/log_viewer_screen.py:54
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:61
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:46
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/profiles_screen.py:41
@@ -13653,6 +13975,22 @@ msgstr "กำลังส่งออกเป็นภาษา « {name} »�
 #: src/omega_serv/interfaces/tui/screens/_export_worker.py:35
 msgid "Export HTML indisponible dans cet environnement."
 msgstr "การส่งออก HTML ไม่พร้อมใช้งานในสภาพแวดล้อมนี้"
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:23
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
+#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
+#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
+#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
+#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
+#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
+msgid "Erreur de configuration."
+msgstr "การตั้งค่าผิดพลาด"
+
+#: src/omega_serv/interfaces/tui/screens/_intervention_access.py:26
+msgid "Blocklist indisponible dans cet environnement."
+msgstr "blocklist ไม่พร้อมใช้งานในสภาพแวดล้อมนี้"
 
 #: src/omega_serv/interfaces/tui/screens/_riposte_access.py:91
 msgid "RIPOSTE indisponible dans cet environnement."
@@ -13750,6 +14088,7 @@ msgstr "6 ชม."
 
 #: src/omega_serv/interfaces/tui/screens/_waf_list_choices.py:35
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:23
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:41
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:203
 msgid "7 jours"
@@ -13840,10 +14179,12 @@ msgstr "การตั้งค่าผิดพลาด - บันทึก
 msgid "Règles de contrôle d'accès mises à jour."
 msgstr "อัปเดตกฎการควบคุมการเข้าถึงแล้ว"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:73
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:82
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:91
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:49
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:52
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:549
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:85
@@ -13852,82 +14193,99 @@ msgstr "อัปเดตกฎการควบคุมการเข้า
 msgid "État"
 msgstr "สถานะ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:74
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:99
 msgid "Réglages"
 msgstr "การตั้งค่า"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:75
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
 msgid "Menaces"
 msgstr "ภัยคุกคาม"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:76
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:79
 msgid "Incidents"
 msgstr "เหตุการณ์"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:77
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:80
 msgid "Deception"
 msgstr "Deception"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:81
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:98
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:57
 #: src/omega_serv/interfaces/tui/screens/riposte_simulate_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:40
 msgid "Simuler"
 msgstr "จำลอง"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:83
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
 msgid "Modules"
 msgstr "โมดูล"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:84
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
 msgid "Limitations"
 msgstr "ข้อจำกัด"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:85
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:88
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:154
 #: src/omega_serv/interfaces/tui/screens/text_file_editor_screen.py:156
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:39
 msgid "Tester"
 msgstr "ทดสอบ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:86
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:89
 msgid "Custom"
 msgstr "Custom"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:87
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:90
 msgid "Magnet"
 msgstr "Magnet"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:95
 msgid "Politiques"
 msgstr "นโยบาย"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:93
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:96
 #: src/omega_serv/interfaces/tui/screens/riposte_recidives_screen.py:72
 msgid "Actions"
 msgstr "การดำเนินการ"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:94
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:97
 msgid "Récidives"
 msgstr "การกระทำซ้ำ"
 
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:107
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:75
+msgid "Bannir"
+msgstr "แบน"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:108
+msgid "Débannir"
+msgstr "ยกเลิกแบน"
+
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:109
+msgid "Statut des bans"
+msgstr "สถานะการแบน"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:122
 msgid "ACTIVE SÉCURITÉ"
 msgstr "ความปลอดภัยเชิงรุก"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "') avant d'utiliser les sous-écrans ci-dessous, sinon ils resteront en erreur d'accès."
 msgstr "') ก่อนใช้หน้าจอย่อยด้านล่าง มิฉะนั้นจะยังเกิดข้อผิดพลาดในการเข้าถึง"
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:113
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:126
 msgid "Le service système dédié ({DEFAULT_SYSTEM_GROUP!r}) est installé, mais cette session n'a pas encore pris en compte votre appartenance à ce groupe - deconnectez-vous/reconnectez-vous (ou 'newgrp "
 msgstr "ติดตั้งบริการระบบเฉพาะ ({DEFAULT_SYSTEM_GROUP!r}) แล้ว แต่เซสชันนี้ยังไม่รับรู้การเป็นสมาชิกกลุ่มนี้ของคุณ - ออกจากระบบ/เข้าสู่ระบบใหม่ (หรือ 'newgrp "
 
-#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:120
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:133
 msgid "ACTIVE DEFENSE"
 msgstr "ACTIVE DEFENSE"
+
+#: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:144
+msgid "INTERVENTION MANUELLE"
+msgstr "การแทรกแซงด้วยตนเอง"
 
 #: src/omega_serv/interfaces/tui/screens/active_defense_settings_screen.py:72
 #: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:138
@@ -14513,17 +14871,6 @@ msgstr "Realm"
 msgid "Utilisateurs autorisés"
 msgstr "ผู้ใช้ที่อนุญาต"
 
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:102
-#: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:265
-#: src/omega_serv/interfaces/tui/screens/fastcgi_screen.py:78
-#: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:57
-#: src/omega_serv/interfaces/tui/screens/waf_magnet_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:128
-#: src/omega_serv/interfaces/tui/screens/waf_rate_limit_screen.py:158
-#: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:64
-msgid "Erreur de configuration."
-msgstr "การตั้งค่าผิดพลาด"
-
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:135
 msgid "AJOUTER UN UTILISATEUR"
 msgstr "เพิ่มผู้ใช้"
@@ -14728,6 +15075,86 @@ msgstr "ไม่พบข้อมูลสำรอง: {selected_snapshot_id}
 #, python-brace-format
 msgid "Sauvegarde supprimée : {selected_snapshot_id}"
 msgstr "ลบข้อมูลสำรองแล้ว: {selected_snapshot_id}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:49
+msgid "JSON - tous les bans"
+msgstr "JSON - การแบนทั้งหมด"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:50
+msgid "HTML - tous les bans (thème ci-dessous)"
+msgstr "HTML - การแบนทั้งหมด (ธีมด้านล่าง)"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:51
+msgid "TXT injection - bans actifs"
+msgstr "TXT นำเข้า - การแบนที่มีผล"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:52
+msgid "TXT injection - toute la liste"
+msgstr "TXT นำเข้า - ทั้งรายการ"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:69
+msgid "STATUT DES BANS"
+msgstr "สถานะการแบน"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:71
+msgid "Tous les bans de la blocklist du WAF, avec leur origine. Lecture seule : chaque ban se lève là où il a été posé (Débannir pour l'intervention manuelle, WAF → Modules, RIPOSTE → Actions)."
+msgstr "การแบนทั้งหมดใน blocklist ของ WAF พร้อมที่มา อ่านอย่างเดียว: การแบนแต่ละรายการยกเลิกในที่ที่ตั้งไว้ (ยกเลิกแบน สำหรับการแทรกแซงด้วยตนเอง, WAF → โมดูล, RIPOSTE → การดำเนินการ)"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:81
+msgid "TXT injection : une adresse par ligne, lignes « # » ignorées - importable tel quel dans omega-fire (Bannir une liste d'IPs). Un réseau n'y figure qu'en commentaire."
+msgstr "TXT นำเข้า: หนึ่งที่อยู่ต่อบรรทัด ข้ามบรรทัด « # » - นำเข้าได้ทันทีใน omega-fire (บล็อกรายการ IP) เครือข่ายจะปรากฏเป็นความคิดเห็นเท่านั้น"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
+#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
+msgid "Exporter"
+msgstr "ส่งออก"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Adresse / réseau"
+msgstr "ที่อยู่ / เครือข่าย"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
+#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
+msgid "Expiration"
+msgstr "หมดอายุ"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+msgid "Origine"
+msgstr "ที่มา"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:102
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:67
+msgid "Posé le"
+msgstr "ตั้งเมื่อ"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:128
+msgid "Aucun ban dans la blocklist."
+msgstr "ไม่มีการแบนใน blocklist"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:131
+#, python-brace-format
+msgid "{label} : {count}"
+msgstr "{label}: {count}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:132
+#, python-brace-format
+msgid "{active} ban(s) actif(s) sur {total}"
+msgstr "การแบนที่มีผล {active} จาก {total}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:172
+#, python-brace-format
+msgid "Export impossible : {error}"
+msgstr "ส่งออกไม่ได้: {error}"
+
+#: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:174
+#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
+#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
+#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
+#, python-brace-format
+msgid "Export écrit : {export_path}"
+msgstr "เขียนไฟล์ส่งออกแล้ว: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/base_config_screen.py:54
 msgid "CONFIGURATION DE BASE"
@@ -15032,13 +15459,6 @@ msgstr "ส่งออก HTML"
 #: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:84
 msgid "Analyse en cours..."
 msgstr "กำลังวิเคราะห์..."
-
-#: src/omega_serv/interfaces/tui/screens/capabilities_screen.py:144
-#: src/omega_serv/interfaces/tui/screens/export_log_archives_screen.py:115
-#: src/omega_serv/interfaces/tui/screens/guide_menu_screen.py:117
-#, python-brace-format
-msgid "Export écrit : {export_path}"
-msgstr "เขียนไฟล์ส่งออกแล้ว: {export_path}"
 
 #: src/omega_serv/interfaces/tui/screens/capability_detail_screen.py:22
 msgid "Cette capacité est pleinement opérationnelle et disponible."
@@ -16693,12 +17113,14 @@ msgid "(aucun)"
 msgstr "(ไม่มี)"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:22
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 #: src/omega_serv/interfaces/tui/screens/riposte_actions_screen.py:202
 msgid "24 heures"
 msgstr "24 ชั่วโมง"
 
 #: src/omega_serv/interfaces/tui/screens/log_stats_screen.py:24
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:42
 #: src/omega_serv/interfaces/tui/screens/process_ip_screen.py:40
 msgid "30 jours"
 msgstr "30 วัน"
@@ -16814,10 +17236,6 @@ msgstr "หมุนเวียน / เก็บถาวร"
 msgid "Purger les archives"
 msgstr "ล้างไฟล์เก็บถาวร"
 
-#: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:52
-msgid "Exporter"
-msgstr "ส่งออก"
-
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:65
 msgid "GESTION DES LOGS"
 msgstr "จัดการล็อก"
@@ -16825,6 +17243,73 @@ msgstr "จัดการล็อก"
 #: src/omega_serv/interfaces/tui/screens/logs_menu_screen.py:76
 msgid "MAINTENANCE"
 msgstr "การบำรุงรักษา"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:38
+msgid "1 heure"
+msgstr "1 ชั่วโมง"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:39
+msgid "6 heures"
+msgstr "6 ชั่วโมง"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:43
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:71
+msgid "Durée libre (heures)"
+msgstr "ระยะเวลาอิสระ (ชั่วโมง)"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:44
+msgid "Permanent"
+msgstr "ถาวร"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:56
+msgid "BANNIR UNE ADRESSE IP"
+msgstr "แบนที่อยู่ IP"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:58
+msgid "Ban sans condition : l'adresse reçoit la page 451 sur tout le site, avant les backends. Aucun lien avec Active Defense ni RIPOSTE (jamais compté dans la récidive) ; il se lève dans Débannir."
+msgstr "แบนโดยไม่มีเงื่อนไข: ที่อยู่ได้รับหน้า 451 ทั่วทั้งเว็บไซต์ ก่อนถึงแบ็กเอนด์ ไม่เกี่ยวข้องกับ Active Defense หรือ RIPOSTE (ไม่นับเป็นการกระทำซ้ำ); ยกเลิกได้ใน ยกเลิกแบน"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:66
+msgid "ex. 203.0.113.7 ou 2001:db8::7"
+msgstr "เช่น 203.0.113.7 หรือ 2001:db8::7"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:72
+msgid "ex. 48"
+msgstr "เช่น 48"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:87
+msgid "WAF désactivé : la blocklist n'est pas consultée, un ban posé ici n'aurait aucun effet. Activez l'option waf (menu Options)."
+msgstr "WAF ปิดอยู่: ไม่มีการตรวจ blocklist การแบนที่ตั้งที่นี่จะไม่มีผล เปิดตัวเลือก waf (เมนู ตัวเลือก)"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:116
+msgid "Durée libre invalide : un nombre d'heures entier, supérieur à 0."
+msgstr "ระยะเวลาอิสระไม่ถูกต้อง: จำนวนชั่วโมงเต็มที่มากกว่า 0"
+
+#: src/omega_serv/interfaces/tui/screens/manual_ban_screen.py:134
+#, python-brace-format
+msgid "Confirmer le ban de {ip}"
+msgstr "ยืนยันการแบน {ip}"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:46
+msgid "DÉBANNIR UNE ADRESSE IP"
+msgstr "ยกเลิกแบนที่อยู่ IP"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:48
+msgid "Seuls les bans posés par l'intervention manuelle apparaissent ici. Les autres se lèvent là où ils ont été posés : WAF → Modules (réseaux, auto-bans, omega-jail), RIPOSTE → Actions."
+msgstr "แสดงเฉพาะการแบนที่ตั้งโดยการแทรกแซงด้วยตนเอง การแบนอื่นยกเลิกในที่ที่ตั้งไว้: WAF → โมดูล (เครือข่าย แบนอัตโนมัติ omega-jail), RIPOSTE → การดำเนินการ"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:92
+msgid "Aucun ban posé par l'intervention manuelle."
+msgstr "ไม่มีการแบนที่ตั้งโดยการแทรกแซงด้วยตนเอง"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:113
+msgid "Lever le ban"
+msgstr "ยกเลิกการแบน"
+
+#: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:114
+#, python-brace-format
+msgid "Lever le ban de {ip} ? Elle pourra de nouveau accéder au site."
+msgstr "ยกเลิกการแบน {ip} หรือไม่? ที่อยู่นี้จะเข้าถึงเว็บไซต์ได้อีกครั้ง"
 
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:37
 msgid "OPTIONS"
@@ -18784,8 +19269,6 @@ msgid "En-tête"
 msgstr "เฮดเดอร์"
 
 #: src/omega_serv/interfaces/tui/screens/routing_rule_editor_screen.py:64
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:194
 msgid "Motif"
 msgstr "รูปแบบ"
 
@@ -19224,11 +19707,6 @@ msgstr "การเปลี่ยนแปลงที่ยังไม่บ
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:33
 msgid "MENACES SUIVIES"
 msgstr "ภัยคุกคามที่ติดตาม"
-
-#: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
-#: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:105
-msgid "Expiration"
-msgstr "หมดอายุ"
 
 #: src/omega_serv/interfaces/tui/screens/threats_screen.py:44
 msgid "Mise à jour"
@@ -20376,15 +20854,21 @@ msgstr "ใช่"
 msgid "non"
 msgstr "ไม่"
 
-#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
 #, python-brace-format
-msgid "Généré le {date} · {count} capacité(s)"
-msgstr "สร้างเมื่อ {date} · {count} ความสามารถ"
+msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
+msgstr "สร้างเมื่อ {date} · การแบน {count} รายการ มีผลอยู่ {active} รายการ"
 
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
 msgstr "รายงานสร้างโดย"
+
+#: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:75
+#, python-brace-format
+msgid "Généré le {date} · {count} capacité(s)"
+msgstr "สร้างเมื่อ {date} · {count} ความสามารถ"
 
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:6
 #: src/omega_serv/infrastructure/exporters/templates/guide_report.html.j2:60

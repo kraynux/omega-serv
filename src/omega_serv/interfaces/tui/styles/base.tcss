@@ -445,6 +445,21 @@ Screen {
     width: 20;
 }
 
+/* INTERVENTION MANUELLE (decision utilisateur 2026-11-06) : une ligne sous les trois colonnes, exactement de leur
+   largeur (3 x 24 + 2 x 2 de marge = 76), titre centre sur la bordure ; trois boutons de 20 centres. */
+.omega-home-menu.omega-intervention-menu {
+    width: 76;
+    height: 5;
+    padding: 0 1;
+    margin-top: 1;
+    align: center middle;
+}
+
+.omega-intervention-menu .omega-btn-frame {
+    width: 20;
+    margin: 0 1;
+}
+
 /* Tableaux des ecrans RIPOSTE : hauteur auto bornee (jamais 1fr dans une zone qui defile - le tableau
    tomberait a la seule ligne d'en-tete). */
 .omega-riposte-table {

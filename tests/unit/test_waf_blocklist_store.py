@@ -285,5 +285,47 @@ class TestBlocklistStoreWritesBetweenProcesses(unittest.TestCase):
         self.assertIn("occupe", stderr.getvalue())
 
 
+class TestBlocklistModeIgnoresUmask(unittest.TestCase):
+    """Incident craftdark 2026-11-06 : `blocklist add` lance par le pont omega-jail sous umask 077 recreait le
+    fichier en 600 - le service (autre compte, meme groupe) ne pouvait plus le lire : ni 451, ni auto-ban."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.path = Path(self._tmp.name) / "blocklist.json"
+        self.now = datetime(2026, 11, 6, tzinfo=timezone.utc)
+        self.store = JsonBlocklistStore(LocalFilesystem(), self.path, _FakeClock(self.now))
+        self._umask = os.umask(0o077)
+
+    def tearDown(self):
+        os.umask(self._umask)
+        self._tmp.cleanup()
+
+    def _add(self, ip: str) -> None:
+        self.store.add_entry(BlocklistEntry(network=f"{ip}/32", reason="test", created_at=self.now.isoformat()))
+
+    def _mode(self) -> int:
+        return os.stat(self.path).st_mode & 0o777
+
+    def test_new_file_is_group_readable_under_umask_077(self):
+        self._add("203.0.113.7")
+        self.assertEqual(self._mode(), 0o660)
+
+    def test_rewrite_repairs_a_file_left_in_600(self):
+        self._add("203.0.113.7")
+        os.chmod(self.path, 0o600)
+        self._add("203.0.113.8")
+        self.assertEqual(self._mode(), 0o660)
+
+    def test_rewrite_keeps_wider_existing_mode(self):
+        self._add("203.0.113.7")
+        os.chmod(self.path, 0o664)
+        self._add("203.0.113.8")
+        self.assertEqual(self._mode(), 0o664)
+
+    def test_no_temporary_file_left(self):
+        self._add("203.0.113.7")
+        self.assertEqual(sorted(p.name for p in self.path.parent.iterdir() if p.suffix == ".tmp"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -102,7 +102,7 @@ class WafModulesScreen(OmegaScreen):
     def on_mount(self) -> None:
         table = self.query_one("#blocklist-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns(_("Réseau"), _("Motif"), _("Expiration"), _("Source"))
+        table.add_columns(_("Réseau"), _("Motif du ban"), _("Expiration"), _("Source"))
         rule_paths_table = self.query_one("#rule-paths-table", DataTable)
         rule_paths_table.cursor_type = "row"
         rule_paths_table.add_columns(_("Chemin du pack"))
@@ -191,7 +191,7 @@ class WafModulesScreen(OmegaScreen):
                     title=_("AJOUTER UNE ENTRÉE"),
                     fields=[
                         ("network", _("Réseau (ex: 203.0.113.25/32)"), ""),
-                        ("reason", _("Motif"), ""),
+                        ("reason", _("Motif du ban"), ""),
                         ("duration_seconds", _("Durée en secondes (vide = permanent)"), ""),
                         ("confirm_permanent", _("Confirmer un bannissement permanent (oui/non)"), to_text(False)),
                     ],

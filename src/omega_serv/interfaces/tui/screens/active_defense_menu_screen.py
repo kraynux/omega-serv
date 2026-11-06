@@ -50,8 +50,11 @@ from omega_serv.interfaces.tui.screens.active_defense_simulate_screen import (
     ActiveDefenseSimulateScreen,
 )
 from omega_serv.interfaces.tui.screens.active_defense_status_screen import ActiveDefenseStatusScreen
+from omega_serv.interfaces.tui.screens.ban_status_screen import BanStatusScreen
 from omega_serv.interfaces.tui.screens.deception_screen import DeceptionScreen
 from omega_serv.interfaces.tui.screens.incidents_screen import IncidentsScreen
+from omega_serv.interfaces.tui.screens.manual_ban_screen import ManualBanScreen
+from omega_serv.interfaces.tui.screens.manual_unban_screen import ManualUnbanScreen
 from omega_serv.interfaces.tui.screens.riposte_actions_screen import RiposteActionsScreen
 from omega_serv.interfaces.tui.screens.riposte_policies_screen import RipostePoliciesScreen
 from omega_serv.interfaces.tui.screens.riposte_recidives_screen import RiposteRecidivesScreen
@@ -97,6 +100,16 @@ _RIPOSTE_ITEMS: tuple[tuple[str, str], ...] = (
 )
 
 
+# INTERVENTION MANUELLE (decisions utilisateur 2026-11-06) : 4e cadre, une ligne sous les trois colonnes et de leur
+# largeur, au-dessus de Retour. Ban sans condition d'une adresse IP dans la blocklist du WAF, sans lien avec Active
+# Defense ni RIPOSTE.
+_INTERVENTION_ITEMS: tuple[tuple[str, str], ...] = (
+    ("intervention-ban", _("Bannir")),
+    ("intervention-unban", _("Débannir")),
+    ("intervention-status", _("Statut des bans")),
+)
+
+
 class ActiveDefenseMenuScreen(OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
@@ -124,6 +137,11 @@ class ActiveDefenseMenuScreen(OmegaScreen):
                             with Container(classes="omega-btn-frame"):
                                 yield Button(label, id=item_id)
                         menu.border_title = title
+            with Center(), Horizontal(classes="omega-home-menu omega-intervention-menu") as intervention:
+                for item_id, label in _INTERVENTION_ITEMS:
+                    with Container(classes="omega-btn-frame"):
+                        yield Button(label, id=item_id)
+                intervention.border_title = _("INTERVENTION MANUELLE")
             with Center(), Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Retour"), id="back")
         yield Footer()
@@ -149,6 +167,12 @@ class ActiveDefenseMenuScreen(OmegaScreen):
             return DeceptionScreen(container=self._container)
         if item_id == "simulate":
             return ActiveDefenseSimulateScreen(container=self._container)
+        intervention_screens: dict[str, type[OmegaScreen]] = {
+            "intervention-ban": ManualBanScreen, "intervention-unban": ManualUnbanScreen,
+            "intervention-status": BanStatusScreen,
+        }
+        if item_id in intervention_screens:
+            return intervention_screens[item_id](container=self._container)  # type: ignore[call-arg]
         if item_id == "waf-status":
             return WafStatusScreen(container=self._container)
         if item_id == "waf-modules":

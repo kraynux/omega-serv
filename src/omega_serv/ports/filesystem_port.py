@@ -70,11 +70,15 @@ class FilesystemPort(Protocol):
     def write_text(self, path: Path, content: str) -> None:
         ...
 
-    def atomic_write_text(self, path: Path, content: str) -> None:
+    def atomic_write_text(self, path: Path, content: str, min_mode: int | None = None) -> None:
         """Ecriture atomique (spec §5.3) : fichier temporaire, fsync,
         remplacement atomique (os.replace) - jamais un write_text()
         direct sur une configuration active, pour ne jamais laisser un
-        fichier a moitie ecrit en cas d'interruption."""
+        fichier a moitie ecrit en cas d'interruption.
+
+        `min_mode` (fichier partage avec le service, ex. 0o660) : droits
+        garantis quel que soit l'umask de l'appelant, groupe du fichier
+        remplace garde si possible."""
         ...
 
     def copy_file(self, source: Path, destination: Path) -> None:

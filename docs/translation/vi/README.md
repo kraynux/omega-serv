@@ -30,6 +30,13 @@ Xem trước: [Ảnh chụp màn hình](https://kraynux.snake-mackarel.ts.net/om
 
 **OMEGA-SERV** là một máy chủ HTTP/1.1 viết bằng Python thuần (chỉ dùng thư viện chuẩn cho lõi máy chủ), được thiết kế để phục vụ nội dung tĩnh và, tùy chọn, PHP-FPM, với cơ chế gia cố giao thức bật sẵn theo mặc định và các mô-đun bảo mật (WAF, TLS, xác thực) có thể xếp chồng thay vì bị áp đặt. Một bộ máy native C++ tùy chọn có thể phục vụ các yêu cầu thay cho bộ máy Python, với cùng các kiểm tra bảo mật (xem §6b). Là công cụ thứ bảy của bộ `omega-` nhưng cố ý **nằm ngoài đợt tích hợp `omega-suite` sắp tới** (nó tác động lên chính máy cục bộ đang chạy nó, không phải lên mục tiêu từ xa — cùng họ với `omega-fire`); được tổ chức theo Clean Architecture, với `bootstrap/` đóng vai trò gốc lắp ghép (composition root).
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/D.png" width="24%" />
+</p>
+
 ## 1. Tầm nhìn và phạm vi
 
 Ưu tiên được nêu rõ là **sự vững chắc/an toàn của lõi HTTP trước hết** — WAF và TLS là các mô-đun tùy chọn đặt lên trên, không bao giờ là điều kiện tiên quyết. Một máy chủ chỉ làm một việc (phục vụ tệp, có thể cả PHP) nhưng làm đúng, với cơ chế gia cố giao thức thực sự không thể vượt qua, thay vì một máy chủ làm nhiều việc nửa vời.
@@ -211,7 +218,7 @@ Hướng dẫn trợ giúp (phím `a`) có màn hình **Liên hệ và hỗ tr�
 - **Sổ đăng ký khả năng** — thăm dò hệ thống ở chế độ chỉ đọc (hệ thống init, cổng cấu hình đã bị chiếm hay chưa, có `openssl`/`logrotate`/`tailscale`/`lnav` hay không, dung lượng đĩa, giới hạn file descriptor...), xuất JSON/HTML.
 - **Hồ sơ** — cùng trường hợp sử dụng với `profile` trong CLI (§5), luôn hiển thị diff trước khi ghi.
 - **Cấu hình chi tiết của máy chủ** — CRUD đầy đủ cho alias/chuyển hướng/rewrite/dirlisting/proxy tin cậy/reverse proxy đi ra/FastCGI/cache/xác thực/kiểm soát truy cập/trang lỗi, cùng menu con **TLS** (trạng thái, tạo chứng chỉ tự ký, trình hướng dẫn CA cục bộ, trình hướng dẫn Let's Encrypt/Certbot, gia hạn tự động, thu hồi, bật/tắt — xem §9); khung thứ hai **TÙY CHỌN VÀ KIỂM TRA** gom các lối tắt tới **Tùy chọn** (`option` trong CLI, §7) và **Kiểm tra cấu hình** (`config check` trong CLI, §10) — cùng lộ trình chỉnh thiết lập rồi kiểm tra, hai màn hình này không còn truy cập trực tiếp từ menu chính. WAF không còn nằm ở đây (xem "Bảo mật chủ động" bên dưới): nó chủ yếu hiển thị trạng thái vận hành thay đổi liên tục, không phải một biểu mẫu cấu hình tĩnh đơn giản. Mỗi lần lưu luôn chỉ rõ bước tiếp theo: nạp lại nóng tự động và lặng lẽ nếu dịch vụ đang chạy (dirlisting, truy cập, alias/chuyển hướng/rewrite, cache, trang lỗi, proxy tin cậy, vùng reverse proxy/FastCGI, người dùng/vùng xác thực), hoặc xác nhận tường minh việc khởi động lại hoàn toàn khi thay đổi liên quan đến socket lắng nghe, TLS hoặc Active Defense — không màn hình nào còn để bạn phải đoán có cần khởi động lại máy chủ hay không.
-- **Bảo mật chủ động** — một màn hình duy nhất gom hai khối đặt cạnh nhau: **Active Defense** (Trạng thái, Mối đe dọa được theo dõi với điểm/mức, Sự cố với dòng thời gian/xuất IoC/báo cáo, phân bổ Deception, Mô phỏng một quyết định ở chế độ dry-run, **Thiết lập** — cấu hình đầy đủ mà không bao giờ phải sửa tay `config/omega-serve.json`, xem §11) và **WAF** (Trạng thái, Mô-đun — chế độ/gói quy tắc/danh sách chặn, Thử một yêu cầu, Custom — tạo quy tắc tùy chỉnh và nạp các danh sách đường dẫn/từ khóa có thể sửa bằng chuột (xem §11b), Magnet — nhập một script `mod_magnet` bên ngoài có kiểm tra tương thích trước khi kích hoạt) — xem §11. **RIPOSTE**: khối thứ ba (WAF → Active Defense → RIPOSTE, theo thứ tự của một cuộc tấn công) — phản ứng theo bậc qua thời gian, xem §11d.
+- **Bảo mật chủ động** — một màn hình duy nhất gom hai khối đặt cạnh nhau: **Active Defense** (Trạng thái, Mối đe dọa được theo dõi với điểm/mức, Sự cố với dòng thời gian/xuất IoC/báo cáo, phân bổ Deception, Mô phỏng một quyết định ở chế độ dry-run, **Thiết lập** — cấu hình đầy đủ mà không bao giờ phải sửa tay `config/omega-serve.json`, xem §11) và **WAF** (Trạng thái, Mô-đun — chế độ/gói quy tắc/danh sách chặn, Thử một yêu cầu, Custom — tạo quy tắc tùy chỉnh và nạp các danh sách đường dẫn/từ khóa có thể sửa bằng chuột (xem §11b), Magnet — nhập một script `mod_magnet` bên ngoài có kiểm tra tương thích trước khi kích hoạt) — xem §11. **RIPOSTE**: khối thứ ba (WAF → Active Defense → RIPOSTE, theo thứ tự của một cuộc tấn công) — phản ứng theo bậc qua thời gian, xem §11d. Bên dưới ba khối, **CAN THIỆP THỦ CÔNG**: cấm hoặc gỡ cấm một địa chỉ IP bằng tay, trạng thái của mọi lệnh cấm — xem §11e.
 - **Quản lý log** — menu hai cột. Cột **Thư viện**: trung tâm tham chiếu mọi log cần xử lý (thêm thủ công, một cú nhấp thêm ngay các log riêng của instance — access/error/WAF gốc, + script magnet §7 nếu đang bật —, hoặc một **nguồn từ xa** được tải về qua SSH, xem bên dưới); **Yêu thích** (tổ hợp log + trình xem được lưu dưới một tên, mở trực tiếp); **Xem log** với 3 trình xem tùy chọn theo số log được chọn — Đơn giản (tail trực tiếp + thống kê chung IP/lỗi/mã HTTP trên mọi định dạng), Cổ điển (đọc + theo dõi), `lnav` hợp nhất (hiển thị terminal thực trong giao diện, log magnet được đưa vào sẵn + các đường dẫn thủ công **được ghim** để giữ lại giữa các phiên); **Xem và xử lý IP** (top IP trên một hoặc nhiều log tùy chọn, khoảng thời gian 24h/7 ngày/30 ngày/tất cả, gỡ một IP). Cột **Bảo trì** (không đổi): xoay vòng/lưu trữ thủ công hoặc tự động theo ngưỡng kích thước, tạo bản sao lưu ngay, cấu hình/quản lý các tác vụ tự động lên lịch (dạng khai báo — xem ghi chú bên dưới), khôi phục/dọn dẹp một bản lưu trữ, xuất danh sách.
 - **Dịch vụ** — cùng các hành động với `service` trong CLI (§12), nâng quyền `sudo` từng lần cho mỗi hành động, không bao giờ chạy toàn bộ ứng dụng bằng root.
 - **Đa instance** — sổ đăng ký toàn cục (`~/.config/omega-serv/instances.json`, nằm ngoài mọi thư mục dự án) các bản cài đặt đã biết trên máy, kèm trạng thái systemd của từng bản; tạo instance mới (sao chép cây thư mục, môi trường ảo và phụ thuộc riêng, cấu hình mới với cổng khác, kiểm tra không lồng nhau và không xung đột cổng) ngay từ giao diện. Nút về cơ bản không hiển thị khi chỉ có một bản cài đặt (nhãn "Đa instance" trở thành "Instances (N)" khi biết từ 2 bản trở lên); chuyển hẳn sang một instance khác (`os.execv`, xác nhận tường minh, splash riêng thông báo việc chuyển khi khởi động lại); gỡ cài đặt hoàn toàn một instance (gỡ unit, gỡ tài khoản hệ thống riêng nếu không còn instance nào khác dùng, và tùy chọn xóa thư mục, không bao giờ mặc định).
@@ -310,6 +317,19 @@ Chỉ là tùy chọn giao diện — không bao giờ nhầm với `config/omeg
 ./omega-serv.sh service start
 ./omega-serv.sh service status
 ```
+
+### Trợ giúp đầy đủ các lệnh
+
+Các lệnh ở trên chỉ là ví dụ. Để xem mọi lệnh và tùy chọn:
+
+```bash
+./omega-serv.sh help                    # cây lệnh đầy đủ
+./omega-serv.sh help riposte            # một nhánh
+./omega-serv.sh riposte actions --help  # chi tiết một lệnh
+man omega-serv                          # trang hướng dẫn (do install.sh cài)
+```
+
+Tài liệu tham khảo đầy đủ: [docs/HELP.md](../../HELP.md).
 
 ### Mã thoát đáng chú ý
 
@@ -512,6 +532,15 @@ Mô-đun tùy chọn (`option enable riposte`, tắt theo mặc định, cần k
 - **Cơ chế bảo vệ**: cùng các ngoại lệ như WAF (máy cục bộ, Tailscale, mạng nội bộ), không bao giờ đè lên một lệnh cấm thủ công hoặc dài hơn, một hành động mỗi đợt, giới hạn số lệnh cấm đồng thời.
 - **Cấm cục bộ và cấm mạng**: lệnh cấm cục bộ do omega-serv đặt trong danh sách chặn của WAF — địa chỉ nhận trang 451 “IP của bạn đã bị cấm” cho mọi yêu cầu, trong suốt thời gian cấm. Lệnh cấm mạng được giao cho fail2ban qua các jail của omega-jail (`<service>-riposte-1h/6h/24h/7d`, mỗi phiên bản một bộ); nó không có tác dụng khi kết nối đi qua một proxy cục bộ (Tailscale Funnel), lúc đó chỉ lệnh cấm cục bộ bảo vệ.
 - **Giao diện**: sáu màn hình trong Bảo mật chủ động (Trạng thái, Chính sách, Hành động, Tái phạm, Mô phỏng, Cài đặt) và cùng các lệnh trên dòng lệnh (`riposte …`). Sao lưu: `config backup --include-riposte`.
+
+## 11e. Can thiệp thủ công (Bảo mật chủ động)
+
+Một khung **CAN THIỆP THỦ CÔNG**, bên dưới ba khối của Bảo mật chủ động, để thao tác bằng tay mà không cần viết quy tắc cấu hình: cấm một địa chỉ IP không điều kiện, gỡ cấm, xem mọi lệnh cấm hiện có.
+
+- **Cấm**: một địa chỉ IPv4 hoặc IPv6, một lý do, một thời hạn (1 giờ đến 30 ngày, tự chọn hoặc vĩnh viễn). Lệnh cấm đi qua danh sách chặn của WAF: trang 451 trên toàn trang, trước khi định tuyến — các backend không bao giờ thấy địa chỉ. Hiệu lực ngay với cả hai bộ máy, không cần quyền root. Một mạng được cấm trong WAF → Mô-đun.
+- **Độc lập**: không liên quan đến Active Defense hay RIPOSTE — lệnh cấm thủ công không bao giờ tính là tái phạm, và không cơ chế tự động nào thay thế nó. Cần xác nhận với địa chỉ cục bộ, riêng hoặc Tailscale.
+- **Gỡ cấm**: chỉ các lệnh cấm đặt ở đây; các lệnh khác được gỡ ở nơi đã đặt (WAF → Mô-đun, RIPOSTE → Hành động).
+- **Trạng thái cấm**: mọi lệnh cấm kèm nguồn gốc (thủ công, tự động cấm WAF, RIPOSTE, omega-jail, Magnet), xuất được ra JSON, HTML hoặc TXT — mỗi dòng một địa chỉ, nhập nguyên trạng được vào omega-fire.
 
 ## 12. Dịch vụ và vận hành
 

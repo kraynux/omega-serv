@@ -131,6 +131,7 @@ class DependencyContainer:
         export_capabilities_html_fn: Callable[[Sequence[Capability], str], str] | None = None,
         export_log_archives_html_fn: Callable[[Sequence[dict], str], str] | None = None,
         export_guide_html_fn: Callable[[Sequence[dict], Sequence[dict], str], str] | None = None,
+        export_bans_html_fn: Callable[[Sequence[dict], int, str], str] | None = None,
         export_in_language_runner: Callable[[list[str], str], ProcessResult] | None = None,
         serve_foreground_runner: Callable[[Path, DependencyContainer], Awaitable[int]] | None = None,
         riposte_store_factory: Callable[[Path, bool], RiposteStorePort] | None = None,
@@ -170,6 +171,7 @@ class DependencyContainer:
         self._export_capabilities_html_fn = export_capabilities_html_fn
         self._export_log_archives_html_fn = export_log_archives_html_fn
         self._export_guide_html_fn = export_guide_html_fn
+        self._export_bans_html_fn = export_bans_html_fn
         self._export_in_language_runner = export_in_language_runner
         self._last_export_error: str | None = None
         self._serve_foreground_runner = serve_foreground_runner
@@ -540,6 +542,12 @@ class DependencyContainer:
         fn = self._export_guide_html_fn
         return self._render_html_export(
             "guide", theme_name, None if fn is None else (lambda: fn(screen_guides, faq_entries, theme_name)))
+
+    def export_bans_html(self, bans: Sequence[dict], active_count: int, theme_name: str) -> str | None:
+        """Statut des bans : dans une autre langue d'export, l'enfant relit lui-meme la blocklist (tous les bans)."""
+        fn = self._export_bans_html_fn
+        return self._render_html_export(
+            "bans", theme_name, None if fn is None else (lambda: fn(bans, active_count, theme_name)))
 
     @property
     def serve_foreground_runner(self) -> Callable[[Path, DependencyContainer], Awaitable[int]] | None:
