@@ -1,0 +1,102 @@
+OMEGA-SERV 2.5.0 - Ce qui change pour vous
+==========================================
+
+Une version riche : un tableau de bord complet, un nouveau module de sécurité, un
+second moteur HTTP au choix et de nombreuses corrections. Le détail technique complet
+reste dans le CHANGELOG.
+
+
+UN TABLEAU DE BORD QUI DIT TOUT D'UN COUP D'ŒIL
+-----------------------------------------------
+- État & Ressources relit les 15 dernières minutes du journal dès l'ouverture : plus de
+  cadre vide au départ.
+- Trafic : débits sur 1 et 5 minutes, top 5 des IP, des chemins demandés et des chemins
+  en 404 (souvent des scanners), les dernières requêtes.
+- Sécurité : attaques bloquées, refus 403 et 429, IP bannies.
+- Le serveur lui-même : CPU, mémoire, connexions, taille des journaux, espace libre,
+  instances en marche, date de la dernière sauvegarde.
+- Réseau : vos cartes ethernet et wifi (l'active en vert), un petit graphique TCP/UDP
+  et le volume envoyé par omega-serv depuis son démarrage.
+- Jauges colorées selon le niveau (vert, jaune, orange, rouge), dans les couleurs de
+  votre thème, et quelques icônes pour s'y retrouver plus vite.
+- Un bouton « access.log » ouvre directement le journal d'accès de l'instance.
+
+Les icônes demandent une police emoji (Noto Color Emoji, voir le README). Une Nerd Font
+ne suffit pas.
+
+
+LECTEUR DE LOGS PLUS PRATIQUE
+-----------------------------
+- Le viewer Simple reprend le tableau de bord : refus 403/429, top 5 des IP, des chemins
+  demandés et des chemins en 404. Les chemins se lisent depuis le début, le compte est
+  aligné à droite.
+- Titres et boutons centrés dans les viewers Simple et Classique.
+
+
+RIPOSTE : DES BANS QUI S'ALLONGENT POUR LES RÉCIDIVISTES (en développement)
+--------------------------------------------------------------------------
+- Nouveau module de Sécurité active, désactivé par défaut.
+- Il se souvient des adresses qui reviennent et répond par paliers : 1 h, 6 h, 24 h,
+  7 jours. Un ban manuel ou plus long n'est jamais écrasé.
+- Six écrans pour tout suivre et tout régler : état, politiques, actions en cours,
+  récidives, simulation, réglages. Arrêt d'urgence en un clic.
+- Avec omega-jail, le ban peut aussi être appliqué au pare-feu de la machine.
+
+
+UN SECOND MOTEUR HTTP AU CHOIX (en développement)
+-------------------------------------------------
+- Dans Configuration de base, vous choisissez qui traite les requêtes : le moteur
+  Python (par défaut) ou le moteur natif C++.
+- Les contrôles de sécurité, les journaux et la configuration restent les mêmes.
+- Si le moteur natif ne peut pas démarrer, le moteur Python prend le relais et la
+  raison est affichée.
+- Le moteur natif est fourni compilé dans l'archive ; install.sh le recompile sur place
+  si besoin, sans jamais bloquer l'installation.
+
+
+CONTACT ET SUPPORT
+------------------
+- Dans le Guide d'aide (touche a) : payer un café au développeur, contacter le support,
+  ou se déclarer utilisateur de façon anonyme.
+- La déclaration est volontaire et désactivée par défaut. Le message exact est affiché
+  avant l'envoi, et vous pouvez vous retirer à tout moment.
+
+
+SAUVEGARDES PLUS COMPLÈTES
+--------------------------
+- Nouvelle case « Tout sauvegarder » : RIPOSTE, pages d'erreur personnalisées,
+  préférences, bibliothèque des journaux, listes de mots-clés du WAF et scripts Magnet.
+- Après la création, ce qui n'a pas pu être archivé est indiqué.
+
+
+UN SERVEUR PLUS SÛR ET PLUS JUSTE
+---------------------------------
+- Une IP bannie reçoit désormais la page « Votre IP a été bannie » (451) partout.
+- Les requêtes mal formées sont refusées plus strictement, selon les normes HTTP.
+- Plus aucun ban perdu quand plusieurs processus écrivent la liste en même temps, et un
+  ban automatique n'écrase plus un ban plus fort.
+- Le WAF décide plus vite, avec exactement les mêmes décisions.
+
+
+CORRECTIONS
+-----------
+- Le débit réseau du tableau de bord affichait un total depuis le démarrage de la
+  machine : il affiche maintenant un vrai débit par seconde.
+- Les alias peuvent viser un dossier du système sous /var (ex. /var/www/html) : ils
+  étaient refusés à tort. Les dossiers internes d'omega-serv restent protégés.
+- Un lien symbolique cassé ou en boucle ne fait plus planter le listing d'un dossier.
+- Les adresses IPv6 abrégées (::1, 2a02:...::be86) sont reconnues dans les journaux.
+- Les formulaires d'Active Defense restent ouverts en cas d'erreur, plus besoin de tout
+  ressaisir.
+- Incidents ouverts et fermés séparés, et plus aucune ligne de journal perdue après
+  « Voir et traiter IP ».
+
+
+APRÈS LA MISE À JOUR
+--------------------
+1. Redémarrez le service une fois (un simple rechargement ne suffit pas pour une nouvelle
+   version). L'interface vous le rappelle si vous l'oubliez.
+2. Rien d'autre à faire : vos réglages, vos listes, vos bans, vos pages d'erreur et le
+   contenu de webroot/ sont conservés.
+
+Vérifier le fichier téléchargé : sha256sum -c --ignore-missing sha.txt

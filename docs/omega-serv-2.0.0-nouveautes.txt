@@ -1,0 +1,120 @@
+OMEGA-SERV 2.0.0 - Ce qui change pour vous
+==========================================
+
+L'essentiel en quelques lignes. Le détail technique complet reste dans le CHANGELOG.
+
+
+17 LANGUES
+----------
+- L'interface existe maintenant en 17 langues : français, anglais, espagnol, portugais
+  (Brésil), italien, allemand, néerlandais, polonais, russe, chinois, vietnamien, thaï,
+  indonésien, japonais, coréen, hindi et arabe.
+  Choix : touche « o » (Réglages), puis « Langue / Language ».
+- Les pages vues par vos visiteurs (pages d'erreur, liste de fichiers) ont leur propre
+  réglage de langue, indépendant du vôtre.
+- Les exports (rapports HTML, rapport d'incident) peuvent être produits dans une autre
+  langue que celle de l'interface.
+- Les journaux du serveur restent en français.
+- Hindi : Kitty, Ghostty et Konsole décalent les cadres et les colonnes (un avertissement
+  s'affiche au démarrage). Alacritty, Terminator, GNOME Terminal et Xfce Terminal l'affichent
+  correctement. Les autres langues ne sont pas concernées.
+
+
+UN VRAI REVERSE PROXY
+---------------------
+omega-serv peut désormais servir seul de reverse proxy complet, devant plusieurs serveurs
+web de votre réseau :
+- Répartition des visiteurs entre vos serveurs, au choix : chacun son tour, selon la
+  puissance de chaque serveur, vers le moins occupé, vers le plus rapide à répondre ou
+  selon leur charge réelle.
+- Un visiteur peut rester sur le même serveur pendant sa visite (affinité de session),
+  et certaines requêtes peuvent être dirigées vers un serveur précis.
+- Surveillance de la santé des serveurs : un serveur en panne est écarté automatiquement,
+  puis réintégré quand il répond de nouveau.
+- Cache des réponses pour soulager vos serveurs, protection contre la surcharge et contre
+  les boucles de proxy.
+- Pilotage à chaud (mettre un serveur en maintenance, consulter l'état) sans redémarrer.
+
+
+LES JOURNAUX ENTIÈREMENT REVUS
+------------------------------
+Le menu « Gestion des logs » reprend les conventions d'omega-log, l'outil de la suite
+dédié aux journaux :
+- Une Bibliothèque qui rassemble tous vos journaux (ceux d'omega-serv et les vôtres), avec
+  des favoris pour retrouver les plus utiles.
+- Trois façons de les lire, selon le besoin : une vue simple, une vue classique, et lnav
+  pour fusionner et analyser plusieurs journaux à la fois.
+- Sources distantes : récupérer le journal d'un autre serveur de votre réseau (par SSH),
+  sur simple clic, sans mot de passe enregistré.
+- Repérer une adresse dans les journaux et agir dessus, statistiques, rotation,
+  sauvegarde, restauration et export des archives.
+
+
+PROTÉGER LE SITE CONTRE LES ROBOTS
+----------------------------------
+- Deux listes prêtes à l'emploi de chemins visés par les robots (fichiers secrets,
+  sauvegardes, pages d'administration...). Elles ne sont jamais activées sans vous :
+  vous les chargez quand vous le décidez, depuis Active Sécurité > Custom.
+- Un mode « observation » permet de voir ce qu'une liste aurait bloqué avant de
+  l'activer pour de bon.
+- Un éditeur intégré, utilisable à la souris, pour modifier ces listes, avec vérification
+  en direct et test contre vos vrais journaux.
+- Active Defense exporte ses incidents aux formats STIX 2.1 et MISP, pour les partager avec
+  une plateforme de renseignement sur les menaces (fichiers créés sur votre serveur, jamais
+  envoyés).
+- Vos propres appareils (machine locale, réseau local, Tailscale) ne sont jamais bannis
+  automatiquement : seul le trafic venu d'Internet peut l'être.
+- Magnet : vous pouvez importer un script de protection déjà écrit pour Lighttpd
+  (mod_magnet), sans le réécrire. Il s'ajoute à la protection intégrée sans jamais
+  l'affaiblir, et l'écran vérifie sa compatibilité avant que vous ne l'activiez.
+  Écran Active Sécurité > Magnet.
+
+
+FINI LES BANS SUR UNE PAGE CHARGÉE D'IMAGES
+-------------------------------------------
+- Nouvel écran Active Sécurité > « Exclusions et débit » : vous pouvez donner une limite
+  plus large à un dossier précis (une galerie d'images, par exemple) ou à vos propres
+  appareils, sans relâcher la protection du reste du site.
+- Un visiteur qui recharge une page riche en images n'est plus pris pour un attaquant.
+- Une vraie page « 429 - trop de requêtes », dans la langue de vos visiteurs, et les
+  pages d'erreur gardent leur mise en forme même pour une adresse bloquée.
+
+
+UN SERVEUR PLUS RAPIDE ET PLUS ÉCONOME
+--------------------------------------
+- Les gros fichiers (vidéos, archives) sont envoyés morceau par morceau : le serveur ne les
+  charge plus entièrement en mémoire et reste réactif pour les autres visiteurs pendant un
+  téléchargement.
+- Un téléchargement interrompu peut reprendre où il s'était arrêté, et on peut avancer
+  dans une vidéo.
+- Au rechargement d'une page, le navigateur ne retélécharge que ce qui a changé ; images,
+  styles et polices sont gardés en cache un moment (réglable dans l'écran Cache).
+- Si vous déposez une version compressée d'un fichier texte (fichier.gz ou fichier.br à
+  côté de l'original), elle est envoyée aux navigateurs qui la comprennent.
+- Mode « boost » (écran Résistance et limites) : plusieurs processus serveur au lieu d'un
+  seul, pour mieux utiliser les cœurs du processeur. Désactivé par défaut. L'écran indique
+  ce que votre machine permet, et les protections (limites de débit, bannissements)
+  restent exactes quel que soit le nombre de processus.
+
+
+PLUS FIABLE AU QUOTIDIEN
+------------------------
+- L'arrêt du service laisse de nouveau les téléchargements en cours se terminer.
+- Les messages du service apparaissent tout de suite dans le journal système.
+- L'interface vous prévient si le service tourne encore avec l'ancienne version après une
+  mise à jour.
+- Plusieurs pannes corrigées : site inaccessible si la liste de bannissement devenait
+  illisible, bans enregistrés au mauvais endroit, bannissement trop large en IPv6,
+  listes effacées par erreur depuis certains écrans.
+
+
+APRÈS LA MISE À JOUR
+--------------------
+1. Redémarrez le service une fois (un simple rechargement ne suffit pas pour une nouvelle
+   version). L'interface vous le rappelle si vous l'oubliez.
+2. Si vous aviez des exclusions WAF écrites comme un début de nom (« /img » pour viser
+   « /images/ »), écrivez désormais le dossier complet (« /images ») : une exclusion
+   correspond maintenant à un dossier entier, jamais à un début de mot.
+3. Rien d'autre à faire : vos réglages, vos listes et vos bans sont conservés.
+
+Vérifier le fichier téléchargé : sha256sum -c --ignore-missing sha.txt

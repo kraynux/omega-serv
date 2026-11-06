@@ -1,0 +1,47 @@
+OMEGA-SERV 2.0.1 - Ce qui change pour vous
+==========================================
+
+Une version de correction, sans nouvel écran ni nouveau réglage. Le détail technique
+complet reste dans le CHANGELOG.
+
+
+VOS PAGES D'ERREUR GARDENT LEUR MISE EN FORME
+---------------------------------------------
+- Les pages d'erreur que vous placez dans le dossier des pages personnalisées
+  (webroot/.errors/ par défaut : 404.html, 429.html, 500.html...) s'affichaient sans
+  couleurs ni mise en page : la protection CSP du serveur bloquait leur style intégré.
+- Elles s'affichent désormais telles que vous les avez écrites, sans rien changer à vos
+  fichiers et sans relâcher la protection : seul le style exact de chaque page d'erreur
+  est autorisé, et les autres pages du site gardent leur protection habituelle.
+- Même correction pour la page d'erreur intégrée du serveur, utilisée pour les codes
+  qui n'ont pas de page dédiée.
+
+
+CHOISIR SES LOGS À LA SOURIS
+----------------------------
+- Dans Voir les logs, Voir et traiter IP et Favoris, les logs de la Bibliothèque sont
+  maintenant numérotés : plus besoin de compter les lignes pour savoir quel numéro taper.
+- Un clic sur un log suffit pour l'ouvrir avec le lecteur de votre choix.
+- Pour en combiner plusieurs (lnav, favori), double-cliquez chaque log ou appuyez sur
+  Entrée : son numéro s'ajoute dans le champ, et un second double-clic le retire.
+
+
+UN SERVEUR QUI TIENT MIEUX SOUS ATTAQUE
+---------------------------------------
+- Plus la liste des adresses bannies se remplissait, plus le serveur ralentissait pour
+  tous les visiteurs : avec 100 adresses bannies, il ne traitait plus qu'un tiers des
+  requêtes, justement au moment d'une attaque.
+- La liste est maintenant préparée une seule fois à chaque changement : le serveur garde
+  la même vitesse, qu'elle soit vide ou pleine. Les mêmes adresses restent bloquées,
+  avec les mêmes durées.
+- Les fichiers du site sont aussi servis un peu plus vite (environ 2 %).
+
+
+APRÈS LA MISE À JOUR
+--------------------
+1. Redémarrez le service une fois (un simple rechargement ne suffit pas pour une nouvelle
+   version). L'interface vous le rappelle si vous l'oubliez.
+2. Rien d'autre à faire : vos réglages, vos listes, vos bans et vos pages d'erreur sont
+   conservés.
+
+Vérifier le fichier téléchargé : sha256sum -c --ignore-missing sha.txt

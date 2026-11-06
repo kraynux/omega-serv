@@ -13,7 +13,7 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
-## Non publié (prépare la 2.5.0)
+## version 2.5.01 : Publié
 
 ### Ajouté
 
@@ -66,7 +66,7 @@ signalés explicitement, même mineurs.
   (`--include-preferences`), **bibliothèque des journaux** : favoris, sources distantes, rotations planifiées
   (`--include-logs-library`). Après la création, ce qui n'a pas pu être archivé est indiqué (ex. un certificat
   hors du dossier omega-serv). Nouvelle option `config restore --stop-and-restart`.
-- **Moteur HTTP natif (en développement)** : réglage `server.engine` (`python` par défaut, `native`). Le moteur
+- **Moteur HTTP natif** : réglage `server.engine` (`python` par défaut, `native`). Le moteur
   natif (C++) sert le contenu statique ; le serveur Python garde la configuration, la sécurité et la surveillance.
   Il gère aussi TLS en mode direct (même bibliothèque OpenSSL et mêmes réglages que le moteur Python : versions,
   suites, certificat, phrase de passe ; un certificat inutilisable empêche le démarrage, jamais de HTTP à la place).
@@ -97,7 +97,7 @@ signalés explicitement, même mineurs.
   utilisé à sa place et la raison est affichée (écran État & Ressources, `omega-serv engine status`, error.log) -
   jamais un serveur à moitié natif. Changer de moteur demande un redémarrage complet : un rechargement qui l'exigerait
   est refusé avec ce message.
-- **RIPOSTE (en développement)** : 3e module de Sécurité active, qui
+- **RIPOSTE** : 3e module de Sécurité active, qui
   décide de réponses graduées dans la durée (bans de plus en plus longs pour les récidivistes). Option
   `riposte`, désactivée par défaut ; l'activer demande un redémarrage complet. Processus séparé lancé et
   surveillé par `serve` (mode simple et mode boost, un par instance, relancé s'il s'arrête, jamais au
