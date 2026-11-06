@@ -5,12 +5,17 @@
 
 # 🔒 OMEGA-SERV
 
-**独立、可移植、默认加固的 HTTP Web 服务器**
+**一个独立、可移植、默认加固的 HTTP/1.1 Web 服务器。**
 
-> 由 [kraynux](https://github.com/kraynux) 为 [Omega-Server](https://kraynux.snake-mackarel.ts.net) 打造   
+OMEGA-SERV 提供静态网站服务，如有需要，还可通过 PHP-FPM 运行 PHP。它的设计目标是：启动简单、在终端中易于管理、难以被误用 —— HTTP 协议检查从启动起即生效，而更高级的功能（WAF、TLS、认证、反向代理）保持可选，必须主动启用。
 
-官方页面：[OMEGA-SERV](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/) &nbsp; 参考、使用、帮助与常见问题：[完整指南](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/guide.html)  
-预览：[截图](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) &nbsp; 演示 [演示服务器](https://craftdark.snake-mackarel.ts.net) &nbsp; [Web 服务器对比/测试](comparatif-serveurs-web.md)  
+> 由 [kraynux](https://github.com/kraynux) 为 [Omega-Server](https://kraynux.snake-mackarel.ts.net) 打造
+
+[官方页面](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/) ·
+[完整指南](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/zh-CN/guide.html) ·
+[截图](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) ·
+[演示服务器](https://craftdark.snake-mackarel.ts.net) ·
+[Web 服务器对比](comparatif-serveurs-web.md)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -22,13 +27,13 @@
 [![Platform](https://img.shields.io/badge/Platform-Linux-informational.svg)](https://www.linux.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../../../LICENSE)
 
-🌐 文档、导出和界面提供 **17 种语言** —— 参见 [界面语言](#界面语言)。  
+🌐 界面、文档、导出和访客页面提供 **17 种语言**。  
 **语言：**
 <img src="https://flagcdn.com/w20/fr.png" alt="France" style="height:14px;"> [Français](../../../README.md) · <img src="https://flagcdn.com/w20/gb.png" alt="English" style="height:14px;"> [English](../en/README.md) · <img src="https://flagcdn.com/w20/es.png" alt="Español" style="height:14px;"> [Español](../es/README.md) · <img src="https://flagcdn.com/w20/br.png" alt="Português (Brasil)" style="height:14px;"> [Português (Brasil)](../pt-BR/README.md) · <img src="https://flagcdn.com/w20/it.png" alt="Italiano" style="height:14px;"> [Italiano](../it/README.md) · <img src="https://flagcdn.com/w20/de.png" alt="Deutsch" style="height:14px;"> [Deutsch](../de/README.md) · <img src="https://flagcdn.com/w20/nl.png" alt="Nederlands" style="height:14px;"> [Nederlands](../nl/README.md) · <img src="https://flagcdn.com/w20/pl.png" alt="Polski" style="height:14px;"> [Polski](../pl/README.md) · <img src="https://flagcdn.com/w20/ru.png" alt="Русский" style="height:14px;"> [Русский](../ru/README.md) · <img src="https://flagcdn.com/w20/cn.png" alt="中文" style="height:14px;"> [中文](README.md) · <img src="https://flagcdn.com/w20/vn.png" alt="Tiếng Việt" style="height:14px;"> [Tiếng Việt](../vi/README.md) · <img src="https://flagcdn.com/w20/th.png" alt="ไทย" style="height:14px;"> [ไทย](../th/README.md) · <img src="https://flagcdn.com/w20/id.png" alt="Bahasa Indonesia" style="height:14px;"> [Bahasa Indonesia](../id/README.md) · <img src="https://flagcdn.com/w20/jp.png" alt="日本語" style="height:14px;"> [日本語](../ja/README.md) · <img src="https://flagcdn.com/w20/kr.png" alt="한국어" style="height:14px;"> [한국어](../ko/README.md) · <img src="https://flagcdn.com/w20/in.png" alt="हिन्दी" style="height:14px;"> [हिन्दी](../hi/README.md) · <img src="https://flagcdn.com/w20/ae.png" alt="العربية" style="height:14px;"> [العربية](../ar/README.md)
 
 ---
 
-**OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有默认启用的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。可选的原生 C++ 引擎可以代替 Python 引擎处理请求，安全检查完全相同（见 §6b）。它是 `omega-` 工具套件中的第七个工具，但有意**不纳入未来的 `omega-suite` 集成**（它作用于托管它的本机，而不是远程目标 —— 与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
+**OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有默认启用的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。可选的原生 C++ 引擎可以代替 Python 引擎处理请求，安全检查完全相同。它作用于托管它的本机，而不是远程目标（与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/A.png" width="24%" />
@@ -37,23 +42,73 @@
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/D.png" width="24%" />
 </p>
 
+## 目录
+
+- [1. 愿景与范围](#1-愿景与范围)
+  - [OMEGA-SERV 能做什么](#omega-serv-能做什么)
+  - [OMEGA-SERV 不做什么](#omega-serv-不做什么)
+  - [OMEGA-SERV 与市面上的 Web 服务器对比](#omega-serv-与市面上的-web-服务器对比)
+  - [使用警告](#使用警告)
+  - [前提条件](#前提条件)
+  - [下载](#下载)
+- [2. 安装](#2-安装)
+  - [更新](#更新)
+  - [依赖](#依赖)
+  - [推荐的可选工具](#推荐的可选工具)
+- [3. 使用](#3-使用)
+  - [交互模式（TUI）](#交互模式tui)
+  - [界面语言](#界面语言)
+  - [总体流程](#总体流程)
+    - [键盘快捷键（交互式界面）](#键盘快捷键交互式界面)
+    - [帮助指南（`F1`/`a` 键）](#帮助指南f1a-键)
+    - [联系与支持（帮助指南）](#联系与支持帮助指南)
+    - [主菜单（交互式界面）](#主菜单交互式界面)
+    - [应用设置（`o` 键或命令面板）](#应用设置o-键或命令面板)
+  - [完整的命令帮助](#完整的命令帮助)
+  - [重要的退出码](#重要的退出码)
+- [4. 终端兼容性](#4-终端兼容性)
+  - [根据检测到的仿真器选择配置](#根据检测到的仿真器选择配置)
+  - [根据终端尺寸选择配置](#根据终端尺寸选择配置)
+- [5. 配置档案](#5-配置档案)
+- [6. 架构](#6-架构)
+- [6b. HTTP 引擎与进程数](#6b-http-引擎与进程数)
+- [7. 可选模块](#7-可选模块)
+  - [7a. 出站反向代理 —— 详情](#7a-出站反向代理--详情)
+- [8. HTTP 加固（默认启用）](#8-http-加固默认启用)
+- [9. TLS](#9-tls)
+  - [9a. 自签名证书（最简）](#9a-自签名证书最简)
+  - [9b. 本地 CA](#9b-本地-ca)
+  - [9c. Let's Encrypt / ACME（Certbot）—— 公共、自托管](#9c-lets-encrypt--acmecertbot-公共自托管)
+  - [9d. 自动续期（Certbot）](#9d-自动续期certbot)
+- [10. 安全审计](#10-安全审计)
+- [11. Active Defense（deception + 战争模式）](#11-active-defensedeception--战争模式)
+- [11b. 敏感路径列表（WAF）](#11b-敏感路径列表waf)
+- [11c. 按目录和按 IP/网络的速率限制（WAF）](#11c-按目录和按-ip网络的速率限制waf)
+- [11d. RIPOSTE(随时间推移的分级响应)](#11d-riposte随时间推移的分级响应)
+- [11e. 手动干预（主动安全）](#11e-手动干预主动安全)
+- [12. 服务与运维](#12-服务与运维)
+- [13. 日志](#13-日志)
+  - [13a. 远程来源（SSH）](#13a-远程来源ssh)
+- [14. 测试](#14-测试)
+- [15. 范围之外](#15-范围之外)
+
 ## 1. 愿景与范围
 
-明确的优先级是**首先保证 HTTP 核心的稳固与安全** —— WAF 和 TLS 是叠加在其上的可选模块，绝不是前提条件。一个只做一件事（提供文件，或许还有 PHP）但把它做好、拥有真正无法绕过的协议加固的服务器，胜过一个样样都做却样样不精的服务器。
+明确的优先级是**首先保证 HTTP 核心的稳固与安全** —— WAF 和 TLS 是叠加在其上的可选模块，绝不是前提条件。一个做多件事（提供文件、可能还有 PHP、反向代理……）但都把它们做好、拥有真正无法绕过的协议加固的服务器，胜过一个样样都做却样样不精的服务器。
 
 ### OMEGA-SERV 能做什么
 
 - 提供静态内容（文件、可选目录列表、别名、重定向、重写、缓存），并进行安全的路径解析（目录穿越、双重编码、符号链接）。大文件直接从磁盘分块发送，从不载入内存；每个文件都带有 `ETag` 和 `Last-Modified`（重新加载 = 空的 304 响应），并接受 `Range` 部分请求（断点续传、视频）；图片、媒体、字体、CSS 和 JS 会获得默认的 `Cache-Control`，可在 缓存 屏幕中修改。预压缩的文本文件：如果 `site.css` 旁边存在 `site.css.br` 或 `site.css.gz`（用 `brotli -k site.css` 或 `gzip -k site.css` 生成）且浏览器接受，就改为发送它们 —— 绝不会发送比原文件更旧的版本。
 - 默认加固 HTTP 协议：严格解析请求，且没有关闭选项（拒绝 `Content-Length`/`Transfer-Encoding` 的歧义），显式允许的方法、`Host` 头校验，网站响应及其错误页面都带有安全头和基础 CSP。
-- 可选：WAF 过滤（特征、速率限制、封禁列表）、直接 TLS（自签名证书、本地 CA 签发，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书 —— 参见 §9）、按区域的 HTTP Basic 认证、通过 FastCGI/PHP-FPM 运行 PHP、隔离的上传区域。
+- 可选：WAF 过滤（特征、速率限制、封禁列表）、直接 TLS（自签名证书、本地 CA 签发，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书）、按区域的 HTTP Basic 认证、通过 FastCGI/PHP-FPM 运行 PHP、隔离的上传区域。
 - 多个服务器进程，使用 Python 引擎时每个物理核心最多一个（抗压与限制 屏幕）；安全计数器（速率限制、重犯）在各进程之间共享，始终准确。
 - 审计自身配置（`audit security`），并可安装为系统服务（systemd/OpenRC/runit）。
-- 端到端可脚本化的非交互式 CLI，**以及交互式界面（Textual）**，二者覆盖完全相同的用例 —— 参见 §3。界面路线图（`OMEGA-SERV_PLAN-DETAILLE_INTERFACE.md`，§12）**已全部交付**：能力清单、配置档案/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/认证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（日志库/收藏、3 种查看器 —— 简单/经典/合并 lnav ——、查看并处理 IP、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、上下文帮助指南（每个屏幕一张卡片并附具体示例、常见问题、HTML 导出、经测试验证的完整覆盖）、每次保存后系统提示重新加载/重启，以及无需手动编辑文件即可完整配置 Active Defense。
+- 端到端可脚本化的非交互式 CLI，**以及交互式界面（Textual）**，二者覆盖完全相同的用例。界面**完全可用鼠标和/或键盘操作**：能力清单、配置档案/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/认证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（日志库/收藏、3 种查看器 —— 简单/经典/合并 lnav ——、查看并处理 IP、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、上下文帮助指南（每个屏幕一张卡片并附具体示例、常见问题、HTML 导出、经测试验证的完整覆盖）、每次保存后系统提示重新加载/重启，以及无需手动编辑文件即可完整配置 Active Defense。
 
 ### OMEGA-SERV 不做什么
 
-- 原生 CGI（已从 V1 范围中移除 —— 仅支持 FastCGI/PHP-FPM）。
-- TLS 双向认证（mTLS）、OCSP stapling —— 不在 V1 范围内，参见 §15。（可通过 Certbot 使用 ACME/Let's Encrypt，参见 §9c/9d。）
+- 原生 CGI（但支持 FastCGI/PHP-FPM）。
+- TLS 双向认证（mTLS）、OCSP stapling（而通过 Certbot 的 ACME/Let's Encrypt 是可用的）。
 - 进程间共享的 HTTP 缓存。
 - 扫描/审计远程目标（为此请参见 `omega-check`/`omega-scan`/`omega-deep` —— Omega-serv 只审计自身，绝不审计第三方）。
 
@@ -65,8 +120,6 @@
 ### 使用警告
 
 Omega-serv **拒绝以 root 身份启动**。在任何内置配置档案中（包括 `hardened`），都不会默认启用任何安全模块（WAF、TLS、认证）—— 启用它们始终是一个显式操作（`config enable-tls`、`option enable waf`……）。`hardened` 配置档案本身建议在真正暴露于互联网时使用反向代理，而不是取代它。
-
-## 2. 安装
 
 ### 前提条件
 
@@ -84,7 +137,9 @@ wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
 
-### 安装
+[↑ 目录](#目录)
+
+## 2. 安装
 
 > ⚠️ **您是在更新现有安装吗？** 如果 `omega-serv/` 已经存在，下面的命令会**静默跳过解压**（它认为这是一次中断的首次安装，而不是更新）—— 这样您就会在**旧的、未改变的代码**上重新安装依赖，而且没有任何错误提示。请改用下方的 [更新](#更新) 一节。
 
@@ -98,9 +153,9 @@ chmod +x install.sh
 `install.sh`：
 
 1. 如果虚拟环境 `.venv` 尚不存在，则创建它。
-2. 安装软件包（`pip install -e .`）—— 服务器核心**没有任何外部依赖**（参见 §6）。
+2. 安装软件包（`pip install -e .`）—— 服务器核心**没有任何外部依赖**。
 3. 使 `omega-serv.sh` 和 `install.sh` 可执行。
-4. 检查随附的原生引擎能否在本机启动，必要且可行时在本机重新编译 —— 绝不阻塞安装（§6b）。
+4. 检查随附的原生引擎能否在本机启动，必要且可行时在本机重新编译 —— 绝不阻塞安装。
 5. 将别名 `serv` 添加到 `~/.bashrc` 和 `~/.zshrc`（若已存在则不重复添加）。
 
 ### 更新
@@ -116,28 +171,28 @@ cd omega-serv/
 
 归档包有意排除了所有运行时状态（`var/db/`、`var/log/`、`var/backups/`、`secure/secrets/`、`secure/certificates/*.key`、`config/omega-serve.json`、**`webroot/` —— 实际提供的网站**……）—— 覆盖解压绝不会触及现有的数据、证书、设置或所提供的内容，只会替换应用代码。`install.sh` 会复用现有的 `.venv`，并直接在其上重新安装依赖。
 
-自 2026-10-18 起，`var/` 和 `secure/auth/` 完全不再包含在归档包中，哪怕是空目录：因此覆盖解压不会再重置它们的权限（与 systemd 服务账户共享）—— 更新后不再需要「服务 → 重新应用权限」。`install.sh` 会在这些目录缺失时创建它们，但绝不改动已存在的目录。
+`var/` 和 `secure/auth/` 目录不包含在归档包中，哪怕是空目录：因此覆盖解压不会再重置它们的权限（与 systemd 服务账户共享）—— 更新后不再需要「服务 → 修复权限」。`install.sh` 会在这些目录缺失时创建它们，但绝不改动已存在的目录。
 
 > ⚠️ **如果服务已在运行，仅上述步骤是不够的。** 它替换了磁盘上的代码，但已在运行的进程仍继续使用加载在内存中的旧代码 —— 之后总是需要一次**完整重启**：
 > ```bash
 > sudo systemctl restart <服务名>
 > ```
-> **绝不是简单的重新加载**（`systemctl reload`，或 服务 屏幕 → *重新加载*）：它只会重新读取部分配置选项（WAF 规则、认证区域……），**从不重新读取 Python 代码本身**。如果 `systemctl status <服务名>` 显示的启动时间早于您的更新，就说明它仍在运行旧代码。如果您总是通过覆盖同一目录来更新（上面的标准情况），这次重启就是唯一缺少的步骤 —— 无需重新安装服务。
+> **绝不是简单的重新加载**（`systemctl reload`，或 服务 屏幕 → *重新加载*）：它只会重新读取部分配置选项（WAF 规则、认证区域……），**从不重新读取 Python 代码本身**。如果 `systemctl status <服务名>` 显示的启动时间早于您的更新，就说明它仍在运行旧代码。如果您总是通过覆盖同一目录来更新（上面的标准情况），这次重启就是唯一缺少的步骤 —— 无需重新安装服务。通知区域会显示提示消息：只需在「SERVICE」菜单中重启服务即可。
 
 > ⚠️ **如果之后服务陷入重启循环**（`systemctl status` 在 active/inactive 之间切换，`journalctl -u <服务名>` 显示在 `var/` 下写入文件时出现 `PermissionError`）：`tar` 解压会恢复归档中记录的目录权限，这可能会抹掉首次安装时为专用系统账户设置的权限共享 —— 即使 `install.sh` 本身从不改动它。无需重新安装 unit：服务 屏幕 → **修复权限**（重新为 `var/` 和 `secure/auth/` 应用共享，不改动 systemd unit）。
 
 ### 依赖
 
-服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行密码哈希）保持纯 Python/标准库实现，所有与 TLS 证书相关的操作都通过 `openssl` 程序以子进程方式完成，而不是借助 Python 加密库 —— **这部分没有任何外部依赖**。只有交互式界面（§3）引入了依赖：`omega-lib`（主题、终端检测 —— 套件共享库，未发布到 PyPI，随分发归档包附带）、`textual` 和 `pyte`（在界面中渲染合并 `lnav` 的终端仿真）、`jinja2`（带主题的 HTML 导出）以及 `psutil`（状态与资源 屏幕 —— CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（HTTP 解析器和路径解析器的属性测试，绝不用于生产）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。额外的可选扩展（`pip install -e ".[magnet]"`）：`lupa`（嵌入式 Lua 绑定，预编译 wheel，无需系统 `lua` 解释器），仅用于补充性的 WAF 脚本「magnet」（§7）—— 从不默认安装；缺少它时会给出提示（能力 `waf-magnet`，**能力** 屏幕）并附上确切的安装命令，但不会阻塞服务器其余部分。
+服务器核心（HTTP/1.1 解析器、FastCGI 客户端、通过 `hashlib.scrypt` 进行密码哈希）保持纯 Python/标准库实现，所有与 TLS 证书相关的操作都通过 `openssl` 程序以子进程方式完成，而不是借助 Python 加密库 —— **这部分没有任何外部依赖**。只有交互式界面引入了依赖：`omega-lib`（主题、终端检测 —— 套件共享库，未发布到 PyPI，随分发归档包附带）、`textual` 和 `pyte`（在界面中渲染合并 `lnav` 的终端仿真）、`jinja2`（带主题的 HTML 导出）以及 `psutil`（状态与资源 屏幕 —— CPU/内存/磁盘/网络）。可选的开发/测试依赖（`pip install -e ".[test]"`）：`hypothesis`（HTTP 解析器和路径解析器的属性测试，绝不用于生产）。质量工具（`pip install -e ".[dev]"`）：`pytest`、`ruff`、`mypy`、`import-linter`。额外的可选扩展（`pip install -e ".[magnet]"`）：`lupa`（嵌入式 Lua 绑定，预编译 wheel，无需系统 `lua` 解释器），仅用于补充性的 WAF 脚本「magnet」—— 从不默认安装；缺少它时会给出提示（能力 `waf-magnet`，**能力** 屏幕）并附上确切的安装命令，但不会阻塞服务器其余部分。
 
 ### 推荐的可选工具
 
 如果缺少这些工具，界面会以降级模式运行：
 
-- `openssl` —— 所有与 TLS 证书相关的操作都需要它（自签名、本地 CA、导入）；没有它，`certs *` 命令会失败，但服务器其余部分正常运行（参见 §9）。
-- `certbot` —— 仅 **Let's Encrypt** 向导及其自动续期需要（§9c/9d）；自签名 TLS/本地 CA 不需要它。
-- `lnav` —— 在 **日志管理** 屏幕中进行高级合并日志分析（§3）；找不到程序时给出清晰明确的错误信息，不会崩溃，屏幕其余部分（查看/跟踪/轮转/统计）没有它也正常工作。
-- `scp`（`openssh`/`openssh-clients` 软件包，几乎总是已经安装）—— 仅 **远程来源（SSH）** 需要（§13a）；没有它，获取会以清晰的提示失败，日志库其余部分正常工作。
+- `openssl` —— 所有与 TLS 证书相关的操作都需要它（自签名、本地 CA、导入）；没有它，`certs *` 命令会失败，但服务器其余部分正常运行。
+- `certbot` —— 仅 **Let's Encrypt** 向导及其自动续期需要；自签名 TLS/本地 CA 不需要它。
+- `lnav` —— 在 **日志管理** 屏幕中进行高级合并日志分析；找不到程序时给出清晰明确的错误信息，不会崩溃，屏幕其余部分（查看/跟踪/轮转/统计）没有它也正常工作。
+- `scp`（`openssh`/`openssh-clients` 软件包，几乎总是已经安装）—— 仅 **远程来源（SSH）** 需要；没有它，获取会以清晰的提示失败，日志库其余部分正常工作。
 - `python-psutil`（与 PyPI 上的 `psutil` 对应的系统软件包）—— 无论如何都会由 `pip install -e .` 自动安装（软件包的必需依赖，**状态与资源** 屏幕始终需要它），但通过系统包管理器预先安装可以免去 `pip` 在本地编译 wheel。
 - `cmake`、C++20 编译器（`g++`）、OpenSSL 3 头文件和 PCRE2 —— 仅当随附的原生引擎无法启动（glibc 低于 2.38）时才需要：此时 `install.sh` 会在本机重新编译。没有 PCRE2 时，本地编译的引擎在启用 WAF 后会把每个请求交给 Python 检查（更慢）；没有这些工具时，omega-serv 继续使用 Python 引擎。
 - 一款 emoji 字体（Noto Color Emoji）—— 可选，用于简单查看器（日志管理）的图标；没有它时部分图标会显示为方框，其他功能不受影响。Nerd Font 不包含这些 emoji。
@@ -163,6 +218,8 @@ sudo apt install fonts-noto-color-emoji                    # Debian/Ubuntu
 sudo dnf install google-noto-color-emoji-fonts             # Fedora
 ```
 
+[↑ 目录](#目录)
+
 ## 3. 使用
 
 两个在功能上严格等价的界面，二者之间绝无重复逻辑：非交互式 CLI（可脚本化，下文使用）和交互式 Textual 界面（菜单、表单、表格）—— 其中任一操作在 CLI 一侧都存在，界面只是为相同用例提供外观。
@@ -185,7 +242,7 @@ serv
 
 ### 总体流程
 
-启动画面（splash，按任意键或单击即可关闭）→ 主菜单（首次启动向导 / 能力清单 / 配置档案 / 详细配置 / 主动安全 / 日志管理 / 服务 / 多实例 / 状态与资源 / 审计 / 备份）→ 选择一个部分，再选择一个操作，每个表单都会先校验必填字段再继续 → 在任何敏感或破坏性操作（重启、删除、恢复……）之前进行显式确认 → 每次保存修改了已在提供的配置后，系统提示后续步骤（自动热重新加载，或确认完整重启）。对终端的适配（颜色、尺寸、渲染配置的结构性降级）是自动的，无需手动标志 —— 参见 §4。
+启动画面（splash，按任意键或单击即可关闭）→ 主菜单（首次启动向导 / 能力清单 / 配置档案 / 详细配置 / 主动安全 / 日志管理 / 服务 / 多实例 / 状态与资源 / 审计 / 备份）→ 选择一个部分，再选择一个操作，每个表单都会先校验必填字段再继续 → 在任何敏感或破坏性操作（重启、删除、恢复……）之前进行显式确认 → 每次保存修改了已在提供的配置后，系统提示后续步骤（自动热重新加载，或确认完整重启）。对终端的适配（颜色、尺寸、渲染配置的结构性降级）是自动的，无需手动标志。
 
 #### 键盘快捷键（交互式界面）
 
@@ -216,14 +273,14 @@ serv
 
 - **首次启动向导** —— 分 8 步的引导流程（欢迎 → 只读能力检测 → 选择配置档案 → bind/端口 → 可选 TLS → 检查 → 摘要 + 写入 → 提议安装服务）；无需了解 CLI 即可生成完整配置并启动服务器。
 - **能力清单** —— 只读系统探测（init 系统、所配置的端口是否已被占用、是否存在 `openssl`/`logrotate`/`tailscale`/`lnav`、磁盘空间、描述符上限……），可导出 JSON/HTML。
-- **配置档案** —— 与 CLI 中 `profile` 相同的用例（§5），写入前始终显示 diff。
-- **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/认证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、生成自签名证书、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用 —— 参见 §9）；第二个框 **选项与检查** 集中了指向 **选项**（`option` CLI，§7）和 **检查配置**（`config check` CLI，§10）的快捷入口 —— 与"先调整设置再检查"的流程一致，这两个屏幕不再能从主菜单直接打开。WAF 不再位于此处（参见下方"主动安全"）：它主要展示不断变化的运行状态，而不是简单的静态配置表单。每次保存都会系统地指明后续步骤：若服务正在运行，则自动静默热重新加载（目录列表、访问、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、用户/认证区域）；若修改涉及监听套接字、TLS 或 Active Defense，则显式确认完整重启 —— 再也没有任何屏幕让您去猜是否需要重启服务器。
-- **主动安全** —— 单一屏幕，两个并排的区块：**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置，参见 §11）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表（参见 §11b）、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）—— 参见 §11。 **RIPOSTE**:第三个区块(WAF → Active Defense → RIPOSTE,即攻击的顺序)——随时间推移的分级响应,见 §11d。 三个区块下方是 **手动干预**：手动封禁或解除封禁 IP 地址，查看所有封禁的状态 — 见 §11e。
-- **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 §7 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/全部，可移除某个 IP）。**维护** 栏（未变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（声明式 —— 参见下方说明）、恢复/清理归档、导出列表。
-- **服务** —— 与 CLI 中 `service` 相同的操作（§12），每个操作单独临时提权 `sudo`，绝不让整个应用以 root 身份运行。
+- **配置档案** —— 与 CLI 中 `profile` 相同的用例，写入前始终显示 diff。
+- **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/认证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、生成自签名证书、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用）；第二个框 **选项与检查** 集中了指向 **选项**（`option` CLI）和 **检查配置**（`config check` CLI）的快捷入口 —— 与"先调整设置再检查"的流程一致，这两个屏幕不再能从主菜单直接打开。WAF 不再位于此处（参见下方"主动安全"）：它主要展示不断变化的运行状态，而不是简单的静态配置表单。每次保存都会系统地指明后续步骤：若服务正在运行，则自动静默热重新加载（目录列表、访问、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、用户/认证区域）；若修改涉及监听套接字、TLS 或 Active Defense，则显式确认完整重启 —— 再也没有任何屏幕让您去猜是否需要重启服务器。
+- **主动安全** —— 单一屏幕，按攻击的顺序并排三个区块：**WAF**、**Active Defense** 和 **RIPOSTE**（随时间推移的分级响应）。**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）。三个区块下方是 **手动干预**：手动封禁或解除封禁 IP 地址，查看所有封禁的状态。
+- **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/全部，可移除某个 IP）。**维护** 栏（未变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（声明式 —— 参见下方说明）、恢复/清理归档、导出列表。
+- **服务** —— 与 CLI 中 `service` 相同的操作，每个操作单独临时提权 `sudo`，绝不让整个应用以 root 身份运行。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），附每个实例的 systemd 状态；可直接在界面中创建新实例（复制目录树、独立的虚拟环境和依赖、带独立端口的全新配置、检查嵌套和端口冲突）。只有一个安装时该按钮几乎不可见（一旦已知实例达到 2 个，"多实例"标签就会变为"实例 (N)"）；可完整切换到另一个实例（`os.execv`，显式确认，重启时显示专门的切换启动画面）；可完整卸载实例（移除 unit、若不再被其他实例使用则移除专用系统账户，并可选删除目录，但绝不默认删除）。
-- **状态与资源** —— 一目了然的总览，每 2 秒刷新：服务器状态（进程/PID、系统服务状态、配置档案/活动选项/TLS/端口）、访问日志的实时流量（吞吐量、按状态码分布、唯一 IP、错误率）、系统资源（CPU/内存/磁盘/交换/负载/网络，通过 `psutil`）；还集中了 **模拟请求** 快捷入口（与相应 CLI 命令相同的用例，§10）。
-- **安全审计** —— 与相应 CLI 命令相同的用例（§10）。
+- **状态与资源** —— 一目了然的总览，每 2 秒刷新：服务器状态（进程/PID、系统服务状态、配置档案/活动选项/TLS/端口）、访问日志的实时流量（吞吐量、按状态码分布、唯一 IP、错误率）、系统资源（CPU/内存/磁盘/交换/负载/网络，通过 `psutil`）；还集中了 **模拟请求** 快捷入口（与相应 CLI 命令相同的用例）。
+- **安全审计** —— 与相应 CLI 命令相同的用例。
 - **配置备份** —— 配置文件的 tar.gz 归档，并在显式选择时包含 WAF 规则/认证区域/证书（一旦包含真实机密就必须确认）/Active Defense 数据库；支持恢复、列出、删除。
 
 > 关于计划的轮转自动化：它们会被保存（频率 + 目标日志），但**没有任何东西会自动执行它们** —— 界面侧不会，后台也不会。这是有意为之，以与 `omega-fire` 中具有相同声明式行为的对应屏幕保持一致。若确认有需要，真正的周期性执行（systemd 定时器、后台任务）需另行构建。
@@ -262,7 +319,7 @@ serv
 ./omega-serv.sh blocklist add --network 203.0.113.0/24 --reason "检测到扫描" --duration-seconds 3600
 ./omega-serv.sh blocklist remove --network 203.0.113.0/24
 
-# Active Defense（deception + 战争模式，选项 "active_defense" - 参见 §11）
+# Active Defense（deception + 战争模式，选项 "active_defense"）
 ./omega-serv.sh active-defense status
 ./omega-serv.sh active-defense simulate --ip 203.0.113.42 --path /wp-login.php --attack-class scan --score 40
 ./omega-serv.sh active-defense purge
@@ -276,7 +333,7 @@ serv
 ./omega-serv.sh deception list
 ./omega-serv.sh deception release --subject 203.0.113.42:ab12cd34
 
-# RIPOSTE(随时间推移的分级响应,选项 "riposte" - 见 §11d)
+# RIPOSTE(随时间推移的分级响应,选项 "riposte")
 ./omega-serv.sh riposte status
 ./omega-serv.sh riposte simulate --ip 203.0.113.7 --class scan --returns 3
 ./omega-serv.sh riposte actions list
@@ -342,6 +399,8 @@ man omega-serv                          # 手册页（由 install.sh 安装）
 | `certs check-expiry` | `1` | 证书已过期 |
 | 其他任何命令 | `0`/`1` | 成功 / 校验失败 |
 
+[↑ 目录](#目录)
+
 ## 4. 终端兼容性
 
 交互式界面（基于 [Rich](https://rich.readthedocs.io/) 构建的 [Textual](https://textual.textualize.io/)）会自动检测终端的能力（仿真器、尺寸），并据此调整其结构样式表（`complete`/`standard`/`reduced`/`mono`），无需手动标志。CLI 模式始终保持纯文本，与终端无关。这是整个 `omega-` 套件共享的策略（`omega-lib`，`terminal/policies.py`）—— 与 `omega-check`/`omega-fire` 完全相同。
@@ -365,7 +424,9 @@ man omega-serv                          # 手册页（由 install.sh 安装）
 | 80 × 24 | `reduced` |
 | 更小 | `mono` |
 
-最终采用的配置是**两者中更严格的那个**（仿真器和尺寸）—— 一个全屏的 Ghostty 若被缩小到 70 列，就会降到 `mono`，即使其仿真器允许 `complete`。可用 `r` 键实时刷新，也可在应用设置中手动覆盖（`o` 键，§3）。
+最终采用的配置是**两者中更严格的那个**（仿真器和尺寸）—— 一个全屏的 Ghostty 若被缩小到 70 列，就会降到 `mono`，即使其仿真器允许 `complete`。可用 `r` 键实时刷新，也可在应用设置中手动覆盖（`o` 键）。
+
+[↑ 目录](#目录)
 
 ## 5. 配置档案
 
@@ -377,6 +438,8 @@ man omega-serv                          # 手册页（由 install.sh 安装）
 | `development` | 仅用于本地开发，绝不宣称适合互联网：必须绑定 loopback、CSP 为 report-only、详细错误页面 |
 
 配置合并顺序：内置安全值 → 所选配置档案 → 保留当前已启用的选项（可跨配置档案切换保留）→ 显式的用户覆盖层。写入前始终显示完整 diff（`profile apply`）。
+
+[↑ 目录](#目录)
 
 ## 6. 架构
 
@@ -394,7 +457,9 @@ src/omega_serv/
 └── bootstrap/         DependencyContainer、项目根目录解析
 ```
 
-由 `import-linter` 验证的规则（8 项契约）：`domain`/`core` 绝不依赖外层；`interfaces.tui` 绝不直接依赖 `infrastructure`；`textual` 仅限于 `interfaces.tui`；`subprocess` 仅限于 `infrastructure/process/subprocess_runner.py`（以及 `infrastructure/lnav/`，交互式 PTY 流）；`ssl` 仅限于 `infrastructure/tls/ssl_context_builder.py`；`jinja2` 仅限于 `infrastructure/exporters/html_exporter.py`；`sqlite3` 仅限于 `infrastructure/persistence/sqlite_active_defense_connection.py`（项目唯一的关系型存储，专供 Active Defense 使用 —— 参见 §11）；`lupa` 仅限于 `infrastructure/waf/lua_waf_adapter.py`（补充性 WAF 脚本「magnet」，§7）。
+由 `import-linter` 验证的规则（8 项契约）：`domain`/`core` 绝不依赖外层；`interfaces.tui` 绝不直接依赖 `infrastructure`；`textual` 仅限于 `interfaces.tui`；`subprocess` 仅限于 `infrastructure/process/subprocess_runner.py`（以及 `infrastructure/lnav/`，交互式 PTY 流）；`ssl` 仅限于 `infrastructure/tls/ssl_context_builder.py`；`jinja2` 仅限于 `infrastructure/exporters/html_exporter.py`；`sqlite3` 仅限于 `infrastructure/persistence/sqlite_active_defense_connection.py`（项目唯一的关系型存储，专供 Active Defense 使用）；`lupa` 仅限于 `infrastructure/waf/lua_waf_adapter.py`（补充性 WAF 脚本「magnet」）。
+
+[↑ 目录](#目录)
 
 ## 6b. HTTP 引擎与进程数
 
@@ -405,20 +470,22 @@ src/omega_serv/
 - **绝不混用**：由同一条规则决定实际使用的引擎，并在各处显示（**状态与资源** 界面、`omega-serv engine status`）。如果原生引擎无法处理全部请求（直连 TLS 同时启用了反向代理、FastCGI 或文件上传）或无法启动，就由 Python 引擎处理，并显示原因。在 **基本配置** 中，只要有已启用的功能阻止，原生引擎选项就会变灰，并说明需要更改什么才能启用；在其他地方保存的、会导致失去原生引擎的设置，会先要求确认。
 - **如果 Python 检查没有响应**，由 `waf.on_internal_error` 决定：不经检查直接响应，或拒绝（503）。这种情况下身份验证区域始终被拒绝，已被封禁的地址也继续被拒绝（451）。
 
+[↑ 目录](#目录)
+
 ## 7. 可选模块
 
 在所有内置配置档案中均默认禁用 —— 启用始终是显式的（`option enable <名称>` 或 `config enable-tls`）：
 
 | 模块 | 作用 |
 |---|---|
-| `waf` | 特征（敏感路径、扫描器 UA/Referer、请求体中的 SQLi/XSS/CMDi）、可作为文本文件编辑的列表（关键词，或带 `!` 例外的敏感路径，每个列表各自有观察模式和重犯规则 —— 附带两个参考列表，显式加载，参见 §11b）、速率限制（令牌桶，按目录和按 IP/网络的规则，参见 §11c）、封禁列表（CIDR + 过期时间）、信誉/升级、导入现有的 Lighttpd `mod_magnet` WAF 脚本作为「magnet」类型的可选增强（无需重写，扩展 `pip install -e ".[magnet]"` —— 叠加式，绝不能解除原生封禁；导入时检查兼容性，有专用 TUI 屏幕）—— `log-only` 模式在结构上无法封禁 |
-| TLS | 直接 TLS（自签名、本地 CA，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书 —— 参见 §9），V1 中绝无 mTLS/OCSP |
+| `waf` | 特征（敏感路径、扫描器 UA/Referer、请求体中的 SQLi/XSS/CMDi）、可作为文本文件编辑的列表（关键词，或带 `!` 例外的敏感路径，每个列表各自有观察模式和重犯规则 —— 附带两个参考列表，显式加载）、速率限制（令牌桶，按目录和按 IP/网络的规则）、封禁列表（CIDR + 过期时间）、信誉/升级、导入现有的 Lighttpd `mod_magnet` WAF 脚本作为「magnet」类型的可选增强（无需重写，扩展 `pip install -e ".[magnet]"` —— 叠加式，绝不能解除原生封禁；导入时检查兼容性，有专用 TUI 屏幕）—— `log-only` 模式在结构上无法封禁 |
+| TLS | 直接 TLS（自签名、本地 CA，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书），V1 中绝无 mTLS/OCSP |
 | 认证 | 按区域（`url_prefix`）的 HTTP Basic，`hashlib.scrypt` 并防御时序攻击（即使用户不存在也保持恒定时间） |
 | FastCGI/PHP-FPM | 只有一组 `(url_prefix, script_root)`，`script_root` 在构造上就被限制在 `webroot/` 之外（静态处理器永远无法泄露 PHP 源码） |
-| 出站反向代理 | Omega-serv 自身充当一个或多个后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）—— 负载均衡（round-robin、加权、least-connections、ip-hash、least-response-time、实际负载）、会话亲和与基于请求头的路由规则、被动与主动健康检查、响应缓存（多个 `Vary` 变体）、背压、防环保护、热管理 API —— 完整细节见 §7a |
+| 出站反向代理 | Omega-serv 自身充当一个或多个后端的代理（与 `server.tls.mode = "behind_proxy"` 方向相反）—— 负载均衡（round-robin、加权、least-connections、ip-hash、least-response-time、实际负载）、会话亲和与基于请求头的路由规则、被动与主动健康检查、响应缓存（多个 `Vary` 变体）、背压、防环保护、热管理 API |
 | Upload | 隔离区域、按区域配额、服务器端生成的文件名 —— V1 不支持流式传输（受 `server.max_request_size` 限制） |
-| `active_defense` | 基于已计算的 WAF 信号（绝不另算第二个评分）的 Deception + 战争模式：静态诱饵、有针对性的减速/增强日志/速率限制、事件 + IoC 导出 —— 参见 §11 |
-| `riposte` | 随时间推移的分级响应:按地址记录再犯,越来越长的封禁(WAF 的 blocklist、通过 omega-jail 的网络封禁)或延长诱饵,解除与紧急停止——独立进程,见 §11d |
+| `active_defense` | 基于已计算的 WAF 信号（绝不另算第二个评分）的 Deception + 战争模式：静态诱饵、有针对性的减速/增强日志/速率限制、事件 + IoC 导出 |
+| `riposte` | 随时间推移的分级响应:按地址记录再犯,越来越长的封禁(WAF 的 blocklist、通过 omega-jail 的网络封禁)或延长诱饵,解除与紧急停止——独立进程 |
 
 ### 7a. 出站反向代理 —— 详情
 
@@ -433,6 +500,8 @@ OMEGA-SERV 可以自身充当一个或多个 HTTP/HTTPS 后端的反向代理 �
 - **WebSocket** —— 可按区域允许 upgrade，建立后在整个隧道生命周期内固定一个 upstream，无应用层超时。
 - **热管理** —— 小型本地 HTTP API（`/.omega-serv-admin/`，与原生负载探针一样受 `trusted_proxy` 保护），使 TUI 能读取/强制设置某个后端的 DRAINING/MAINTENANCE 状态，并读取**实际正在运行的服务器**的缓存命中/未命中比例（专用屏幕 *后端实时状态*）—— 由于 TUI 和服务器始终是两个没有共享内存的独立进程，这个本地 HTTP 通道是二者之间唯一的桥梁。
 
+[↑ 目录](#目录)
+
 ## 8. HTTP 加固（默认启用）
 
 - 请求解析，没有关闭选项：请求头/请求行**在读取过程中**就加以限制（绝不事后处理），拒绝过时的头部折叠，始终拒绝 `Transfer-Encoding`（绝不猜测）。
@@ -441,6 +510,8 @@ OMEGA-SERV 可以自身充当一个或多个 HTTP/HTTPS 后端的反向代理 �
 - 安全头和基础 CSP（`enforce`/`report-only`）应用于网站的响应，包括其错误页面（403、404……），且绝不会被模块移除或覆盖。例外：在对请求进行任何处理之前发出的响应（格式错误或过大的请求、超时、无效的 `Host`、被拒绝的方法、服务器饱和）不带这些头 —— 它们是不含网站内容的简短错误页面。默认启用，只能在 **通用安全** 界面关闭（`security.security_headers_enabled`）。`Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` 始终为 `same-origin`，没有真正破坏网站的风险。`Cross-Origin-Embedder-Policy` 始终显式发送（绝不缺失 —— 外部扫描器借此区分「未考虑」和「有意放宽」），在**所有**配置档案（包括 `hardened`）中默认为 `unsafe-none`：与前两者不同，`require-corp`/`credentialless` 可能会阻止属于实际所提供网站的跨源资源（字体、图片、第三方 iframe）—— 可调整（`security.coep_mode`）。CSP 区域（`security.csp_zones`）：按路径前缀的**显式**例外（例如仅在真正需要的 `/某个目录/` 下允许 `unsafe-inline`），每个区域都完全替换其前缀的默认策略 —— 绝不合并，绝不全局放宽；任何例外都会在 `audit security` 中保持可见（CSP-001/CSP-002 也会扫描区域），即使是有意为之。通过向导逐条指令引导创建（**通用安全** 屏幕），每个字段都预填了全局策略的**当前**值 —— 这样只修改需要改变的部分，而不是从空白字段开始而无意中牺牲其他指令；如果组装后的区域放宽了 `unsafe-inline`/`unsafe-eval`/通配源 `*`，则需要额外的显式确认。
 - 在任何比较之前（封禁列表、可信代理、速率限制）都会规范化 IPv4 映射的 IPv6 地址（`::ffff:x.x.x.x`）—— 否则就是一个已知的绕过方式。
 - 除常规单元/集成测试外，还通过属性测试（`hypothesis`，生成数千个样例）对 HTTP 解析器和路径解析器进行验证。
+
+[↑ 目录](#目录)
 
 ## 9. TLS
 
@@ -460,7 +531,7 @@ secure/certificates/ca/
 └── index.txt      # 0600 - 记录每张已签发证书的 V(alid)/R(evoked) 状态
 ```
 
-流程：`certs generate-ca`（CA 密钥口令**必填**，若省略 `--password` 则交互输入并双重确认）→ `certs generate-csr`（服务器密钥 + CSR）→ `certs sign-csr`（用 CA 签名，复制 CSR 的 SAN，按需生成 `fullchain.pem`）→ 让 `tls.certificate.certificate_path` 指向该 `fullchain.pem`。泄露的证书通过 `certs revoke` 吊销（标记 `index.txt`，会先确认证书确实来自此 CA —— 否则拒绝）。V1 不提供 CRL 分发、外部 CA/第三方机构 CSR 或 mTLS（参见 §15）。
+流程：`certs generate-ca`（CA 密钥口令**必填**，若省略 `--password` 则交互输入并双重确认）→ `certs generate-csr`（服务器密钥 + CSR）→ `certs sign-csr`（用 CA 签名，复制 CSR 的 SAN，按需生成 `fullchain.pem`）→ 让 `tls.certificate.certificate_path` 指向该 `fullchain.pem`。泄露的证书通过 `certs revoke` 吊销（标记 `index.txt`，会先确认证书确实来自此 CA —— 否则拒绝）。V1 不提供 CRL 分发、外部 CA/第三方机构 CSR 或 mTLS。
 
 ### 9c. Let's Encrypt / ACME（Certbot）—— 公共、自托管
 
@@ -472,9 +543,13 @@ secure/certificates/ca/
 
 `详细配置 → TLS → 自动续期` 会根据**此实例**实际检测到的服务管理器进行适配（绝不是多个实例共享的机制）：systemd → 生成并安装定时器（`<service>-certbot-renew.timer`，每天两次 + 随机延迟，`certbot renew` 限定于该实例的 `--config-dir`）；否则 → 若有 `crontab` 则写入 crontab 行（当前用户，无需特权）；否则 → 显示手动配置说明，不强制写入。在某些发行版（包括 Arch/Manjaro）上，Certbot 软件包默认**不会**安装任何定时器，这与 Debian/Ubuntu 不同 —— 因此提供了这个屏幕，而不是简单地检查一个假定已经存在的机制。配置完成后，续期会自动重新导入每张续期后的证书（`certs import`），然后重启服务，再也无需任何手动干预。
 
+[↑ 目录](#目录)
+
 ## 10. 安全审计
 
 `audit security` **不会阻断**：它会以 `CRITICAL` 级别重新执行 `config check` 中已有的阻断检查，然后应用建议性规则（TLS、CSP、危险方法、超时、上传卫生 —— 纯计算；文件权限、证书过期、已安装的 systemd unit、日志大小 —— 真实 I/O）。`WAF-001`（WAF 停留在 `log-only`）通过一个小状态文件（`var/run/waf-mode-state.json`）随时间观察 —— 只有在多次运行中观察到 `log-only` 持续 ≥14 天后才会触发，而不是在第一次 `audit` 时就触发。
+
+[↑ 目录](#目录)
 
 ## 11. Active Defense（deception + 战争模式）
 
@@ -500,9 +575,11 @@ secure/certificates/ca/
 
 备份/恢复：`config backup --include-active-defense` 会将 sqlite 数据库（威胁/事件/分配）纳入归档 —— 其中绝无明文机密，因此不像 `--include-auth` 那样需要 `--confirm-secrets`。
 
+[↑ 目录](#目录)
+
 ## 11b. 敏感路径列表（WAF）
 
-WAF 可以加载以文本文件形式存在的**可编辑列表**，每行一个路径（或关键词），入口为 **主动安全 → Custom → 添加 →「加载列表」**。默认从不加载任何内容：这是一个显式操作。
+WAF 可以加载以文本文件形式存在的**可编辑列表**，每行一个路径（或关键词），入口为 **主动安全 → WAF → Custom → 添加 →「加载列表」**。默认从不加载任何内容：这是一个显式操作。
 
 - **附带的参考列表**：`sensitive-paths-hostile`（298 个没有合法用途的路径：机密、备份、VCS、控制台……）和 `sensitive-paths-probe`（132 个探测路径，有时会由真实网站提供：`/admin`、`/api`、监控……）。加载时会在 `secure/waf/rules/keywords/` 中创建一份**本地副本**：您编辑的是这份副本，omega-serv 的更新绝不会覆盖它（「参考列表的新增内容」随后会逐项提议新条目）。
 - **语法**：`/admin`（→ `/admin` 和 `/admin/xxx`，绝不包括 `/administrator`）、`/.git/`（其下的所有内容）、`/*.bak`（扩展名）、`!/api/v1`（例外，始终优先）。路径按引擎相同的方式解码（`%2e`、双重编码、全角字符）。
@@ -512,15 +589,19 @@ WAF 可以加载以文本文件形式存在的**可编辑列表**，每行一个
 - **防护措施**：受保护的关键路径（`/`、`robots.txt`、`sitemap.xml`、`/.well-known/acme-challenge/`……），会拒绝可能命中实际所提供路由（别名、反向代理、Auth 区域、webroot）的阻断性列表，编辑器中的 **「对照我的日志检查」**（显示本会命中成功请求的行，一键添加例外）。
 - **内置编辑器**：带行号的实时诊断、对某个路径进行「测试」、安全写入（保留权限和组、拒绝符号链接、检测外部修改）、检查服务账户可否读取（「修正权限」），以及**如实的**重新加载：若列表未通过检查，则拒绝并给出原因，服务器继续保留当前规则。
 
+[↑ 目录](#目录)
+
 ## 11c. 按目录和按 IP/网络的速率限制（WAF）
 
-WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 次请求 / 60 秒）可以在 **主动安全 → 限制** 中细化（或手动编辑 `rate_limit.path_policies` / `rate_limit.source_policies`）：
+WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 次请求 / 60 秒）可以在 **主动安全 → WAF → 限制** 中细化（或手动编辑 `rate_limit.path_policies` / `rate_limit.source_policies`）：
 
 - **按目录的规则**（`prefix`、`requests`、`window_seconds`）：对该目录**取代**全局限制，并有自己的计数器（`requests: 0` = 不限）。最长前缀优先；`/images` 覆盖 `/images/a.png`，但绝不覆盖 `/images2`。典型场景是返回 429 的重型页面（图片画廊）。
 - **按 IP/网络的规则**（`network`、`requests`、`window_seconds`、`trusted`）：原理相同；最精确的网络优先。优先级：目录，其次 IP/网络，最后全局限制。
 - **对公众的封禁不变**：公网 IP 超限仍会在 `waf-alerts.log` 中记录为 `"action": "block"`，因此可被 omega-jail 封禁（10 分钟内 3 次拒绝 → 12 小时）。**可信来源** —— `never_auto_block` 网络或标记为 `trusted: true` 的规则 —— 仍会收到 429，但记录为 `"action": "throttle"`，jail 从不计入。
 - **magnet 脚本**：它自己的速率限制（429 响应）从不计为一次检测，因此绝不会导致自动封禁；对于被目录或 IP/网络规则覆盖的请求，以原生规则为准，magnet 的 429 会被忽略（它的攻击特征仍然生效）。
 - 速率规则**从不**关闭 WAF 检查；反之，检查排除（`exclusions.path_prefixes`）也从不解除速率限制。没有启用 `trusted_proxy` 时，覆盖 `127.0.0.1`/`::1` 的规则会被忽略（与 `never_auto_block` 相同的防护）。
+
+[↑ 目录](#目录)
 
 ## 11d. RIPOSTE(随时间推移的分级响应)
 
@@ -533,6 +614,8 @@ WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 
 - **本地封禁与网络封禁**：本地封禁由 omega-serv 写入 WAF 的封禁列表——在整个封禁期间，该地址的所有请求都会收到 451 页面“您的 IP 已被封禁”。网络封禁通过 omega-jail 的 jail 交给 fail2ban（`<service>-riposte-1h/6h/24h/7d`，每个实例一组）；当连接经由本地代理（Tailscale Funnel）到达时，它不起作用，此时只有本地封禁能提供保护。
 - **界面**:主动安全中的六个界面(状态、策略、操作、再犯、模拟、设置),以及相同的命令行命令(`riposte …`)。备份:`config backup --include-riposte`。
 
+[↑ 目录](#目录)
+
 ## 11e. 手动干预（主动安全）
 
 位于主动安全三个区块下方的 **手动干预** 框，用于在不编写配置规则的情况下手动操作：无条件封禁一个 IP 地址、解除封禁、查看所有当前封禁。
@@ -542,31 +625,39 @@ WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 
 - **解除封禁**：仅限在此设置的封禁；其他封禁在设置它们的地方解除（WAF → 模块，RIPOSTE → 操作）。
 - **封禁状态**：所有封禁及其来源（手动、WAF 自动封禁、RIPOSTE、omega-jail、Magnet），可导出为 JSON、HTML 或 TXT — 每行一个地址，可原样导入 omega-fire。
 
+[↑ 目录](#目录)
+
 ## 12. 服务与运维
 
-自动检测 systemd/OpenRC/runit（`service install/status/start/stop/restart/enable/disable/uninstall`）。生成的 systemd unit 默认应用不可协商的加固：`NoNewPrivileges`、`PrivateTmp`、`ProtectSystem=strict`、`ProtectHome`、`ReadWritePaths` 仅限 `var/`、必须使用专用用户/组、`UMask=0077`、`Restart=on-failure`。收到 SIGTERM 时优雅停止（处理完进行中的连接，可配置宽限期，然后强制关闭）；收到 SIGHUP 时热重新加载（仅 WAF 规则和 Auth 区域 —— bind/端口/TLS 和 Active Defense 不经完整重启就绝不能修改）。
+自动检测 systemd/OpenRC/runit（`service install/status/start/stop/restart/enable/disable/uninstall`）。生成的 systemd unit 默认应用不可协商的加固：`NoNewPrivileges`、`PrivateTmp`、`ProtectSystem=strict`、`ProtectHome`、`ReadWritePaths` 仅限 `var/`、必须使用专用用户/组、`UMask=0007`、`Restart=on-failure`。收到 SIGTERM 时优雅停止（处理完进行中的连接，可配置宽限期，然后强制关闭）；收到 SIGHUP 时热重新加载（仅 WAF 规则和 Auth 区域 —— bind/端口/TLS 和 Active Defense 不经完整重启就绝不能修改）。
+
+[↑ 目录](#目录)
 
 ## 13. 日志
 
-`var/log/access.log`（Apache combined 格式 + `request_id`，转义以防日志注入）、`var/log/error.log`。按大小/保留文件数轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。magnet 脚本（§7）：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` —— 只有在 magnet 启用时才会自动加入日志库（按钮 *添加 Omega-Serv 的已知日志*）；而 `lnav` 总是会提供它们（缺失的文件在启动时会被直接忽略）。
+`var/log/access.log`（Apache combined 格式 + `request_id`，转义以防日志注入）、`var/log/error.log`。按大小/保留文件数轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。magnet 脚本：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` —— 只有在 magnet 启用时才会自动加入日志库（按钮 *添加 Omega-Serv 的已知日志*）；而 `lnav` 总是会提供它们（缺失的文件在启动时会被直接忽略）。
 
 ### 13a. 远程来源（SSH）
 
 在显式请求时，集中收集位于反向代理之后同一本地网络中的后端服务器日志（屏幕 **日志管理 → 日志库 → 远程来源（SSH）**）。「fetch」是一次手动、单次的操作，绝不是实时流或自动轮询：在单击 *立即获取* 时通过 `scp` 获取一份**副本**，写入 `var/log/remote/`，然后像普通日志一样加入日志库（*访问* 列 = `ssh`，*修改时间* 列 = **这次**获取的日期 —— 绝不是远程文件的日期）；再次获取只会用更新的副本替换之前的副本。
 
-有意设置的防护措施（完整研究见 `OMEGA-SERV_ETUDE-FAISABILITE_LOGS_DISTANTS.md`）：不进行任何自动网络扫描，未经显式配置绝不连接（标签/主机/远程路径，用户/端口/私钥可选 —— 留空时由 `ssh`/`~/.ssh/config` 决定，就像手动输入命令一样），绝不询问或存储密码（私钥只通过路径引用，Omega-serv 绝不读取或存储它），传输前不检查大小。`scp` 能力在本地的 **能力清单** 中检测（仅检测程序是否存在，绝不测试主机可达性）；有意不考虑 Samba（YAGNI，直到确认存在真实需求）。
+有意设置的防护措施：不进行任何自动网络扫描，未经显式配置绝不连接（标签/主机/远程路径，用户/端口/私钥可选 —— 留空时由 `ssh`/`~/.ssh/config` 决定，就像手动输入命令一样），绝不询问或存储密码（私钥只通过路径引用，Omega-serv 绝不读取或存储它），传输前不检查大小。`scp` 能力在本地的 **能力清单** 中检测（仅检测程序是否存在，绝不测试主机可达性）；有意不考虑 Samba（YAGNI，直到确认存在真实需求）。
+
+[↑ 目录](#目录)
 
 ## 14. 测试
 
 ```bash
 source .venv/bin/activate
 lint-imports        # 检查 8 项分层契约
-pytest -q           # 2485 个测试
+pytest -q           # 全部测试
 ruff check .
 mypy src
 ```
 
 结构：`tests/unit/`（领域/应用，测试替身）、`tests/integration/`（在真实 TCP 套接字上运行的真实 asyncio 服务器、以子进程运行的真实 `openssl`、针对完整临时项目执行的真实 CLI 命令、通过 Textual 的 `Pilot` API 测试交互式界面 - 绝不截图）、`tests/security/`（针对 HTTP 解析器和路径解析器的 `hypothesis` 属性测试）。
+
+[↑ 目录](#目录)
 
 ## 15. 范围之外
 
@@ -575,6 +666,8 @@ mypy src
 - 外部 CA / 第三方机构 CSR、完整的 CRL 分发
 - Active Defense：与 `omega-fire` 封禁事件的真正集成（受阻于 `omega-fire` 一侧，它目前没有提供任何读取接口）
 
+[↑ 目录](#目录)
+
 ---
 
-> 🔒 OMEGA-SERV —— 一个稳固、完整、安全且具防御性的 Web 服务器。
+> 🔒 **OMEGA-SERV** —— 一个稳固、完整、安全且有意防御的 Web 服务器。
