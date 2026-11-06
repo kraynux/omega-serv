@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 09:44+0100\n"
+"POT-Creation-Date: 2026-11-06 12:03+0100\n"
 "PO-Revision-Date: 2026-10-23 23:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: ไทย\n"
@@ -6146,7 +6146,7 @@ msgid "Ouvre le registre des capacités."
 msgstr "เปิดทะเบียนความสามารถ"
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:28
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:86
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:177
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:320
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:327
@@ -6219,7 +6219,7 @@ msgstr "เปิดเมนูการตั้งค่าโดยละเ
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:42
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:49
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:79
 msgid "Dépend de l'écran ouvert ensuite - voir sa propre fiche."
 msgstr "ขึ้นอยู่กับหน้าจอที่เปิดถัดไป - ดูหัวข้อของหน้าจอนั้น"
 
@@ -6355,65 +6355,65 @@ msgstr "ไม่มีผลใด (อ่าน รีเฟรชอัตโ
 msgid "Active Sécurité"
 msgstr "ความปลอดภัยเชิงรุก"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:74
-msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
-msgstr "รวม Active Defense (deception/ภัยคุกคาม/เหตุการณ์) และไฟร์วอลล์แอปพลิเคชัน (WAF)"
-
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:75
+msgid "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+msgstr "รวมตามลำดับการโจมตี: WAF (ป้องกัน), Active Defense (ตรวจจับ), RIPOSTE (ตอบโต้ตามเวลา) และด้านล่างคือ การแทรกแซงด้วยตนเอง (แบนหรือยกเลิกแบนที่อยู่ IP ด้วยตนเอง)"
+
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
 msgid "À utiliser pour la sécurité active du serveur."
 msgstr "ใช้สำหรับความปลอดภัยเชิงรุกของเซิร์ฟเวอร์"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:76
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:78
 msgid "Ouvre le menu Active Sécurité."
 msgstr "เปิดเมนูความปลอดภัยเชิงรุก"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:80
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:85
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:81
 #: src/omega_serv/interfaces/tui/screens/home.py:86
 msgid "Audit de sécurité"
 msgstr "ตรวจสอบความปลอดภัย"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:81
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
 msgid "Vérifications consultatives (service, rotation des logs, mode WAF...)."
 msgstr "การตรวจสอบเชิงแนะนำ (บริการ การหมุนเวียนล็อก โหมด WAF...)"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
 msgid "À lancer ponctuellement pour un avis global."
 msgstr "เรียกใช้เป็นครั้งคราวเพื่อดูภาพรวม"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:85
 msgid "Ouvre l'écran d'audit."
 msgstr "เปิดหน้าจอตรวจสอบ"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:87
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:102
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:82
 #: src/omega_serv/interfaces/tui/screens/home.py:88
 msgid "Sauvegarde de configuration"
 msgstr "สำรองข้อมูลการตั้งค่า"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:88
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
 msgid "Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."
 msgstr "สร้าง แสดงรายการ กู้คืน หรือลบข้อมูลสำรองการตั้งค่าแบบเต็ม"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
 msgid "À utiliser avant un changement risque, ou pour migrer une configuration."
 msgstr "ใช้ก่อนการเปลี่ยนแปลงที่มีความเสี่ยง หรือเพื่อย้ายการตั้งค่า"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:92
 msgid "Ouvre l'écran de sauvegarde."
 msgstr "เปิดหน้าจอสำรองข้อมูล"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:93
 msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr "การกู้คืนจะเขียนทับไฟล์เป้าหมายโดยตรง - ดูหัวข้อของหน้าจอนั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:94
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
 msgid "Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."
 msgstr "หน้าจอนี้ไม่แก้ไขการตั้งค่าด้วยตัวเองเลย - มีเพียงการนำทาง"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:97
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:99
 msgid "Appuyer sur Échap depuis cet écran demande une confirmation de sortie de l'application (contrairement aux autres écrans, où Échap revient simplement en arrière)."
 msgstr "การกด Esc จากหน้าจอนี้จะขอยืนยันการออกจากแอปพลิเคชัน (ต่างจากหน้าจออื่นที่ Esc เพียงย้อนกลับ)"
 
@@ -8002,6 +8002,7 @@ msgstr "กับดักจริงที่แก้ไขแล้ว: ห�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:322
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:335
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:346
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
 msgid "WAF/Active Defense"
 msgstr "WAF/Active Defense"
 
@@ -8162,7 +8163,7 @@ msgstr "ข้อความที่แสดงหลัง 'บันทึ�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (นำเข้า WAF ภายนอก)"
 
@@ -8312,163 +8313,171 @@ msgstr "ตัวช่วย Let's Encrypt ล้มเหลว (challenge HTT
 msgid "Les causes les plus fréquentes, dans l'ordre à vérifier : (1) le port 80 n'est pas réellement joignable depuis Internet (redirection de port manquante ou incorrecte sur le routeur/pare-feu, ou un autre service occupe déjà ce port sur la machine), (2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propagé - vérifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test (staging, coché par défaut) tout fonctionne mais le certificat obtenu n'est jamais reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par Certbot - il précise généralement laquelle de ces causes s'applique."
 msgstr "สาเหตุที่พบบ่อยที่สุด เรียงตามลำดับที่ควรตรวจสอบ: (1) พอร์ต 80 เข้าถึงจากอินเทอร์เน็ตไม่ได้จริง (ไม่มีหรือตั้งค่าการส่งต่อพอร์ตบนเราเตอร์/ไฟร์วอลล์ผิด หรือมีบริการอื่นใช้พอร์ตนี้บนเครื่องอยู่) (2) โดเมนยังไม่ชี้มายัง IP นี้ (DNS/DDNS ยังไม่กระจาย - ตรวจสอบด้วย `dig`/`nslookup` จากเครื่องภายนอก) (3) ในโหมดทดสอบ (staging เลือกไว้โดยค่าเริ่มต้น) ทุกอย่างทำงานแต่ใบรับรองที่ได้จะไม่ได้รับการยอมรับจากเบราว์เซอร์ - เป็นเรื่องปกติ ให้ยกเลิกการเลือกเมื่อตรวจสอบโดเมนและ webroot แล้ว ข้อความข้อผิดพลาดที่แสดงคือข้อความจาก Certbot โดยตรง - มักจะระบุว่าสาเหตุใดเกิดขึ้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:593
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:604
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:615
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:630
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:642
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:654
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:666
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:678
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:689
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:700
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+msgid "Comment bannir une adresse IP à la main, sans écrire de règle ?"
+msgstr "จะแบนที่อยู่ IP ด้วยตนเองโดยไม่ต้องเขียนกฎได้อย่างไร?"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:585
+msgid "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte (JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> Liste de blocage."
+msgstr "ความปลอดภัยเชิงรุก -> การแทรกแซงด้วยตนเอง -> แบน: ที่อยู่ เหตุผล และระยะเวลา การแบนมีผลทันที (หน้า 451 ทั่วทั้งเว็บไซต์ ก่อนถึงแบ็กเอนด์) ไม่ต้องใช้สิทธิ์ root และไม่เกี่ยวข้องกับการกระทำซ้ำของ RIPOSTE; ยกเลิกได้ใน ยกเลิกแบน สถานะการแบน แสดงการแบนทั้งหมดพร้อมที่มาและส่งออกได้ (JSON, HTML หรือ TXT ที่นำเข้า omega-fire ได้ทันที) สำหรับเครือข่าย ให้ใช้ WAF -> โมดูล -> รายการบล็อก"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:606
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:617
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:628
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:691
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:702
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:595
 msgid "Quelle différence entre Active Defense et RIPOSTE ?"
 msgstr "Active Defense กับ RIPOSTE ต่างกันอย่างไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:584
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:597
 msgid "Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence (épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique."
 msgstr "Active Defense ทำงานระหว่างคำขอ: ประเมินแต่ละแหล่งที่มาจากสิ่งที่กำลังทำ (คะแนน ระดับ normal / suspicious / hostile / contained) และตอบสนองทันที (เหยื่อล่อ การชะลอ เหตุการณ์) RIPOSTE ทำงานตามเวลา: จดจำแหล่งที่มาที่กลับมาหลังความเงียบ (ตอน) และใช้การแบนที่นานขึ้นเรื่อย ๆ (ขั้น ค่าเริ่มต้น 1 ชม., 6 ชม., 24 ชม., 7 วัน) พร้อมการหมดอายุ การยกเลิก และความจำการกระทำซ้ำ RIPOSTE ไม่เคยเปลี่ยนคะแนนหรือเกณฑ์ของ Active Defense นโยบายทำได้เพียงกำหนดระดับ Active Defense ขั้นต่ำ"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
 msgid "Pourquoi RIPOSTE a-t-il banni cette adresse ?"
 msgstr "ทำไม RIPOSTE แบนที่อยู่นี้?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:596
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:609
 msgid "Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et « riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce ban dans la récidive », et au besoin « Lever et exempter cette source »."
 msgstr "หน้าการดำเนินการ: รายละเอียดการดำเนินการแสดงนโยบาย ขั้น เหตุการณ์ต้นเหตุ และการหมดอายุ 'การตัดสินใจล่าสุด' ในหน้าจำลอง: อธิบายแต่ละการตัดสินใจทีละบรรทัด (นโยบายที่เลือก จำนวนการกลับมา ข้อยกเว้นที่ตรวจ) บรรทัดคำสั่ง: 'riposte actions show <id>' และ 'riposte decisions list --ip <ที่อยู่> --explain' หากผลบวกลวง: 'ยกเลิก' โดยเลือก 'ไม่นับการแบนนี้เป็นการกระทำซ้ำ' และหากจำเป็น 'ยกเลิกและยกเว้นแหล่งที่มานี้'"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:605
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
 msgid "J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"
 msgstr "ฉันยกเลิกการแบนของ RIPOSTE แล้ว แต่ที่อยู่ยังถูกบล็อก - ทำไม?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:620
 msgid "Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client (la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne couvre pas la même adresse : RIPOSTE n'y touche jamais."
 msgstr "นโยบาย 'แบนในเครื่อง + แบนเครือข่าย' ส่งการแบนไปยัง fail2ban ด้วย ผ่าน jail <service>-riposte-1h/6h/24h/7d ของ omega-jail omega-serv ไม่มีสิทธิ์ยกเลิกการแบนของ fail2ban: 'ยกเลิก' จะเอาออกเฉพาะการแบนในเครื่อง (WAF blocklist) ยกเลิกการแบนเครือข่ายด้วย omega-fire หรือ fail2ban-client (jail แสดงในรายละเอียดการดำเนินการ) ตรวจสอบด้วยว่าไม่มีการแบนของ WAF หรือการแบนด้วยตนเองที่เป้าหมายที่อยู่เดียวกัน: RIPOSTE ไม่เคยแตะต้องสิ่งเหล่านั้น"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:616
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:629
 msgid "Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"
 msgstr "สถานการณ์ « ผู้สำรวจเหยื่อล่อ » และ « การสำรวจอัปโหลด / API » ถูกปฏิเสธ (ไม่รู้จักโปรไฟล์เหยื่อล่อ) - ต้องทำอย่างไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
 msgid "Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, « Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter -> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre."
 msgstr "สองสถานการณ์นี้ไม่แบน: แต่จะส่งแหล่งที่มาไปยังเหยื่อล่อของ Active Defense ดังนั้นเหยื่อล่อต้องมีอยู่ก่อนโหลดสถานการณ์ - « ผู้สำรวจเหยื่อล่อ » ใช้โปรไฟล์ fake_admin และ « การสำรวจอัปโหลด / API » ใช้โปรไฟล์ fake_api (1) ต้องเปิดตัวเลือก active_defense (เมนู ตัวเลือก) (2) ใน ความปลอดภัยเชิงรุก -> การตั้งค่า (บล็อก Active Defense): « เปิด Deception » = ใช่ แล้วกดบันทึก (3) ยังอยู่ใน การตั้งค่า « เพิ่มโปรไฟล์ »: ชื่อ fake_admin (หรือ fake_api) เปิดใช้งาน ใช่ ประเภทการโจมตี scan,credential_stuffing สำหรับ fake_admin หรือ api_probe,upload_probe สำหรับ fake_api, Isolation fixture และเว้นโซนเหยื่อล่อว่าง (4) กลับไปที่ RIPOSTE -> นโยบาย -> เพิ่ม -> สถานการณ์พร้อมใช้: สถานการณ์จะได้รับการยอมรับ เหยื่อล่อจะทำงานหลังรีสตาร์ทแบบเต็มเท่านั้น อีกสามสถานการณ์เป็นการแบนและไม่ต้องใช้เหยื่อล่อ"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:644
 msgid "RIPOSTE ne fait rien - pourquoi ?"
 msgstr "RIPOSTE ไม่ทำอะไรเลย - ทำไม?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:633
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:646
 msgid "Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins 1 h de silence. Simuler avec la même situation montre la condition qui manque."
 msgstr "ตรวจตามลำดับ: (1) เปิดใช้งานโมดูล 'riposte' ในตัวเลือกและเริ่มบริการใหม่ทั้งหมดแล้วหรือยัง? (2) WAF เปิดใช้งานหรือไม่? หากไม่ RIPOSTE จะมองไม่เห็นการโจมตี (3) มีนโยบายที่เปิดใช้งานอย่างน้อยหนึ่งรายการหรือไม่ ('บันทึกโดยไม่เปิดใช้งาน' จะยังอยู่ในโหมดสังเกต)? (4) หยุดฉุกเฉินไม่ได้ทำงานอยู่ใช่ไหม (หน้าสถานะ: ปุ่มแสดง 'ทำต่อ')? (5) ถึงเงื่อนไขหรือยัง: เช่น 3 ตอนใน 7 วัน โดยมีความเงียบอย่างน้อย 1 ชั่วโมงระหว่างแต่ละตอน การจำลองสถานการณ์เดียวกันจะบอกเงื่อนไขที่ขาด"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:656
 msgid "Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"
 msgstr "ที่อยู่ที่ถูกแบนได้รับหน้า 451: เป็นของ omega-serv หรือ fail2ban?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:645
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:658
 msgid "C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list »."
 msgstr "เป็นของ omega-serv ที่อยู่ที่อยู่ในรายการบล็อกของ WAF (แบนอัตโนมัติของ WAF, แบนด้วยตนเอง หรือแบนในเครื่องของ RIPOSTE) จะได้รับหน้า 451 “IP ของคุณถูกแบน” ในทุกคำขอตลอดระยะเวลาที่ถูกแบน รหัส 403 ปฏิเสธเพียงคำขอเดียว (ตรงกับกฎ) โดยไม่แบน การแบนของ fail2ban ทำงานที่ไฟร์วอลล์: ไม่เคยส่งหน้าใดกลับมา การเชื่อมต่อถูกตัดหรือเชื่อมต่อไม่สำเร็จ หากต้องการรู้ว่าใครแบน ให้ดูแหล่งที่มาของการแบนในรายการบล็อก (« auto » = แบนอัตโนมัติของ WAF, « riposte », « manual »): WAF → โมดูล → รายการบล็อก หรือ « blocklist list »"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:668
 msgid "À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"
 msgstr "jail omega-serv-riposte-1h, -6h, -24h และ -7d มีไว้ทำอะไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:657
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:670
 msgid "Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails, préfixé par le nom de son service."
 msgstr "เป็น jail ของ fail2ban สำหรับการแบนเครือข่ายของ RIPOSTE ซึ่งติดตั้งโดย omega-jail (1.1.0 ขึ้นไป) เมื่อนโยบาย “แบนในเครื่อง + แบนเครือข่าย” สั่งแบน omega-serv จะแบนในเครื่องก่อน แล้วเขียนหนึ่งบรรทัดลงใน « var/log/riposte-decisions.jsonl »; fail2ban อ่านบรรทัดนั้นแล้วแบนที่อยู่ที่ไฟร์วอลล์ jail เหล่านี้มีระยะเวลาคงที่: แต่ละขั้นของ RIPOSTE จะไปที่ jail ที่ยาวที่สุดที่ไม่เกินขั้นนั้น (ขั้น 2 ชม. ไปที่ jail 1 ชม.) และอินเทอร์เฟซจะแสดงไว้ อินสแตนซ์ omega-serv แต่ละตัวมีชุด jail ของตัวเอง โดยขึ้นต้นด้วยชื่อบริการของตน"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:680
 msgid "J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"
 msgstr "ฉันอัปเดต omega-jail แล้ว แต่ jail ของ RIPOSTE ไม่ปรากฏทั้งใน fail2ban และใน omega-fire"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:669
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:682
 msgid "Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans rien à déclarer."
 msgstr "การอัปเดต omega-jail อย่างเดียวไม่ได้ติดตั้ง jail ใหม่ ให้แตกไฟล์เก็บถาวรทับโฟลเดอร์เดิม แล้วเรียก « ./install.sh »: จะแสดงรายการ jail ในแคตตาล็อกที่ยังไม่ได้ติดตั้งและเสนอให้ติดตั้ง (« sudo ») หรือ: « sudo ./omega-jail.sh --apply » jail ของ RIPOSTE จะถูกเสนอเฉพาะเมื่อเปิดใช้งานโมดูล RIPOSTE ใน omega-serv (ไม่เช่นนั้นจะเป็น “ยังไม่ได้กำหนดค่าแหล่งที่มา”) ตรวจสอบ: « sudo fail2ban-client status » omega-fire จะแสดงทันทีที่ติดตั้ง โดยไม่ต้องประกาศอะไร"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
 msgid "Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"
 msgstr "หลัง Tailscale Funnel หรือพร็อกซีในเครื่อง การแบนเครือข่ายมีประโยชน์ไหม?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:681
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:694
 msgid "Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul."
 msgstr "ไม่ใช่การแบนของ fail2ban อย่างเดียว: ในกรณีนี้การเชื่อมต่อมาจากพร็อกซีในเครื่อง (tailscaled, 127.0.0.1) ไม่ใช่จากผู้เยี่ยมชม และการแบนที่ไฟร์วอลล์ไปไม่ถึงผู้เยี่ยมชม omega-jail (1.1.0 ขึ้นไป) ตรวจพบกรณีนี้แล้วส่งต่อการแบนของ fail2ban ทุกครั้งที่เป็นที่อยู่สาธารณะไปยังรายการบล็อกของ omega-serv: ที่อยู่นั้นจะได้รับหน้า 451 เหมือนกับสคริปต์ Magnet jail ของ RIPOSTE จะไม่ถูกส่งต่อ: RIPOSTE แบนในเครื่องไว้แล้ว (451) เมื่อผู้เยี่ยมชมเชื่อมต่อกับเซิร์ฟเวอร์โดยตรง การแบนที่ไฟร์วอลล์ทำงานได้เอง"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:690
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
 msgid "La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"
 msgstr "jail omega-serv-active-defense ทำงานซ้ำซ้อนกับ RIPOSTE หรือไม่?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:705
 msgid "En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si seuls les paliers RIPOSTE doivent compter."
 msgstr "บางส่วน jail นี้ของ omega-jail แบนที่ไฟร์วอลล์ 24 ชม. คงที่ ทุกที่อยู่ที่ Active Defense จัดเป็น hostile หรือ contained โดยไม่สนใจขั้นของ RIPOSTE: ที่อยู่จึงอาจถูกแบนที่ระดับเครือข่ายเร็วกว่าหรือนานกว่าขั้นที่เลือก หน้าจอ สถานะ ของ RIPOSTE จะแจ้งเรื่องนี้ เก็บไว้หากต้องการตาข่ายนิรภัยนี้; ลบออก (การจัดการ jail ของ omega-fire) หากต้องการให้นับเฉพาะขั้นของ RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:701
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
 msgid "Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"
 msgstr "การโจมตีทดสอบของฉันไม่ทำให้เกิดการแบน RIPOSTE เลย - ทำไม?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
 msgid "Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie : nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque."
 msgstr "ตามลำดับ: (1) คำขอต้องตรงกับกฎของ WAF ซึ่งจะได้ 403 (เช่น « /?id=1 UNION SELECT 1 » หรือ « /.env »); 404 ธรรมดาไม่ใช่การโจมตี; (2) ที่อยู่ต้องไม่ได้รับการยกเว้น: โฮสต์ในเครื่อง Tailscale และเครือข่ายภายในไม่ถูกแบนเลย ให้ทดสอบจากที่อยู่สาธารณะ (4G) และหากอยู่หลังพร็อกซี ให้ตั้งค่าพร็อกซีที่เชื่อถือได้; (3) ต้องเป็นไปตามนโยบาย: จำนวนตอน คลาสการโจมตี และระดับ Active Defense ขั้นต่ำ (“ไม่มี” สำหรับการทดสอบ); (4) ที่อยู่ที่ถูกแบนอยู่แล้ว (หน้า 451 มักมาจากการแบนอัตโนมัติของ WAF) จะไม่ถูกวิเคราะห์อีก: RIPOSTE ไม่สนใจการปฏิเสธของรายการบล็อก ให้ยกเลิกการแบนนั้นก่อน การจำลองสถานการณ์เดียวกันจะแสดงสิ่งที่ขาด"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:727
 msgid "Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"
 msgstr "ทำไม omega-fire แสดงเฉพาะการแบนของ fail2ban?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:729
 msgid "omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, dont ceux de RIPOSTE, apparaissent bien dans omega-fire."
 msgstr "omega-fire อ่านจาก fail2ban และไฟร์วอลล์ การแบนของ omega-serv (รายการบล็อกของ WAF, หน้า 451: แบนอัตโนมัติ แบนด้วยตนเอง แบนในเครื่องของ RIPOSTE) ตอนนี้ต้องดูใน omega-serv: WAF → โมดูล → รายการบล็อก, หน้าจอ การดำเนินการ ของ RIPOSTE หรือ « blocklist list » ส่วน jail ที่ omega-jail ติดตั้ง รวมถึงของ RIPOSTE จะแสดงใน omega-fire"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:723
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:746
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:764
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:776
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:786
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:736
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:759
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:799
 msgid "Moteur HTTP et performances"
 msgstr "เอนจิน HTTP และประสิทธิภาพ"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:724
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:737
 msgid "Moteur Python ou natif : qu'est-ce que ça change concrètement ?"
 msgstr "เอนจิน Python หรือเนทีฟ: ในทางปฏิบัติต่างกันอย่างไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:739
 msgid "Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute (correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée par le moteur natif, sans coût mesurable. Mesuré sur trois machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des dizaines de millions de requêtes par jour sur une machine modeste."
 msgstr "สิ่งที่ไม่เปลี่ยน: คำตอบ บันทึก ความปลอดภัย และฟังก์ชันที่มีให้ สิ่งที่เปลี่ยนคือผู้จัดการคำขอ HTTP: ตัวแปลภาษา Python หรือโปรแกรมที่คอมไพล์แล้วซึ่งใช้ทุกคอร์ เมื่อเปิด WAF เอนจินเนทีฟจะตรวจหากฎเอง: คำขอที่ไม่ตรงกับกฎใดเลยจะได้รับการตอบโดยไม่ผ่าน Python หากมีข้อสงสัยแม้เพียงเล็กน้อย (ตรงกับกฎ, ข้อความที่ไม่ใช่ ASCII, ส่วนหัวหรือเนื้อหาที่ต้องตรวจ, แหล่งที่มาที่ Active Defense กำลังติดตาม, โซนการยืนยันตัวตน) Python จะเป็นผู้ตัดสิน เหมือนกับเอนจิน Python ทุกประการ หากเปิด magnet คำขอทั้งหมดจะผ่าน Python ส่วนการจำกัดอัตรานั้นเอนจินเนทีฟเป็นผู้นับ โดยไม่มีค่าใช้จ่ายที่วัดได้ จากการวัดบนสามเครื่อง (ดูรายละเอียดในการเปรียบเทียบเว็บเซิร์ฟเวอร์) เอนจินเนทีฟให้บริการหน้าเล็กเร็วกว่าเอนจิน Python 10 ถึง 27 เท่าเมื่อไม่มีการตรวจสอบความปลอดภัย และเร็วกว่า 8 ถึง 30 เท่าเมื่อเปิด WAF ซึ่งทำให้ปริมาณงานลดลงเพียง 5 ถึง 22 %; ไฟล์ 100 KB เร็วกว่า 3.5 ถึง 10 เท่า; ไฟล์ขนาดใหญ่เร็วกว่า 1.3 ถึง 2.7 เท่า เวลาตอบสนองของคำขอที่ช้าที่สุดลดลง 5 ถึง 15 เท่า แลกกับการใช้หน่วยความจำเพิ่มประมาณ 5 MB และเพิ่มอีกประมาณ 8 MB เมื่อเปิด WAF (กฎที่โหลดไว้ในเอนจินเนทีฟ) การแสดงรายการไดเรกทอรี หน้าภายใน reverse proxy, FastCGI, การส่งไฟล์ และ WebSocket ถูกส่งต่อให้ Python: คำขอเหล่านั้นยังคงความเร็วของเอนจิน Python สำหรับเว็บไซต์เล็กที่มีผู้เข้าชมน้อย ทั้งสองแบบเพียงพออย่างเหลือเฟือ: แม้แต่เอนจิน Python ที่เปิด WAF ก็ให้บริการได้หลายสิบล้านคำขอต่อวันบนเครื่องธรรมดา"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:747
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:760
 msgid "Combien de processus choisir ?"
 msgstr "ควรเลือกกี่โปรเซส?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:749
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:762
 msgid "Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques (le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; le nombre réellement appliqué s'affiche dans État & Ressources."
 msgstr "ขึ้นอยู่กับเอนจิน เอนจิน Python: แต่ละโปรเซสให้บริการคำขอ จากการวัด 2 โปรเซสให้บริการได้มากกว่า 1 โปรเซส 1.6 ถึง 2 เท่า และ 4 โปรเซสประมาณ 3.5 เท่า จนถึงจำนวนคอร์จริง (ค่าสูงสุดที่เสนอ) แต่ละโปรเซสใช้หน่วยความจำเพิ่มประมาณ 10 ถึง 20 MB เอนจินเนทีฟ: ใช้ทุกคอร์อยู่แล้ว โปรเซสที่ตั้งค่าคือโปรเซสของการตรวจสอบความปลอดภัย ซึ่งได้รับเฉพาะคำขอที่ต้องตรวจ (WAF ตรงกับกฎหรือมีข้อสงสัย, แหล่งที่มาที่ Active Defense กำลังติดตาม, การยืนยันตัวตน) ดังนั้นสำหรับทราฟฟิกทั่วไป โปรเซสที่ 2 ไม่ช่วยอะไร: จากการวัด ปริมาณงานยังเท่าเดิม จะมีประโยชน์เมื่อคำขอทั้งหมดผ่าน Python (เปิด magnet) และเครื่องมีอย่างน้อย 4 คอร์จริง: ได้คำขอมากขึ้น 1.5 ถึง 1.7 เท่า บน 2 คอร์ให้ผลเพียง 5 ถึง 12 % เพราะโปรเซสเซอร์ทำงานเต็มอยู่แล้ว: หน้าจอจึงเสนอให้เฉพาะเมื่อมีตั้งแต่ 4 คอร์ เกิน 2 โปรเซส ผลที่วัดได้คือ 4 % หน้าจอ ความทนทานและขีดจำกัด แสดงค่าสูงสุดของเครื่องนี้และประโยชน์ของการเพิ่ม จำนวนที่ใช้จริงแสดงใน สถานะและทรัพยากร"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:765
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:778
 msgid "Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"
 msgstr "ทำไมตัวเลือก « เนทีฟ C++ » ใน การตั้งค่าพื้นฐาน จึงเป็นสีเทา?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:767
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:780
 msgid "Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif (ces routes demandent de confier la connexion au processus Python, impossible quand le natif chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif."
 msgstr "เพราะมีสาเหตุที่ทำให้เอนจินเนทีฟให้บริการทั้งหมดไม่ได้: ไม่พบไบนารี bin/omega-http-core หรือเริ่มทำงานบนเครื่องนี้ไม่ได้ (install.sh จะพยายามคอมไพล์ใหม่) หรือ TLS อยู่ในโหมดโดยตรงขณะที่เปิดรีเวิร์สพร็อกซี FastCGI หรือการอัปโหลดไฟล์ (เส้นทางเหล่านี้ต้องมอบการเชื่อมต่อให้โปรเซส Python ซึ่งทำไม่ได้เมื่อเนทีฟเข้ารหัสเอง) รายการสาเหตุและวิธีแก้แต่ละสาเหตุจะแสดงใต้ตัวเลือก ไม่มีเซิร์ฟเวอร์ที่เป็นเนทีฟครึ่งเดียว: แก้สาเหตุก่อน แล้วจึงเลือกเนทีฟ"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:790
 msgid "Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"
 msgstr "เอนจินเนทีฟเปลี่ยนบันทึก fail2ban (omega-jail) หรือ RIPOSTE ของฉันหรือไม่?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:779
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:792
 msgid "Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne voient aucune différence. Une adresse bannie l'est quel que soit le moteur."
 msgstr "ไม่ บันทึกการเข้าถึงเขียนในรูปแบบเดียวกันทุกตัวอักษร และบันทึกความปลอดภัย (การแจ้งเตือน WAF, เหตุการณ์ Active Defense) เขียนโดยโค้ด Python ชุดเดียวกับเอนจิน Python RIPOSTE, omega-jail และ omega-fire อ่านบรรทัดเดียวกันและไม่เห็นความแตกต่างใด ๆ ที่อยู่ที่ถูกแบนยังคงถูกแบนไม่ว่าจะใช้เอนจินใด"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:787
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:800
 msgid "J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"
 msgstr "ฉันเลือกเอนจินเนทีฟแล้ว แต่ สถานะและทรัพยากร แสดง « Python » - เพราะอะไร?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:802
 msgid "Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre."
 msgstr "เซิร์ฟเวอร์ยังไม่ได้รีสตาร์ท (เอนจินจะเปลี่ยนเมื่อรีสตาร์ทเต็มรูปแบบเท่านั้น) หรือเนทีฟเริ่มทำงานไม่ได้: ไม่พบไบนารีหรือถูกปฏิเสธ หรือมีฟังก์ชันที่เปิดอยู่ซึ่งมันให้บริการไม่ได้ ในกรณีนี้เอนจิน Python ให้บริการทั้งหมด และเหตุผลแสดงใน สถานะและทรัพยากร (ส่วน เอนจิน HTTP) ในบันทึกข้อผิดพลาด และผ่านคำสั่ง « omega-serv engine status » จะไม่มีการให้บริการครึ่งหนึ่งโดยเอนจินหนึ่งและอีกครึ่งโดยอีกเอนจินหนึ่ง"
 
@@ -10558,7 +10567,7 @@ msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterminis
 msgstr "เมื่อ `war_mode.enabled=true` ทุกอย่างจะเป็นอัตโนมัติและกำหนดได้แน่นอน โดยไม่ต้องทำอะไรด้วยมือ: ทุกการตัดสินของ WAF ที่คำนวณไว้แล้วจะเพิ่มคะแนนสะสมต่อแหล่งที่มา (IP + User-Agent ที่แฮชแล้ว ลดลงตามเวลา) ซึ่งเมื่อข้ามเกณฑ์ที่ตั้งค่าได้ (normal/suspicious/hostile/contained) จะทำให้เกิดการดำเนินการอัตโนมัติ (เปลี่ยนเส้นทางไปยังเหยื่อล่อ บันทึกล็อกแบบละเอียด การหน่วงเวลา การสร้างเหตุการณ์)"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - การตั้งค่า"
 
@@ -10722,7 +10731,7 @@ msgid "Une zone de leurre n'est jamais créée automatiquement et son existence 
 msgstr "โซนเหยื่อล่อไม่ถูกสร้างอัตโนมัติและไม่มีการตรวจสอบการมีอยู่ตอนบันทึก - หากไม่มีสิ่งใดรับฟังที่ที่อยู่ที่ระบุ ผู้โจมตีจะได้รับข้อผิดพลาด 502 ตอนมีคำขอ ไม่ใช่ก่อนหน้านั้น"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - ภัยคุกคาม"
 
@@ -10755,7 +10764,7 @@ msgid "Aucune modification possible depuis cet écran."
 msgstr "ไม่สามารถแก้ไขสิ่งใดจากหน้าจอนี้"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - เหตุการณ์"
 
@@ -10869,7 +10878,7 @@ msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports
 msgstr "ดูข้อมูลเท่านั้น ยกเว้นการปิดเหตุการณ์ (ย้อนกลับไม่ได้) และการส่งออก (เขียนลงดิสก์)"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - เหยื่อล่อ"
 
@@ -10908,7 +10917,7 @@ msgid "Les affectations expirées mais jamais libérées restent visibles avec l
 msgstr "การกำหนดที่หมดอายุแต่ไม่เคยปล่อยจะยังมองเห็นได้ในสถานะ 'หมดอายุ' - ต่างจากการปล่อยด้วยมือ"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - จำลอง"
 
@@ -11023,7 +11032,7 @@ msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter
 msgstr "หากไม่มีการอ้างอิงแพ็กกฎใดเลย WAF จะตรวจจับอะไรไม่ได้แม้ทำงานอยู่ - หน้าจอแจ้งเรื่องนี้อย่างชัดเจน ซึ่งแก้ช่องโหว่จริงที่ผู้ใช้รายงานมา"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "WAF - Modules"
 msgstr "WAF - โมดูล"
 
@@ -11135,7 +11144,7 @@ msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement 
 msgstr "โหมด/พฤติกรรมเมื่อเกิดข้อผิดพลาด/แพ็กกฎต้องโหลดใหม่จึงจะมีผล (อัตโนมัติหากมีบริการที่ทำงานอยู่) ส่วนรายการบล็อกมีผลทันทีโดยไม่ต้องทำอะไรเพิ่ม"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - ข้อจำกัด (ข้อยกเว้นและการจำกัดอัตรา)"
 
@@ -11238,7 +11247,7 @@ msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une d�
 msgstr "สคริปต์ magnet: rate limit ของตัวเอง (429) ไม่นับเป็นการตรวจพบ จึงไม่นำไปสู่การแบนอัตโนมัติ สำหรับคำขอที่อยู่ในกฎโฟลเดอร์หรือ IP/เครือข่ายด้านบน กฎนั้นมีผลเหนือกว่า: 429 ของ magnet จะถูกละเว้น (ลายเซ็นการโจมตีของมันยังคงใช้อยู่)"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "WAF - Tester une requête"
 msgstr "WAF - ทดสอบคำขอ"
 
@@ -11275,7 +11284,7 @@ msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur 
 msgstr "สร้างเอนจิน WAF ใหม่จากการตั้งค่าที่บันทึกบนดิสก์ทุกครั้งที่ทดสอบ - หากเซิร์ฟเวอร์ที่ทำงานอยู่ยังไม่ได้โหลดใหม่หลังเปลี่ยนกฎ การทดสอบนี้อาจแสดงพฤติกรรมที่ต่างจากที่เซิร์ฟเวอร์ใช้อยู่จริงในขณะนี้"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - กฎและรายการแบบกำหนดเอง"
 
@@ -11648,7 +11657,7 @@ msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route r�
 msgstr "รายการที่บล็อกด้วยตัวเอง (ความรุนแรง >= 5) และจะกระทบเส้นทางที่ให้บริการจริง (alias, reverse proxy, โซน Auth, ไฟล์ใน webroot) จะถูกปฏิเสธ: เพิ่มข้อยกเว้น '!/พาธ' ในรายการ หรือโหลดในโหมดเฝ้าดู"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - ตัวแก้ไขรายการ"
 
@@ -11857,7 +11866,7 @@ msgid "L'état en bas de l'écran indique si le compte du service peut lire le f
 msgstr "สถานะที่ด้านล่างของหน้าจอแสดงว่าบัญชีของบริการอ่านไฟล์ได้หรือไม่: ไฟล์ที่อ่านไม่ได้จะทำให้การโหลดใหม่ครั้งถัดไปล้มเหลว"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modifier une liste"
 msgstr "WAF - แก้ไขรายการ"
 
@@ -12000,7 +12009,7 @@ msgid "Un script importe peut référencer une fonctionnalité lighty.* non supp
 msgstr "สคริปต์ที่นำเข้าอาจอ้างถึงฟังก์ชัน lighty.* ที่สะพานนี้ไม่รองรับ (เป็น nil เสมอฝั่ง Lua) - เรียกตรวจสอบความเข้ากันได้ทุกครั้งก่อนเปิดสคริปต์ใหม่ใน production โดยเฉพาะกับ on_error=fail-closed"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - เลือกแพ็กกฎ"
 
@@ -13833,16 +13842,16 @@ msgid "Audit et sauvegarde"
 msgstr "การตรวจสอบและการสำรองข้อมูล"
 
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:84
-msgid "Active Defense - Statut"
-msgstr "Active Defense - สถานะ"
-
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Statut"
 msgstr "WAF - สถานะ"
 
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "WAF - Assistant règle / chargement de liste"
 msgstr "WAF - ตัวช่วยกฎ / โหลดรายการ"
+
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+msgid "Active Defense - Statut"
+msgstr "Active Defense - สถานะ"
 
 #: src/omega_serv/interfaces/tui/rendering/aligned_block.py:73
 msgid "detail() sans ligne precedente"
@@ -20854,12 +20863,12 @@ msgstr "ใช่"
 msgid "non"
 msgstr "ไม่"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:58
 #, python-brace-format
 msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
 msgstr "สร้างเมื่อ {date} · การแบน {count} รายการ มีผลอยู่ {active} รายการ"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:80
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
@@ -21125,6 +21134,9 @@ msgstr "ไฟล์การตั้งค่า WordPress"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "การสำรวจปลั๊กอิน/ธีม WordPress ทั่วไป"
+
+#~ msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
+#~ msgstr "รวม Active Defense (deception/ภัยคุกคาม/เหตุการณ์) และไฟร์วอลล์แอปพลิเคชัน (WAF)"
 
 #, python-brace-format
 #~ msgid "plus gros : {name} ({size})"

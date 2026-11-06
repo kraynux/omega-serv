@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 09:44+0100\n"
+"POT-Creation-Date: 2026-11-06 12:03+0100\n"
 "PO-Revision-Date: 2026-10-23 21:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Tiếng Việt\n"
@@ -6146,7 +6146,7 @@ msgid "Ouvre le registre des capacités."
 msgstr "Mở sổ đăng ký khả năng."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:28
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:86
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:177
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:320
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:327
@@ -6219,7 +6219,7 @@ msgstr "Mở menu cấu hình chi tiết."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:42
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:49
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:79
 msgid "Dépend de l'écran ouvert ensuite - voir sa propre fiche."
 msgstr "Tùy thuộc màn hình được mở tiếp theo - xem mục riêng của nó."
 
@@ -6355,65 +6355,65 @@ msgstr "Không có tác dụng (chỉ đọc, tự làm mới mỗi 2 giây)."
 msgid "Active Sécurité"
 msgstr "Bảo mật chủ động"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:74
-msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
-msgstr "Gồm Active Defense (deception/mối đe dọa/sự cố) và tường lửa ứng dụng (WAF)."
-
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:75
+msgid "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+msgstr "Gom theo thứ tự của một cuộc tấn công: WAF (bảo vệ), Active Defense (phát hiện), RIPOSTE (đáp trả qua thời gian) và bên dưới là CAN THIỆP THỦ CÔNG (cấm hoặc gỡ cấm một địa chỉ IP bằng tay)."
+
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
 msgid "À utiliser pour la sécurité active du serveur."
 msgstr "Dùng cho bảo mật chủ động của máy chủ."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:76
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:78
 msgid "Ouvre le menu Active Sécurité."
 msgstr "Mở menu Bảo mật chủ động."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:80
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:85
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:81
 #: src/omega_serv/interfaces/tui/screens/home.py:86
 msgid "Audit de sécurité"
 msgstr "Kiểm tra bảo mật"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:81
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
 msgid "Vérifications consultatives (service, rotation des logs, mode WAF...)."
 msgstr "Các kiểm tra mang tính tư vấn (dịch vụ, xoay vòng log, chế độ WAF...)."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
 msgid "À lancer ponctuellement pour un avis global."
 msgstr "Chạy định kỳ để có đánh giá tổng thể."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:85
 msgid "Ouvre l'écran d'audit."
 msgstr "Mở màn hình kiểm tra."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:87
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:102
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:82
 #: src/omega_serv/interfaces/tui/screens/home.py:88
 msgid "Sauvegarde de configuration"
 msgstr "Sao lưu cấu hình"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:88
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
 msgid "Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."
 msgstr "Tạo, liệt kê, khôi phục hoặc xóa các bản sao lưu đầy đủ của cấu hình."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
 msgid "À utiliser avant un changement risque, ou pour migrer une configuration."
 msgstr "Dùng trước một thay đổi rủi ro, hoặc để chuyển cấu hình sang nơi khác."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:92
 msgid "Ouvre l'écran de sauvegarde."
 msgstr "Mở màn hình sao lưu."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:93
 msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr "Khôi phục sẽ GHI ĐÈ trực tiếp các tệp liên quan - xem mục riêng của nó."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:94
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
 msgid "Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."
 msgstr "Màn hình này không bao giờ tự sửa cấu hình - chỉ để điều hướng."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:97
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:99
 msgid "Appuyer sur Échap depuis cet écran demande une confirmation de sortie de l'application (contrairement aux autres écrans, où Échap revient simplement en arrière)."
 msgstr "Nhấn Esc tại màn hình này sẽ yêu cầu xác nhận thoát ứng dụng (khác với các màn hình khác, nơi Esc chỉ quay lại)."
 
@@ -8002,6 +8002,7 @@ msgstr "Cạm bẫy thực tế đã sửa: nếu thông báo lỗi nhắc đế
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:322
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:335
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:346
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
 msgid "WAF/Active Defense"
 msgstr "WAF/Active Defense"
 
@@ -8162,7 +8163,7 @@ msgstr "Thông báo hiển thị sau 'Lưu và áp dụng' cho biết lý do: (1
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (nhập WAF bên ngoài)"
 
@@ -8312,163 +8313,171 @@ msgstr "Trình hướng dẫn Let's Encrypt thất bại (thử thách HTTP-01) 
 msgid "Les causes les plus fréquentes, dans l'ordre à vérifier : (1) le port 80 n'est pas réellement joignable depuis Internet (redirection de port manquante ou incorrecte sur le routeur/pare-feu, ou un autre service occupe déjà ce port sur la machine), (2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propagé - vérifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test (staging, coché par défaut) tout fonctionne mais le certificat obtenu n'est jamais reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par Certbot - il précise généralement laquelle de ces causes s'applique."
 msgstr "Các nguyên nhân phổ biến nhất, theo thứ tự cần kiểm tra: (1) cổng 80 không thực sự truy cập được từ Internet (thiếu hoặc sai chuyển tiếp cổng trên router/tường lửa, hoặc một dịch vụ khác đã chiếm cổng này trên máy), (2) tên miền chưa trỏ về IP này (DNS/DDNS chưa lan truyền - kiểm tra bằng `dig`/`nslookup` từ một máy bên ngoài), (3) ở chế độ thử (staging, được chọn mặc định) mọi thứ hoạt động nhưng chứng chỉ nhận được không bao giờ được trình duyệt công nhận - điều này là bình thường, hãy bỏ chọn ô này khi đã kiểm tra tên miền và webroot. Thông báo lỗi hiển thị chính là thông báo do Certbot trả về - nó thường nói rõ nguyên nhân nào áp dụng."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:593
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:604
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:615
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:630
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:642
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:654
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:666
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:678
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:689
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:700
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+msgid "Comment bannir une adresse IP à la main, sans écrire de règle ?"
+msgstr "Làm sao cấm một địa chỉ IP bằng tay, không cần viết quy tắc?"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:585
+msgid "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte (JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> Liste de blocage."
+msgstr "Bảo mật chủ động -> CAN THIỆP THỦ CÔNG -> Cấm: một địa chỉ, một lý do, một thời hạn. Lệnh cấm có hiệu lực ngay (trang 451 trên toàn trang, trước các backend), không cần quyền root và không liên quan đến tái phạm RIPOSTE; gỡ trong Gỡ cấm. Trạng thái cấm liệt kê mọi lệnh cấm kèm nguồn gốc và xuất chúng (JSON, HTML, hoặc TXT nhập nguyên trạng được vào omega-fire). Với một mạng, hãy dùng WAF -> Mô-đun -> Danh sách chặn."
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:606
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:617
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:628
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:691
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:702
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:595
 msgid "Quelle différence entre Active Defense et RIPOSTE ?"
 msgstr "Active Defense và RIPOSTE khác nhau thế nào?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:584
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:597
 msgid "Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence (épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique."
 msgstr "Active Defense hành động TRONG LÚC xử lý yêu cầu: nó chấm điểm mỗi nguồn theo những gì nguồn đang làm (điểm, các mức normal / suspicious / hostile / contained) và phản ứng ngay (mồi nhử, làm chậm, sự cố). RIPOSTE hành động QUA THỜI GIAN: nó ghi nhớ những nguồn quay lại sau một khoảng im lặng (đợt) và áp cho chúng lệnh cấm ngày càng dài (các bậc, mặc định 1 giờ, 6 giờ, 24 giờ, 7 ngày), có thời hạn, có thể gỡ và có bộ nhớ tái phạm. RIPOSTE không bao giờ thay đổi điểm hay ngưỡng của Active Defense; nó chỉ có thể yêu cầu một mức Active Defense tối thiểu trong chính sách."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
 msgid "Pourquoi RIPOSTE a-t-il banni cette adresse ?"
 msgstr "Vì sao RIPOSTE cấm địa chỉ này?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:596
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:609
 msgid "Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et « riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce ban dans la récidive », et au besoin « Lever et exempter cette source »."
 msgstr "Màn hình Hành động: chi tiết hành động cho biết chính sách, bậc, sự kiện gốc và thời hạn. Màn hình Mô phỏng, « Quyết định gần đây »: mỗi quyết định được giải thích từng dòng (chính sách được chọn, số lần quay lại, ngoại lệ đã kiểm tra). Trên dòng lệnh: « riposte actions show <id> » và « riposte decisions list --ip <địa chỉ> --explain ». Báo nhầm: « Gỡ bỏ » kèm « không tính lệnh cấm này vào tái phạm », và nếu cần « Gỡ bỏ và miễn trừ nguồn này »."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:605
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
 msgid "J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"
 msgstr "Tôi đã gỡ một lệnh cấm RIPOSTE nhưng địa chỉ vẫn bị chặn - vì sao?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:620
 msgid "Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client (la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne couvre pas la même adresse : RIPOSTE n'y touche jamais."
 msgstr "Một chính sách « cấm cục bộ + cấm mạng » cũng chuyển lệnh cấm cho fail2ban, qua các jail omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv không có quyền gỡ lệnh cấm fail2ban: « Gỡ bỏ » chỉ xóa lệnh cấm cục bộ (blocklist của WAF). Hãy gỡ lệnh cấm mạng trong omega-fire hoặc bằng fail2ban-client (tên jail có trong chi tiết hành động). Cũng hãy kiểm tra xem có lệnh cấm của WAF hoặc lệnh cấm thủ công nào bao phủ cùng địa chỉ không: RIPOSTE không bao giờ động tới chúng."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:616
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:629
 msgid "Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"
 msgstr "Các kịch bản « Kẻ dò mồi nhử » và « Thăm dò upload / API » bị từ chối (hồ sơ mồi nhử không xác định) - phải làm gì?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
 msgid "Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, « Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter -> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre."
 msgstr "Hai kịch bản này không cấm: chúng đưa nguồn tới một mồi nhử của Active Defense, vì vậy mồi nhử phải tồn tại TRƯỚC khi nạp kịch bản - « Kẻ dò mồi nhử » dùng hồ sơ fake_admin, « Thăm dò upload / API » dùng hồ sơ fake_api. (1) Tùy chọn active_defense phải được bật (menu Tùy chọn). (2) Trong Bảo mật chủ động -> Thiết lập (khối Active Defense): « Bật deception » = có, rồi Lưu. (3) Vẫn trong Thiết lập, « Thêm hồ sơ »: Tên fake_admin (hoặc fake_api), Bật có, lớp tấn công scan,credential_stuffing cho fake_admin hoặc api_probe,upload_probe cho fake_api, Isolation fixture, vùng mồi nhử để trống. (4) Quay lại RIPOSTE -> Chính sách -> Thêm -> Kịch bản sẵn sàng để nạp: kịch bản được chấp nhận. Mồi nhử chỉ hoạt động sau khi khởi động lại hoàn toàn. Ba kịch bản còn lại thực hiện cấm và không cần mồi nhử nào."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:644
 msgid "RIPOSTE ne fait rien - pourquoi ?"
 msgstr "RIPOSTE không làm gì cả - vì sao?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:633
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:646
 msgid "Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins 1 h de silence. Simuler avec la même situation montre la condition qui manque."
 msgstr "Theo thứ tự: (1) mô-đun 'riposte' phải được bật trong Tùy chọn, rồi dịch vụ được KHỞI ĐỘNG LẠI hoàn toàn; (2) WAF phải đang bật, nếu không RIPOSTE không thấy cuộc tấn công nào; (3) phải có ít nhất một chính sách đang bật (« Lưu mà không bật » để nó ở chế độ quan sát); (4) dừng khẩn cấp không được bật (màn hình Trạng thái: nút hiển thị « Tiếp tục »); (5) điều kiện phải đạt: ví dụ 3 đợt trong 7 ngày, mỗi đợt cách đợt trước ít nhất 1 giờ im lặng. Mô phỏng cùng tình huống sẽ cho thấy điều kiện còn thiếu."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:656
 msgid "Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"
 msgstr "Một địa chỉ bị cấm nhận trang 451: đó là omega-serv hay fail2ban?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:645
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:658
 msgid "C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list »."
 msgstr "Đó là omega-serv. Một địa chỉ có trong danh sách chặn của WAF (tự động cấm của WAF, cấm thủ công hoặc cấm cục bộ của RIPOSTE) nhận trang 451 “IP của bạn đã bị cấm” cho mọi yêu cầu, trong suốt thời gian cấm. Mã 403 chỉ từ chối một yêu cầu (đã khớp một quy tắc), không cấm. Lệnh cấm của fail2ban tác động lên tường lửa: nó không bao giờ trả về trang nào, kết nối bị cắt hoặc không thiết lập được. Để biết ai đã cấm, hãy xem nguồn của lệnh cấm trong danh sách chặn (« auto » = tự động cấm của WAF, « riposte », « manual »): WAF → Mô-đun → Danh sách chặn, hoặc « blocklist list »."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:668
 msgid "À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"
 msgstr "Các jail omega-serv-riposte-1h, -6h, -24h và -7d dùng để làm gì?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:657
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:670
 msgid "Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails, préfixé par le nom de son service."
 msgstr "Đó là các jail fail2ban cho lệnh cấm mạng của RIPOSTE, do omega-jail (1.1.0 trở lên) cài đặt. Khi một chính sách “cấm cục bộ + cấm mạng” ra lệnh cấm, omega-serv áp dụng cấm cục bộ trước, rồi ghi một dòng vào « var/log/riposte-decisions.jsonl »; fail2ban đọc dòng đó và cấm địa chỉ trên tường lửa. Các jail có thời lượng cố định: mỗi mức của RIPOSTE vào jail dài nhất không vượt quá nó (mức 2 giờ vào jail 1 giờ), và giao diện có ghi rõ. Mỗi phiên bản omega-serv có bộ jail riêng, với tên dịch vụ của nó làm tiền tố."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:680
 msgid "J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"
 msgstr "Tôi đã cập nhật omega-jail nhưng các jail RIPOSTE không xuất hiện trong fail2ban lẫn omega-fire"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:669
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:682
 msgid "Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans rien à déclarer."
 msgstr "Chỉ cập nhật omega-jail thì chưa cài các jail mới. Hãy giải nén tệp lưu trữ đè lên thư mục hiện có, rồi chạy « ./install.sh »: nó liệt kê các jail trong danh mục chưa được cài và đề nghị cài chúng (« sudo »). Hoặc: « sudo ./omega-jail.sh --apply ». Các jail RIPOSTE chỉ được đề nghị khi mô-đun RIPOSTE đã bật trong omega-serv (nếu không: “nguồn chưa được cấu hình”). Kiểm tra: « sudo fail2ban-client status ». omega-fire hiển thị chúng ngay khi đã cài, không cần khai báo gì."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
 msgid "Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"
 msgstr "Phía sau Tailscale Funnel hoặc một proxy cục bộ, lệnh cấm mạng có tác dụng không?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:681
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:694
 msgid "Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul."
 msgstr "Không phải chỉ riêng lệnh cấm của fail2ban: khi đó các kết nối đến từ proxy cục bộ (tailscaled, 127.0.0.1), không phải từ khách truy cập, và lệnh cấm trên tường lửa không chạm tới họ. omega-jail (1.1.0 trở lên) phát hiện điều này và khi đó chuyển mọi lệnh cấm của fail2ban đối với địa chỉ công khai vào danh sách chặn của omega-serv: địa chỉ nhận trang 451, như với script Magnet. Các jail RIPOSTE không được chuyển: RIPOSTE đã đặt lệnh cấm cục bộ (451). Khi khách kết nối trực tiếp đến máy chủ, lệnh cấm trên tường lửa tự tác dụng."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:690
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
 msgid "La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"
 msgstr "Jail omega-serv-active-defense có trùng lặp với RIPOSTE không?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:705
 msgid "En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si seuls les paliers RIPOSTE doivent compter."
 msgstr "Một phần. Jail này của omega-jail cấm trên tường lửa trong 24 giờ cố định mọi địa chỉ bị Active Defense xếp vào hostile hoặc contained, không tính đến các mức của RIPOSTE: vì vậy một địa chỉ có thể bị cấm ở tầng mạng sớm hơn hoặc lâu hơn mức đã chọn. Màn hình Trạng thái của RIPOSTE có cảnh báo điều này. Hãy giữ nó nếu bạn muốn lớp bảo vệ này; gỡ nó (quản lý jail của omega-fire) nếu chỉ các mức của RIPOSTE được tính."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:701
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
 msgid "Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"
 msgstr "Cuộc tấn công thử của tôi không gây ra lệnh cấm RIPOSTE nào - tại sao?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
 msgid "Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie : nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque."
 msgstr "Theo thứ tự: (1) yêu cầu phải khớp một quy tắc WAF, tức trả về 403 (ví dụ « /?id=1 UNION SELECT 1 » hoặc « /.env »); một mã 404 đơn thuần không phải là tấn công; (2) địa chỉ không được miễn trừ: máy cục bộ, Tailscale và mạng cục bộ không bao giờ bị cấm, hãy thử từ một địa chỉ công khai (4G) và, nếu ở sau proxy, hãy cấu hình proxy tin cậy; (3) chính sách phải được thỏa: số tập, lớp tấn công và mức Active Defense tối thiểu (“không có” khi thử); (4) một địa chỉ đã bị cấm (trang 451, thường do tự động cấm của WAF) không còn được phân tích: RIPOSTE bỏ qua các lần từ chối của danh sách chặn, hãy gỡ lệnh cấm đó trước. Mô phỏng cùng tình huống sẽ cho thấy điều còn thiếu."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:727
 msgid "Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"
 msgstr "Tại sao omega-fire chỉ hiển thị các lệnh cấm của fail2ban?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:729
 msgid "omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, dont ceux de RIPOSTE, apparaissent bien dans omega-fire."
 msgstr "omega-fire đọc fail2ban và tường lửa. Các lệnh cấm của omega-serv (danh sách chặn của WAF, trang 451: tự động cấm, cấm thủ công, cấm cục bộ RIPOSTE) hiện được xem trong omega-serv: WAF → Mô-đun → Danh sách chặn, màn hình Hành động của RIPOSTE, hoặc « blocklist list ». Các jail do omega-jail cài, kể cả jail của RIPOSTE, vẫn hiển thị trong omega-fire."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:723
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:746
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:764
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:776
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:786
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:736
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:759
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:799
 msgid "Moteur HTTP et performances"
 msgstr "Bộ máy HTTP và hiệu năng"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:724
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:737
 msgid "Moteur Python ou natif : qu'est-ce que ça change concrètement ?"
 msgstr "Bộ máy Python hay native: thực tế thay đổi gì?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:739
 msgid "Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute (correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée par le moteur natif, sans coût mesurable. Mesuré sur trois machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des dizaines de millions de requêtes par jour sur une machine modeste."
 msgstr "Điều không thay đổi: phản hồi, nhật ký, bảo mật và các chức năng có sẵn. Điều thay đổi là ai xử lý các yêu cầu HTTP: trình thông dịch Python, hay một chương trình đã biên dịch dùng mọi lõi. Khi có WAF, bộ máy native tự dò các quy tắc: yêu cầu không khớp quy tắc nào được phục vụ mà không qua Python; chỉ cần có chút nghi ngờ (khớp quy tắc, văn bản không phải ASCII, tiêu đề hoặc thân cần kiểm tra, nguồn đang được Active Defense theo dõi, vùng xác thực), Python sẽ quyết định, y như với bộ máy Python. Nếu magnet đang bật, mọi yêu cầu đều qua Python; còn giới hạn tốc độ do bộ máy native đếm, không tốn chi phí đo được. Đo trên ba máy (bảng so sánh máy chủ web, xem để biết chi tiết), bộ máy native phục vụ trang nhỏ nhanh hơn bộ máy Python 10 đến 27 lần khi không có kiểm tra bảo mật, và nhanh hơn 8 đến 30 lần khi có WAF, vốn chỉ làm nó mất 5 đến 22 % thông lượng; tệp 100 KB nhanh hơn 3,5 đến 10 lần; tệp lớn nhanh hơn 1,3 đến 2,7 lần. Thời gian phản hồi của các yêu cầu chậm nhất giảm 5 đến 15 lần. Đổi lại, nó chiếm thêm khoảng 5 MB bộ nhớ, và thêm khoảng 8 MB nữa khi có WAF (các quy tắc được nạp vào bộ máy native). Liệt kê thư mục, các trang nội bộ, reverse proxy, FastCGI, gửi tệp và WebSocket được giao cho Python: các yêu cầu đó giữ tốc độ của bộ máy Python. Với một trang nhỏ ít người truy cập, cả hai đều dư sức: ngay cả bộ máy Python có WAF cũng phục vụ hàng chục triệu yêu cầu mỗi ngày trên một máy khiêm tốn."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:747
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:760
 msgid "Combien de processus choisir ?"
 msgstr "Nên chọn bao nhiêu tiến trình?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:749
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:762
 msgid "Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques (le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; le nombre réellement appliqué s'affiche dans État & Ressources."
 msgstr "Tùy vào bộ máy. Bộ máy Python: mỗi tiến trình phục vụ yêu cầu; đo được, 2 tiến trình phục vụ gấp 1,6 đến 2 lần so với 1, và 4 tiến trình khoảng 3,5 lần, cho tới số lõi vật lý (mức tối đa được đề xuất). Mỗi tiến trình chiếm thêm khoảng 10 đến 20 MB bộ nhớ. Bộ máy native: nó đã dùng mọi lõi, các tiến trình được thiết lập là tiến trình kiểm tra bảo mật, chỉ nhận các yêu cầu cần kiểm tra (WAF khớp hoặc nghi ngờ, nguồn đang được Active Defense theo dõi, xác thực). Vì vậy với lưu lượng thông thường, tiến trình thứ 2 không mang lại gì: đo được, thông lượng vẫn như cũ. Nó có ích khi mọi yêu cầu đều qua Python (magnet đang bật) và máy có ít nhất 4 lõi vật lý: nhiều yêu cầu hơn 1,5 đến 1,7 lần. Trên 2 lõi, nó chỉ mang lại 5 đến 12 %, vì bộ xử lý đã bận: do đó màn hình chỉ đề xuất nó từ 4 lõi trở lên. Trên 2 tiến trình, mức lợi đo được là 4 %. Màn hình Khả năng chịu tải và giới hạn hiển thị mức tối đa của máy này và lợi ích của việc tăng lên; số thực sự được áp dụng hiển thị trong Trạng thái & Tài nguyên."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:765
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:778
 msgid "Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"
 msgstr "Tại sao lựa chọn « Native C++ » bị làm mờ trong Cấu hình cơ bản?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:767
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:780
 msgid "Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif (ces routes demandent de confier la connexion au processus Python, impossible quand le natif chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif."
 msgstr "Vì có nguyên nhân ngăn bộ máy native phục vụ mọi thứ: tệp nhị phân bin/omega-http-core bị thiếu hoặc không khởi động được trên máy này (khi đó install.sh thử biên dịch lại), hoặc TLS đang ở chế độ trực tiếp trong khi reverse proxy, FastCGI hoặc tải tệp lên đang bật (các tuyến này cần giao kết nối cho tiến trình Python, điều không thể khi native tự mã hóa). Danh sách nguyên nhân, và cách gỡ từng nguyên nhân, hiển thị dưới lựa chọn. Không bao giờ có máy chủ native một nửa: hãy gỡ nguyên nhân rồi chọn native."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:790
 msgid "Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"
 msgstr "Bộ máy native có thay đổi nhật ký, fail2ban (omega-jail) hay RIPOSTE của tôi không?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:779
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:792
 msgid "Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne voient aucune différence. Une adresse bannie l'est quel que soit le moteur."
 msgstr "Không. Nhật ký truy cập được ghi cùng định dạng, đúng từng ký tự, và các nhật ký bảo mật (cảnh báo WAF, sự kiện Active Defense) được ghi bởi cùng mã Python như với bộ máy Python. RIPOSTE, omega-jail và omega-fire đọc cùng các dòng và không thấy khác biệt nào. Một địa chỉ bị cấm vẫn bị cấm dù dùng bộ máy nào."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:787
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:800
 msgid "J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"
 msgstr "Tôi đã chọn bộ máy native nhưng Trạng thái & Tài nguyên ghi « Python » - tại sao?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:802
 msgid "Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre."
 msgstr "Máy chủ chưa được khởi động lại (bộ máy chỉ đổi khi khởi động lại hoàn toàn), hoặc native không khởi động được: thiếu tệp nhị phân hoặc bị từ chối, hoặc một chức năng đang bật mà nó không phục vụ được. Khi đó bộ máy Python phục vụ mọi thứ, và lý do hiển thị trong Trạng thái & Tài nguyên (mục BỘ MÁY HTTP), trong nhật ký lỗi và qua lệnh « omega-serv engine status ». Không bao giờ có gì được phục vụ một nửa bởi bộ máy này và một nửa bởi bộ máy kia."
 
@@ -10558,7 +10567,7 @@ msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterminis
 msgstr "Khi `war_mode.enabled=true`, mọi thứ trở nên tự động và tất định, không cần can thiệp thủ công: mỗi quyết định WAF đã tính sẽ nạp vào một điểm cộng dồn theo nguồn (IP + User-Agent đã băm, giảm dần theo thời gian), điểm này vượt qua các ngưỡng có thể cấu hình (normal/suspicious/hostile/contained) và kích hoạt các hành động tự động (chuyển tới mồi nhử, ghi log mở rộng, làm chậm, tạo sự cố)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - Thiết lập"
 
@@ -10722,7 +10731,7 @@ msgid "Une zone de leurre n'est jamais créée automatiquement et son existence 
 msgstr "Một vùng mồi nhử không bao giờ được tạo tự động và sự tồn tại của nó không được kiểm tra khi lưu - nếu không có gì lắng nghe ở địa chỉ đã chỉ định, kẻ tấn công nhận lỗi 502 vào thời điểm yêu cầu, không phải trước đó."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - Mối đe dọa"
 
@@ -10755,7 +10764,7 @@ msgid "Aucune modification possible depuis cet écran."
 msgstr "Không thể sửa gì từ màn hình này."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - Sự cố"
 
@@ -10869,7 +10878,7 @@ msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports
 msgstr "Chỉ để tra cứu, trừ việc đóng sự cố (không thể hoàn tác) và xuất (ghi đĩa)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - Mồi nhử"
 
@@ -10908,7 +10917,7 @@ msgid "Les affectations expirées mais jamais libérées restent visibles avec l
 msgstr "Các phân bổ đã hết hạn nhưng chưa bao giờ được giải phóng vẫn hiển thị với trạng thái 'hết hạn' - khác với giải phóng thủ công."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - Mô phỏng"
 
@@ -11023,7 +11032,7 @@ msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter
 msgstr "Nếu không có gói quy tắc nào được tham chiếu, WAF KHÔNG THỂ phát hiện gì dù đang bật - màn hình nêu rõ điều này, khắc phục một lỗ hổng thật do người dùng báo."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "WAF - Modules"
 msgstr "WAF - Mô-đun"
 
@@ -11135,7 +11144,7 @@ msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement 
 msgstr "Chế độ/hành vi khi lỗi/gói quy tắc cần nạp lại để áp dụng (tự động nếu có dịch vụ đang hoạt động). Còn danh sách chặn được áp dụng tức thì mà không cần thao tác nào thêm."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - Giới hạn (ngoại lệ và giới hạn tốc độ)"
 
@@ -11238,7 +11247,7 @@ msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une d�
 msgstr "Script magnet: rate limit riêng của nó (429) không bao giờ được tính là phát hiện, nên không bao giờ dẫn đến tự động cấm. Với yêu cầu thuộc một quy tắc thư mục hoặc IP/mạng ở trên, quy tắc đó được ưu tiên: lỗi 429 của magnet bị bỏ qua (các chữ ký tấn công của nó vẫn được áp dụng)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "WAF - Tester une requête"
 msgstr "WAF - Thử yêu cầu"
 
@@ -11275,7 +11284,7 @@ msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur 
 msgstr "Tạo lại bộ máy WAF từ cấu hình ĐÃ LƯU trên đĩa ở mỗi lần thử - nếu một máy chủ đang chạy chưa được nạp lại sau khi đổi quy tắc, lần thử này có thể phản ánh hành vi khác với những gì máy chủ đó hiện đang thực sự áp dụng."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - Quy tắc và danh sách tùy chỉnh"
 
@@ -11648,7 +11657,7 @@ msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route r�
 msgstr "Một danh sách tự chặn (mức độ >= 5) mà chạm tới một route thực sự được phục vụ (alias, reverse proxy, vùng Auth, tệp của webroot) sẽ bị từ chối: hãy thêm ngoại lệ '!/duong-dan' vào danh sách, hoặc nạp nó ở chế độ Quan sát."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - Trình soạn thảo danh sách"
 
@@ -11857,7 +11866,7 @@ msgid "L'état en bas de l'écran indique si le compte du service peut lire le f
 msgstr "Trạng thái ở cuối màn hình cho biết tài khoản dịch vụ có đọc được tệp không: một tệp không đọc được sẽ làm lần nạp lại tiếp theo thất bại."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modifier une liste"
 msgstr "WAF - Sửa danh sách"
 
@@ -12000,7 +12009,7 @@ msgid "Un script importe peut référencer une fonctionnalité lighty.* non supp
 msgstr "Một script đã nhập có thể tham chiếu một tính năng lighty.* mà cầu nối này không hỗ trợ (luôn là nil phía Lua) - luôn chạy Kiểm tra tương thích trước khi bật một script mới trong môi trường sản xuất, nhất là với on_error=fail-closed."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - Chọn gói quy tắc"
 
@@ -13833,16 +13842,16 @@ msgid "Audit et sauvegarde"
 msgstr "Kiểm tra và sao lưu"
 
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:84
-msgid "Active Defense - Statut"
-msgstr "Active Defense - Trạng thái"
-
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Statut"
 msgstr "WAF - Trạng thái"
 
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "WAF - Assistant règle / chargement de liste"
 msgstr "WAF - Trình hướng dẫn quy tắc / nạp danh sách"
+
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+msgid "Active Defense - Statut"
+msgstr "Active Defense - Trạng thái"
 
 #: src/omega_serv/interfaces/tui/rendering/aligned_block.py:73
 msgid "detail() sans ligne precedente"
@@ -20854,12 +20863,12 @@ msgstr "có"
 msgid "non"
 msgstr "không"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:58
 #, python-brace-format
 msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
 msgstr "Tạo lúc {date} · {count} lệnh cấm, trong đó {active} đang hiệu lực"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:80
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
@@ -21125,6 +21134,9 @@ msgstr "Tệp cấu hình WordPress"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "Dò plugin/giao diện WordPress chung"
+
+#~ msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
+#~ msgstr "Gồm Active Defense (deception/mối đe dọa/sự cố) và tường lửa ứng dụng (WAF)."
 
 #, python-brace-format
 #~ msgid "plus gros : {name} ({size})"

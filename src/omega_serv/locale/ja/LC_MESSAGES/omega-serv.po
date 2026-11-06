@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 09:44+0100\n"
+"POT-Creation-Date: 2026-11-06 12:03+0100\n"
 "PO-Revision-Date: 2026-10-23 23:50+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 日本語\n"
@@ -6146,7 +6146,7 @@ msgid "Ouvre le registre des capacités."
 msgstr "機能レジストリを開きます。"
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:28
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:86
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:177
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:320
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:327
@@ -6219,7 +6219,7 @@ msgstr "詳細設定メニューを開きます。"
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:42
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:49
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:79
 msgid "Dépend de l'écran ouvert ensuite - voir sa propre fiche."
 msgstr "次に開く画面によります - 該当ページを参照。"
 
@@ -6355,65 +6355,65 @@ msgstr "影響なし（読み取り、2 秒ごとに自動更新）。"
 msgid "Active Sécurité"
 msgstr "アクティブセキュリティ"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:74
-msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
-msgstr "Active Defense（deception/脅威/インシデント）とアプリケーションファイアウォール（WAF）をまとめたもの。"
-
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:75
+msgid "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+msgstr "攻撃の順序に沿ってまとめます：WAF（守る）、Active Defense（検知する）、RIPOSTE（時間をかけて反撃する）、その下に 手動介入（IP アドレスを手動で BAN・BAN 解除）。"
+
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
 msgid "À utiliser pour la sécurité active du serveur."
 msgstr "サーバーのアクティブセキュリティに使用します。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:76
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:78
 msgid "Ouvre le menu Active Sécurité."
 msgstr "アクティブセキュリティメニューを開きます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:80
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:85
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:81
 #: src/omega_serv/interfaces/tui/screens/home.py:86
 msgid "Audit de sécurité"
 msgstr "セキュリティ監査"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:81
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
 msgid "Vérifications consultatives (service, rotation des logs, mode WAF...)."
 msgstr "助言的なチェック（サービス、ログのローテーション、WAF モード...）。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
 msgid "À lancer ponctuellement pour un avis global."
 msgstr "全体的な評価のために時々実行します。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:85
 msgid "Ouvre l'écran d'audit."
 msgstr "監査画面を開きます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:87
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:102
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:82
 #: src/omega_serv/interfaces/tui/screens/home.py:88
 msgid "Sauvegarde de configuration"
 msgstr "設定のバックアップ"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:88
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
 msgid "Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."
 msgstr "設定の完全なバックアップの作成、一覧、復元、削除。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
 msgid "À utiliser avant un changement risque, ou pour migrer une configuration."
 msgstr "リスクのある変更の前や、設定の移行に使用します。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:92
 msgid "Ouvre l'écran de sauvegarde."
 msgstr "バックアップ画面を開きます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:93
 msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr "復元すると対象ファイルが直接上書きされます - 該当ページを参照。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:94
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
 msgid "Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."
 msgstr "この画面自体は設定を変更しません - ナビゲーションのみ。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:97
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:99
 msgid "Appuyer sur Échap depuis cet écran demande une confirmation de sortie de l'application (contrairement aux autres écrans, où Échap revient simplement en arrière)."
 msgstr "この画面で Esc を押すとアプリケーション終了の確認が表示されます（他の画面では Esc は単に戻ります）。"
 
@@ -8002,6 +8002,7 @@ msgstr "修正済みの実際の落とし穴：失敗メッセージに 'omega-l
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:322
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:335
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:346
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
 msgid "WAF/Active Defense"
 msgstr "WAF/Active Defense"
 
@@ -8162,7 +8163,7 @@ msgstr "「保存して適用」の後に表示されるメッセージが理由
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet（外部 WAF のインポート）"
 
@@ -8312,163 +8313,171 @@ msgstr "Let's Encrypt ウィザードが失敗します（HTTP-01 チャレン�
 msgid "Les causes les plus fréquentes, dans l'ordre à vérifier : (1) le port 80 n'est pas réellement joignable depuis Internet (redirection de port manquante ou incorrecte sur le routeur/pare-feu, ou un autre service occupe déjà ce port sur la machine), (2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propagé - vérifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test (staging, coché par défaut) tout fonctionne mais le certificat obtenu n'est jamais reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par Certbot - il précise généralement laquelle de ces causes s'applique."
 msgstr "よくある原因（確認する順）：(1) ポート 80 が実際にはインターネットから到達できない（ルーター/ファイアウォールのポート転送がない・誤っている、またはマシン上の別のサービスがこのポートを使用中）、(2) ドメインがまだこの IP を指していない（DNS/DDNS が未伝播 - 外部のマシンから `dig`/`nslookup` で確認）、(3) テストモード（staging、既定でチェック）ではすべて成功しても、取得した証明書はブラウザに認識されません - これは正常で、ドメインと webroot を確認したらチェックを外してください。表示されるエラーメッセージは Certbot がそのまま返したもので、通常はどの原因に当たるかを示しています。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:593
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:604
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:615
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:630
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:642
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:654
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:666
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:678
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:689
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:700
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+msgid "Comment bannir une adresse IP à la main, sans écrire de règle ?"
+msgstr "ルールを書かずに IP アドレスを手動で BAN するには？"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:585
+msgid "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte (JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> Liste de blocage."
+msgstr "アクティブセキュリティ -> 手動介入 -> BAN：アドレス、理由、期間を指定します。BAN は即座に有効になり（バックエンドの手前で、サイト全体で 451 ページ）、root 権限は不要で、RIPOSTE の再犯とは関係ありません。「BAN 解除」で解除します。「BAN の状態」はすべての BAN を発生元とともに一覧表示し、エクスポートできます（JSON、HTML、またはそのまま omega-fire に取り込める TXT）。ネットワークは WAF -> モジュール -> ブロックリスト で扱います。"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:606
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:617
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:628
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:691
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:702
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:595
 msgid "Quelle différence entre Active Defense et RIPOSTE ?"
 msgstr "Active Defense と RIPOSTE の違いは?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:584
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:597
 msgid "Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence (épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique."
 msgstr "Active Defense はリクエストの最中に動きます:各送信元をいま何をしているか(スコア、レベル normal / suspicious / hostile / contained)で評価し、すぐに反応します(デコイ、減速、インシデント)。RIPOSTE は時間をかけて動きます:沈黙のあとに戻ってくる送信元(エピソード)を記憶し、期限・解除・再犯の記憶とともに、ますます長い BAN(段階、既定 1 時間、6 時間、24 時間、7 日)を適用します。RIPOSTE は Active Defense のスコアやしきい値を決して変えません。ポリシーで最低 Active Defense レベルを求めることができるだけです。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
 msgid "Pourquoi RIPOSTE a-t-il banni cette adresse ?"
 msgstr "RIPOSTE はなぜこのアドレスを BAN したのですか?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:596
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:609
 msgid "Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et « riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce ban dans la récidive », et au besoin « Lever et exempter cette source »."
 msgstr "アクション画面:アクションの詳細にポリシー、段階、発端のイベント、期限が表示されます。シミュレーション画面の「最近の判断」:各判断が 1 行ずつ説明されます(選ばれたポリシー、戻り回数、確認した除外)。コマンドライン:「riposte actions show <id>」と「riposte decisions list --ip <アドレス> --explain」。誤検知の場合:「この BAN を再犯に数えない」を付けて「解除」し、必要なら「解除してこの送信元を除外」。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:605
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
 msgid "J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"
 msgstr "RIPOSTE の BAN を解除したのに、アドレスがまだブロックされています - なぜですか?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:620
 msgid "Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client (la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne couvre pas la même adresse : RIPOSTE n'y touche jamais."
 msgstr "「ローカル BAN + ネットワーク BAN」のポリシーは、omega-jail の jail <service>-riposte-1h/6h/24h/7d を通じて BAN を fail2ban にも渡します。omega-serv には fail2ban の BAN を解除する権限がありません:「解除」はローカル BAN(WAF の blocklist)だけを取り除きます。ネットワーク BAN は omega-fire または fail2ban-client で解除してください(jail はアクションの詳細に表示されます)。WAF の BAN や手動の BAN が同じアドレスを対象にしていないかも確認してください:RIPOSTE はそれらには決して触れません。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:616
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:629
 msgid "Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"
 msgstr "「デコイ探索者」と「アップロード / API 調査」のシナリオが拒否される（不明なデコイプロファイル）- どうすればよい？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
 msgid "Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, « Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter -> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre."
 msgstr "この 2 つのシナリオは BAN しません。送信元を Active Defense のデコイへ送るため、そのデコイはシナリオを読み込む前に存在している必要があります。「デコイ探索者」は fake_admin プロファイル、「アップロード / API 調査」は fake_api プロファイルを使います。(1) active_defense オプションを有効にします（「オプション」メニュー）。(2) アクティブセキュリティ -> 設定（Active Defense ブロック）で「Deception を有効化」= はい にして保存します。(3) 同じく「設定」で「プロファイルを追加」：名前 fake_admin（または fake_api）、有効 はい、攻撃クラスは fake_admin なら scan,credential_stuffing、fake_api なら api_probe,upload_probe、Isolation は fixture、おとりゾーンは空。(4) RIPOSTE -> ポリシー -> 追加 -> すぐに読み込めるシナリオ に戻ると、シナリオが受け付けられます。デコイは完全な再起動の後にのみ機能します。残りの 3 つのシナリオは BAN を行い、デコイは不要です。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:644
 msgid "RIPOSTE ne fait rien - pourquoi ?"
 msgstr "RIPOSTE が何もしません - なぜですか?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:633
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:646
 msgid "Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins 1 h de silence. Simuler avec la même situation montre la condition qui manque."
 msgstr "順に確認:(1) オプションで 'riposte' モジュールを有効にし、サービスを完全に再起動したか。(2) WAF が有効か。有効でないと RIPOSTE には攻撃が見えません。(3) 有効なポリシーが少なくとも 1 つあるか(「有効化せずに保存」では観察のままです)。(4) 緊急停止が有効になっていないか(状態画面:ボタンが「再開」と表示)。(5) 条件を満たしたか:たとえば 7 日間に 3 エピソードで、各エピソードの間に 1 時間以上の沈黙。同じ状況をシミュレーションすると、足りない条件がわかります。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:656
 msgid "Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"
 msgstr "BAN されたアドレスに 451 ページが表示される：これは omega-serv ですか、fail2ban ですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:645
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:658
 msgid "C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list »."
 msgstr "omega-serv です。WAF のブロックリストにあるアドレス（WAF の自動 BAN、手動 BAN、RIPOSTE のローカル BAN）は、BAN の期間中、すべてのリクエストで 451 ページ「あなたの IP は BAN されました」を受け取ります。403 はひとつのリクエストを拒否するだけで（ルールに一致）、BAN はしません。fail2ban の BAN はファイアウォールで働きます。ページを返すことはなく、接続は切断されるか確立されません。誰が BAN したかは、ブロックリストの BAN の送信元で分かります（« auto » = WAF の自動 BAN、« riposte »、« manual »）：WAF → モジュール → ブロックリスト、または « blocklist list »。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:668
 msgid "À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"
 msgstr "jail の omega-serv-riposte-1h、-6h、-24h、-7d は何のためのものですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:657
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:670
 msgid "Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails, préfixé par le nom de son service."
 msgstr "RIPOSTE のネットワーク BAN 用の fail2ban jail で、omega-jail（1.1.0 以降）がインストールします。「ローカル BAN + ネットワーク BAN」ポリシーが BAN すると、omega-serv はまずローカル BAN を行い、次に « var/log/riposte-decisions.jsonl » に 1 行書き込みます。fail2ban がそれを読み、ファイアウォールでアドレスを BAN します。jail の期間は固定です。RIPOSTE の各段階は、それを超えない最も長い jail に割り当てられ（2 時間の段階は 1 時間の jail へ）、画面にもそう表示されます。omega-serv の各インスタンスは、サービス名を接頭辞とする独自の jail 一式を持ちます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:680
 msgid "J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"
 msgstr "omega-jail を更新したのに、RIPOSTE の jail が fail2ban にも omega-fire にも表示されません"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:669
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:682
 msgid "Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans rien à déclarer."
 msgstr "omega-jail を更新するだけでは新しい jail はインストールされません。既存のフォルダーの上にアーカイブを展開し、« ./install.sh » を実行してください。カタログのうち未インストールの jail を一覧表示し、インストールを提案します（« sudo »）。または « sudo ./omega-jail.sh --apply »。RIPOSTE の jail は、omega-serv で RIPOSTE モジュールが有効な場合にのみ提案されます（無効なら「ソース未設定」）。確認：« sudo fail2ban-client status »。インストールされればすぐに omega-fire に表示され、申告は不要です。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
 msgid "Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"
 msgstr "Tailscale Funnel やローカルプロキシの背後では、ネットワーク BAN は役に立ちますか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:681
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:694
 msgid "Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul."
 msgstr "fail2ban の BAN だけでは効きません。この場合、接続は訪問者ではなくローカルプロキシ（tailscaled、127.0.0.1）から届き、ファイアウォールの BAN は訪問者に届きません。omega-jail（1.1.0 以降）はこれを検出し、公開アドレスに対する fail2ban の BAN をすべて omega-serv のブロックリストに引き継ぎます。そのアドレスには Magnet スクリプトと同様に 451 ページが返されます。RIPOSTE の jail は引き継ぎません。RIPOSTE がすでにローカル BAN（451）を設定しているためです。訪問者がサーバーに直接接続する場合は、ファイアウォールの BAN だけで機能します。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:690
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
 msgid "La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"
 msgstr "jail の omega-serv-active-defense は RIPOSTE と重複していますか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:705
 msgid "En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si seuls les paliers RIPOSTE doivent compter."
 msgstr "一部重複しています。omega-jail のこの jail は、Active Defense が hostile または contained と分類したアドレスを、RIPOSTE の段階に関係なく、ファイアウォールで 24 時間固定で BAN します。そのため、ネットワーク層では選んだ段階より早く、または長く BAN されることがあります。RIPOSTE の「状態」画面がこれを知らせます。この安全網が必要なら残し、RIPOSTE の段階だけを有効にしたいなら削除してください（omega-fire の jail 管理）。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:701
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
 msgid "Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"
 msgstr "テスト攻撃をしても RIPOSTE の BAN が発生しません。なぜですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
 msgid "Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie : nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque."
 msgstr "順に確認してください：(1) リクエストが WAF のルールに一致して 403 になる必要があります（例：« /?id=1 UNION SELECT 1 » や « /.env »）。単なる 404 は攻撃ではありません。(2) アドレスが除外されていないこと：ローカルホスト、Tailscale、ローカルネットワークは決して BAN されません。公開アドレス（4G）からテストし、プロキシの背後では信頼できるプロキシを設定してください。(3) ポリシーの条件を満たすこと：エピソード数、攻撃クラス、最低 Active Defense レベル（テストでは「なし」）。(4) すでに BAN されたアドレス（451 ページ、多くは WAF の自動 BAN）は分析されません。RIPOSTE はブロックリストによる拒否を無視するので、先にその BAN を解除してください。同じ状況をシミュレートすると、何が足りないかが分かります。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:727
 msgid "Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"
 msgstr "omega-fire に fail2ban の BAN しか表示されないのはなぜですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:729
 msgid "omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, dont ceux de RIPOSTE, apparaissent bien dans omega-fire."
 msgstr "omega-fire は fail2ban とファイアウォールを読み取ります。omega-serv の BAN（WAF のブロックリスト、451 ページ：自動 BAN、手動 BAN、RIPOSTE のローカル BAN）は、今のところ omega-serv で確認します：WAF → モジュール → ブロックリスト、RIPOSTE の「アクション」画面、または « blocklist list »。omega-jail がインストールした jail は、RIPOSTE のものも含め omega-fire に表示されます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:723
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:746
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:764
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:776
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:786
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:736
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:759
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:799
 msgid "Moteur HTTP et performances"
 msgstr "HTTP エンジンと性能"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:724
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:737
 msgid "Moteur Python ou natif : qu'est-ce que ça change concrètement ?"
 msgstr "Python エンジンとネイティブエンジン：実際に何が変わる？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:739
 msgid "Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute (correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée par le moteur natif, sans coût mesurable. Mesuré sur trois machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des dizaines de millions de requêtes par jour sur une machine modeste."
 msgstr "変わらないもの：応答、ログ、セキュリティ、利用できる機能。変わるのは HTTP リクエストを処理する主体です：Python インタープリターか、すべてのコアを使うコンパイル済みプログラムか。WAF が有効な場合、ネイティブエンジンは自らルールを照合します。どのルールにも一致しないリクエストは Python を通さずに応答し、少しでも疑いがあれば（一致、ASCII 以外のテキスト、検査が必要なヘッダーや本文、Active Defense が追跡中の送信元、認証ゾーン）、Python エンジンの場合とまったく同じく Python が判断します。magnet が有効な場合は、すべてのリクエストが Python を通ります。一方、レート制限はネイティブエンジンが数え、測定できるほどのコストはかかりません。3 台のマシンでの実測（詳細は Web サーバー比較を参照）では、ネイティブエンジンは小さなページを、セキュリティチェックなしで Python エンジンの 10〜27 倍、WAF ありで 8〜30 倍の速さで配信し、WAF によるスループットの低下は 5〜22 % にとどまります。100 KB のファイルは 3.5〜10 倍、大きなファイルは 1.3〜2.7 倍速くなります。最も遅いリクエストの応答時間は 1/5〜1/15 になります。その代わり、メモリを約 5 MB 多く使い、WAF ありではさらに約 8 MB 使います（ネイティブエンジンに読み込まれたルール）。ディレクトリ一覧、内部ページ、リバースプロキシ、FastCGI、ファイル送信、WebSocket は Python に任されるため、これらのリクエストは Python エンジンの速度のままです。アクセスの少ない小さなサイトなら、どちらでも十分すぎるほどです。WAF を有効にした Python エンジンでも、一般的なマシンで 1 日数千万リクエストを処理できます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:747
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:760
 msgid "Combien de processus choisir ?"
 msgstr "プロセス数はいくつにすべき？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:749
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:762
 msgid "Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques (le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; le nombre réellement appliqué s'affiche dans État & Ressources."
 msgstr "エンジンによります。Python エンジン：各プロセスがリクエストを処理します。実測では、2 プロセスで 1 プロセスの 1.6〜2 倍、4 プロセスで約 3.5 倍になり、上限は物理コア数（提示される最大値）です。プロセスごとにメモリを約 10〜20 MB 多く使います。ネイティブエンジン：すでにすべてのコアを使っており、設定するプロセスはセキュリティチェック用で、検査が必要なリクエスト（WAF の一致または疑い、Active Defense が追跡中の送信元、認証）だけを受け取ります。そのため通常のトラフィックでは、2 つ目のプロセスは何ももたらしません：実測でもスループットは変わりません。効果があるのは、すべてのリクエストが Python を通る場合（magnet が有効）で、マシンに物理コアが 4 以上あるときです：リクエスト数が 1.5〜1.7 倍になります。2 コアではプロセッサーがすでに忙しいため 5〜12 % しか向上しません：そのため画面は 4 コア以上の場合にのみ提示します。2 を超えると、実測の向上は 4 % です。「耐性と制限」画面にはこのマシンの最大値と増やすと何が得られるかが表示され、実際に適用される数は「状態とリソース」に表示されます。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:765
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:778
 msgid "Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"
 msgstr "基本設定で「ネイティブ C++」がグレー表示になっているのはなぜですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:767
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:780
 msgid "Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif (ces routes demandent de confier la connexion au processus Python, impossible quand le natif chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif."
 msgstr "ネイティブエンジンがすべてを処理するのを妨げる原因があるためです: バイナリ bin/omega-http-core がない、またはこのマシンで起動しない（その場合 install.sh が再コンパイルを試みます）、または TLS が直接モードで、リバースプロキシ・FastCGI・ファイルアップロードが有効になっている（これらのルートは接続を Python プロセスに委譲する必要があり、ネイティブ自身が暗号化している場合は不可能です）。原因の一覧とそれぞれの解消方法が選択肢の下に表示されます。半分だけネイティブのサーバーには決してなりません: 原因を解消してからネイティブを選んでください。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:790
 msgid "Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"
 msgstr "ネイティブエンジンでログ、fail2ban（omega-jail）、RIPOSTE は変わりますか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:779
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:792
 msgid "Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne voient aucune différence. Une adresse bannie l'est quel que soit le moteur."
 msgstr "いいえ。アクセスログは同じ形式で 1 文字単位まで同じに書かれ、セキュリティログ（WAF アラート、Active Defense イベント）は Python エンジンと同じ Python コードで書かれます。RIPOSTE、omega-jail、omega-fire は同じ行を読み、違いはありません。禁止されたアドレスはエンジンに関係なく禁止されたままです。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:787
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:800
 msgid "J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"
 msgstr "ネイティブエンジンを選んだのに 状態とリソース に「Python」と表示されるのはなぜですか？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:802
 msgid "Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre."
 msgstr "サーバーがまだ再起動されていない（エンジンは完全な再起動時にのみ切り替わります）か、ネイティブが起動できなかったためです: バイナリがない・拒否された、または処理できない機能が有効になっている。この場合は Python エンジンがすべてを処理し、理由は 状態とリソース（HTTP エンジン セクション）、エラーログ、「omega-serv engine status」コマンドで表示されます。一方が半分、もう一方が半分を処理することは決してありません。"
 
@@ -10558,7 +10567,7 @@ msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterminis
 msgstr "`war_mode.enabled=true` にすると、手作業なしですべて自動かつ決定的になります：すでに計算された WAF の各判定がソースごとの累積スコア（IP + ハッシュした User-Agent、時間とともに減衰）を積み上げ、設定可能なしきい値（normal/suspicious/hostile/contained）を超えると自動アクション（おとりへの転送、詳細ログ、遅延、インシデント作成）が発動します。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - 設定"
 
@@ -10722,7 +10731,7 @@ msgid "Une zone de leurre n'est jamais créée automatiquement et son existence 
 msgstr "おとりゾーンは自動で作成されることはなく、保存時に存在も確認されません - 指定したアドレスで何も待ち受けていなければ、攻撃者はその前ではなくリクエスト時に 502 エラーを受け取ります。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - 脅威"
 
@@ -10755,7 +10764,7 @@ msgid "Aucune modification possible depuis cet écran."
 msgstr "この画面からは何も変更できません。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - インシデント"
 
@@ -10869,7 +10878,7 @@ msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports
 msgstr "閲覧のみ。ただしインシデントのクローズ（元に戻せない）とエクスポート（ディスクへの書き込み）を除きます。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - おとり"
 
@@ -10908,7 +10917,7 @@ msgid "Les affectations expirées mais jamais libérées restent visibles avec l
 msgstr "期限切れで一度も解放されていない割り当ては「期限切れ」状態で表示されたままです - 手動の解放とは異なります。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - シミュレーション"
 
@@ -11023,7 +11032,7 @@ msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter
 msgstr "参照中のルールパックが 1 つもないと、WAF は有効でも何も検出できません - 画面はこれを明示的に示し、ユーザーから報告された実際の抜けを解消しています。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "WAF - Modules"
 msgstr "WAF - モジュール"
 
@@ -11135,7 +11144,7 @@ msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement 
 msgstr "モード/エラー時の動作/ルールパックは、反映にリロードが必要です（有効なサービスがあれば自動）。ブロックリストは追加の操作なしに即座に反映されます。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - 制限(除外とレート制限)"
 
@@ -11238,7 +11247,7 @@ msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une d�
 msgstr "magnet スクリプト：独自のレート制限（429）は検出として数えられないため、自動 BAN につながることはありません。上のフォルダや IP/ネットワークのルールに該当するリクエストでは、そのルールが優先されます：magnet の 429 は無視されます（攻撃シグネチャは引き続き適用されます）。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "WAF - Tester une requête"
 msgstr "WAF - リクエストをテスト"
 
@@ -11275,7 +11284,7 @@ msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur 
 msgstr "テストのたびにディスクに保存された設定から WAF エンジンを再構築します - すでに起動したサーバーがルールの変更後にまだリロードされていない場合、このテストはそのサーバーが現在実際に適用している動作と異なることがあります。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - カスタムルールとリスト"
 
@@ -11648,7 +11657,7 @@ msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route r�
 msgstr "単独でブロックするリスト（重大度 5 以上）で、実際に配信されているルート（エイリアス、リバースプロキシ、Auth ゾーン、webroot のファイル）に当たるものは拒否されます：リストに例外 '!/パス' を追加するか、観察で読み込んでください。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - リストエディタ"
 
@@ -11857,7 +11866,7 @@ msgid "L'état en bas de l'écran indique si le compte du service peut lire le f
 msgstr "画面下部の状態は、サービスのアカウントがファイルを読めるかを示します：読めないファイルは次回のリロードを失敗させます。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modifier une liste"
 msgstr "WAF - リストを変更"
 
@@ -12000,7 +12009,7 @@ msgid "Un script importe peut référencer une fonctionnalité lighty.* non supp
 msgstr "インポートしたスクリプトが、このブリッジのサポートしない lighty.* 機能を参照していることがあります（Lua 側では常に nil）- 新しいスクリプトを本番で有効にする前は、特に on_error=fail-closed の場合、必ず「互換性を確認」を実行してください。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - ルールパックの選択"
 
@@ -13833,16 +13842,16 @@ msgid "Audit et sauvegarde"
 msgstr "監査とバックアップ"
 
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:84
-msgid "Active Defense - Statut"
-msgstr "Active Defense - 状態"
-
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Statut"
 msgstr "WAF - 状態"
 
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "WAF - Assistant règle / chargement de liste"
 msgstr "WAF - ルール / リスト読み込みウィザード"
+
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+msgid "Active Defense - Statut"
+msgstr "Active Defense - 状態"
 
 #: src/omega_serv/interfaces/tui/rendering/aligned_block.py:73
 msgid "detail() sans ligne precedente"
@@ -20854,12 +20863,12 @@ msgstr "はい"
 msgid "non"
 msgstr "いいえ"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:58
 #, python-brace-format
 msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
 msgstr "{date} に生成 · BAN {count} 件、うち有効 {active} 件"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:80
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
@@ -21125,6 +21134,9 @@ msgstr "WordPress の設定ファイル"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "WordPress のプラグイン/テーマの汎用的な探索"
+
+#~ msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
+#~ msgstr "Active Defense（deception/脅威/インシデント）とアプリケーションファイアウォール（WAF）をまとめたもの。"
 
 #, python-brace-format
 #~ msgid "plus gros : {name} ({size})"

@@ -71,7 +71,9 @@ HOME_SCREEN = ScreenGuide(
         ),
         FieldGuide(
             label=_("Active Sécurité"),
-            definition=_("Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."),
+            definition=_(
+                "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+            ),
             utilisation=_("À utiliser pour la sécurité active du serveur."),
             action=_("Ouvre le menu Active Sécurité."),
             reaction=_("Dépend de l'écran ouvert ensuite - voir sa propre fiche."),

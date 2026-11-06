@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 09:44+0100\n"
+"POT-Creation-Date: 2026-11-06 12:03+0100\n"
 "PO-Revision-Date: 2026-10-22 12:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 简体中文\n"
@@ -6145,7 +6145,7 @@ msgid "Ouvre le registre des capacités."
 msgstr "打开能力清单。"
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:28
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:86
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:177
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:320
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:327
@@ -6218,7 +6218,7 @@ msgstr "打开详细配置菜单。"
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:42
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:49
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:79
 msgid "Dépend de l'écran ouvert ensuite - voir sa propre fiche."
 msgstr "取决于接下来打开的界面 - 见其专门的说明。"
 
@@ -6354,65 +6354,65 @@ msgstr "无效果（只读，每 2 秒自动刷新）。"
 msgid "Active Sécurité"
 msgstr "主动安全"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:74
-msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
-msgstr "汇集 Active Defense（deception/威胁/事件）和应用防火墙（WAF）。"
-
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:75
+msgid "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+msgstr "按攻击的顺序汇集：WAF（防护）、Active Defense（检测）、RIPOSTE（随时间推移反击），下方是 手动干预（手动封禁或解除封禁 IP 地址）。"
+
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
 msgid "À utiliser pour la sécurité active du serveur."
 msgstr "用于服务器的主动安全。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:76
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:78
 msgid "Ouvre le menu Active Sécurité."
 msgstr "打开“主动安全”菜单。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:80
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:85
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:81
 #: src/omega_serv/interfaces/tui/screens/home.py:86
 msgid "Audit de sécurité"
 msgstr "安全审计"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:81
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
 msgid "Vérifications consultatives (service, rotation des logs, mode WAF...)."
 msgstr "参考性检查（服务、日志轮转、WAF 模式……）。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
 msgid "À lancer ponctuellement pour un avis global."
 msgstr "不定期运行，获取整体评估。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:85
 msgid "Ouvre l'écran d'audit."
 msgstr "打开审计界面。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:87
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:102
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:82
 #: src/omega_serv/interfaces/tui/screens/home.py:88
 msgid "Sauvegarde de configuration"
 msgstr "配置备份"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:88
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
 msgid "Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."
 msgstr "创建、列出、恢复或删除完整的配置备份。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
 msgid "À utiliser avant un changement risque, ou pour migrer une configuration."
 msgstr "在有风险的更改之前，或迁移配置时使用。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:92
 msgid "Ouvre l'écran de sauvegarde."
 msgstr "打开备份界面。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:93
 msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr "恢复会直接覆盖目标文件 - 见其专门的说明。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:94
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
 msgid "Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."
 msgstr "此界面本身从不修改配置 - 只有导航。"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:97
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:99
 msgid "Appuyer sur Échap depuis cet écran demande une confirmation de sortie de l'application (contrairement aux autres écrans, où Échap revient simplement en arrière)."
 msgstr "在此界面按 Esc 会要求确认退出应用程序（与其他界面不同，其他界面按 Esc 只是返回上一级）。"
 
@@ -8001,6 +8001,7 @@ msgstr "已修复的真实陷阱：如果失败信息中提到 'omega-lib' 和 '
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:322
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:335
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:346
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
 msgid "WAF/Active Defense"
 msgstr "WAF/Active Defense"
 
@@ -8161,7 +8162,7 @@ msgstr "点击“保存并应用”后显示的消息会给出原因：(1) 列�
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet（导入外部 WAF）"
 
@@ -8311,163 +8312,171 @@ msgstr "Let's Encrypt 向导失败（HTTP-01 质询）- 为什么？"
 msgid "Les causes les plus fréquentes, dans l'ordre à vérifier : (1) le port 80 n'est pas réellement joignable depuis Internet (redirection de port manquante ou incorrecte sur le routeur/pare-feu, ou un autre service occupe déjà ce port sur la machine), (2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propagé - vérifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test (staging, coché par défaut) tout fonctionne mais le certificat obtenu n'est jamais reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par Certbot - il précise généralement laquelle de ces causes s'applique."
 msgstr "最常见的原因，按检查顺序：(1) 80 端口实际上无法从互联网访问（路由器/防火墙上缺少端口转发或转发错误，或本机上已有其他服务占用了该端口），(2) 域名尚未指向此 IP（DNS/DDNS 尚未生效 - 请在外部机器上用 `dig`/`nslookup` 检查），(3) 在测试模式下（staging，默认勾选）一切正常，但获得的证书永远不会被浏览器认可 - 这是正常的，确认域名和 webroot 无误后取消勾选即可。显示的错误消息直接来自 Certbot - 它通常会说明适用的是哪一种原因。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:593
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:604
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:615
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:630
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:642
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:654
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:666
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:678
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:689
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:700
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+msgid "Comment bannir une adresse IP à la main, sans écrire de règle ?"
+msgstr "如何手动封禁一个 IP 地址，而不编写规则？"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:585
+msgid "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte (JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> Liste de blocage."
+msgstr "主动安全 -> 手动干预 -> 封禁：一个地址、一个原因、一个时长。封禁立即生效（在整个网站上返回 451 页面，发生在后端之前），无需 root 权限，与 RIPOSTE 的再犯无关；在“解除封禁”中解除。“封禁状态”列出所有封禁及其来源并可导出（JSON、HTML，或可原样导入 omega-fire 的 TXT）。要封禁网络，请使用 WAF -> 模块 -> 封禁列表。"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:606
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:617
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:628
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:691
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:702
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:595
 msgid "Quelle différence entre Active Defense et RIPOSTE ?"
 msgstr "Active Defense 和 RIPOSTE 有什么区别?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:584
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:597
 msgid "Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence (épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique."
 msgstr "Active Defense 在请求期间行动:它根据来源当前的行为为每个来源打分(分数,级别 normal / suspicious / hostile / contained),并立即做出反应(诱饵、减速、事件)。RIPOSTE 随时间推移行动:它会记住在一段安静期后回来的来源(事件段),并对其施加越来越长的封禁(级别,默认 1 小时、6 小时、24 小时、7 天),带有到期时间、可解除功能和再犯记忆。RIPOSTE 从不修改 Active Defense 的分数或阈值;它只能在策略中要求最低的 Active Defense 级别。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
 msgid "Pourquoi RIPOSTE a-t-il banni cette adresse ?"
 msgstr "RIPOSTE 为什么封禁了这个地址?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:596
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:609
 msgid "Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et « riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce ban dans la récidive », et au besoin « Lever et exempter cette source »."
 msgstr "「操作」界面:操作详情给出策略、级别、来源事件和到期时间。「模拟」界面的「最近决策」:每个决策都逐行解释(选中的策略、返回次数、已检查的排除项)。命令行:「riposte actions show <id>」和「riposte decisions list --ip <地址> --explain」。误报:使用「解除」并勾选「此封禁不计入再犯」,必要时选择「解除并豁免此来源」。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:605
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
 msgid "J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"
 msgstr "我解除了 RIPOSTE 的封禁,但该地址仍被阻止 - 为什么?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:620
 msgid "Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client (la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne couvre pas la même adresse : RIPOSTE n'y touche jamais."
 msgstr "「本地封禁 + 网络封禁」策略也会通过 omega-jail 的 jail <service>-riposte-1h/6h/24h/7d 把封禁交给 fail2ban。omega-serv 无权解除 fail2ban 的封禁:「解除」只移除本地封禁(WAF 的 blocklist)。请在 omega-fire 中或用 fail2ban-client 解除网络封禁(jail 显示在操作详情中)。还请检查是否有 WAF 封禁或手动封禁覆盖同一地址:RIPOSTE 从不触碰它们。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:616
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:629
 msgid "Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"
 msgstr "「诱饵探索者」和「上传 / API 探测」场景被拒绝（未知的诱饵配置）- 怎么办？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
 msgid "Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, « Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter -> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre."
 msgstr "这两个场景不封禁：它们把来源引向 Active Defense 的诱饵，因此诱饵必须在加载场景之前就已存在 -「诱饵探索者」使用 fake_admin 配置，「上传 / API 探测」使用 fake_api 配置。(1) 必须启用 active_defense 选项（「选项」菜单）。(2) 在「主动安全 -> 设置」（Active Defense 模块）中：「启用 Deception」= 是，然后保存。(3) 仍在「设置」中，「添加档案」：名称 fake_admin（或 fake_api），启用 是，攻击类别：fake_admin 用 scan,credential_stuffing，fake_api 用 api_probe,upload_probe，Isolation 选 fixture，诱饵区域留空。(4) 回到 RIPOSTE -> 策略 -> 添加 -> 现成场景：场景会被接受。诱饵只有在完全重启后才会生效。其余三个场景执行封禁，不需要任何诱饵。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:644
 msgid "RIPOSTE ne fait rien - pourquoi ?"
 msgstr "RIPOSTE 什么都不做 - 为什么?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:633
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:646
 msgid "Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins 1 h de silence. Simuler avec la même situation montre la condition qui manque."
 msgstr "按顺序:(1) 必须在「选项」中启用 'riposte' 模块,然后完全重启服务;(2) WAF 必须启用,否则 RIPOSTE 看不到任何攻击;(3) 至少要有一条已启用的策略(「保存但不启用」会让它保持观察状态);(4) 紧急停止不能处于激活状态(「状态」界面:按钮显示「恢复」);(5) 必须满足条件:例如 7 天内 3 个事件段,每个事件段与前一个之间至少间隔 1 小时的安静期。模拟相同情况可显示缺少的条件。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:656
 msgid "Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"
 msgstr "被封禁的地址收到 451 页面：是 omega-serv 还是 fail2ban？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:645
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:658
 msgid "C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list »."
 msgstr "是 omega-serv。WAF 封禁列表中的地址（WAF 自动封禁、手动封禁或 RIPOSTE 本地封禁）在整个封禁期间，所有请求都会收到 451 页面“您的 IP 已被封禁”。403 只拒绝一次请求（命中了某条规则），并不封禁。fail2ban 的封禁作用于防火墙：它从不返回页面，连接会被切断或无法建立。要知道是谁封禁的，请查看封禁列表中的封禁来源（« auto » = WAF 自动封禁，« riposte »，« manual »）：WAF → 模块 → 封禁列表，或 « blocklist list »。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:668
 msgid "À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"
 msgstr "omega-serv-riposte-1h、-6h、-24h 和 -7d 这些 jail 有什么用？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:657
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:670
 msgid "Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails, préfixé par le nom de son service."
 msgstr "它们是 RIPOSTE 网络封禁所用的 fail2ban jail，由 omega-jail（1.1.0 或更高版本）安装。当“本地封禁 + 网络封禁”策略执行封禁时，omega-serv 先施加本地封禁，然后在 « var/log/riposte-decisions.jsonl » 中写入一行；fail2ban 读取该行并在防火墙中封禁该地址。这些 jail 的时长是固定的：每个 RIPOSTE 档位都会进入不超过它的最长 jail（2 小时的档位进入 1 小时的 jail），界面会注明。每个 omega-serv 实例都有自己的一组 jail，以其服务名为前缀。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:680
 msgid "J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"
 msgstr "我更新了 omega-jail，但 RIPOSTE 的 jail 既没出现在 fail2ban 中，也没出现在 omega-fire 中"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:669
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:682
 msgid "Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans rien à déclarer."
 msgstr "仅更新 omega-jail 并不会安装其新的 jail。请将压缩包解压到现有文件夹之上，然后运行 « ./install.sh »：它会列出目录中尚未安装的 jail，并提示安装（« sudo »）。也可以执行：« sudo ./omega-jail.sh --apply »。只有在 omega-serv 中启用了 RIPOSTE 模块时，才会提供 RIPOSTE 的 jail（否则显示“来源未配置”）。检查：« sudo fail2ban-client status »。一旦安装，omega-fire 就会显示它们，无需任何声明。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
 msgid "Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"
 msgstr "在 Tailscale Funnel 或本地代理之后，网络封禁还有用吗？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:681
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:694
 msgid "Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul."
 msgstr "仅靠 fail2ban 的封禁不行:此时连接来自本地代理(tailscaled,127.0.0.1)而不是访客,防火墙封禁触及不到访客。omega-jail(1.1.0 或更高版本)会检测到这一点,并把每个公网地址的 fail2ban 封禁转发到 omega-serv 的封禁列表:该地址会收到 451 页面,与 Magnet 脚本相同。RIPOSTE 的 jail 不会被转发:RIPOSTE 已经施加了本地封禁(451)。当访客直接连接服务器时,防火墙封禁单独即可生效。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:690
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
 msgid "La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"
 msgstr "omega-serv-active-defense 这个 jail 与 RIPOSTE 重复吗？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:705
 msgid "En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si seuls les paliers RIPOSTE doivent compter."
 msgstr "部分重复。omega-jail 的这个 jail 会在防火墙中将 Active Defense 判定为 hostile 或 contained 的任何地址固定封禁 24 小时，不考虑 RIPOSTE 的档位：因此某个地址在网络层可能比所选档位更早或更长时间地被封禁。RIPOSTE 的“状态”界面会提示这一点。如果需要这层保险就保留它；如果只应以 RIPOSTE 档位为准，就删除它（在 omega-fire 的 jail 管理中）。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:701
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
 msgid "Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"
 msgstr "我的测试攻击没有触发任何 RIPOSTE 封禁——为什么？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
 msgid "Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie : nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque."
 msgstr "依次检查：(1) 请求必须命中一条 WAF 规则，即返回 403（例如 « /?id=1 UNION SELECT 1 » 或 « /.env »）；普通的 404 不算攻击；(2) 地址不能是豁免地址：本机、Tailscale 和本地网络永远不会被封禁，请从公网地址（4G）测试，若在代理之后，请设置可信代理；(3) 必须满足策略条件：情节数量、攻击类别和最低 Active Defense 级别（测试时选“无”）；(4) 已被封禁的地址（451 页面，通常来自 WAF 自动封禁）不再被分析：RIPOSTE 会忽略封禁列表的拒绝，请先解除该封禁。模拟同样的情况可以看出缺少什么。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:727
 msgid "Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"
 msgstr "为什么 omega-fire 只显示 fail2ban 的封禁？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:729
 msgid "omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, dont ceux de RIPOSTE, apparaissent bien dans omega-fire."
 msgstr "omega-fire 读取的是 fail2ban 和防火墙。omega-serv 的封禁（WAF 封禁列表，451 页面：自动封禁、手动封禁、RIPOSTE 本地封禁）目前需要在 omega-serv 中查看：WAF → 模块 → 封禁列表、RIPOSTE 的“操作”界面，或 « blocklist list »。由 omega-jail 安装的 jail，包括 RIPOSTE 的 jail，都会显示在 omega-fire 中。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:723
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:746
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:764
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:776
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:786
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:736
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:759
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:799
 msgid "Moteur HTTP et performances"
 msgstr "HTTP 引擎与性能"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:724
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:737
 msgid "Moteur Python ou natif : qu'est-ce que ça change concrètement ?"
 msgstr "Python 引擎还是原生引擎：实际有什么不同？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:739
 msgid "Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute (correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée par le moteur natif, sans coût mesurable. Mesuré sur trois machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des dizaines de millions de requêtes par jour sur une machine modeste."
 msgstr "不变的：响应、日志、安全性和可用功能。变化的是由谁处理 HTTP 请求：Python 解释器，还是使用全部核心的编译程序。启用 WAF 时，原生引擎自行检查规则：没有任何规则匹配的请求不经过 Python 直接响应；只要有一点疑问（匹配、非 ASCII 文本、需要检查的请求头或请求体、Active Defense 正在跟踪的来源、身份验证区域），就由 Python 决定，与 Python 引擎完全相同。如果启用了 magnet，所有请求都经过 Python；速率限制则由原生引擎计数，没有可测量的开销。在三台机器上实测（详见 Web 服务器对比），在没有安全检查时，原生引擎提供小页面的速度是 Python 引擎的 10 到 27 倍；启用 WAF 时为 8 到 30 倍，WAF 只让它损失 5% 到 22% 的吞吐量；100 KB 文件快 3.5 到 10 倍；大文件快 1.3 到 2.7 倍。最慢请求的响应时间缩短为原来的 1/5 到 1/15。代价是多占用约 5 MB 内存，启用 WAF 时再多约 8 MB（加载到原生引擎中的规则）。目录列表、内部页面、反向代理、FastCGI、文件上传和 WebSocket 交给 Python 处理：这些请求保持 Python 引擎的速度。对于访问量不大的小网站，两者都绰绰有余：即使是启用 WAF 的 Python 引擎，在一台普通机器上每天也能处理数千万个请求。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:747
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:760
 msgid "Combien de processus choisir ?"
 msgstr "应该选择多少个进程？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:749
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:762
 msgid "Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques (le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; le nombre réellement appliqué s'affiche dans État & Ressources."
 msgstr "取决于引擎。Python 引擎：每个进程都处理请求；实测 2 个进程的处理量是 1 个的 1.6 到 2 倍，4 个约为 3.5 倍，上限为物理核心数（即提供的最大值）。每个进程多占用约 10 到 20 MB 内存。原生引擎：它已使用全部核心，所设置的进程是安全检查进程，只接收需要检查的请求（WAF 匹配或存疑、Active Defense 正在跟踪的来源、身份验证）。因此对普通流量，第 2 个进程没有任何作用：实测吞吐量不变。当所有请求都经过 Python（启用了 magnet）且机器至少有 4 个物理核心时，它才有用：请求量提高 1.5 到 1.7 倍。在 2 个核心上它只带来 5% 到 12%，因为处理器已经很忙：因此界面只在 4 个核心及以上时才提供该选项。超过 2 个时，实测收益为 4%。「抗压与限制」界面显示本机的最大值以及增加进程能带来什么；实际应用的数量显示在「状态与资源」中。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:765
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:778
 msgid "Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"
 msgstr "为什么在基本配置中「原生 C++」选项是灰色的？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:767
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:780
 msgid "Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif (ces routes demandent de confier la connexion au processus Python, impossible quand le natif chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif."
 msgstr "因为有原因阻止原生引擎处理全部内容：二进制文件 bin/omega-http-core 缺失或无法在本机启动（此时 install.sh 会尝试重新编译），或者 TLS 处于直接模式，而反向代理、FastCGI 或文件上传已启用（这些路由需要把连接交给 Python 进程，而原生引擎自行加密时无法做到）。原因列表以及每个原因的解除方法显示在选项下方。绝不会有半原生的服务器：先解除原因，再选择原生引擎。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:790
 msgid "Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"
 msgstr "原生引擎会改变我的日志、fail2ban（omega-jail）或 RIPOSTE 吗？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:779
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:792
 msgid "Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne voient aucune différence. Une adresse bannie l'est quel que soit le moteur."
 msgstr "不会。访问日志以相同格式逐字符写入，安全日志（WAF 警报、Active Defense 事件）由与 Python 引擎相同的 Python 代码写入。RIPOSTE、omega-jail 和 omega-fire 读取相同的行，看不出任何区别。无论使用哪个引擎，被封禁的地址都保持封禁。"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:787
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:800
 msgid "J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"
 msgstr "我选择了原生引擎，但状态与资源显示「Python」- 为什么？"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:802
 msgid "Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre."
 msgstr "服务器尚未重启（引擎只在完全重启时更换），或者原生引擎无法启动：二进制文件缺失或被拒绝，或启用了它无法处理的功能。这种情况下由 Python 引擎处理一切，原因显示在状态与资源（HTTP 引擎部分）、错误日志以及「omega-serv engine status」命令中。绝不会一半由一个引擎、一半由另一个引擎处理。"
 
@@ -10557,7 +10566,7 @@ msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterminis
 msgstr "一旦 `war_mode.enabled=true`，一切都变为自动且确定的，无需任何手动干预：每个已计算出的 WAF 判定都会累加到每个来源的分数中（IP + 哈希后的 User-Agent，随时间衰减），分数越过可配置的阈值（normal/suspicious/hostile/contained）时会触发自动动作（重定向到诱饵、增强日志、减速、创建事件）。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - 设置"
 
@@ -10721,7 +10730,7 @@ msgid "Une zone de leurre n'est jamais créée automatiquement et son existence 
 msgstr "诱饵区域从不自动创建，保存时也不检查其是否存在 - 如果指定地址上没有任何服务在监听，攻击者会在请求时收到 502 错误，而不是更早。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - 威胁"
 
@@ -10754,7 +10763,7 @@ msgid "Aucune modification possible depuis cet écran."
 msgstr "无法从此界面进行任何修改。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - 事件"
 
@@ -10868,7 +10877,7 @@ msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports
 msgstr "纯粹用于查看，关闭事件（不可撤销）和导出（写入磁盘）除外。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - 诱饵"
 
@@ -10907,7 +10916,7 @@ msgid "Les affectations expirées mais jamais libérées restent visibles avec l
 msgstr "已过期但从未释放的分配仍以“已过期”状态显示 - 与手动释放不同。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - 模拟"
 
@@ -11022,7 +11031,7 @@ msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter
 msgstr "如果没有引用任何规则包，即使启用了 WAF 也什么都检测不到 - 界面会明确指出这一点，修复了用户报告的一个真实漏洞。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "WAF - Modules"
 msgstr "WAF - 模块"
 
@@ -11134,7 +11143,7 @@ msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement 
 msgstr "模式/错误行为/规则包需要重新加载才能生效（如有活动服务则自动进行）。而封禁列表则会立即生效，无需任何额外操作。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - 限制(排除项与速率限制)"
 
@@ -11237,7 +11246,7 @@ msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une d�
 msgstr "magnet 脚本：它自身的速率限制（429）绝不计为检测，因此绝不会导致自动封禁。对于受上方目录或 IP/网络规则覆盖的请求，以该规则为准：magnet 的 429 会被忽略（其攻击特征仍然生效）。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "WAF - Tester une requête"
 msgstr "WAF - 测试请求"
 
@@ -11274,7 +11283,7 @@ msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur 
 msgstr "每次测试都会根据磁盘上已保存的配置重建 WAF 引擎 - 如果已启动的服务器在规则更改后尚未重新加载，此测试反映的行为可能与该服务器目前实际应用的行为不同。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - 自定义规则与列表"
 
@@ -11647,7 +11656,7 @@ msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route r�
 msgstr "能够单独拦截（严重级别 >= 5）且会影响真正提供服务的路由（别名、反向代理、Auth 区域、webroot 中的文件）的列表会被拒绝：请在列表中添加 '!/路径' 例外，或以“观察”模式加载。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - 列表编辑器"
 
@@ -11856,7 +11865,7 @@ msgid "L'état en bas de l'écran indique si le compte du service peut lire le f
 msgstr "界面底部的状态显示服务账户能否读取该文件：无法读取的文件会导致下一次重新加载失败。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modifier une liste"
 msgstr "WAF - 修改列表"
 
@@ -11999,7 +12008,7 @@ msgid "Un script importe peut référencer une fonctionnalité lighty.* non supp
 msgstr "导入的脚本可能引用此桥接不支持的 lighty.* 功能（在 Lua 中始终为 nil）- 在生产环境启用新脚本之前，务必运行“检查兼容性”，尤其是使用 on_error=fail-closed 时。"
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - 选择规则包"
 
@@ -13832,16 +13841,16 @@ msgid "Audit et sauvegarde"
 msgstr "审计与备份"
 
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:84
-msgid "Active Defense - Statut"
-msgstr "Active Defense - 状态"
-
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Statut"
 msgstr "WAF - 状态"
 
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "WAF - Assistant règle / chargement de liste"
 msgstr "WAF - 规则向导 / 加载列表"
+
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+msgid "Active Defense - Statut"
+msgstr "Active Defense - 状态"
 
 #: src/omega_serv/interfaces/tui/rendering/aligned_block.py:73
 msgid "detail() sans ligne precedente"
@@ -20853,12 +20862,12 @@ msgstr "是"
 msgid "non"
 msgstr "否"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:58
 #, python-brace-format
 msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
 msgstr "生成于 {date} · 共 {count} 个封禁，其中 {active} 个生效中"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:80
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
@@ -21124,6 +21133,9 @@ msgstr "WordPress 配置文件"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "通用 WordPress 插件/主题探测"
+
+#~ msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
+#~ msgstr "汇集 Active Defense（deception/威胁/事件）和应用防火墙（WAF）。"
 
 #, python-brace-format
 #~ msgid "plus gros : {name} ({size})"

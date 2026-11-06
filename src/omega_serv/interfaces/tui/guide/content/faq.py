@@ -578,6 +578,19 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
         ),
     ),
     FaqEntry(
+        category=_("WAF/Active Defense"),
+        question=_("Comment bannir une adresse IP à la main, sans écrire de règle ?"),
+        answer=(
+            _(
+                "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est "
+                "immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive "
+                "RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte "
+                "(JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> "
+                "Liste de blocage."
+            )
+        ),
+    ),
+    FaqEntry(
         category=_("RIPOSTE"),
         question=_("Quelle différence entre Active Defense et RIPOSTE ?"),
         answer=(

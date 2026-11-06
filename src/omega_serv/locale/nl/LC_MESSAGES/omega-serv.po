@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 09:44+0100\n"
+"POT-Creation-Date: 2026-11-06 12:03+0100\n"
 "PO-Revision-Date: 2026-10-23 18:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Nederlands\n"
@@ -6146,7 +6146,7 @@ msgid "Ouvre le registre des capacités."
 msgstr "Opent het capaciteitenregister."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:28
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:86
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:177
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:320
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:327
@@ -6219,7 +6219,7 @@ msgstr "Opent het menu van de gedetailleerde configuratie."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:42
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:49
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:79
 msgid "Dépend de l'écran ouvert ensuite - voir sa propre fiche."
 msgstr "Hangt af van het daarna geopende scherm - zie de eigen kaart."
 
@@ -6355,65 +6355,65 @@ msgstr "Geen effect (lezen, elke 2 seconden automatisch vernieuwd)."
 msgid "Active Sécurité"
 msgstr "Actieve beveiliging"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:74
-msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
-msgstr "Groepeert Active Defense (deception/dreigingen/incidenten) en de applicatiefirewall (WAF)."
-
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:75
+msgid "Regroupe, dans l'ordre d'une attaque : WAF (protéger), Active Defense (détecter), RIPOSTE (riposter dans la durée) et, dessous, INTERVENTION MANUELLE (bannir ou débannir une adresse IP à la main)."
+msgstr "Groepeert, in de volgorde van een aanval: WAF (beschermen), Active Defense (detecteren), RIPOSTE (terugslaan over de tijd) en daaronder HANDMATIGE INGREEP (een IP-adres met de hand verbannen of de ban opheffen)."
+
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:77
 msgid "À utiliser pour la sécurité active du serveur."
 msgstr "Voor de actieve beveiliging van de server."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:76
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:78
 msgid "Ouvre le menu Active Sécurité."
 msgstr "Opent het menu Actieve beveiliging."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:80
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:85
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:81
 #: src/omega_serv/interfaces/tui/screens/home.py:86
 msgid "Audit de sécurité"
 msgstr "Beveiligingsaudit"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:81
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
 msgid "Vérifications consultatives (service, rotation des logs, mode WAF...)."
 msgstr "Adviserende controles (dienst, logrotatie, WAF-modus...)."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:82
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:84
 msgid "À lancer ponctuellement pour un avis global."
 msgstr "Af en toe uit te voeren voor een algemeen oordeel."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:83
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:85
 msgid "Ouvre l'écran d'audit."
 msgstr "Opent het auditscherm."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:87
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:102
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:82
 #: src/omega_serv/interfaces/tui/screens/home.py:88
 msgid "Sauvegarde de configuration"
 msgstr "Configuratieback-up"
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:88
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
 msgid "Créer, lister, restaurer ou supprimer des sauvegardes complètes de la configuration."
 msgstr "Volledige back-ups van de configuratie maken, weergeven, herstellen of verwijderen."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:89
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
 msgid "À utiliser avant un changement risque, ou pour migrer une configuration."
 msgstr "Te gebruiken vóór een riskante wijziging, of om een configuratie te migreren."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:90
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:92
 msgid "Ouvre l'écran de sauvegarde."
 msgstr "Opent het back-upscherm."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:91
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:93
 msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr "Herstellen OVERSCHRIJFT de betrokken bestanden direct - zie de eigen kaart."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:94
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
 msgid "Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."
 msgstr "Dit scherm wijzigt de configuratie nooit zelf - alleen navigatie."
 
-#: src/omega_serv/interfaces/tui/guide/content/accueil.py:97
+#: src/omega_serv/interfaces/tui/guide/content/accueil.py:99
 msgid "Appuyer sur Échap depuis cet écran demande une confirmation de sortie de l'application (contrairement aux autres écrans, où Échap revient simplement en arrière)."
 msgstr "Esc op dit scherm vraagt om bevestiging om de toepassing af te sluiten (anders dan op de andere schermen, waar Esc gewoon teruggaat)."
 
@@ -8002,6 +8002,7 @@ msgstr "Opgeloste werkelijke valkuil: als de foutmelding 'omega-lib' en 'No matc
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:322
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:335
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:346
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
 msgid "WAF/Active Defense"
 msgstr "WAF/Active Defense"
 
@@ -8162,7 +8163,7 @@ msgstr "De melding na 'Opslaan en toepassen' geeft de reden: (1) de lijst is nog
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:414
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:432
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:854
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
 msgid "WAF - Magnet (import d'un WAF externe)"
 msgstr "WAF - Magnet (import van een externe WAF)"
 
@@ -8312,163 +8313,171 @@ msgstr "De Let's Encrypt-assistent mislukt (HTTP-01-uitdaging) - waarom?"
 msgid "Les causes les plus fréquentes, dans l'ordre à vérifier : (1) le port 80 n'est pas réellement joignable depuis Internet (redirection de port manquante ou incorrecte sur le routeur/pare-feu, ou un autre service occupe déjà ce port sur la machine), (2) le domaine ne pointe pas encore vers cette IP (DNS/DDNS pas encore propagé - vérifiez avec `dig`/`nslookup` depuis une machine externe), (3) en mode test (staging, coché par défaut) tout fonctionne mais le certificat obtenu n'est jamais reconnu par les navigateurs - c'est normal, décochez la case une fois le domaine et le webroot vérifiés. Le message d'erreur affiché est directement celui renvoyé par Certbot - il précise généralement laquelle de ces causes s'applique."
 msgstr "De meest voorkomende oorzaken, in de volgorde om te controleren: (1) poort 80 is niet echt bereikbaar vanaf internet (portforwarding op de router/firewall ontbreekt of is fout, of een andere dienst gebruikt die poort al op de machine), (2) het domein wijst nog niet naar dit IP (DNS/DDNS nog niet doorgegeven - controleer met `dig`/`nslookup` vanaf een externe machine), (3) in testmodus (staging, standaard aangevinkt) werkt alles, maar het verkregen certificaat wordt nooit door browsers herkend - dat is normaal, vink het vakje uit zodra domein en webroot gecontroleerd zijn. De getoonde foutmelding is rechtstreeks die van Certbot - die geeft meestal aan welke van deze oorzaken van toepassing is."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:581
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:593
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:604
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:615
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:630
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:642
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:654
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:666
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:678
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:689
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:700
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+msgid "Comment bannir une adresse IP à la main, sans écrire de règle ?"
+msgstr "Hoe verban ik een IP-adres met de hand, zonder een regel te schrijven?"
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:585
+msgid "Active Sécurité -> INTERVENTION MANUELLE -> Bannir : une adresse, un motif, une durée. Le ban est immédiat (page 451 sur tout le site, avant les backends), sans droits root et sans lien avec la récidive RIPOSTE ; il se lève dans Débannir. Statut des bans liste tous les bans avec leur origine et les exporte (JSON, HTML, ou TXT importable tel quel dans omega-fire). Pour un réseau, passez par WAF -> Modules -> Liste de blocage."
+msgstr "Actieve beveiliging -> HANDMATIGE INGREEP -> Verbannen: een adres, een reden, een duur. De ban werkt meteen (pagina 451 op de hele site, vóór de backends), zonder rootrechten en zonder verband met de RIPOSTE-herhalingen; hij wordt opgeheven in Ban opheffen. Banstatus toont alle bans met hun herkomst en exporteert ze (JSON, HTML, of TXT, zo te importeren in omega-fire). Voor een netwerk: WAF -> Modules -> Blokkeerlijst."
+
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:606
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:617
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:628
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:691
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:702
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:713
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
 #: src/omega_serv/interfaces/tui/screens/active_defense_menu_screen.py:134
 msgid "RIPOSTE"
 msgstr "RIPOSTE"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:582
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:595
 msgid "Quelle différence entre Active Defense et RIPOSTE ?"
 msgstr "Wat is het verschil tussen Active Defense en RIPOSTE?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:584
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:597
 msgid "Active Defense agit PENDANT la requête : il note chaque source selon ce qu'elle fait maintenant (score, niveaux normal / suspicious / hostile / contained) et réagit tout de suite (leurre, ralentissement, incident). RIPOSTE agit DANS LA DURÉE : il se souvient des sources qui reviennent après un silence (épisodes) et leur applique des bans de plus en plus longs (paliers, par défaut 1 h, 6 h, 24 h, 7 j), avec une échéance, une levée possible et une mémoire de récidive. RIPOSTE ne modifie jamais le score ni les seuils d'Active Defense ; il peut seulement exiger un niveau Active Defense minimal dans une politique."
 msgstr "Active Defense handelt TIJDENS het verzoek: het beoordeelt elke bron naar wat ze nu doet (score, niveaus normal / suspicious / hostile / contained) en reageert meteen (lokaas, vertraging, incident). RIPOSTE handelt OVER DE TIJD: het onthoudt bronnen die na een stilte terugkomen (episodes) en legt ze steeds langere bans op (treden, standaard 1 u, 6 u, 24 u, 7 d), met een vervaldatum, de mogelijkheid tot opheffen en een recidivegeheugen. RIPOSTE wijzigt nooit de score of de drempels van Active Defense; het kan in een beleidsregel alleen een minimaal Active Defense-niveau eisen."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:594
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
 msgid "Pourquoi RIPOSTE a-t-il banni cette adresse ?"
 msgstr "Waarom heeft RIPOSTE dit adres geband?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:596
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:609
 msgid "Écran Actions : le détail de l'action donne la politique, le palier, l'événement d'origine et l'échéance. Écran Simuler, « Décisions récentes » : chaque décision est expliquée ligne par ligne (politique retenue, nombre de retours, exclusions vérifiées). En ligne de commande : « riposte actions show <id> » et « riposte decisions list --ip <adresse> --explain ». Faux positif : « Lever » avec « ne pas compter ce ban dans la récidive », et au besoin « Lever et exempter cette source »."
 msgstr "Scherm Acties: het detail van de actie geeft de beleidsregel, de trede, de oorspronkelijke gebeurtenis en de vervaldatum. Scherm Simuleren, « Recente beslissingen »: elke beslissing wordt regel voor regel uitgelegd (gekozen beleidsregel, aantal terugkeren, gecontroleerde uitzonderingen). Op de opdrachtregel: « riposte actions show <id> » en « riposte decisions list --ip <adres> --explain ». Vals positief: « Opheffen » met « deze ban niet meetellen voor recidive », en zo nodig « Opheffen en deze bron vrijstellen »."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:605
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
 msgid "J'ai levé un ban RIPOSTE mais l'adresse reste bloquée - pourquoi ?"
 msgstr "Ik heb een RIPOSTE-ban opgeheven, maar het adres blijft geblokkeerd - waarom?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:607
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:620
 msgid "Une politique « ban local + ban réseau » passe aussi le ban à fail2ban, par les jails omega-jail <service>-riposte-1h/6h/24h/7d. omega-serv n'a pas les droits de lever un ban fail2ban : « Lever » ne retire que le ban local (blocklist du WAF). Levez le ban réseau dans omega-fire ou avec fail2ban-client (la jail est indiquée dans le détail de l'action). Vérifiez aussi qu'un ban du WAF ou un ban manuel ne couvre pas la même adresse : RIPOSTE n'y touche jamais."
 msgstr "Een beleidsregel « lokale ban + netwerkban » geeft de ban ook door aan fail2ban, via de omega-jail-jails <service>-riposte-1h/6h/24h/7d. omega-serv heeft geen rechten om een fail2ban-ban op te heffen: « Opheffen » verwijdert alleen de lokale ban (blocklist van de WAF). Hef de netwerkban op in omega-fire of met fail2ban-client (de jail staat in het detail van de actie). Controleer ook dat geen WAF-ban of handmatige ban hetzelfde adres dekt: RIPOSTE komt daar nooit aan."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:616
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:629
 msgid "Les scénarios « Explorateur de leurres » et « Sonde upload / API » sont refusés (profil de leurre inconnu) - que faire ?"
 msgstr "De scenario's ‘Lokaasverkenner’ en ‘Upload-/API-sonde’ worden geweigerd (onbekend lokaasprofiel) - wat nu?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:618
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
 msgid "Ces deux scénarios ne bannissent pas : ils envoient la source vers un leurre d'Active Defense, qui doit donc exister AVANT de charger le scénario - « Explorateur de leurres » utilise le profil fake_admin, « Sonde upload / API » le profil fake_api. (1) L'option active_defense doit être activée (menu Options). (2) Dans Active Sécurité -> Réglages (bloc Active Defense) : « Deception active » = oui, puis Enregistrer. (3) Toujours dans Réglages, « Ajouter un profil » : Nom fake_admin (ou fake_api), Actif oui, Classes d'attaque scan,credential_stuffing pour fake_admin ou api_probe,upload_probe pour fake_api, Isolation fixture, Zone de leurre vide. (4) Revenez dans RIPOSTE -> Politiques -> Ajouter -> Scénario prêt à charger : le scénario est accepté. Les leurres ne fonctionnent qu'après un redémarrage complet. Les trois autres scénarios bannissent et n'ont besoin d'aucun leurre."
 msgstr "Deze twee scenario's blokkeren niet: ze sturen de bron naar een lokaas van Active Defense, dat dus VOOR het laden van het scenario moet bestaan - ‘Lokaasverkenner’ gebruikt het profiel fake_admin, ‘Upload-/API-sonde’ het profiel fake_api. (1) De optie active_defense moet ingeschakeld zijn (menu Opties). (2) In Actieve beveiliging -> Instellingen (blok Active Defense): ‘Deception actief’ = ja, daarna Opslaan. (3) Nog steeds in Instellingen, ‘Profiel toevoegen’: Naam fake_admin (of fake_api), Actief ja, aanvalsklassen scan,credential_stuffing voor fake_admin of api_probe,upload_probe voor fake_api, Isolation fixture, lokaaszone leeg. (4) Ga terug naar RIPOSTE -> Beleidsregels -> Toevoegen -> Kant-en-klaar scenario: het scenario wordt geaccepteerd. Lokazen werken pas na een volledige herstart. De andere drie scenario's blokkeren en hebben geen lokaas nodig."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:631
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:644
 msgid "RIPOSTE ne fait rien - pourquoi ?"
 msgstr "RIPOSTE doet niets - waarom?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:633
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:646
 msgid "Dans l'ordre : (1) le module 'riposte' doit être activé dans Options, puis le service REDÉMARRÉ complètement ; (2) le WAF doit être actif, sinon RIPOSTE ne voit aucune attaque ; (3) au moins une politique doit être active (« Enregistrer sans activer » la laisse en observation) ; (4) l'arrêt d'urgence ne doit pas être actif (écran État : le bouton affiche « Reprendre ») ; (5) la condition doit être atteinte : par exemple 3 épisodes en 7 jours, un épisode étant séparé du précédent par au moins 1 h de silence. Simuler avec la même situation montre la condition qui manque."
 msgstr "Op volgorde: (1) de module 'riposte' moet in Opties ingeschakeld zijn en de dienst daarna VOLLEDIG herstart; (2) de WAF moet actief zijn, anders ziet RIPOSTE geen enkele aanval; (3) minstens één beleidsregel moet actief zijn (« Opslaan zonder inschakelen » laat haar in observatie); (4) de noodstop mag niet actief zijn (scherm Status: de knop toont « Hervatten »); (5) de voorwaarde moet bereikt zijn: bijvoorbeeld 3 episodes in 7 dagen, elke episode van de vorige gescheiden door minstens 1 u stilte. Dezelfde situatie simuleren toont de ontbrekende voorwaarde."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:643
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:656
 msgid "Une adresse bannie reçoit une page 451 : est-ce omega-serv ou fail2ban ?"
 msgstr "Een geband adres krijgt een 451-pagina: is dat omega-serv of fail2ban?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:645
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:658
 msgid "C'est omega-serv. Une adresse présente dans la liste de blocage du WAF (auto-ban du WAF, ban manuel ou ban local RIPOSTE) reçoit la page 451 « Votre IP a été bannie » sur toutes ses requêtes, pendant toute la durée du ban. Un 403 refuse seulement une requête (une règle touchée), sans bannir. Un ban fail2ban agit sur le pare-feu : il ne renvoie jamais de page, la connexion est coupée ou n'aboutit pas. Pour savoir qui a banni, regardez la source du ban dans la liste de blocage (« auto » = auto-ban du WAF, « riposte », « manual ») : WAF → Modules → Liste de blocage, ou « blocklist list »."
 msgstr "Dat is omega-serv. Een adres op de blokkeerlijst van de WAF (auto-ban van de WAF, handmatige ban of lokale RIPOSTE-ban) krijgt de 451-pagina „Uw IP is geband” op al zijn verzoeken, zolang de ban duurt. Een 403 weigert alleen één verzoek (er werd een regel geraakt), zonder te bannen. Een fail2ban-ban werkt op de firewall: die geeft nooit een pagina terug, de verbinding wordt verbroken of komt niet tot stand. Wie heeft gebannen, ziet u aan de bron van de ban in de blokkeerlijst (« auto » = auto-ban van de WAF, « riposte », « manual »): WAF → Modules → Blokkeerlijst, of « blocklist list »."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:655
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:668
 msgid "À quoi servent les jails omega-serv-riposte-1h, -6h, -24h et -7d ?"
 msgstr "Waarvoor dienen de jails omega-serv-riposte-1h, -6h, -24h en -7d?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:657
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:670
 msgid "Ce sont les jails fail2ban du ban réseau de RIPOSTE, installés par omega-jail (1.1.0 ou plus). Quand une politique « ban local + ban réseau » bannit, omega-serv pose d'abord le ban local, puis écrit une ligne dans « var/log/riposte-decisions.jsonl » ; fail2ban la lit et bannit l'adresse au pare-feu. Les jails ont une durée fixe : chaque palier RIPOSTE va à la plus longue qui ne le dépasse pas (un palier de 2 h va dans la jail de 1 h), et l'interface l'indique. Chaque instance omega-serv a son propre jeu de jails, préfixé par le nom de son service."
 msgstr "Het zijn de fail2ban-jails van de RIPOSTE-netwerkban, geïnstalleerd door omega-jail (1.1.0 of nieuwer). Wanneer een beleid „lokale ban + netwerkban” bant, legt omega-serv eerst de lokale ban op en schrijft dan een regel in « var/log/riposte-decisions.jsonl »; fail2ban leest die en bant het adres op de firewall. De jails hebben een vaste duur: elk RIPOSTE-niveau gaat naar de langste die het niet overschrijdt (een niveau van 2 u gaat naar de jail van 1 u), en de interface vermeldt dat. Elke omega-serv-instantie heeft haar eigen set jails, met de naam van haar service als voorvoegsel."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:667
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:680
 msgid "J'ai mis à jour omega-jail, mais les jails RIPOSTE n'apparaissent ni dans fail2ban ni dans omega-fire"
 msgstr "Ik heb omega-jail bijgewerkt, maar de RIPOSTE-jails verschijnen niet in fail2ban en niet in omega-fire"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:669
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:682
 msgid "Mettre à jour omega-jail ne suffit pas à installer ses nouveaux jails. Extrayez l'archive par-dessus le dossier existant, puis lancez « ./install.sh » : il liste les jails du catalogue pas encore installés et propose de les installer (« sudo »). À défaut : « sudo ./omega-jail.sh --apply ». Les jails RIPOSTE ne sont proposés que si le module RIPOSTE est activé dans omega-serv (sinon « source non configurée »). Vérification : « sudo fail2ban-client status ». omega-fire les affiche dès qu'ils sont installés, sans rien à déclarer."
 msgstr "omega-jail bijwerken installeert de nieuwe jails niet vanzelf. Pak het archief uit over de bestaande map en start « ./install.sh »: het somt de nog niet geïnstalleerde jails van de catalogus op en stelt voor ze te installeren (« sudo »). Anders: « sudo ./omega-jail.sh --apply ». De RIPOSTE-jails worden alleen voorgesteld als de RIPOSTE-module in omega-serv is ingeschakeld (anders „bron niet geconfigureerd”). Controle: « sudo fail2ban-client status ». omega-fire toont ze zodra ze geïnstalleerd zijn, zonder iets te hoeven declareren."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:679
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
 msgid "Derrière Tailscale Funnel ou un proxy local, le ban réseau sert-il à quelque chose ?"
 msgstr "Heeft de netwerkban zin achter Tailscale Funnel of een lokale proxy?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:681
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:694
 msgid "Pas le ban fail2ban seul : les connexions arrivent alors du proxy local (tailscaled, 127.0.0.1), pas du visiteur, et le ban pare-feu ne le touche pas. omega-jail (1.1.0 ou plus) le détecte et relaie alors chaque ban fail2ban d'une adresse publique dans la liste de blocage d'omega-serv : l'adresse reçoit la page 451, comme avec le script Magnet. Les jails RIPOSTE ne sont pas relayés : RIPOSTE a déjà posé son ban local (451). Quand les visiteurs se connectent directement au serveur, le ban pare-feu agit seul."
 msgstr "Niet de fail2ban-ban alleen: de verbindingen komen dan van de lokale proxy (tailscaled, 127.0.0.1), niet van de bezoeker, en de firewallban bereikt hem niet. omega-jail (1.1.0 of nieuwer) detecteert dat en geeft dan elke fail2ban-ban van een publiek adres door aan de blokkeerlijst van omega-serv: het adres krijgt de 451-pagina, zoals met het Magnet-script. RIPOSTE-jails worden niet doorgegeven: RIPOSTE heeft zijn lokale ban (451) al gezet. Wanneer bezoekers rechtstreeks met de server verbinden, werkt de firewallban op zichzelf."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:690
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
 msgid "La jail omega-serv-active-defense fait-elle double emploi avec RIPOSTE ?"
 msgstr "Doet de jail omega-serv-active-defense dubbel werk met RIPOSTE?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:692
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:705
 msgid "En partie. Cette jail d'omega-jail bannit au pare-feu pendant 24 h fixes toute adresse classée hostile ou contained par Active Defense, sans tenir compte des paliers RIPOSTE : une adresse peut donc être bannie au niveau réseau plus tôt ou plus longtemps que le palier choisi. L'écran État de RIPOSTE la signale. Gardez-la si vous voulez ce filet de sécurité ; retirez-la (gestion des jails d'omega-fire) si seuls les paliers RIPOSTE doivent compter."
 msgstr "Gedeeltelijk. Deze jail van omega-jail bant op de firewall gedurende vaste 24 u elk adres dat Active Defense als hostile of contained indeelt, zonder rekening te houden met de RIPOSTE-niveaus: een adres kan dus op netwerkniveau eerder of langer geband worden dan het gekozen niveau. Het RIPOSTE-scherm Status wijst erop. Behoud haar als vangnet; verwijder haar (jailbeheer van omega-fire) als alleen de RIPOSTE-niveaus mogen tellen."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:701
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
 msgid "Mon attaque de test ne déclenche aucun ban RIPOSTE - pourquoi ?"
 msgstr "Mijn testaanval levert geen enkele RIPOSTE-ban op - waarom?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:703
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
 msgid "Dans l'ordre : (1) la requête doit toucher une règle du WAF, ce qui donne un 403 (par exemple « /?id=1 UNION SELECT 1 » ou « /.env ») ; une simple 404 n'est pas une attaque ; (2) l'adresse ne doit pas être exemptée : hôte local, Tailscale et réseau local ne sont jamais bannis, testez depuis une adresse publique (4G) et, derrière un proxy, réglez le proxy de confiance ; (3) la politique doit être remplie : nombre d'épisodes, classes d'attaque et niveau Active Defense minimal (« aucun » pour un test) ; (4) une adresse déjà bannie (page 451, souvent par l'auto-ban du WAF) n'est plus analysée : RIPOSTE ignore les refus de la liste de blocage, levez d'abord ce ban. Simuler la même situation montre ce qui manque."
 msgstr "Op volgorde: (1) het verzoek moet een WAF-regel raken, wat een 403 geeft (bijvoorbeeld « /?id=1 UNION SELECT 1 » of « /.env »); een gewone 404 is geen aanval; (2) het adres mag niet vrijgesteld zijn: lokale host, Tailscale en lokaal netwerk worden nooit geband, test vanaf een publiek adres (4G) en stel achter een proxy de vertrouwde proxy in; (3) het beleid moet vervuld zijn: aantal episodes, aanvalsklassen en minimaal Active Defense-niveau („geen” voor een test); (4) een al geband adres (451-pagina, vaak door de auto-ban van de WAF) wordt niet meer geanalyseerd: RIPOSTE negeert weigeringen van de blokkeerlijst, hef die ban eerst op. Dezelfde situatie simuleren toont wat ontbreekt."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:714
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:727
 msgid "Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"
 msgstr "Waarom toont omega-fire alleen fail2ban-bans?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:716
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:729
 msgid "omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : auto-ban, ban manuel, ban local RIPOSTE) se consultent pour l'instant dans omega-serv : WAF → Modules → Liste de blocage, écran Actions de RIPOSTE, ou « blocklist list ». Les jails installés par omega-jail, dont ceux de RIPOSTE, apparaissent bien dans omega-fire."
 msgstr "omega-fire leest fail2ban en de firewall. De bans van omega-serv (blokkeerlijst van de WAF, 451-pagina: auto-ban, handmatige ban, lokale RIPOSTE-ban) bekijkt u voorlopig in omega-serv: WAF → Modules → Blokkeerlijst, het RIPOSTE-scherm Acties, of « blocklist list ». De jails die omega-jail installeert, ook die van RIPOSTE, verschijnen wel in omega-fire."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:723
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:746
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:764
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:776
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:786
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:736
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:759
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:799
 msgid "Moteur HTTP et performances"
 msgstr "HTTP-engine en prestaties"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:724
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:737
 msgid "Moteur Python ou natif : qu'est-ce que ça change concrètement ?"
 msgstr "Python- of native engine: wat verandert er in de praktijk?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:726
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:739
 msgid "Ce qui ne change pas : les réponses, les journaux, la sécurité et les fonctions disponibles. Ce qui change, c'est qui traite les requêtes HTTP : l'interpréteur Python, ou un programme compilé qui utilise tous les cœurs. Avec le WAF, le moteur natif cherche lui-même les règles : une requête sur laquelle aucune règle ne correspond est servie sans passer par Python ; au moindre doute (correspondance, texte non ASCII, en-têtes ou corps à inspecter, source suivie par Active Defense, zone d'authentification), c'est Python qui décide, exactement comme avec le moteur Python. Si magnet est actif, toutes les requêtes passent par Python ; la limite de débit, elle, est comptée par le moteur natif, sans coût mesurable. Mesuré sur trois machines (comparatif des serveurs web, à lire pour le détail), le moteur natif sert les petites pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des dizaines de millions de requêtes par jour sur une machine modeste."
 msgstr "Wat niet verandert: de antwoorden, de logs, de beveiliging en de beschikbare functies. Wat verandert, is wie de HTTP-verzoeken verwerkt: de Python-interpreter, of een gecompileerd programma dat alle kernen gebruikt. Met de WAF doorzoekt de native engine zelf de regels: een verzoek waarop geen enkele regel van toepassing is, wordt zonder Python afgehandeld; bij de minste twijfel (overeenkomst, niet-ASCII-tekst, te inspecteren headers of body, bron die Active Defense volgt, authenticatiezone) beslist Python, precies zoals met de Python-engine. Is magnet actief, dan gaan alle verzoeken via Python; de snelheidsbeperking wordt daarentegen door de native engine geteld, zonder meetbare kosten. Gemeten op drie machines (vergelijking van webservers, lees die voor de details) levert de native engine kleine pagina's 10 tot 27 keer sneller dan de Python-engine zonder beveiligingscontrole, en 8 tot 30 keer sneller met de WAF, die hem maar 5 tot 22 % van zijn doorvoer kost; bestanden van 100 KB 3,5 tot 10 keer sneller; grote bestanden 1,3 tot 2,7 keer sneller. De responstijd van de traagste verzoeken wordt gedeeld door 5 tot 15. In ruil daarvoor gebruikt hij ongeveer 5 MB meer geheugen, en met de WAF ongeveer 8 MB meer (regels geladen in de native engine). De mapweergave, de interne pagina's, de reverse proxy, FastCGI, bestandsupload en WebSocket worden aan Python doorgegeven: die verzoeken houden de snelheid van de Python-engine. Voor een kleine, weinig bezochte site volstaan beide ruimschoots: zelfs de Python-engine met de WAF verwerkt op een bescheiden machine tientallen miljoenen verzoeken per dag."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:747
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:760
 msgid "Combien de processus choisir ?"
 msgstr "Hoeveel processen kiezen?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:749
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:762
 msgid "Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques (le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : mesuré, le débit reste le même. Il sert quand toutes les requêtes passent par Python (magnet actif) et que la machine a au moins 4 cœurs physiques : 1,5 à 1,7 fois plus de requêtes. Sur 2 cœurs, il n'apporte que 5 à 12 %, le processeur étant déjà occupé : l'écran ne le propose donc qu'à partir de 4 cœurs. Au-delà de 2, le gain mesuré est de 4 %. L'écran Résistance et limites affiche le maximum de cette machine et ce qu'augmenter apporte ; le nombre réellement appliqué s'affiche dans État & Ressources."
 msgstr "Dat hangt af van de engine. Python-engine: elk proces verwerkt verzoeken; gemeten verwerken 2 processen 1,6 tot 2 keer meer dan 1, en 4 ongeveer 3,5 keer meer, tot het aantal fysieke kernen (het aangeboden maximum). Elk proces gebruikt ongeveer 10 tot 20 MB meer geheugen. Native engine: die gebruikt al alle kernen, de ingestelde processen zijn die van de beveiligingscontroles, die alleen de te controleren verzoeken krijgen (overeenkomst of twijfel van de WAF, bronnen die Active Defense volgt, authenticatie). Voor gewoon verkeer levert een 2e proces dus niets op: gemeten blijft de doorvoer gelijk. Het helpt wanneer alle verzoeken via Python gaan (magnet actief) en de machine minstens 4 fysieke kernen heeft: 1,5 tot 1,7 keer meer verzoeken. Op 2 kernen levert hij maar 5 tot 12 % op, omdat de processor al bezet is: het scherm biedt hem daarom pas vanaf 4 kernen aan. Boven 2 is de gemeten winst 4 %. Het scherm Weerbaarheid en limieten toont het maximum van deze machine en wat verhogen oplevert; het werkelijk toegepaste aantal staat in Status & bronnen."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:765
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:778
 msgid "Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"
 msgstr "Waarom is de keuze « Native C++ » uitgegrijsd in Basisconfiguratie?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:767
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:780
 msgid "Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif (ces routes demandent de confier la connexion au processus Python, impossible quand le natif chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif."
 msgstr "Omdat iets de native engine verhindert alles te bedienen: de binary bin/omega-http-core ontbreekt of start niet op deze machine (install.sh probeert hem dan opnieuw te compileren), of TLS staat in directe modus terwijl reverse proxy, FastCGI of bestandsupload actief is (deze routes moeten de verbinding aan het Python-proces overdragen, wat onmogelijk is wanneer de native engine zelf versleutelt). De lijst met oorzaken, en hoe elke oorzaak op te heffen, staat onder de keuze. Nooit een half-native server: hef de oorzaak op en kies dan de native engine."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:777
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:790
 msgid "Le moteur natif change-t-il mes journaux, fail2ban (omega-jail) ou RIPOSTE ?"
 msgstr "Verandert de native engine mijn logboeken, fail2ban (omega-jail) of RIPOSTE?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:779
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:792
 msgid "Non. Le journal d'accès est écrit au même format, caractère pour caractère, et les journaux de sécurité (alertes WAF, événements Active Defense) sont écrits par le même code Python qu'avec le moteur Python. RIPOSTE, omega-jail et omega-fire lisent les mêmes lignes et ne voient aucune différence. Une adresse bannie l'est quel que soit le moteur."
 msgstr "Nee. Het toegangslogboek wordt in hetzelfde formaat geschreven, teken voor teken, en de beveiligingslogboeken (WAF-meldingen, Active Defense-gebeurtenissen) worden door dezelfde Python-code geschreven als met de Python-engine. RIPOSTE, omega-jail en omega-fire lezen dezelfde regels en zien geen verschil. Een geblokkeerd adres blijft geblokkeerd, welke engine ook draait."
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:787
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:800
 msgid "J'ai choisi le moteur natif mais État & Ressources indique « Python » - pourquoi ?"
 msgstr "Ik heb de native engine gekozen, maar Status & bronnen toont « Python » - waarom?"
 
-#: src/omega_serv/interfaces/tui/guide/content/faq.py:789
+#: src/omega_serv/interfaces/tui/guide/content/faq.py:802
 msgid "Le serveur n'a pas encore été redémarré (le moteur ne change qu'au redémarrage complet), ou le natif n'a pas pu démarrer : binaire absent ou refusé, ou fonction active qu'il ne sait pas servir. Dans ce cas le moteur Python sert tout, et la raison est affichée dans État & Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre."
 msgstr "De server is nog niet herstart (de engine wisselt alleen bij een volledige herstart), of de native engine kon niet starten: binary ontbreekt of geweigerd, of een actieve functie die hij niet kan bedienen. In dat geval bedient de Python-engine alles, en de reden staat in Status & bronnen (sectie HTTP-ENGINE), in het foutenlogboek en via het commando « omega-serv engine status ». Er wordt nooit iets half door de ene en half door de andere engine bediend."
 
@@ -10558,7 +10567,7 @@ msgid "Une fois `war_mode.enabled=true`, tout devient automatique et déterminis
 msgstr "Zodra `war_mode.enabled=true` is, gaat alles automatisch en deterministisch, zonder handmatige tussenkomst: elke al berekende WAF-beslissing voedt een opgetelde score per bron (IP + gehashte User-Agent, met afname in de tijd), die instelbare drempels (normal/suspicious/hostile/contained) overschrijdt en automatische acties activeert (omleiding naar lokaas, uitgebreide logging, vertraging, aanmaken van een incident)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:64
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
 msgid "Active Defense - Réglages"
 msgstr "Active Defense - Instellingen"
 
@@ -10722,7 +10731,7 @@ msgid "Une zone de leurre n'est jamais créée automatiquement et son existence 
 msgstr "Een lokaaszone wordt nooit automatisch aangemaakt en het bestaan ervan wordt bij het opslaan niet gecontroleerd - luistert er niets op het opgegeven adres, dan krijgt de aanvaller een fout 502 op het moment van het verzoek, niet eerder."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:188
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
 msgid "Active Defense - Menaces"
 msgstr "Active Defense - Dreigingen"
 
@@ -10755,7 +10764,7 @@ msgid "Aucune modification possible depuis cet écran."
 msgstr "Geen wijziging mogelijk vanuit dit scherm."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:205
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
 msgid "Active Defense - Incidents"
 msgstr "Active Defense - Incidenten"
 
@@ -10869,7 +10878,7 @@ msgid "Purement consultatif sauf fermeture d'incident (irréversible) et exports
 msgstr "Alleen raadplegen, behalve het sluiten van een incident (onomkeerbaar) en de exports (schrijven naar schijf)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:257
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
 msgid "Active Defense - Leurres"
 msgstr "Active Defense - Lokaas"
 
@@ -10908,7 +10917,7 @@ msgid "Les affectations expirées mais jamais libérées restent visibles avec l
 msgstr "Verlopen maar nooit vrijgegeven toewijzingen blijven zichtbaar met de status 'verlopen' - anders dan een handmatige vrijgave."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:277
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:99
 msgid "Active Defense - Simuler"
 msgstr "Active Defense - Simuleren"
 
@@ -11023,7 +11032,7 @@ msgid "Si aucun pack de règles n'est référence, le WAF ne peut RIEN détecter
 msgstr "Als er geen regelpack wordt gerefereerd, kan de WAF NIETS detecteren, ook als hij actief is - het scherm geeft dit uitdrukkelijk aan, wat een echt door de gebruiker gemeld gat dicht."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:341
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:85
 msgid "WAF - Modules"
 msgstr "WAF - Modules"
 
@@ -11135,7 +11144,7 @@ msgid "Mode/comportement d'erreur/packs de règles nécessitent un rechargement 
 msgstr "Modus/gedrag bij fouten/regelpacks vereisen een herlading om van kracht te worden (automatisch als er een actieve dienst is). De blokkeerlijst daarentegen geldt direct, zonder verdere actie."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:409
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:86
 msgid "WAF - Limitations (exclusions et débit)"
 msgstr "WAF - Beperkingen (uitzonderingen en snelheidslimiet)"
 
@@ -11238,7 +11247,7 @@ msgid "Script magnet : son propre rate limit (429) ne compte jamais comme une d�
 msgstr "Magnet-script: zijn eigen rate limit (429) telt nooit als detectie en leidt dus nooit tot een automatische ban. Bij een verzoek dat onder een map- of IP/netwerkregel hierboven valt, geldt die regel: de 429 van magnet wordt genegeerd (zijn aanvalssignaturen blijven gelden)."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:490
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:93
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:87
 msgid "WAF - Tester une requête"
 msgstr "WAF - Een verzoek testen"
 
@@ -11275,7 +11284,7 @@ msgid "Reconstruit le moteur WAF à partir de la configuration SAUVEGARDÉE sur 
 msgstr "Bouwt de WAF-engine bij elke test opnieuw op uit de op schijf OPGESLAGEN configuratie - is een al gestarte server na een regelwijziging nog niet herladen, dan kan deze test ander gedrag laten zien dan wat die server op dit moment echt toepast."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:515
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:88
 msgid "WAF - Règles et listes personnalisées"
 msgstr "WAF - Eigen regels en lijsten"
 
@@ -11648,7 +11657,7 @@ msgid "Une liste qui bloque seule (gravité >= 5) et qui toucherait une route r�
 msgstr "Een lijst die alleen blokkeert (ernst >= 5) en een echt geleverde route zou raken (alias, reverse proxy, Auth-zone, webroot-bestand), wordt geweigerd: voeg een uitzondering '!/pad' toe aan de lijst, of laad haar in Observatie."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:731
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:96
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Éditeur de liste"
 msgstr "WAF - Lijsteditor"
 
@@ -11857,7 +11866,7 @@ msgid "L'état en bas de l'écran indique si le compte du service peut lire le f
 msgstr "De status onder aan het scherm geeft aan of het dienstaccount het bestand kan lezen: een onleesbaar bestand zou de volgende herlading laten mislukken."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:837
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:97
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:91
 msgid "WAF - Modifier une liste"
 msgstr "WAF - Een lijst wijzigen"
 
@@ -12000,7 +12009,7 @@ msgid "Un script importe peut référencer une fonctionnalité lighty.* non supp
 msgstr "Een geïmporteerd script kan verwijzen naar een lighty.*-functie die deze brug niet ondersteunt (aan Lua-kant altijd nil) - voer altijd Compatibiliteit controleren uit voordat u een nieuw script in productie activeert, vooral met on_error=fail-closed."
 
 #: src/omega_serv/interfaces/tui/guide/content/securite_active.py:918
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:98
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:92
 msgid "WAF - Choix d'un pack de règles"
 msgstr "WAF - Keuze van een regelpack"
 
@@ -13833,16 +13842,16 @@ msgid "Audit et sauvegarde"
 msgstr "Audit en back-up"
 
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:84
-msgid "Active Defense - Statut"
-msgstr "Active Defense - Status"
-
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:90
 msgid "WAF - Statut"
 msgstr "WAF - Status"
 
-#: src/omega_serv/interfaces/tui/guide/menu_tree.py:95
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:89
 msgid "WAF - Assistant règle / chargement de liste"
 msgstr "WAF - Regelassistent / lijst laden"
+
+#: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
+msgid "Active Defense - Statut"
+msgstr "Active Defense - Status"
 
 #: src/omega_serv/interfaces/tui/rendering/aligned_block.py:73
 msgid "detail() sans ligne precedente"
@@ -20854,12 +20863,12 @@ msgstr "ja"
 msgid "non"
 msgstr "nee"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:59
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:58
 #, python-brace-format
 msgid "Généré le {date} · {count} ban(s), dont {active} actif(s)"
 msgstr "Gegenereerd op {date} · {count} ban(s), waarvan {active} actief"
 
-#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:81
+#: src/omega_serv/infrastructure/exporters/templates/bans_report.html.j2:80
 #: src/omega_serv/infrastructure/exporters/templates/capabilities_report.html.j2:95
 #: src/omega_serv/infrastructure/exporters/templates/log_archives_report.html.j2:77
 msgid "Rapport généré par"
@@ -21125,6 +21134,9 @@ msgstr "WordPress-configuratiebestanden"
 #: secure/waf/rules/wordpress-probes.json
 msgid "Sonde plugin/thème WordPress générique"
 msgstr "Generieke WordPress-plugin-/themasonde"
+
+#~ msgid "Regroupe Active Defense (deception/menaces/incidents) et le pare-feu applicatif (WAF)."
+#~ msgstr "Groepeert Active Defense (deception/dreigingen/incidenten) en de applicatiefirewall (WAF)."
 
 #, python-brace-format
 #~ msgid "plus gros : {name} ({size})"
