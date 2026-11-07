@@ -6,9 +6,16 @@ taille), configurer une automatisation (frequence declarative - meme
 bookkeeping-seul que la reference, voir infrastructure/logging/
 rotation_automation_store.py) et gerer/supprimer les automatisations en
 cours. Archives ecrites dans var/backups/logs/, distinct de
-var/backups/ (sauvegardes de configuration, deja utilise ailleurs)."""
+var/backups/ (sauvegardes de configuration, deja utilise ailleurs).
+
+Automatisations EXECUTEES depuis le 2026-11-07 (application/logs/rotation_automation.py) : la premiere
+automatisation installe une tache planifiee quotidienne (timer systemd, sinon ligne crontab, sinon
+instructions), la derniere supprimee la retire. « Gérer les automatisations » montre l'etat de cette tache,
+la derniere et la prochaine execution."""
 from __future__ import annotations
 
+import getpass
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -18,12 +25,25 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.application.logs.rotation_automation import (
+    ScheduleResult,
+    install_rotation_schedule,
+    remove_rotation_schedule,
+    rotation_schedule_status,
+    uses_systemd,
+)
+from omega_serv.application.services.resolve_current_service_name import (
+    resolve_current_service_name,
+)
 from omega_serv.core.i18n import _
+from omega_serv.domain.logs.rotation_schedule import next_run
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.ports.process_runner_port import ProcessRunnerPort
+    from omega_serv.ports.service_manager_port import ServiceManagerPort
 
 _KNOWN_LOGS: tuple[tuple[str, str], ...] = (
     (_("Access log"), "access"),
@@ -77,6 +97,7 @@ class LogRotationScreen(OmegaScreen):
             )
 
             yield Static(_("Automatisations planifiées"), id="manage-label", classes="omega-subtitle")
+            yield Static("", id="schedule-status", classes="omega-hint")
             yield DataTable(id="automations-table")
 
             with Horizontal(classes="omega-actions"):
@@ -84,6 +105,8 @@ class LogRotationScreen(OmegaScreen):
                     yield Button(_("Valider"), id="launch", variant="primary")
                 with Container(classes="omega-btn-frame", id="delete-automation-frame"):
                     yield Button(_("Supprimer la sélection"), id="delete-automation", variant="error")
+                with Container(classes="omega-btn-frame", id="install-schedule-frame"):
+                    yield Button(_("Réinstaller l'exécution"), id="install-schedule")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Retour"), id="back")
         yield Footer()
@@ -91,7 +114,7 @@ class LogRotationScreen(OmegaScreen):
     def on_mount(self) -> None:
         table = self.query_one("#automations-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns(_("Log"), _("Fréquence"), _("Créée le"))
+        table.add_columns(_("Log"), _("Fréquence"), _("Créée le"), _("Dernière exécution"), _("Prochaine"))
         self._apply_mode(_MODE_ROTATE)
 
     def on_select_changed(self, event: Select.Changed) -> None:
@@ -111,6 +134,8 @@ class LogRotationScreen(OmegaScreen):
         self.query_one("#automations-table", DataTable).display = is_manage
         self.query_one("#launch-frame", Container).display = not is_manage
         self.query_one("#delete-automation-frame", Container).display = is_manage
+        self.query_one("#install-schedule-frame", Container).display = is_manage
+        self.query_one("#schedule-status", Static).display = is_manage
         if is_manage:
             self._refresh_automations_table()
 
@@ -118,11 +143,64 @@ class LogRotationScreen(OmegaScreen):
         store = self._container.build_rotation_automation_store()
         table = self.query_one("#automations-table", DataTable)
         table.clear()
-        for idx, item in enumerate(store.list_all()):
+        automations = store.list_all()
+        for idx, item in enumerate(automations):
+            last = str(item.get("last_run_at") or "")[:16].replace("T", " ") or "-"
+            upcoming = next_run(item)
             table.add_row(
-                item.get("log_id", ""), item.get("interval_label", ""), item.get("created_at", ""), key=str(idx),
+                item.get("log_id", ""), item.get("interval_label", ""), str(item.get("created_at", ""))[:16].replace("T", " "),
+                last, "-" if upcoming is None else upcoming.strftime("%Y-%m-%d"), key=str(idx),
             )
         self._selected_automation_index = None
+        self._show_schedule_status(bool(automations))
+
+    # ---- tache planifiee (2026-11-07) ----------------------------------------
+
+    def _scheduler(self) -> tuple[ServiceManagerPort | None, ProcessRunnerPort] | None:
+        runner_factory = self._container.privileged_runner_factory
+        if runner_factory is None:
+            return None
+        factory = self._container.service_manager_factory
+        return (factory() if factory is not None else None), runner_factory()
+
+    def _service_name(self) -> str:
+        return resolve_current_service_name(
+            self._container.instance_registry, self._container.filesystem,
+            self._container.settings_store, self._container.project_root,
+        )
+
+    def _show_schedule_status(self, has_automations: bool) -> None:
+        status_widget = self.query_one("#schedule-status", Static)
+        scheduler = self._scheduler()
+        if scheduler is None:
+            status_widget.update(_("Exécution automatique indisponible dans cet environnement."))
+            return
+        manager, runner = scheduler
+        status = rotation_schedule_status(self._service_name(), manager, runner)
+        hint = "" if status.success or not has_automations else " " + _("Utilisez « Réinstaller l'exécution ».")
+        status_widget.update(status.message + hint)
+
+    def _apply_schedule(self, install: bool) -> ScheduleResult | None:
+        """Installe (ou retire) la tache planifiee ; ecran suspendu pour systemd (sudo)."""
+        scheduler = self._scheduler()
+        if scheduler is None:
+            return None
+        manager, runner = scheduler
+
+        def work() -> ScheduleResult:
+            if install:
+                return install_rotation_schedule(
+                    self._service_name(), self._container.project_root, sys.executable, manager,
+                    self._container.systemd_unit_dir, runner, getpass.getuser(),
+                )
+            return remove_rotation_schedule(
+                self._service_name(), manager, self._container.systemd_unit_dir, runner,
+            )
+
+        if uses_systemd(manager):
+            with self._maybe_suspend():
+                return work()
+        return work()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         self._selected_automation_index = int(str(event.row_key.value))
@@ -134,6 +212,12 @@ class LogRotationScreen(OmegaScreen):
             return
         if button_id == "delete-automation":
             self._delete_selected_automation()
+            return
+        if button_id == "install-schedule":
+            result = self._apply_schedule(install=True)
+            if result is not None:
+                self.query_one("#rotation-result", Static).update(result.message)
+            self._refresh_automations_table()
             return
         if button_id != "launch":
             return
@@ -202,13 +286,16 @@ class LogRotationScreen(OmegaScreen):
         days_interval, interval_label = _FREQ_OPTIONS[freq_key]
 
         store = self._container.build_rotation_automation_store()
+        first = not store.list_all()
         store.add({
             "log_id": log_id,
             "days_interval": days_interval,
             "interval_label": interval_label,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-        result_widget.update(_("Automatisation enregistrée pour {log_id!r} ({interval_label}).").format(log_id=log_id, interval_label=interval_label))
+        message = _("Automatisation enregistrée pour {log_id!r} ({interval_label}).").format(log_id=log_id, interval_label=interval_label)
+        schedule = self._apply_schedule(install=True) if first else None
+        result_widget.update(message if schedule is None else f"{message}\n{schedule.message}")
 
     def _delete_selected_automation(self) -> None:
         result_widget = self.query_one("#rotation-result", Static)
@@ -229,5 +316,7 @@ class LogRotationScreen(OmegaScreen):
             return
         store = self._container.build_rotation_automation_store()
         deleted = store.delete(self._selected_automation_index)
-        result_widget.update(_("Automatisation supprimée.") if deleted else _("Automatisation introuvable."))
+        message = _("Automatisation supprimée.") if deleted else _("Automatisation introuvable.")
+        schedule = self._apply_schedule(install=False) if deleted and not store.list_all() else None
+        result_widget.update(message if schedule is None or not schedule.message else f"{message}\n{schedule.message}")
         self._refresh_automations_table()

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
+from textual.css.query import NoMatches
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.declaration.use_cases import (
@@ -16,8 +17,10 @@ from omega_serv.application.declaration.use_cases import (
     declaration_status,
     withdraw,
 )
+from omega_serv.application.updates.check_updates import check_for_update
 from omega_serv.core.i18n import _
 from omega_serv.domain.declaration.model import MODE_DAILY
+from omega_serv.domain.updates.release_check import UpdateCheck, UpdateStatus
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.declaration_screen import DeclarationScreen, local_date
@@ -34,6 +37,7 @@ class ContactSupportScreen(OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
         self._container = container
+        self._release_notes_url = ""
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -63,6 +67,18 @@ class ContactSupportScreen(OmegaScreen):
             yield Static(_("Formulaire de contact : {url}").format(url=CONTACT_FORM_URL))
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Contacter le support"), id="contact", variant="primary")
+
+            # Verification manuelle des mises a jour (decision utilisateur 2026-11-07) : aucune connexion sans clic.
+            yield Static(_("Version et mises à jour"), classes="omega-subtitle")
+            yield Static(_("Compare votre version à la liste des versions publiées sur le site. Rien n'est envoyé, "
+                           "et rien n'est vérifié sans votre clic."), classes="omega-hint")
+            yield Static(_("Version installée : {version}").format(version=self._container.app_version),
+                         id="update-state")
+            with Horizontal(classes="omega-actions"):
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Vérifier les mises à jour"), id="check-update", variant="primary")
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Voir les nouveautés"), id="release-notes", disabled=True)
         with Horizontal(classes="omega-actions omega-riposte-actions"), Container(classes="omega-btn-frame"):
             yield Button(_("Retour"), id="back")
         yield Footer()
@@ -101,6 +117,10 @@ class ContactSupportScreen(OmegaScreen):
             self._open(PAYPAL_URL)
         elif button_id == "contact":
             self._open(CONTACT_FORM_URL)
+        elif button_id == "check-update":
+            self._check_update()
+        elif button_id == "release-notes" and self._release_notes_url:
+            self._open(self._release_notes_url)
         elif button_id == "declare":
             self.app.push_screen(DeclarationScreen(container=self._container), lambda _result: self._refresh())
         elif button_id == "withdraw":
@@ -143,3 +163,37 @@ class ContactSupportScreen(OmegaScreen):
             self.app.notify(_("Clé effacée. Réception injoignable : votre entrée y disparaîtra seule "
                               "(90 jours en envoi quotidien, 1 an en envoi unique)."), severity="warning", timeout=12)
         self._refresh()
+
+    def _check_update(self) -> None:
+        source = self._container.release_source()
+        if source is None:
+            self.app.notify(_("Vérification indisponible dans ce mode de lancement."), severity="error")
+            return
+        self.query_one("#check-update", Button).disabled = True
+        self.query_one("#update-state", Static).update(_("Vérification en cours..."))
+        installed = self._container.app_version
+        self.run_worker(lambda: self.app.call_from_thread(self._show_update, check_for_update(source, installed)),
+                        thread=True, exclusive=True)
+
+    def _show_update(self, check: UpdateCheck) -> None:
+        try:
+            state = self.query_one("#update-state", Static)
+            notes = self.query_one("#release-notes", Button)
+            self.query_one("#check-update", Button).disabled = False
+        except NoMatches:
+            return  # ecran deja ferme
+        self._release_notes_url = ""
+        notes.disabled = True
+        if check.status is UpdateStatus.UPDATE_AVAILABLE:
+            self._release_notes_url = check.notes_url
+            notes.disabled = False
+            state.update(_("Nouvelle version disponible : {latest} (installée : {installed}).\nArchive : {url}").format(
+                latest=check.latest, installed=check.installed, url=check.archive_url))
+        elif check.status is UpdateStatus.UP_TO_DATE:
+            state.update(_("Vous avez la dernière version publiée ({version}).").format(version=check.installed))
+        elif check.status is UpdateStatus.AHEAD:
+            state.update(_("Votre version ({installed}) est plus récente que la dernière publiée ({latest}) : "
+                           "version en cours, pas encore publiée.").format(installed=check.installed, latest=check.latest))
+        else:
+            state.update(_("Version installée : {version}. Site injoignable ou liste des versions illisible : "
+                           "réessayez plus tard.").format(version=check.installed))

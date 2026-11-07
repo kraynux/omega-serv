@@ -980,6 +980,18 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
 
     # -- Voir et traiter IP (generalise a la Bibliotheque) --------------
 
+    async def _wait_computation(self, pilot, iterations: int = 200):
+        """Calcul dans le pool de processus (2026-11-07) : attendre `_computing` faux, jamais un nombre
+        de lignes (les anciennes restent affichees le temps du nouveau calcul)."""
+        await pilot.pause()
+        for _ in range(iterations):
+            if not pilot.app.screen._computing:
+                await pilot.pause()
+                return
+            await asyncio.sleep(0.05)
+            await pilot.pause()
+        self.fail("calcul jamais termine")
+
     async def test_process_ip_lists_and_removes_selected_ip(self):
         self.access_log.write_text(self._archive_line("1.1.1.1", 2, 200) + self._archive_line("2.2.2.2", 1, 200))
         container = self._container()
@@ -990,8 +1002,8 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await self._start(pilot)
             await self._open_process_ip(pilot)
             pilot.app.screen.query_one("#selection-input", Input).value = "1"
-            pilot.app.screen.query_one("#period-all", Button).press()
-            await pilot.pause()
+            pilot.app.screen.query_one("#period-Tout", Button).press()
+            await self._wait_computation(pilot)
             table = pilot.app.screen.query_one("#top-ips-table", DataTable)
             self.assertEqual(table.row_count, 2)
             table.move_cursor(row=0)
@@ -1003,9 +1015,47 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
+            await self._wait_computation(pilot)
             self.assertIsInstance(pilot.app.screen, ProcessIpScreen)
             table = pilot.app.screen.query_one("#top-ips-table", DataTable)
             self.assertEqual(table.row_count, 1)
+        self.assertNotIn("1.1.1.1", self.access_log.read_text())
+        self.assertIn("2.2.2.2", self.access_log.read_text())
+
+    async def test_process_ip_manual_search_counts_and_removes_typed_ip(self):
+        """Demande utilisateur 2026-11-07 : saisir une IP, voir son nombre de lignes et la retirer sans passer
+        par le top."""
+        self.access_log.write_text(self._archive_line("1.1.1.1", 2, 200) + self._archive_line("2.2.2.2", 1, 200))
+        container = self._container()
+        self._generate_config(container)
+        self._add_to_library(container, self.access_log)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._start(pilot)
+            await self._open_process_ip(pilot)
+            pilot.app.screen.query_one("#selection-input", Input).value = "1"
+            pilot.app.screen.query_one("#ip-input", Input).value = "1.2.3"
+            pilot.app.screen.query_one("#search-ip", Button).press()
+            await pilot.pause()
+            self.assertIn("1.2.3", str(pilot.app.screen.query_one("#ip-error", Static).render()))
+            self.assertTrue(pilot.app.screen.query_one("#remove-ip", Button).disabled)
+
+            pilot.app.screen.query_one("#ip-input", Input).value = "1.1.1.1"
+            pilot.app.screen.query_one("#search-ip", Button).press()
+            await self._wait_computation(pilot)
+            table = pilot.app.screen.query_one("#top-ips-table", DataTable)
+            self.assertEqual(table.row_count, 1)
+            self.assertIn("1 ligne(s) - access.log : 1", str(pilot.app.screen.query_one("#ip-search-result", Static).render()))
+            self.assertFalse(pilot.app.screen.query_one("#remove-ip", Button).disabled)
+            pilot.app.screen.query_one("#remove-ip", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            await self._wait_computation(pilot)
+            self.assertIsInstance(pilot.app.screen, ProcessIpScreen)
+            self.assertEqual(pilot.app.screen.query_one("#top-ips-table", DataTable).row_count, 0)
+            self.assertIn("access.log : 0", str(pilot.app.screen.query_one("#ip-search-result", Static).render()))
         self.assertNotIn("1.1.1.1", self.access_log.read_text())
         self.assertIn("2.2.2.2", self.access_log.read_text())
 
@@ -1019,8 +1069,8 @@ class TestTuiLogs(unittest.IsolatedAsyncioTestCase):
             await self._start(pilot)
             await self._open_process_ip(pilot)
             pilot.app.screen.query_one("#selection-input", Input).value = "1"
-            pilot.app.screen.query_one("#period-7d", Button).press()
-            await pilot.pause()
+            pilot.app.screen.query_one("#period-7j", Button).press()
+            await self._wait_computation(pilot)
             table = pilot.app.screen.query_one("#top-ips-table", DataTable)
             self.assertEqual(table.row_count, 1)
             self.assertEqual(str(table.get_row_at(0)[0]), "1.1.1.1")

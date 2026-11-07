@@ -1,4 +1,4 @@
-# omega-serv 2.5.0 : aide de la ligne de commande
+# omega-serv 2.6.0 : aide de la ligne de commande
 
 > Fichier généré par `tools/cli_reference.py` depuis le code : ne pas le modifier à la main.
 
@@ -78,6 +78,9 @@ active-defense          Active Defense : état, simulation, purge (voir aussi th
                         écrire.
   purge                 Purge les menaces expirées, ferme les incidents redevenus calmes, supprime
                         les incidents fermés depuis plus de 90 jours.
+logs                    Logs d'omega-serv.
+  run-automations       Fait tourner les logs dont l'automatisation (Rotate / archivage) est à
+                        échéance.
 engine                  Moteur HTTP (Python ou natif).
   status                Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel
                         repli.
@@ -169,6 +172,8 @@ declaration             Déclaration anonyme d'utilisateur (volontaire, désacti
                         sa destination.
   withdraw              Retire la déclaration (supprimée à la réception).
   send-scheduled        Envoi quotidien, lancé par serve (pas à utiliser à la main).
+version                 Affiche la version installée ; --check la compare à la dernière version
+                        publiée sur le site.
 help                    Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv
                         help riposte).
 ```
@@ -183,6 +188,7 @@ help                    Affiche l'arbre de toutes les commandes, ou d'une branch
 - [`waf`](#waf) : Pare-feu applicatif (WAF).
 - [`blocklist`](#blocklist) : Adresses bannies.
 - [`active-defense`](#active-defense) : Active Defense : état, simulation, purge (voir aussi threats, incidents, deception).
+- [`logs`](#logs) : Logs d'omega-serv.
 - [`engine`](#engine) : Moteur HTTP (Python ou natif).
 - [`riposte`](#riposte) : RIPOSTE : bans de plus en plus longs pour les récidivistes.
 - [`threats`](#threats) : Menaces suivies par Active Defense.
@@ -193,6 +199,7 @@ help                    Affiche l'arbre de toutes les commandes, ou d'une branch
 - [`service`](#service) : Service système (systemd, OpenRC ou runit).
 - [`audit`](#audit) : Audit de sécurité.
 - [`declaration`](#declaration) : Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut).
+- [`version`](#version) : Affiche la version installée ; --check la compare à la dernière version publiée sur le site.
 - [`help`](#help) : Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte).
 
 ## serve
@@ -524,6 +531,24 @@ Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les 
 
 ```text
 omega-serv active-defense purge
+```
+
+## logs
+
+Logs d'omega-serv.
+
+```text
+omega-serv logs COMMANDE
+```
+
+### logs run-automations
+
+Fait tourner les logs dont l'automatisation (Rotate / archivage) est à échéance.
+
+Lancée chaque nuit par le timer systemd ou la ligne crontab installés par l'interface.
+
+```text
+omega-serv logs run-automations
 ```
 
 ## engine
@@ -1421,6 +1446,18 @@ Envoi quotidien, lancé par serve (pas à utiliser à la main).
 ```text
 omega-serv declaration send-scheduled
 ```
+
+## version
+
+Affiche la version installée ; --check la compare à la dernière version publiée sur le site.
+
+```text
+omega-serv version [--check]
+```
+
+| Argument | Rôle |
+|---|---|
+| `--check` | Lit la liste des versions publiées (download/sha.txt du site) ; rien n'est envoyé. |
 
 ## help
 

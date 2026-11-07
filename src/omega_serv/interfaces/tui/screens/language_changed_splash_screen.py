@@ -18,14 +18,15 @@ LANGUAGE_LABEL = "Langue / Language"
 
 
 class LanguageChangedSplashScreen(Screen[None]):
-    def __init__(self, *, native_name: str) -> None:
+    def __init__(self, *, native_name: str, version: str) -> None:
         super().__init__()
         self._native_name = native_name
+        self._version = version
 
     def compose(self) -> ComposeResult:
         with Middle(classes="omega-splash-middle"):
             with Center():
-                yield SplashHero()
+                yield SplashHero(self._version)
             with Center():
                 yield Static(f"{LANGUAGE_LABEL} : {self._native_name}", classes="omega-title", id="language-name")
             with Center():

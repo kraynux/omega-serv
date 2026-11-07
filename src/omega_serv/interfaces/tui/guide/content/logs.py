@@ -10,9 +10,9 @@ LOGS_MENU_SCREEN = ScreenGuide(
     title=_("Gestion des logs (menu)"),
     acces=_("Accueil -> Gestion des logs"),
     definition=(
-        _("Sous-menu en 2 colonnes : BIBLIOTHÈQUE (consultation - Bibliotheque/Favoris/"
-        "Voir les logs/Voir et traiter IP) et MAINTENANCE (rotation/archivage - "
-        "inchangée depuis la Phase 6).")
+        _("Sous-menu en 2 colonnes de 5 boutons : BIBLIOTHÈQUE (consultation - Bibliothèque, "
+        "Favoris, Voir les logs, Voir et traiter IP, Statistiques) et MAINTENANCE (Rotate / "
+        "archivage, Restaurer une archive, Purger les archives, Exporter, Santé des logs).")
     ),
     fields=(),
     consequences=_("Aucune - purement navigation."),
@@ -320,11 +320,26 @@ PROCESS_IP_SCREEN = ScreenGuide(
             reaction=_("Aucun effet (lecture seule)."),
         ),
         FieldGuide(
-            label=_("24 heures / 7 jours / 30 jours / Tout"),
+            label=_("24h / 7j / 30j / Tout (fichier entier)"),
             definition=_("Choisit la période analysée."),
-            utilisation=_("Un clic recalculé immédiatement la liste."),
-            action=_("Relit et reanalyse les logs sélectionnés."),
-            reaction=_("Aucun effet (lecture seule)."),
+            utilisation=_("24h, 7j et 30j lisent depuis la fin du fichier (rapide) ; « Tout » lit le fichier "
+                          "entier, de quelques secondes à plusieurs minutes pour un gros log. La taille et le "
+                          "nombre de lignes estimé de la sélection s'affichent avant le clic."),
+            action=_("Relit et analyse les logs sélectionnés en arrière-plan, sur plusieurs cœurs pour un gros "
+                     "fichier : une roue, des messages, le temps écoulé et une barre de progression montrent "
+                     "que le calcul avance. Les boutons de période restent grisés jusqu'à la fin."),
+            reaction=_("Aucun effet (lecture seule). Échap arrête l'analyse : il faudra la relancer."),
+        ),
+        FieldGuide(
+            label=_("IP à rechercher / Rechercher cette IP"),
+            definition=_("Cherche une IP précise dans les logs sélectionnés, sans attendre qu'elle apparaisse "
+                         "dans le top."),
+            utilisation=_("Saisissez l'adresse (IPv4 ou IPv6, ex: 203.0.113.42), puis le bouton ou Entrée. Le "
+                          "fichier entier est lu, en arrière-plan."),
+            action=_("Compte les lignes de cette IP dans chaque log : le total et le détail par log s'affichent "
+                     "au-dessus du tableau. Ce sont exactement les lignes que le retrait supprimerait."),
+            reaction=_("Aucun effet (lecture seule). Si l'IP est présente, elle est déjà sélectionnée : « Retirer "
+                       "cette IP » est actif ; après le retrait, l'IP est recomptée."),
         ),
         FieldGuide(
             label=_("Retirer cette IP des logs analyses"),
@@ -337,6 +352,49 @@ PROCESS_IP_SCREEN = ScreenGuide(
     consequences=_("Le retrait d'IP modifie directement et irréversiblement les fichiers de log concernés."),
     points_de_vigilance=(
         _("La reconnaissance d'une IP dans une ligne ne dépend d'aucun format particulier - fonctionne identiquement quel que soit le type de log."),
+        _("Un log illisible par votre compte (par exemple /var/log/auth.log) : votre mot de passe sudo est "
+          "demandé, puis le log est lu avec sudo. Refus : le chemin en cause est affiché."),
+    ),
+)
+
+LOG_STATS_SCREEN = ScreenGuide(
+    screen_class_name="LogStatsScreen",
+    title=_("Statistiques"),
+    acces=_("Accueil -> Gestion des logs -> Statistiques"),
+    definition=_("Rapport de statistiques d'un ou plusieurs logs de la Bibliothèque, quel que soit leur format : "
+                 "synthèse, statuts HTTP en jauges, top IP, chemins demandés et en 404, répartition horaire et "
+                 "tendance par jour. Même écran qu'omega-log."),
+    fields=(
+        FieldGuide(
+            label=_("Numéros (ex: 1,2)"),
+            definition=_("Sélectionne un ou plusieurs logs de la Bibliothèque à analyser."),
+            utilisation=_("Séparés par des virgules ; sans saisie, la ligne surlignée est utilisée."),
+            action=_("Détermine les logs lus par les boutons de période."),
+            reaction=_("Aucun effet (lecture seule)."),
+        ),
+        FieldGuide(
+            label=_("24h / 7j / 30j / Tout (fichier entier)"),
+            definition=_("Choisit la période et lance le calcul."),
+            utilisation=_("Même fonctionnement que dans Voir et traiter IP : indicateur d'attente, barre de "
+                          "progression, un seul calcul à la fois."),
+            action=_("Calcule le rapport en arrière-plan et l'affiche sous les boutons."),
+            reaction=_("Aucun effet (lecture seule)."),
+        ),
+        FieldGuide(
+            label=_("Exporter JSON / Exporter HTML"),
+            definition=_("Enregistre le dernier rapport calculé dans le répertoire d'export."),
+            utilisation=_("Calculez d'abord une période ; choisissez le thème avant l'export HTML."),
+            action=_("JSON : les données brutes. HTML : le rapport complet avec cartes, histogramme et jauges, "
+                     "dans la langue des exports (Options)."),
+            reaction=_("Écriture d'un fichier horodaté, aucun effet sur le serveur."),
+        ),
+    ),
+    consequences=_("Purement consultatif - les logs ne sont jamais modifiés."),
+    points_de_vigilance=(
+        _("Les heures du log sont lues telles qu'elles sont écrites (fuseau ignoré) : la répartition horaire "
+          "suit l'horloge du programme qui a écrit le log."),
+        _("Un log illisible par votre compte (par exemple /var/log/auth.log) : votre mot de passe sudo est "
+          "demandé, puis le log est lu avec sudo. Refus : le chemin en cause est affiché."),
     ),
 )
 
@@ -369,14 +427,26 @@ LOG_ROTATION_SCREEN = ScreenGuide(
             definition=_("À quelle fréquence l'automatisation doit se déclencher."),
             utilisation=_("Hebdomadaire, mensuelle, trimestrielle, semestrielle ou annuelle."),
             action=_("Utilisé par Valider."),
-            reaction=_("Enregistre une automatisation - ne déclenche PAS une rotation immédiate."),
+            reaction=_("Enregistre une automatisation, sans rotation immédiate. La première installe la tâche "
+                       "planifiée qui l'exécute chaque nuit : timer systemd (mot de passe sudo demandé), sinon "
+                       "ligne de votre crontab (OpenRC, runit, aucun gestionnaire), sinon la ligne à ajouter "
+                       "vous-même est affichée."),
         ),
         FieldGuide(
             label=_("Automatisations planifiées (mode gestion)"),
-            definition=_("Liste des automatisations déjà enregistrées."),
+            definition=_("Liste des automatisations, avec leur dernière et leur prochaine exécution, et l'état "
+                         "de la tâche planifiée au-dessus."),
             utilisation=_("Sélectionner une ligne active le bouton de suppression."),
-            action=_("Supprimer la sélection retire l'automatisation (avec confirmation)."),
+            action=_("Supprimer la sélection retire l'automatisation (avec confirmation). La dernière retirée "
+                     "retire aussi la tâche planifiée."),
             reaction=_("Suppression immédiate et définitive de l'automatisation choisie."),
+        ),
+        FieldGuide(
+            label=_("Réinstaller l'exécution"),
+            definition=_("Réinstalle la tâche planifiée si elle a disparu (timer désactivé, crontab vidée)."),
+            utilisation=_("Visible en mode gestion ; l'état affiché dit si c'est nécessaire."),
+            action=_("Même installation qu'à la première automatisation."),
+            reaction=_("Les automatisations s'exécutent de nouveau chaque nuit."),
         ),
     ),
     consequences=(
@@ -389,6 +459,11 @@ LOG_ROTATION_SCREEN = ScreenGuide(
             _("Les archives sont écrites dans var/backups/logs/, un emplacement distinct de "
             "var/backups/ (réservé aux sauvegardes de configuration).")
         ),
+        _("Chaque nuit, la tâche planifiée lance « omega-serv logs run-automations » sous votre compte, jamais "
+          "root : chaque log dont l'échéance est passée est archivé comme avec « Sauvegarde maintenant ». Un échec "
+          "est retenté la nuit suivante."),
+        _("Sans systemd, la ligne crontab ne rattrape pas une nuit où la machine était éteinte : l'échéance part la "
+          "première nuit où elle est allumée. Santé des logs signale une automatisation en retard."),
     ),
 )
 
@@ -453,6 +528,70 @@ EXPORT_LOG_ARCHIVES_SCREEN = ScreenGuide(
     ),
 )
 
+LOG_HEALTH_SCREEN = ScreenGuide(
+    screen_class_name="LogHealthScreen",
+    title=_("Santé des logs"),
+    acces=_("Accueil -> Gestion des logs -> Santé des logs"),
+    definition=_("Contrôle en lecture seule des logs d'omega-serv et de ceux de la Bibliothèque, du disque qui "
+                 "les porte et des archives. Chaque log reçoit un niveau : OK, Info, Attention ou Problème."),
+    fields=(
+        FieldGuide(
+            label=_("Tableau des logs"),
+            definition=_("Une ligne par log : état (niveau), chemin, taille, dernière écriture et constat le "
+                         "plus grave."),
+            utilisation=_("Surlignez une ligne pour voir sous le tableau tous ses constats et, pour chacun, ce "
+                          "que vous pouvez faire (commande ou écran à ouvrir)."),
+            action=_("Contrôles : fichier absent ou lien cassé, droits (lecture par votre compte, écriture "
+                     "par le compte du service, écriture par tout le monde), log muet depuis plus de 7 jours, "
+                     "fichier vide, dates non reconnues ou dans le futur, octets nuls (log abîmé), seuil de "
+                     "rotation dépassé, gros log sans règle logrotate, doublon dans la Bibliothèque."),
+            reaction=_("Aucun effet : seuls le début et la fin de chaque log sont lus."),
+        ),
+        FieldGuide(
+            label=_("Corriger les droits"),
+            definition=_("Rend un log d'omega-serv de nouveau inscriptible par le compte du service."),
+            utilisation=_("Actif seulement si vous êtes propriétaire du fichier et que le compte du service est "
+                          "dans son groupe. Confirmation obligatoire."),
+            action=_("Ajoute le droit d'écriture du groupe (par exemple 644 → 664), jamais avec sudo, jamais pour "
+                     "tout le monde."),
+            reaction=_("Le service peut de nouveau écrire ses lignes ; l'analyse est relancée."),
+        ),
+        FieldGuide(
+            label=_("Corriger avec sudo"),
+            definition=_("Corrige les droits quand « Corriger les droits » ne suffit pas (fichier à root, groupe "
+                         "étranger au service) ou qu'un log est inscriptible par tout le monde."),
+            utilisation=_("La commande exacte est montrée avant ; votre mot de passe sudo est demandé ensuite."),
+            action=_("chgrp vers le compte du service puis chmod g+w, ou chmod o-w : jamais chown, jamais "
+                     "récursif, un seul fichier."),
+            reaction=_("Droits corrigés ; l'analyse est relancée."),
+        ),
+        FieldGuide(
+            label=_("Analyser avec sudo"),
+            definition=_("Complète l'analyse des logs illisibles par votre compte."),
+            utilisation=_("Actif seulement si au moins un log est illisible ; mot de passe sudo demandé."),
+            action=_("Lit avec sudo le début et la fin de ces logs : dates, format, octets nuls."),
+            reaction=_("Le constat « illisible par votre compte » reste affiché : il est toujours vrai."),
+        ),
+        FieldGuide(
+            label=_("Exporter JSON / Exporter HTML / Exporter TXT"),
+            definition=_("Enregistre le rapport dans le répertoire d'export."),
+            utilisation=_("Choisissez le thème avant l'export HTML."),
+            action=_("JSON : les codes et valeurs (données). HTML et TXT : le rapport lisible, avec les "
+                     "conseils, dans la langue des exports (Options)."),
+            reaction=_("Écriture d'un fichier horodaté, aucun effet sur le serveur."),
+        ),
+    ),
+    consequences=_("Lecture seule, sauf « Corriger les droits » et « Corriger avec sudo », après confirmation."),
+    points_de_vigilance=(
+        _("La croissance par jour est estimée d'après la première et la dernière date du log : elle sert à "
+          "prévoir dans combien de jours le disque sera plein."),
+        _("Au-delà du seuil de rotation, utilisez Rotate / archivage : sauvegarde immédiate, ou automatisation "
+          "planifiée exécutée chaque nuit."),
+        _("Section AUTOMATISATIONS : signale une automatisation de rotation en échec ou en retard de plus de 2 jours, "
+          "et des automatisations sans tâche planifiée pour les exécuter."),
+    ),
+)
+
 ALL_LOGS_GUIDES: tuple[ScreenGuide, ...] = (
     LOGS_MENU_SCREEN,
     LOG_LIBRARY_SCREEN,
@@ -463,8 +602,10 @@ ALL_LOGS_GUIDES: tuple[ScreenGuide, ...] = (
     LOG_VIEWER_SCREEN,
     LNAV_SCREEN,
     PROCESS_IP_SCREEN,
+    LOG_STATS_SCREEN,
     LOG_ROTATION_SCREEN,
     RESTORE_LOG_ARCHIVE_SCREEN,
     PURGE_LOG_ARCHIVES_SCREEN,
     EXPORT_LOG_ARCHIVES_SCREEN,
+    LOG_HEALTH_SCREEN,
 )

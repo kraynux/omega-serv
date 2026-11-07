@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="{{ html_lang() }}" dir="{{ html_dir() }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMEGA-SERV — {{ _("Santé des logs") }}</title>
+<style>
+  /* Sante des logs (2026-11-07) : meme presentation que le rapport de Statistiques (cartes, boites),
+     un bandeau de couleur par niveau. Couleurs = palette du theme d'export choisi. */
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    line-height: 1.6;
+    color: {{ palette.foreground }};
+    background: {{ palette.background }};
+    padding: 20px;
+    margin: 0;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: {{ palette.surface }};
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  h1 {
+    font-size: 1.4rem;
+    color: {{ palette.foreground }};
+    border-bottom: 3px solid {{ palette.accent }};
+    padding-bottom: 10px;
+    margin: 0 0 20px;
+  }
+  h2 { font-size: 1.05rem; color: {{ palette.accent }}; margin: 0 0 12px; }
+  .meta { color: {{ palette.secondary }}; margin-bottom: 20px; }
+  .box {
+    background: {{ palette.panel }};
+    border: 1px solid {{ palette.accent }};
+    border-radius: 8px;
+    padding: 16px 20px 20px;
+    margin-bottom: 20px;
+  }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi-card { background: {{ palette.surface }}; border: 1px solid {{ palette.panel }}; border-radius: 4px; padding: 12px 14px; }
+  .kpi-card .value { font-size: 1.4rem; font-weight: 600; }
+  .kpi-card .label { font-size: 0.78rem; color: {{ palette.secondary }}; margin-top: 2px; }
+  .ok { color: {{ palette.success }}; }
+  .info { color: {{ palette.secondary }}; }
+  .warning { color: {{ palette.warning }}; }
+  .problem { color: {{ palette.error }}; }
+
+  .item {
+    background: {{ palette.surface }};
+    border-inline-start: 4px solid {{ palette.secondary }};
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+  }
+  .item.ok { border-inline-start-color: {{ palette.success }}; }
+  .item.warning { border-inline-start-color: {{ palette.warning }}; }
+  .item.problem { border-inline-start-color: {{ palette.error }}; }
+  .item .title { color: {{ palette.foreground }}; font-weight: 600; word-break: break-all; }
+  .item .origin, .item .facts { color: {{ palette.secondary }}; font-size: 0.82rem; }
+  .badge { display: inline-block; min-width: 90px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+  ul { margin: 6px 0 0; padding-inline-start: 20px; }
+  li { font-size: 0.88rem; margin-bottom: 4px; color: {{ palette.foreground }}; }
+  .hint { display: block; color: {{ palette.secondary }}; font-size: 0.82rem; word-break: break-all; }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid {{ palette.panel }};
+    text-align: center;
+    color: {{ palette.secondary }};
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>OMEGA-SERV — {{ _("Santé des logs") }}</h1>
+    <p class="meta">{{ _("Généré le {date}").format(date=generated_at) }} · <span class="{{ level }}">{{ level_label }}</span></p>
+
+    {% macro findings_list(items) -%}
+    <ul>
+      {% for finding in items %}
+      <li><span class="badge {{ finding.level }}">{{ finding.level_label }}</span> {{ finding.text }}
+        {% if finding.hint %}<span class="hint">→ {{ finding.hint }}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {%- endmacro %}
+
+    <div class="box">
+      <h2>{{ _("Résumé") }}</h2>
+      <div class="kpi-grid">
+        {% for item in counts %}
+        <div class="kpi-card"><div class="value {{ item.level }}">{{ item.count }}</div><div class="label">{{ item.label }}</div></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>{{ _("Logs") }}</h2>
+      {% for log in logs %}
+      <div class="item {{ log.level }}">
+        <div class="title"><span class="badge {{ log.level }}">{{ log.level_label }}</span> {{ log.path }}</div>
+        <div class="origin">{{ log.origin }}</div>
+        {% if log.facts %}<div class="facts">{{ log.facts }}</div>{% endif %}
+        {% if log.findings %}{{ findings_list(log.findings) }}{% else %}<ul><li>{{ _("Aucun problème.") }}</li></ul>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="box">
+      <h2>{{ _("Disques") }}</h2>
+      {% for disk in disks %}
+      <div class="item {{ disk.level }}">
+        <div class="title"><span class="badge {{ disk.level }}">{{ disk.level_label }}</span> {{ disk.line }}</div>
+        {% if disk.findings %}{{ findings_list(disk.findings) }}{% endif %}
+      </div>
+      {% else %}
+      <p class="info">-</p>
+      {% endfor %}
+    </div>
+
+    {% if automations %}
+    <div class="box">
+      <h2>{{ _("Automatisations") }}</h2>
+      <div class="item {{ automations.level }}">
+        <div class="title"><span class="badge {{ automations.level }}">{{ automations.level_label }}</span> {{ automations.line }}</div>
+        {% if automations.findings %}{{ findings_list(automations.findings) }}{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if archives %}
+    <div class="box">
+      <h2>{{ _("Archives") }}</h2>
+      <p>{{ archives }}</p>
+    </div>
+    {% endif %}
+
+    <footer>{{ _("Rapport généré par") }} <strong>OMEGA-SERV</strong></footer>
+  </div>
+</body>
+</html>

@@ -428,6 +428,23 @@ Screen {
     height: 1fr;
 }
 
+/* Viewer Simple remonte (retour utilisateur 2026-11-07 : l'ascenseur cachait encore la fin du cadre de stats) :
+   ni retrait haut et bas du panneau ni marge au-dessus du titre - 3 lignes de plus pour les cadres, l'ecart
+   titre / cadres et cadres / Retour est garde. */
+#simple-viewer-panel {
+    padding: 0 2 0 2;  /* les 4 cotes : un `padding-top` seul remettait tout a zero */
+}
+
+#simple-viewer-panel .omega-title {
+    margin: 0 0 1 0;
+}
+
+/* Voir et traiter IP, recherche manuelle (2026-11-07) : une IPv6 complete fait 39 caracteres, la largeur 24 des
+   champs de .omega-actions la couperait. */
+#ip-input {
+    width: 42;
+}
+
 #simple-viewer-body > DataTable {
     width: 1fr;
     height: 1fr;
@@ -502,4 +519,15 @@ Screen {
 .omega-choice-message-scroll {
     height: auto;
     max-height: 14;
+}
+
+/* Statistiques et Sante des logs (2026-11-07) : tables dans un panneau qui defile = hauteur du contenu,
+   plafonnee (piege omega-log/omega-fire : `1fr` y ecrase la table a son en-tete). Au-dela, la table defile. */
+LogStatsScreen #library-table, LogHealthScreen #health-table {
+    height: auto;
+    max-height: 14;
+}
+
+LogHealthScreen #health-disks, LogHealthScreen #health-archives, LogHealthScreen #health-automations {
+    margin-bottom: 1;
 }

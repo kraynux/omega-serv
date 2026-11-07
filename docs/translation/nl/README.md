@@ -36,10 +36,10 @@ OMEGA-SERV serveert statische sites en, als u dat wilt, PHP via PHP-FPM. Hij is 
 **OMEGA-SERV** is een HTTP/1.1-server geschreven in puur Python (voor de serverkern alleen de standaardbibliotheek), bedoeld om statische inhoud en optioneel PHP-FPM te serveren, met een standaard actieve protocolverharding en beveiligingsmodules (WAF, TLS, authenticatie) die u kunt stapelen in plaats van dat ze worden opgelegd. Een optionele native C++-engine kan de verzoeken afhandelen in plaats van de Python-engine, met dezelfde beveiligingscontroles. Hij werkt op de lokale machine die hem host, niet op externe doelen (dezelfde familie als `omega-fire`); opgebouwd volgens Clean Architecture, waarbij `bootstrap/` dienstdoet als compositiewortel.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/omega-serv/D.png" width="24%" />
 </p>
 
 ## Inhoud
@@ -88,7 +88,8 @@ OMEGA-SERV serveert statische sites en, als u dat wilt, PHP via PHP-FPM. Hij is 
 - [11e. Handmatige ingreep (Actieve beveiliging)](#11e-handmatige-ingreep-actieve-beveiliging)
 - [12. Diensten en beheer](#12-diensten-en-beheer)
 - [13. Logboeken](#13-logboeken)
-  - [13a. Externe bronnen (SSH)](#13a-externe-bronnen-ssh)
+  - [13a. Logmanager](#13a-logmanager)
+  - [13b. Externe bronnen (SSH)](#13b-externe-bronnen-ssh)
 - [14. Tests](#14-tests)
 - [15. Buiten de reikwijdte](#15-buiten-de-reikwijdte)
 
@@ -103,7 +104,7 @@ De uitgesproken prioriteit is **eerst de robuustheid/veiligheid van de HTTP-kern
 - Optioneel: WAF-filtering (signaturen, snelheidsbeperking, blokkeerlijst), direct TLS (zelfondertekend certificaat, ondertekend door een lokale CA, of publiek via Let's Encrypt/Certbot met automatische vernieuwing), HTTP Basic-authenticatie per zone, PHP via FastCGI/PHP-FPM, afgeschermde uploadzones.
 - Meerdere serverprocessen, hoogstens één per fysieke kern van de machine met de Python-engine (scherm Weerbaarheid en limieten); de beveiligingstellers (snelheidsbeperking, herhaling) worden tussen hen gedeeld en blijven exact.
 - Auditeert zijn eigen configuratie (`audit security`) en installeert zich als systeemdienst (systemd/OpenRC/runit).
-- Volledig scriptbare, niet-interactieve CLI, **én interactieve interface (Textual)** die precies dezelfde use-cases omvat. Interface **volledig te bedienen met muis en/of toetsenbord**: capaciteitenregister, profielen/opties, gedetailleerde configuratie (aliassen/omleidingen/herschrijvingen/FastCGI/mapoverzicht/authenticatie/cache/WAF/vertrouwde proxy's/uitgaande reverse proxy/TLS), logbeheer (Bibliotheek/Favorieten, 3 viewers — eenvoudig/klassiek/samengevoegde lnav —, IP bekijken en behandelen, externe SSH-bronnen, rotatie/back-up/automatisering/herstel/opschonen/export), systeemdienst, multi-instantie (register, aanmaak), controle/simulatie/audit, back-up/herstel van de configuratie, eerste-installatie-assistent, applicatie-instellingen (thema, weergaveprofiel, paden voor exports/screenshots), contextuele helphandleiding (pagina per scherm met concrete voorbeelden, FAQ, HTML-export, volledige dekking gecontroleerd door tests), systematische melding herladen/herstarten na elke opslag, volledige configuratie van Active Defense zonder handmatige bestandsbewerking.
+- Volledig scriptbare, niet-interactieve CLI, **én interactieve interface (Textual)** die precies dezelfde use-cases omvat. Interface **volledig te bedienen met muis en/of toetsenbord**: capaciteitenregister, profielen/opties, gedetailleerde configuratie (aliassen/omleidingen/herschrijvingen/FastCGI/mapoverzicht/authenticatie/cache/WAF/vertrouwde proxy's/uitgaande reverse proxy/TLS), logbeheer (Bibliotheek/Favorieten, 3 viewers — eenvoudig/klassiek/samengevoegde lnav —, IP bekijken en behandelen, Statistieken, externe SSH-bronnen, rotatie/back-up/automatisering/herstel/opschonen/export, Loggezondheid), systeemdienst, multi-instantie (register, aanmaak), controle/simulatie/audit, back-up/herstel van de configuratie, eerste-installatie-assistent, applicatie-instellingen (thema, weergaveprofiel, paden voor exports/screenshots), contextuele helphandleiding (pagina per scherm met concrete voorbeelden, FAQ, HTML-export, volledige dekking gecontroleerd door tests), systematische melding herladen/herstarten na elke opslag, volledige configuratie van Active Defense zonder handmatige bestandsbewerking.
 
 ### Wat OMEGA-SERV niet doet
 
@@ -129,10 +130,10 @@ Omega-serv **weigert te starten als root**. In geen enkel meegeleverd profiel, o
 
 ### Downloaden
 
-Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archief van de nieuwste versie en SHA-256-controlesommen van elke versie: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Werkt u een bestaande installatie bij?** De onderstaande opdracht **slaat het uitpakken stilzwijgend over** als `omega-serv/` al bestaat (hij gaat ervan uit dat het om een onderbroken eerste installatie gaat, niet om een update) — u zou dan de afhankelijkheden opnieuw installeren op de **oude, ongewijzigde code**, zonder ook maar één foutmelding. Gebruik in plaats daarvan het onderdeel [Bijwerken](#bijwerken) hieronder.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Hier al uitgepakt, stap overgeslagen." || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ Als `omega-serv/` al bestaat (eerdere installatie), **start `tar` dan nooit vanu
 
 ```bash
 # Vanuit de BOVENLIGGENDE map van omega-serv/ (nooit van binnenuit)
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ De hulpgids (toets `a`) biedt een scherm **Contact en ondersteuning**: *Trakteer
 - **Profielen** — dezelfde use-case als `profile` in de CLI, diff altijd getoond vóór het schrijven.
 - **Gedetailleerde configuratie van de server** — volledige CRUD op aliassen/omleidingen/herschrijvingen/mapoverzicht/vertrouwde proxy's/uitgaande reverse proxy/FastCGI/cache/authenticatie/toegangscontrole/foutpagina's, plus het submenu **TLS** (status, zelfondertekende generatie, assistent lokale CA, Let's Encrypt/Certbot-assistent, automatische vernieuwing, intrekking, in-/uitschakelen); een tweede kader **OPTIES EN CONTROLE** bundelt daar de snelkoppelingen naar **Opties** (`option` CLI) en **Configuratie controleren** (`config check` CLI) — hetzelfde traject als instellingen aanpassen en daarna controleren; deze twee schermen zijn niet meer rechtstreeks vanuit het hoofdmenu bereikbaar. De WAF woont hier niet meer (zie "Actieve beveiliging" hieronder): hij toont vooral operationele status die voortdurend verandert, geen eenvoudig statisch configuratieformulier. Elke opslag vermeldt systematisch de volgende stap: automatische en stille herlading tijdens bedrijf als er een dienst actief is (mapoverzicht, toegang, aliassen/omleidingen/herschrijvingen, cache, foutpagina's, vertrouwde proxy's, reverse-proxy-/FastCGI-zones, gebruikers/authenticatiezones), of expliciete bevestiging van een volledige herstart wanneer de wijziging de luistersocket, TLS of Active Defense raakt — geen enkel scherm laat u nog raden of de server opnieuw gestart moet worden.
 - **Actieve beveiliging** — één scherm met drie blokken naast elkaar, in de volgorde van een aanval: **WAF**, **Active Defense** en **RIPOSTE** (getrapte reacties over de tijd). **Active Defense** (Status, Gevolgde dreigingen met score/niveau, Incidenten met tijdlijn/IoC-export/rapport, toewijzingen van Deception, Een beslissing simuleren in dry-run, **Instellingen** — volledige configuratie zonder ooit `config/omega-serve.json` met de hand te bewerken) en **WAF** (Status, Modules — modus/regelpakketten/blokkeerlijst, Een verzoek testen, Custom — eigen regels opstellen en met de muis bewerkbare lijsten van paden/trefwoorden laden, Magnet — een extern `mod_magnet`-script importeren met compatibiliteitscontrole vóór activering). Onder de drie blokken **HANDMATIGE INGREEP**: een IP-adres met de hand verbannen of de ban opheffen, status van alle bans.
-- **Logbeheer** — menu in twee kolommen. Kolom **Bibliotheek**: centrale hub die elke te behandelen log refereert (handmatige vulling, één klik voegt automatisch de eigen logs van de instantie toe — access/error/native WAF, + magnet-script indien actief —, of een via SSH opgehaalde **externe bron**, zie hieronder); **Favorieten** (combinatie van logs + viewer opgeslagen onder een naam, directe start); **Logs bekijken** met 3 viewers naar keuze afhankelijk van het aantal geselecteerde logs — Eenvoudig (live tail + generieke statistieken IP's/fouten/HTTP-codes voor elk formaat), Klassiek (lezen + volgen), samengevoegde `lnav` (echte terminalweergave in de interface, magnet-logs automatisch inbegrepen + handmatige paden die u **vastzet** om ze tussen sessies te bewaren); **IP bekijken en behandelen** (top-IP's uit één of meer gekozen logs, periode 24u/7d/30d/alles, verwijderen van een IP). Kolom **Onderhoud** (ongewijzigd): handmatige of automatische rotatie/archivering op groottedrempel, direct een back-up maken, instellen/beheren van geplande automatiseringen (declaratief — zie opmerking hieronder), een archief herstellen/opschonen, export van de lijst.
+- **Logbeheer** — menu in twee kolommen. Kolom **Bibliotheek**: centrale hub die elke te behandelen log refereert (handmatige vulling, één klik voegt automatisch de eigen logs van de instantie toe — access/error/native WAF, + magnet-script indien actief —, of een via SSH opgehaalde **externe bron**, zie hieronder); **Favorieten** (combinatie van logs + viewer opgeslagen onder een naam, directe start); **Logs bekijken** met 3 viewers naar keuze afhankelijk van het aantal geselecteerde logs — Eenvoudig (live tail + generieke statistieken IP's/fouten/HTTP-codes voor elk formaat), Klassiek (lezen + volgen), samengevoegde `lnav` (echte terminalweergave in de interface, magnet-logs automatisch inbegrepen + handmatige paden die u **vastzet** om ze tussen sessies te bewaren); **IP bekijken en behandelen** (top-IP's uit één of meer gekozen logs, periode 24u/7d/30d/volledig bestand, berekening op de achtergrond met voortgangsindicator, verwijderen van een IP); **Statistieken** (volledig rapport van één of meer logs — samenvatting, HTTP-statussen, top-IP's, paden, verdeling per uur, trend per dag — exporteerbaar als JSON/HTML). Kolom **Onderhoud**: handmatige of automatische rotatie/archivering op groottedrempel, direct een back-up maken, instellen/beheren van geplande automatiseringen (elke nacht uitgevoerd door een systemd-timer, of door een crontab-regel onder OpenRC/runit), een archief herstellen/opschonen, export van de lijst; **Loggezondheid** (alleen-lezen controle van de logs, de schijf en de archieven — rechten, stille of beschadigde logs, rotatie, logrotate, dagen tot de schijf vol is —, met de te nemen stap voor elke bevinding, correctie van de rechten — met sudo indien nodig —, export JSON/HTML/TXT). Als een log niet leesbaar is voor uw account, vragen Statistieken en IP bekijken en behandelen om uw sudo-wachtwoord en lezen het daarna.
 - **Dienst** — dezelfde acties als `service` in de CLI, eenmalige `sudo`-verhoging per actie, nooit de hele applicatie als root gestart.
 - **Multi-instantie** — globaal register (`~/.config/omega-serv/instances.json`, buiten elke projectmap) van de op de machine bekende installaties, met de systemd-status van elk; aanmaak van een nieuwe instantie (kopie van de mapstructuur, eigen virtuele omgeving en afhankelijkheden, verse configuratie met aparte poort, controle op nesting en poortconflict) rechtstreeks vanuit de interface. Knop praktisch onzichtbaar bij een enkele installatie (het label "Multi-instantie" wordt "Instanties (N)" zodra er 2 bekend zijn); volledige overschakeling naar een andere instantie (`os.execv`, expliciete bevestiging, eigen splash die de overschakeling bij het herstarten aankondigt); volledige verwijdering van een instantie (verwijderen van de unit, van het speciale systeemaccount als geen andere instantie het nog gebruikt, en optioneel verwijderen van de map, nooit standaard).
 - **Status & bronnen** — overzicht in één oogopslag, elke 2 seconden vernieuwd: serverstatus (proces/PID, status van de systeemdienst, profiel/actieve opties/TLS/poort), live stroom van de toegangslog (doorvoer, verdeling per statuscode, unieke IP's, foutpercentage), systeembronnen (CPU/RAM/schijf/swap/belasting/netwerk, via `psutil`); bundelt ook de snelkoppeling **Een verzoek simuleren** (dezelfde use-case als de bijbehorende CLI-opdracht).
 - **Beveiligingsaudit** — dezelfde use-case als de bijbehorende CLI-opdracht.
 - **Back-up van de configuratie** — tar.gz-archief van het configuratiebestand en, op expliciete keuze, van de WAF-regels/authenticatiezones/certificaten (bevestiging verplicht zodra echte geheimen zijn inbegrepen)/Active Defense-database, herstel, lijst, verwijderen.
 
-> Opmerking over geplande rotatieautomatiseringen: ze worden opgeslagen (frequentie + doellog), maar **niets voert ze automatisch uit** — niet aan de interfacekant en niet op de achtergrond. Dat is een bewuste keuze voor gelijkheid met het overeenkomstige scherm van `omega-fire`, dat hetzelfde declaratieve gedrag heeft. Een echte periodieke uitvoering (systemd-timer, achtergrondtaak) moet apart worden gebouwd als de behoefte wordt bevestigd.
+> Opmerking over geplande rotatieautomatiseringen: de eerste automatisering installeert een dagelijkse taak — systemd-timer (sudo-wachtwoord gevraagd), anders een regel in uw crontab (OpenRC, runit of zonder servicebeheerder; er moet een cron-daemon draaien), anders wordt de regel getoond die u zelf moet toevoegen. Elke nacht archiveert `omega-serv logs run-automations`, onder uw account, elke log waarvan de termijn verstreken is; het verwijderen van de laatste automatisering verwijdert de taak.
 
 #### Applicatie-instellingen (toets `o` of opdrachtpalet)
 
@@ -637,7 +638,19 @@ Automatische detectie van systemd/OpenRC/runit (`service install/status/start/st
 
 `var/log/access.log` (Apache combined-formaat + `request_id`, escaping tegen loginjectie), `var/log/error.log`. Rotatie op grootte/aantal bewaarde bestanden (`logs.rotation`). Native WAF: `var/log/waf-alerts.log` (`options.waf.logging.path`). Magnet-script: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, standaardwaarden `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — alleen automatisch aan de Bibliotheek toegevoegd (knop *Bekende Omega-Serv-logs toevoegen*) als magnet actief is; `lnav` stelt ze daarentegen altijd voor (een ontbrekend bestand wordt bij het starten gewoon genegeerd).
 
-### 13a. Externe bronnen (SSH)
+### 13a. Logmanager
+
+Het scherm **Logbeheer** is een echte manager, geen eenvoudige lezer: elke log (die van de instantie, een handmatig toegevoegd bestand of de kopie van een externe server) komt in de **Bibliotheek**, en daarna:
+
+- **Lezen** — drie viewers: Eenvoudig (live dashboard: HTTP-codes, weigeringen 403/429, top-IP's, paden), Klassiek (lezen en volgen), geïntegreerde `lnav` (meerdere samengevoegde logs). Een **Favoriet** bewaart een selectie en de bijbehorende viewer onder een naam.
+- **Analyseren** — **IP bekijken en behandelen** (meest actieve adressen, over 24 u, 7 d, 30 d of het volledige bestand) en **Statistieken** (volledig rapport, export JSON/HTML), op de achtergrond berekend op meerdere kernen, zelfs voor grote bestanden. In **IP bekijken en behandelen** kunt u ook een bepaald IP invoeren: de regels ervan worden in elk log geteld en daarna met één klik verwijderd.
+- **Controleren** — **Loggezondheid**: rechten, stille of beschadigde logs, rotatie, schijfruimte, archieven en automatiseringen, met de te nemen stap voor elke bevinding; export JSON/HTML/TXT.
+- **Back-uppen** — rotatie op groottedrempel, directe back-up, herstel en opschonen van de archieven (`var/backups/logs/`).
+- **Automatiseren** — één geplande back-up per log (elke N dagen), elke nacht uitgevoerd door een systemd-timer of een regel in uw crontab (OpenRC, runit), altijd onder uw account, nooit als root.
+
+Als rechten blokkeren, vraagt omega-serv om uw sudo-wachtwoord om de log te lezen, of om alleen het foutieve recht te corrigeren (de opdracht wordt dan getoond voordat ze wordt uitgevoerd).
+
+### 13b. Externe bronnen (SSH)
 
 Centraliseert op uitdrukkelijk verzoek de log van een backendserver op hetzelfde lokale netwerk achter de reverse proxy (scherm **Logbeheer → Bibliotheek → Externe bronnen (SSH)**). Een « fetch » is een handmatige, eenmalige actie, nooit een live stroom of automatische polling: een **kopie** wordt via `scp` opgehaald op het moment van de klik op *Nu ophalen*, geschreven onder `var/log/remote/` en daarna als een gewone log aan de Bibliotheek toegevoegd (kolom *Toegang* = `ssh`, kolom *Gewijzigd* = datum van **deze** ophaling — nooit die van het externe bestand); een nieuwe ophaling vervangt gewoon de vorige kopie door een recentere.
 

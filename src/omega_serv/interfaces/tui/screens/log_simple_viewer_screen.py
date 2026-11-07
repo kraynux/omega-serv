@@ -70,7 +70,8 @@ class LogSimpleViewerScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
+        # Panneau remonte (2026-11-07, comme Etat & Ressources) : 3 lignes de plus pour le cadre de stats.
+        with Vertical(id="simple-viewer-panel", classes="omega-panel"):
             with Center():  # titre et bouton centres (2026-11-05)
                 yield Static(_("VOIR LES LOGS - SIMPLE - {path}").format(path=self._path), classes="omega-title")
             with Horizontal(id="simple-viewer-body"):
@@ -211,14 +212,17 @@ class LogSimpleViewerScreen(OmegaScreen):
         return content
 
     def _append_top(self, content: Text, items: list[tuple[str, int]], style: str) -> None:
-        """Valeur (IP, chemin) depuis le bord gauche, compte colle au bord droit (2026-11-05) : le chemin
-        dispose de toute la largeur restante au lieu de commencer au milieu du cadre."""
+        """Valeur (IP, chemin) depuis le bord gauche, compte aligne a droite une colonne avant le bord
+        (2026-11-05, marge 2026-11-07) : le chemin dispose de toute la largeur restante au lieu de commencer
+        au milieu du cadre."""
         if not items:
             content.append("    " + _("(aucun)") + "\n\n", style="dim")
             return
         width = self.query_one("#stats-box", Static).size.width or _TOP_WIDTH
         count_width = max(len(str(count)) for _value, count in items)
-        room = max(8, width - 2 - count_width)  # 1 espace de marge + 1 avant le compte
+        # 1 espace de marge a gauche, 1 avant le compte et 1 apres (retour utilisateur 2026-11-07 : colle a
+        # l'ascenseur, on ne savait pas si un chiffre etait cache derriere)
+        room = max(8, width - 3 - count_width)
         for value, count in items:
             shown = value if cell_len(value) <= room else set_cell_size(value, room - 1) + "…"
             content.append(" " + shown + " " * (room - cell_len(shown)) + " ", style=style)

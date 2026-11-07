@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.filesystem_port import FilesystemPort
     from omega_serv.ports.instance_registry_port import InstanceRegistryPort
     from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
+    from omega_serv.ports.release_source_port import ReleaseSourcePort
     from omega_serv.ports.riposte_store_port import RiposteStorePort
 
 
@@ -294,6 +295,12 @@ def _build_declaration_sender(version: str) -> DeclarationSenderPort:
     return HttpsDeclarationSender(version)
 
 
+def _build_release_source(version: str) -> ReleaseSourcePort:
+    from omega_serv.infrastructure.updates.https_release_source import HttpsReleaseSource
+
+    return HttpsReleaseSource(version)
+
+
 def _open_url(url: str) -> bool:
     from omega_serv.infrastructure.desktop.browser_opener import open_in_browser
 
@@ -372,12 +379,33 @@ def _export_guide_html(screen_guides: Sequence[dict], faq_entries: Sequence[dict
     return export_guide_html(screen_guides, faq_entries, theme_name)
 
 
+def _export_payload(kind: str, payload: dict, theme_name: str) -> str | None:
+    """Rapports rendus depuis des donnees deja calculees (2026-11-07) : Statistiques et Sante des logs."""
+    from omega_serv.infrastructure.exporters.html_exporter import export_log_stats_html
+
+    if kind == "log-stats":
+        from omega_serv.application.logs.stats_presentation import stats_html_arguments
+
+        return export_log_stats_html(**stats_html_arguments(payload), theme_name=theme_name)
+    if kind == "log-health":
+        from omega_serv.application.logs.health_presentation import html_arguments
+        from omega_serv.infrastructure.exporters.html_exporter import export_log_health_html
+
+        return export_log_health_html(theme_name=theme_name, **html_arguments(payload))
+    if kind == "log-health-txt":
+        from omega_serv.application.logs.health_presentation import render_text
+
+        return render_text(payload)
+    return None
+
+
 # Lot « langue des exports » (decision utilisateur 2026-10-23) : un export dans une autre langue
 # que l'interface est genere par un processus enfant lance dans cette langue. Le guide et les
 # raisons du registre des capacites sont traduits a leur creation (import, scan) : seul un
 # processus demarre dans la langue voulue les produit sans melange de langues.
 EXPORT_HTML_CHILD_COMMAND = "_export-html"
 EXPORT_REPORT_CHILD_COMMAND = "_export-report"
+EXPORT_PAYLOAD_CHILD_COMMAND = "_export-payload"
 # Code de sortie convenu avec DependencyContainer : le message est traduit par le parent,
 # dans la langue de l'interface (l'enfant parle la langue des exports).
 EXPORT_CHILD_INCIDENT_NOT_FOUND = 3
@@ -463,10 +491,21 @@ def _write_report_here(incident_id: str) -> Path | None:
 
 def _run_export_child_command(argv: list[str]) -> int:
     """`_export-html <guide|capabilities|log-archives|bans> <theme>` : HTML sur stdout.
-    `_export-report <incident_id>` : chemin du rapport ecrit sur stdout. Commandes internes,
+    `_export-report <incident_id>` : chemin du rapport ecrit sur stdout.
+    `_export-payload <log-stats|log-health|log-health-txt> <theme> <fichier.json>` : rapport sur stdout. Commandes internes,
     lancees uniquement par `_run_export_in_language` (absentes de --help)."""
     if argv[0] == EXPORT_HTML_CHILD_COMMAND and len(argv) == 3:
         content = _render_html_export_here(argv[1], argv[2])
+        if content is None:
+            return 1
+        sys.stdout.write(content)
+        return 0
+    if argv[0] == EXPORT_PAYLOAD_CHILD_COMMAND and len(argv) == 4:
+        import json
+        from pathlib import Path
+
+        payload = json.loads(Path(argv[3]).read_text(encoding="utf-8"))
+        content = _export_payload(argv[1], payload, argv[2])
         if content is None:
             return 1
         sys.stdout.write(content)
@@ -533,7 +572,9 @@ def main(argv: list[str] | None = None) -> int:
 
     align_spacing_marks_with_terminal()
 
-    if effective_argv and effective_argv[0] in (EXPORT_HTML_CHILD_COMMAND, EXPORT_REPORT_CHILD_COMMAND):
+    if effective_argv and effective_argv[0] in (
+        EXPORT_HTML_CHILD_COMMAND, EXPORT_REPORT_CHILD_COMMAND, EXPORT_PAYLOAD_CHILD_COMMAND,
+    ):
         return _run_export_child_command(effective_argv)
 
     if not effective_argv:
@@ -586,17 +627,24 @@ def main(argv: list[str] | None = None) -> int:
             export_guide_html_fn=_export_guide_html,
             export_bans_html_fn=_export_bans_html,
             export_in_language_runner=_run_export_in_language,
+            export_payload_fn=_export_payload,
+            privileged_runner_factory=_build_acme_client,
             serve_foreground_runner=_run_serve_foreground,
             riposte_store_factory=_open_riposte_store,
             riposte_journal_reader=_read_riposte_journals,
             installed_jails_reader=_installed_fail2ban_jails,
             declaration_sender_factory=_build_declaration_sender,
+            release_source_factory=_build_release_source,
             url_opener=_open_url,
         )
+        from omega_serv.application.logs.process_pool import shutdown_stats_pool, warm_up_stats_pool
+
+        warm_up_stats_pool()  # avant le pilote Textual (Statistiques, Voir et traiter IP)
         from omega_serv.interfaces.tui.app import OmegaServApp
 
         app = OmegaServApp(container)
         _run_with_text_direction(app)
+        shutdown_stats_pool()  # jamais de processus du pool laisses derriere un os.execv
         if app.pending_switch is not None:
             os.environ["OMEGA_SERV_SWITCHED_FROM"] = app.pending_switch.source_name
             path, exec_argv = _build_execv_invocation(app.pending_switch.python_executable)

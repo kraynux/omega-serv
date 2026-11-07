@@ -130,11 +130,20 @@ _LINUX_BOX = (
     "└─────────────────────┘",
 )
 
-_INDICATOR = (
-    "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
-    "▄████▒2.5.0▒████▄",
-    "┌█▒░▒░▒░▒░▒░▒░▒░▒█┐",
-)
+_INDICATOR_WIDTH = 17
+"""Largeur de la ligne de version (« ▄████▒2.6.0▒████▄ ») : posee sur le chapeau de 15, sous le bord de 19."""
+
+
+def _indicator(version: str) -> tuple[str, ...]:
+    """Version lue dans pyproject.toml (seule source, 2026-11-07) au lieu d'etre ecrite ici : une version plus
+    longue (2.10.0) raccourcit les blocs de chaque cote, jamais moins d'un."""
+    badge = f"▒{version}▒"
+    side = max(1, (_INDICATOR_WIDTH - 2 - len(badge)) // 2)
+    return (
+        "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+        "▄" + "█" * side + badge + "█" * side + "▄",
+        "┌█▒░▒░▒░▒░▒░▒░▒░▒█┐",
+    )
 
 _OMEGA_BOX = (
     "┌───────────────────────────────────────────────────────────────────────────┐",
@@ -158,26 +167,27 @@ _SERVER_BODY = (
 
 _TAGLINE = _("HTTP | WAF | TLS | LOG | SECURE | AUDIT | EXPORT")
 
-_LINES: tuple[str, ...] = (
-    f"[$foreground]{_centered(_LINUX_BOX[0])}[/]",
-    _split_frame(_centered(_LINUX_BOX[1])),
-    f"[$foreground]{_centered(_LINUX_BOX[2])}[/]",
-    *[_center_markup(_light_up(row), len(row)) for row in _INDICATOR],
-    f"[$foreground]{_centered(_OMEGA_BOX[0])}[/]",
-    _wordmark_line(_centered(_OMEGA_BOX[1]), "$accent"),
-    _wordmark_line(_centered(_OMEGA_BOX[2]), "$foreground"),
-    _wordmark_line(_centered(_OMEGA_BOX[3]), "$accent"),
-    f"[$foreground]{_centered(_OMEGA_BOX[4])}[/]",
-    *[_center_markup(_light_up(row), len(row)) for row in _SERVER_BODY],
-    "",
-    _tagline(_centered(_TAGLINE)),
-)
-
-_MARKUP = "\n".join(_LINES)
+def splash_markup(version: str) -> str:
+    lines = (
+        f"[$foreground]{_centered(_LINUX_BOX[0])}[/]",
+        _split_frame(_centered(_LINUX_BOX[1])),
+        f"[$foreground]{_centered(_LINUX_BOX[2])}[/]",
+        *[_center_markup(_light_up(row), len(row)) for row in _indicator(version)],
+        f"[$foreground]{_centered(_OMEGA_BOX[0])}[/]",
+        _wordmark_line(_centered(_OMEGA_BOX[1]), "$accent"),
+        _wordmark_line(_centered(_OMEGA_BOX[2]), "$foreground"),
+        _wordmark_line(_centered(_OMEGA_BOX[3]), "$accent"),
+        f"[$foreground]{_centered(_OMEGA_BOX[4])}[/]",
+        *[_center_markup(_light_up(row), len(row)) for row in _SERVER_BODY],
+        "",
+        _tagline(_centered(_TAGLINE)),
+    )
+    return "\n".join(lines)
 
 
 class SplashHero(Static):
-    """Bloc decoratif de l'ecran de demarrage (screens/splash.py)."""
+    """Bloc decoratif de l'ecran de demarrage (screens/splash.py). `version` : celle de pyproject.toml,
+    passee par l'application (container.app_version)."""
 
-    def __init__(self) -> None:
-        super().__init__(_MARKUP, classes="omega-splash-hero")
+    def __init__(self, version: str) -> None:
+        super().__init__(splash_markup(version), classes="omega-splash-hero")

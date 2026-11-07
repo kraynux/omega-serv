@@ -36,10 +36,10 @@ OMEGA-SERV menyajikan situs statis dan, jika Anda mau, PHP melalui PHP-FPM. Ia d
 **OMEGA-SERV** adalah server HTTP/1.1 yang ditulis dalam Python murni (hanya pustaka standar untuk inti server), dirancang untuk menyajikan konten statis dan, secara opsional, PHP-FPM, dengan pengerasan protokol yang aktif secara bawaan serta modul keamanan (WAF, TLS, autentikasi) yang dapat ditumpuk alih-alih dipaksakan. Mesin native C++ opsional dapat melayani permintaan sebagai pengganti mesin Python, dengan pemeriksaan keamanan yang sama. Ia bekerja pada mesin lokal yang menjalankannya, bukan pada target jarak jauh (keluarga yang sama dengan `omega-fire`); disusun dengan Clean Architecture, dengan `bootstrap/` sebagai akar komposisi (composition root).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/omega-serv/D.png" width="24%" />
 </p>
 
 ## Daftar isi
@@ -88,7 +88,8 @@ OMEGA-SERV menyajikan situs statis dan, jika Anda mau, PHP melalui PHP-FPM. Ia d
 - [11e. Intervensi manual (Keamanan Aktif)](#11e-intervensi-manual-keamanan-aktif)
 - [12. Layanan dan operasi](#12-layanan-dan-operasi)
 - [13. Log](#13-log)
-  - [13a. Sumber jarak jauh (SSH)](#13a-sumber-jarak-jauh-ssh)
+  - [13a. Pengelola log](#13a-pengelola-log)
+  - [13b. Sumber jarak jauh (SSH)](#13b-sumber-jarak-jauh-ssh)
 - [14. Pengujian](#14-pengujian)
 - [15. Di luar cakupan](#15-di-luar-cakupan)
 
@@ -103,7 +104,7 @@ Prioritas yang dinyatakan adalah **kekokohan/keamanan inti HTTP terlebih dahulu*
 - Secara opsional: penyaringan WAF (tanda tangan, pembatasan laju, daftar blokir), TLS langsung (sertifikat swatanda, ditandatangani CA lokal, atau publik melalui Let's Encrypt/Certbot dengan perpanjangan otomatis), autentikasi HTTP Basic per zona, PHP melalui FastCGI/PHP-FPM, zona unggahan yang terkurung.
 - Beberapa proses server, paling banyak satu per inti fisik mesin dengan mesin Python (layar Ketahanan dan batas); penghitung keamanan (rate limit, residivisme) dibagi di antara proses dan tetap akurat.
 - Mengaudit konfigurasinya sendiri (`audit security`) dan memasang dirinya sebagai layanan sistem (systemd/OpenRC/runit).
-- CLI non-interaktif yang dapat ditulis skrip dari awal hingga akhir, **dan antarmuka interaktif (Textual)** yang membungkus kasus penggunaan yang persis sama. Antarmuka **sepenuhnya dapat dikendalikan dengan tetikus dan/atau papan ketik**: registri kapabilitas, profil/opsi, konfigurasi terperinci (alias/pengalihan/rewrite/FastCGI/dirlisting/autentikasi/cache/WAF/proxy tepercaya/reverse proxy keluar/TLS), pengelolaan log (Pustaka/Favorit, 3 penampil — sederhana/klasik/lnav gabungan —, Lihat dan tangani IP, sumber jarak jauh SSH, rotasi/cadangan/otomatisasi/pemulihan/pembersihan/ekspor), layanan sistem, multi-instans (registri, pembuatan), pemeriksaan/simulasi/audit, pencadangan/pemulihan konfigurasi, asisten peluncuran pertama, pengaturan aplikasi (tema, profil tampilan, jalur ekspor/tangkapan layar), panduan bantuan kontekstual (lembar per layar dengan contoh konkret, FAQ, ekspor HTML, cakupan lengkap yang diverifikasi oleh pengujian), penunjukan sistematis muat ulang/mulai ulang setelah setiap penyimpanan, konfigurasi Active Defense lengkap tanpa mengedit berkas secara manual.
+- CLI non-interaktif yang dapat ditulis skrip dari awal hingga akhir, **dan antarmuka interaktif (Textual)** yang membungkus kasus penggunaan yang persis sama. Antarmuka **sepenuhnya dapat dikendalikan dengan tetikus dan/atau papan ketik**: registri kapabilitas, profil/opsi, konfigurasi terperinci (alias/pengalihan/rewrite/FastCGI/dirlisting/autentikasi/cache/WAF/proxy tepercaya/reverse proxy keluar/TLS), pengelolaan log (Pustaka/Favorit, 3 penampil — sederhana/klasik/lnav gabungan —, Lihat dan tangani IP, Statistik, sumber jarak jauh SSH, rotasi/cadangan/otomatisasi/pemulihan/pembersihan/ekspor, Kesehatan log), layanan sistem, multi-instans (registri, pembuatan), pemeriksaan/simulasi/audit, pencadangan/pemulihan konfigurasi, asisten peluncuran pertama, pengaturan aplikasi (tema, profil tampilan, jalur ekspor/tangkapan layar), panduan bantuan kontekstual (lembar per layar dengan contoh konkret, FAQ, ekspor HTML, cakupan lengkap yang diverifikasi oleh pengujian), penunjukan sistematis muat ulang/mulai ulang setelah setiap penyimpanan, konfigurasi Active Defense lengkap tanpa mengedit berkas secara manual.
 
 ### Yang tidak dilakukan OMEGA-SERV
 
@@ -129,10 +130,10 @@ Omega-serv **menolak berjalan sebagai root**. Tidak ada modul keamanan (WAF, TLS
 
 ### Unduhan
 
-Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Arsip versi terbaru dan sidik jari SHA-256 dari setiap versi: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Anda memperbarui instalasi yang sudah ada?** Perintah di bawah **diam-diam melewati ekstraksi** jika `omega-serv/` sudah ada (ia menganggap ini instalasi pertama yang terputus, bukan pembaruan) — Anda akan memasang ulang dependensi di atas **kode lama yang tidak berubah**, tanpa pesan galat sedikit pun. Gunakan bagian [Pembaruan](#pembaruan) di bawah sebagai gantinya.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Sudah diekstrak di sini, langkah dilewati." || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ Jika `omega-serv/` sudah ada (instalasi sebelumnya), **jangan pernah menjalankan
 
 ```bash
 # Dari folder INDUK omega-serv/ (jangan pernah dari dalamnya)
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ Panduan bantuan (tombol `a`) menyediakan layar **Kontak dan dukungan**: *Traktir
 - **Profil** — kasus penggunaan yang sama dengan `profile` di CLI, diff selalu ditampilkan sebelum penulisan.
 - **Konfigurasi terperinci server** — CRUD lengkap untuk alias/pengalihan/rewrite/dirlisting/proxy tepercaya/reverse proxy keluar/FastCGI/cache/autentikasi/kontrol akses/halaman kesalahan, ditambah submenu **TLS** (status, pembuatan swatanda, asisten CA lokal, asisten Let's Encrypt/Certbot, perpanjangan otomatis, pencabutan, aktifkan/nonaktifkan); bingkai kedua **OPSI DAN PEMERIKSAAN** mengelompokkan pintasan ke **Opsi** (`option` di CLI) dan **Periksa konfigurasi** (`config check` di CLI) — alur yang sama seperti menyesuaikan pengaturan lalu memeriksa, kedua layar ini tidak lagi dapat diakses langsung dari menu utama. WAF tidak lagi berada di sini (lihat "Keamanan Aktif" di bawah): ia terutama menampilkan status operasional yang terus berubah, bukan formulir konfigurasi statis sederhana. Setiap penyimpanan selalu menyebutkan langkah berikutnya: muat ulang panas otomatis dan senyap jika ada layanan aktif (dirlisting, akses, alias/pengalihan/rewrite, cache, halaman kesalahan, proxy tepercaya, zona reverse proxy/FastCGI, pengguna/zona autentikasi), atau konfirmasi eksplisit mulai ulang penuh ketika perubahan menyentuh soket pendengar, TLS, atau Active Defense — tidak ada lagi layar yang membuat Anda menebak apakah server harus dijalankan ulang.
 - **Keamanan Aktif** — layar tunggal yang mengelompokkan tiga blok berdampingan, sesuai urutan sebuah serangan: **WAF**, **Active Defense**, dan **RIPOSTE** (respons bertingkat dari waktu ke waktu). **Active Defense** (Status, Ancaman yang dilacak dengan skor/tingkat, Insiden dengan kronologi/ekspor IoC/laporan, penugasan Deception, Simulasikan keputusan dalam dry-run, **Pengaturan** — konfigurasi lengkap tanpa pernah mengedit `config/omega-serve.json` secara manual) dan **WAF** (Status, Modul — mode/paket aturan/daftar blokir, Uji permintaan, Custom — penulis aturan khusus dan pemuatan daftar jalur/kata kunci yang dapat diedit dengan tetikus, Magnet — impor skrip `mod_magnet` eksternal dengan pemeriksaan kompatibilitas sebelum aktivasi). Di bawah tiga blok, **INTERVENSI MANUAL**: memblokir atau membuka blokir alamat IP secara manual, status semua blokir.
-- **Pengelolaan log** — menu dua kolom. Kolom **Pustaka**: pusat yang merujuk setiap log yang perlu ditangani (penambahan manual, satu klik langsung menambahkan log milik instans — access/error/WAF bawaan, + skrip magnet jika aktif —, atau **sumber jarak jauh** yang diambil melalui SSH, lihat di bawah); **Favorit** (kombinasi log + penampil yang disimpan dengan sebuah nama, dibuka langsung); **Lihat log** dengan 3 penampil pilihan menurut jumlah log yang dipilih — Sederhana (tail langsung + statistik umum IP/galat/kode HTTP pada format apa pun), Klasik (baca + ikuti), `lnav` gabungan (tampilan terminal nyata di antarmuka, log magnet otomatis disertakan + jalur manual yang **disematkan** agar tetap tersimpan antarsesi); **Lihat dan tangani IP** (IP teratas pada satu atau beberapa log pilihan, periode 24 jam/7 hari/30 hari/semua, penghapusan IP). Kolom **Pemeliharaan** (tidak berubah): rotasi/pengarsipan manual atau otomatis berdasarkan ambang ukuran, pembuatan cadangan seketika, konfigurasi/pengelolaan otomatisasi terjadwal (deklaratif — lihat catatan di bawah), pulihkan/bersihkan arsip, ekspor daftar.
+- **Pengelolaan log** — menu dua kolom. Kolom **Pustaka**: pusat yang merujuk setiap log yang perlu ditangani (penambahan manual, satu klik langsung menambahkan log milik instans — access/error/WAF bawaan, + skrip magnet jika aktif —, atau **sumber jarak jauh** yang diambil melalui SSH, lihat di bawah); **Favorit** (kombinasi log + penampil yang disimpan dengan sebuah nama, dibuka langsung); **Lihat log** dengan 3 penampil pilihan menurut jumlah log yang dipilih — Sederhana (tail langsung + statistik umum IP/galat/kode HTTP pada format apa pun), Klasik (baca + ikuti), `lnav` gabungan (tampilan terminal nyata di antarmuka, log magnet otomatis disertakan + jalur manual yang **disematkan** agar tetap tersimpan antarsesi); **Lihat dan tangani IP** (IP teratas pada satu atau beberapa log pilihan, periode 24 jam/7 hari/30 hari/seluruh berkas, perhitungan di latar belakang dengan indikator kemajuan, penghapusan IP); **Statistik** (laporan lengkap dari satu atau beberapa log — ringkasan, status HTTP, IP teratas, jalur, sebaran per jam, tren per hari — dapat diekspor ke JSON/HTML). Kolom **Pemeliharaan**: rotasi/pengarsipan manual atau otomatis berdasarkan ambang ukuran, pembuatan cadangan seketika, konfigurasi/pengelolaan otomatisasi terjadwal (dijalankan setiap malam oleh timer systemd, atau oleh baris crontab di OpenRC/runit), pulihkan/bersihkan arsip, ekspor daftar; **Kesehatan log** (pemeriksaan baca-saja atas log, disk, dan arsip — izin, log yang senyap atau rusak, rotasi, logrotate, sisa hari sebelum disk penuh —, dengan tindakan yang perlu dilakukan untuk setiap temuan, perbaikan izin — dengan sudo bila perlu —, ekspor JSON/HTML/TXT). Bila sebuah log tidak dapat dibaca oleh akun Anda, Statistik serta Lihat dan tangani IP meminta kata sandi sudo Anda lalu membacanya.
 - **Layanan** — tindakan yang sama dengan `service` di CLI, elevasi `sudo` sesekali per tindakan, tidak pernah seluruh aplikasi dijalankan sebagai root.
 - **Multi-instans** — registri global (`~/.config/omega-serv/instances.json`, di luar direktori proyek mana pun) dari instalasi yang dikenal di mesin, dengan status systemd masing-masing; pembuatan instans baru (salinan pohon direktori, lingkungan virtual dan dependensi tersendiri, konfigurasi baru dengan port berbeda, pemeriksaan tidak bertingkat dan tidak ada konflik port) langsung dari antarmuka. Tombol ini praktis tak terlihat untuk satu instalasi (label "Multi-instans" menjadi "Instances (N)" begitu 2 instans dikenal); peralihan penuh ke instans lain (`os.execv`, konfirmasi eksplisit, splash khusus yang mengumumkan peralihan saat mulai ulang); pencopotan lengkap sebuah instans (penghapusan unit, akun sistem khusus jika tidak lagi dipakai instans lain, dan penghapusan direktori secara opsional, tidak pernah secara bawaan).
 - **Status & Sumber Daya** — ringkasan sekilas, disegarkan setiap 2 detik: status server (proses/PID, status layanan sistem, profil/opsi aktif/TLS/port), aliran log akses langsung (laju, distribusi per kode status, IP unik, tingkat galat), sumber daya sistem (CPU/RAM/disk/swap/beban/jaringan, melalui `psutil`); juga mengelompokkan pintasan **Simulasikan permintaan** (kasus penggunaan yang sama dengan perintah CLI terkait).
 - **Audit keamanan** — kasus penggunaan yang sama dengan perintah CLI terkait.
 - **Cadangan konfigurasi** — arsip tar.gz dari berkas konfigurasi dan, atas pilihan eksplisit, aturan WAF/zona autentikasi/sertifikat (konfirmasi wajib begitu rahasia nyata disertakan)/basis data Active Defense, pemulihan, daftar, penghapusan.
 
-> Catatan tentang otomatisasi rotasi terjadwal: otomatisasi ini disimpan (frekuensi + log sasaran) tetapi **tidak ada yang menjalankannya secara otomatis** — baik di sisi antarmuka maupun sebagai tugas latar belakang. Ini pilihan yang disengaja demi keselarasan dengan layar setara di `omega-fire`, yang berperilaku deklaratif yang sama. Eksekusi berkala yang nyata (timer systemd, tugas latar belakang) akan dibangun terpisah jika kebutuhannya terkonfirmasi.
+> Catatan tentang otomatisasi rotasi terjadwal: otomatisasi pertama memasang tugas harian — timer systemd (kata sandi sudo diminta), jika tidak, baris di crontab Anda (OpenRC, runit, atau tanpa pengelola layanan; daemon cron harus berjalan), jika tidak, baris yang perlu Anda tambahkan sendiri akan ditampilkan. Setiap malam, `omega-serv logs run-automations` mengarsipkan, di bawah akun Anda, setiap log yang sudah jatuh tempo; menghapus otomatisasi terakhir akan mencabut tugas tersebut.
 
 #### Pengaturan aplikasi (tombol `o` atau palet perintah)
 
@@ -637,7 +638,19 @@ Deteksi otomatis systemd/OpenRC/runit (`service install/status/start/stop/restar
 
 `var/log/access.log` (format Apache combined + `request_id`, pelolosan anti-injeksi log), `var/log/error.log`. Rotasi berdasarkan ukuran/jumlah berkas yang disimpan (`logs.rotation`). WAF bawaan: `var/log/waf-alerts.log` (`options.waf.logging.path`). Skrip magnet: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, bawaan `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — langsung ditambahkan ke Pustaka (tombol *Tambahkan log Omega-Serv yang dikenal*) hanya jika magnet aktif; sebaliknya `lnav` selalu menawarkannya (berkas yang tidak ada cukup diabaikan saat dijalankan).
 
-### 13a. Sumber jarak jauh (SSH)
+### 13a. Pengelola log
+
+Layar **Pengelolaan log** adalah pengelola sungguhan, bukan sekadar pembaca: setiap log (milik instans, berkas yang ditambahkan secara manual, atau salinan dari server jarak jauh) masuk ke **Pustaka**, lalu:
+
+- **Membaca** — tiga penampil: Sederhana (dasbor langsung: kode HTTP, penolakan 403/429, IP teratas, jalur), Klasik (baca dan ikuti), `lnav` terintegrasi (beberapa log digabungkan). Sebuah **Favorit** menyimpan pilihan beserta penampilnya dengan sebuah nama.
+- **Menganalisis** — **Lihat dan tangani IP** (alamat paling aktif, dalam 24 jam, 7 hari, 30 hari, atau seluruh berkas) dan **Statistik** (laporan lengkap, ekspor JSON/HTML), dihitung di latar belakang pada beberapa inti, bahkan untuk berkas besar. Di **Lihat dan tangani IP**, Anda juga dapat mengetik IP tertentu: barisnya dihitung di setiap log, lalu dilepas dengan sekali klik.
+- **Memeriksa** — **Kesehatan log**: izin, log yang senyap atau rusak, rotasi, ruang disk, arsip, dan otomatisasi, dengan tindakan yang perlu dilakukan untuk setiap temuan; ekspor JSON/HTML/TXT.
+- **Mencadangkan** — rotasi berdasarkan ambang ukuran, cadangan seketika, pemulihan dan pembersihan arsip (`var/backups/logs/`).
+- **Mengotomatiskan** — satu cadangan terjadwal per log (setiap N hari), dijalankan setiap malam oleh timer systemd, atau oleh baris di crontab Anda (OpenRC, runit), selalu di bawah akun Anda, tidak pernah root.
+
+Bila izin menghalangi, omega-serv meminta kata sandi sudo Anda untuk membaca log, atau untuk memperbaiki hanya izin yang salah (perintahnya ditampilkan sebelum dijalankan).
+
+### 13b. Sumber jarak jauh (SSH)
 
 Memusatkan, atas permintaan eksplisit, log dari server backend yang berada di jaringan lokal yang sama di belakang reverse proxy (layar **Pengelolaan log → Pustaka → Sumber jarak jauh (SSH)**). Sebuah « fetch » adalah tindakan manual sekali jalan, tidak pernah aliran langsung atau polling otomatis: **salinan** diambil melalui `scp` saat Anda mengklik *Ambil sekarang*, ditulis di bawah `var/log/remote/`, lalu ditambahkan ke Pustaka seperti log biasa (kolom *Akses* = `ssh`, kolom *Diubah* = tanggal pengambilan **ini** — tidak pernah tanggal berkas jarak jauh); pengambilan baru cukup menggantikan salinan sebelumnya dengan yang lebih baru.
 

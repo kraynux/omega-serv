@@ -8,7 +8,11 @@ n'a aucun executeur reel pour ce mecanisme (verifie directement dans son
 code), ce n'est donc pas une regression par rapport a la reference mais
 une fidelite honnete a son comportement reel. Une vraie execution
 periodique (cron/systemd timer/tache de fond dans le serveur asyncio)
-resterait a construire separement si un besoin confirme apparait."""
+resterait a construire separement si un besoin confirme apparait.
+
+CONSTRUITE le 2026-11-07 (demande utilisateur) : application/logs/rotation_automation.py execute chaque
+nuit les automatisations echues (timer systemd ou ligne crontab), et note ici `last_run_at` et
+`last_result`."""
 from __future__ import annotations
 
 import json
@@ -40,6 +44,10 @@ class RotationAutomationStore:
         automations.pop(index)
         self._save(automations)
         return True
+
+    def save_all(self, automations: list[dict[str, object]]) -> None:
+        """Reecrit la liste (date et resultat de la derniere execution, 2026-11-07)."""
+        self._save(automations)
 
     def _save(self, automations: list[dict[str, object]]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)

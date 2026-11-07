@@ -60,6 +60,14 @@ class TestLogsMaintenance(unittest.TestCase):
         self.assertEqual(removed, 0)
         self.assertEqual(self.path.read_text(), _LINE_A + _LINE_B)
 
+    def test_removes_ipv6_ending_with_double_colon(self):
+        """Regression 2026-11-07 : la limite de mot \\b ne trouvait jamais une IPv6 terminee par `::`."""
+        line = '2a03:2880:f800:15:: - - [04/Oct/2026:15:37:16 +0200] "GET / HTTP/1.1" 403 10 "-" "curl"\n'
+        self.path.write_text(line + _LINE_B)
+        removed = self.maintenance.remove_ip("2a03:2880:f800:15::", self.path)
+        self.assertEqual(removed, 1)
+        self.assertEqual(self.path.read_text(), _LINE_B)
+
     def test_write_is_atomic_no_leftover_tmp_file(self):
         self.path.write_text(_LINE_A + _LINE_B)
         self.maintenance.remove_ip("1.1.1.1", self.path)

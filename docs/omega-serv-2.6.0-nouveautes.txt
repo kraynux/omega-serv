@@ -1,0 +1,98 @@
+OMEGA-SERV 2.6.0 - Ce qui change pour vous
+==========================================
+
+Une version centrée sur les journaux : la Gestion des logs devient un vrai gestionnaire,
+qui lit, analyse, contrôle, sauvegarde et automatise. Le détail technique complet reste
+dans le CHANGELOG.
+
+
+STATISTIQUES : LE RAPPORT COMPLET DE VOS LOGS
+---------------------------------------------
+- Nouveau bouton Statistiques dans la colonne Bibliothèque de la Gestion des logs.
+- Un ou plusieurs logs, quel que soit leur format, sur 24 h, 7 jours, 30 jours ou le
+  fichier entier.
+- Synthèse, statuts HTTP en jauges, top des IP, chemins demandés et chemins en 404,
+  répartition par heure et tendance par jour.
+- Export JSON, ou HTML lisible dans le navigateur, dans la langue de votre choix.
+- Les gros fichiers sont analysés en arrière-plan sur plusieurs cœurs, avec une barre
+  de progression : l'interface ne se fige plus.
+
+
+SANTÉ DES LOGS : UN CONTRÔLE QUI DIT QUOI FAIRE
+-----------------------------------------------
+- Nouveau bouton Santé des logs dans la colonne Maintenance.
+- Pour chaque log : droits, log muet depuis des jours, fichier vide ou abîmé, dates
+  illisibles, seuil de rotation dépassé, log sans règle logrotate, doublon.
+- Pour le disque : la croissance des logs et le nombre de jours avant qu'il soit plein.
+- Les archives et les sauvegardes planifiées sont contrôlées aussi.
+- Chaque constat dit quoi faire. « Corriger les droits » répare un log que le service
+  ne pouvait plus écrire.
+- Export JSON, HTML ou TXT.
+
+
+LES SAUVEGARDES PLANIFIÉES S'EXÉCUTENT VRAIMENT
+-----------------------------------------------
+- Dans Rotate / archivage, une sauvegarde planifiée (tous les N jours) est maintenant
+  réellement lancée chaque nuit. Jusqu'ici, elle était seulement enregistrée.
+- La première installe une tâche quotidienne : timer systemd, sinon une ligne de votre
+  crontab (OpenRC, runit), sinon la ligne à ajouter vous-même est affichée.
+- Tout se fait sous votre compte, jamais en root. L'écran montre la dernière et la
+  prochaine exécution ; Santé des logs signale un échec ou un retard.
+
+
+VOIR ET TRAITER IP : CHERCHER UNE IP PRÉCISE
+--------------------------------------------
+- Saisissez une adresse (IPv4 ou IPv6) : ses lignes sont comptées dans chaque log
+  choisi, puis retirées en un clic, sans attendre qu'elle apparaisse dans le top.
+- Le calcul du top tourne en arrière-plan, avec le même indicateur d'attente que les
+  Statistiques.
+
+
+QUAND UN LOG VOUS EST INTERDIT : SUDO
+-------------------------------------
+- Un log illisible par votre compte (par exemple /var/log/auth.log) : Statistiques et
+  Voir et traiter IP demandent votre mot de passe sudo, puis le lisent.
+- Santé des logs peut aussi analyser ces logs avec sudo, et corriger un droit qui
+  bloque. La commande exacte est montrée avant d'être lancée : jamais de changement de
+  propriétaire, jamais plus d'un fichier.
+
+
+VERSION ET MISES À JOUR
+-----------------------
+- La version d'omega-serv est affichée dans la barre de titre, en haut de chaque écran.
+- Guide d'aide (touche a) → Contact et support → « Vérifier les mises à jour » : omega-serv
+  compare votre version à la liste des versions publiées sur le site. Seulement quand
+  vous cliquez, et rien n'est envoyé. Si une version plus récente existe, « Voir les
+  nouveautés » ouvre son résumé.
+- En ligne de commande : omega-serv version --check.
+
+
+PLUS CONFORTABLE
+----------------
+- Viewer Simple : le cadre de statistiques s'affiche en entier en plein écran, et les
+  chiffres ne se cachent plus derrière l'ascenseur.
+- Multi-instance : les boutons sont rangés sur trois lignes, lisibles dans un petit
+  terminal.
+- La documentation (README, guide, site) décrit le gestionnaire de logs dans les 17
+  langues, avec deux nouvelles fiches d'aide.
+
+
+CORRECTIONS
+-----------
+- « Retirer cette IP » ne retirait rien pour une adresse IPv6 terminée par « :: ». Une
+  IP n'est plus jamais confondue avec une IP plus longue (1.1.1.1 et 1.1.1.11).
+- Un log contenant des caractères invalides ne fait plus planter la lecture.
+- L'aide de Santé des logs décrivait une colonne qui n'existe plus.
+
+
+APRÈS LA MISE À JOUR
+--------------------
+1. Redémarrez le service une fois (un simple rechargement ne suffit pas pour une nouvelle
+   version). L'interface vous le rappelle si vous l'oubliez.
+2. Si vous aviez enregistré des sauvegardes planifiées de logs : ouvrez une fois Rotate /
+   archivage → « Gérer les automatisations en cours » et choisissez « Réinstaller
+   l'exécution » pour qu'elles tournent chaque nuit.
+3. Rien d'autre à faire : vos réglages, vos listes, vos bans, vos pages d'erreur et le
+   contenu de webroot/ sont conservés.
+
+Vérifier le fichier téléchargé : sha256sum -c --ignore-missing sha.txt

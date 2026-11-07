@@ -13,6 +13,89 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## version 2.6.0 : Publié
+
+### Ajouté
+
+- **Version affichée et vérification des mises à jour** : la barre de titre montre la version (« OMEGA-SERV 2.6.0 »),
+  lue dans `pyproject.toml`, seule source (le splash n'a plus de version écrite en dur). Guide d'aide → Contact et
+  support → « Vérifier les mises à jour » : compare la version installée à la liste des versions publiées
+  (`download/sha.txt` du site), seulement sur votre clic, rien n'est envoyé ; « Voir les nouveautés » ouvre le
+  résumé de la nouvelle version. En ligne de commande : `omega-serv version` et `omega-serv version --check`
+  (code 1 si le site est injoignable).
+- **Voir et traiter IP : recherche manuelle** : saisir une IP (IPv4 ou IPv6), voir son nombre de lignes dans
+  chaque log sélectionné (fichier entier) et la retirer directement, sans attendre qu'elle apparaisse dans le top.
+- **Gestion des logs → Statistiques** (5e bouton de la colonne BIBLIOTHÈQUE), même écran qu'omega-log : un ou
+  plusieurs logs de la Bibliothèque, quel que soit leur format, période 24h / 7j / 30j / « Tout (fichier
+  entier) ». Synthèse, statuts HTTP en jauges, top IP, chemins demandés et en 404, répartition horaire,
+  tendance par jour. Export JSON et HTML (5 thèmes, langue des exports). Remplace l'ancien écran limité à
+  l'access log, qui n'était plus relié à aucun menu.
+- **Gestion des logs → Santé des logs** (5e bouton de la colonne MAINTENANCE) : contrôle en lecture seule des
+  logs d'omega-serv et de la Bibliothèque, du disque qui les porte et des archives. Fichier absent ou lien
+  cassé, droits (lecture par votre compte, écriture par le compte du service, écriture par tout le monde),
+  log muet depuis plus de 7 jours, fichier vide, dates non reconnues ou dans le futur, octets nuls, seuil de
+  rotation dépassé, gros log sans règle logrotate, doublon dans la Bibliothèque ; croissance par jour et
+  jours avant disque plein. Chaque constat dit quoi faire. « Corriger les droits » rend un log d'omega-serv
+  de nouveau inscriptible par le service (bit d'écriture du groupe, après confirmation, sans sudo, quand vous
+  êtes propriétaire du fichier). Export JSON, HTML et TXT. Fiches F1, 16 langues.
+- **Authentification sudo quand les droits bloquent**, même mécanisme que l'écran Service (l'interface est
+  suspendue, `sudo -v` demande le mot de passe dans le terminal, puis des commandes `sudo -n` : jamais de mot
+  de passe demandé ailleurs) :
+  - **Statistiques** et **Voir et traiter IP** : un log illisible par votre compte (par exemple
+    `/var/log/auth.log`) déclenche la demande, puis il est lu avec sudo ; un refus affiche le chemin en cause.
+    La lecture sudo se fait dans le processus de l'interface, jamais dans les processus de calcul : elle marche
+    aussi quand sudoers mémorise l'authentification par processus parent (`timestamp_type=ppid`).
+  - **Santé des logs → Corriger avec sudo** : quand « Corriger les droits » ne suffit pas (fichier à root,
+    groupe étranger au service) ou qu'un log est inscriptible par tout le monde. La commande exacte est montrée
+    avant : `chgrp` vers le compte du service puis `chmod g+w`, ou `chmod o-w`. Jamais `chown`, jamais
+    récursif, un seul fichier.
+  - **Santé des logs → Analyser avec sudo** : lit avec sudo le début et la fin des logs illisibles par votre
+    compte (dates, format, octets nuls) ; le constat « illisible par votre compte » reste affiché.
+- **Rotate / archivage : les automatisations s'exécutent pour de vrai.** Jusqu'ici elles étaient seulement
+  enregistrées, rien ne les lançait. La première automatisation installe une tâche planifiée quotidienne,
+  la dernière supprimée la retire :
+  - **systemd** : timer `<service>-log-rotation.timer` (mot de passe sudo demandé à l'installation) ;
+  - **OpenRC, runit ou aucun gestionnaire** : ligne de votre crontab, sans privilège (il faut un démon cron
+    actif : cronie, dcron, busybox crond…) ; une autre instance garde sa propre ligne ;
+  - **sans crontab** : la ligne à ajouter vous-même est affichée.
+
+  Chaque nuit, la nouvelle commande `omega-serv logs run-automations` (sous votre compte, jamais root) archive
+  chaque log arrivé à échéance, comme « Sauvegarde maintenant ». Un échec est retenté la nuit suivante.
+  « Gérer les automatisations » montre l'état de la tâche, la dernière et la prochaine exécution, et propose
+  « Réinstaller l'exécution ».
+- **Santé des logs → AUTOMATISATIONS** : signale une automatisation de rotation en échec (avec l'erreur), en
+  retard de plus de 2 jours (machine éteinte la nuit sans systemd, démon cron arrêté), ou des automatisations
+  sans tâche planifiée pour les exécuter ; aussi dans les exports JSON, HTML et TXT.
+
+### Modifié
+
+- **Viewer Simple** : titre et panneau remontés, trois lignes de plus pour le cadre de statistiques ; en plein
+  écran, il s'affiche en entier sans ascenseur ; quand l'ascenseur apparaît, une colonne vide le sépare des
+  chiffres (on ne devine plus si un chiffre est caché derrière).
+- **README** : nouvelle section « 13a. Gestionnaire de logs » (lire, analyser — dont la recherche d'une IP précise —,
+  contrôler, sauvegarder, automatiser) ; « Sources distantes (SSH) » devient 13b. Même chose dans les 16 langues, avec
+  le site (readme, présentation, guide : fiches Statistiques et Santé des logs, 75 fiches).
+- **Multi-instance** : les boutons sont sur trois rangées (Rafraîchir et Créer une nouvelle instance ; Piloter et
+  Désinstaller cette instance ; Retour) ; sur une seule ligne, un petit terminal les coupait.
+
+- **Voir et traiter IP** : le calcul tourne en arrière-plan, sur plusieurs cœurs pour un gros log, avec le
+  même indicateur d'attente qu'omega-log (roue, messages, temps écoulé, barre de progression réelle). La
+  taille et le nombre de lignes estimé de la sélection s'affichent avant le clic ; « Tout » devient « Tout
+  (fichier entier) », avec l'avertissement de durée.
+- Analyse des lignes de log plus rapide (mêmes résultats), reprise d'omega-log.
+
+### Corrigé
+
+- **Voir et traiter IP** : « Retirer cette IP » ne retirait aucune ligne pour une IPv6 terminée par `::` (par exemple
+  `2a03:2880:f800:15::`) ; la règle de correspondance ne coupe plus non plus une IP plus longue (1.1.1.1 ne touche
+  jamais 1.1.1.11).
+- **Aide F1 de Santé des logs** : la fiche citait une colonne « origine » qui n'existe plus et disait qu'omega-serv
+  ne fait pas tourner ses logs tout seul ; elle renvoie maintenant vers la sauvegarde immédiate ou l'automatisation
+  planifiée de Rotate / archivage (16 langues).
+- Voir et traiter IP : sur un gros log, l'interface restait figée pendant tout le calcul.
+- Commandes externes : une sortie contenant un octet non UTF-8 (log lu avec sudo) ne fait plus planter la
+  lecture, les octets invalides sont remplacés.
+
 ## version 2.5.0 : Publié
 
 ### Ajouté
@@ -37,7 +120,7 @@ signalés explicitement, même mineurs.
   Textes d'aide, `omega-serv help` et les nouveaux messages (packs WAF ajoutés, « expire le » de
   `blocklist add`) traduits dans les 16 langues (249 phrases) ; la page de manuel et `docs/HELP.md`
   restent en français.
-
+ doit on changer la version en 2.5.1
 - **État & Ressources plus complet** *FLUX* : relit à l'ouverture les 15 dernières minutes du journal d'accès (plus de cadre vide au
   départ), débits sur la dernière minute et les 5 dernières, top 5 des IP, des chemins demandés et des
   chemins en 404 (souvent des scanners), section *SÉCURITÉ* (attaques bloquées, refus de liste de blocage et

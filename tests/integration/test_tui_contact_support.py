@@ -39,6 +39,14 @@ class _Sender:
         return SendOutcome(True) if self.ok else SendOutcome(False, "unreachable")
 
 
+class _ReleaseSource:
+    def __init__(self, content: str | None) -> None:
+        self.content = content
+
+    def fetch_sha_list(self) -> str | None:
+        return self.content
+
+
 class TestContactSupport(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -49,10 +57,12 @@ class TestContactSupport(unittest.IsolatedAsyncioTestCase):
             shutil.copy(profile_file, self.root / "config" / "profiles" / profile_file.name)
         (self.root / "pyproject.toml").write_text('version = "2.5.0"\n', encoding="utf-8")
         self.sender = _Sender()
+        self.release_source = _ReleaseSource("aa  omega-serv-2.5.0.tar.gz\nbb  omega-serv-2.6.0.tar.gz\n")
         self.opened: list[str] = []
         self.container = DependencyContainer(
             project_root=self.root,
             declaration_sender_factory=lambda _version: self.sender,
+            release_source_factory=lambda _version: self.release_source,
             url_opener=lambda url: self.opened.append(url) or True,
         )
         generate_default_config(self.container.configuration, self.container.filesystem, self.container.config_file)
@@ -90,6 +100,30 @@ class TestContactSupport(unittest.IsolatedAsyncioTestCase):
             await self._wait_for(pilot, lambda: len(self.opened) == 2)
             self.assertEqual(self.opened, [PAYPAL_URL, CONTACT_FORM_URL])
             self.assertTrue(pilot.app.screen.query_one("#withdraw", Button).disabled)
+
+    async def test_check_update_shows_new_version_and_opens_release_notes(self):
+        """Verification manuelle (2026-11-07) : version 2.5.0 installee, 2.6.0 publiee."""
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._open_contact(pilot)
+            self.assertIn("2.5.0", str(pilot.app.screen.query_one("#update-state", Static).content))
+            self.assertTrue(pilot.app.screen.query_one("#release-notes", Button).disabled)
+            pilot.app.screen.query_one("#check-update", Button).press()
+            await self._wait_for(pilot, lambda: not pilot.app.screen.query_one("#release-notes", Button).disabled)
+            self.assertIn("2.6.0", str(pilot.app.screen.query_one("#update-state", Static).content))
+            pilot.app.screen.query_one("#release-notes", Button).press()
+            await self._wait_for(pilot, lambda: len(self.opened) == 1)
+            self.assertTrue(self.opened[0].endswith("omega-serv-2.6.0-nouveautes.txt"))
+
+    async def test_check_update_unreachable_site_says_so(self):
+        self.release_source.content = None
+        app = OmegaServApp(self.container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._open_contact(pilot)
+            pilot.app.screen.query_one("#check-update", Button).press()
+            await self._wait_for(
+                pilot, lambda: "injoignable" in str(pilot.app.screen.query_one("#update-state", Static).content))
+            self.assertTrue(pilot.app.screen.query_one("#release-notes", Button).disabled)
 
     async def test_declare_then_withdraw(self):
         app = OmegaServApp(self.container)

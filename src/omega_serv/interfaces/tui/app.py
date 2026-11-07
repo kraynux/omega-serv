@@ -97,6 +97,8 @@ class OmegaServApp(App[None]):
         for theme in build_all_textual_themes():
             self.register_theme(theme)
         self.theme = self._startup_state.theme.theme_name
+        # Version dans la barre de titre (decision utilisateur 2026-11-07) : pyproject.toml, seule source.
+        self.title = f"{TITLE} {self._container.app_version}"
         self.pending_switch: PendingInstanceSwitch | None = None
         self.pending_restart: PendingInterfaceRestart | None = None
 
@@ -104,7 +106,8 @@ class OmegaServApp(App[None]):
         switched_from = os.environ.pop(_SWITCHED_FROM_ENV_VAR, None)
         language_changed = os.environ.pop(LANGUAGE_CHANGED_ENV_VAR, None)
         if language_changed is not None:
-            self.push_screen(LanguageChangedSplashScreen(native_name=STATE.language.native_name), self._after_splash)
+            self.push_screen(LanguageChangedSplashScreen(native_name=STATE.language.native_name,
+                                                         version=self._container.app_version), self._after_splash)
         elif switched_from is not None:
             self.push_screen(
                 InstanceSwitchSplashScreen(
@@ -115,7 +118,7 @@ class OmegaServApp(App[None]):
                 self._after_splash,
             )
         else:
-            self.push_screen(SplashScreen(), self._after_splash)
+            self.push_screen(SplashScreen(version=self._container.app_version), self._after_splash)
 
     def _current_instance_display_name(self) -> str:
         current_path = self._container.filesystem.resolve_real_path(self._container.project_root)

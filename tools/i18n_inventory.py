@@ -568,6 +568,8 @@ def scan_templates(source: str, root: Path) -> list[Entry]:
                     entries.append(Entry(source, "exports-html", rel, number, "", "texte de modele HTML",
                                          TRADUIRE, "texte d'un modele d'export HTML (Jinja2)", text))
             for attr in _J2_ATTR.finditer(masked):
+                if not attr.group(2).strip():
+                    continue  # valeur faite seulement d'expressions {{ }} : des donnees, deja relevees cote Python
                 entries.append(Entry(source, "exports-html", rel, number, "", f"attribut {attr.group(1)}=",
                                      TRADUIRE, "attribut lisible d'un modele d'export HTML", attr.group(2)))
             if 'lang="' in line:

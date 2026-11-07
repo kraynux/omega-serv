@@ -23,6 +23,9 @@ class SubprocessRunner:
                 input=input_text,
                 capture_output=True,
                 text=True,
+                # Sortie d'un log lu via sudo (2026-11-07) : un octet non UTF-8 ne doit jamais lever
+                # UnicodeDecodeError ; meme convention que toutes les lectures de logs du projet.
+                errors="replace",
                 timeout=timeout,
                 check=False,
             )

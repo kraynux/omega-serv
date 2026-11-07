@@ -97,3 +97,30 @@ def export_bans_html(bans: Sequence[dict], active_count: int, theme_name: str = 
         generated_at=datetime.now(timezone.utc).isoformat(),
         palette=palette,
     )
+
+
+def export_log_stats_html(
+    *, sources: Sequence[str], period_label: str, report: dict, volume: str, theme_name: str = DEFAULT_EXPORT_THEME,
+) -> str:
+    """Rapport de Statistiques (2026-11-07, porte d'omega-log) : `report` = `dataclasses.asdict(StatsReport)`,
+    ce module reste agnostique du modele de domaine."""
+    from omega_serv.infrastructure.exporters.html_theme_resolver import resolve_export_palette
+
+    template = _env.get_template("log_stats_report.html.j2")
+    return template.render(
+        sources=sources,
+        period_label=period_label,
+        report=report,
+        volume=volume,
+        generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        palette=resolve_export_palette(theme_name),
+    )
+
+
+def export_log_health_html(*, theme_name: str = DEFAULT_EXPORT_THEME, **arguments: object) -> str:
+    """Sante des logs (2026-11-07) : `arguments` = `health_presentation.html_arguments(...)`, phrases deja
+    traduites."""
+    from omega_serv.infrastructure.exporters.html_theme_resolver import resolve_export_palette
+
+    template = _env.get_template("log_health_report.html.j2")
+    return template.render(palette=resolve_export_palette(theme_name), **arguments)

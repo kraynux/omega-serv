@@ -36,10 +36,10 @@ OMEGA-SERV liefert statische Websites aus und, wenn Sie möchten, PHP über PHP-
 **OMEGA-SERV** ist ein in reinem Python geschriebener HTTP/1.1-Server (für den Serverkern ausschließlich die Standardbibliothek), gedacht für statische Inhalte und optional PHP-FPM, mit einer standardmäßig aktiven Protokollhärtung und Sicherheitsmodulen (WAF, TLS, Authentifizierung), die sich aufschichten lassen, statt aufgezwungen zu werden. Eine optionale native C++-Engine kann die Anfragen anstelle der Python-Engine bedienen, mit denselben Sicherheitsprüfungen. Er wirkt auf die lokale Maschine, die ihn beherbergt, nicht auf entfernte Ziele (gleiche Familie wie `omega-fire`); aufgebaut nach Clean Architecture, wobei `bootstrap/` als Kompositionswurzel dient.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/omega-serv/D.png" width="24%" />
 </p>
 
 ## Inhalt
@@ -88,7 +88,8 @@ OMEGA-SERV liefert statische Websites aus und, wenn Sie möchten, PHP über PHP-
 - [11e. Manueller Eingriff (Aktive Sicherheit)](#11e-manueller-eingriff-aktive-sicherheit)
 - [12. Dienste und Betrieb](#12-dienste-und-betrieb)
 - [13. Protokolle](#13-protokolle)
-  - [13a. Entfernte Quellen (SSH)](#13a-entfernte-quellen-ssh)
+  - [13a. Log-Manager](#13a-log-manager)
+  - [13b. Entfernte Quellen (SSH)](#13b-entfernte-quellen-ssh)
 - [14. Tests](#14-tests)
 - [15. Außerhalb des Umfangs](#15-außerhalb-des-umfangs)
 
@@ -103,7 +104,7 @@ Die erklärte Priorität ist **zuerst die Robustheit/Sicherheit des HTTP-Kerns**
 - Optional: WAF-Filterung (Signaturen, Ratenbegrenzung, Sperrliste), direktes TLS (selbstsigniertes Zertifikat, von einer lokalen CA signiert oder öffentlich über Let's Encrypt/Certbot mit automatischer Erneuerung), HTTP-Basic-Authentifizierung pro Zone, PHP über FastCGI/PHP-FPM, abgeschottete Upload-Zonen.
 - Mehrere Serverprozesse, höchstens einer pro physischem Kern der Maschine mit der Python-Engine (Bildschirm Widerstandsfähigkeit und Grenzen); die Sicherheitszähler (Ratenbegrenzung, Wiederholungsregel) werden zwischen ihnen geteilt und bleiben exakt.
 - Auditiert seine eigene Konfiguration (`audit security`) und installiert sich als Systemdienst (systemd/OpenRC/runit).
-- Durchgängig skriptbare, nicht interaktive CLI **und interaktive Oberfläche (Textual)**, die exakt dieselben Anwendungsfälle abbildet. Oberfläche **vollständig per Maus und/oder Tastatur bedienbar**: Fähigkeitsregister, Profile/Optionen, detaillierte Konfiguration (Aliase/Weiterleitungen/Rewrites/FastCGI/Verzeichnisliste/Authentifizierung/Cache/WAF/vertrauenswürdige Proxys/ausgehender Reverse Proxy/TLS), Log-Verwaltung (Bibliothek/Favoriten, 3 Viewer — einfach/klassisch/zusammengeführtes lnav —, IP ansehen und bearbeiten, entfernte SSH-Quellen, Rotation/Sicherung/Automatisierung/Wiederherstellung/Bereinigung/Export), Systemdienst, Multi-Instanz (Register, Erstellung), Prüfung/Simulation/Audit, Sicherung/Wiederherstellung der Konfiguration, Ersteinrichtungs-Assistent, Anwendungseinstellungen (Theme, Rendering-Profil, Pfade für Exporte/Screenshots), kontextbezogenes Hilfehandbuch (Seite pro Bildschirm mit konkreten Beispielen, FAQ, HTML-Export, per Test verifizierte vollständige Abdeckung), systematischer Hinweis auf Neuladen/Neustart nach jedem Speichern, vollständige Konfiguration von Active Defense ohne manuelle Dateibearbeitung.
+- Durchgängig skriptbare, nicht interaktive CLI **und interaktive Oberfläche (Textual)**, die exakt dieselben Anwendungsfälle abbildet. Oberfläche **vollständig per Maus und/oder Tastatur bedienbar**: Fähigkeitsregister, Profile/Optionen, detaillierte Konfiguration (Aliase/Weiterleitungen/Rewrites/FastCGI/Verzeichnisliste/Authentifizierung/Cache/WAF/vertrauenswürdige Proxys/ausgehender Reverse Proxy/TLS), Log-Verwaltung (Bibliothek/Favoriten, 3 Viewer — einfach/klassisch/zusammengeführtes lnav —, IP ansehen und bearbeiten, Statistiken, entfernte SSH-Quellen, Rotation/Sicherung/Automatisierung/Wiederherstellung/Bereinigung/Export, Log-Zustand), Systemdienst, Multi-Instanz (Register, Erstellung), Prüfung/Simulation/Audit, Sicherung/Wiederherstellung der Konfiguration, Ersteinrichtungs-Assistent, Anwendungseinstellungen (Theme, Rendering-Profil, Pfade für Exporte/Screenshots), kontextbezogenes Hilfehandbuch (Seite pro Bildschirm mit konkreten Beispielen, FAQ, HTML-Export, per Test verifizierte vollständige Abdeckung), systematischer Hinweis auf Neuladen/Neustart nach jedem Speichern, vollständige Konfiguration von Active Defense ohne manuelle Dateibearbeitung.
 
 ### Was OMEGA-SERV nicht tut
 
@@ -129,10 +130,10 @@ Omega-serv **verweigert den Start als root**. In keinem mitgelieferten Profil, a
 
 ### Download
 
-Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Aktualisieren Sie eine bestehende Installation?** Der folgende Befehl **überspringt das Entpacken stillschweigend**, wenn `omega-serv/` bereits existiert (er nimmt an, es handle sich um eine abgebrochene Erstinstallation, nicht um ein Update) — Sie würden die Abhängigkeiten dann auf dem **alten, unveränderten Code** neu installieren, ohne die geringste Fehlermeldung. Verwenden Sie stattdessen den Abschnitt [Aktualisierung](#aktualisierung) weiter unten.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Hier bereits entpackt, Schritt übersprungen." || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Hier bereits entpackt, Schritt übersprungen." || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ Wenn `omega-serv/` bereits existiert (frühere Installation), **starten Sie `tar
 
 ```bash
 # Aus dem ÜBERGEORDNETEN Ordner von omega-serv/ (niemals von innen)
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ Der Hilfe-Leitfaden (Taste `a`) bietet einen Bildschirm **Kontakt und Support**:
 - **Profile** — derselbe Anwendungsfall wie `profile` in der CLI, Diff wird vor dem Schreiben immer angezeigt.
 - **Detaillierte Konfiguration des Servers** — vollständiges CRUD für Aliase/Weiterleitungen/Rewrites/Verzeichnisliste/vertrauenswürdige Proxys/ausgehenden Reverse Proxy/FastCGI/Cache/Authentifizierung/Zugriffskontrolle/Fehlerseiten, dazu das Untermenü **TLS** (Status, selbstsignierte Erzeugung, Assistent lokale CA, Let's-Encrypt/Certbot-Assistent, automatische Erneuerung, Widerruf, aktivieren/deaktivieren); ein zweiter Rahmen **OPTIONEN UND PRÜFUNG** bündelt dort die Verknüpfungen zu **Optionen** (`option` CLI) und **Konfiguration prüfen** (`config check` CLI) — derselbe Ablauf wie Einstellungen anpassen und dann prüfen; diese beiden Bildschirme sind nicht mehr direkt vom Hauptmenü aus erreichbar. Der WAF wohnt nicht mehr hier (siehe „Aktive Sicherheit“ unten): Er zeigt vor allem fortlaufend wechselnden Betriebszustand, kein einfaches statisches Konfigurationsformular. Jedes Speichern nennt systematisch den nächsten Schritt: automatisches und stilles Neuladen im laufenden Betrieb, wenn ein Dienst aktiv ist (Verzeichnisliste, Zugriff, Aliase/Weiterleitungen/Rewrites, Cache, Fehlerseiten, vertrauenswürdige Proxys, Reverse-Proxy-/FastCGI-Zonen, Benutzer/Authentifizierungszonen), oder explizite Bestätigung eines vollständigen Neustarts, wenn die Änderung den Listen-Socket, TLS oder Active Defense betrifft — kein Bildschirm lässt mehr raten, ob der Server neu gestartet werden muss.
 - **Aktive Sicherheit** — ein einziger Bildschirm mit drei nebeneinander liegenden Blöcken, in der Reihenfolge eines Angriffs: **WAF**, **Active Defense** und **RIPOSTE** (abgestufte Reaktionen über die Zeit). **Active Defense** (Status, Verfolgte Bedrohungen mit Punktzahl/Stufe, Vorfälle mit Chronologie/IoC-Export/Bericht, Deception-Zuweisungen, Entscheidung im Dry-Run simulieren, **Einstellungen** — vollständige Konfiguration, ohne jemals `config/omega-serve.json` von Hand zu bearbeiten) und **WAF** (Status, Module — Modus/Regelpakete/Sperrliste, Anfrage testen, Custom — Erstellen eigener Regeln und Laden mausbearbeitbarer Pfad-/Stichwortlisten, Magnet — ein externes `mod_magnet`-Skript importieren, mit Kompatibilitätsprüfung vor der Aktivierung). Unter den drei Blöcken **MANUELLER EINGRIFF**: eine IP-Adresse von Hand sperren oder entsperren, Status aller Sperren.
-- **Log-Verwaltung** — Menü in zwei Spalten. Spalte **Bibliothek**: zentraler Hub, der jedes zu bearbeitende Log referenziert (manuelle Befüllung, ein Klick fügt automatisch die instanzeigenen Logs hinzu — access/error/nativer WAF, + Magnet-Skript, falls aktiv —, oder eine über SSH abgerufene **entfernte Quelle**, siehe unten); **Favoriten** (unter einem Namen gespeicherte Kombination aus Logs + Viewer, Direktstart); **Logs ansehen** mit 3 Viewern zur Wahl je nach Anzahl der ausgewählten Logs — Einfach (Live-tail + generische Statistiken zu IPs/Fehlern/HTTP-Codes für jedes Format), Klassisch (Lesen + Verfolgen), zusammengeführtes `lnav` (echte Terminaldarstellung in der Oberfläche, Magnet-Logs automatisch enthalten + manuelle, **angeheftete** Pfade, um sie zwischen Sitzungen zu behalten); **IP ansehen und bearbeiten** (Top-IPs aus einem oder mehreren gewählten Logs, Zeitraum 24h/7T/30T/alles, Entfernen einer IP). Spalte **Wartung** (unverändert): manuelle oder automatische Rotation/Archivierung ab einer Größenschwelle, sofortige Sicherung, Einrichtung/Verwaltung geplanter Automatisierungen (deklarativ — siehe Hinweis unten), Archiv wiederherstellen/bereinigen, Export der Liste.
+- **Log-Verwaltung** — Menü in zwei Spalten. Spalte **Bibliothek**: zentraler Hub, der jedes zu bearbeitende Log referenziert (manuelle Befüllung, ein Klick fügt automatisch die instanzeigenen Logs hinzu — access/error/nativer WAF, + Magnet-Skript, falls aktiv —, oder eine über SSH abgerufene **entfernte Quelle**, siehe unten); **Favoriten** (unter einem Namen gespeicherte Kombination aus Logs + Viewer, Direktstart); **Logs ansehen** mit 3 Viewern zur Wahl je nach Anzahl der ausgewählten Logs — Einfach (Live-tail + generische Statistiken zu IPs/Fehlern/HTTP-Codes für jedes Format), Klassisch (Lesen + Verfolgen), zusammengeführtes `lnav` (echte Terminaldarstellung in der Oberfläche, Magnet-Logs automatisch enthalten + manuelle, **angeheftete** Pfade, um sie zwischen Sitzungen zu behalten); **IP ansehen und bearbeiten** (Top-IPs aus einem oder mehreren gewählten Logs, Zeitraum 24h/7T/30T/ganze Datei, Berechnung im Hintergrund mit Fortschrittsanzeige, Entfernen einer IP); **Statistiken** (vollständiger Bericht über ein oder mehrere Logs — Zusammenfassung, HTTP-Status, Top-IPs, Pfade, stündliche Verteilung, Tagestrend — exportierbar als JSON/HTML). Spalte **Wartung**: manuelle oder automatische Rotation/Archivierung ab einer Größenschwelle, sofortige Sicherung, Einrichtung/Verwaltung geplanter Automatisierungen (jede Nacht von einem systemd-Timer ausgeführt, oder unter OpenRC/runit von einer crontab-Zeile), Archiv wiederherstellen/bereinigen, Export der Liste; **Log-Zustand** (schreibgeschützte Prüfung der Logs, der Festplatte und der Archive — Rechte, stumme oder beschädigte Logs, Rotation, logrotate, Tage bis zur vollen Festplatte —, mit dem zu ergreifenden Schritt für jeden Befund, Korrektur der Rechte — bei Bedarf mit sudo —, Export JSON/HTML/TXT). Wenn ein Log für Ihr Konto nicht lesbar ist, fragen Statistiken und IP ansehen und bearbeiten nach Ihrem sudo-Passwort und lesen es dann.
 - **Dienst** — dieselben Aktionen wie `service` in der CLI, punktuelle `sudo`-Erhöhung pro Aktion, niemals die ganze Anwendung als root gestartet.
 - **Multi-Instanz** — globales Register (`~/.config/omega-serv/instances.json`, außerhalb jedes Projektverzeichnisses) der auf der Maschine bekannten Installationen, mit dem systemd-Status jeder einzelnen; Erstellung einer neuen Instanz (Kopie des Verzeichnisbaums, eigene virtuelle Umgebung und Abhängigkeiten, frische Konfiguration mit eigenem Port, Prüfung auf Verschachtelung und Portkonflikt) direkt aus der Oberfläche. Schaltfläche bei einer Einzelinstallation praktisch unsichtbar (die Bezeichnung „Multi-Instanz“ wird ab 2 bekannten zu „Instanzen (N)“); vollständiger Wechsel zu einer anderen Instanz (`os.execv`, explizite Bestätigung, eigener Splash, der den Wechsel beim Neustart ankündigt); vollständige Deinstallation einer Instanz (Entfernen der Unit, des dedizierten Systemkontos, falls von keiner anderen Instanz mehr genutzt, und optionales Löschen des Verzeichnisses, niemals standardmäßig).
 - **Status & Ressourcen** — Überblick auf einen Blick, alle 2 Sekunden aktualisiert: Serverzustand (Prozess/PID, Status des Systemdienstes, Profil/aktive Optionen/TLS/Port), Live-Fluss des Zugriffslogs (Durchsatz, Verteilung nach Statuscode, eindeutige IPs, Fehlerquote), Systemressourcen (CPU/RAM/Festplatte/Swap/Last/Netzwerk, über `psutil`); enthält auch die Verknüpfung **Anfrage simulieren** (derselbe Anwendungsfall wie der entsprechende CLI-Befehl).
 - **Sicherheitsaudit** — derselbe Anwendungsfall wie der entsprechende CLI-Befehl.
 - **Sicherung der Konfiguration** — tar.gz-Archiv der Konfigurationsdatei und, auf ausdrücklichen Wunsch, der WAF-Regeln/Authentifizierungszonen/Zertifikate (Bestätigung Pflicht, sobald echte Geheimnisse enthalten sind)/Active-Defense-Datenbank, Wiederherstellung, Liste, Löschen.
 
-> Hinweis zu geplanten Rotationsautomatisierungen: Sie werden gespeichert (Häufigkeit + Ziel-Log), aber **nichts führt sie automatisch aus** — weder auf Seiten der Oberfläche noch im Hintergrund. Das ist eine bewusste Entscheidung für Gleichheit mit dem entsprechenden Bildschirm von `omega-fire`, das dasselbe deklarative Verhalten hat. Eine echte periodische Ausführung (systemd-Timer, Hintergrundaufgabe) muss bei bestätigtem Bedarf separat gebaut werden.
+> Hinweis zu geplanten Rotationsautomatisierungen: Die erste Automatisierung richtet eine tägliche Aufgabe ein — systemd-Timer (sudo-Passwort wird abgefragt), sonst eine Zeile in Ihrer crontab (OpenRC, runit oder ohne Init-Manager; ein cron-Dienst muss laufen), sonst wird die Zeile angezeigt, die Sie selbst hinzufügen müssen. Jede Nacht archiviert `omega-serv logs run-automations` unter Ihrem Konto jedes fällige Log; das Löschen der letzten Automatisierung entfernt die Aufgabe.
 
 #### Anwendungseinstellungen (Taste `o` oder Befehlspalette)
 
@@ -637,7 +638,19 @@ Automatische Erkennung von systemd/OpenRC/runit (`service install/status/start/s
 
 `var/log/access.log` (Apache-combined-Format + `request_id`, Escaping gegen Log-Injection), `var/log/error.log`. Rotation nach Größe/Anzahl aufbewahrter Dateien (`logs.rotation`). Nativer WAF: `var/log/waf-alerts.log` (`options.waf.logging.path`). Magnet-Skript: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, Standardwerte `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — nur dann automatisch zur Bibliothek hinzugefügt (Schaltfläche *Bekannte Omega-Serv-Logs hinzufügen*), wenn Magnet aktiv ist; `lnav` schlägt sie dagegen immer vor (eine fehlende Datei wird beim Start einfach ignoriert).
 
-### 13a. Entfernte Quellen (SSH)
+### 13a. Log-Manager
+
+Der Bildschirm **Log-Verwaltung** ist ein echter Manager, nicht nur ein einfacher Betrachter: Jedes Log (die der Instanz, eine von Hand hinzugefügte Datei oder die Kopie eines entfernten Servers) kommt in die **Bibliothek**, und dann:
+
+- **Lesen** — drei Viewer: Einfach (Live-Dashboard: HTTP-Codes, Ablehnungen 403/429, Top-IPs, Pfade), Klassisch (Lesen und Verfolgen), integriertes `lnav` (mehrere zusammengeführte Logs). Ein **Favorit** speichert eine Auswahl samt Viewer unter einem Namen.
+- **Analysieren** — **IP ansehen und bearbeiten** (aktivste Adressen, über 24 h, 7 T, 30 T oder die ganze Datei) und **Statistiken** (vollständiger Bericht, Export JSON/HTML), im Hintergrund auf mehreren Kernen berechnet, auch bei großen Dateien. In **IP ansehen und bearbeiten** lässt sich auch eine bestimmte IP eingeben: ihre Zeilen werden in jedem Log gezählt und dann mit einem Klick entfernt.
+- **Prüfen** — **Log-Zustand**: Rechte, stumme oder beschädigte Logs, Rotation, Festplattenplatz, Archive und Automatisierungen, mit dem zu ergreifenden Schritt für jeden Befund; Export JSON/HTML/TXT.
+- **Sichern** — Rotation nach Größenschwelle, sofortige Sicherung, Wiederherstellung und Bereinigung der Archive (`var/backups/logs/`).
+- **Automatisieren** — eine geplante Sicherung pro Log (alle N Tage), jede Nacht von einem systemd-Timer oder einer Zeile Ihrer crontab (OpenRC, runit) ausgeführt, immer unter Ihrem Konto, niemals als root.
+
+Wenn Rechte blockieren, fragt omega-serv nach Ihrem sudo-Passwort, um das Log zu lesen oder nur das fehlerhafte Recht zu korrigieren (der Befehl wird dann vor der Ausführung angezeigt).
+
+### 13b. Entfernte Quellen (SSH)
 
 Zentralisiert auf ausdrücklichen Wunsch das Log eines Backend-Servers im selben lokalen Netzwerk hinter dem Reverse Proxy (Bildschirm **Log-Verwaltung → Bibliothek → Entfernte Quellen (SSH)**). Ein « Fetch » ist eine manuelle, einmalige Aktion, niemals ein Live-Datenstrom oder automatisches Polling: Eine **Kopie** wird beim Klick auf *Jetzt abrufen* über `scp` geholt, unter `var/log/remote/` geschrieben und dann wie ein gewöhnliches Log zur Bibliothek hinzugefügt (Spalte *Zugriff* = `ssh`, Spalte *Geändert* = Datum **dieses** Abrufs — niemals das der entfernten Datei); ein neuer Abruf ersetzt einfach die vorherige Kopie durch eine neuere.
 

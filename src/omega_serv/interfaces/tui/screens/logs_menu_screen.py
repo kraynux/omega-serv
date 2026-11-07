@@ -6,16 +6,10 @@ Voir et traiter IP, portes depuis omega-log), colonne 2 "Maintenance"
 patron CSS que `active_defense_menu_screen.py` (`.omega-panel-row` + 2x
 `.omega-home-menu`, chacun son `border_title`).
 
-"Statistiques du log d'acces" (ancien `LogStatsScreen`) et "Top IPs"
-(ancien `TopIpsScreen`, desormais `ProcessIpScreen`) ne sont PLUS des
-boutons separes - leurs besoins sont desormais couverts par "Voir les
-logs" (Viewer Simple, stats generiques sur n'importe quel log) et "Voir
-et traiter IP" (generalise a toute la Bibliotheque) respectivement.
-`LogStatsScreen` reste present dans le code (fonctionnel, non
-supprime) mais n'est plus relie a ce menu - son besoin specifique
-(repartition HTTP detaillee sur l'access log, export 5 themes) reste a
-rouvrir separement si un besoin reel se confirme, jamais une
-suppression silencieuse de code qui marche."""
+5e bouton de chaque colonne (2026-11-07, OMEGA-SERV_A_FAIRE_STATS_DEPUIS_OMEGA_LOG.md) : "Statistiques"
+(ecran d'omega-log, n'importe quel log de la Bibliotheque) a gauche et, pour garder deux colonnes egales,
+"Sante des logs" (controle des logs et des archives, avec export) a droite. "Top IPs" reste couvert par
+"Voir et traiter IP"."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -29,8 +23,10 @@ from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.export_log_archives_screen import ExportLogArchivesScreen
 from omega_serv.interfaces.tui.screens.log_favorites_screen import LogFavoritesScreen
+from omega_serv.interfaces.tui.screens.log_health_screen import LogHealthScreen
 from omega_serv.interfaces.tui.screens.log_library_screen import LogLibraryScreen
 from omega_serv.interfaces.tui.screens.log_rotation_screen import LogRotationScreen
+from omega_serv.interfaces.tui.screens.log_stats_screen import LogStatsScreen
 from omega_serv.interfaces.tui.screens.log_view_screen import LogViewScreen
 from omega_serv.interfaces.tui.screens.process_ip_screen import ProcessIpScreen
 from omega_serv.interfaces.tui.screens.purge_log_archives_screen import PurgeLogArchivesScreen
@@ -44,12 +40,14 @@ _LIBRARY_ITEMS: tuple[tuple[str, str], ...] = (
     ("favorites", _("Favoris")),
     ("view-logs", _("Voir les logs")),
     ("process-ip", _("Voir et traiter IP")),
+    ("stats", _("Statistiques")),
 )
 _MAINTENANCE_ITEMS: tuple[tuple[str, str], ...] = (
     ("rotation", _("Rotate / archivage")),
     ("restore", _("Restaurer une archive")),
     ("purge", _("Purger les archives")),
     ("export", _("Exporter")),
+    ("health", _("Santé des logs")),
 )
 
 
@@ -92,10 +90,12 @@ class LogsMenuScreen(OmegaScreen):
             "favorites": LogFavoritesScreen,
             "view-logs": LogViewScreen,
             "process-ip": ProcessIpScreen,
+            "stats": LogStatsScreen,
             "rotation": LogRotationScreen,
             "restore": RestoreLogArchiveScreen,
             "purge": PurgeLogArchivesScreen,
             "export": ExportLogArchivesScreen,
+            "health": LogHealthScreen,
         }
         screen_cls = mapping.get(item_id) if item_id else None
         if screen_cls is None:

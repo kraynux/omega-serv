@@ -49,17 +49,20 @@ class InstancesScreen(OmegaScreen):
             yield Static(_("INSTANCES"), classes="omega-title")
             yield Static("", id="current-instance-hint", classes="omega-hint")
             yield DataTable(id="instances-table")
+            # Trois rangees (retour utilisateur 2026-11-07 : sur une seule ligne, un petit terminal coupait
+            # les boutons) : gestion de la liste, actions sur l'instance choisie, puis Retour.
             with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Rafraîchir"), id="refresh")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Créer une nouvelle instance"), id="create", variant="primary")
+            with Horizontal(classes="omega-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Piloter cette instance"), id="switch-to", disabled=True)
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Désinstaller cette instance"), id="uninstall-instance", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:

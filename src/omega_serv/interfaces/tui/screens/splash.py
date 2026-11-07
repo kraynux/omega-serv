@@ -15,12 +15,16 @@ from omega_serv.interfaces.tui.widgets.splash_hero import SplashHero
 class SplashScreen(Screen[None]):
     """Premier ecran affiche par app.py. Aucun appel a application/ ici :
     contenu statique. Pas de temporisation automatique : seule une action
-    explicite (touche ou clic) fait passer a la suite."""
+    explicite (touche ou clic) fait passer a la suite. `version` : celle de pyproject.toml (app.py)."""
+
+    def __init__(self, *, version: str) -> None:
+        super().__init__()
+        self._version = version
 
     def compose(self) -> ComposeResult:
         with Middle(classes="omega-splash-middle"):
             with Center():
-                yield SplashHero()
+                yield SplashHero(self._version)
             with Center():
                 yield Static(_("Cliquez ou appuyez sur une touche pour continuer..."), classes="omega-splash-prompt")
 

@@ -36,10 +36,10 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 **OMEGA-SERV**는 순수 Python(서버 핵심부는 표준 라이브러리만 사용)으로 작성된 HTTP/1.1 서버로, 정적 콘텐츠를 제공하고 선택적으로 PHP-FPM을 실행하도록 설계되었습니다. 기본으로 활성화된 프로토콜 강화와, 강제가 아니라 필요에 따라 겹쳐 쓸 수 있는 보안 모듈(WAF, TLS, 인증)을 갖추고 있습니다. 선택 사항인 네이티브 C++ 엔진이 같은 보안 검사를 유지한 채 Python 엔진 대신 요청을 처리할 수 있습니다. 원격 대상이 아니라 자신을 실행하는 로컬 머신에 작용합니다(`omega-fire`와 같은 계열). Clean Architecture로 구성되며, `bootstrap/`이 컴포지션 루트 역할을 합니다.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/D.png" width="24%" />
 </p>
 
 ## 목차
@@ -88,7 +88,8 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 - [11e. 수동 개입(능동 보안)](#11e-수동-개입능동-보안)
 - [12. 서비스와 운영](#12-서비스와-운영)
 - [13. 로그](#13-로그)
-  - [13a. 원격 소스(SSH)](#13a-원격-소스ssh)
+  - [13a. 로그 관리자](#13a-로그-관리자)
+  - [13b. 원격 소스(SSH)](#13b-원격-소스ssh)
 - [14. 테스트](#14-테스트)
 - [15. 범위 밖](#15-범위-밖)
 
@@ -103,7 +104,7 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 - 선택 사항: WAF 필터링(시그니처, 요청 제한, 차단 목록), 직접 TLS(자체 서명 인증서, 로컬 CA 서명, 또는 자동 갱신되는 Let's Encrypt/Certbot 공개 인증서), 영역별 HTTP Basic 인증, FastCGI/PHP-FPM을 통한 PHP, 격리된 업로드 영역.
 - 여러 서버 프로세스, Python 엔진에서는 머신의 물리 코어당 최대 하나(내구성과 제한 화면). 보안 카운터(rate limit, 재범)는 프로세스 간에 공유되며 정확하게 유지됩니다.
 - 자신의 설정을 감사하고(`audit security`) 시스템 서비스(systemd/OpenRC/runit)로 스스로를 설치합니다.
-- 처음부터 끝까지 스크립트로 쓸 수 있는 비대화형 CLI와, **똑같은 사용 사례를 감싸는 대화형 인터페이스(Textual)**. 인터페이스는 **마우스 및/또는 키보드로 완전히 조작할 수 있습니다**: 기능 레지스트리, 프로필/옵션, 상세 설정(별칭/리디렉션/재작성/FastCGI/dirlisting/인증/캐시/WAF/신뢰 프록시/아웃바운드 리버스 프록시/TLS), 로그 관리(라이브러리/즐겨찾기, 3가지 뷰어 — 단순/클래식/통합 lnav —, IP 보기 및 처리, SSH 원격 소스, 순환/백업/자동화/복원/삭제/내보내기), 시스템 서비스, 다중 인스턴스(레지스트리, 생성), 확인/시뮬레이션/감사, 설정 백업/복원, 첫 실행 마법사, 애플리케이션 설정(테마, 렌더링 프로필, 내보내기/스크린샷 경로), 상황별 도움말 가이드(구체적인 예가 담긴 화면별 안내, FAQ, HTML 내보내기, 테스트로 검증된 빠짐없는 범위), 저장할 때마다 다시 로드/재시작 여부를 항상 표시, 파일을 직접 편집하지 않는 Active Defense의 전체 설정.
+- 처음부터 끝까지 스크립트로 쓸 수 있는 비대화형 CLI와, **똑같은 사용 사례를 감싸는 대화형 인터페이스(Textual)**. 인터페이스는 **마우스 및/또는 키보드로 완전히 조작할 수 있습니다**: 기능 레지스트리, 프로필/옵션, 상세 설정(별칭/리디렉션/재작성/FastCGI/dirlisting/인증/캐시/WAF/신뢰 프록시/아웃바운드 리버스 프록시/TLS), 로그 관리(라이브러리/즐겨찾기, 3가지 뷰어 — 단순/클래식/통합 lnav —, IP 보기 및 처리, 통계, SSH 원격 소스, 순환/백업/자동화/복원/삭제/내보내기, 로그 상태), 시스템 서비스, 다중 인스턴스(레지스트리, 생성), 확인/시뮬레이션/감사, 설정 백업/복원, 첫 실행 마법사, 애플리케이션 설정(테마, 렌더링 프로필, 내보내기/스크린샷 경로), 상황별 도움말 가이드(구체적인 예가 담긴 화면별 안내, FAQ, HTML 내보내기, 테스트로 검증된 빠짐없는 범위), 저장할 때마다 다시 로드/재시작 여부를 항상 표시, 파일을 직접 편집하지 않는 Active Defense의 전체 설정.
 
 ### OMEGA-SERV가 하지 않는 일
 
@@ -129,10 +130,10 @@ Omega-serv는 **root로 시작하기를 거부합니다**. 제공되는 어떤 �
 
 ### 다운로드
 
-최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **기존 설치를 업데이트하시나요?** 아래 명령은 `omega-serv/`가 이미 있으면 **압축 해제를 조용히 건너뜁니다**(업데이트가 아니라 중단된 첫 설치로 간주하기 때문) — 그러면 **바뀌지 않은 예전 코드** 위에 의존성을 다시 설치하게 되며, 오류 메시지는 전혀 나오지 않습니다. 대신 아래의 [업데이트](#업데이트) 절을 사용하십시오.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ 여기에는 이미 압축이 풀려 있습니다. 이 단계를 건너뜁니다." || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ 여기에는 이미 압축이 풀려 있습니다. 이 단계를 건너뜁니다." || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/의 상위 폴더에서 실행(절대 안에서 실행하지 않음)
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ serv
 - **프로필** — CLI의 `profile`과 같은 사용 사례이며, 기록 전에 항상 diff를 보여 줍니다.
 - **서버 상세 설정** — 별칭/리디렉션/재작성/dirlisting/신뢰 프록시/아웃바운드 리버스 프록시/FastCGI/캐시/인증/접근 제어/오류 페이지의 완전한 CRUD와 하위 메뉴 **TLS**(상태, 자체 서명 생성, 로컬 CA 마법사, Let's Encrypt/Certbot 마법사, 자동 갱신, 폐기, 활성화/비활성화). 두 번째 틀 **옵션 및 확인**에는 **옵션**(CLI `option`)과 **설정 확인**(CLI `config check`)으로 가는 바로 가기가 모여 있습니다 — 설정을 조정한 뒤 확인하는 같은 흐름이며, 이 두 화면은 더 이상 메인 메뉴에서 바로 열 수 없습니다. WAF는 더 이상 여기에 없습니다(아래 「능동 보안」 참조): WAF가 주로 보여 주는 것은 계속 변하는 운영 상태이지, 단순한 정적 설정 양식이 아니기 때문입니다. 저장할 때마다 다음 단계를 항상 밝힙니다: 서비스가 실행 중이면 자동으로 조용히 핫 리로드(dirlisting, 접근, 별칭/리디렉션/재작성, 캐시, 오류 페이지, 신뢰 프록시, 리버스 프록시/FastCGI 영역, 인증 사용자/영역), 변경이 수신 소켓, TLS, Active Defense에 관련되면 완전한 재시작의 명시적 확인 — 이제 어떤 화면도 서버를 다시 시작해야 하는지 추측하게 하지 않습니다.
 - **능동 보안** — 세 블록을 공격의 순서대로 나란히 모은 단일 화면: **WAF**, **Active Defense**, **RIPOSTE**(시간에 걸친 단계적 대응). **Active Defense**(상태, 점수/수준이 있는 추적 중인 위협, 타임라인/IoC 내보내기/보고서가 있는 인시던트, Deception 할당, 드라이런으로 결정 시뮬레이션, **설정** — `config/omega-serve.json`을 직접 편집하지 않는 전체 설정)와 **WAF**(상태, 모듈 — 모드/규칙 팩/차단 목록, 요청 테스트, Custom — 사용자 규칙 작성과 마우스로 편집할 수 있는 경로/키워드 목록 불러오기, Magnet — 활성화 전에 호환성을 확인하고 외부 `mod_magnet` 스크립트 가져오기). 세 블록 아래의 **수동 개입**: IP 주소를 직접 차단하거나 차단 해제하고, 모든 차단의 상태를 확인.
-- **로그 관리** — 2열 메뉴. **라이브러리** 열: 처리할 모든 로그를 참조하는 중심(수동 추가, 클릭 한 번으로 인스턴스 고유 로그 추가 — access/error/네이티브 WAF, + 켜져 있으면 magnet 스크립트 —, 또는 SSH로 가져온 **원격 소스**, 아래 참조). **즐겨찾기**(로그 + 뷰어 조합을 이름으로 저장해 바로 실행). **로그 보기**는 선택한 로그 수에 따라 3가지 뷰어 중에서 고릅니다 — 단순(실시간 tail + 모든 형식에서 IP/오류/HTTP 코드의 일반 통계), 클래식(읽기 + 추적), 통합 `lnav`(인터페이스 안의 실제 터미널 렌더링, magnet 로그 자동 포함 + 세션 간에 유지되도록 **고정한** 수동 경로). **IP 보기 및 처리**(선택한 하나 이상의 로그의 상위 IP, 기간 24시간/7일/30일/전체, IP 제거). **유지 관리** 열(변경 없음): 수동 또는 크기 기준 자동 순환/보관, 즉시 백업 생성, 예약 자동화 설정/관리(선언적 — 아래 참고 참조), 보관 파일 복원/삭제, 목록 내보내기.
+- **로그 관리** — 2열 메뉴. **라이브러리** 열: 처리할 모든 로그를 참조하는 중심(수동 추가, 클릭 한 번으로 인스턴스 고유 로그 추가 — access/error/네이티브 WAF, + 켜져 있으면 magnet 스크립트 —, 또는 SSH로 가져온 **원격 소스**, 아래 참조). **즐겨찾기**(로그 + 뷰어 조합을 이름으로 저장해 바로 실행). **로그 보기**는 선택한 로그 수에 따라 3가지 뷰어 중에서 고릅니다 — 단순(실시간 tail + 모든 형식에서 IP/오류/HTTP 코드의 일반 통계), 클래식(읽기 + 추적), 통합 `lnav`(인터페이스 안의 실제 터미널 렌더링, magnet 로그 자동 포함 + 세션 간에 유지되도록 **고정한** 수동 경로). **IP 보기 및 처리**(선택한 하나 이상의 로그의 상위 IP, 기간 24시간/7일/30일/파일 전체, 진행 표시와 함께 백그라운드에서 계산, IP 제거). **통계**(하나 이상의 로그에 대한 전체 보고서 — 요약, HTTP 상태, 상위 IP, 경로, 시간대별 분포, 일별 추이 — JSON/HTML로 내보내기 가능). **유지 관리** 열: 수동 또는 크기 기준 자동 순환/보관, 즉시 백업 생성, 예약 자동화 설정/관리(매일 밤 systemd 타이머로, OpenRC/runit에서는 crontab 한 줄로 실행), 보관 파일 복원/삭제, 목록 내보내기. **로그 상태**(로그, 디스크, 보관 파일의 읽기 전용 점검 — 권한, 조용하거나 손상된 로그, 순환, logrotate, 디스크가 가득 찰 때까지 남은 일수 —, 발견 사항마다 해야 할 조치 표시, 권한 수정 — 필요하면 sudo로 —, JSON/HTML/TXT 내보내기). 사용자 계정으로 읽을 수 없는 로그는 통계와 IP 보기 및 처리가 sudo 비밀번호를 요청한 뒤 읽습니다.
 - **서비스** — CLI의 `service`와 같은 동작. 동작마다 일시적으로 `sudo`로 권한을 올리며, 애플리케이션 전체를 root로 실행하지 않습니다.
 - **다중 인스턴스** — 머신에서 알려진 설치의 전역 레지스트리(`~/.config/omega-serv/instances.json`, 어떤 프로젝트 디렉터리에도 속하지 않음)와 각 설치의 systemd 상태. 인터페이스에서 바로 새 인스턴스를 만들 수 있습니다(트리 복사, 전용 가상 환경과 의존성, 다른 포트를 쓰는 새 설정, 중첩과 포트 충돌 검사). 설치가 하나뿐이면 버튼이 사실상 드러나지 않고(2개 이상 알려지면 레이블 「다중 인스턴스」가 「Instances (N)」으로 바뀜), 다른 인스턴스로 완전히 전환할 수 있으며(`os.execv`, 명시적 확인, 재시작 시 전환을 알리는 전용 스플래시), 인스턴스를 완전히 제거할 수도 있습니다(유닛 제거, 다른 인스턴스가 더 이상 쓰지 않으면 전용 시스템 계정 제거, 그리고 선택적으로 디렉터리 삭제 — 기본으로 삭제하는 일은 없음).
 - **상태 및 리소스** — 2초마다 새로 고치는 한눈에 보는 개요: 서버 상태(프로세스/PID, 시스템 서비스 상태, 프로필/켜진 옵션/TLS/포트), 실시간 접근 로그 흐름(처리량, 상태 코드별 분포, 고유 IP, 오류율), 시스템 리소스(CPU/RAM/디스크/스왑/부하/네트워크, `psutil` 사용). **요청 시뮬레이션** 바로 가기도 여기에 있습니다(해당 CLI 명령과 같은 사용 사례).
 - **보안 감사** — 해당 CLI 명령과 같은 사용 사례.
 - **설정 백업** — 설정 파일의 tar.gz 아카이브와, 명시적으로 고르면 WAF 규칙/인증 영역/인증서(실제 비밀 정보를 포함하면 확인 필수)/Active Defense 데이터베이스, 복원, 목록, 삭제.
 
-> 예약된 순환 자동화에 대한 참고: 이것들은 저장되지만(빈도 + 대상 로그) **자동으로 실행하는 것은 아무것도 없습니다** — 인터페이스에서도, 백그라운드 작업으로도 마찬가지입니다. 같은 선언적 동작을 하는 `omega-fire`의 해당 화면과 맞추기 위한 의도적인 선택입니다. 실제 주기적 실행(systemd 타이머, 백그라운드 작업)은 필요성이 확인되면 따로 만들 예정입니다.
+> 예약된 순환 자동화에 대한 참고: 첫 자동화를 만들면 매일 실행되는 작업이 설치됩니다 — systemd 타이머(sudo 비밀번호 요청), 그렇지 않으면 사용자 crontab의 한 줄(OpenRC, runit 또는 서비스 관리자가 없는 경우, cron 데몬이 실행 중이어야 함), 그것도 안 되면 직접 추가할 줄이 표시됩니다. 매일 밤 `omega-serv logs run-automations`가 기한이 된 각 로그를 사용자 계정으로 보관합니다. 마지막 자동화를 삭제하면 작업도 제거됩니다.
 
 #### 애플리케이션 설정(`o` 키 또는 명령 팔레트)
 
@@ -637,7 +638,19 @@ systemd/OpenRC/runit 자동 감지(`service install/status/start/stop/restart/en
 
 `var/log/access.log`(Apache combined 형식 + `request_id`, 로그 주입 방지 이스케이프), `var/log/error.log`. 크기/보관 파일 수에 따른 순환(`logs.rotation`). 네이티브 WAF: `var/log/waf-alerts.log`(`options.waf.logging.path`). magnet 스크립트: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, 기본값 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — magnet이 켜져 있을 때만 라이브러리에 바로 추가됩니다(*Omega-Serv의 알려진 로그 추가* 버튼). 반면 `lnav`는 항상 이를 제안합니다(없는 파일은 실행할 때 그냥 무시됨).
 
-### 13a. 원격 소스(SSH)
+### 13a. 로그 관리자
+
+**로그 관리** 화면은 단순한 뷰어가 아니라 진짜 관리자입니다: 모든 로그(인스턴스의 로그, 직접 추가한 파일, 원격 서버의 사본)가 **라이브러리**에 들어간 뒤:
+
+- **읽기** — 세 가지 뷰어: 단순(실시간 대시보드: HTTP 코드, 403/429 거부, 상위 IP, 경로), 클래식(읽기와 추적), 내장 `lnav`(여러 로그 통합). **즐겨찾기**는 선택한 로그와 그 뷰어를 이름으로 저장합니다.
+- **분석** — **IP 보기 및 처리**(가장 활발한 주소, 24시간, 7일, 30일 또는 파일 전체)와 **통계**(전체 보고서, JSON/HTML 내보내기)는 큰 파일이라도 백그라운드에서 여러 코어로 계산합니다. **IP 보기 및 처리**에서는 특정 IP를 직접 입력할 수도 있습니다: 로그마다 해당 줄 수를 센 뒤 한 번의 클릭으로 제거합니다.
+- **점검** — **로그 상태**: 권한, 조용하거나 손상된 로그, 순환, 디스크 공간, 보관 파일과 자동화를 발견 사항마다 해야 할 조치와 함께 보여 줍니다. JSON/HTML/TXT 내보내기.
+- **백업** — 크기 기준 순환, 즉시 백업, 보관 파일 복원과 삭제(`var/backups/logs/`).
+- **자동화** — 로그마다 예약 백업 하나(N일마다)가 매일 밤 systemd 타이머나 사용자 crontab의 한 줄(OpenRC, runit)로 실행되며, 항상 사용자 계정으로 실행되고 결코 root로 실행되지 않습니다.
+
+권한이 막으면 omega-serv는 로그를 읽거나 문제가 된 권한만 고치기 위해 sudo 비밀번호를 요청합니다(이때 명령은 실행 전에 표시됩니다).
+
+### 13b. 원격 소스(SSH)
 
 명시적인 요청에 따라, 리버스 프록시 뒤 같은 로컬 네트워크에 있는 백엔드 서버의 로그를 모읍니다(**로그 관리 → 라이브러리 → 원격 소스(SSH)** 화면). 「fetch」는 수동으로 한 번 하는 동작이며, 실시간 흐름이나 자동 폴링이 결코 아닙니다: *지금 가져오기* 버튼을 누른 순간 `scp`로 **사본**을 가져와 `var/log/remote/` 아래에 쓰고, 일반 로그처럼 라이브러리에 추가합니다(*접근* 열 = `ssh`, *수정 시각* 열 = **이번** 가져오기의 날짜 — 원격 파일의 날짜가 아님). 새로 가져오면 이전 사본이 더 새것으로 바뀔 뿐입니다.
 

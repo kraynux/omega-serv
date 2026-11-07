@@ -36,10 +36,10 @@ OMEGA-SERV 提供静态网站服务，如有需要，还可通过 PHP-FPM 运行
 **OMEGA-SERV** 是一个用纯 Python 编写的 HTTP/1.1 服务器（服务器核心仅使用标准库），用于提供静态内容，并可选支持 PHP-FPM；它具有默认启用的协议加固，以及可按需叠加而非强制启用的安全模块（WAF、TLS、认证）。可选的原生 C++ 引擎可以代替 Python 引擎处理请求，安全检查完全相同。它作用于托管它的本机，而不是远程目标（与 `omega-fire` 同属一类）；采用整洁架构（Clean Architecture），由 `bootstrap/` 充当组合根。
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zn-CH/omega-serv/D.png" width="24%" />
 </p>
 
 ## 目录
@@ -88,7 +88,8 @@ OMEGA-SERV 提供静态网站服务，如有需要，还可通过 PHP-FPM 运行
 - [11e. 手动干预（主动安全）](#11e-手动干预主动安全)
 - [12. 服务与运维](#12-服务与运维)
 - [13. 日志](#13-日志)
-  - [13a. 远程来源（SSH）](#13a-远程来源ssh)
+  - [13a. 日志管理器](#13a-日志管理器)
+  - [13b. 远程来源（SSH）](#13b-远程来源ssh)
 - [14. 测试](#14-测试)
 - [15. 范围之外](#15-范围之外)
 
@@ -103,7 +104,7 @@ OMEGA-SERV 提供静态网站服务，如有需要，还可通过 PHP-FPM 运行
 - 可选：WAF 过滤（特征、速率限制、封禁列表）、直接 TLS（自签名证书、本地 CA 签发，或通过 Let's Encrypt/Certbot 获取并自动续期的公共证书）、按区域的 HTTP Basic 认证、通过 FastCGI/PHP-FPM 运行 PHP、隔离的上传区域。
 - 多个服务器进程，使用 Python 引擎时每个物理核心最多一个（抗压与限制 屏幕）；安全计数器（速率限制、重犯）在各进程之间共享，始终准确。
 - 审计自身配置（`audit security`），并可安装为系统服务（systemd/OpenRC/runit）。
-- 端到端可脚本化的非交互式 CLI，**以及交互式界面（Textual）**，二者覆盖完全相同的用例。界面**完全可用鼠标和/或键盘操作**：能力清单、配置档案/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/认证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（日志库/收藏、3 种查看器 —— 简单/经典/合并 lnav ——、查看并处理 IP、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、上下文帮助指南（每个屏幕一张卡片并附具体示例、常见问题、HTML 导出、经测试验证的完整覆盖）、每次保存后系统提示重新加载/重启，以及无需手动编辑文件即可完整配置 Active Defense。
+- 端到端可脚本化的非交互式 CLI，**以及交互式界面（Textual）**，二者覆盖完全相同的用例。界面**完全可用鼠标和/或键盘操作**：能力清单、配置档案/选项、详细配置（别名/重定向/重写/FastCGI/目录列表/认证/缓存/WAF/可信代理/出站反向代理/TLS）、日志管理（日志库/收藏、3 种查看器 —— 简单/经典/合并 lnav ——、查看并处理 IP、统计、SSH 远程来源、轮转/备份/自动化/恢复/清理/导出、日志健康）、系统服务、多实例（注册表、创建）、检查/模拟/审计、配置备份/恢复、首次启动向导、应用设置（主题、渲染配置、导出/截图路径）、上下文帮助指南（每个屏幕一张卡片并附具体示例、常见问题、HTML 导出、经测试验证的完整覆盖）、每次保存后系统提示重新加载/重启，以及无需手动编辑文件即可完整配置 Active Defense。
 
 ### OMEGA-SERV 不做什么
 
@@ -129,10 +130,10 @@ Omega-serv **拒绝以 root 身份启动**。在任何内置配置档案中（�
 
 ### 下载
 
-最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+最新版本的归档包以及每个版本的 SHA-256 校验和：[omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **您是在更新现有安装吗？** 如果 `omega-serv/` 已经存在，下面的命令会**静默跳过解压**（它认为这是一次中断的首次安装，而不是更新）—— 这样您就会在**旧的、未改变的代码**上重新安装依赖，而且没有任何错误提示。请改用下方的 [更新](#更新) 一节。
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ 已在此处解压，跳过此步骤。" || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ chmod +x install.sh
 
 ```bash
 # 在 omega-serv/ 的上级目录中执行（切勿在其内部）
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ serv
 - **配置档案** —— 与 CLI 中 `profile` 相同的用例，写入前始终显示 diff。
 - **服务器详细配置** —— 对别名/重定向/重写/目录列表/可信代理/出站反向代理/FastCGI/缓存/认证/访问控制/错误页面的完整增删改查，外加 **TLS** 子菜单（状态、生成自签名证书、本地 CA 向导、Let's Encrypt/Certbot 向导、自动续期、吊销、启用/禁用）；第二个框 **选项与检查** 集中了指向 **选项**（`option` CLI）和 **检查配置**（`config check` CLI）的快捷入口 —— 与"先调整设置再检查"的流程一致，这两个屏幕不再能从主菜单直接打开。WAF 不再位于此处（参见下方"主动安全"）：它主要展示不断变化的运行状态，而不是简单的静态配置表单。每次保存都会系统地指明后续步骤：若服务正在运行，则自动静默热重新加载（目录列表、访问、别名/重定向/重写、缓存、错误页面、可信代理、反向代理/FastCGI 区域、用户/认证区域）；若修改涉及监听套接字、TLS 或 Active Defense，则显式确认完整重启 —— 再也没有任何屏幕让您去猜是否需要重启服务器。
 - **主动安全** —— 单一屏幕，按攻击的顺序并排三个区块：**WAF**、**Active Defense** 和 **RIPOSTE**（随时间推移的分级响应）。**Active Defense**（状态、带评分/级别的被跟踪威胁、带时间线/IoC 导出/报告的事件、Deception 分配、以 dry-run 方式模拟决策、**设置** —— 无需手动编辑 `config/omega-serve.json` 的完整配置）以及 **WAF**（状态、模块 —— 模式/规则包/封禁列表、测试请求、Custom —— 编写自定义规则并加载可用鼠标编辑的路径/关键词列表、Magnet —— 导入外部 `mod_magnet` 脚本并在启用前检查兼容性）。三个区块下方是 **手动干预**：手动封禁或解除封禁 IP 地址，查看所有封禁的状态。
-- **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/全部，可移除某个 IP）。**维护** 栏（未变）：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（声明式 —— 参见下方说明）、恢复/清理归档、导出列表。
+- **日志管理** —— 两栏菜单。**日志库** 栏：引用所有待处理日志的中心枢纽（手动添加，一次单击即可自动加入实例自身的日志 —— access/error/原生 WAF，若 magnet 脚本 处于活动状态还包括它的日志 ——，或通过 SSH 获取的**远程来源**，参见下文）；**收藏**（以名称保存的日志 + 查看器组合，可直接启动）；**查看日志**，根据所选日志数量提供 3 种查看器 —— 简单（实时 tail + 适用于任意格式的 IP/错误/HTTP 代码通用统计）、经典（阅读 + 跟踪）、合并 `lnav`（在界面中真实渲染终端，自动包含 magnet 日志 + **固定**的手动路径以在会话之间保留）；**查看并处理 IP**（从一个或多个所选日志中统计活跃 IP，时间段 24 小时/7 天/30 天/整个文件，在后台计算并显示进度指示，可移除某个 IP）；**统计**（一个或多个日志的完整报告 —— 概要、HTTP 状态、活跃 IP 排行、路径、按小时分布、按天趋势 —— 可导出为 JSON/HTML）。**维护** 栏：按大小阈值手动或自动轮转/归档、立即创建备份、配置/管理计划自动化（每晚由 systemd 定时器执行，在 OpenRC/runit 下则由一行 crontab 执行）、恢复/清理归档、导出列表；**日志健康**（对日志、磁盘和归档进行只读检查 —— 权限、静默或损坏的日志、轮转、logrotate、距磁盘写满的天数 ——，并为每项发现给出应采取的操作，修复权限 —— 必要时使用 sudo ——，导出 JSON/HTML/TXT）。当某个日志无法以您的账户读取时，统计 和 查看并处理 IP 会请求您的 sudo 密码，然后读取它。
 - **服务** —— 与 CLI 中 `service` 相同的操作，每个操作单独临时提权 `sudo`，绝不让整个应用以 root 身份运行。
 - **多实例** —— 本机已知安装的全局注册表（`~/.config/omega-serv/instances.json`，位于任何项目目录之外），附每个实例的 systemd 状态；可直接在界面中创建新实例（复制目录树、独立的虚拟环境和依赖、带独立端口的全新配置、检查嵌套和端口冲突）。只有一个安装时该按钮几乎不可见（一旦已知实例达到 2 个，"多实例"标签就会变为"实例 (N)"）；可完整切换到另一个实例（`os.execv`，显式确认，重启时显示专门的切换启动画面）；可完整卸载实例（移除 unit、若不再被其他实例使用则移除专用系统账户，并可选删除目录，但绝不默认删除）。
 - **状态与资源** —— 一目了然的总览，每 2 秒刷新：服务器状态（进程/PID、系统服务状态、配置档案/活动选项/TLS/端口）、访问日志的实时流量（吞吐量、按状态码分布、唯一 IP、错误率）、系统资源（CPU/内存/磁盘/交换/负载/网络，通过 `psutil`）；还集中了 **模拟请求** 快捷入口（与相应 CLI 命令相同的用例）。
 - **安全审计** —— 与相应 CLI 命令相同的用例。
 - **配置备份** —— 配置文件的 tar.gz 归档，并在显式选择时包含 WAF 规则/认证区域/证书（一旦包含真实机密就必须确认）/Active Defense 数据库；支持恢复、列出、删除。
 
-> 关于计划的轮转自动化：它们会被保存（频率 + 目标日志），但**没有任何东西会自动执行它们** —— 界面侧不会，后台也不会。这是有意为之，以与 `omega-fire` 中具有相同声明式行为的对应屏幕保持一致。若确认有需要，真正的周期性执行（systemd 定时器、后台任务）需另行构建。
+> 关于计划的轮转自动化：第一个自动化会安装一个每日任务 —— systemd 定时器（会请求 sudo 密码），否则为您 crontab 中的一行（OpenRC、runit 或没有服务管理器时，需有 cron 守护进程在运行），再否则会显示需要您自行添加的那一行。每晚，`omega-serv logs run-automations` 会以您的账户归档每个到期的日志；删除最后一个自动化时会移除该任务。
 
 #### 应用设置（`o` 键或命令面板）
 
@@ -637,7 +638,19 @@ WAF 的速率限制（令牌桶，`options.waf.rate_limit`，默认每个 IP 60 
 
 `var/log/access.log`（Apache combined 格式 + `request_id`，转义以防日志注入）、`var/log/error.log`。按大小/保留文件数轮转（`logs.rotation`）。原生 WAF：`var/log/waf-alerts.log`（`options.waf.logging.path`）。magnet 脚本：`options.waf.magnet.paths.alerts_log`/`.blocklist_log`，默认为 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` —— 只有在 magnet 启用时才会自动加入日志库（按钮 *添加 Omega-Serv 的已知日志*）；而 `lnav` 总是会提供它们（缺失的文件在启动时会被直接忽略）。
 
-### 13a. 远程来源（SSH）
+### 13a. 日志管理器
+
+**日志管理** 屏幕是一个真正的管理器，而不只是简单的阅读器：任何日志（实例自身的日志、手动添加的文件，或远程服务器的副本）都会进入 **日志库**，然后：
+
+- **阅读** —— 三种查看器：简单（实时仪表盘：HTTP 代码、403/429 拒绝、活跃 IP 排行、路径）、经典（阅读与跟踪）、集成的 `lnav`（合并多个日志）。**收藏** 以一个名称保存所选日志及其查看器。
+- **分析** —— **查看并处理 IP**（最活跃的地址，范围为 24 小时、7 天、30 天或整个文件）和 **统计**（完整报告，导出 JSON/HTML），在后台利用多个核心计算，即使是大文件也一样。 在 **查看并处理 IP** 中，也可以直接输入某个 IP：统计它在每个日志中的行数，然后一键移除。
+- **检查** —— **日志健康**：权限、静默或损坏的日志、轮转、磁盘空间、归档和自动化，并为每项发现给出应采取的操作；导出 JSON/HTML/TXT。
+- **备份** —— 按大小阈值轮转、立即备份、恢复和清理归档（`var/backups/logs/`）。
+- **自动化** —— 每个日志一项计划备份（每 N 天），每晚由 systemd 定时器执行，或由您 crontab 中的一行执行（OpenRC、runit），始终以您的账户运行，绝不使用 root。
+
+当权限受阻时，omega-serv 会请求您的 sudo 密码，以读取该日志，或仅修复出错的那项权限（此时会在执行前显示命令）。
+
+### 13b. 远程来源（SSH）
 
 在显式请求时，集中收集位于反向代理之后同一本地网络中的后端服务器日志（屏幕 **日志管理 → 日志库 → 远程来源（SSH）**）。「fetch」是一次手动、单次的操作，绝不是实时流或自动轮询：在单击 *立即获取* 时通过 `scp` 获取一份**副本**，写入 `var/log/remote/`，然后像普通日志一样加入日志库（*访问* 列 = `ssh`，*修改时间* 列 = **这次**获取的日期 —— 绝不是远程文件的日期）；再次获取只会用更新的副本替换之前的副本。
 

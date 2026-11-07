@@ -13,12 +13,16 @@ trouve en generalisant, pas suppose. Remplace par une correspondance
 generique a limite de mot sur la chaine IP elle-meme (meme principe
 qu'omega-log/application/use_cases/process_ip.py::remove_ip_from_file,
 deja valide) - fonctionne identiquement quel que soit le format de la
-ligne, y compris l'access log Combined d'Omega-Serv lui-meme."""
+ligne, y compris l'access log Combined d'Omega-Serv lui-meme.
+
+2026-11-07 : regle de correspondance deplacee dans `domain/logs/ip_match.py` (partagee avec la recherche
+manuelle d'une IP) ; la limite de mot ne trouvait jamais une IPv6 terminee par `::`."""
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
+
+from omega_serv.domain.logs.ip_match import ip_line_pattern, line_contains_ip
 
 
 class LogsMaintenance:
@@ -26,14 +30,14 @@ class LogsMaintenance:
         if not log_path.exists():
             return 0
 
-        pattern = re.compile(rf"\b{re.escape(ip)}\b")
+        pattern = ip_line_pattern(ip)
         try:
             with log_path.open(encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
         except OSError:
             return 0
 
-        kept_lines = [line for line in lines if not pattern.search(line)]
+        kept_lines = [line for line in lines if not line_contains_ip(line, ip, pattern)]
         removed = len(lines) - len(kept_lines)
         if not removed:
             return 0

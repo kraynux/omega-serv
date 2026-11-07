@@ -36,10 +36,10 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 **OMEGA-SERV** là một máy chủ HTTP/1.1 viết bằng Python thuần (chỉ dùng thư viện chuẩn cho lõi máy chủ), được thiết kế để phục vụ nội dung tĩnh và, tùy chọn, PHP-FPM, với cơ chế gia cố giao thức bật sẵn theo mặc định và các mô-đun bảo mật (WAF, TLS, xác thực) có thể xếp chồng thay vì bị áp đặt. Một bộ máy native C++ tùy chọn có thể phục vụ các yêu cầu thay cho bộ máy Python, với cùng các kiểm tra bảo mật. Nó tác động lên chính máy cục bộ đang chạy nó, không phải lên mục tiêu từ xa (cùng họ với `omega-fire`); được tổ chức theo Clean Architecture, với `bootstrap/` đóng vai trò gốc lắp ghép (composition root).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/A.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/B.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/C.png" width="24%" />
-  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/D.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/A.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/B.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/C.png" width="24%" />
+  <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/D.png" width="24%" />
 </p>
 
 ## Mục lục
@@ -88,7 +88,8 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 - [11e. Can thiệp thủ công (Bảo mật chủ động)](#11e-can-thiệp-thủ-công-bảo-mật-chủ-động)
 - [12. Dịch vụ và vận hành](#12-dịch-vụ-và-vận-hành)
 - [13. Log](#13-log)
-  - [13a. Nguồn từ xa (SSH)](#13a-nguồn-từ-xa-ssh)
+  - [13a. Trình quản lý log](#13a-trình-quản-lý-log)
+  - [13b. Nguồn từ xa (SSH)](#13b-nguồn-từ-xa-ssh)
 - [14. Kiểm thử](#14-kiểm-thử)
 - [15. Ngoài phạm vi](#15-ngoài-phạm-vi)
 
@@ -103,7 +104,7 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 - Tùy chọn: lọc WAF (chữ ký, giới hạn tốc độ, danh sách chặn), TLS trực tiếp (chứng chỉ tự ký, do CA cục bộ ký, hoặc công khai qua Let's Encrypt/Certbot với gia hạn tự động), xác thực HTTP Basic theo vùng, PHP qua FastCGI/PHP-FPM, vùng tải lên được cô lập.
 - Nhiều tiến trình máy chủ, tối đa một tiến trình cho mỗi lõi vật lý của máy với bộ máy Python (màn hình Khả năng chịu tải và giới hạn); các bộ đếm bảo mật (rate limit, tái phạm) được chia sẻ giữa chúng và luôn chính xác.
 - Tự kiểm tra cấu hình của chính mình (`audit security`) và tự cài đặt như dịch vụ hệ thống (systemd/OpenRC/runit).
-- CLI không tương tác có thể viết script từ đầu đến cuối, **và giao diện tương tác (Textual)** bao bọc đúng các trường hợp sử dụng đó. Giao diện **điều khiển hoàn toàn bằng chuột và/hoặc bàn phím**: sổ đăng ký khả năng, hồ sơ/tùy chọn, cấu hình chi tiết (alias/chuyển hướng/rewrite/FastCGI/dirlisting/xác thực/cache/WAF/proxy tin cậy/reverse proxy đi ra/TLS), quản lý log (Thư viện/Yêu thích, 3 trình xem — đơn giản/cổ điển/lnav hợp nhất —, Xem và xử lý IP, nguồn từ xa SSH, xoay vòng/sao lưu/tự động hóa/khôi phục/dọn dẹp/xuất), dịch vụ hệ thống, đa instance (sổ đăng ký, tạo mới), kiểm tra/mô phỏng/kiểm toán, sao lưu/khôi phục cấu hình, trình hướng dẫn lần đầu chạy, thiết lập ứng dụng (giao diện, hồ sơ hiển thị, đường dẫn xuất/ảnh chụp), hướng dẫn trợ giúp theo ngữ cảnh (phiếu cho từng màn hình với ví dụ cụ thể, FAQ, xuất HTML, độ bao phủ đầy đủ được kiểm chứng bằng test), luôn chỉ rõ cần nạp lại hay khởi động lại sau mỗi lần lưu, cấu hình Active Defense đầy đủ mà không cần sửa tệp thủ công.
+- CLI không tương tác có thể viết script từ đầu đến cuối, **và giao diện tương tác (Textual)** bao bọc đúng các trường hợp sử dụng đó. Giao diện **điều khiển hoàn toàn bằng chuột và/hoặc bàn phím**: sổ đăng ký khả năng, hồ sơ/tùy chọn, cấu hình chi tiết (alias/chuyển hướng/rewrite/FastCGI/dirlisting/xác thực/cache/WAF/proxy tin cậy/reverse proxy đi ra/TLS), quản lý log (Thư viện/Yêu thích, 3 trình xem — đơn giản/cổ điển/lnav hợp nhất —, Xem và xử lý IP, Thống kê, nguồn từ xa SSH, xoay vòng/sao lưu/tự động hóa/khôi phục/dọn dẹp/xuất, Tình trạng log), dịch vụ hệ thống, đa instance (sổ đăng ký, tạo mới), kiểm tra/mô phỏng/kiểm toán, sao lưu/khôi phục cấu hình, trình hướng dẫn lần đầu chạy, thiết lập ứng dụng (giao diện, hồ sơ hiển thị, đường dẫn xuất/ảnh chụp), hướng dẫn trợ giúp theo ngữ cảnh (phiếu cho từng màn hình với ví dụ cụ thể, FAQ, xuất HTML, độ bao phủ đầy đủ được kiểm chứng bằng test), luôn chỉ rõ cần nạp lại hay khởi động lại sau mỗi lần lưu, cấu hình Active Defense đầy đủ mà không cần sửa tệp thủ công.
 
 ### Những gì OMEGA-SERV không làm
 
@@ -129,10 +130,10 @@ Omega-serv **từ chối khởi động với quyền root**. Không mô-đun b�
 
 ### Tải xuống
 
-Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.5.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.5.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -144,7 +145,7 @@ sha256sum -c --ignore-missing sha.txt
 > ⚠️ **Bạn đang cập nhật một bản cài đặt có sẵn?** Lệnh bên dưới **lặng lẽ bỏ qua bước giải nén** nếu `omega-serv/` đã tồn tại (nó cho rằng đó là một lần cài đặt đầu tiên bị gián đoạn, không phải một bản cập nhật) — khi đó bạn sẽ cài lại các phụ thuộc trên **mã cũ không thay đổi**, mà không có bất kỳ thông báo lỗi nào. Hãy dùng mục [Cập nhật](#cập-nhật) bên dưới thay thế.
 
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Đã giải nén ở đây, bỏ qua bước này." || tar -xzf omega-serv-2.5.0.tar.gz
+[ -d omega-serv ] && echo "ℹ️ Đã giải nén ở đây, bỏ qua bước này." || tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -164,7 +165,7 @@ Nếu `omega-serv/` đã tồn tại (bản cài đặt trước), **đừng bao
 
 ```bash
 # Từ thư mục CHA của omega-serv/ (không bao giờ từ bên trong)
-tar -xzf omega-serv-2.5.0.tar.gz
+tar -xzf omega-serv-2.6.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -276,14 +277,14 @@ Hướng dẫn trợ giúp (phím `a`) có màn hình **Liên hệ và hỗ tr�
 - **Hồ sơ** — cùng trường hợp sử dụng với `profile` trong CLI, luôn hiển thị diff trước khi ghi.
 - **Cấu hình chi tiết của máy chủ** — CRUD đầy đủ cho alias/chuyển hướng/rewrite/dirlisting/proxy tin cậy/reverse proxy đi ra/FastCGI/cache/xác thực/kiểm soát truy cập/trang lỗi, cùng menu con **TLS** (trạng thái, tạo chứng chỉ tự ký, trình hướng dẫn CA cục bộ, trình hướng dẫn Let's Encrypt/Certbot, gia hạn tự động, thu hồi, bật/tắt); khung thứ hai **TÙY CHỌN VÀ KIỂM TRA** gom các lối tắt tới **Tùy chọn** (`option` trong CLI) và **Kiểm tra cấu hình** (`config check` trong CLI) — cùng lộ trình chỉnh thiết lập rồi kiểm tra, hai màn hình này không còn truy cập trực tiếp từ menu chính. WAF không còn nằm ở đây (xem "Bảo mật chủ động" bên dưới): nó chủ yếu hiển thị trạng thái vận hành thay đổi liên tục, không phải một biểu mẫu cấu hình tĩnh đơn giản. Mỗi lần lưu luôn chỉ rõ bước tiếp theo: nạp lại nóng tự động và lặng lẽ nếu dịch vụ đang chạy (dirlisting, truy cập, alias/chuyển hướng/rewrite, cache, trang lỗi, proxy tin cậy, vùng reverse proxy/FastCGI, người dùng/vùng xác thực), hoặc xác nhận tường minh việc khởi động lại hoàn toàn khi thay đổi liên quan đến socket lắng nghe, TLS hoặc Active Defense — không màn hình nào còn để bạn phải đoán có cần khởi động lại máy chủ hay không.
 - **Bảo mật chủ động** — một màn hình duy nhất gom ba khối đặt cạnh nhau, theo thứ tự của một cuộc tấn công: **WAF**, **Active Defense** và **RIPOSTE** (phản ứng theo bậc qua thời gian). **Active Defense** (Trạng thái, Mối đe dọa được theo dõi với điểm/mức, Sự cố với dòng thời gian/xuất IoC/báo cáo, phân bổ Deception, Mô phỏng một quyết định ở chế độ dry-run, **Thiết lập** — cấu hình đầy đủ mà không bao giờ phải sửa tay `config/omega-serve.json`) và **WAF** (Trạng thái, Mô-đun — chế độ/gói quy tắc/danh sách chặn, Thử một yêu cầu, Custom — tạo quy tắc tùy chỉnh và nạp các danh sách đường dẫn/từ khóa có thể sửa bằng chuột, Magnet — nhập một script `mod_magnet` bên ngoài có kiểm tra tương thích trước khi kích hoạt). Bên dưới ba khối, **CAN THIỆP THỦ CÔNG**: cấm hoặc gỡ cấm một địa chỉ IP bằng tay, trạng thái của mọi lệnh cấm.
-- **Quản lý log** — menu hai cột. Cột **Thư viện**: trung tâm tham chiếu mọi log cần xử lý (thêm thủ công, một cú nhấp thêm ngay các log riêng của instance — access/error/WAF gốc, + script magnet nếu đang bật —, hoặc một **nguồn từ xa** được tải về qua SSH, xem bên dưới); **Yêu thích** (tổ hợp log + trình xem được lưu dưới một tên, mở trực tiếp); **Xem log** với 3 trình xem tùy chọn theo số log được chọn — Đơn giản (tail trực tiếp + thống kê chung IP/lỗi/mã HTTP trên mọi định dạng), Cổ điển (đọc + theo dõi), `lnav` hợp nhất (hiển thị terminal thực trong giao diện, log magnet được đưa vào sẵn + các đường dẫn thủ công **được ghim** để giữ lại giữa các phiên); **Xem và xử lý IP** (top IP trên một hoặc nhiều log tùy chọn, khoảng thời gian 24h/7 ngày/30 ngày/tất cả, gỡ một IP). Cột **Bảo trì** (không đổi): xoay vòng/lưu trữ thủ công hoặc tự động theo ngưỡng kích thước, tạo bản sao lưu ngay, cấu hình/quản lý các tác vụ tự động lên lịch (dạng khai báo — xem ghi chú bên dưới), khôi phục/dọn dẹp một bản lưu trữ, xuất danh sách.
+- **Quản lý log** — menu hai cột. Cột **Thư viện**: trung tâm tham chiếu mọi log cần xử lý (thêm thủ công, một cú nhấp thêm ngay các log riêng của instance — access/error/WAF gốc, + script magnet nếu đang bật —, hoặc một **nguồn từ xa** được tải về qua SSH, xem bên dưới); **Yêu thích** (tổ hợp log + trình xem được lưu dưới một tên, mở trực tiếp); **Xem log** với 3 trình xem tùy chọn theo số log được chọn — Đơn giản (tail trực tiếp + thống kê chung IP/lỗi/mã HTTP trên mọi định dạng), Cổ điển (đọc + theo dõi), `lnav` hợp nhất (hiển thị terminal thực trong giao diện, log magnet được đưa vào sẵn + các đường dẫn thủ công **được ghim** để giữ lại giữa các phiên); **Xem và xử lý IP** (top IP trên một hoặc nhiều log tùy chọn, khoảng thời gian 24h/7 ngày/30 ngày/toàn bộ tệp, tính toán ở nền kèm chỉ báo tiến độ, gỡ một IP); **Thống kê** (báo cáo đầy đủ của một hoặc nhiều log — tổng hợp, trạng thái HTTP, top IP, đường dẫn, phân bố theo giờ, xu hướng theo ngày — có thể xuất JSON/HTML). Cột **Bảo trì**: xoay vòng/lưu trữ thủ công hoặc tự động theo ngưỡng kích thước, tạo bản sao lưu ngay, cấu hình/quản lý các tác vụ tự động lên lịch (được thực thi mỗi đêm bởi bộ hẹn giờ systemd, hoặc bởi một dòng crontab trên OpenRC/runit), khôi phục/dọn dẹp một bản lưu trữ, xuất danh sách; **Tình trạng log** (kiểm tra chỉ đọc các log, ổ đĩa và bản lưu trữ — quyền, log im lặng hoặc hư hỏng, xoay vòng, logrotate, số ngày trước khi đầy đĩa —, kèm thao tác cần làm cho từng phát hiện, sửa quyền — dùng sudo nếu cần —, xuất JSON/HTML/TXT). Khi một log không đọc được bằng tài khoản của bạn, Thống kê và Xem và xử lý IP sẽ hỏi mật khẩu sudo của bạn rồi đọc nó.
 - **Dịch vụ** — cùng các hành động với `service` trong CLI, nâng quyền `sudo` từng lần cho mỗi hành động, không bao giờ chạy toàn bộ ứng dụng bằng root.
 - **Đa instance** — sổ đăng ký toàn cục (`~/.config/omega-serv/instances.json`, nằm ngoài mọi thư mục dự án) các bản cài đặt đã biết trên máy, kèm trạng thái systemd của từng bản; tạo instance mới (sao chép cây thư mục, môi trường ảo và phụ thuộc riêng, cấu hình mới với cổng khác, kiểm tra không lồng nhau và không xung đột cổng) ngay từ giao diện. Nút về cơ bản không hiển thị khi chỉ có một bản cài đặt (nhãn "Đa instance" trở thành "Instances (N)" khi biết từ 2 bản trở lên); chuyển hẳn sang một instance khác (`os.execv`, xác nhận tường minh, splash riêng thông báo việc chuyển khi khởi động lại); gỡ cài đặt hoàn toàn một instance (gỡ unit, gỡ tài khoản hệ thống riêng nếu không còn instance nào khác dùng, và tùy chọn xóa thư mục, không bao giờ mặc định).
 - **Trạng thái & Tài nguyên** — tổng quan trong nháy mắt, làm mới mỗi 2 giây: trạng thái máy chủ (tiến trình/PID, trạng thái dịch vụ hệ thống, hồ sơ/tùy chọn đang bật/TLS/cổng), luồng log truy cập trực tiếp (lưu lượng, phân bố theo mã trạng thái, IP duy nhất, tỷ lệ lỗi), tài nguyên hệ thống (CPU/RAM/đĩa/swap/tải/mạng, qua `psutil`); cũng gom lối tắt **Mô phỏng yêu cầu** (cùng trường hợp sử dụng với lệnh CLI tương ứng).
 - **Kiểm tra bảo mật** — cùng trường hợp sử dụng với lệnh CLI tương ứng.
 - **Sao lưu cấu hình** — bản lưu trữ tar.gz của tệp cấu hình và, khi được chọn tường minh, các quy tắc WAF/vùng xác thực/chứng chỉ (bắt buộc xác nhận khi có bí mật thật được đưa vào)/cơ sở dữ liệu Active Defense, khôi phục, liệt kê, xóa.
 
-> Ghi chú về các tác vụ xoay vòng tự động lên lịch: chúng được lưu lại (tần suất + log đích) nhưng **không có gì tự động thực thi chúng** — cả ở phía giao diện lẫn dưới dạng tác vụ nền. Đây là lựa chọn có chủ ý để đồng nhất với màn hình tương đương của `omega-fire`, vốn có cùng hành vi khai báo. Việc thực thi định kỳ thật sự (bộ hẹn giờ systemd, tác vụ nền) sẽ được xây dựng riêng nếu nhu cầu được xác nhận.
+> Ghi chú về các tác vụ xoay vòng tự động lên lịch: tác vụ tự động đầu tiên sẽ cài đặt một tác vụ hằng ngày — bộ hẹn giờ systemd (sẽ hỏi mật khẩu sudo), nếu không được thì một dòng trong crontab của bạn (OpenRC, runit hoặc không có trình quản lý dịch vụ, cần có một daemon cron đang chạy), nếu vẫn không được thì dòng bạn cần tự thêm sẽ được hiển thị. Mỗi đêm, `omega-serv logs run-automations` lưu trữ, dưới tài khoản của bạn, từng log đã đến hạn; xóa tác vụ tự động cuối cùng sẽ gỡ bỏ tác vụ hằng ngày.
 
 #### Thiết lập ứng dụng (phím `o` hoặc bảng lệnh)
 
@@ -637,7 +638,19 @@ Tự động phát hiện systemd/OpenRC/runit (`service install/status/start/st
 
 `var/log/access.log` (định dạng Apache combined + `request_id`, thoát ký tự chống chèn log), `var/log/error.log`. Xoay vòng theo kích thước/số tệp được giữ lại (`logs.rotation`). WAF gốc: `var/log/waf-alerts.log` (`options.waf.logging.path`). Script magnet: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, mặc định `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — chỉ được thêm sẵn vào Thư viện (nút *Thêm các log đã biết của Omega-Serv*) nếu magnet đang bật; còn `lnav` thì luôn đề xuất chúng (tệp không tồn tại chỉ đơn giản bị bỏ qua khi khởi chạy).
 
-### 13a. Nguồn từ xa (SSH)
+### 13a. Trình quản lý log
+
+Màn hình **Quản lý log** là một trình quản lý thực thụ, không chỉ là một trình đọc đơn giản: mọi log (log của instance, một tệp thêm bằng tay, hoặc bản sao từ một máy chủ từ xa) đều vào **Thư viện**, rồi:
+
+- **Đọc** — ba trình xem: Đơn giản (bảng điều khiển trực tiếp: mã HTTP, từ chối 403/429, top IP, đường dẫn), Cổ điển (đọc và theo dõi), `lnav` tích hợp (hợp nhất nhiều log). Một mục **Yêu thích** lưu một lựa chọn cùng trình xem của nó dưới một tên.
+- **Phân tích** — **Xem và xử lý IP** (các địa chỉ hoạt động nhiều nhất, trong 24 giờ, 7 ngày, 30 ngày hoặc toàn bộ tệp) và **Thống kê** (báo cáo đầy đủ, xuất JSON/HTML), được tính ở nền trên nhiều lõi, kể cả với tệp lớn. Trong **Xem và xử lý IP**, bạn cũng có thể nhập một IP cụ thể: số dòng của nó được đếm trong từng log, rồi gỡ bằng một cú nhấp.
+- **Kiểm soát** — **Tình trạng log**: quyền, log im lặng hoặc hư hỏng, xoay vòng, dung lượng đĩa, bản lưu trữ và tác vụ tự động, kèm thao tác cần làm cho từng phát hiện; xuất JSON/HTML/TXT.
+- **Sao lưu** — xoay vòng theo ngưỡng kích thước, sao lưu ngay, khôi phục và dọn dẹp bản lưu trữ (`var/backups/logs/`).
+- **Tự động hóa** — một bản sao lưu lên lịch cho mỗi log (mỗi N ngày), được thực thi mỗi đêm bởi bộ hẹn giờ systemd, hoặc bởi một dòng trong crontab của bạn (OpenRC, runit), luôn dưới tài khoản của bạn, không bao giờ là root.
+
+Khi quyền truy cập cản trở, omega-serv hỏi mật khẩu sudo của bạn để đọc log, hoặc chỉ để sửa đúng quyền bị sai (khi đó lệnh được hiển thị trước khi chạy).
+
+### 13b. Nguồn từ xa (SSH)
 
 Tập trung, theo yêu cầu tường minh, log của một máy chủ backend nằm trong cùng mạng cục bộ phía sau reverse proxy (màn hình **Quản lý log → Thư viện → Nguồn từ xa (SSH)**). Một lần « fetch » là thao tác thủ công và đơn lẻ, không bao giờ là luồng trực tiếp hay thăm dò tự động: một **bản sao** được tải về qua `scp` lúc nhấp *Tải về ngay*, ghi vào `var/log/remote/`, rồi thêm vào Thư viện như một log bình thường (cột *Truy cập* = `ssh`, cột *Sửa đổi* = ngày của **lần** tải về **này** — không bao giờ là ngày của tệp từ xa); lần tải về mới chỉ đơn giản thay bản sao trước bằng bản mới hơn.
 

@@ -45,6 +45,7 @@ from omega_serv.ports.log_library_repository_port import LogLibraryRepositoryPor
 from omega_serv.ports.logger_port import LoggerPort
 from omega_serv.ports.profile_repository_port import ProfileRepositoryPort
 from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
+from omega_serv.ports.release_source_port import ReleaseSourcePort
 from omega_serv.ports.remote_log_source_repository_port import RemoteLogSourceRepositoryPort
 from omega_serv.ports.service_manager_port import ServiceManagerPort
 from omega_serv.ports.settings_store import SettingsStore
@@ -133,11 +134,14 @@ class DependencyContainer:
         export_guide_html_fn: Callable[[Sequence[dict], Sequence[dict], str], str] | None = None,
         export_bans_html_fn: Callable[[Sequence[dict], int, str], str] | None = None,
         export_in_language_runner: Callable[[list[str], str], ProcessResult] | None = None,
+        export_payload_fn: Callable[[str, dict, str], str | None] | None = None,
+        privileged_runner_factory: Callable[[], ProcessRunnerPort] | None = None,
         serve_foreground_runner: Callable[[Path, DependencyContainer], Awaitable[int]] | None = None,
         riposte_store_factory: Callable[[Path, bool], RiposteStorePort] | None = None,
         riposte_journal_reader: Callable[[Path, Path], list[ObservedEvent]] | None = None,
         installed_jails_reader: Callable[[], frozenset[str] | None] | None = None,
         declaration_sender_factory: Callable[[str], DeclarationSenderPort] | None = None,
+        release_source_factory: Callable[[str], ReleaseSourcePort] | None = None,
         url_opener: Callable[[str], bool] | None = None,
         create_instance_runner: Callable[
             [Path, str, Path, str, int, str, FilesystemPort, InstanceRegistryPort, ClockPort,
@@ -173,12 +177,15 @@ class DependencyContainer:
         self._export_guide_html_fn = export_guide_html_fn
         self._export_bans_html_fn = export_bans_html_fn
         self._export_in_language_runner = export_in_language_runner
+        self._export_payload_fn = export_payload_fn
+        self._privileged_runner_factory = privileged_runner_factory
         self._last_export_error: str | None = None
         self._serve_foreground_runner = serve_foreground_runner
         self._riposte_store_factory = riposte_store_factory
         self._riposte_journal_reader = riposte_journal_reader
         self._installed_jails_reader = installed_jails_reader
         self._declaration_sender_factory = declaration_sender_factory
+        self._release_source_factory = release_source_factory
         self._url_opener = url_opener
         self._project_root = project_root
         self._systemd_unit_dir = systemd_unit_dir
@@ -550,6 +557,43 @@ class DependencyContainer:
             "bans", theme_name, None if fn is None else (lambda: fn(bans, active_count, theme_name)))
 
     @property
+    def privileged_runner_factory(self) -> Callable[[], ProcessRunnerPort] | None:
+        """Runner des operations sur les logs avec sudo (2026-11-07 : Statistiques, Voir et traiter IP, Sante
+        des logs) - meme regime que `acme_client_factory` : None dans les tests (jamais de vrai sudo), une
+        vraie `SubprocessRunner()` en production (omega_serv.__main__)."""
+        return self._privileged_runner_factory
+
+    def export_payload(self, kind: str, payload: dict, theme_name: str) -> str | None:
+        """Rapport rendu a partir de donnees deja calculees (Statistiques, Sante des logs - 2026-11-07) :
+        `kind` = "log-stats", "log-health" ou "log-health-txt". Dans une autre langue d'export, les
+        donnees passent a l'enfant par un fichier JSON temporaire de var/run/ (jamais recalculees : un
+        gros log prendrait des minutes), supprime ensuite."""
+        import json
+        import tempfile
+
+        self._last_export_error = None
+        fn = self._export_payload_fn
+        code = self._export_language_override()
+        if code is None:
+            return None if fn is None else fn(kind, payload, theme_name)
+        if self._export_in_language_runner is None:
+            return None
+        run_dir = self._project_root / "var" / "run"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".json", prefix="export-payload-",
+                                         dir=run_dir, delete=False) as handle:
+            json.dump(payload, handle, ensure_ascii=False, default=str)
+            payload_path = Path(handle.name)
+        try:
+            result = self._export_in_language_runner(["_export-payload", kind, theme_name, str(payload_path)], code)
+        finally:
+            payload_path.unlink(missing_ok=True)
+        if not result.ok:
+            self._last_export_error = self._export_error_message(code, result)
+            return None
+        return result.stdout
+
+    @property
     def serve_foreground_runner(self) -> Callable[[Path, DependencyContainer], Awaitable[int]] | None:
         """Lance reellement le serveur au premier plan (bloquant jusqu'a
         Ctrl+C/SIGTERM) - retour utilisateur 2026-09-09 : l'assistant
@@ -602,6 +646,12 @@ class DependencyContainer:
         """Envoi HTTPS vers la reception ; None hors interface (urllib atteint ssl : injecte depuis
         __main__.py, jamais importe ici)."""
         factory = self._declaration_sender_factory
+        return None if factory is None else factory(self.app_version)
+
+    def release_source(self) -> ReleaseSourcePort | None:
+        """Lecture de download/sha.txt pour « Verifier les mises a jour » ; None hors interface (urllib atteint
+        ssl : injecte depuis __main__.py, jamais importe ici, comme declaration_sender)."""
+        factory = self._release_source_factory
         return None if factory is None else factory(self.app_version)
 
     def open_url(self, url: str) -> bool:

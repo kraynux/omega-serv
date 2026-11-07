@@ -106,3 +106,36 @@ def plan_read_access_fixes(
         new_mode = node.mode | (bit << _permission_class_shift(node, account))
         fixes.append(AccessFix(path=node.path, current_mode=stat.S_IMODE(node.mode), new_mode=stat.S_IMODE(new_mode)))
     return tuple(fixes), tuple(not_fixable)
+
+
+_WRITE = 0o2
+
+
+def service_can_write(chain: tuple[PathNode, ...], account: AccountIdentity) -> ReadabilityVerdict:
+    """Le compte du service peut-il ECRIRE dans le fichier (dernier element de `chain`) ? Sante des logs,
+    2026-11-07 : un log d'omega-serv cree par l'utilisateur en 644 n'est plus alimente par le service
+    (bug des logs partages). Chaque dossier doit etre traversable (x), le fichier inscriptible (w)."""
+    if account.uid == 0:
+        return ReadabilityVerdict(readable=True)
+    blocking: list[PathNode] = []
+    for node in chain:
+        needed = _EXECUTE if node.is_dir else _WRITE
+        if not _has_bit(node, account, needed):
+            blocking.append(node)
+    return ReadabilityVerdict(readable=not blocking, blocking=tuple(blocking))
+
+
+def plan_write_access_fix(
+    verdict: ReadabilityVerdict, account: AccountIdentity, current_uid: int,
+) -> AccessFix | None:
+    """Seule correction faite par omega-serv : ajouter le bit d'ecriture du GROUPE au fichier, quand le
+    compte du service est membre de son groupe et que l'utilisateur en est proprietaire (jamais de sudo,
+    jamais le bit « autres » : un log inscriptible par tout le monde est une faille). None sinon : la
+    commande a lancer est affichee a l'utilisateur."""
+    if len(verdict.blocking) != 1:
+        return None
+    node = verdict.blocking[0]
+    if node.is_dir or node.uid != current_uid or _permission_class_shift(node, account) != 3:
+        return None
+    new_mode = node.mode | (_WRITE << 3)
+    return AccessFix(path=node.path, current_mode=stat.S_IMODE(node.mode), new_mode=stat.S_IMODE(new_mode))

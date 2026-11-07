@@ -308,8 +308,14 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(table.row_count, 1)
             table.move_cursor(row=0)
             table.action_select_cursor()
-            await pilot.pause()
-            self.assertIn("opened", str(pilot.app.screen.query_one("#incident-detail", Static).content))
+            # Attente bornee (2026-11-07) : sous la charge de la suite complete, une seule pause ne suffisait
+            # pas toujours a afficher le detail (echec intermittent, jamais seul).
+            detail = pilot.app.screen.query_one("#incident-detail", Static)
+            for _attempt in range(50):
+                await pilot.pause(0.1)
+                if str(detail.content):
+                    break
+            self.assertIn("opened", str(detail.content))
 
             pilot.app.screen.query_one("#close-incident", Button).press()
             await pilot.pause()
@@ -1060,7 +1066,13 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             await self._reach_home(pilot)
             await self._open_menu(pilot)
             pilot.app.screen.query_one("#settings", Button).press()
-            await pilot.pause()
+            # Attente bornee (2026-11-07) : sous la charge de la suite complete, on_mount remplissait les champs
+            # APRES la saisie du test, qui etait ecrasee (enregistrement valide, demande de redemarrage).
+            for _attempt in range(50):
+                await pilot.pause(0.1)
+                fields = pilot.app.screen.query("#war-suspicious-input")
+                if fields and fields.first(Input).value:
+                    break
             pilot.app.screen.query_one("#war-suspicious-input", Input).value = "90"
             pilot.app.screen.query_one("#war-hostile-input", Input).value = "10"
             pilot.app.screen.query_one("#save", Button).press()

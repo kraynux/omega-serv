@@ -261,8 +261,9 @@ CONTACT_SUPPORT_SCREEN = ScreenGuide(
     screen_class_name="ContactSupportScreen",
     title=_("Contact et support"),
     acces=_("Guide d'aide (touche a) -> Contact et support"),
-    definition=_("Payer un café au développeur, se déclarer utilisateur anonyme d'omega-serv, ou contacter le "
-                 "support. Les adresses sont toujours affichées en clair."),
+    definition=_("Payer un café au développeur, se déclarer utilisateur anonyme d'omega-serv, contacter le "
+                 "support, ou vérifier si une nouvelle version est publiée. Les adresses sont toujours affichées "
+                 "en clair."),
     fields=(
         FieldGuide(
             label=_("Payer un café"),
@@ -294,6 +295,17 @@ CONTACT_SUPPORT_SCREEN = ScreenGuide(
             utilisation=_("Aucune saisie : omega-serv n'envoie jamais de message lui-même."),
             action=_("Ouvre l'adresse dans votre navigateur."),
             reaction=_("Sans session graphique, recopiez l'adresse affichée."),
+        ),
+        FieldGuide(
+            label=_("Vérifier les mises à jour / Voir les nouveautés"),
+            definition=_("Compare la version installée (aussi affichée dans la barre de titre) à la liste des "
+                         "versions publiées sur le site (download/sha.txt)."),
+            utilisation=_("Seulement sur votre clic : aucune vérification automatique, rien n'est envoyé. Même "
+                          "vérification en ligne de commande : omega-serv version --check."),
+            action=_("Affiche « à jour », la nouvelle version avec l'adresse de son archive, ou une version en "
+                     "cours plus récente que la dernière publiée."),
+            reaction=_("Si une version plus récente existe, « Voir les nouveautés » ouvre son résumé dans votre "
+                       "navigateur. Rien n'est installé : la mise à jour se fait comme décrit dans le README."),
         ),
     ),
     consequences=_("Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déclaration) ou sur Ne plus "

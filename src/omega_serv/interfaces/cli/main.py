@@ -91,6 +91,7 @@ from omega_serv.application.tls.revoke_certificate import revoke_certificate
 from omega_serv.application.tls.sign_certificate_signing_request import (
     sign_certificate_signing_request,
 )
+from omega_serv.application.updates.check_updates import check_for_update
 from omega_serv.bootstrap.container import DependencyContainer
 from omega_serv.bootstrap.early_language import is_server_process
 from omega_serv.bootstrap.paths import CONFIG_FILE
@@ -113,6 +114,7 @@ from omega_serv.domain.security.waf.config import parse_waf_config
 from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.domain.services.entities import ServiceStatus
 from omega_serv.domain.services.systemd_unit import SystemdUnitParams
+from omega_serv.domain.updates.release_check import UpdateStatus
 from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
 from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
     MarkdownIncidentReportExporter,
@@ -1468,6 +1470,30 @@ def cmd_engine_status(args: argparse.Namespace, container: DependencyContainer) 
     return 0
 
 
+def cmd_logs_run_automations(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Lancee chaque nuit par le timer systemd ou la ligne crontab (2026-11-07) : fait tourner les logs dont
+    l'automatisation (Gestion des logs -> Rotate / archivage) est arrivee a echeance."""
+    from datetime import datetime, timezone
+
+    from omega_serv.application.logs.rotation_automation import run_due_automations
+
+    result = load_config(container.configuration, args.config)
+    if not result.success or result.config is None:
+        _print_errors(result.errors)
+        return 1
+    now = datetime.now(timezone.utc)
+    runs = run_due_automations(container.build_rotation_automation_store(), result.config.logs,
+                               container.project_root, now, container.rotate_log_if_needed)
+    stamp = now.strftime("%Y-%m-%d %H:%M UTC")
+    if not runs:
+        print(_("{stamp} : aucune automatisation à échéance.").format(stamp=stamp))
+    for run in runs:
+        state = _("réussie") if run.success else _("échec")
+        print(_("{stamp} : {log_id} : {state} - {message}").format(stamp=stamp, log_id=run.log_id, state=state,
+                                                                    message=run.message))
+    return 0 if all(run.success for run in runs) else 1
+
+
 def cmd_service_status(args: argparse.Namespace, container: DependencyContainer) -> int:
     manager = _detect_or_fail()
     if manager is None:
@@ -1617,6 +1643,32 @@ def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer)
         print(_("État : sécurisé") if result.is_secure else _("État : NON SÉCURISÉ"))
 
     return result.exit_code
+
+
+def cmd_version(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Meme verification que Guide d'aide → Contact et support → « Vérifier les mises à jour » (2026-11-07).
+    Code de sortie 1 si le site est injoignable ou la liste illisible."""
+    installed = container.app_version
+    if not args.check:
+        print(installed)
+        return 0
+    from omega_serv.infrastructure.updates.https_release_source import HttpsReleaseSource
+
+    check = check_for_update(HttpsReleaseSource(installed), installed)
+    if check.status is UpdateStatus.UPDATE_AVAILABLE:
+        print(_("Nouvelle version disponible : {latest} (installée : {installed}).\nArchive : {url}").format(
+            latest=check.latest, installed=check.installed, url=check.archive_url))
+        print(_("Nouveautés : {url}").format(url=check.notes_url))
+    elif check.status is UpdateStatus.UP_TO_DATE:
+        print(_("Vous avez la dernière version publiée ({version}).").format(version=check.installed))
+    elif check.status is UpdateStatus.AHEAD:
+        print(_("Votre version ({installed}) est plus récente que la dernière publiée ({latest}) : "
+                "version en cours, pas encore publiée.").format(installed=check.installed, latest=check.latest))
+    else:
+        print(_("Version installée : {version}. Site injoignable ou liste des versions illisible : "
+                "réessayez plus tard.").format(version=check.installed), file=sys.stderr)
+        return 1
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1776,6 +1828,12 @@ def build_parser() -> argparse.ArgumentParser:
     add_command(active_defense_sub, "purge", _(
         "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime les incidents fermés "
         "depuis plus de 90 jours.")).set_defaults(func=cmd_active_defense_purge)
+
+    logs_sub = add_group(subparsers, "logs", _("Logs d'omega-serv."), "logs_command")
+    add_command(logs_sub, "run-automations", _(
+        "Fait tourner les logs dont l'automatisation (Rotate / archivage) est à échéance."), _(
+        "Lancée chaque nuit par le timer systemd ou la ligne crontab installés par l'interface.")).set_defaults(
+        func=cmd_logs_run_automations)
 
     engine_sub = add_group(subparsers, "engine", _("Moteur HTTP (Python ou natif)."), "engine_command")
     add_command(engine_sub, "status", _(
@@ -2025,6 +2083,12 @@ def build_parser() -> argparse.ArgumentParser:
     security_parser.set_defaults(func=cmd_audit_security)
 
     add_declaration_parser(subparsers)
+
+    version_parser = add_command(subparsers, "version", _(
+        "Affiche la version installée ; --check la compare à la dernière version publiée sur le site."))
+    version_parser.add_argument("--check", action="store_true", help=_(
+        "Lit la liste des versions publiées (download/sha.txt du site) ; rien n'est envoyé."))
+    version_parser.set_defaults(func=cmd_version)
 
     help_parser = add_command(subparsers, "help", _(
         "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte)."))
