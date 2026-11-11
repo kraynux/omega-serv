@@ -13,7 +13,7 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
-## version 2.6.1 : construite le 2026-11-10, non publiée
+## version 2.6.1 : Publié
 
 Correctifs issus de l'étude de l'interconnecteur de la suite (`~/DEV/CONNECT/`), étape 1 : rendre chaque outil
 sûr avant de les relier ; étape 2 : contrats communs (omega-lib 0.2.0).

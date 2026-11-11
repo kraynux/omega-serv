@@ -130,10 +130,10 @@ Omega-serv **ปฏิเสธการเริ่มทำงานในฐ�
 
 ### ดาวน์โหลด
 
-ไฟล์เก็บถาวรของเวอร์ชันล่าสุดและค่าแฮช SHA-256 ของทุกเวอร์ชัน: [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+ไฟล์เก็บถาวรของเวอร์ชันล่าสุดและค่าแฮช SHA-256 ของทุกเวอร์ชัน: [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -142,10 +142,8 @@ sha256sum -c --ignore-missing sha.txt
 
 ## 2. การติดตั้ง
 
-> ⚠️ **กำลังอัปเดตการติดตั้งที่มีอยู่แล้วใช่ไหม?** คำสั่งด้านล่าง **ข้ามการแตกไฟล์อย่างเงียบ ๆ** ถ้ามี `omega-serv/` อยู่แล้ว (มันถือว่าเป็นการติดตั้งครั้งแรกที่ถูกขัดจังหวะ ไม่ใช่การอัปเดต) — ผลคือคุณจะติดตั้ง dependency ใหม่บน **โค้ดเก่าที่ไม่เปลี่ยนแปลง** โดยไม่มีข้อความผิดพลาดใด ๆ เลย ให้ใช้หัวข้อ [การอัปเดต](#การอัปเดต) ด้านล่างแทน
-
 ```bash
-[ -d omega-serv ] && echo "ℹ️ แตกไฟล์ไว้ที่นี่แล้ว ข้ามขั้นตอนนี้" || tar -xzf omega-serv-2.6.0.tar.gz
+tar -xzf omega-serv-2.6.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -165,7 +163,7 @@ chmod +x install.sh
 
 ```bash
 # จากโฟลเดอร์แม่ของ omega-serv/ (ห้ามทำจากภายใน)
-tar -xzf omega-serv-2.6.0.tar.gz
+tar -xzf omega-serv-2.6.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```

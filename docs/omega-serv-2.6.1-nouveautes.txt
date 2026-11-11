@@ -1,0 +1,35 @@
+OMEGA-SERV 2.6.1 - Ce qui change pour vous
+==========================================
+
+Une version de sécurité et de fiabilité, et omega-serv sait se présenter aux autres
+outils omega (omega-connect) et travailler avec eux. Le détail technique complet reste
+dans le CHANGELOG.
+
+
+SÉCURITÉ ET DROITS
+------------------
+- La réparation des permissions ne suit plus jamais un lien symbolique placé dans var/ :
+  un tel lien aurait pu faire changer par root les droits d'un fichier système.
+- Les sauvegardes complètes (var/backups/ : comptes, certificats, clés privées) ne sont
+  plus partagées avec le groupe du service : propriétaire seul.
+- Les commandes qui écrivent dans le projet sont refusées en root : elles y créaient des
+  fichiers que le service ne pouvait plus modifier (liste noire en root, puis erreur 502).
+- omega-serv.sh ne lance plus d'installation de paquets en root dans votre dossier.
+- var/run/ garde son partage avec le service à chaque démarrage.
+- Mode log-only : omega-waf ne pose plus de ban réseau quand le serveur, lui, ne bloque
+  rien.
+
+
+TRAVAILLER AVEC LES AUTRES OUTILS OMEGA
+---------------------------------------
+- ./omega-serv.sh synchro jeton dépose une « carte d'identité » (var/omega-jeton.json) ;
+  ./omega-serv.sh synchro fiche décrit l'instance (fonctions actives, service, journaux
+  partagés, liste protégée). omega-connect les lit pour relier vos outils.
+- ./omega-serv.sh service permissions répare en ligne de commande les droits partagés
+  avec le service (le même bouton existe dans l'écran Service).
+- ./omega-serv.sh synchro groupe-service ajouter|retirer donne au service l'accès à
+  l'espace partagé d'omega-connect, sans toucher à son unité systemd ; pris en compte au
+  prochain redémarrage du service.
+- Liste noire : les autres outils marquent leurs bans de leur origine et ne lèvent plus
+  que les leurs (blocklist add/remove --origin) ; lecture en JSON (blocklist list
+  --format json).

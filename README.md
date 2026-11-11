@@ -135,10 +135,10 @@ Omega-serv **refuse de démarrer en tant que root**. Aucun module de sécurité 
 
 ### Téléchargement 
 
-Archive de la dernière version et empreintes SHA-256 de chaque version : [omega-serv-2.6.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archive de la dernière version et empreintes SHA-256 de chaque version : [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.0.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -147,10 +147,8 @@ sha256sum -c --ignore-missing sha.txt
 
 ## 2. Installation
 
-> ⚠️ **Vous mettez à jour une installation existante ?** La commande ci-dessous **saute silencieusement l'extraction** si `omega-serv/` existe déjà (elle suppose que c'est une première installation interrompue, pas une mise à jour) — vous réinstalleriez alors les dépendances sur l'**ancien code inchangé**, sans le moindre message d'erreur. Utilisez la section [Mise à jour](#mise-à-jour) ci-dessous à la place.
-
 ```bash
-[ -d omega-serv ] && echo "ℹ️ Déjà extrait ici, étape ignorée." || tar -xzf omega-serv-2.6.0.tar.gz
+tar -xzf omega-serv-2.6.1.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -170,7 +168,7 @@ Si `omega-serv/` existe déjà (installation précédente), **ne lancez jamais `
 
 ```bash
 # Depuis le dossier PARENT de omega-serv/ (jamais depuis l'intérieur)
-tar -xzf omega-serv-2.6.0.tar.gz
+tar -xzf omega-serv-2.6.1.tar.gz
 cd omega-serv/
 ./install.sh
 ```
