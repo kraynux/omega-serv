@@ -15,12 +15,15 @@ import asyncio
 import getpass
 import json
 import os
+import pwd
 import signal
 import sys
 from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 from typing import cast
+
+from omega_lib.synchro.models import ServiceInfo
 
 from omega_serv.application.active_defense.manage_deception import release_deception
 from omega_serv.application.active_defense.manage_incidents import close_incident
@@ -63,6 +66,7 @@ from omega_serv.application.server.start_server import (
 )
 from omega_serv.application.services.install_service import (
     install_systemd_service,
+    repair_service_permissions,
     uninstall_systemd_service,
 )
 from omega_serv.application.services.manage_service import (
@@ -113,6 +117,7 @@ from omega_serv.domain.security.tls.exceptions import CertificateToolError
 from omega_serv.domain.security.waf.config import parse_waf_config
 from omega_serv.domain.security.waf.reputation import effective_never_auto_block
 from omega_serv.domain.services.entities import ServiceStatus
+from omega_serv.domain.services.exceptions import ServiceControlError
 from omega_serv.domain.services.systemd_unit import SystemdUnitParams
 from omega_serv.domain.updates.release_check import UpdateStatus
 from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
@@ -718,6 +723,14 @@ def cmd_blocklist_list(args: argparse.Namespace, container: DependencyContainer)
 
     blocklist_port = build_blocklist_port(load_result.config, container.project_root, container.filesystem, container.clock)
     entries = blocklist_port.list_entries()
+    if args.format == "json":
+        # Format lisible par les autres outils (2026-11-10) : jamais traduit, versionne, au lieu de la
+        # sortie texte (traduite, « permanent ») que le pont d'omega-jail devait analyser.
+        print(json.dumps({"schema_version": 1, "entries": [
+            {"network": e.network, "source": e.source, "origin": e.origin, "created_at": e.created_at,
+             "expires_at": e.expires_at, "reason": e.reason} for e in entries
+        ]}, ensure_ascii=False))
+        return 0
     if not entries:
         print(_("Aucune entrée."))
         return 0
@@ -737,6 +750,7 @@ def cmd_blocklist_add(args: argparse.Namespace, container: DependencyContainer) 
     blocklist_port = build_blocklist_port(load_result.config, container.project_root, container.filesystem, container.clock)
     result = add_blocklist_entry(
         blocklist_port, args.network, args.reason, args.duration_seconds, confirm_permanent=args.confirm_permanent,
+        origin=args.origin,
     )
     print(result.message)
     return 0 if result.success else 1
@@ -750,7 +764,7 @@ def cmd_blocklist_remove(args: argparse.Namespace, container: DependencyContaine
     assert load_result.config is not None
 
     blocklist_port = build_blocklist_port(load_result.config, container.project_root, container.filesystem, container.clock)
-    result = remove_blocklist_entry(blocklist_port, args.network)
+    result = remove_blocklist_entry(blocklist_port, args.network, origin=args.origin)
     print(result.message)
     return 0 if result.success else 1
 
@@ -1595,6 +1609,98 @@ def cmd_service_uninstall(args: argparse.Namespace, container: DependencyContain
     return 0 if result.success else 1
 
 
+def _unit_group(container: DependencyContainer, service_name: str) -> str:
+    """Valeur de `Group=` de l'unite installee (section [Service]), sinon le groupe dedie par defaut."""
+    from omega_serv.domain.services.systemd_unit import DEFAULT_SYSTEM_GROUP
+
+    unit_path = container.systemd_unit_dir / f"{service_name}.service"
+    try:
+        content = container.filesystem.read_text(unit_path) if container.filesystem.exists(unit_path) else ""
+    except OSError:
+        content = ""
+    section = ""
+    for raw in content.splitlines():
+        line = raw.strip()
+        if line.startswith("[") and line.endswith("]"):
+            section = line
+        elif section == "[Service]" and line.startswith("Group="):
+            return line.removeprefix("Group=").strip() or DEFAULT_SYSTEM_GROUP
+    return DEFAULT_SYSTEM_GROUP
+
+
+def _project_owner(project_root: Path) -> str:
+    try:
+        return pwd.getpwuid(project_root.stat().st_uid).pw_name
+    except (KeyError, OSError):
+        return ""
+
+
+def cmd_service_permissions(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Droits partages avec le service (2026-11-10, lot E de l'etape 3 d'omega-connect) : fichiers de var/
+    appartenant a root rendus au proprietaire du dossier, puis var/ et secure/auth/ partages avec le groupe du
+    service (meme reparation que le bouton de l'ecran Service). Demande sudo elle-meme ; acceptee en root (les
+    fichiers sont rendus au proprietaire, jamais crees en root)."""
+    manager_type = detect_service_manager_type()
+    if manager_type != "systemd":
+        print(_("Erreur : opération non supportée pour {value} (systemd seulement).").format(
+            value=manager_type or _("aucun gestionnaire détecté")), file=sys.stderr)
+        return 1
+    owner = _project_owner(container.project_root)
+    if not owner or owner == "root":
+        print(_("Erreur : propriétaire du dossier introuvable ou root ({root}).").format(root=container.project_root),
+              file=sys.stderr)
+        return 1
+    group = args.group or _unit_group(container, args.service_name)
+    manager = SystemdServiceManager(SubprocessRunner())
+    try:
+        result = repair_service_permissions(container.filesystem, container.project_root, group, owner, manager)
+    except ServiceControlError as error:
+        print(_("Erreur : {error}").format(error=error), file=sys.stderr)
+        return 1
+    print(result.message)
+    return 0 if result.success else 1
+
+
+def cmd_synchro_service_group(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """`synchro groupe-service ajouter|retirer` : groupe de la zone neutre donne au service de cette instance
+    par un complement systemd (voir application/services/zone_group.py). Demande sudo elle-meme ; acceptee en
+    root (omega-connect la lance avec sudo apres une seule authentification)."""
+    import grp
+
+    from omega_serv.application.services.resolve_current_service_name import (
+        resolve_current_service_name,
+    )
+    from omega_serv.application.services.zone_group import add_zone_group, remove_zone_group
+
+    manager_type = detect_service_manager_type()
+    if manager_type != "systemd":
+        print(_("Erreur : opération non supportée pour {value} (systemd seulement).").format(
+            value=manager_type or _("aucun gestionnaire détecté")), file=sys.stderr)
+        return 1
+    service_name = args.service_name or resolve_current_service_name(
+        container.instance_registry, container.filesystem, container.settings_store, container.project_root)
+
+    def group_exists(name: str) -> bool:
+        try:
+            grp.getgrnam(name)
+        except KeyError:
+            return False
+        return True
+
+    manager = SystemdServiceManager(SubprocessRunner())
+    try:
+        if args.service_group_action == "ajouter":
+            result = add_zone_group(container.filesystem, manager, container.systemd_unit_dir, service_name,
+                                    container.project_root, group_exists)
+        else:
+            result = remove_zone_group(container.filesystem, manager, container.systemd_unit_dir, service_name)
+    except ServiceControlError as error:
+        print(_("Erreur : {error}").format(error=error), file=sys.stderr)
+        return 1
+    print(result.message, file=sys.stdout if result.success else sys.stderr)
+    return 0 if result.success else 1
+
+
 _SEVERITY_LABELS = {
     Severity.CRITICAL: _("CRITICAL"), Severity.HIGH: _("HIGH"), Severity.MEDIUM: _("MEDIUM"),
     Severity.LOW: _("LOW"), Severity.INFO: _("INFO"),
@@ -1668,6 +1774,93 @@ def cmd_version(args: argparse.Namespace, container: DependencyContainer) -> int
         print(_("Version installée : {version}. Site injoignable ou liste des versions illisible : "
                 "réessayez plus tard.").format(version=check.installed), file=sys.stderr)
         return 1
+    return 0
+
+
+def cmd_synchro_jeton(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Cree ou met a jour var/omega-jeton.json (contrats d'interconnexion, 2026-11-10) puis l'affiche en
+    JSON. Appelee par install.sh ; jamais en root (refusee par _refuse_root_for_writing_command)."""
+    from omega_lib.infrastructure.synchro.files import dumps
+    from omega_lib.synchro.codec import token_to_dict
+
+    from omega_serv.application.synchro.serv_contracts import refresh_serv_token
+
+    refresh = refresh_serv_token(container.project_root, container.app_version)
+    if refresh.token is None:
+        print(_("Jeton d'installation non écrit ({path}) : {reason}").format(path=refresh.path, reason=refresh.reason),
+              file=sys.stderr)
+        return 1
+    print(dumps(token_to_dict(refresh.token)), end="")
+    return 0
+
+
+def _synchro_service_info(container: DependencyContainer) -> ServiceInfo | None:
+    from omega_serv.application.services.resolve_current_service_name import (
+        resolve_current_service_account,
+        resolve_current_service_name,
+    )
+    from omega_serv.domain.services.systemd_unit import DEFAULT_SYSTEM_GROUP
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
+
+    name = resolve_current_service_name(container.instance_registry, container.filesystem,
+                                        container.settings_store, container.project_root)
+    manager_type = detect_service_manager_type()
+    if manager_type is None:
+        return None
+    account = ""
+    if manager_type == "systemd":
+        account = resolve_current_service_account(
+            container.instance_registry, container.filesystem, container.settings_store,
+            container.project_root, container.systemd_unit_dir) or ""
+        if not account:
+            return None  # aucune unite installee : serveur lance a la main, pas de service
+    manager = _build_service_manager(manager_type)
+    state = ""
+    try:
+        status = manager.status(name)
+        state = status.state
+    except Exception:  # noqa: BLE001 - lecture d'etat best-effort : la fiche reste utile sans
+        state = ""
+    return ServiceInfo(manager=manager_type, unit=f"{name}.service" if manager_type == "systemd" else name,
+                       user=account, group=DEFAULT_SYSTEM_GROUP if account else "", state=state)
+
+
+def cmd_synchro_fiche(args: argparse.Namespace, container: DependencyContainer) -> int:
+    """Fiche de CETTE instance (capacites, service, journaux partages) en JSON non traduit et versionne,
+    pour omega-connect (contrats d'interconnexion, 2026-11-10). Lecture seule."""
+    from datetime import datetime, timezone
+
+    from omega_lib.infrastructure.synchro.files import dumps
+    from omega_lib.synchro.codec import sheet_to_dict
+
+    from omega_serv.application.services.resolve_current_service_name import (
+        resolve_current_service_name,
+    )
+    from omega_serv.application.synchro.serv_contracts import (
+        SheetContext,
+        build_serv_sheet,
+        installation_id,
+    )
+
+    result = load_config(container.configuration, args.config)
+    if not result.success or result.config is None:
+        _print_errors(result.errors)
+        return 1
+    config = result.config
+    status = container.engine_status(config)
+    effective = status.running.effective if status.running is not None else status.forecast.effective
+    context = SheetContext(
+        version=container.app_version,
+        instance=resolve_current_service_name(container.instance_registry, container.filesystem,
+                                              container.settings_store, container.project_root),
+        installation_id=installation_id(container.project_root),
+        service=_synchro_service_info(container),
+        native_binary_problem=container.native_binary_problem(),
+        effective_engine=effective,
+        now=datetime.now(timezone.utc),
+    )
+    sheet = build_serv_sheet(config, container.project_root.resolve(), container.filesystem, context)
+    print(dumps(sheet_to_dict(sheet)), end="")
     return 0
 
 
@@ -1792,8 +1985,10 @@ def build_parser() -> argparse.ArgumentParser:
         func=cmd_waf_never_auto_block)
 
     blocklist_sub = add_group(subparsers, "blocklist", _("Adresses bannies."), "blocklist_command")
-    add_command(blocklist_sub, "list", _("Affiche les bans : réseau, origine, expiration, motif.")).set_defaults(
-        func=cmd_blocklist_list)
+    list_parser = add_command(blocklist_sub, "list", _("Affiche les bans : réseau, origine, expiration, motif."))
+    list_parser.add_argument("--format", choices=("text", "json"), default="text",
+                             help=_("text (défaut, traduit) ou json (pour les autres outils, jamais traduit)."))
+    list_parser.set_defaults(func=cmd_blocklist_list)
     add_parser = add_command(blocklist_sub, "add", _("Bannit une adresse ou un réseau."))
     add_parser.add_argument("--network", required=True, metavar=_("RESEAU"),
                             help=_("Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."))
@@ -1801,10 +1996,14 @@ def build_parser() -> argparse.ArgumentParser:
     add_parser.add_argument("--duration-seconds", type=int, default=None, metavar=_("SECONDES"),
                             help=_("Durée du ban. Sans durée, le ban est permanent et demande --confirm-permanent."))
     add_parser.add_argument("--confirm-permanent", action="store_true", help=_("Confirme un ban permanent."))
+    add_parser.add_argument("--origin", default=None, metavar=_("OUTIL"),
+                            help=_("Outil qui pose le ban (ex. omega-fire) : lui seul pourra le lever avec --origin."))
     add_parser.set_defaults(func=cmd_blocklist_add)
     remove_parser = add_command(blocklist_sub, "remove", _("Lève un ban."))
     remove_parser.add_argument("--network", required=True, metavar=_("RESEAU"),
                                help=_("Adresse ou réseau, tel qu'affiché par blocklist list."))
+    remove_parser.add_argument("--origin", default=None, metavar=_("OUTIL"),
+                               help=_("Ne lève le ban que s'il a été posé avec cette origine."))
     remove_parser.set_defaults(func=cmd_blocklist_remove)
 
     active_defense_sub = add_group(subparsers, "active-defense", _(
@@ -2063,6 +2262,14 @@ def build_parser() -> argparse.ArgumentParser:
     install_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
     install_parser.set_defaults(func=cmd_service_install)
 
+    permissions_parser = add_command(service_sub, "permissions", _(
+        "Répare les droits partagés avec le service : fichiers de var/ appartenant à root rendus au propriétaire "
+        "du dossier, var/ et secure/auth/ partagés avec le groupe du service (demande les droits administrateur)."))
+    permissions_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    permissions_parser.add_argument("--group", default="", metavar=_("NOM"), help=_(
+        "Groupe du service (défaut : celui de son unité, sinon omega-serv)."))
+    permissions_parser.set_defaults(func=cmd_service_permissions)
+
     uninstall_parser = add_command(service_sub, "uninstall", _("Supprime l'unité du service."))
     uninstall_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
     uninstall_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
@@ -2084,6 +2291,28 @@ def build_parser() -> argparse.ArgumentParser:
 
     add_declaration_parser(subparsers)
 
+    synchro_sub = add_group(subparsers, "synchro", _(
+        "Liens avec les autres outils omega (omega-connect) : jeton d'installation et fiche de l'instance."),
+        "synchro_command")
+    add_command(synchro_sub, "jeton", _(
+        "Crée ou met à jour le jeton d'installation (var/omega-jeton.json) et l'affiche en JSON."), _(
+        "Lancée par install.sh et à chaque ouverture de l'interface. Jamais en root.")).set_defaults(
+        func=cmd_synchro_jeton)
+    fiche_parser = add_command(synchro_sub, "fiche", _(
+        "Affiche la fiche de cette instance (fonctions actives, service, journaux partagés), pour omega-connect."))
+    fiche_parser.add_argument("--format", choices=("json",), default="json", help=_(
+        "Format de sortie : json seulement (non traduit, versionné)."))
+    fiche_parser.set_defaults(func=cmd_synchro_fiche)
+    group_parser = add_command(synchro_sub, "groupe-service", _(
+        "Donne (ou retire) au service de cette instance le groupe omega-synchro, pour qu'il lise la zone neutre : "
+        "complément systemd <service>.service.d/omega-synchro.conf, l'unité n'est pas touchée. Demandé par "
+        "omega-connect ; pris en compte au prochain redémarrage du service."))
+    group_parser.add_argument("service_group_action", choices=("ajouter", "retirer"), metavar=_("ACTION"),
+                              help=_("ajouter ou retirer."))
+    group_parser.add_argument("--service-name", default="", metavar=_("NOM"), help=_(
+        "Nom du service (défaut : celui de cette instance)."))
+    group_parser.set_defaults(func=cmd_synchro_service_group)
+
     version_parser = add_command(subparsers, "version", _(
         "Affiche la version installée ; --check la compare à la dernière version publiée sur le site."))
     version_parser.add_argument("--check", action="store_true", help=_(
@@ -2096,6 +2325,51 @@ def build_parser() -> argparse.ArgumentParser:
     help_parser.set_defaults(func=lambda args, _container: cmd_help(parser, args))
 
     return parser
+
+
+_ROOT_ALLOWED_COMMANDS: frozenset[str] = frozenset({
+    # Lecture seule (verifie le 2026-11-10 : aucun fichier cree ni modifie dans var/, secure/, config/).
+    "cmd_version", "cmd_config_check", "cmd_config_show", "cmd_config_list_backups",
+    "cmd_profile_list", "cmd_profile_show", "cmd_option_list",
+    "cmd_waf_never_auto_block", "cmd_blocklist_list",
+    "cmd_active_defense_status", "cmd_active_defense_simulate",
+    "cmd_threats_list", "cmd_threats_show", "cmd_incidents_list", "cmd_incidents_show",
+    "cmd_riposte_status", "cmd_riposte_scenarios_list", "cmd_riposte_scenarios_show",
+    "cmd_riposte_policies_list", "cmd_riposte_policies_show",
+    "cmd_riposte_sources_list", "cmd_riposte_sources_show", "cmd_riposte_decisions_list",
+    "cmd_engine_status", "cmd_auth_list", "cmd_certs_show", "cmd_certs_verify", "cmd_certs_check_expiry",
+    "cmd_synchro_fiche",
+    # Gerent eux-memes leurs privileges (sudo ponctuel) ou refusent root d'eux-memes (serve).
+    "cmd_serve", "cmd_service_status", "cmd_service_start", "cmd_service_stop", "cmd_service_restart",
+    "cmd_service_reload", "cmd_service_enable", "cmd_service_disable",
+    "cmd_service_install", "cmd_service_uninstall",
+    # Lot E de l'etape 3 d'omega-connect (2026-11-10) : lances avec sudo par omega-connect ; n'ecrivent rien
+    # dans le dossier du projet en root (droits rendus au proprietaire, complement systemd hors du projet).
+    "cmd_service_permissions", "cmd_synchro_service_group",
+})
+"""Commandes acceptees en root (correctif 2026-11-10, etude de l'interconnecteur) : toutes les autres
+ecrivent dans le dossier du projet (var/, secure/, config/). Lancees en root, elles y creaient des
+fichiers que le service (compte dedie) ne pouvait plus modifier - incident craftdark du 2026-10-18
+(blocklist root 600, puis 502). Liste blanche plutot que liste noire : une commande ajoutee plus tard
+est refusee en root tant qu'elle n'a pas ete verifiee."""
+
+
+def _refuse_root_for_writing_command(args: argparse.Namespace, project_root: Path) -> int | None:
+    if not running_as_root() or args.command == "help":
+        return None
+    if getattr(args.func, "__name__", "") in _ROOT_ALLOWED_COMMANDS:
+        return None
+    try:
+        owner = pwd.getpwuid(project_root.stat().st_uid).pw_name
+    except (KeyError, OSError):
+        owner = "?"
+    print(
+        _("Erreur : lancée en root, cette commande créerait dans {root} des fichiers que le service ne "
+          "pourrait plus modifier. Relancez-la sans sudo, sous le compte propriétaire du dossier "
+          "({owner}).").format(root=project_root, owner=owner),
+        file=sys.stderr,
+    )
+    return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -2111,6 +2385,9 @@ def main(argv: list[str] | None = None) -> int:
         )
     parser = build_parser()
     args = parser.parse_args(effective_argv)
+    refused = _refuse_root_for_writing_command(args, container.project_root)
+    if refused is not None:
+        return refused
     return cast(int, args.func(args, container))
 
 

@@ -237,6 +237,19 @@ if [ ! -f "$SCRIPT_DIR/config/omega-serve.json" ]; then
     fi
 fi
 
+# -------------------------------------------------------------------------
+# 8. Jeton d'installation (var/omega-jeton.json, contrats d'interconnexion
+#    2026-11-10) : lu par omega-connect, sans rien executer, pour savoir
+#    quel outil est la, ou, sous quel compte. Jamais en root (refuse par la
+#    commande elle-meme) ; un echec ne bloque jamais l'installation.
+# -------------------------------------------------------------------------
+if "$SCRIPT_DIR/.venv/bin/python" -m omega_serv synchro jeton >/dev/null 2>&1; then
+    ok "Jeton d'installation à jour (var/omega-jeton.json)."
+else
+    warn "Jeton d'installation non écrit : omega-connect ne verra pas cette installation tant qu'il manque."
+    tip "Il sera créé à la prochaine ouverture d'omega-serv, ou avec : ${SCRIPT_DIR}/omega-serv.sh synchro jeton"
+fi
+
 echo ""
 ok "Installation terminée."
 tip "Lancez Omega-Serv avec : ${SCRIPT_DIR}/omega-serv.sh serve (ou 'serv serve' dans un nouveau terminal si l'alias vient d'être ajouté)."

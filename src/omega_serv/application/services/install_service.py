@@ -116,7 +116,9 @@ def repair_directory_permissions(
     if grant_directory_access is None:
         return ManageServiceResult(False, _("Ce gestionnaire de service ne supporte pas cette opération."))
 
-    grant_directory_access(project_root / "var", group, repairing_user)
+    # var/backups jamais partage avec le groupe (2026-11-10) : sauvegardes completes = users.json,
+    # certificats et cles privees. Le service n'y lit ni n'y ecrit (sauvegardes faites par l'utilisateur).
+    grant_directory_access(project_root / "var", group, repairing_user, private_subdirs=("backups",))
     # secure/auth/ (2026-09-29, crash reel en boucle : PermissionError
     # sur secure/auth/zones.json) : users.json/zones.json sont ecrits
     # par l'ecran Authentification (interfaces/tui/screens/
@@ -179,6 +181,25 @@ def install_systemd_service(
             "l'interface puisse lire ce que le service écrit")
         )
     return ManageServiceResult(True, _("Unité installée : {unit_path}{user_note}{group_note}").format(unit_path=unit_path, user_note=user_note, group_note=group_note))
+
+
+def repair_service_permissions(
+    filesystem: FilesystemPort,
+    project_root: Path,
+    group: str,
+    owner: str,
+    service_manager: ServiceManagerPort,
+) -> ManageServiceResult:
+    """`omega-serv service permissions` (2026-11-10, lot E de l'etape 3 d'omega-connect) : la reparation du
+    bouton de l'ecran Service, en ligne de commande, precedee de la remise a `owner` des fichiers de var/
+    appartenant a root (une commande lancee en root les y avait crees : incident craftdark du 2026-10-18).
+    omega-connect `reparer` l'appelle pour les droits de la liste noire et des journaux lus par les jails ;
+    il ne fait jamais lui-meme chown ou chmod sur les fichiers d'omega-serv."""
+    return_root_owned = getattr(service_manager, "return_root_owned", None)
+    if return_root_owned is None:
+        return ManageServiceResult(False, _("Ce gestionnaire de service ne supporte pas cette opération."))
+    return_root_owned(project_root / "var", owner)
+    return repair_directory_permissions(filesystem, project_root, group, owner, service_manager)
 
 
 def uninstall_systemd_service(

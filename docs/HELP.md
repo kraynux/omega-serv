@@ -1,4 +1,4 @@
-# omega-serv 2.6.0 : aide de la ligne de commande
+# omega-serv 2.6.1 : aide de la ligne de commande
 
 > Fichier généré par `tools/cli_reference.py` depuis le code : ne pas le modifier à la main.
 
@@ -162,6 +162,9 @@ service                 Service système (systemd, OpenRC ou runit).
   disable               Désactive le démarrage automatique au boot.
   install               Crée l'unité systemd du service (systemd seulement ; demande les droits
                         administrateur).
+  permissions           Répare les droits partagés avec le service : fichiers de var/ appartenant à
+                        root rendus au propriétaire du dossier, var/ et secure/auth/ partagés avec
+                        le groupe du service (demande les droits administrateur).
   uninstall             Supprime l'unité du service.
 audit                   Audit de sécurité.
   security              Audite l'installation : configuration, droits, TLS, service. Code 1 si
@@ -172,6 +175,16 @@ declaration             Déclaration anonyme d'utilisateur (volontaire, désacti
                         sa destination.
   withdraw              Retire la déclaration (supprimée à la réception).
   send-scheduled        Envoi quotidien, lancé par serve (pas à utiliser à la main).
+synchro                 Liens avec les autres outils omega (omega-connect) : jeton d'installation et
+                        fiche de l'instance.
+  jeton                 Crée ou met à jour le jeton d'installation (var/omega-jeton.json) et
+                        l'affiche en JSON.
+  fiche                 Affiche la fiche de cette instance (fonctions actives, service, journaux
+                        partagés), pour omega-connect.
+  groupe-service        Donne (ou retire) au service de cette instance le groupe omega-synchro, pour
+                        qu'il lise la zone neutre : complément systemd <service>.service.d/omega-
+                        synchro.conf, l'unité n'est pas touchée. Demandé par omega-connect ; pris en
+                        compte au prochain redémarrage du service.
 version                 Affiche la version installée ; --check la compare à la dernière version
                         publiée sur le site.
 help                    Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv
@@ -199,6 +212,7 @@ help                    Affiche l'arbre de toutes les commandes, ou d'une branch
 - [`service`](#service) : Service système (systemd, OpenRC ou runit).
 - [`audit`](#audit) : Audit de sécurité.
 - [`declaration`](#declaration) : Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut).
+- [`synchro`](#synchro) : Liens avec les autres outils omega (omega-connect) : jeton d'installation et fiche de l'instance.
 - [`version`](#version) : Affiche la version installée ; --check la compare à la dernière version publiée sur le site.
 - [`help`](#help) : Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv help riposte).
 
@@ -463,15 +477,19 @@ omega-serv blocklist COMMANDE
 Affiche les bans : réseau, origine, expiration, motif.
 
 ```text
-omega-serv blocklist list
+omega-serv blocklist list [--format {text,json}]
 ```
+
+| Argument | Rôle |
+|---|---|
+| `--format {text,json}` | text (défaut, traduit) ou json (pour les autres outils, jamais traduit). |
 
 ### blocklist add
 
 Bannit une adresse ou un réseau.
 
 ```text
-omega-serv blocklist add --network RESEAU --reason TEXTE [--duration-seconds SECONDES] [--confirm-permanent]
+omega-serv blocklist add --network RESEAU --reason TEXTE [--duration-seconds SECONDES] [--confirm-permanent] [--origin OUTIL]
 ```
 
 | Argument | Rôle |
@@ -480,18 +498,20 @@ omega-serv blocklist add --network RESEAU --reason TEXTE [--duration-seconds SEC
 | `--reason TEXTE` | Motif du ban. **(obligatoire)** |
 | `--duration-seconds SECONDES` | Durée du ban. Sans durée, le ban est permanent et demande --confirm-permanent. |
 | `--confirm-permanent` | Confirme un ban permanent. |
+| `--origin OUTIL` | Outil qui pose le ban (ex. omega-fire) : lui seul pourra le lever avec --origin. |
 
 ### blocklist remove
 
 Lève un ban.
 
 ```text
-omega-serv blocklist remove --network RESEAU
+omega-serv blocklist remove --network RESEAU [--origin OUTIL]
 ```
 
 | Argument | Rôle |
 |---|---|
 | `--network RESEAU` | Adresse ou réseau, tel qu'affiché par blocklist list. **(obligatoire)** |
+| `--origin OUTIL` | Ne lève le ban que s'il a été posé avec cette origine. |
 
 ## active-defense
 
@@ -1362,6 +1382,19 @@ omega-serv service install [--service-name NOM] [--description TEXTE] [--python-
 | `--stop-timeout-seconds SECONDES` | Délai laissé à l'arrêt avant de forcer (défaut : 15). |
 | `--unit-path FICHIER` | Fichier d'unité (défaut : /etc/systemd/system/<nom>.service). |
 
+### service permissions
+
+Répare les droits partagés avec le service : fichiers de var/ appartenant à root rendus au propriétaire du dossier, var/ et secure/auth/ partagés avec le groupe du service (demande les droits administrateur).
+
+```text
+omega-serv service permissions [--service-name NOM] [--group NOM]
+```
+
+| Argument | Rôle |
+|---|---|
+| `--service-name NOM` | Nom du service (défaut : omega-serv). |
+| `--group NOM` | Groupe du service (défaut : celui de son unité, sinon omega-serv). |
+
 ### service uninstall
 
 Supprime l'unité du service.
@@ -1446,6 +1479,49 @@ Envoi quotidien, lancé par serve (pas à utiliser à la main).
 ```text
 omega-serv declaration send-scheduled
 ```
+
+## synchro
+
+Liens avec les autres outils omega (omega-connect) : jeton d'installation et fiche de l'instance.
+
+```text
+omega-serv synchro COMMANDE
+```
+
+### synchro jeton
+
+Crée ou met à jour le jeton d'installation (var/omega-jeton.json) et l'affiche en JSON.
+
+Lancée par install.sh et à chaque ouverture de l'interface. Jamais en root.
+
+```text
+omega-serv synchro jeton
+```
+
+### synchro fiche
+
+Affiche la fiche de cette instance (fonctions actives, service, journaux partagés), pour omega-connect.
+
+```text
+omega-serv synchro fiche [--format {json}]
+```
+
+| Argument | Rôle |
+|---|---|
+| `--format {json}` | Format de sortie : json seulement (non traduit, versionné). |
+
+### synchro groupe-service
+
+Donne (ou retire) au service de cette instance le groupe omega-synchro, pour qu'il lise la zone neutre : complément systemd <service>.service.d/omega-synchro.conf, l'unité n'est pas touchée. Demandé par omega-connect ; pris en compte au prochain redémarrage du service.
+
+```text
+omega-serv synchro groupe-service ACTION [--service-name NOM]
+```
+
+| Argument | Rôle |
+|---|---|
+| `ACTION` | ajouter ou retirer. |
+| `--service-name NOM` | Nom du service (défaut : celui de cette instance). |
 
 ## version
 

@@ -116,7 +116,7 @@ class FakeServiceManager:
     def remove_system_user(self, user: str, group: str) -> None:
         self.calls.append(("remove-system-user", f"{user}:{group}"))
 
-    def grant_directory_access(self, path: Path, group: str, extra_user: str) -> None:
+    def grant_directory_access(self, path: Path, group: str, extra_user: str, private_subdirs=()) -> None:
         self.calls.append(("grant-directory-access", f"{path}:{group}:{extra_user}"))
 
 

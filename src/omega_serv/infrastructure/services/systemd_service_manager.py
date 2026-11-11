@@ -233,7 +233,9 @@ class SystemdServiceManager:
                 group, "remove-system-group", group_result.stderr.strip() or _("code {returncode}").format(returncode=group_result.returncode), "systemd",
             )
 
-    def grant_directory_access(self, path: Path, group: str, extra_user: str) -> None:
+    def grant_directory_access(
+        self, path: Path, group: str, extra_user: str, private_subdirs: tuple[str, ...] = (),
+    ) -> None:
         """Partage `path` (typiquement `var/`) avec le compte systeme
         dedie (retour utilisateur 2026-09-10, second vrai bug trouve
         juste apres la creation du compte : le service crash-loopait
@@ -254,13 +256,68 @@ class SystemdServiceManager:
         UMask=0007` (necessaire en plus de ceci : sans quoi les
         NOUVEAUX fichiers crees par le service restent illisibles au
         groupe malgre le repertoire partage)."""
+        # private_subdirs (2026-11-10, etude de l'interconnecteur) : sous-dossiers jamais partages avec
+        # le groupe - var/backups contient users.json, les certificats et leurs cles privees. Ils sont
+        # sautes par find (-prune) puis remis en acces proprietaire seul (go-rwx).
+        # Liens symboliques jamais suivis (2026-11-10, lot E de l'etape 3 d'omega-connect) : var/ est inscriptible
+        # par le compte du service. Un lien var/x -> /etc/shadow aurait fait faire a root `chgrp omega-serv` et
+        # `chmod g+rw` sur la cible (chgrp et chmod suivent un lien passe en argument). `! -type l` les ecarte,
+        # `chgrp -h` traite le lien lui-meme s'il apparait entre find et chgrp.
+        prune: list[str] = []
+        for name in private_subdirs:
+            prune += ["-path", str(path / name), "-prune", "-o"]
         commands: list[tuple[list[str], str]] = [
-            (["chgrp", "-R", group, str(path)], "grant-directory-access-chgrp"),
-            (["chmod", "-R", "g+rwX", str(path)], "grant-directory-access-chmod"),
-            (["find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"], "grant-directory-access-setgid"),
+            (["find", str(path), *prune, "!", "-type", "l", "-exec", "chgrp", "-h", group, "{}", "+"],
+             "grant-directory-access-chgrp"),
+            (["find", str(path), *prune, "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"],
+             "grant-directory-access-chmod"),
+            (["find", str(path), *prune, "-type", "d", "-exec", "chmod", "g+s", "{}", "+"],
+             "grant-directory-access-setgid"),
+            *((["find", str(path / name), "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"],
+               "grant-directory-access-private") for name in private_subdirs if (path / name).exists()),
             (["usermod", "-aG", group, extra_user], "grant-directory-access-usermod"),
         ]
         for args, operation in commands:
+            result = self._run_privileged(args)
+            if result.returncode != 0:
+                raise ServiceControlError(
+                    str(path), operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd",
+                )
+
+    def return_root_owned(self, path: Path, owner: str) -> None:
+        """Rend a `owner` (proprietaire du dossier du projet) les fichiers de `path` appartenant a root
+        (2026-11-10, lot E de l'etape 3 d'omega-connect) : une commande lancee en root y avait cree des fichiers
+        que le service ne pouvait plus modifier (incident craftdark du 2026-10-18 : liste noire root 600, puis
+        502). Meme systeme de fichiers seulement, liens jamais suivis (`chown -h`)."""
+        result = self._run_privileged(
+            ["find", str(path), "-xdev", "-user", "root", "!", "-type", "l", "-exec", "chown", "-h", owner, "{}", "+"])
+        if result.returncode != 0:
+            raise ServiceControlError(
+                str(path), "return-root-owned", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd",
+            )
+
+    def write_drop_in(self, directory: Path, path: Path, content: str) -> None:
+        """Complement systemd `<service>.service.d/<fichier>.conf` (2026-11-10, lot E de l'etape 3
+        d'omega-connect) : ajoute un reglage a l'unite sans la reecrire. Dossier 0755, fichier 0644, root."""
+        steps: list[tuple[list[str], str | None, str]] = [
+            (["install", "-d", "-m", "0755", str(directory)], None, "write-drop-in-directory"),
+            (["tee", str(path)], content, "write-drop-in"),
+            (["chmod", "0644", str(path)], None, "write-drop-in-mode"),
+        ]
+        for args, input_text, operation in steps:
+            result = self._run_privileged(args, input_text=input_text)
+            if result.returncode != 0:
+                raise ServiceControlError(
+                    str(path), operation, result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd",
+                )
+
+    def remove_drop_in(self, directory: Path, path: Path) -> None:
+        """Retire le complement ; le dossier `.d` seulement s'il est vide (un autre complement y reste)."""
+        steps: list[tuple[list[str], str]] = [
+            (["rm", "-f", "--", str(path)], "remove-drop-in"),
+            (["rmdir", "--ignore-fail-on-non-empty", "--", str(directory)], "remove-drop-in-directory"),
+        ]
+        for args, operation in steps:
             result = self._run_privileged(args)
             if result.returncode != 0:
                 raise ServiceControlError(

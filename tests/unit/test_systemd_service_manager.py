@@ -1,3 +1,4 @@
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -406,8 +407,8 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
     def test_runs_chgrp_chmod_setgid_usermod_in_order_with_sudo(self, _mock_root):
         path = Path("/home/kraynux/DEV/SERV/omega-serv/var")
         runner = _FakeProcessRunner({
-            ("sudo", "chgrp", "-R", "omega-serv", str(path)): ProcessResult(0, "", ""),
-            ("sudo", "chmod", "-R", "g+rwX", str(path)): ProcessResult(0, "", ""),
+            ("sudo", "find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
+            ("sudo", "find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
             ("sudo", "find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
             ("sudo", "usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
         })
@@ -416,8 +417,8 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
         self.assertEqual(
             runner.calls,
             [
-                ["sudo", "chgrp", "-R", "omega-serv", str(path)],
-                ["sudo", "chmod", "-R", "g+rwX", str(path)],
+                ["sudo", "find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"],
+                ["sudo", "find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"],
                 ["sudo", "find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"],
                 ["sudo", "usermod", "-aG", "omega-serv", "kraynux"],
             ],
@@ -427,8 +428,8 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
     def test_not_prefixed_when_already_root(self, _mock_root):
         path = Path("/srv/omega-serv/var")
         runner = _FakeProcessRunner({
-            ("chgrp", "-R", "omega-serv", str(path)): ProcessResult(0, "", ""),
-            ("chmod", "-R", "g+rwX", str(path)): ProcessResult(0, "", ""),
+            ("find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
+            ("find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
             ("find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
             ("usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
         })
@@ -440,12 +441,32 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
     def test_raises_on_first_failing_step(self, _mock_root):
         path = Path("/srv/omega-serv/var")
         runner = _FakeProcessRunner({
-            ("chgrp", "-R", "omega-serv", str(path)): ProcessResult(1, "", "operation not permitted"),
+            ("find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(1, "", "operation not permitted"),
         })
         manager = SystemdServiceManager(runner)
         with self.assertRaises(ServiceControlError):
             manager.grant_directory_access(path, "omega-serv", "kraynux")
         self.assertEqual(len(runner.calls), 1)
+
+    @patch(_ROOT, return_value=True)
+    def test_private_subdirs_are_pruned_then_made_owner_only(self, _mock_root):
+        """2026-11-10 : var/backups (cles privees, users.json) jamais partage avec le groupe."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "var"
+            (path / "backups").mkdir(parents=True)
+            backups = str(path / "backups")
+            prune = ["-path", backups, "-prune", "-o"]
+            runner = _FakeProcessRunner({
+                ("find", str(path), *prune, "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
+                ("find", str(path), *prune, "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
+                ("find", str(path), *prune, "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
+                ("find", backups, "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"): ProcessResult(0, "", ""),
+                ("usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
+            })
+            manager = SystemdServiceManager(runner)
+            manager.grant_directory_access(path, "omega-serv", "kraynux", private_subdirs=("backups",))
+            self.assertIn(["find", backups, "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"], runner.calls)
+            self.assertEqual(len(runner.calls), 5)
 
 
 if __name__ == "__main__":

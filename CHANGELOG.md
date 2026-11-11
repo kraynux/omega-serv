@@ -13,6 +13,64 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## version 2.6.1 : construite le 2026-11-10, non publiée
+
+Correctifs issus de l'étude de l'interconnecteur de la suite (`~/DEV/CONNECT/`), étape 1 : rendre chaque outil
+sûr avant de les relier ; étape 2 : contrats communs (omega-lib 0.2.0).
+
+### Ajouté
+
+- **`synchro jeton` et `synchro fiche --format json`** (liens avec les autres outils omega, futur omega-connect) :
+  - le **jeton d'installation** `var/omega-jeton.json` dit, sans rien exécuter, quel outil est là, sa version,
+    un identifiant tiré au hasard, l'emplacement et le compte. Il est déposé par `install.sh` et mis à jour à
+    chaque ouverture de l'interface ; jamais écrit en root ni par un autre compte que le propriétaire du
+    dossier ; jamais publié (`var/` est exclu de l'archive). Un dossier copié reçoit un nouvel identifiant ;
+  - la **fiche** de l'instance (fonctions actives : WAF, magnet, omega-waf, RIPOSTE, Active Defense, moteur
+    natif, liste noire ; service ; journaux partagés et leur format ; réseaux jamais bannis automatiquement,
+    comme `waf never-auto-block`) sort en JSON non traduit et versionné. Lecture seule, acceptée en root. Le service n'écrit jamais dans la future zone commune.
+  - `omega-serv.sh synchro …` n'affiche plus la bannière de démarrage : la sortie reste du JSON pur, lisible
+    par omega-connect.
+
+- **`blocklist add --origin OUTIL` et `blocklist remove --origin OUTIL`** : un autre outil (omega-fire, le pont
+  d'omega-jail) marque ses bans de son nom et ne lève **que** les siens, en une seule opération verrouillée.
+  Avant, lever un ban se faisait en deux temps (lecture puis retrait) : un ban posé entre-temps par le WAF ou
+  RIPOSTE sur la même adresse pouvait être levé par erreur. Origine réservée : `intervention`.
+- **`blocklist list --format json`** : sortie versionnée et jamais traduite, pour les autres outils (la sortie
+  texte, traduite, ne doit plus être analysée par un programme).
+- **`service permissions`** (étape 3, lot E, `omega-connect reparer`) : la réparation du bouton de l'écran Service,
+  en ligne de commande, précédée de la remise au propriétaire du dossier des fichiers de `var/` appartenant à root
+  (une commande lancée en root les y avait créés : incident craftdark du 2026-10-18). Groupe lu dans l'unité du
+  service. Demande sudo elle-même.
+- **`synchro groupe-service ajouter|retirer`** (étape 3, lot E) : donne (ou retire) au service de cette instance le
+  groupe `omega-synchro` de la zone neutre d'omega-connect, par un complément systemd
+  `/etc/systemd/system/<service>.service.d/omega-synchro.conf` ; l'unité générée par `service install` n'est
+  jamais touchée. Refusé si le groupe n'existe pas (le service ne démarrerait plus), si l'unité appartient à une
+  autre installation, ou sans unité. Pris en compte au prochain redémarrage du service. Demandée par
+  omega-connect (`etablir`, `retirer --tout`).
+
+### Corrigé
+
+- **Sécurité — réparation des permissions : liens symboliques jamais suivis.** `var/` est inscriptible par le
+  compte du service : un lien `var/x → /etc/shadow` y aurait fait faire à root `chgrp omega-serv` et `chmod g+rw`
+  sur la cible (installation du service, bouton « réparer les permissions », et désormais `service permissions`).
+  Les liens sont maintenant écartés (`! -type l`) et `chgrp -h` traite un lien apparu entre-temps comme un lien.
+- **`omega-serv.sh` ne lance plus `pip install` en root** (venv incomplet) : il demande de relancer `install.sh`
+  sans sudo, comme `omega-jail.sh`. omega-connect lance certaines commandes avec sudo.
+
+- **Commandes lancées en root refusées quand elles écrivent dans le projet** (`blocklist add/remove`,
+  `riposte run`, `logs run-automations`, `auth`, `certs`, `config`, etc.) : lancées en root, elles créaient
+  dans `var/` ou `secure/` des fichiers que le service ne pouvait plus modifier (même mécanisme que l'incident
+  du 2026-10-18 : liste noire en root, puis 502). Restent permises en root : les commandes de lecture seule
+  (vérifiées : aucun fichier écrit) et les commandes `service`, qui gèrent elles-mêmes leurs privilèges.
+- **« Réparer les permissions » ne partage plus `var/backups/`** : les sauvegardes complètes contiennent
+  `users.json`, les certificats et leurs clés privées. Elles devenaient lisibles par tout le groupe
+  `omega-serv` ; elles sont maintenant sautées puis remises en accès propriétaire seul.
+- **`var/run/` garde son bit setgid** : le `chmod` appliqué à chaque démarrage l'effaçait, et les fichiers
+  créés ensuite par l'utilisateur dans `var/run/` gardaient son groupe personnel (illisibles par le service).
+- **Mode log-only respecté par le script magnet omega-waf** : le serveur lui transmet désormais le mode du WAF
+  (`omega_waf_mode`). En log-only, omega-waf ne pose plus de ban ; avant, sa ligne `AJOUT BLOCKLIST` devenait
+  un ban réseau fail2ban alors que le serveur, lui, ne bloquait rien.
+
 ## version 2.6.0 : Publié
 
 ### Ajouté

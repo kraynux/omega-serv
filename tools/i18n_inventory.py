@@ -160,6 +160,10 @@ BUILD_TOOL_FILES = ("infrastructure/waf/keyword_reference_generator.py",)
 # Formats d'echange normalises (STIX 2.1, MISP) : contenu en anglais et en valeurs du standard,
 # jamais traduit (OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §2.4).
 EXCHANGE_FORMAT_FILES = ("infrastructure/exporters/stix_ioc_exporter.py", "infrastructure/exporters/misp_ioc_exporter.py")
+# Contrats d'interconnexion (omega-lib D-017, 2026-11-10) : JSON lu par omega-connect et raisons techniques
+# en anglais ASCII, jamais traduits (code d'omega-lib et module d'omega-serv qui produit jeton et fiche).
+SYNCHRO_CONTRACT_PREFIXES = ("synchro/", "infrastructure/synchro/")
+SYNCHRO_CONTRACT_FILES = ("application/synchro/serv_contracts.py",)
 # Plan i18n §5.3 : libelle bilingue du selecteur et noms de langues (chacune dans SA langue),
 # jamais traduits - c'est ce qui permet de revenir au francais depuis n'importe quelle langue.
 NEVER_TRANSLATED_TEXTS = frozenset({
@@ -423,6 +427,8 @@ class FileScanner:
             return context, TRADUIRE, "marque pour traduction (_ / N_ / ngettext)"
         if text in NEVER_TRANSLATED_TEXTS:
             return context, NE_PAS, "selecteur de langue : libelle bilingue / nom de langue, jamais traduit (plan §5.3)"
+        if self.rel in SYNCHRO_CONTRACT_FILES or self.rel.startswith(SYNCHRO_CONTRACT_PREFIXES):
+            return context, NE_PAS, "contrat d'interconnexion (omega-lib D-017) : JSON et raisons techniques, jamais traduits"
         if self.rel in EXCHANGE_FORMAT_FILES:
             return context, NE_PAS, "format d'echange normalise (STIX 2.1 / MISP), en anglais, jamais traduit"
         for marker, why in MACHINE_CONTRACTS:

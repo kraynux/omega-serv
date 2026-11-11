@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 20:04+0100\n"
+"POT-Creation-Date: 2026-11-10 08:11+0100\n"
 "PO-Revision-Date: 2026-10-21 23:30+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Español\n"
@@ -499,10 +499,10 @@ msgid "Info"
 msgstr "Info"
 
 #: src/omega_serv/application/logs/health_presentation.py:22
-#: src/omega_serv/interfaces/cli/main.py:1220
-#: src/omega_serv/interfaces/cli/main.py:1222
-#: src/omega_serv/interfaces/cli/main.py:1225
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1232
+#: src/omega_serv/interfaces/cli/main.py:1234
+#: src/omega_serv/interfaces/cli/main.py:1237
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
@@ -1334,7 +1334,7 @@ msgstr ""
 msgid "liste {list_id!r} introuvable dans la configuration"
 msgstr "lista {list_id!r} no encontrada en la configuración"
 
-#: src/omega_serv/application/security/manage_blocklist.py:34
+#: src/omega_serv/application/security/manage_blocklist.py:41
 msgid ""
 "Bannissement permanent refusé sans confirmation explicite (passer "
 "--duration-seconds, ou --confirm-permanent pour un bannissement sans "
@@ -1343,33 +1343,39 @@ msgstr ""
 "Baneo permanente rechazado sin confirmación explícita (pasar --duration-"
 "seconds, o --confirm-permanent para un baneo sin caducidad)."
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #, python-brace-format
 msgid "Entrée ajoutée : {network} ({value})"
 msgstr "Entrada añadida: {network} ({value})"
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #, python-brace-format
 msgid "expire le {date}"
 msgstr "caduca el {date}"
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #: src/omega_serv/application/security/manual_intervention.py:168
-#: src/omega_serv/interfaces/cli/main.py:725
+#: src/omega_serv/interfaces/cli/main.py:736
 #: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:30
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "permanente"
 
-#: src/omega_serv/application/security/manage_blocklist.py:52
+#: src/omega_serv/application/security/manage_blocklist.py:71
 #, python-brace-format
-msgid "Aucune entrée pour {network}"
-msgstr "Ninguna entrada para {network}"
+msgid "Aucune entrée d'origine {origin} pour {network}"
+msgstr "Ninguna entrada con origen {origin} para {network}"
 
-#: src/omega_serv/application/security/manage_blocklist.py:53
+#: src/omega_serv/application/security/manage_blocklist.py:72
+#: src/omega_serv/application/security/manage_blocklist.py:76
 #, python-brace-format
 msgid "Entrée retirée : {network}"
 msgstr "Entrada eliminada: {network}"
+
+#: src/omega_serv/application/security/manage_blocklist.py:75
+#, python-brace-format
+msgid "Aucune entrée pour {network}"
+msgstr "Ninguna entrada para {network}"
 
 #: src/omega_serv/application/security/manual_intervention.py:30
 msgid "Pour bannir un réseau : menu WAF → Modules → Liste de blocage."
@@ -1466,7 +1472,7 @@ msgid "en vigueur"
 msgstr "en vigor"
 
 #: src/omega_serv/application/security/manual_intervention.py:169
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "expiré"
@@ -1766,7 +1772,7 @@ msgstr "Procesos"
 msgid "Ce gestionnaire de service ne supporte pas cette opération."
 msgstr "Este gestor de servicios no admite esta operación."
 
-#: src/omega_serv/application/services/install_service.py:143
+#: src/omega_serv/application/services/install_service.py:145
 msgid ""
 "Permissions reappliquees sur var/ et secure/auth/ - {repairing_user!r} "
 "ajouté au groupe {group!r} si besoin : reconnectez votre session (ou 'newgrp"
@@ -1776,11 +1782,11 @@ msgstr ""
 "grupo {group!r} si es necesario: vuelva a iniciar sesión (o 'newgrp "
 "{group}') para que la interfaz pueda leer lo que escribe el servicio."
 
-#: src/omega_serv/application/services/install_service.py:174
+#: src/omega_serv/application/services/install_service.py:176
 msgid " (compte système {user!r} créé ou déjà présent)"
 msgstr " (cuenta del sistema {user!r} creada o ya presente)"
 
-#: src/omega_serv/application/services/install_service.py:178
+#: src/omega_serv/application/services/install_service.py:180
 msgid ""
 " - {installing_user!r} ajouté au groupe {group!r} : reconnectez votre "
 "session (ou 'newgrp "
@@ -1788,21 +1794,21 @@ msgstr ""
 " - {installing_user!r} añadido al grupo {group!r}: vuelva a iniciar sesión "
 "(o 'newgrp "
 
-#: src/omega_serv/application/services/install_service.py:178
+#: src/omega_serv/application/services/install_service.py:180
 msgid "') pour que l'interface puisse lire ce que le service écrit"
 msgstr "') para que la interfaz pueda leer lo que escribe el servicio"
 
-#: src/omega_serv/application/services/install_service.py:181
+#: src/omega_serv/application/services/install_service.py:183
 #, python-brace-format
 msgid "Unité installée : {unit_path}{user_note}{group_note}"
 msgstr "Unidad instalada: {unit_path}{user_note}{group_note}"
 
-#: src/omega_serv/application/services/install_service.py:190
+#: src/omega_serv/application/services/install_service.py:192
 #, python-brace-format
 msgid "Unité introuvable : {unit_path}"
 msgstr "Unidad no encontrada: {unit_path}"
 
-#: src/omega_serv/application/services/install_service.py:202
+#: src/omega_serv/application/services/install_service.py:204
 #, python-brace-format
 msgid "Unité retirée : {unit_path}"
 msgstr "Unidad eliminada: {unit_path}"
@@ -2328,7 +2334,7 @@ msgid "← Retourner sur Google en attendant :-) "
 msgstr "← Volver a Google mientras tanto :-) "
 
 #: src/omega_serv/domain/http/error_pages.py:365
-#: src/omega_serv/interfaces/cli/main.py:160
+#: src/omega_serv/interfaces/cli/main.py:163
 msgid "Erreur"
 msgstr "Error"
 
@@ -2414,22 +2420,22 @@ msgid "o"
 msgstr "B"
 
 #: src/omega_serv/domain/routing/dirlisting.py:231
-#: src/omega_serv/interfaces/cli/main.py:1751
-#: src/omega_serv/interfaces/cli/main.py:1755
-#: src/omega_serv/interfaces/cli/main.py:1767
-#: src/omega_serv/interfaces/cli/main.py:1770
-#: src/omega_serv/interfaces/cli/main.py:1900
-#: src/omega_serv/interfaces/cli/main.py:1909
+#: src/omega_serv/interfaces/cli/main.py:1844
+#: src/omega_serv/interfaces/cli/main.py:1848
+#: src/omega_serv/interfaces/cli/main.py:1860
+#: src/omega_serv/interfaces/cli/main.py:1863
 #: src/omega_serv/interfaces/cli/main.py:1999
-#: src/omega_serv/interfaces/cli/main.py:2004
 #: src/omega_serv/interfaces/cli/main.py:2008
-#: src/omega_serv/interfaces/cli/main.py:2016
-#: src/omega_serv/interfaces/cli/main.py:2047
-#: src/omega_serv/interfaces/cli/main.py:2052
-#: src/omega_serv/interfaces/cli/main.py:2057
-#: src/omega_serv/interfaces/cli/main.py:2059
-#: src/omega_serv/interfaces/cli/main.py:2067
-#: src/omega_serv/interfaces/cli/main.py:2079
+#: src/omega_serv/interfaces/cli/main.py:2098
+#: src/omega_serv/interfaces/cli/main.py:2103
+#: src/omega_serv/interfaces/cli/main.py:2107
+#: src/omega_serv/interfaces/cli/main.py:2115
+#: src/omega_serv/interfaces/cli/main.py:2146
+#: src/omega_serv/interfaces/cli/main.py:2151
+#: src/omega_serv/interfaces/cli/main.py:2156
+#: src/omega_serv/interfaces/cli/main.py:2158
+#: src/omega_serv/interfaces/cli/main.py:2166
+#: src/omega_serv/interfaces/cli/main.py:2178
 msgid "NOM"
 msgstr "NOMBRE"
 
@@ -3440,15 +3446,27 @@ msgstr "la clave privada y el certificado proporcionados no corresponden"
 msgid "le certificat fourni est déjà expiré depuis le {value}"
 msgstr "el certificado proporcionado ya caducó el {value}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:56
+#: src/omega_serv/domain/security/waf/blocklist.py:64
+msgid ""
+"origine invalide (minuscules, chiffres, . _ : -, 64 caractères au plus) : "
+"{origin!r}"
+msgstr ""
+"origen no válido (minúsculas, cifras, . _ : -, 64 caracteres como máximo): "
+"{origin!r}"
+
+#: src/omega_serv/domain/security/waf/blocklist.py:67
+msgid "origine réservée à omega-serv : {origin!r}"
+msgstr "origen reservado a omega-serv: {origin!r}"
+
+#: src/omega_serv/domain/security/waf/blocklist.py:75
 msgid "network invalide (attendu une IP ou un CIDR) : {network!r}"
 msgstr "network no válido (se esperaba una IP o un CIDR): {network!r}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:58
+#: src/omega_serv/domain/security/waf/blocklist.py:77
 msgid "reason ne peut pas être vide"
 msgstr "reason no puede estar vacío"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:60
+#: src/omega_serv/domain/security/waf/blocklist.py:79
 msgid "source invalide : {source!r}"
 msgstr "source no válido: {source!r}"
 
@@ -4265,7 +4283,7 @@ msgstr ""
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:207
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:228
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:233
-#: src/omega_serv/infrastructure/services/systemd_service_manager.py:267
+#: src/omega_serv/infrastructure/services/systemd_service_manager.py:278
 #, python-brace-format
 msgid "code {returncode}"
 msgstr "código {returncode}"
@@ -4395,17 +4413,17 @@ msgstr " (+{value} más)"
 msgid "Liste de chemins invalide {path} : {details}{more}"
 msgstr "Lista de rutas no válida {path}: {details}{more}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:146
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:150
 #, python-brace-format
 msgid "erreur de syntaxe du script magnet : {e}"
 msgstr "error de sintaxis del script magnet: {e}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:269
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:273
 #, python-brace-format
 msgid "script magnet introuvable : {path}"
 msgstr "script magnet no encontrado: {path}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:273
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:277
 #, python-brace-format
 msgid "impossible de lire {path} : {e}"
 msgstr "no se puede leer {path}: {e}"
@@ -4416,13 +4434,13 @@ msgid "Fichier de pack de règles introuvable : {path}"
 msgstr "Archivo de pack de reglas no encontrado: {path}"
 
 #: src/omega_serv/interfaces/cli/command_tree.py:27
-#: src/omega_serv/interfaces/cli/main.py:1683
-#: src/omega_serv/interfaces/cli/main.py:2095
+#: src/omega_serv/interfaces/cli/main.py:1776
+#: src/omega_serv/interfaces/cli/main.py:2207
 msgid "COMMANDE"
 msgstr "COMANDO"
 
 #: src/omega_serv/interfaces/cli/command_tree.py:27
-#: src/omega_serv/interfaces/cli/main.py:1683
+#: src/omega_serv/interfaces/cli/main.py:1776
 msgid "commandes"
 msgstr "comandos"
 
@@ -4578,7 +4596,7 @@ msgstr "unique: una sola vez; quotidien: cada día, enviada por el servidor."
 
 #: src/omega_serv/interfaces/cli/declaration_commands.py:258
 #: src/omega_serv/interfaces/cli/declaration_commands.py:261
-#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:2005
 msgid "CODE"
 msgstr "CÓDIGO"
 
@@ -4602,32 +4620,32 @@ msgstr "Retira la declaración (se borra al recibirla)."
 msgid "Envoi quotidien, lancé par serve (pas à utiliser à la main)."
 msgstr "Envío diario, lanzado por serve (no usar a mano)."
 
-#: src/omega_serv/interfaces/cli/main.py:162
+#: src/omega_serv/interfaces/cli/main.py:165
 #, python-brace-format
 msgid "{prefix} : {error}"
 msgstr "{prefix}: {error}"
 
-#: src/omega_serv/interfaces/cli/main.py:232
+#: src/omega_serv/interfaces/cli/main.py:235
 msgid "Erreur de rechargement"
 msgstr "Error de recarga"
 
-#: src/omega_serv/interfaces/cli/main.py:321
-#: src/omega_serv/interfaces/cli/main.py:438
+#: src/omega_serv/interfaces/cli/main.py:324
+#: src/omega_serv/interfaces/cli/main.py:441
 msgid "Erreur d'environnement"
 msgstr "Error de entorno"
 
-#: src/omega_serv/interfaces/cli/main.py:428
-#: src/omega_serv/interfaces/cli/main.py:458
-#: src/omega_serv/interfaces/cli/main.py:1618
+#: src/omega_serv/interfaces/cli/main.py:431
+#: src/omega_serv/interfaces/cli/main.py:461
+#: src/omega_serv/interfaces/cli/main.py:1630
 msgid "Erreur de configuration"
 msgstr "Error de configuración"
 
-#: src/omega_serv/interfaces/cli/main.py:441
+#: src/omega_serv/interfaces/cli/main.py:444
 #, python-brace-format
 msgid "{config} : configuration valide."
 msgstr "{config}: configuración válida."
 
-#: src/omega_serv/interfaces/cli/main.py:478
+#: src/omega_serv/interfaces/cli/main.py:481
 msgid ""
 "Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou clé"
 " privée TLS) jamais chiffres par défaut - ajoutez --confirm-secrets pour "
@@ -4637,7 +4655,7 @@ msgstr ""
 "clave privada TLS), nunca cifrados por defecto - añada --confirm-secrets "
 "para confirmar."
 
-#: src/omega_serv/interfaces/cli/main.py:497
+#: src/omega_serv/interfaces/cli/main.py:500
 msgid ""
 "Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le "
 "redémarrer."
@@ -4645,11 +4663,11 @@ msgstr ""
 "Vuelva a ejecutar con --stop-and-restart para detener el servicio, restaurar"
 " y luego reiniciarlo."
 
-#: src/omega_serv/interfaces/cli/main.py:504
+#: src/omega_serv/interfaces/cli/main.py:507
 msgid "Aucune sauvegarde."
 msgstr "Ninguna copia de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:509
+#: src/omega_serv/interfaces/cli/main.py:512
 #, python-brace-format
 msgid ""
 "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} Ko  {value2}  "
@@ -4658,40 +4676,40 @@ msgstr ""
 "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} KB  {value2}  "
 "{description}"
 
-#: src/omega_serv/interfaces/cli/main.py:524
-#: src/omega_serv/interfaces/cli/main.py:542
-#: src/omega_serv/interfaces/cli/main.py:1068
-#: src/omega_serv/interfaces/cli/main.py:1096
-#: src/omega_serv/interfaces/cli/main.py:1133
-#: src/omega_serv/interfaces/cli/main.py:1158
-#: src/omega_serv/interfaces/cli/main.py:1179
-#: src/omega_serv/interfaces/cli/main.py:1197
-#: src/omega_serv/interfaces/cli/main.py:1246
+#: src/omega_serv/interfaces/cli/main.py:527
+#: src/omega_serv/interfaces/cli/main.py:545
+#: src/omega_serv/interfaces/cli/main.py:1080
+#: src/omega_serv/interfaces/cli/main.py:1108
+#: src/omega_serv/interfaces/cli/main.py:1145
+#: src/omega_serv/interfaces/cli/main.py:1170
+#: src/omega_serv/interfaces/cli/main.py:1191
+#: src/omega_serv/interfaces/cli/main.py:1209
+#: src/omega_serv/interfaces/cli/main.py:1258
 #, python-brace-format
 msgid "Erreur : {e}"
 msgstr "Error: {e}"
 
-#: src/omega_serv/interfaces/cli/main.py:526
+#: src/omega_serv/interfaces/cli/main.py:529
 #, python-brace-format
 msgid "Profil : {name}"
 msgstr "Perfil: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:547
+#: src/omega_serv/interfaces/cli/main.py:550
 #, python-brace-format
 msgid "Profil de base choisi : {name}"
 msgstr "Perfil base elegido: {name}"
 
-#: src/omega_serv/interfaces/cli/main.py:549
+#: src/omega_serv/interfaces/cli/main.py:552
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:76
 msgid "Aucune modification."
 msgstr "Ningún cambio."
 
-#: src/omega_serv/interfaces/cli/main.py:551
+#: src/omega_serv/interfaces/cli/main.py:554
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:78
 msgid "Modifications :"
 msgstr "Cambios:"
 
-#: src/omega_serv/interfaces/cli/main.py:556
+#: src/omega_serv/interfaces/cli/main.py:559
 msgid ""
 "\n"
 "Conflits détectés :"
@@ -4699,16 +4717,16 @@ msgstr ""
 "\n"
 "Conflictos detectados:"
 
-#: src/omega_serv/interfaces/cli/main.py:558
+#: src/omega_serv/interfaces/cli/main.py:561
 #, python-brace-format
 msgid "  [{value}] {message}"
 msgstr "  [{value}] {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:561
+#: src/omega_serv/interfaces/cli/main.py:564
 msgid "Erreur de validation"
 msgstr "Error de validación"
 
-#: src/omega_serv/interfaces/cli/main.py:564
+#: src/omega_serv/interfaces/cli/main.py:567
 msgid ""
 "\n"
 "(--dry-run : aucune écriture effectuée)"
@@ -4716,7 +4734,7 @@ msgstr ""
 "\n"
 "(--dry-run: no se ha escrito nada)"
 
-#: src/omega_serv/interfaces/cli/main.py:568
+#: src/omega_serv/interfaces/cli/main.py:571
 msgid ""
 "\n"
 "Application refusée (problèmes bloquants, voir ci-dessus). Utiliser --force pour outrepasser."
@@ -4724,7 +4742,7 @@ msgstr ""
 "\n"
 "Aplicación rechazada (problemas bloqueantes, ver arriba). Use --force para forzar."
 
-#: src/omega_serv/interfaces/cli/main.py:572
+#: src/omega_serv/interfaces/cli/main.py:575
 #, python-brace-format
 msgid ""
 "\n"
@@ -4733,7 +4751,7 @@ msgstr ""
 "\n"
 "Configuración actualizada en {config} (perfil '{name}' aplicado)."
 
-#: src/omega_serv/interfaces/cli/main.py:583
+#: src/omega_serv/interfaces/cli/main.py:586
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:93
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
@@ -4741,8 +4759,8 @@ msgstr ""
 msgid "actif"
 msgstr "activo"
 
-#: src/omega_serv/interfaces/cli/main.py:583
-#: src/omega_serv/interfaces/cli/main.py:805
+#: src/omega_serv/interfaces/cli/main.py:586
+#: src/omega_serv/interfaces/cli/main.py:817
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
@@ -4750,70 +4768,70 @@ msgstr "activo"
 msgid "inactif"
 msgstr "inactivo"
 
-#: src/omega_serv/interfaces/cli/main.py:584
+#: src/omega_serv/interfaces/cli/main.py:587
 #, python-brace-format
 msgid "{name} : {state}"
 msgstr "{name}: {state}"
 
-#: src/omega_serv/interfaces/cli/main.py:630
+#: src/omega_serv/interfaces/cli/main.py:633
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:73
 #, python-brace-format
 msgid "Méthode          : {method}"
 msgstr "Método              : {method}"
 
-#: src/omega_serv/interfaces/cli/main.py:631
+#: src/omega_serv/interfaces/cli/main.py:634
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:74
 #, python-brace-format
 msgid "Chemin demandé   : {raw_path}"
 msgstr "Ruta solicitada     : {raw_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:632
+#: src/omega_serv/interfaces/cli/main.py:635
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:75
 #, python-brace-format
 msgid "Chemin normalisé : {normalized_path}"
 msgstr "Ruta normalizada    : {normalized_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:633
+#: src/omega_serv/interfaces/cli/main.py:636
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:76
 #, python-brace-format
 msgid "Méthode autorisée: {method_allowed}"
 msgstr "Método permitido    : {method_allowed}"
 
-#: src/omega_serv/interfaces/cli/main.py:634
+#: src/omega_serv/interfaces/cli/main.py:637
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:77
 #, python-brace-format
 msgid "Refusé (règles)  : {denied_by_access_policy}"
 msgstr "Rechazado (reglas)  : {denied_by_access_policy}"
 
-#: src/omega_serv/interfaces/cli/main.py:635
+#: src/omega_serv/interfaces/cli/main.py:638
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:78
 #, python-brace-format
 msgid "Fichier existe   : {file_exists}"
 msgstr "Archivo existe      : {file_exists}"
 
-#: src/omega_serv/interfaces/cli/main.py:636
+#: src/omega_serv/interfaces/cli/main.py:639
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:79
 #, python-brace-format
 msgid "Statut réponse   : {response_status}"
 msgstr "Estado respuesta    : {response_status}"
 
-#: src/omega_serv/interfaces/cli/main.py:638
+#: src/omega_serv/interfaces/cli/main.py:641
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:82
 #, python-brace-format
 msgid "Motif de refus   : {rejection_reason}"
 msgstr "Motivo de rechazo   : {rejection_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:639
+#: src/omega_serv/interfaces/cli/main.py:642
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:83
 msgid "En-têtes attendus :"
 msgstr "Cabeceras esperadas:"
 
-#: src/omega_serv/interfaces/cli/main.py:641
+#: src/omega_serv/interfaces/cli/main.py:644
 #, python-brace-format
 msgid "  {name}: {value}"
 msgstr "  {name}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:677
+#: src/omega_serv/interfaces/cli/main.py:680
 msgid ""
 "Erreur : options.waf absent de la configuration (exécuter 'omega-serv config"
 " init' ou ajouter la section waf)."
@@ -4821,17 +4839,17 @@ msgstr ""
 "Error: options.waf ausente de la configuración (ejecutar 'omega-serv config "
 "init' o añadir la sección waf)."
 
-#: src/omega_serv/interfaces/cli/main.py:686
+#: src/omega_serv/interfaces/cli/main.py:689
 #, python-brace-format
 msgid "Décision native : {value} (score {score})"
 msgstr "Decisión nativa: {value} (puntuación {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:688
+#: src/omega_serv/interfaces/cli/main.py:691
 #, python-brace-format
 msgid "Décision magnet : {value} (score {score})"
 msgstr "Decisión magnet: {value} (puntuación {score})"
 
-#: src/omega_serv/interfaces/cli/main.py:690
+#: src/omega_serv/interfaces/cli/main.py:693
 #, python-brace-format
 msgid ""
 "ATTENTION - le script magnet a levé une erreur sur cette requête : "
@@ -4840,7 +4858,7 @@ msgstr ""
 "ATENCIÓN - el script magnet ha lanzado un error en esta petición: "
 "{magnet_error}"
 
-#: src/omega_serv/interfaces/cli/main.py:693
+#: src/omega_serv/interfaces/cli/main.py:696
 #, python-brace-format
 msgid ""
 "ATTENTION - le script magnet référence lighty.{{{value}}}, non supporte par "
@@ -4851,7 +4869,7 @@ msgstr ""
 "admitido por este puente (siempre nil - el script puede comportarse de forma"
 " distinta que en un Lighttpd real)"
 
-#: src/omega_serv/interfaces/cli/main.py:697
+#: src/omega_serv/interfaces/cli/main.py:700
 msgid ""
 "ATTENTION - options.waf.magnet.on_error='fail-closed' combiné à une "
 "incompatibilité détectée : toute requête future qui déclenche la même erreur"
@@ -4863,64 +4881,64 @@ msgstr ""
 " será BLOQUEADA (incluido el tráfico legítimo). Pase a 'ignore', o corrija "
 "el script, antes de activarlo en producción."
 
-#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:704
 #, python-brace-format
 msgid "Décision finale : {value}"
 msgstr "Decisión final: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:702
+#: src/omega_serv/interfaces/cli/main.py:705
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:83
 #, python-brace-format
 msgid "Statut : {value}"
 msgstr "Estado: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:703
-#: src/omega_serv/interfaces/cli/main.py:836
+#: src/omega_serv/interfaces/cli/main.py:706
+#: src/omega_serv/interfaces/cli/main.py:848
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:84
 #, python-brace-format
 msgid "Score : {score}"
 msgstr "Puntuación: {score}"
 
-#: src/omega_serv/interfaces/cli/main.py:704
+#: src/omega_serv/interfaces/cli/main.py:707
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:85
 #, python-brace-format
 msgid "Règles : {value}"
 msgstr "Reglas: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:705
+#: src/omega_serv/interfaces/cli/main.py:708
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:86
 #, python-brace-format
 msgid "Politique de zone : {zone_id}"
 msgstr "Política de zona: {zone_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:706
+#: src/omega_serv/interfaces/cli/main.py:709
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:87
 #, python-brace-format
 msgid "Mode : {mode}"
 msgstr "Modo: {mode}"
 
-#: src/omega_serv/interfaces/cli/main.py:708
+#: src/omega_serv/interfaces/cli/main.py:711
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:90
 #, python-brace-format
 msgid "Motif : {blocked_reason}"
 msgstr "Motivo: {blocked_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:722
+#: src/omega_serv/interfaces/cli/main.py:733
 msgid "Aucune entrée."
 msgstr "Ninguna entrada."
 
-#: src/omega_serv/interfaces/cli/main.py:726
+#: src/omega_serv/interfaces/cli/main.py:737
 #, python-brace-format
 msgid "{network}\t{source}\t{expiry}\t{reason}"
 msgstr "{network}\t{source}\t{expiry}\t{reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:776
-#: src/omega_serv/interfaces/cli/main.py:799
+#: src/omega_serv/interfaces/cli/main.py:788
+#: src/omega_serv/interfaces/cli/main.py:811
 #, python-brace-format
 msgid "Erreur d'accès à la base Active Defense : {exc}."
 msgstr "Error de acceso a la base Active Defense: {exc}."
 
-#: src/omega_serv/interfaces/cli/main.py:778
+#: src/omega_serv/interfaces/cli/main.py:790
 msgid ""
 "Si l'appartenance à un groupe système a changé récemment, une nouvelle "
 "session (deconnexion/reconnexion) peut être nécessaire."
@@ -4928,13 +4946,13 @@ msgstr ""
 "Si la pertenencia a un grupo del sistema ha cambiado recientemente, puede "
 "ser necesaria una nueva sesión (cerrar sesión/volver a entrar)."
 
-#: src/omega_serv/interfaces/cli/main.py:784
+#: src/omega_serv/interfaces/cli/main.py:796
 msgid ""
 "Erreur : options.active_defense absent ou désactivé de la configuration."
 msgstr ""
 "Error: options.active_defense ausente o desactivado en la configuración."
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:814
 msgid ""
 "Active Defense : désactivé (options.active_defense.enabled = false ou "
 "absent)."
@@ -4942,249 +4960,249 @@ msgstr ""
 "Active Defense: desactivado (options.active_defense.enabled = false o "
 "ausente)."
 
-#: src/omega_serv/interfaces/cli/main.py:804
+#: src/omega_serv/interfaces/cli/main.py:816
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:57
 #, python-brace-format
 msgid "Active Defense : activé (mode={mode})"
 msgstr "Active Defense: activado (mode={mode})"
 
-#: src/omega_serv/interfaces/cli/main.py:805
+#: src/omega_serv/interfaces/cli/main.py:817
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #, python-brace-format
 msgid "Mode guerre : {value}"
 msgstr "Modo guerra: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:805
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:817
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "activé"
 msgstr "activado"
 
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #, python-brace-format
 msgid "Deception : {value}"
 msgstr "Deception: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 msgid "inactive"
 msgstr "inactiva"
 
-#: src/omega_serv/interfaces/cli/main.py:808
+#: src/omega_serv/interfaces/cli/main.py:820
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:60
 #, python-brace-format
 msgid "Sources suivies : {count}"
 msgstr "Fuentes seguidas: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:819
+#: src/omega_serv/interfaces/cli/main.py:831
 msgid "Aucune menace suivie."
 msgstr "Ninguna amenaza seguida."
 
-#: src/omega_serv/interfaces/cli/main.py:822
+#: src/omega_serv/interfaces/cli/main.py:834
 #, python-brace-format
 msgid "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 msgstr "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:845
 msgid "Aucune menace suivie pour {subject_id!r}."
 msgstr "Ninguna amenaza seguida para {subject_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:835
-#: src/omega_serv/interfaces/cli/main.py:873
+#: src/omega_serv/interfaces/cli/main.py:847
+#: src/omega_serv/interfaces/cli/main.py:885
 #, python-brace-format
 msgid "Source : {subject_id}"
 msgstr "Fuente: {subject_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:837
+#: src/omega_serv/interfaces/cli/main.py:849
 #, python-brace-format
 msgid "Niveau : {level}"
 msgstr "Nivel: {level}"
 
-#: src/omega_serv/interfaces/cli/main.py:838
+#: src/omega_serv/interfaces/cli/main.py:850
 #, python-brace-format
 msgid "Mise à jour : {value}"
 msgstr "Actualización: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:839
+#: src/omega_serv/interfaces/cli/main.py:851
 #, python-brace-format
 msgid "Expiration : {value}"
 msgstr "Caducidad: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:840
+#: src/omega_serv/interfaces/cli/main.py:852
 #, python-brace-format
 msgid "Actions actives : {value}"
 msgstr "Acciones activas: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:855
+#: src/omega_serv/interfaces/cli/main.py:867
 msgid "Aucun incident."
 msgstr "Ningún incidente."
 
-#: src/omega_serv/interfaces/cli/main.py:859
+#: src/omega_serv/interfaces/cli/main.py:871
 #, python-brace-format
 msgid "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 msgstr "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 
-#: src/omega_serv/interfaces/cli/main.py:870
-#: src/omega_serv/interfaces/cli/main.py:916
-#: src/omega_serv/interfaces/cli/main.py:938
+#: src/omega_serv/interfaces/cli/main.py:882
+#: src/omega_serv/interfaces/cli/main.py:928
+#: src/omega_serv/interfaces/cli/main.py:950
 msgid "Incident introuvable : {incident_id!r}."
 msgstr "Incidente no encontrado: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:872
+#: src/omega_serv/interfaces/cli/main.py:884
 #, python-brace-format
 msgid "Incident : {incident_id}"
 msgstr "Incidente: {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:874
+#: src/omega_serv/interfaces/cli/main.py:886
 #, python-brace-format
 msgid "Statut : {status}"
 msgstr "Estado: {status}"
 
-#: src/omega_serv/interfaces/cli/main.py:875
+#: src/omega_serv/interfaces/cli/main.py:887
 #, python-brace-format
 msgid "Ouvert le : {value}"
 msgstr "Abierto el: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:876
+#: src/omega_serv/interfaces/cli/main.py:888
 #, python-brace-format
 msgid "Fermé le : {value}"
 msgstr "Cerrado el: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:877
+#: src/omega_serv/interfaces/cli/main.py:889
 msgid "Chronologie :"
 msgstr "Cronología:"
 
-#: src/omega_serv/interfaces/cli/main.py:879
+#: src/omega_serv/interfaces/cli/main.py:891
 #, python-brace-format
 msgid "  {value}\t{kind}\t{detail}"
 msgstr "  {value}\t{kind}\t{detail}"
 
-#: src/omega_serv/interfaces/cli/main.py:892
+#: src/omega_serv/interfaces/cli/main.py:904
 msgid "Incident introuvable ou déjà fermé : {incident_id!r}."
 msgstr "Incidente no encontrado o ya cerrado: {incident_id!r}."
 
-#: src/omega_serv/interfaces/cli/main.py:894
+#: src/omega_serv/interfaces/cli/main.py:906
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:202
 msgid "Incident {incident_id!r} fermé."
 msgstr "Incidente {incident_id!r} cerrado."
 
-#: src/omega_serv/interfaces/cli/main.py:905
+#: src/omega_serv/interfaces/cli/main.py:917
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:224
 #, python-brace-format
 msgid "Auto-export ({export_format}) : {path}"
 msgstr "Auto-exportación ({export_format}): {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:924
+#: src/omega_serv/interfaces/cli/main.py:936
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:243
 msgid "Format d'export inconnu : {export_format!r} (json, csv, stix ou misp)."
 msgstr ""
 "Formato de exportación desconocido: {export_format!r} (json, csv, stix o "
 "misp)."
 
-#: src/omega_serv/interfaces/cli/main.py:927
+#: src/omega_serv/interfaces/cli/main.py:939
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:245
 #, python-brace-format
 msgid "Exporté : {path}"
 msgstr "Exportado: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:943
+#: src/omega_serv/interfaces/cli/main.py:955
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:257
 #, python-brace-format
 msgid "Rapport généré : {path}"
 msgstr "Informe generado: {path}"
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:966
 msgid "Aucune affectation de leurre."
 msgstr "Ninguna asignación de señuelo."
 
-#: src/omega_serv/interfaces/cli/main.py:958
+#: src/omega_serv/interfaces/cli/main.py:970
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "active"
 msgstr "activa"
 
-#: src/omega_serv/interfaces/cli/main.py:958
+#: src/omega_serv/interfaces/cli/main.py:970
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "expirée"
 msgstr "caducada"
 
-#: src/omega_serv/interfaces/cli/main.py:960
+#: src/omega_serv/interfaces/cli/main.py:972
 #, python-brace-format
 msgid "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 msgstr "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:971
+#: src/omega_serv/interfaces/cli/main.py:983
 msgid "Affectation de leurre libérée pour {subject_id!r} (si elle existait)."
 msgstr "Asignación de señuelo liberada para {subject_id!r} (si existía)."
 
-#: src/omega_serv/interfaces/cli/main.py:985
+#: src/omega_serv/interfaces/cli/main.py:997
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:79
 msgid ""
 "Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value})."
 msgstr ""
 "Clase de ataque desconocida: {attack_class!r} (valores posibles: {value})."
 
-#: src/omega_serv/interfaces/cli/main.py:995
+#: src/omega_serv/interfaces/cli/main.py:1007
 #, python-brace-format
 msgid "Source (simulée) : {subject_id}  (chemin observé : {path})"
 msgstr "Fuente (simulada): {subject_id}  (ruta observada: {path})"
 
-#: src/omega_serv/interfaces/cli/main.py:996
+#: src/omega_serv/interfaces/cli/main.py:1008
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:98
 #, python-brace-format
 msgid "Score : {previous_score} -> {projected_score}"
 msgstr "Puntuación: {previous_score} -> {projected_score}"
 
-#: src/omega_serv/interfaces/cli/main.py:997
+#: src/omega_serv/interfaces/cli/main.py:1009
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:99
 #, python-brace-format
 msgid "Niveau : {previous_level} -> {projected_level}"
 msgstr "Nivel: {previous_level} -> {projected_level}"
 
-#: src/omega_serv/interfaces/cli/main.py:999
+#: src/omega_serv/interfaces/cli/main.py:1011
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:100
 #, python-brace-format
 msgid "  - {line}"
 msgstr "  - {line}"
 
-#: src/omega_serv/interfaces/cli/main.py:1016
+#: src/omega_serv/interfaces/cli/main.py:1028
 #, python-brace-format
 msgid "États de menace purgés : {purged_threat_states}"
 msgstr "Estados de amenaza purgados: {purged_threat_states}"
 
-#: src/omega_serv/interfaces/cli/main.py:1017
+#: src/omega_serv/interfaces/cli/main.py:1029
 #, python-brace-format
 msgid "Incidents fermés automatiquement : {count}"
 msgstr "Incidentes cerrados automáticamente: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1019
+#: src/omega_serv/interfaces/cli/main.py:1031
 #, python-brace-format
 msgid "  - {incident_id}"
 msgstr "  - {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:1020
+#: src/omega_serv/interfaces/cli/main.py:1032
 #, python-brace-format
 msgid "Incidents fermés depuis plus de 90 jours supprimés : {count}"
 msgstr "Incidentes cerrados hace más de 90 días eliminados: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1034
+#: src/omega_serv/interfaces/cli/main.py:1046
 #, python-brace-format
 msgid "Export automatique impossible : {message}"
 msgstr "Exportación automática imposible: {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1036
+#: src/omega_serv/interfaces/cli/main.py:1048
 #, python-brace-format
 msgid "Exports automatiques écrits : {count}"
 msgstr "Exportaciones automáticas escritas: {count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1078
+#: src/omega_serv/interfaces/cli/main.py:1090
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:139
 msgid "Erreur : les deux saisies de passphrase ne correspondent pas."
 msgstr "Error: las dos entradas de la frase de paso no coinciden."
 
-#: src/omega_serv/interfaces/cli/main.py:1101
+#: src/omega_serv/interfaces/cli/main.py:1113
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 #, python-brace-format
@@ -5193,13 +5211,13 @@ msgid ""
 msgstr ""
 "Importe {value} en el almacén de confianza de los clientes (doc TLS §7.4)."
 
-#: src/omega_serv/interfaces/cli/main.py:1101
+#: src/omega_serv/interfaces/cli/main.py:1113
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 msgid "root-ca.pem"
 msgstr "root-ca.pem"
 
-#: src/omega_serv/interfaces/cli/main.py:1138
+#: src/omega_serv/interfaces/cli/main.py:1150
 msgid ""
 "Redémarrage requis pour que le nouveau certificat soit pris en compte "
 "(`omega-serv service restart`)."
@@ -5207,113 +5225,113 @@ msgstr ""
 "Se necesita un reinicio para que el nuevo certificado se tenga en cuenta "
 "(`omega-serv service restart`)."
 
-#: src/omega_serv/interfaces/cli/main.py:1206
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:79
 #, python-brace-format
 msgid "Sujet : {subject}"
 msgstr "Sujeto: {subject}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1219
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:80
 #, python-brace-format
 msgid "Émetteur : {issuer}"
 msgstr "Emisor: {issuer}"
 
-#: src/omega_serv/interfaces/cli/main.py:1208
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:81
 #, python-brace-format
 msgid "Début de validité : {value}"
 msgstr "Inicio de validez: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1209
+#: src/omega_serv/interfaces/cli/main.py:1221
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:82
 #, python-brace-format
 msgid "Fin de validité : {value}"
 msgstr "Fin de validez: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1210
+#: src/omega_serv/interfaces/cli/main.py:1222
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:83
 #, python-brace-format
 msgid "Jours restants : {days_remaining}"
 msgstr "Días restantes: {days_remaining}"
 
-#: src/omega_serv/interfaces/cli/main.py:1211
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type}"
 msgstr "Tipo de clave: {key_type}"
 
-#: src/omega_serv/interfaces/cli/main.py:1211
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type} ({key_bits} bits)"
 msgstr "Tipo de clave: {key_type} ({key_bits} bits)"
 
-#: src/omega_serv/interfaces/cli/main.py:1212
+#: src/omega_serv/interfaces/cli/main.py:1224
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:85
 #, python-brace-format
 msgid "Algorithme de signature : {signature_algorithm}"
 msgstr "Algoritmo de firma: {signature_algorithm}"
 
-#: src/omega_serv/interfaces/cli/main.py:1214
+#: src/omega_serv/interfaces/cli/main.py:1226
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:88
 msgid "SAN :"
 msgstr "SAN:"
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1228
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:89
 #, python-brace-format
 msgid "  - DNS:{dns}"
 msgstr "  - DNS:{dns}"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1230
 #, python-brace-format
 msgid "  - IP:{ip}"
 msgstr "  - IP:{ip}"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
-#: src/omega_serv/interfaces/cli/main.py:1222
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1232
+#: src/omega_serv/interfaces/cli/main.py:1234
+#: src/omega_serv/interfaces/cli/main.py:1237
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 msgid "ERREUR"
 msgstr "ERROR"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] Certificado {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "non expiré"
 msgstr "no caducado"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "NE correspond PAS"
 msgstr "NO corresponde"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #, python-brace-format
 msgid "[{value}] Clé privée {value2}"
 msgstr "[{value}] Clave privada {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "correspondante"
 msgstr "correspondiente"
 
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1237
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 #, python-brace-format
 msgid "[{value}] Permissions clé privée : {value2}"
 msgstr "[{value}] Permisos de la clave privada: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1227
+#: src/omega_serv/interfaces/cli/main.py:1239
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:99
 msgid ""
 "[AVERTISSEMENT] Certificat auto-signé, non approuvé par défaut par les "
@@ -5321,7 +5339,7 @@ msgid ""
 msgstr ""
 "[AVISO] Certificado autofirmado, no aprobado por defecto por los navegadores"
 
-#: src/omega_serv/interfaces/cli/main.py:1229
+#: src/omega_serv/interfaces/cli/main.py:1241
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:101
 #, python-brace-format
 msgid ""
@@ -5329,71 +5347,71 @@ msgid ""
 msgstr ""
 "[AVISO] Certificado a punto de caducar ({days_remaining} días restantes)"
 
-#: src/omega_serv/interfaces/cli/main.py:1282
+#: src/omega_serv/interfaces/cli/main.py:1294
 #, python-brace-format
 msgid "TLS activé (mode {mode}) dans {config}."
 msgstr "TLS activado (modo {mode}) en {config}."
 
-#: src/omega_serv/interfaces/cli/main.py:1298
+#: src/omega_serv/interfaces/cli/main.py:1310
 #, python-brace-format
 msgid "TLS désactivé dans {config}."
 msgstr "TLS desactivado en {config}."
 
-#: src/omega_serv/interfaces/cli/main.py:1310
+#: src/omega_serv/interfaces/cli/main.py:1322
 msgid "Mot de passe : "
 msgstr "Contraseña: "
 
-#: src/omega_serv/interfaces/cli/main.py:1322
+#: src/omega_serv/interfaces/cli/main.py:1334
 msgid "Passphrase de la CA : "
 msgstr "Frase de paso de la CA: "
 
-#: src/omega_serv/interfaces/cli/main.py:1323
+#: src/omega_serv/interfaces/cli/main.py:1335
 msgid "Confirmer la passphrase : "
 msgstr "Confirmar la frase de paso: "
 
-#: src/omega_serv/interfaces/cli/main.py:1408
+#: src/omega_serv/interfaces/cli/main.py:1420
 msgid "Utilisateurs :"
 msgstr "Usuarios:"
 
-#: src/omega_serv/interfaces/cli/main.py:1410
+#: src/omega_serv/interfaces/cli/main.py:1422
 #, python-brace-format
 msgid "  - {username}"
 msgstr "  - {username}"
 
-#: src/omega_serv/interfaces/cli/main.py:1411
+#: src/omega_serv/interfaces/cli/main.py:1423
 msgid "Zones protégées :"
 msgstr "Zonas protegidas:"
 
-#: src/omega_serv/interfaces/cli/main.py:1413
+#: src/omega_serv/interfaces/cli/main.py:1425
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:112
 msgid "toutes"
 msgstr "todos"
 
-#: src/omega_serv/interfaces/cli/main.py:1414
+#: src/omega_serv/interfaces/cli/main.py:1426
 msgid ""
 "  - {path_prefix} (realm={realm!r}, utilisateurs={value}, "
 "methodes={methods})"
 msgstr ""
 "  - {path_prefix} (realm={realm!r}, usuarios={value}, métodos={methods})"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1441
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:272
 #, python-brace-format
 msgid "[INFO] {label} absent ({path})"
 msgstr "[INFO] {label} ausente ({path})"
 
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 msgid "AVERTISSEMENT"
 msgstr "AVISO"
 
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #, python-brace-format
 msgid "[{value}] {label} permissions : {value2}"
 msgstr "[{value}] permisos de {label}: {value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1451
+#: src/omega_serv/interfaces/cli/main.py:1463
 msgid ""
 "Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce"
 " système."
@@ -5401,64 +5419,64 @@ msgstr ""
 "Error: ningún gestor de servicios reconocido (systemd/OpenRC/runit) en este "
 "sistema."
 
-#: src/omega_serv/interfaces/cli/main.py:1464
+#: src/omega_serv/interfaces/cli/main.py:1476
 #, python-brace-format
 msgid "{label} : {value}"
 msgstr "{label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1467
+#: src/omega_serv/interfaces/cli/main.py:1479
 msgid "Connecteurs (moteur natif) :"
 msgstr "Conectores (motor nativo):"
 
-#: src/omega_serv/interfaces/cli/main.py:1469
+#: src/omega_serv/interfaces/cli/main.py:1481
 #, python-brace-format
 msgid "  {label} : {value}"
 msgstr "  {label}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1489
+#: src/omega_serv/interfaces/cli/main.py:1501
 #, python-brace-format
 msgid "{stamp} : aucune automatisation à échéance."
 msgstr "{stamp}: ninguna automatización pendiente."
 
-#: src/omega_serv/interfaces/cli/main.py:1491
+#: src/omega_serv/interfaces/cli/main.py:1503
 msgid "réussie"
 msgstr "correcta"
 
-#: src/omega_serv/interfaces/cli/main.py:1491
+#: src/omega_serv/interfaces/cli/main.py:1503
 msgid "échec"
 msgstr "error"
 
-#: src/omega_serv/interfaces/cli/main.py:1492
+#: src/omega_serv/interfaces/cli/main.py:1504
 #, python-brace-format
 msgid "{stamp} : {log_id} : {state} - {message}"
 msgstr "{stamp}: {log_id}: {state} - {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1503
+#: src/omega_serv/interfaces/cli/main.py:1515
 #, python-brace-format
 msgid "Service : {service_name}"
 msgstr "Servicio: {service_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1504
+#: src/omega_serv/interfaces/cli/main.py:1516
 #, python-brace-format
 msgid "Actif   : {active}"
 msgstr "Activo : {active}"
 
-#: src/omega_serv/interfaces/cli/main.py:1505
+#: src/omega_serv/interfaces/cli/main.py:1517
 #, python-brace-format
 msgid "Activé au démarrage : {enabled}"
 msgstr "Activado al arranque: {enabled}"
 
-#: src/omega_serv/interfaces/cli/main.py:1506
+#: src/omega_serv/interfaces/cli/main.py:1518
 #, python-brace-format
 msgid "État    : {state} ({sub_state})"
 msgstr "Estado : {state} ({sub_state})"
 
-#: src/omega_serv/interfaces/cli/main.py:1508
+#: src/omega_serv/interfaces/cli/main.py:1520
 #, python-brace-format
 msgid "Description : {description}"
 msgstr "Descripción: {description}"
 
-#: src/omega_serv/interfaces/cli/main.py:1562
+#: src/omega_serv/interfaces/cli/main.py:1574
 #, python-brace-format
 msgid ""
 "Erreur : génération d'unité non supportée pour {value} (seul systemd est "
@@ -5467,57 +5485,57 @@ msgstr ""
 "Error: generación de unidad no admitida para {value} (solo se admite systemd"
 " en V1, ver OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5)."
 
-#: src/omega_serv/interfaces/cli/main.py:1562
-#: src/omega_serv/interfaces/cli/main.py:1588
+#: src/omega_serv/interfaces/cli/main.py:1574
+#: src/omega_serv/interfaces/cli/main.py:1600
 msgid "aucun gestionnaire détecté"
 msgstr "ningún gestor detectado"
 
-#: src/omega_serv/interfaces/cli/main.py:1588
+#: src/omega_serv/interfaces/cli/main.py:1600
 #, python-brace-format
 msgid "Erreur : désinstallation d'unité non supportée pour {value}."
 msgstr "Error: desinstalación de unidad no admitida para {value}."
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "CRITICAL"
 msgstr "CRITICAL"
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "HIGH"
 msgstr "HIGH"
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "MEDIUM"
 msgstr "MEDIUM"
 
-#: src/omega_serv/interfaces/cli/main.py:1600
+#: src/omega_serv/interfaces/cli/main.py:1612
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "INFO"
 msgstr "INFO"
 
-#: src/omega_serv/interfaces/cli/main.py:1600
+#: src/omega_serv/interfaces/cli/main.py:1612
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "LOW"
 msgstr "LOW"
 
-#: src/omega_serv/interfaces/cli/main.py:1606
+#: src/omega_serv/interfaces/cli/main.py:1618
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:104
 msgid "Aucun problème détecté."
 msgstr "Ningún problema detectado."
 
-#: src/omega_serv/interfaces/cli/main.py:1610
+#: src/omega_serv/interfaces/cli/main.py:1622
 #, python-brace-format
 msgid "[{label}] {rule_id} {rule_name}"
 msgstr "[{label}] {rule_id} {rule_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1612
+#: src/omega_serv/interfaces/cli/main.py:1624
 #, python-brace-format
 msgid "    -> {recommendation}"
 msgstr "    -> {recommendation}"
 
-#: src/omega_serv/interfaces/cli/main.py:1642
+#: src/omega_serv/interfaces/cli/main.py:1654
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:114
 #, python-brace-format
 msgid ""
@@ -5527,17 +5545,17 @@ msgstr ""
 "Resumen: {critical} critical, {high} high, {medium} medium, {low} low, "
 "{info} info"
 
-#: src/omega_serv/interfaces/cli/main.py:1643
+#: src/omega_serv/interfaces/cli/main.py:1655
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : NON SÉCURISÉ"
 msgstr "Estado: NO SEGURO"
 
-#: src/omega_serv/interfaces/cli/main.py:1643
+#: src/omega_serv/interfaces/cli/main.py:1655
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : sécurisé"
 msgstr "Estado: seguro"
 
-#: src/omega_serv/interfaces/cli/main.py:1659
+#: src/omega_serv/interfaces/cli/main.py:1671
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:190
 #, python-brace-format
 msgid ""
@@ -5547,18 +5565,18 @@ msgstr ""
 "Nueva versión disponible: {latest} (instalada: {installed}).\n"
 "Archivo: {url}"
 
-#: src/omega_serv/interfaces/cli/main.py:1661
+#: src/omega_serv/interfaces/cli/main.py:1673
 #, python-brace-format
 msgid "Nouveautés : {url}"
 msgstr "Novedades: {url}"
 
-#: src/omega_serv/interfaces/cli/main.py:1663
+#: src/omega_serv/interfaces/cli/main.py:1675
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:193
 #, python-brace-format
 msgid "Vous avez la dernière version publiée ({version})."
 msgstr "Tiene la última versión publicada ({version})."
 
-#: src/omega_serv/interfaces/cli/main.py:1665
+#: src/omega_serv/interfaces/cli/main.py:1677
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:195
 #, python-brace-format
 msgid ""
@@ -5568,7 +5586,7 @@ msgstr ""
 "Su versión ({installed}) es más reciente que la última publicada ({latest}):"
 " versión en curso, aún no publicada."
 
-#: src/omega_serv/interfaces/cli/main.py:1668
+#: src/omega_serv/interfaces/cli/main.py:1680
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:198
 #, python-brace-format
 msgid ""
@@ -5578,7 +5596,12 @@ msgstr ""
 "Versión instalada: {version}. Sitio inaccesible o lista de versiones "
 "ilegible: inténtelo de nuevo más tarde."
 
-#: src/omega_serv/interfaces/cli/main.py:1677
+#: src/omega_serv/interfaces/cli/main.py:1696
+#, python-brace-format
+msgid "Jeton d'installation non écrit ({path}) : {reason}"
+msgstr "Token de instalación no escrito ({path}): {reason}"
+
+#: src/omega_serv/interfaces/cli/main.py:1770
 msgid ""
 "Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : "
 "interface interactive. Avec une commande : ligne de commande, scriptable."
@@ -5586,37 +5609,37 @@ msgstr ""
 "Servidor web seguro (WAF, TLS, RIPOSTE, Active Defense). Sin argumentos: "
 "interfaz interactiva. Con un comando: línea de comandos, apta para scripts."
 
-#: src/omega_serv/interfaces/cli/main.py:1679
+#: src/omega_serv/interfaces/cli/main.py:1772
 msgid "Toutes les commandes : omega-serv help. Manuel : man omega-serv."
 msgstr "Todos los comandos: omega-serv help. Manual: man omega-serv."
 
-#: src/omega_serv/interfaces/cli/main.py:1681
-#: src/omega_serv/interfaces/cli/main.py:1707
-#: src/omega_serv/interfaces/cli/main.py:1709
-#: src/omega_serv/interfaces/cli/main.py:1943
-#: src/omega_serv/interfaces/cli/main.py:1944
-#: src/omega_serv/interfaces/cli/main.py:1949
-#: src/omega_serv/interfaces/cli/main.py:1950
-#: src/omega_serv/interfaces/cli/main.py:1951
-#: src/omega_serv/interfaces/cli/main.py:1956
-#: src/omega_serv/interfaces/cli/main.py:1957
-#: src/omega_serv/interfaces/cli/main.py:1963
-#: src/omega_serv/interfaces/cli/main.py:1964
-#: src/omega_serv/interfaces/cli/main.py:1965
-#: src/omega_serv/interfaces/cli/main.py:1970
-#: src/omega_serv/interfaces/cli/main.py:1971
-#: src/omega_serv/interfaces/cli/main.py:1972
-#: src/omega_serv/interfaces/cli/main.py:1980
-#: src/omega_serv/interfaces/cli/main.py:1983
-#: src/omega_serv/interfaces/cli/main.py:1987
+#: src/omega_serv/interfaces/cli/main.py:1774
+#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1802
+#: src/omega_serv/interfaces/cli/main.py:2042
+#: src/omega_serv/interfaces/cli/main.py:2043
+#: src/omega_serv/interfaces/cli/main.py:2048
+#: src/omega_serv/interfaces/cli/main.py:2049
+#: src/omega_serv/interfaces/cli/main.py:2050
 #: src/omega_serv/interfaces/cli/main.py:2055
+#: src/omega_serv/interfaces/cli/main.py:2056
+#: src/omega_serv/interfaces/cli/main.py:2062
 #: src/omega_serv/interfaces/cli/main.py:2063
-#: src/omega_serv/interfaces/cli/main.py:2068
-#: src/omega_serv/interfaces/cli/main.py:2080
+#: src/omega_serv/interfaces/cli/main.py:2064
+#: src/omega_serv/interfaces/cli/main.py:2069
+#: src/omega_serv/interfaces/cli/main.py:2070
+#: src/omega_serv/interfaces/cli/main.py:2071
+#: src/omega_serv/interfaces/cli/main.py:2079
+#: src/omega_serv/interfaces/cli/main.py:2082
+#: src/omega_serv/interfaces/cli/main.py:2086
+#: src/omega_serv/interfaces/cli/main.py:2154
+#: src/omega_serv/interfaces/cli/main.py:2162
+#: src/omega_serv/interfaces/cli/main.py:2167
+#: src/omega_serv/interfaces/cli/main.py:2179
 msgid "FICHIER"
 msgstr "ARCHIVO"
 
-#: src/omega_serv/interfaces/cli/main.py:1682
+#: src/omega_serv/interfaces/cli/main.py:1775
 msgid ""
 "Fichier de configuration (défaut : config/omega-serve.json de "
 "l'installation)."
@@ -5624,21 +5647,21 @@ msgstr ""
 "Archivo de configuración (por defecto: config/omega-serve.json de la "
 "instalación)."
 
-#: src/omega_serv/interfaces/cli/main.py:1685
+#: src/omega_serv/interfaces/cli/main.py:1778
 msgid "Accepte un certificat auto-signé sur une adresse publique."
 msgstr "Acepta un certificado autofirmado en una dirección pública."
 
-#: src/omega_serv/interfaces/cli/main.py:1686
+#: src/omega_serv/interfaces/cli/main.py:1779
 msgid ""
 "Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le "
 "réseau)."
 msgstr "Acepta zonas con contraseña sin TLS (contraseñas legibles en la red)."
 
-#: src/omega_serv/interfaces/cli/main.py:1687
+#: src/omega_serv/interfaces/cli/main.py:1780
 msgid "Méthode HTTP (défaut : GET)."
 msgstr "Método HTTP (por defecto: GET)."
 
-#: src/omega_serv/interfaces/cli/main.py:1690
+#: src/omega_serv/interfaces/cli/main.py:1783
 msgid ""
 "Démarre le serveur au premier plan (c'est ce que lance le service système). "
 "Refuse de tourner en root."
@@ -5646,20 +5669,20 @@ msgstr ""
 "Inicia el servidor en primer plano (es lo que ejecuta el servicio del "
 "sistema). Se niega a funcionar como root."
 
-#: src/omega_serv/interfaces/cli/main.py:1696
+#: src/omega_serv/interfaces/cli/main.py:1789
 msgid "Fichier de configuration : création, vérification, TLS, sauvegardes."
 msgstr ""
 "Archivo de configuración: creación, verificación, TLS, copias de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:1697
+#: src/omega_serv/interfaces/cli/main.py:1790
 msgid "Crée le fichier de configuration par défaut."
 msgstr "Crea el archivo de configuración por defecto."
 
-#: src/omega_serv/interfaces/cli/main.py:1698
+#: src/omega_serv/interfaces/cli/main.py:1791
 msgid "Écrase le fichier existant."
 msgstr "Sobrescribe el archivo existente."
 
-#: src/omega_serv/interfaces/cli/main.py:1701
+#: src/omega_serv/interfaces/cli/main.py:1794
 msgid ""
 "Vérifie la configuration et l'environnement (chemins, droits, certificats) "
 "sans démarrer."
@@ -5667,23 +5690,23 @@ msgstr ""
 "Verifica la configuración y el entorno (rutas, permisos, certificados) sin "
 "iniciar."
 
-#: src/omega_serv/interfaces/cli/main.py:1705
+#: src/omega_serv/interfaces/cli/main.py:1798
 msgid "Affiche la configuration chargée, en JSON."
 msgstr "Muestra la configuración cargada, en JSON."
 
-#: src/omega_serv/interfaces/cli/main.py:1706
+#: src/omega_serv/interfaces/cli/main.py:1799
 msgid "Active TLS dans la configuration."
 msgstr "Activa TLS en la configuración."
 
-#: src/omega_serv/interfaces/cli/main.py:1708
+#: src/omega_serv/interfaces/cli/main.py:1801
 msgid "Certificat à utiliser (sinon celui déjà configuré)."
 msgstr "Certificado a usar (si no, el ya configurado)."
 
-#: src/omega_serv/interfaces/cli/main.py:1710
+#: src/omega_serv/interfaces/cli/main.py:1803
 msgid "Clé privée à utiliser (sinon celle déjà configurée)."
 msgstr "Clave privada a usar (si no, la ya configurada)."
 
-#: src/omega_serv/interfaces/cli/main.py:1712
+#: src/omega_serv/interfaces/cli/main.py:1805
 msgid ""
 "direct : omega-serv chiffre lui-même ; behind_proxy : derrière un reverse "
 "proxy (défaut : direct)."
@@ -5691,11 +5714,11 @@ msgstr ""
 "direct: omega-serv cifra por sí mismo; behind_proxy: detrás de un proxy "
 "inverso (por defecto: direct)."
 
-#: src/omega_serv/interfaces/cli/main.py:1714
+#: src/omega_serv/interfaces/cli/main.py:1807
 msgid "Désactive TLS dans la configuration."
 msgstr "Desactiva TLS en la configuración."
 
-#: src/omega_serv/interfaces/cli/main.py:1717
+#: src/omega_serv/interfaces/cli/main.py:1810
 msgid ""
 "Crée une sauvegarde : la configuration toujours, le reste selon les options "
 "--include-*."
@@ -5703,11 +5726,11 @@ msgstr ""
 "Crea una copia de seguridad: siempre la configuración, el resto según las "
 "opciones --include-*."
 
-#: src/omega_serv/interfaces/cli/main.py:1718
+#: src/omega_serv/interfaces/cli/main.py:1811
 msgid "Ajoute les règles et listes du WAF."
 msgstr "Añade las reglas y listas del WAF."
 
-#: src/omega_serv/interfaces/cli/main.py:1720
+#: src/omega_serv/interfaces/cli/main.py:1813
 msgid ""
 "Ajoute les utilisateurs et les zones protégées (secrets : demande --confirm-"
 "secrets)."
@@ -5715,7 +5738,7 @@ msgstr ""
 "Añade los usuarios y las zonas protegidas (secretos: requiere --confirm-"
 "secrets)."
 
-#: src/omega_serv/interfaces/cli/main.py:1722
+#: src/omega_serv/interfaces/cli/main.py:1815
 msgid ""
 "Ajoute les certificats et les clés TLS (secrets : demande --confirm-"
 "secrets)."
@@ -5723,27 +5746,27 @@ msgstr ""
 "Añade los certificados y las claves TLS (secretos: requiere --confirm-"
 "secrets)."
 
-#: src/omega_serv/interfaces/cli/main.py:1724
+#: src/omega_serv/interfaces/cli/main.py:1817
 msgid "Ajoute la base Active Defense."
 msgstr "Añade la base de datos de Active Defense."
 
-#: src/omega_serv/interfaces/cli/main.py:1726
+#: src/omega_serv/interfaces/cli/main.py:1819
 msgid "Ajoute les pages d'erreur personnalisées."
 msgstr "Añade las páginas de error personalizadas."
 
-#: src/omega_serv/interfaces/cli/main.py:1728
+#: src/omega_serv/interfaces/cli/main.py:1821
 msgid "Ajoute les préférences de l'interface."
 msgstr "Añade las preferencias de la interfaz."
 
-#: src/omega_serv/interfaces/cli/main.py:1730
+#: src/omega_serv/interfaces/cli/main.py:1823
 msgid "Ajoute la bibliothèque des journaux."
 msgstr "Añade la biblioteca de registros."
 
-#: src/omega_serv/interfaces/cli/main.py:1731
+#: src/omega_serv/interfaces/cli/main.py:1824
 msgid "Ajoute la base RIPOSTE."
 msgstr "Añade la base de datos de RIPOSTE."
 
-#: src/omega_serv/interfaces/cli/main.py:1733
+#: src/omega_serv/interfaces/cli/main.py:1826
 msgid ""
 "Tout sauvegarder : toutes les options --include-* (secrets compris : demande"
 " --confirm-secrets)."
@@ -5751,7 +5774,7 @@ msgstr ""
 "Guardarlo todo: todas las opciones --include-* (secretos incluidos: requiere"
 " --confirm-secrets)."
 
-#: src/omega_serv/interfaces/cli/main.py:1735
+#: src/omega_serv/interfaces/cli/main.py:1828
 msgid ""
 "Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés "
 "privées)."
@@ -5759,39 +5782,39 @@ msgstr ""
 "Confirma la inclusión de secretos sin cifrar (hashes de contraseñas, claves "
 "privadas)."
 
-#: src/omega_serv/interfaces/cli/main.py:1736
-#: src/omega_serv/interfaces/cli/main.py:1785
-#: src/omega_serv/interfaces/cli/main.py:1786
-#: src/omega_serv/interfaces/cli/main.py:1800
-#: src/omega_serv/interfaces/cli/main.py:1821
-#: src/omega_serv/interfaces/cli/main.py:1901
-#: src/omega_serv/interfaces/cli/main.py:1903
-#: src/omega_serv/interfaces/cli/main.py:1904
-#: src/omega_serv/interfaces/cli/main.py:1905
-#: src/omega_serv/interfaces/cli/main.py:2014
-#: src/omega_serv/interfaces/cli/main.py:2053
+#: src/omega_serv/interfaces/cli/main.py:1829
+#: src/omega_serv/interfaces/cli/main.py:1878
+#: src/omega_serv/interfaces/cli/main.py:1879
+#: src/omega_serv/interfaces/cli/main.py:1895
+#: src/omega_serv/interfaces/cli/main.py:1920
+#: src/omega_serv/interfaces/cli/main.py:2000
+#: src/omega_serv/interfaces/cli/main.py:2002
+#: src/omega_serv/interfaces/cli/main.py:2003
+#: src/omega_serv/interfaces/cli/main.py:2004
+#: src/omega_serv/interfaces/cli/main.py:2113
+#: src/omega_serv/interfaces/cli/main.py:2152
 msgid "TEXTE"
 msgstr "TEXTO"
 
-#: src/omega_serv/interfaces/cli/main.py:1737
+#: src/omega_serv/interfaces/cli/main.py:1830
 msgid "Texte libre enregistré avec la sauvegarde."
 msgstr "Texto libre guardado con la copia de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:1739
+#: src/omega_serv/interfaces/cli/main.py:1832
 msgid "Restaure une sauvegarde."
 msgstr "Restaura una copia de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:1740
+#: src/omega_serv/interfaces/cli/main.py:1833
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
 msgid "ID"
 msgstr "ID"
 
-#: src/omega_serv/interfaces/cli/main.py:1741
+#: src/omega_serv/interfaces/cli/main.py:1834
 msgid "Identifiant de la sauvegarde (voir config list-backups)."
 msgstr "Identificador de la copia de seguridad (ver config list-backups)."
 
-#: src/omega_serv/interfaces/cli/main.py:1743
+#: src/omega_serv/interfaces/cli/main.py:1836
 msgid ""
 "Arrête le service, restaure, puis le redémarre (nécessaire si le service "
 "tourne)."
@@ -5799,27 +5822,27 @@ msgstr ""
 "Detiene el servicio, restaura y luego lo reinicia (necesario si el servicio "
 "está en marcha)."
 
-#: src/omega_serv/interfaces/cli/main.py:1745
+#: src/omega_serv/interfaces/cli/main.py:1838
 msgid "Liste les sauvegardes."
 msgstr "Lista las copias de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:1747
+#: src/omega_serv/interfaces/cli/main.py:1840
 msgid "Profils de configuration prêts à l'emploi."
 msgstr "Perfiles de configuración listos para usar."
 
-#: src/omega_serv/interfaces/cli/main.py:1748
+#: src/omega_serv/interfaces/cli/main.py:1841
 msgid "Liste les profils disponibles."
 msgstr "Lista los perfiles disponibles."
 
-#: src/omega_serv/interfaces/cli/main.py:1749
+#: src/omega_serv/interfaces/cli/main.py:1842
 msgid "Nom du profil (voir profile list)."
 msgstr "Nombre del perfil (ver profile list)."
 
-#: src/omega_serv/interfaces/cli/main.py:1750
+#: src/omega_serv/interfaces/cli/main.py:1843
 msgid "Affiche un profil et les valeurs qu'il fixe."
 msgstr "Muestra un perfil y los valores que fija."
 
-#: src/omega_serv/interfaces/cli/main.py:1754
+#: src/omega_serv/interfaces/cli/main.py:1847
 msgid ""
 "Applique un profil à la configuration (modifications et conflits affichés "
 "d'abord)."
@@ -5827,31 +5850,31 @@ msgstr ""
 "Aplica un perfil a la configuración (primero se muestran los cambios y "
 "conflictos)."
 
-#: src/omega_serv/interfaces/cli/main.py:1757
+#: src/omega_serv/interfaces/cli/main.py:1850
 msgid "Montre seulement ce qui changerait, sans rien écrire."
 msgstr "Solo muestra lo que cambiaría, sin escribir nada."
 
-#: src/omega_serv/interfaces/cli/main.py:1758
+#: src/omega_serv/interfaces/cli/main.py:1851
 msgid "Applique malgré des problèmes bloquants."
 msgstr "Aplica a pesar de los problemas bloqueantes."
 
-#: src/omega_serv/interfaces/cli/main.py:1762
+#: src/omega_serv/interfaces/cli/main.py:1855
 msgid "Modules optionnels (waf, fastcgi, active_defense, riposte...)."
 msgstr "Módulos opcionales (waf, fastcgi, active_defense, riposte...)."
 
-#: src/omega_serv/interfaces/cli/main.py:1763
+#: src/omega_serv/interfaces/cli/main.py:1856
 msgid "Liste les options et leur état."
 msgstr "Lista las opciones y su estado."
 
-#: src/omega_serv/interfaces/cli/main.py:1764
+#: src/omega_serv/interfaces/cli/main.py:1857
 msgid "Nom de l'option (voir option list)."
 msgstr "Nombre de la opción (ver option list)."
 
-#: src/omega_serv/interfaces/cli/main.py:1765
+#: src/omega_serv/interfaces/cli/main.py:1858
 msgid "Active une option."
 msgstr "Activa una opción."
 
-#: src/omega_serv/interfaces/cli/main.py:1766
+#: src/omega_serv/interfaces/cli/main.py:1859
 msgid ""
 "Première activation du WAF : tous les packs de secure/waf/rules/ sont "
 "ajoutés, en mode log-only."
@@ -5859,11 +5882,11 @@ msgstr ""
 "Primera activación del WAF: se añaden todos los paquetes de "
 "secure/waf/rules/, en modo log-only."
 
-#: src/omega_serv/interfaces/cli/main.py:1769
+#: src/omega_serv/interfaces/cli/main.py:1862
 msgid "Désactive une option."
 msgstr "Desactiva una opción."
 
-#: src/omega_serv/interfaces/cli/main.py:1774
+#: src/omega_serv/interfaces/cli/main.py:1867
 msgid ""
 "Montre comment le serveur traiterait une requête (chemin, règles, statut, "
 "en-têtes), sans l'envoyer."
@@ -5871,23 +5894,23 @@ msgstr ""
 "Muestra cómo trataría el servidor una petición (ruta, reglas, estado, "
 "cabeceras), sin enviarla."
 
-#: src/omega_serv/interfaces/cli/main.py:1776
-#: src/omega_serv/interfaces/cli/main.py:1784
-#: src/omega_serv/interfaces/cli/main.py:1819
-#: src/omega_serv/interfaces/cli/main.py:2013
-#: src/omega_serv/interfaces/cli/main.py:2023
+#: src/omega_serv/interfaces/cli/main.py:1869
+#: src/omega_serv/interfaces/cli/main.py:1877
+#: src/omega_serv/interfaces/cli/main.py:1918
+#: src/omega_serv/interfaces/cli/main.py:2112
+#: src/omega_serv/interfaces/cli/main.py:2122
 msgid "CHEMIN"
 msgstr "RUTA"
 
-#: src/omega_serv/interfaces/cli/main.py:1777
+#: src/omega_serv/interfaces/cli/main.py:1870
 msgid "Chemin demandé, par exemple /docs/index.html."
 msgstr "Ruta solicitada, por ejemplo /docs/index.html."
 
-#: src/omega_serv/interfaces/cli/main.py:1780
+#: src/omega_serv/interfaces/cli/main.py:1873
 msgid "Pare-feu applicatif (WAF)."
 msgstr "Cortafuegos de aplicaciones (WAF)."
 
-#: src/omega_serv/interfaces/cli/main.py:1782
+#: src/omega_serv/interfaces/cli/main.py:1875
 msgid ""
 "Soumet une requête fictive au WAF et affiche sa décision (règles, score, "
 "statut)."
@@ -5895,60 +5918,67 @@ msgstr ""
 "Envía una petición ficticia al WAF y muestra su decisión (reglas, "
 "puntuación, estado)."
 
-#: src/omega_serv/interfaces/cli/main.py:1784
+#: src/omega_serv/interfaces/cli/main.py:1877
 msgid "Chemin de la requête."
 msgstr "Ruta de la petición."
 
-#: src/omega_serv/interfaces/cli/main.py:1785
+#: src/omega_serv/interfaces/cli/main.py:1878
 msgid "Chaîne de requête, sans le « ? »."
 msgstr "Cadena de consulta, sin el «?»."
 
-#: src/omega_serv/interfaces/cli/main.py:1786
+#: src/omega_serv/interfaces/cli/main.py:1879
 msgid "Corps de la requête."
 msgstr "Cuerpo de la petición."
 
-#: src/omega_serv/interfaces/cli/main.py:1788
+#: src/omega_serv/interfaces/cli/main.py:1881
 msgid "Adresse du client simulé (défaut : 127.0.0.1)."
 msgstr "Dirección del cliente simulado (por defecto: 127.0.0.1)."
 
-#: src/omega_serv/interfaces/cli/main.py:1791
+#: src/omega_serv/interfaces/cli/main.py:1884
 msgid "Affiche les réseaux jamais bannis automatiquement (lu par omega-jail)."
 msgstr ""
 "Muestra las redes que nunca se banean automáticamente (leído por omega-"
 "jail)."
 
-#: src/omega_serv/interfaces/cli/main.py:1794
+#: src/omega_serv/interfaces/cli/main.py:1887
 msgid "Adresses bannies."
 msgstr "Direcciones baneadas."
 
-#: src/omega_serv/interfaces/cli/main.py:1795
+#: src/omega_serv/interfaces/cli/main.py:1888
 msgid "Affiche les bans : réseau, origine, expiration, motif."
 msgstr "Muestra los baneos: red, origen, caducidad, motivo."
 
-#: src/omega_serv/interfaces/cli/main.py:1797
+#: src/omega_serv/interfaces/cli/main.py:1890
+msgid ""
+"text (défaut, traduit) ou json (pour les autres outils, jamais traduit)."
+msgstr ""
+"text (por defecto, traducido) o json (para las demás herramientas, nunca "
+"traducido)."
+
+#: src/omega_serv/interfaces/cli/main.py:1892
 msgid "Bannit une adresse ou un réseau."
 msgstr "Banea una dirección o una red."
 
-#: src/omega_serv/interfaces/cli/main.py:1798
-#: src/omega_serv/interfaces/cli/main.py:1806
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1903
 #: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
 msgid "RESEAU"
 msgstr "RED"
 
-#: src/omega_serv/interfaces/cli/main.py:1799
+#: src/omega_serv/interfaces/cli/main.py:1894
 msgid "Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."
 msgstr "Dirección IP o red CIDR, por ejemplo 203.0.113.7 o 203.0.113.0/24."
 
-#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1895
 msgid "Motif du ban."
 msgstr "Motivo del baneo."
 
-#: src/omega_serv/interfaces/cli/main.py:1801
-#: src/omega_serv/interfaces/cli/main.py:2061
+#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:2160
 msgid "SECONDES"
 msgstr "SEGUNDOS"
 
-#: src/omega_serv/interfaces/cli/main.py:1802
+#: src/omega_serv/interfaces/cli/main.py:1897
 msgid ""
 "Durée du ban. Sans durée, le ban est permanent et demande --confirm-"
 "permanent."
@@ -5956,19 +5986,36 @@ msgstr ""
 "Duración del baneo. Sin duración, el baneo es permanente y requiere "
 "--confirm-permanent."
 
-#: src/omega_serv/interfaces/cli/main.py:1803
+#: src/omega_serv/interfaces/cli/main.py:1898
 msgid "Confirme un ban permanent."
 msgstr "Confirma un baneo permanente."
 
-#: src/omega_serv/interfaces/cli/main.py:1805
+#: src/omega_serv/interfaces/cli/main.py:1899
+#: src/omega_serv/interfaces/cli/main.py:1905
+msgid "OUTIL"
+msgstr "HERRAMIENTA"
+
+#: src/omega_serv/interfaces/cli/main.py:1900
+msgid ""
+"Outil qui pose le ban (ex. omega-fire) : lui seul pourra le lever avec "
+"--origin."
+msgstr ""
+"Herramienta que aplica el bloqueo (p. ej. omega-fire): solo ella podrá "
+"levantarlo con --origin."
+
+#: src/omega_serv/interfaces/cli/main.py:1902
 msgid "Lève un ban."
 msgstr "Levanta un baneo."
 
-#: src/omega_serv/interfaces/cli/main.py:1807
+#: src/omega_serv/interfaces/cli/main.py:1904
 msgid "Adresse ou réseau, tel qu'affiché par blocklist list."
 msgstr "Dirección o red, tal como la muestra blocklist list."
 
-#: src/omega_serv/interfaces/cli/main.py:1811
+#: src/omega_serv/interfaces/cli/main.py:1906
+msgid "Ne lève le ban que s'il a été posé avec cette origine."
+msgstr "Solo levanta el bloqueo si se aplicó con este origen."
+
+#: src/omega_serv/interfaces/cli/main.py:1910
 msgid ""
 "Active Defense : état, simulation, purge (voir aussi threats, incidents, "
 "deception)."
@@ -5976,13 +6023,13 @@ msgstr ""
 "Active Defense: estado, simulación, purga (ver también threats, incidents, "
 "deception)."
 
-#: src/omega_serv/interfaces/cli/main.py:1814
+#: src/omega_serv/interfaces/cli/main.py:1913
 msgid ""
 "Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies."
 msgstr ""
 "Muestra el estado: modo, modo guerra, señuelos, número de fuentes seguidas."
 
-#: src/omega_serv/interfaces/cli/main.py:1817
+#: src/omega_serv/interfaces/cli/main.py:1916
 msgid ""
 "Montre la décision qu'Active Defense prendrait pour une source, sans rien "
 "écrire."
@@ -5990,37 +6037,37 @@ msgstr ""
 "Muestra la decisión que tomaría Active Defense para una fuente, sin escribir"
 " nada."
 
-#: src/omega_serv/interfaces/cli/main.py:1818
+#: src/omega_serv/interfaces/cli/main.py:1917
 msgid "Adresse de la source simulée."
 msgstr "Dirección de la fuente simulada."
 
-#: src/omega_serv/interfaces/cli/main.py:1820
+#: src/omega_serv/interfaces/cli/main.py:1919
 msgid "Chemin observé (défaut : /)."
 msgstr "Ruta observada (por defecto: /)."
 
-#: src/omega_serv/interfaces/cli/main.py:1822
+#: src/omega_serv/interfaces/cli/main.py:1921
 msgid "User-Agent de la source."
 msgstr "User-Agent de la fuente."
 
-#: src/omega_serv/interfaces/cli/main.py:1823
+#: src/omega_serv/interfaces/cli/main.py:1922
 #: src/omega_serv/interfaces/cli/riposte_query_commands.py:230
 msgid "CLASSE"
 msgstr "CLASE"
 
-#: src/omega_serv/interfaces/cli/main.py:1824
+#: src/omega_serv/interfaces/cli/main.py:1923
 msgid "Classe d'attaque (défaut : scan ; liste affichée si inconnue)."
 msgstr ""
 "Clase de ataque (por defecto: scan; se muestra la lista si es desconocida)."
 
-#: src/omega_serv/interfaces/cli/main.py:1825
+#: src/omega_serv/interfaces/cli/main.py:1924
 msgid "POINTS"
 msgstr "PUNTOS"
 
-#: src/omega_serv/interfaces/cli/main.py:1826
+#: src/omega_serv/interfaces/cli/main.py:1925
 msgid "Points ajoutés au score de menace (défaut : 10)."
 msgstr "Puntos añadidos a la puntuación de amenaza (por defecto: 10)."
 
-#: src/omega_serv/interfaces/cli/main.py:1829
+#: src/omega_serv/interfaces/cli/main.py:1928
 msgid ""
 "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime "
 "les incidents fermés depuis plus de 90 jours."
@@ -6028,17 +6075,17 @@ msgstr ""
 "Purga las amenazas caducadas, cierra los incidentes que se han calmado, "
 "borra los incidentes cerrados hace más de 90 días."
 
-#: src/omega_serv/interfaces/cli/main.py:1832
+#: src/omega_serv/interfaces/cli/main.py:1931
 msgid "Logs d'omega-serv."
 msgstr "Logs de omega-serv."
 
-#: src/omega_serv/interfaces/cli/main.py:1834
+#: src/omega_serv/interfaces/cli/main.py:1933
 msgid ""
 "Fait tourner les logs dont l'automatisation (Rotate / archivage) est à "
 "échéance."
 msgstr "Rota los logs cuya automatización (Rotación / archivado) ha vencido."
 
-#: src/omega_serv/interfaces/cli/main.py:1835
+#: src/omega_serv/interfaces/cli/main.py:1934
 msgid ""
 "Lancée chaque nuit par le timer systemd ou la ligne crontab installés par "
 "l'interface."
@@ -6046,11 +6093,11 @@ msgstr ""
 "Lanzada cada noche por el temporizador systemd o la línea crontab instalados"
 " por la interfaz."
 
-#: src/omega_serv/interfaces/cli/main.py:1838
+#: src/omega_serv/interfaces/cli/main.py:1937
 msgid "Moteur HTTP (Python ou natif)."
 msgstr "Motor HTTP (Python o nativo)."
 
-#: src/omega_serv/interfaces/cli/main.py:1840
+#: src/omega_serv/interfaces/cli/main.py:1939
 msgid ""
 "Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel "
 "repli."
@@ -6058,11 +6105,11 @@ msgstr ""
 "Muestra el motor solicitado, el que está en marcha y el motivo de un posible"
 " repliegue."
 
-#: src/omega_serv/interfaces/cli/main.py:1844
+#: src/omega_serv/interfaces/cli/main.py:1943
 msgid "RIPOSTE : bans de plus en plus longs pour les récidivistes."
 msgstr "RIPOSTE: baneos cada vez más largos para los reincidentes."
 
-#: src/omega_serv/interfaces/cli/main.py:1846
+#: src/omega_serv/interfaces/cli/main.py:1945
 msgid ""
 "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; "
 "utile au diagnostic)."
@@ -6070,78 +6117,78 @@ msgstr ""
 "Ejecuta el proceso RIPOSTE en primer plano (normalmente lo lanza serve; útil"
 " para diagnóstico)."
 
-#: src/omega_serv/interfaces/cli/main.py:1848
+#: src/omega_serv/interfaces/cli/main.py:1947
 msgid "Affiche l'état de RIPOSTE (lecture seule)."
 msgstr "Muestra el estado de RIPOSTE (solo lectura)."
 
-#: src/omega_serv/interfaces/cli/main.py:1852
+#: src/omega_serv/interfaces/cli/main.py:1951
 msgid "Menaces suivies par Active Defense."
 msgstr "Amenazas seguidas por Active Defense."
 
-#: src/omega_serv/interfaces/cli/main.py:1853
+#: src/omega_serv/interfaces/cli/main.py:1952
 msgid "Liste les sources suivies avec leur score et leur niveau."
 msgstr "Lista las fuentes seguidas con su puntuación y su nivel."
 
-#: src/omega_serv/interfaces/cli/main.py:1855
+#: src/omega_serv/interfaces/cli/main.py:1954
 msgid "Seulement ce niveau."
 msgstr "Solo este nivel."
 
-#: src/omega_serv/interfaces/cli/main.py:1857
+#: src/omega_serv/interfaces/cli/main.py:1956
 msgid "Affiche le détail d'une source suivie."
 msgstr "Muestra el detalle de una fuente seguida."
 
-#: src/omega_serv/interfaces/cli/main.py:1858
-#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1957
+#: src/omega_serv/interfaces/cli/main.py:1991
 msgid "SOURCE"
 msgstr "FUENTE"
 
-#: src/omega_serv/interfaces/cli/main.py:1859
+#: src/omega_serv/interfaces/cli/main.py:1958
 msgid "Identifiant de la source, tel qu'affiché par threats list."
 msgstr "Identificador de la fuente, tal como lo muestra threats list."
 
-#: src/omega_serv/interfaces/cli/main.py:1862
+#: src/omega_serv/interfaces/cli/main.py:1961
 msgid "Incidents Active Defense."
 msgstr "Incidentes de Active Defense."
 
-#: src/omega_serv/interfaces/cli/main.py:1863
+#: src/omega_serv/interfaces/cli/main.py:1962
 msgid "Identifiant de l'incident (voir incidents list)."
 msgstr "Identificador del incidente (ver incidents list)."
 
-#: src/omega_serv/interfaces/cli/main.py:1864
+#: src/omega_serv/interfaces/cli/main.py:1963
 msgid "Liste les incidents."
 msgstr "Lista los incidentes."
 
-#: src/omega_serv/interfaces/cli/main.py:1866
+#: src/omega_serv/interfaces/cli/main.py:1965
 msgid "Seulement les incidents ouverts (open) ou fermés (closed)."
 msgstr "Solo los incidentes abiertos (open) o cerrados (closed)."
 
-#: src/omega_serv/interfaces/cli/main.py:1867
+#: src/omega_serv/interfaces/cli/main.py:1966
 msgid "HEURES"
 msgstr "HORAS"
 
-#: src/omega_serv/interfaces/cli/main.py:1868
+#: src/omega_serv/interfaces/cli/main.py:1967
 msgid "Seulement les incidents des N dernières heures."
 msgstr "Solo los incidentes de las últimas N horas."
 
-#: src/omega_serv/interfaces/cli/main.py:1870
+#: src/omega_serv/interfaces/cli/main.py:1969
 msgid "Affiche un incident et sa chronologie."
 msgstr "Muestra un incidente y su cronología."
 
-#: src/omega_serv/interfaces/cli/main.py:1874
+#: src/omega_serv/interfaces/cli/main.py:1973
 msgid "Ferme un incident (et l'exporte si l'export automatique est activé)."
 msgstr ""
 "Cierra un incidente (y lo exporta si la exportación automática está "
 "activada)."
 
-#: src/omega_serv/interfaces/cli/main.py:1878
+#: src/omega_serv/interfaces/cli/main.py:1977
 msgid "Exporte les indicateurs de compromission (IoC) d'un incident."
 msgstr "Exporta los indicadores de compromiso (IoC) de un incidente."
 
-#: src/omega_serv/interfaces/cli/main.py:1880
+#: src/omega_serv/interfaces/cli/main.py:1979
 msgid "FORMATS"
 msgstr "FORMATOS"
 
-#: src/omega_serv/interfaces/cli/main.py:1881
+#: src/omega_serv/interfaces/cli/main.py:1980
 msgid ""
 "Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp "
 "(défaut : json)."
@@ -6149,63 +6196,63 @@ msgstr ""
 "Uno o varios formatos separados por comas: json, csv, stix, misp (por "
 "defecto: json)."
 
-#: src/omega_serv/interfaces/cli/main.py:1884
+#: src/omega_serv/interfaces/cli/main.py:1983
 msgid "Écrit le rapport Markdown d'un incident."
 msgstr "Escribe el informe Markdown de un incidente."
 
-#: src/omega_serv/interfaces/cli/main.py:1888
+#: src/omega_serv/interfaces/cli/main.py:1987
 msgid "Leurres Active Defense."
 msgstr "Señuelos de Active Defense."
 
-#: src/omega_serv/interfaces/cli/main.py:1889
+#: src/omega_serv/interfaces/cli/main.py:1988
 msgid "Liste les sources envoyées vers un leurre."
 msgstr "Lista las fuentes enviadas a un señuelo."
 
-#: src/omega_serv/interfaces/cli/main.py:1891
+#: src/omega_serv/interfaces/cli/main.py:1990
 msgid "Libère une source de son leurre."
 msgstr "Libera una fuente de su señuelo."
 
-#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1992
 msgid "Identifiant de la source, tel qu'affiché par deception list."
 msgstr "Identificador de la fuente, tal como lo muestra deception list."
 
-#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:1995
 msgid "Certificats TLS (via OpenSSL)."
 msgstr "Certificados TLS (mediante OpenSSL)."
 
-#: src/omega_serv/interfaces/cli/main.py:1902
+#: src/omega_serv/interfaces/cli/main.py:2001
 msgid "Organisation (défaut : OMEGA-SERV)."
 msgstr "Organización (por defecto: OMEGA-SERV)."
 
-#: src/omega_serv/interfaces/cli/main.py:1903
+#: src/omega_serv/interfaces/cli/main.py:2002
 msgid "Service ou département."
 msgstr "Servicio o departamento."
 
-#: src/omega_serv/interfaces/cli/main.py:1904
+#: src/omega_serv/interfaces/cli/main.py:2003
 msgid "Ville."
 msgstr "Ciudad."
 
-#: src/omega_serv/interfaces/cli/main.py:1905
+#: src/omega_serv/interfaces/cli/main.py:2004
 msgid "Région."
 msgstr "Región."
 
-#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:2005
 msgid "Pays, code à deux lettres (FR, BE...)."
 msgstr "País, código de dos letras (FR, BE...)."
 
-#: src/omega_serv/interfaces/cli/main.py:1910
+#: src/omega_serv/interfaces/cli/main.py:2009
 msgid "Noms de domaine supplémentaires couverts par le certificat."
 msgstr "Nombres de dominio adicionales cubiertos por el certificado."
 
-#: src/omega_serv/interfaces/cli/main.py:1912
+#: src/omega_serv/interfaces/cli/main.py:2011
 msgid "Adresses IP couvertes par le certificat."
 msgstr "Direcciones IP cubiertas por el certificado."
 
-#: src/omega_serv/interfaces/cli/main.py:1914
+#: src/omega_serv/interfaces/cli/main.py:2013
 msgid "Nom commun : le nom de domaine principal."
 msgstr "Nombre común: el nombre de dominio principal."
 
-#: src/omega_serv/interfaces/cli/main.py:1916
+#: src/omega_serv/interfaces/cli/main.py:2015
 msgid ""
 "Génère un certificat auto-signé aux chemins de la configuration (l'ancien "
 "est sauvegardé)."
@@ -6213,54 +6260,54 @@ msgstr ""
 "Genera un certificado autofirmado en las rutas de la configuración (el "
 "anterior se guarda)."
 
-#: src/omega_serv/interfaces/cli/main.py:1919
-#: src/omega_serv/interfaces/cli/main.py:1930
-#: src/omega_serv/interfaces/cli/main.py:1954
-#: src/omega_serv/interfaces/cli/main.py:1988
+#: src/omega_serv/interfaces/cli/main.py:2018
+#: src/omega_serv/interfaces/cli/main.py:2029
+#: src/omega_serv/interfaces/cli/main.py:2053
+#: src/omega_serv/interfaces/cli/main.py:2087
 #: src/omega_serv/interfaces/cli/riposte_query_commands.py:244
 msgid "JOURS"
 msgstr "DÍAS"
 
-#: src/omega_serv/interfaces/cli/main.py:1920
-#: src/omega_serv/interfaces/cli/main.py:1955
+#: src/omega_serv/interfaces/cli/main.py:2019
+#: src/omega_serv/interfaces/cli/main.py:2054
 msgid "Validité en jours (défaut : 365)."
 msgstr "Validez en días (por defecto: 365)."
 
-#: src/omega_serv/interfaces/cli/main.py:1922
-#: src/omega_serv/interfaces/cli/main.py:1942
+#: src/omega_serv/interfaces/cli/main.py:2021
+#: src/omega_serv/interfaces/cli/main.py:2041
 msgid "Type de clé (défaut : rsa2048)."
 msgstr "Tipo de clave (por defecto: rsa2048)."
 
-#: src/omega_serv/interfaces/cli/main.py:1923
-#: src/omega_serv/interfaces/cli/main.py:1934
-#: src/omega_serv/interfaces/cli/main.py:1952
-#: src/omega_serv/interfaces/cli/main.py:1973
-#: src/omega_serv/interfaces/cli/main.py:2000
-#: src/omega_serv/interfaces/cli/main.py:2009
+#: src/omega_serv/interfaces/cli/main.py:2022
+#: src/omega_serv/interfaces/cli/main.py:2033
+#: src/omega_serv/interfaces/cli/main.py:2051
+#: src/omega_serv/interfaces/cli/main.py:2072
+#: src/omega_serv/interfaces/cli/main.py:2099
+#: src/omega_serv/interfaces/cli/main.py:2108
 msgid "MOT-DE-PASSE"
 msgstr "CONTRASEÑA"
 
-#: src/omega_serv/interfaces/cli/main.py:1924
+#: src/omega_serv/interfaces/cli/main.py:2023
 msgid "Chiffre la clé privée avec ce mot de passe (facultatif)."
 msgstr "Cifra la clave privada con esta contraseña (opcional)."
 
-#: src/omega_serv/interfaces/cli/main.py:1928
+#: src/omega_serv/interfaces/cli/main.py:2027
 msgid "Crée une autorité de certification locale dans secure/certificates/ca."
 msgstr "Crea una autoridad de certificación local en secure/certificates/ca."
 
-#: src/omega_serv/interfaces/cli/main.py:1929
+#: src/omega_serv/interfaces/cli/main.py:2028
 msgid "Nom de l'autorité de certification."
 msgstr "Nombre de la autoridad de certificación."
 
-#: src/omega_serv/interfaces/cli/main.py:1931
+#: src/omega_serv/interfaces/cli/main.py:2030
 msgid "Validité en jours (défaut : 3650)."
 msgstr "Validez en días (por defecto: 3650)."
 
-#: src/omega_serv/interfaces/cli/main.py:1933
+#: src/omega_serv/interfaces/cli/main.py:2032
 msgid "Type de clé (défaut : rsa4096)."
 msgstr "Tipo de clave (por defecto: rsa4096)."
 
-#: src/omega_serv/interfaces/cli/main.py:1935
+#: src/omega_serv/interfaces/cli/main.py:2034
 msgid ""
 "Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois "
 "au clavier (conseillé)."
@@ -6268,52 +6315,52 @@ msgstr ""
 "Contraseña de la clave de la CA; sin esta opción, se pide dos veces por "
 "teclado (recomendado)."
 
-#: src/omega_serv/interfaces/cli/main.py:1939
+#: src/omega_serv/interfaces/cli/main.py:2038
 msgid ""
 "Génère une clé et une demande de signature (CSR) à faire signer par une CA."
 msgstr ""
 "Genera una clave y una solicitud de firma (CSR) para que la firme una CA."
 
-#: src/omega_serv/interfaces/cli/main.py:1943
+#: src/omega_serv/interfaces/cli/main.py:2042
 msgid "Clé privée à créer."
 msgstr "Clave privada a crear."
 
-#: src/omega_serv/interfaces/cli/main.py:1944
+#: src/omega_serv/interfaces/cli/main.py:2043
 msgid "Demande de signature à créer."
 msgstr "Solicitud de firma a crear."
 
-#: src/omega_serv/interfaces/cli/main.py:1947
+#: src/omega_serv/interfaces/cli/main.py:2046
 msgid "Mot de passe de la clé de CA (sinon demandé au clavier, conseillé)."
 msgstr ""
 "Contraseña de la clave de la CA (si no, se pide por teclado, recomendado)."
 
-#: src/omega_serv/interfaces/cli/main.py:1948
+#: src/omega_serv/interfaces/cli/main.py:2047
 msgid "Signe une demande de signature (CSR) avec une CA."
 msgstr "Firma una solicitud de firma (CSR) con una CA."
 
-#: src/omega_serv/interfaces/cli/main.py:1949
+#: src/omega_serv/interfaces/cli/main.py:2048
 msgid "Demande de signature à signer."
 msgstr "Solicitud de firma a firmar."
 
-#: src/omega_serv/interfaces/cli/main.py:1950
-#: src/omega_serv/interfaces/cli/main.py:1971
+#: src/omega_serv/interfaces/cli/main.py:2049
+#: src/omega_serv/interfaces/cli/main.py:2070
 msgid "Clé privée de la CA."
 msgstr "Clave privada de la CA."
 
-#: src/omega_serv/interfaces/cli/main.py:1951
-#: src/omega_serv/interfaces/cli/main.py:1972
+#: src/omega_serv/interfaces/cli/main.py:2050
+#: src/omega_serv/interfaces/cli/main.py:2071
 msgid "Certificat de la CA."
 msgstr "Certificado de la CA."
 
-#: src/omega_serv/interfaces/cli/main.py:1956
+#: src/omega_serv/interfaces/cli/main.py:2055
 msgid "Certificat signé à écrire."
 msgstr "Certificado firmado a escribir."
 
-#: src/omega_serv/interfaces/cli/main.py:1958
+#: src/omega_serv/interfaces/cli/main.py:2057
 msgid "Écrit aussi la chaîne complète (certificat puis CA)."
 msgstr "Escribe también la cadena completa (certificado y luego CA)."
 
-#: src/omega_serv/interfaces/cli/main.py:1962
+#: src/omega_serv/interfaces/cli/main.py:2061
 msgid ""
 "Installe un certificat existant aux chemins de la configuration (Let's "
 "Encrypt, CA d'entreprise...)."
@@ -6321,31 +6368,31 @@ msgstr ""
 "Instala un certificado existente en las rutas de la configuración (Let's "
 "Encrypt, CA de empresa...)."
 
-#: src/omega_serv/interfaces/cli/main.py:1963
+#: src/omega_serv/interfaces/cli/main.py:2062
 msgid "Clé privée."
 msgstr "Clave privada."
 
-#: src/omega_serv/interfaces/cli/main.py:1964
+#: src/omega_serv/interfaces/cli/main.py:2063
 msgid "Certificat."
 msgstr "Certificado."
 
-#: src/omega_serv/interfaces/cli/main.py:1966
+#: src/omega_serv/interfaces/cli/main.py:2065
 msgid "Chaîne des certificats intermédiaires (facultatif)."
 msgstr "Cadena de certificados intermedios (opcional)."
 
-#: src/omega_serv/interfaces/cli/main.py:1969
+#: src/omega_serv/interfaces/cli/main.py:2068
 msgid "Révoque un certificat émis par une CA locale."
 msgstr "Revoca un certificado emitido por una CA local."
 
-#: src/omega_serv/interfaces/cli/main.py:1970
+#: src/omega_serv/interfaces/cli/main.py:2069
 msgid "Certificat à révoquer."
 msgstr "Certificado a revocar."
 
-#: src/omega_serv/interfaces/cli/main.py:1977
+#: src/omega_serv/interfaces/cli/main.py:2076
 msgid "Certificat à lire (défaut : celui de la configuration)."
 msgstr "Certificado a leer (por defecto: el de la configuración)."
 
-#: src/omega_serv/interfaces/cli/main.py:1979
+#: src/omega_serv/interfaces/cli/main.py:2078
 msgid ""
 "Vérifie un certificat : dates, correspondance avec la clé, droits de la clé."
 " Code 1 s'il a expiré."
@@ -6353,27 +6400,27 @@ msgstr ""
 "Verifica un certificado: fechas, correspondencia con la clave, permisos de "
 "la clave. Código 1 si ha caducado."
 
-#: src/omega_serv/interfaces/cli/main.py:1982
+#: src/omega_serv/interfaces/cli/main.py:2081
 msgid "Affiche le détail d'un certificat (même rapport que verify)."
 msgstr "Muestra el detalle de un certificado (mismo informe que verify)."
 
-#: src/omega_serv/interfaces/cli/main.py:1986
+#: src/omega_serv/interfaces/cli/main.py:2085
 msgid "Même rapport que verify, avec une alerte si l'expiration approche."
 msgstr "Mismo informe que verify, con una alerta si se acerca la caducidad."
 
-#: src/omega_serv/interfaces/cli/main.py:1989
+#: src/omega_serv/interfaces/cli/main.py:2088
 msgid "Seuil d'alerte en jours (défaut : 30)."
 msgstr "Umbral de alerta en días (por defecto: 30)."
 
-#: src/omega_serv/interfaces/cli/main.py:1993
+#: src/omega_serv/interfaces/cli/main.py:2092
 msgid "Authentification HTTP Basic : utilisateurs et zones protégées."
 msgstr "Autenticación HTTP Basic: usuarios y zonas protegidas."
 
-#: src/omega_serv/interfaces/cli/main.py:1994
+#: src/omega_serv/interfaces/cli/main.py:2093
 msgid "Nom d'utilisateur."
 msgstr "Nombre de usuario."
 
-#: src/omega_serv/interfaces/cli/main.py:1995
+#: src/omega_serv/interfaces/cli/main.py:2094
 msgid ""
 "Mot de passe (sinon demandé au clavier, conseillé : il resterait dans "
 "l'historique)."
@@ -6381,39 +6428,39 @@ msgstr ""
 "Contraseña (si no, se pide por teclado, recomendado: quedaría en el "
 "historial)."
 
-#: src/omega_serv/interfaces/cli/main.py:1996
+#: src/omega_serv/interfaces/cli/main.py:2095
 msgid "Début de chemin protégé, par exemple /admin."
 msgstr "Comienzo de ruta protegida, por ejemplo /admin."
 
-#: src/omega_serv/interfaces/cli/main.py:1998
+#: src/omega_serv/interfaces/cli/main.py:2097
 msgid "Crée un utilisateur."
 msgstr "Crea un usuario."
 
-#: src/omega_serv/interfaces/cli/main.py:2003
+#: src/omega_serv/interfaces/cli/main.py:2102
 msgid "Supprime un utilisateur."
 msgstr "Elimina un usuario."
 
-#: src/omega_serv/interfaces/cli/main.py:2007
+#: src/omega_serv/interfaces/cli/main.py:2106
 msgid "Change le mot de passe d'un utilisateur."
 msgstr "Cambia la contraseña de un usuario."
 
-#: src/omega_serv/interfaces/cli/main.py:2012
+#: src/omega_serv/interfaces/cli/main.py:2111
 msgid "Protège un chemin par mot de passe."
 msgstr "Protege una ruta con contraseña."
 
-#: src/omega_serv/interfaces/cli/main.py:2015
+#: src/omega_serv/interfaces/cli/main.py:2114
 msgid "Nom affiché par le navigateur dans la demande de connexion."
 msgstr "Nombre que muestra el navegador en la petición de inicio de sesión."
 
-#: src/omega_serv/interfaces/cli/main.py:2017
+#: src/omega_serv/interfaces/cli/main.py:2116
 msgid "Utilisateurs autorisés dans la zone."
 msgstr "Usuarios autorizados en la zona."
 
-#: src/omega_serv/interfaces/cli/main.py:2018
+#: src/omega_serv/interfaces/cli/main.py:2117
 msgid "METHODE"
 msgstr "MÉTODO"
 
-#: src/omega_serv/interfaces/cli/main.py:2019
+#: src/omega_serv/interfaces/cli/main.py:2118
 msgid ""
 "Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles"
 " que le serveur autorise)."
@@ -6421,15 +6468,15 @@ msgstr ""
 "Solo se aceptan estos métodos HTTP en la zona (por defecto: todos los que "
 "permite el servidor)."
 
-#: src/omega_serv/interfaces/cli/main.py:2022
+#: src/omega_serv/interfaces/cli/main.py:2121
 msgid "Retire la protection d'un chemin."
 msgstr "Quita la protección de una ruta."
 
-#: src/omega_serv/interfaces/cli/main.py:2026
+#: src/omega_serv/interfaces/cli/main.py:2125
 msgid "Liste les utilisateurs et les zones protégées."
 msgstr "Lista los usuarios y las zonas protegidas."
 
-#: src/omega_serv/interfaces/cli/main.py:2028
+#: src/omega_serv/interfaces/cli/main.py:2127
 msgid ""
 "Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que "
 "par leur propriétaire."
@@ -6437,36 +6484,36 @@ msgstr ""
 "Comprueba que los archivos de usuarios y zonas solo los pueda leer su "
 "propietario."
 
-#: src/omega_serv/interfaces/cli/main.py:2032
+#: src/omega_serv/interfaces/cli/main.py:2131
 msgid "Service système (systemd, OpenRC ou runit)."
 msgstr "Servicio del sistema (systemd, OpenRC o runit)."
 
-#: src/omega_serv/interfaces/cli/main.py:2033
+#: src/omega_serv/interfaces/cli/main.py:2132
 msgid "Nom du service (défaut : omega-serv)."
 msgstr "Nombre del servicio (por defecto: omega-serv)."
 
-#: src/omega_serv/interfaces/cli/main.py:2034
+#: src/omega_serv/interfaces/cli/main.py:2133
 msgid "Fichier d'unité (défaut : /etc/systemd/system/<nom>.service)."
 msgstr ""
 "Archivo de unidad (por defecto: /etc/systemd/system/<nombre>.service)."
 
-#: src/omega_serv/interfaces/cli/main.py:2037
+#: src/omega_serv/interfaces/cli/main.py:2136
 msgid "Affiche l'état du service."
 msgstr "Muestra el estado del servicio."
 
-#: src/omega_serv/interfaces/cli/main.py:2038
+#: src/omega_serv/interfaces/cli/main.py:2137
 msgid "Démarre le service."
 msgstr "Inicia el servicio."
 
-#: src/omega_serv/interfaces/cli/main.py:2039
+#: src/omega_serv/interfaces/cli/main.py:2138
 msgid "Arrête le service."
 msgstr "Detiene el servicio."
 
-#: src/omega_serv/interfaces/cli/main.py:2040
+#: src/omega_serv/interfaces/cli/main.py:2139
 msgid "Redémarre le service (nécessaire après une mise à jour)."
 msgstr "Reinicia el servicio (necesario tras una actualización)."
 
-#: src/omega_serv/interfaces/cli/main.py:2042
+#: src/omega_serv/interfaces/cli/main.py:2141
 msgid ""
 "Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur "
 "demandent un redémarrage."
@@ -6474,15 +6521,15 @@ msgstr ""
 "Recarga sin cortar: reglas WAF y zonas; bind, puerto, TLS y motor requieren "
 "un reinicio."
 
-#: src/omega_serv/interfaces/cli/main.py:2043
+#: src/omega_serv/interfaces/cli/main.py:2142
 msgid "Active le démarrage automatique au boot."
 msgstr "Activa el inicio automático al arrancar."
 
-#: src/omega_serv/interfaces/cli/main.py:2044
+#: src/omega_serv/interfaces/cli/main.py:2143
 msgid "Désactive le démarrage automatique au boot."
 msgstr "Desactiva el inicio automático al arrancar."
 
-#: src/omega_serv/interfaces/cli/main.py:2051
+#: src/omega_serv/interfaces/cli/main.py:2150
 msgid ""
 "Crée l'unité systemd du service (systemd seulement ; demande les droits "
 "administrateur)."
@@ -6490,35 +6537,35 @@ msgstr ""
 "Crea la unidad systemd del servicio (solo systemd; requiere derechos de "
 "administrador)."
 
-#: src/omega_serv/interfaces/cli/main.py:2054
+#: src/omega_serv/interfaces/cli/main.py:2153
 msgid "Description de l'unité (défaut : OMEGA-SERV web server)."
 msgstr "Descripción de la unidad (por defecto: OMEGA-SERV web server)."
 
-#: src/omega_serv/interfaces/cli/main.py:2056
+#: src/omega_serv/interfaces/cli/main.py:2155
 msgid "Python à utiliser (défaut : celui du .venv de l'installation)."
 msgstr "Python a usar (por defecto: el del .venv de la instalación)."
 
-#: src/omega_serv/interfaces/cli/main.py:2058
+#: src/omega_serv/interfaces/cli/main.py:2157
 msgid "Compte système qui fait tourner le service (défaut : omega-serv)."
 msgstr "Cuenta del sistema que ejecuta el servicio (por defecto: omega-serv)."
 
-#: src/omega_serv/interfaces/cli/main.py:2060
+#: src/omega_serv/interfaces/cli/main.py:2159
 msgid "Groupe du service (défaut : omega-serv)."
 msgstr "Grupo del servicio (por defecto: omega-serv)."
 
-#: src/omega_serv/interfaces/cli/main.py:2062
+#: src/omega_serv/interfaces/cli/main.py:2161
 msgid "Délai laissé à l'arrêt avant de forcer (défaut : 15)."
 msgstr "Plazo concedido a la parada antes de forzarla (por defecto: 15)."
 
-#: src/omega_serv/interfaces/cli/main.py:2066
+#: src/omega_serv/interfaces/cli/main.py:2165
 msgid "Supprime l'unité du service."
 msgstr "Elimina la unidad del servicio."
 
-#: src/omega_serv/interfaces/cli/main.py:2071
+#: src/omega_serv/interfaces/cli/main.py:2170
 msgid "Audit de sécurité."
 msgstr "Auditoría de seguridad."
 
-#: src/omega_serv/interfaces/cli/main.py:2073
+#: src/omega_serv/interfaces/cli/main.py:2172
 msgid ""
 "Audite l'installation : configuration, droits, TLS, service. Code 1 si "
 "critique, 2 si élevé, 3 si la configuration est illisible."
@@ -6526,15 +6573,49 @@ msgstr ""
 "Audita la instalación: configuración, permisos, TLS, servicio. Código 1 si "
 "crítico, 2 si alto, 3 si la configuración es ilegible."
 
-#: src/omega_serv/interfaces/cli/main.py:2076
+#: src/omega_serv/interfaces/cli/main.py:2175
 msgid "Format du rapport (défaut : text)."
 msgstr "Formato del informe (por defecto: text)."
 
-#: src/omega_serv/interfaces/cli/main.py:2078
+#: src/omega_serv/interfaces/cli/main.py:2177
 msgid "N'affiche que ce niveau et les plus graves (défaut : info)."
 msgstr "Solo muestra este nivel y los más graves (por defecto: info)."
 
-#: src/omega_serv/interfaces/cli/main.py:2088
+#: src/omega_serv/interfaces/cli/main.py:2187
+msgid ""
+"Liens avec les autres outils omega (omega-connect) : jeton d'installation et"
+" fiche de l'instance."
+msgstr ""
+"Enlaces con las demás herramientas omega (omega-connect): token de "
+"instalación y ficha de la instancia."
+
+#: src/omega_serv/interfaces/cli/main.py:2190
+msgid ""
+"Crée ou met à jour le jeton d'installation (var/omega-jeton.json) et "
+"l'affiche en JSON."
+msgstr ""
+"Crea o actualiza el token de instalación (var/omega-jeton.json) y lo muestra"
+" en JSON."
+
+#: src/omega_serv/interfaces/cli/main.py:2191
+msgid ""
+"Lancée par install.sh et à chaque ouverture de l'interface. Jamais en root."
+msgstr ""
+"La ejecuta install.sh y cada apertura de la interfaz. Nunca como root."
+
+#: src/omega_serv/interfaces/cli/main.py:2194
+msgid ""
+"Affiche la fiche de cette instance (fonctions actives, service, journaux "
+"partagés), pour omega-connect."
+msgstr ""
+"Muestra la ficha de esta instancia (funciones activas, servicio, registros "
+"compartidos), para omega-connect."
+
+#: src/omega_serv/interfaces/cli/main.py:2196
+msgid "Format de sortie : json seulement (non traduit, versionné)."
+msgstr "Formato de salida: solo json (sin traducir, versionado)."
+
+#: src/omega_serv/interfaces/cli/main.py:2200
 msgid ""
 "Affiche la version installée ; --check la compare à la dernière version "
 "publiée sur le site."
@@ -6542,7 +6623,7 @@ msgstr ""
 "Muestra la versión instalada; --check la compara con la última versión "
 "publicada en el sitio."
 
-#: src/omega_serv/interfaces/cli/main.py:2090
+#: src/omega_serv/interfaces/cli/main.py:2202
 msgid ""
 "Lit la liste des versions publiées (download/sha.txt du site) ; rien n'est "
 "envoyé."
@@ -6550,7 +6631,7 @@ msgstr ""
 "Lee la lista de versiones publicadas (download/sha.txt del sitio); no se "
 "envía nada."
 
-#: src/omega_serv/interfaces/cli/main.py:2094
+#: src/omega_serv/interfaces/cli/main.py:2206
 msgid ""
 "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv "
 "help riposte)."
@@ -6558,9 +6639,20 @@ msgstr ""
 "Muestra el árbol de todos los comandos, o de una rama (p. ej.: omega-serv "
 "help riposte)."
 
-#: src/omega_serv/interfaces/cli/main.py:2095
+#: src/omega_serv/interfaces/cli/main.py:2207
 msgid "Branche à afficher (facultatif)."
 msgstr "Rama a mostrar (opcional)."
+
+#: src/omega_serv/interfaces/cli/main.py:2247
+#, python-brace-format
+msgid ""
+"Erreur : lancée en root, cette commande créerait dans {root} des fichiers "
+"que le service ne pourrait plus modifier. Relancez-la sans sudo, sous le "
+"compte propriétaire du dossier ({owner})."
+msgstr ""
+"Error: ejecutado como root, este comando crearía en {root} archivos que el "
+"servicio ya no podría modificar. Vuelva a ejecutarlo sin sudo, con la cuenta"
+" propietaria de la carpeta ({owner})."
 
 #: src/omega_serv/interfaces/cli/riposte_action_commands.py:51
 #: src/omega_serv/interfaces/cli/riposte_commands.py:300

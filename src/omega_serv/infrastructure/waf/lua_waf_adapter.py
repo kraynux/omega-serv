@@ -139,6 +139,10 @@ class LuaWafAdapter:
         self._runtime.globals()["omega_never_auto_block"] = self._runtime.table_from(
             list(config.reputation.never_auto_block)
         )
+        # Mode du WAF (2026-11-10) : en log-only, un script qui le lit (omega-waf.lua) ne pose aucun ban -
+        # sinon sa ligne « AJOUT BLOCKLIST » devenait un ban reseau fail2ban alors que le serveur, lui,
+        # neutralisait deja le 451. Un script qui l'ignore garde son comportement.
+        self._runtime.globals()["omega_waf_mode"] = config.mode
 
         try:
             self._compiled = self._runtime.compile(script_source)

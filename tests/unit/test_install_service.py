@@ -54,7 +54,7 @@ class _FakeServiceManagerWithDirectoryAccess(_FakeServiceManagerWithUserCreation
         super().__init__()
         self.grant_directory_access_calls = []
 
-    def grant_directory_access(self, path, group, extra_user):
+    def grant_directory_access(self, path, group, extra_user, private_subdirs=()):
         self.grant_directory_access_calls.append((path, group, extra_user))
 
 

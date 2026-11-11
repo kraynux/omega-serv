@@ -9,8 +9,12 @@ from pathlib import Path
 
 from omega_serv.ports.filesystem_port import FilesystemPort
 
-_SHARED_RUN_DIR_MODE = 0o770
-"""Retour utilisateur reel (2026-09-27, boucle de crash systemd -
+_SHARED_RUN_DIR_MODE = 0o2770
+"""Setgid ajoute le 2026-11-10 : le `chmod 0770` a chaque demarrage effacait le bit setgid pose par
+« Reparer les permissions » ; les fichiers crees ensuite dans var/run par l'utilisateur gardaient son
+groupe primaire (constate : log_rotation_automations.json en kraynux:kraynux 644, illisible au service).
+
+Retour utilisateur reel (2026-09-27, boucle de crash systemd -
 `PermissionError` sur var/run/omega-serv.pid.tmp, ~65 tentatives de
 redemarrage) : `make_directory()` par defaut (0o750, voir
 FilesystemPort) ne donne au groupe QUE lecture+traversee, jamais

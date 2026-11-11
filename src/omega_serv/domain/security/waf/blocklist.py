@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import functools
 import ipaddress
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -47,6 +48,24 @@ def _serialize_entry(e: BlocklistEntry) -> dict[str, Any]:
     if e.origin is not None:  # seulement si present : fichier inchange pour toutes les autres entrees
         item["origin"] = e.origin
     return item
+
+
+RESERVED_ORIGINS: frozenset[str] = frozenset({"intervention"})
+"""Origines posees par omega-serv lui-meme (Active Securite -> INTERVENTION MANUELLE) : jamais par la CLI."""
+
+_ORIGIN_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._:-]{0,63}$")
+
+
+def validate_origin(origin: str) -> str | None:
+    """Origine d'une entree posee par un autre outil (2026-11-10, ex. `omega-fire`, `omega-jail`) :
+    minuscules, chiffres, `.`, `_`, `:`, `-`, 64 caracteres au plus, jamais une origine reservee.
+    Sert a ne lever QUE ses propres bans (`blocklist remove --origin`)."""
+    if not _ORIGIN_PATTERN.match(origin):
+        return _("origine invalide (minuscules, chiffres, . _ : -, 64 caractères au plus) : {origin!r}").format(
+            origin=origin)
+    if origin in RESERVED_ORIGINS:
+        return _("origine réservée à omega-serv : {origin!r}").format(origin=origin)
+    return None
 
 
 def validate_blocklist_entry(entry: BlocklistEntry) -> str | None:

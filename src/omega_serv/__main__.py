@@ -546,6 +546,20 @@ def _run_with_text_direction(app) -> None:  # type: ignore[no-untyped-def]
         sys.stdout.flush()
 
 
+def _refresh_install_token_quietly() -> None:
+    """Jeton d'installation var/omega-jeton.json (contrats d'interconnexion, 2026-11-10) : mis a jour a chaque
+    ouverture de l'interface si la version, la racine ou la machine ont change. Jamais bloquant ; jamais en
+    root ni sous un autre compte que le proprietaire du dossier (omega-lib refuse et ne leve rien)."""
+    try:
+        from omega_serv.application.synchro.serv_contracts import refresh_serv_token
+        from omega_serv.bootstrap.paths import PROJECT_ROOT
+        from omega_serv.infrastructure.declaration.app_version import application_version
+
+        refresh_serv_token(PROJECT_ROOT, application_version(PROJECT_ROOT))
+    except Exception:  # noqa: BLE001, S110 - un jeton manquant laisse seulement l'outil « non relie »
+        pass
+
+
 def main(argv: list[str] | None = None) -> int:
     effective_argv = sys.argv[1:] if argv is None else argv
 
@@ -603,6 +617,7 @@ def main(argv: list[str] | None = None) -> int:
         from omega_serv.application.services.build_service_manager import build_service_manager
         from omega_serv.bootstrap.container import DependencyContainer
 
+        _refresh_install_token_quietly()
         container = DependencyContainer(
             service_manager_factory=build_service_manager,
             config_check_runner=_run_config_check,

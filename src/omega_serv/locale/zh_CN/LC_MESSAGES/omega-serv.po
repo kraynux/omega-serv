@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 20:04+0100\n"
+"POT-Creation-Date: 2026-11-10 08:11+0100\n"
 "PO-Revision-Date: 2026-10-22 12:00+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 简体中文\n"
@@ -470,10 +470,10 @@ msgid "Info"
 msgstr "信息"
 
 #: src/omega_serv/application/logs/health_presentation.py:22
-#: src/omega_serv/interfaces/cli/main.py:1220
-#: src/omega_serv/interfaces/cli/main.py:1222
-#: src/omega_serv/interfaces/cli/main.py:1225
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1232
+#: src/omega_serv/interfaces/cli/main.py:1234
+#: src/omega_serv/interfaces/cli/main.py:1237
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
@@ -1247,40 +1247,46 @@ msgstr "观察模式：记录告警，在更改严重级别之前不会拦截或
 msgid "liste {list_id!r} introuvable dans la configuration"
 msgstr "配置中找不到列表 {list_id!r}"
 
-#: src/omega_serv/application/security/manage_blocklist.py:34
+#: src/omega_serv/application/security/manage_blocklist.py:41
 msgid ""
 "Bannissement permanent refusé sans confirmation explicite (passer "
 "--duration-seconds, ou --confirm-permanent pour un bannissement sans "
 "expiration)."
 msgstr "未经明确确认，拒绝永久封禁（请传入 --duration-seconds，或用 --confirm-permanent 进行无期限封禁）。"
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #, python-brace-format
 msgid "Entrée ajoutée : {network} ({value})"
 msgstr "已添加条目：{network}（{value}）"
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #, python-brace-format
 msgid "expire le {date}"
 msgstr "{date} 到期"
 
-#: src/omega_serv/application/security/manage_blocklist.py:46
+#: src/omega_serv/application/security/manage_blocklist.py:56
 #: src/omega_serv/application/security/manual_intervention.py:168
-#: src/omega_serv/interfaces/cli/main.py:725
+#: src/omega_serv/interfaces/cli/main.py:736
 #: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:30
 #: src/omega_serv/interfaces/tui/screens/waf_modules_screen.py:152
 msgid "permanent"
 msgstr "永久"
 
-#: src/omega_serv/application/security/manage_blocklist.py:52
+#: src/omega_serv/application/security/manage_blocklist.py:71
 #, python-brace-format
-msgid "Aucune entrée pour {network}"
-msgstr "{network} 没有条目"
+msgid "Aucune entrée d'origine {origin} pour {network}"
+msgstr "没有来源为 {origin} 的 {network} 条目"
 
-#: src/omega_serv/application/security/manage_blocklist.py:53
+#: src/omega_serv/application/security/manage_blocklist.py:72
+#: src/omega_serv/application/security/manage_blocklist.py:76
 #, python-brace-format
 msgid "Entrée retirée : {network}"
 msgstr "已移除条目：{network}"
+
+#: src/omega_serv/application/security/manage_blocklist.py:75
+#, python-brace-format
+msgid "Aucune entrée pour {network}"
+msgstr "{network} 没有条目"
 
 #: src/omega_serv/application/security/manual_intervention.py:30
 msgid "Pour bannir un réseau : menu WAF → Modules → Liste de blocage."
@@ -1371,7 +1377,7 @@ msgid "en vigueur"
 msgstr "生效中"
 
 #: src/omega_serv/application/security/manual_intervention.py:169
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/manual_unban_screen.py:89
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "expiré"
@@ -1661,7 +1667,7 @@ msgstr "进程"
 msgid "Ce gestionnaire de service ne supporte pas cette opération."
 msgstr "此服务管理器不支持该操作。"
 
-#: src/omega_serv/application/services/install_service.py:143
+#: src/omega_serv/application/services/install_service.py:145
 msgid ""
 "Permissions reappliquees sur var/ et secure/auth/ - {repairing_user!r} "
 "ajouté au groupe {group!r} si besoin : reconnectez votre session (ou 'newgrp"
@@ -1670,31 +1676,31 @@ msgstr ""
 "已重新应用 var/ 和 secure/auth/ 的权限 - 如有需要已将 {repairing_user!r} 加入组 "
 "{group!r}：请重新登录会话（或执行 'newgrp {group}'），以便界面能读取服务写入的内容。"
 
-#: src/omega_serv/application/services/install_service.py:174
+#: src/omega_serv/application/services/install_service.py:176
 msgid " (compte système {user!r} créé ou déjà présent)"
 msgstr " （系统账户 {user!r} 已创建或已存在）"
 
-#: src/omega_serv/application/services/install_service.py:178
+#: src/omega_serv/application/services/install_service.py:180
 msgid ""
 " - {installing_user!r} ajouté au groupe {group!r} : reconnectez votre "
 "session (ou 'newgrp "
 msgstr " - 已将 {installing_user!r} 加入组 {group!r}：请重新登录会话（或执行 'newgrp "
 
-#: src/omega_serv/application/services/install_service.py:178
+#: src/omega_serv/application/services/install_service.py:180
 msgid "') pour que l'interface puisse lire ce que le service écrit"
 msgstr "'），以便界面能读取服务写入的内容"
 
-#: src/omega_serv/application/services/install_service.py:181
+#: src/omega_serv/application/services/install_service.py:183
 #, python-brace-format
 msgid "Unité installée : {unit_path}{user_note}{group_note}"
 msgstr "已安装单元：{unit_path}{user_note}{group_note}"
 
-#: src/omega_serv/application/services/install_service.py:190
+#: src/omega_serv/application/services/install_service.py:192
 #, python-brace-format
 msgid "Unité introuvable : {unit_path}"
 msgstr "找不到单元：{unit_path}"
 
-#: src/omega_serv/application/services/install_service.py:202
+#: src/omega_serv/application/services/install_service.py:204
 #, python-brace-format
 msgid "Unité retirée : {unit_path}"
 msgstr "已移除单元：{unit_path}"
@@ -2196,7 +2202,7 @@ msgid "← Retourner sur Google en attendant :-) "
 msgstr "← 先回 Google 逛逛吧 :-) "
 
 #: src/omega_serv/domain/http/error_pages.py:365
-#: src/omega_serv/interfaces/cli/main.py:160
+#: src/omega_serv/interfaces/cli/main.py:163
 msgid "Erreur"
 msgstr "错误"
 
@@ -2278,22 +2284,22 @@ msgid "o"
 msgstr "B"
 
 #: src/omega_serv/domain/routing/dirlisting.py:231
-#: src/omega_serv/interfaces/cli/main.py:1751
-#: src/omega_serv/interfaces/cli/main.py:1755
-#: src/omega_serv/interfaces/cli/main.py:1767
-#: src/omega_serv/interfaces/cli/main.py:1770
-#: src/omega_serv/interfaces/cli/main.py:1900
-#: src/omega_serv/interfaces/cli/main.py:1909
+#: src/omega_serv/interfaces/cli/main.py:1844
+#: src/omega_serv/interfaces/cli/main.py:1848
+#: src/omega_serv/interfaces/cli/main.py:1860
+#: src/omega_serv/interfaces/cli/main.py:1863
 #: src/omega_serv/interfaces/cli/main.py:1999
-#: src/omega_serv/interfaces/cli/main.py:2004
 #: src/omega_serv/interfaces/cli/main.py:2008
-#: src/omega_serv/interfaces/cli/main.py:2016
-#: src/omega_serv/interfaces/cli/main.py:2047
-#: src/omega_serv/interfaces/cli/main.py:2052
-#: src/omega_serv/interfaces/cli/main.py:2057
-#: src/omega_serv/interfaces/cli/main.py:2059
-#: src/omega_serv/interfaces/cli/main.py:2067
-#: src/omega_serv/interfaces/cli/main.py:2079
+#: src/omega_serv/interfaces/cli/main.py:2098
+#: src/omega_serv/interfaces/cli/main.py:2103
+#: src/omega_serv/interfaces/cli/main.py:2107
+#: src/omega_serv/interfaces/cli/main.py:2115
+#: src/omega_serv/interfaces/cli/main.py:2146
+#: src/omega_serv/interfaces/cli/main.py:2151
+#: src/omega_serv/interfaces/cli/main.py:2156
+#: src/omega_serv/interfaces/cli/main.py:2158
+#: src/omega_serv/interfaces/cli/main.py:2166
+#: src/omega_serv/interfaces/cli/main.py:2178
 msgid "NOM"
 msgstr "名称"
 
@@ -3199,15 +3205,25 @@ msgstr "提供的私钥与证书不匹配"
 msgid "le certificat fourni est déjà expiré depuis le {value}"
 msgstr "提供的证书已于 {value} 过期"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:56
+#: src/omega_serv/domain/security/waf/blocklist.py:64
+msgid ""
+"origine invalide (minuscules, chiffres, . _ : -, 64 caractères au plus) : "
+"{origin!r}"
+msgstr "来源无效（小写字母、数字、. _ : -，最多 64 个字符）：{origin!r}"
+
+#: src/omega_serv/domain/security/waf/blocklist.py:67
+msgid "origine réservée à omega-serv : {origin!r}"
+msgstr "保留给 omega-serv 的来源：{origin!r}"
+
+#: src/omega_serv/domain/security/waf/blocklist.py:75
 msgid "network invalide (attendu une IP ou un CIDR) : {network!r}"
 msgstr "network 无效（应为 IP 或 CIDR）：{network!r}"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:58
+#: src/omega_serv/domain/security/waf/blocklist.py:77
 msgid "reason ne peut pas être vide"
 msgstr "reason 不能为空"
 
-#: src/omega_serv/domain/security/waf/blocklist.py:60
+#: src/omega_serv/domain/security/waf/blocklist.py:79
 msgid "source invalide : {source!r}"
 msgstr "source 无效：{source!r}"
 
@@ -3981,7 +3997,7 @@ msgstr "误报稳定后切换到 'block' 模式，或明确说明保持 log-only
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:207
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:228
 #: src/omega_serv/infrastructure/services/systemd_service_manager.py:233
-#: src/omega_serv/infrastructure/services/systemd_service_manager.py:267
+#: src/omega_serv/infrastructure/services/systemd_service_manager.py:278
 #, python-brace-format
 msgid "code {returncode}"
 msgstr "代码 {returncode}"
@@ -4101,17 +4117,17 @@ msgstr " （另有 {value} 个）"
 msgid "Liste de chemins invalide {path} : {details}{more}"
 msgstr "路径列表无效 {path}：{details}{more}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:146
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:150
 #, python-brace-format
 msgid "erreur de syntaxe du script magnet : {e}"
 msgstr "magnet 脚本语法错误：{e}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:269
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:273
 #, python-brace-format
 msgid "script magnet introuvable : {path}"
 msgstr "找不到 magnet 脚本：{path}"
 
-#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:273
+#: src/omega_serv/infrastructure/waf/lua_waf_adapter.py:277
 #, python-brace-format
 msgid "impossible de lire {path} : {e}"
 msgstr "无法读取 {path}：{e}"
@@ -4122,13 +4138,13 @@ msgid "Fichier de pack de règles introuvable : {path}"
 msgstr "找不到规则包文件：{path}"
 
 #: src/omega_serv/interfaces/cli/command_tree.py:27
-#: src/omega_serv/interfaces/cli/main.py:1683
-#: src/omega_serv/interfaces/cli/main.py:2095
+#: src/omega_serv/interfaces/cli/main.py:1776
+#: src/omega_serv/interfaces/cli/main.py:2207
 msgid "COMMANDE"
 msgstr "命令"
 
 #: src/omega_serv/interfaces/cli/command_tree.py:27
-#: src/omega_serv/interfaces/cli/main.py:1683
+#: src/omega_serv/interfaces/cli/main.py:1776
 msgid "commandes"
 msgstr "命令"
 
@@ -4275,7 +4291,7 @@ msgstr "unique：仅一次；quotidien：每天一次，由服务器发送。"
 
 #: src/omega_serv/interfaces/cli/declaration_commands.py:258
 #: src/omega_serv/interfaces/cli/declaration_commands.py:261
-#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:2005
 msgid "CODE"
 msgstr "代码"
 
@@ -4299,49 +4315,49 @@ msgstr "撤回声明（接收方收到后删除）。"
 msgid "Envoi quotidien, lancé par serve (pas à utiliser à la main)."
 msgstr "每日发送，由 serve 启动（不要手动使用）。"
 
-#: src/omega_serv/interfaces/cli/main.py:162
+#: src/omega_serv/interfaces/cli/main.py:165
 #, python-brace-format
 msgid "{prefix} : {error}"
 msgstr "{prefix}：{error}"
 
-#: src/omega_serv/interfaces/cli/main.py:232
+#: src/omega_serv/interfaces/cli/main.py:235
 msgid "Erreur de rechargement"
 msgstr "重新加载错误"
 
-#: src/omega_serv/interfaces/cli/main.py:321
-#: src/omega_serv/interfaces/cli/main.py:438
+#: src/omega_serv/interfaces/cli/main.py:324
+#: src/omega_serv/interfaces/cli/main.py:441
 msgid "Erreur d'environnement"
 msgstr "环境错误"
 
-#: src/omega_serv/interfaces/cli/main.py:428
-#: src/omega_serv/interfaces/cli/main.py:458
-#: src/omega_serv/interfaces/cli/main.py:1618
+#: src/omega_serv/interfaces/cli/main.py:431
+#: src/omega_serv/interfaces/cli/main.py:461
+#: src/omega_serv/interfaces/cli/main.py:1630
 msgid "Erreur de configuration"
 msgstr "配置错误"
 
-#: src/omega_serv/interfaces/cli/main.py:441
+#: src/omega_serv/interfaces/cli/main.py:444
 #, python-brace-format
 msgid "{config} : configuration valide."
 msgstr "{config}：配置有效。"
 
-#: src/omega_serv/interfaces/cli/main.py:478
+#: src/omega_serv/interfaces/cli/main.py:481
 msgid ""
 "Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou clé"
 " privée TLS) jamais chiffres par défaut - ajoutez --confirm-secrets pour "
 "confirmer."
 msgstr "此备份将包含真实的机密（密码哈希和/或 TLS 私钥），默认从不加密 - 请添加 --confirm-secrets 以确认。"
 
-#: src/omega_serv/interfaces/cli/main.py:497
+#: src/omega_serv/interfaces/cli/main.py:500
 msgid ""
 "Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le "
 "redémarrer."
 msgstr "请使用 --stop-and-restart 重新运行,以停止服务、恢复,然后重新启动。"
 
-#: src/omega_serv/interfaces/cli/main.py:504
+#: src/omega_serv/interfaces/cli/main.py:507
 msgid "Aucune sauvegarde."
 msgstr "没有备份。"
 
-#: src/omega_serv/interfaces/cli/main.py:509
+#: src/omega_serv/interfaces/cli/main.py:512
 #, python-brace-format
 msgid ""
 "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} Ko  {value2}  "
@@ -4350,40 +4366,40 @@ msgstr ""
 "{snapshot_id}  {value}  {scope:<20}  {size_kb:.1f} KB  {value2}  "
 "{description}"
 
-#: src/omega_serv/interfaces/cli/main.py:524
-#: src/omega_serv/interfaces/cli/main.py:542
-#: src/omega_serv/interfaces/cli/main.py:1068
-#: src/omega_serv/interfaces/cli/main.py:1096
-#: src/omega_serv/interfaces/cli/main.py:1133
-#: src/omega_serv/interfaces/cli/main.py:1158
-#: src/omega_serv/interfaces/cli/main.py:1179
-#: src/omega_serv/interfaces/cli/main.py:1197
-#: src/omega_serv/interfaces/cli/main.py:1246
+#: src/omega_serv/interfaces/cli/main.py:527
+#: src/omega_serv/interfaces/cli/main.py:545
+#: src/omega_serv/interfaces/cli/main.py:1080
+#: src/omega_serv/interfaces/cli/main.py:1108
+#: src/omega_serv/interfaces/cli/main.py:1145
+#: src/omega_serv/interfaces/cli/main.py:1170
+#: src/omega_serv/interfaces/cli/main.py:1191
+#: src/omega_serv/interfaces/cli/main.py:1209
+#: src/omega_serv/interfaces/cli/main.py:1258
 #, python-brace-format
 msgid "Erreur : {e}"
 msgstr "错误：{e}"
 
-#: src/omega_serv/interfaces/cli/main.py:526
+#: src/omega_serv/interfaces/cli/main.py:529
 #, python-brace-format
 msgid "Profil : {name}"
 msgstr "配置档案：{name}"
 
-#: src/omega_serv/interfaces/cli/main.py:547
+#: src/omega_serv/interfaces/cli/main.py:550
 #, python-brace-format
 msgid "Profil de base choisi : {name}"
 msgstr "选定的基础配置档案：{name}"
 
-#: src/omega_serv/interfaces/cli/main.py:549
+#: src/omega_serv/interfaces/cli/main.py:552
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:76
 msgid "Aucune modification."
 msgstr "没有修改。"
 
-#: src/omega_serv/interfaces/cli/main.py:551
+#: src/omega_serv/interfaces/cli/main.py:554
 #: src/omega_serv/interfaces/tui/screens/apply_profile_screen.py:78
 msgid "Modifications :"
 msgstr "修改："
 
-#: src/omega_serv/interfaces/cli/main.py:556
+#: src/omega_serv/interfaces/cli/main.py:559
 msgid ""
 "\n"
 "Conflits détectés :"
@@ -4391,16 +4407,16 @@ msgstr ""
 "\n"
 "检测到冲突："
 
-#: src/omega_serv/interfaces/cli/main.py:558
+#: src/omega_serv/interfaces/cli/main.py:561
 #, python-brace-format
 msgid "  [{value}] {message}"
 msgstr "  [{value}] {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:561
+#: src/omega_serv/interfaces/cli/main.py:564
 msgid "Erreur de validation"
 msgstr "验证错误"
 
-#: src/omega_serv/interfaces/cli/main.py:564
+#: src/omega_serv/interfaces/cli/main.py:567
 msgid ""
 "\n"
 "(--dry-run : aucune écriture effectuée)"
@@ -4408,7 +4424,7 @@ msgstr ""
 "\n"
 "（--dry-run：未写入任何内容）"
 
-#: src/omega_serv/interfaces/cli/main.py:568
+#: src/omega_serv/interfaces/cli/main.py:571
 msgid ""
 "\n"
 "Application refusée (problèmes bloquants, voir ci-dessus). Utiliser --force pour outrepasser."
@@ -4416,7 +4432,7 @@ msgstr ""
 "\n"
 "拒绝应用（存在阻断性问题，见上文）。使用 --force 强制执行。"
 
-#: src/omega_serv/interfaces/cli/main.py:572
+#: src/omega_serv/interfaces/cli/main.py:575
 #, python-brace-format
 msgid ""
 "\n"
@@ -4425,7 +4441,7 @@ msgstr ""
 "\n"
 "配置已在 {config} 中更新（已应用配置档案 '{name}'）。"
 
-#: src/omega_serv/interfaces/cli/main.py:583
+#: src/omega_serv/interfaces/cli/main.py:586
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/instances_screen.py:93
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
@@ -4433,8 +4449,8 @@ msgstr ""
 msgid "actif"
 msgstr "运行中"
 
-#: src/omega_serv/interfaces/cli/main.py:583
-#: src/omega_serv/interfaces/cli/main.py:805
+#: src/omega_serv/interfaces/cli/main.py:586
+#: src/omega_serv/interfaces/cli/main.py:817
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #: src/omega_serv/interfaces/tui/screens/options_screen.py:68
 #: src/omega_serv/interfaces/tui/screens/resource_status_screen.py:672
@@ -4442,93 +4458,93 @@ msgstr "运行中"
 msgid "inactif"
 msgstr "未运行"
 
-#: src/omega_serv/interfaces/cli/main.py:584
+#: src/omega_serv/interfaces/cli/main.py:587
 #, python-brace-format
 msgid "{name} : {state}"
 msgstr "{name}：{state}"
 
-#: src/omega_serv/interfaces/cli/main.py:630
+#: src/omega_serv/interfaces/cli/main.py:633
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:73
 #, python-brace-format
 msgid "Méthode          : {method}"
 msgstr "方法         : {method}"
 
-#: src/omega_serv/interfaces/cli/main.py:631
+#: src/omega_serv/interfaces/cli/main.py:634
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:74
 #, python-brace-format
 msgid "Chemin demandé   : {raw_path}"
 msgstr "请求路径     : {raw_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:632
+#: src/omega_serv/interfaces/cli/main.py:635
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:75
 #, python-brace-format
 msgid "Chemin normalisé : {normalized_path}"
 msgstr "规范化路径   : {normalized_path}"
 
-#: src/omega_serv/interfaces/cli/main.py:633
+#: src/omega_serv/interfaces/cli/main.py:636
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:76
 #, python-brace-format
 msgid "Méthode autorisée: {method_allowed}"
 msgstr "允许的方法   : {method_allowed}"
 
-#: src/omega_serv/interfaces/cli/main.py:634
+#: src/omega_serv/interfaces/cli/main.py:637
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:77
 #, python-brace-format
 msgid "Refusé (règles)  : {denied_by_access_policy}"
 msgstr "被规则拒绝   : {denied_by_access_policy}"
 
-#: src/omega_serv/interfaces/cli/main.py:635
+#: src/omega_serv/interfaces/cli/main.py:638
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:78
 #, python-brace-format
 msgid "Fichier existe   : {file_exists}"
 msgstr "文件存在     : {file_exists}"
 
-#: src/omega_serv/interfaces/cli/main.py:636
+#: src/omega_serv/interfaces/cli/main.py:639
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:79
 #, python-brace-format
 msgid "Statut réponse   : {response_status}"
 msgstr "响应状态     : {response_status}"
 
-#: src/omega_serv/interfaces/cli/main.py:638
+#: src/omega_serv/interfaces/cli/main.py:641
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:82
 #, python-brace-format
 msgid "Motif de refus   : {rejection_reason}"
 msgstr "拒绝原因     : {rejection_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:639
+#: src/omega_serv/interfaces/cli/main.py:642
 #: src/omega_serv/interfaces/tui/screens/simulate_request_screen.py:83
 msgid "En-têtes attendus :"
 msgstr "预期的响应头："
 
-#: src/omega_serv/interfaces/cli/main.py:641
+#: src/omega_serv/interfaces/cli/main.py:644
 #, python-brace-format
 msgid "  {name}: {value}"
 msgstr "  {name}: {value}"
 
-#: src/omega_serv/interfaces/cli/main.py:677
+#: src/omega_serv/interfaces/cli/main.py:680
 msgid ""
 "Erreur : options.waf absent de la configuration (exécuter 'omega-serv config"
 " init' ou ajouter la section waf)."
 msgstr "错误：配置中缺少 options.waf（请执行 'omega-serv config init' 或添加 waf 部分）。"
 
-#: src/omega_serv/interfaces/cli/main.py:686
+#: src/omega_serv/interfaces/cli/main.py:689
 #, python-brace-format
 msgid "Décision native : {value} (score {score})"
 msgstr "原生判定：{value}（分数 {score}）"
 
-#: src/omega_serv/interfaces/cli/main.py:688
+#: src/omega_serv/interfaces/cli/main.py:691
 #, python-brace-format
 msgid "Décision magnet : {value} (score {score})"
 msgstr "magnet 判定：{value}（分数 {score}）"
 
-#: src/omega_serv/interfaces/cli/main.py:690
+#: src/omega_serv/interfaces/cli/main.py:693
 #, python-brace-format
 msgid ""
 "ATTENTION - le script magnet a levé une erreur sur cette requête : "
 "{magnet_error}"
 msgstr "注意 - magnet 脚本在此请求上抛出了错误：{magnet_error}"
 
-#: src/omega_serv/interfaces/cli/main.py:693
+#: src/omega_serv/interfaces/cli/main.py:696
 #, python-brace-format
 msgid ""
 "ATTENTION - le script magnet référence lighty.{{{value}}}, non supporte par "
@@ -4538,7 +4554,7 @@ msgstr ""
 "注意 - magnet 脚本引用了 lighty.{{{value}}}，此桥接不支持（始终为 nil - 脚本的行为可能与真实 Lighttpd "
 "中不同）"
 
-#: src/omega_serv/interfaces/cli/main.py:697
+#: src/omega_serv/interfaces/cli/main.py:700
 msgid ""
 "ATTENTION - options.waf.magnet.on_error='fail-closed' combiné à une "
 "incompatibilité détectée : toute requête future qui déclenche la même erreur"
@@ -4548,320 +4564,320 @@ msgstr ""
 "注意 - options.waf.magnet.on_error='fail-closed' "
 "与检测到的不兼容同时存在：今后任何触发同一错误的请求都将被拦截（包括合法流量）。在生产环境启用此脚本之前，请改为 'ignore' 或修正脚本。"
 
-#: src/omega_serv/interfaces/cli/main.py:701
+#: src/omega_serv/interfaces/cli/main.py:704
 #, python-brace-format
 msgid "Décision finale : {value}"
 msgstr "最终判定：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:702
+#: src/omega_serv/interfaces/cli/main.py:705
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:83
 #, python-brace-format
 msgid "Statut : {value}"
 msgstr "状态：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:703
-#: src/omega_serv/interfaces/cli/main.py:836
+#: src/omega_serv/interfaces/cli/main.py:706
+#: src/omega_serv/interfaces/cli/main.py:848
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:84
 #, python-brace-format
 msgid "Score : {score}"
 msgstr "分数：{score}"
 
-#: src/omega_serv/interfaces/cli/main.py:704
+#: src/omega_serv/interfaces/cli/main.py:707
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:85
 #, python-brace-format
 msgid "Règles : {value}"
 msgstr "规则：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:705
+#: src/omega_serv/interfaces/cli/main.py:708
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:86
 #, python-brace-format
 msgid "Politique de zone : {zone_id}"
 msgstr "区域策略：{zone_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:706
+#: src/omega_serv/interfaces/cli/main.py:709
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:87
 #, python-brace-format
 msgid "Mode : {mode}"
 msgstr "模式：{mode}"
 
-#: src/omega_serv/interfaces/cli/main.py:708
+#: src/omega_serv/interfaces/cli/main.py:711
 #: src/omega_serv/interfaces/tui/screens/waf_test_screen.py:90
 #, python-brace-format
 msgid "Motif : {blocked_reason}"
 msgstr "原因：{blocked_reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:722
+#: src/omega_serv/interfaces/cli/main.py:733
 msgid "Aucune entrée."
 msgstr "没有条目。"
 
-#: src/omega_serv/interfaces/cli/main.py:726
+#: src/omega_serv/interfaces/cli/main.py:737
 #, python-brace-format
 msgid "{network}\t{source}\t{expiry}\t{reason}"
 msgstr "{network}\t{source}\t{expiry}\t{reason}"
 
-#: src/omega_serv/interfaces/cli/main.py:776
-#: src/omega_serv/interfaces/cli/main.py:799
+#: src/omega_serv/interfaces/cli/main.py:788
+#: src/omega_serv/interfaces/cli/main.py:811
 #, python-brace-format
 msgid "Erreur d'accès à la base Active Defense : {exc}."
 msgstr "访问 Active Defense 数据库出错：{exc}。"
 
-#: src/omega_serv/interfaces/cli/main.py:778
+#: src/omega_serv/interfaces/cli/main.py:790
 msgid ""
 "Si l'appartenance à un groupe système a changé récemment, une nouvelle "
 "session (deconnexion/reconnexion) peut être nécessaire."
 msgstr "如果最近更改了系统组成员身份，可能需要新的会话（注销后重新登录）。"
 
-#: src/omega_serv/interfaces/cli/main.py:784
+#: src/omega_serv/interfaces/cli/main.py:796
 msgid ""
 "Erreur : options.active_defense absent ou désactivé de la configuration."
 msgstr "错误：配置中缺少 options.active_defense 或已禁用。"
 
-#: src/omega_serv/interfaces/cli/main.py:802
+#: src/omega_serv/interfaces/cli/main.py:814
 msgid ""
 "Active Defense : désactivé (options.active_defense.enabled = false ou "
 "absent)."
 msgstr "Active Defense：已禁用（options.active_defense.enabled = false 或缺失）。"
 
-#: src/omega_serv/interfaces/cli/main.py:804
+#: src/omega_serv/interfaces/cli/main.py:816
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:57
 #, python-brace-format
 msgid "Active Defense : activé (mode={mode})"
 msgstr "Active Defense：已启用（mode={mode}）"
 
-#: src/omega_serv/interfaces/cli/main.py:805
+#: src/omega_serv/interfaces/cli/main.py:817
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:58
 #, python-brace-format
 msgid "Mode guerre : {value}"
 msgstr "战争模式：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:805
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:817
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #: src/omega_serv/interfaces/tui/screens/tls_toggle_screen.py:60
 msgid "activé"
 msgstr "已启用"
 
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 #, python-brace-format
 msgid "Deception : {value}"
 msgstr "Deception：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:806
+#: src/omega_serv/interfaces/cli/main.py:818
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:59
 msgid "inactive"
 msgstr "未启用"
 
-#: src/omega_serv/interfaces/cli/main.py:808
+#: src/omega_serv/interfaces/cli/main.py:820
 #: src/omega_serv/interfaces/tui/screens/active_defense_status_screen.py:60
 #, python-brace-format
 msgid "Sources suivies : {count}"
 msgstr "跟踪的来源：{count}"
 
-#: src/omega_serv/interfaces/cli/main.py:819
+#: src/omega_serv/interfaces/cli/main.py:831
 msgid "Aucune menace suivie."
 msgstr "没有跟踪的威胁。"
 
-#: src/omega_serv/interfaces/cli/main.py:822
+#: src/omega_serv/interfaces/cli/main.py:834
 #, python-brace-format
 msgid "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 msgstr "{subject_id}\t{score}\t{level}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:833
+#: src/omega_serv/interfaces/cli/main.py:845
 msgid "Aucune menace suivie pour {subject_id!r}."
 msgstr "没有跟踪 {subject_id!r} 的威胁。"
 
-#: src/omega_serv/interfaces/cli/main.py:835
-#: src/omega_serv/interfaces/cli/main.py:873
+#: src/omega_serv/interfaces/cli/main.py:847
+#: src/omega_serv/interfaces/cli/main.py:885
 #, python-brace-format
 msgid "Source : {subject_id}"
 msgstr "来源：{subject_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:837
+#: src/omega_serv/interfaces/cli/main.py:849
 #, python-brace-format
 msgid "Niveau : {level}"
 msgstr "级别：{level}"
 
-#: src/omega_serv/interfaces/cli/main.py:838
+#: src/omega_serv/interfaces/cli/main.py:850
 #, python-brace-format
 msgid "Mise à jour : {value}"
 msgstr "更新时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:839
+#: src/omega_serv/interfaces/cli/main.py:851
 #, python-brace-format
 msgid "Expiration : {value}"
 msgstr "过期时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:840
+#: src/omega_serv/interfaces/cli/main.py:852
 #, python-brace-format
 msgid "Actions actives : {value}"
 msgstr "生效的动作：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:855
+#: src/omega_serv/interfaces/cli/main.py:867
 msgid "Aucun incident."
 msgstr "没有事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:859
+#: src/omega_serv/interfaces/cli/main.py:871
 #, python-brace-format
 msgid "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 msgstr "{incident_id}\t{subject_id}\t{status}\t{value}\t{closed}"
 
-#: src/omega_serv/interfaces/cli/main.py:870
-#: src/omega_serv/interfaces/cli/main.py:916
-#: src/omega_serv/interfaces/cli/main.py:938
+#: src/omega_serv/interfaces/cli/main.py:882
+#: src/omega_serv/interfaces/cli/main.py:928
+#: src/omega_serv/interfaces/cli/main.py:950
 msgid "Incident introuvable : {incident_id!r}."
 msgstr "找不到事件：{incident_id!r}。"
 
-#: src/omega_serv/interfaces/cli/main.py:872
+#: src/omega_serv/interfaces/cli/main.py:884
 #, python-brace-format
 msgid "Incident : {incident_id}"
 msgstr "事件：{incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:874
+#: src/omega_serv/interfaces/cli/main.py:886
 #, python-brace-format
 msgid "Statut : {status}"
 msgstr "状态：{status}"
 
-#: src/omega_serv/interfaces/cli/main.py:875
+#: src/omega_serv/interfaces/cli/main.py:887
 #, python-brace-format
 msgid "Ouvert le : {value}"
 msgstr "开启时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:876
+#: src/omega_serv/interfaces/cli/main.py:888
 #, python-brace-format
 msgid "Fermé le : {value}"
 msgstr "关闭时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:877
+#: src/omega_serv/interfaces/cli/main.py:889
 msgid "Chronologie :"
 msgstr "时间线："
 
-#: src/omega_serv/interfaces/cli/main.py:879
+#: src/omega_serv/interfaces/cli/main.py:891
 #, python-brace-format
 msgid "  {value}\t{kind}\t{detail}"
 msgstr "  {value}\t{kind}\t{detail}"
 
-#: src/omega_serv/interfaces/cli/main.py:892
+#: src/omega_serv/interfaces/cli/main.py:904
 msgid "Incident introuvable ou déjà fermé : {incident_id!r}."
 msgstr "找不到事件或事件已关闭：{incident_id!r}。"
 
-#: src/omega_serv/interfaces/cli/main.py:894
+#: src/omega_serv/interfaces/cli/main.py:906
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:202
 msgid "Incident {incident_id!r} fermé."
 msgstr "事件 {incident_id!r} 已关闭。"
 
-#: src/omega_serv/interfaces/cli/main.py:905
+#: src/omega_serv/interfaces/cli/main.py:917
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:224
 #, python-brace-format
 msgid "Auto-export ({export_format}) : {path}"
 msgstr "自动导出（{export_format}）：{path}"
 
-#: src/omega_serv/interfaces/cli/main.py:924
+#: src/omega_serv/interfaces/cli/main.py:936
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:243
 msgid "Format d'export inconnu : {export_format!r} (json, csv, stix ou misp)."
 msgstr "未知的导出格式：{export_format!r}（json、csv、stix 或 misp）。"
 
-#: src/omega_serv/interfaces/cli/main.py:927
+#: src/omega_serv/interfaces/cli/main.py:939
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:245
 #, python-brace-format
 msgid "Exporté : {path}"
 msgstr "已导出：{path}"
 
-#: src/omega_serv/interfaces/cli/main.py:943
+#: src/omega_serv/interfaces/cli/main.py:955
 #: src/omega_serv/interfaces/tui/screens/incidents_screen.py:257
 #, python-brace-format
 msgid "Rapport généré : {path}"
 msgstr "已生成报告：{path}"
 
-#: src/omega_serv/interfaces/cli/main.py:954
+#: src/omega_serv/interfaces/cli/main.py:966
 msgid "Aucune affectation de leurre."
 msgstr "没有诱饵分配。"
 
-#: src/omega_serv/interfaces/cli/main.py:958
+#: src/omega_serv/interfaces/cli/main.py:970
 #: src/omega_serv/interfaces/cli/riposte_text.py:127
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "active"
 msgstr "生效中"
 
-#: src/omega_serv/interfaces/cli/main.py:958
+#: src/omega_serv/interfaces/cli/main.py:970
 #: src/omega_serv/interfaces/tui/screens/deception_screen.py:65
 msgid "expirée"
 msgstr "已过期"
 
-#: src/omega_serv/interfaces/cli/main.py:960
+#: src/omega_serv/interfaces/cli/main.py:972
 #, python-brace-format
 msgid "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 msgstr "{subject_id}\t{profile_name}\t{status}\t{value}\t{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:971
+#: src/omega_serv/interfaces/cli/main.py:983
 msgid "Affectation de leurre libérée pour {subject_id!r} (si elle existait)."
 msgstr "已释放 {subject_id!r} 的诱饵分配（如果存在）。"
 
-#: src/omega_serv/interfaces/cli/main.py:985
+#: src/omega_serv/interfaces/cli/main.py:997
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:79
 msgid ""
 "Classe d'attaque inconnue : {attack_class!r} (valeurs possibles : {value})."
 msgstr "未知的攻击类别：{attack_class!r}（可选值：{value}）。"
 
-#: src/omega_serv/interfaces/cli/main.py:995
+#: src/omega_serv/interfaces/cli/main.py:1007
 #, python-brace-format
 msgid "Source (simulée) : {subject_id}  (chemin observé : {path})"
 msgstr "来源（模拟）：{subject_id}  （观察到的路径：{path}）"
 
-#: src/omega_serv/interfaces/cli/main.py:996
+#: src/omega_serv/interfaces/cli/main.py:1008
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:98
 #, python-brace-format
 msgid "Score : {previous_score} -> {projected_score}"
 msgstr "分数：{previous_score} -> {projected_score}"
 
-#: src/omega_serv/interfaces/cli/main.py:997
+#: src/omega_serv/interfaces/cli/main.py:1009
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:99
 #, python-brace-format
 msgid "Niveau : {previous_level} -> {projected_level}"
 msgstr "级别：{previous_level} -> {projected_level}"
 
-#: src/omega_serv/interfaces/cli/main.py:999
+#: src/omega_serv/interfaces/cli/main.py:1011
 #: src/omega_serv/interfaces/tui/screens/active_defense_simulate_screen.py:100
 #, python-brace-format
 msgid "  - {line}"
 msgstr "  - {line}"
 
-#: src/omega_serv/interfaces/cli/main.py:1016
+#: src/omega_serv/interfaces/cli/main.py:1028
 #, python-brace-format
 msgid "États de menace purgés : {purged_threat_states}"
 msgstr "已清除的威胁状态：{purged_threat_states}"
 
-#: src/omega_serv/interfaces/cli/main.py:1017
+#: src/omega_serv/interfaces/cli/main.py:1029
 #, python-brace-format
 msgid "Incidents fermés automatiquement : {count}"
 msgstr "自动关闭的事件：{count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1019
+#: src/omega_serv/interfaces/cli/main.py:1031
 #, python-brace-format
 msgid "  - {incident_id}"
 msgstr "  - {incident_id}"
 
-#: src/omega_serv/interfaces/cli/main.py:1020
+#: src/omega_serv/interfaces/cli/main.py:1032
 #, python-brace-format
 msgid "Incidents fermés depuis plus de 90 jours supprimés : {count}"
 msgstr "已删除关闭超过 90 天的事件:{count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1034
+#: src/omega_serv/interfaces/cli/main.py:1046
 #, python-brace-format
 msgid "Export automatique impossible : {message}"
 msgstr "无法自动导出:{message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1036
+#: src/omega_serv/interfaces/cli/main.py:1048
 #, python-brace-format
 msgid "Exports automatiques écrits : {count}"
 msgstr "已写入自动导出:{count}"
 
-#: src/omega_serv/interfaces/cli/main.py:1078
+#: src/omega_serv/interfaces/cli/main.py:1090
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:139
 msgid "Erreur : les deux saisies de passphrase ne correspondent pas."
 msgstr "错误：两次输入的口令不一致。"
 
-#: src/omega_serv/interfaces/cli/main.py:1101
+#: src/omega_serv/interfaces/cli/main.py:1113
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 #, python-brace-format
@@ -4869,265 +4885,265 @@ msgid ""
 "Importez {value} dans le magasin de confiance des clients (doc TLS §7.4)."
 msgstr "请将 {value} 导入客户端的信任存储（TLS 文档 §7.4）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1101
+#: src/omega_serv/interfaces/cli/main.py:1113
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:193
 #: src/omega_serv/interfaces/tui/screens/ca_wizard_screen.py:306
 msgid "root-ca.pem"
 msgstr "root-ca.pem"
 
-#: src/omega_serv/interfaces/cli/main.py:1138
+#: src/omega_serv/interfaces/cli/main.py:1150
 msgid ""
 "Redémarrage requis pour que le nouveau certificat soit pris en compte "
 "(`omega-serv service restart`)."
 msgstr "需要重启才能使新证书生效（`omega-serv service restart`）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1206
+#: src/omega_serv/interfaces/cli/main.py:1218
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:79
 #, python-brace-format
 msgid "Sujet : {subject}"
 msgstr "主题：{subject}"
 
-#: src/omega_serv/interfaces/cli/main.py:1207
+#: src/omega_serv/interfaces/cli/main.py:1219
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:80
 #, python-brace-format
 msgid "Émetteur : {issuer}"
 msgstr "颁发者：{issuer}"
 
-#: src/omega_serv/interfaces/cli/main.py:1208
+#: src/omega_serv/interfaces/cli/main.py:1220
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:81
 #, python-brace-format
 msgid "Début de validité : {value}"
 msgstr "生效时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1209
+#: src/omega_serv/interfaces/cli/main.py:1221
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:82
 #, python-brace-format
 msgid "Fin de validité : {value}"
 msgstr "失效时间：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1210
+#: src/omega_serv/interfaces/cli/main.py:1222
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:83
 #, python-brace-format
 msgid "Jours restants : {days_remaining}"
 msgstr "剩余天数：{days_remaining}"
 
-#: src/omega_serv/interfaces/cli/main.py:1211
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type}"
 msgstr "密钥类型：{key_type}"
 
-#: src/omega_serv/interfaces/cli/main.py:1211
+#: src/omega_serv/interfaces/cli/main.py:1223
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:84
 #, python-brace-format
 msgid "Type de clé : {key_type} ({key_bits} bits)"
 msgstr "密钥类型：{key_type}（{key_bits} 位）"
 
-#: src/omega_serv/interfaces/cli/main.py:1212
+#: src/omega_serv/interfaces/cli/main.py:1224
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:85
 #, python-brace-format
 msgid "Algorithme de signature : {signature_algorithm}"
 msgstr "签名算法：{signature_algorithm}"
 
-#: src/omega_serv/interfaces/cli/main.py:1214
+#: src/omega_serv/interfaces/cli/main.py:1226
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:88
 msgid "SAN :"
 msgstr "SAN："
 
-#: src/omega_serv/interfaces/cli/main.py:1216
+#: src/omega_serv/interfaces/cli/main.py:1228
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:89
 #, python-brace-format
 msgid "  - DNS:{dns}"
 msgstr "  - DNS:{dns}"
 
-#: src/omega_serv/interfaces/cli/main.py:1218
+#: src/omega_serv/interfaces/cli/main.py:1230
 #, python-brace-format
 msgid "  - IP:{ip}"
 msgstr "  - IP:{ip}"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
-#: src/omega_serv/interfaces/cli/main.py:1222
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1232
+#: src/omega_serv/interfaces/cli/main.py:1234
+#: src/omega_serv/interfaces/cli/main.py:1237
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 msgid "ERREUR"
 msgstr "错误"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 #, python-brace-format
 msgid "[{value}] Certificat {value2}"
 msgstr "[{value}] 证书{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1220
+#: src/omega_serv/interfaces/cli/main.py:1232
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:92
 msgid "non expiré"
 msgstr "未过期"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "NE correspond PAS"
 msgstr "不匹配"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 #, python-brace-format
 msgid "[{value}] Clé privée {value2}"
 msgstr "[{value}] 私钥{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1222
+#: src/omega_serv/interfaces/cli/main.py:1234
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:94
 msgid "correspondante"
 msgstr "匹配"
 
-#: src/omega_serv/interfaces/cli/main.py:1225
+#: src/omega_serv/interfaces/cli/main.py:1237
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:97
 #, python-brace-format
 msgid "[{value}] Permissions clé privée : {value2}"
 msgstr "[{value}] 私钥权限：{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1227
+#: src/omega_serv/interfaces/cli/main.py:1239
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:99
 msgid ""
 "[AVERTISSEMENT] Certificat auto-signé, non approuvé par défaut par les "
 "navigateurs"
 msgstr "[警告] 自签名证书，浏览器默认不信任"
 
-#: src/omega_serv/interfaces/cli/main.py:1229
+#: src/omega_serv/interfaces/cli/main.py:1241
 #: src/omega_serv/interfaces/tui/screens/tls_status_screen.py:101
 #, python-brace-format
 msgid ""
 "[AVERTISSEMENT] Certificat bientôt expiré ({days_remaining} jours restants)"
 msgstr "[警告] 证书即将过期（剩余 {days_remaining} 天）"
 
-#: src/omega_serv/interfaces/cli/main.py:1282
+#: src/omega_serv/interfaces/cli/main.py:1294
 #, python-brace-format
 msgid "TLS activé (mode {mode}) dans {config}."
 msgstr "已在 {config} 中启用 TLS（模式 {mode}）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1298
+#: src/omega_serv/interfaces/cli/main.py:1310
 #, python-brace-format
 msgid "TLS désactivé dans {config}."
 msgstr "已在 {config} 中禁用 TLS。"
 
-#: src/omega_serv/interfaces/cli/main.py:1310
+#: src/omega_serv/interfaces/cli/main.py:1322
 msgid "Mot de passe : "
 msgstr "密码： "
 
-#: src/omega_serv/interfaces/cli/main.py:1322
+#: src/omega_serv/interfaces/cli/main.py:1334
 msgid "Passphrase de la CA : "
 msgstr "CA 口令： "
 
-#: src/omega_serv/interfaces/cli/main.py:1323
+#: src/omega_serv/interfaces/cli/main.py:1335
 msgid "Confirmer la passphrase : "
 msgstr "确认口令： "
 
-#: src/omega_serv/interfaces/cli/main.py:1408
+#: src/omega_serv/interfaces/cli/main.py:1420
 msgid "Utilisateurs :"
 msgstr "用户："
 
-#: src/omega_serv/interfaces/cli/main.py:1410
+#: src/omega_serv/interfaces/cli/main.py:1422
 #, python-brace-format
 msgid "  - {username}"
 msgstr "  - {username}"
 
-#: src/omega_serv/interfaces/cli/main.py:1411
+#: src/omega_serv/interfaces/cli/main.py:1423
 msgid "Zones protégées :"
 msgstr "受保护的区域："
 
-#: src/omega_serv/interfaces/cli/main.py:1413
+#: src/omega_serv/interfaces/cli/main.py:1425
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:112
 msgid "toutes"
 msgstr "全部"
 
-#: src/omega_serv/interfaces/cli/main.py:1414
+#: src/omega_serv/interfaces/cli/main.py:1426
 msgid ""
 "  - {path_prefix} (realm={realm!r}, utilisateurs={value}, "
 "methodes={methods})"
 msgstr "  - {path_prefix}（realm={realm!r}，用户={value}，方法={methods}）"
 
-#: src/omega_serv/interfaces/cli/main.py:1429
+#: src/omega_serv/interfaces/cli/main.py:1441
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:272
 #, python-brace-format
 msgid "[INFO] {label} absent ({path})"
 msgstr "[INFO] 缺少{label}（{path}）"
 
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 msgid "AVERTISSEMENT"
 msgstr "警告"
 
-#: src/omega_serv/interfaces/cli/main.py:1433
+#: src/omega_serv/interfaces/cli/main.py:1445
 #: src/omega_serv/interfaces/tui/screens/auth_menu_screen.py:282
 #, python-brace-format
 msgid "[{value}] {label} permissions : {value2}"
 msgstr "[{value}] {label} 权限：{value2}"
 
-#: src/omega_serv/interfaces/cli/main.py:1451
+#: src/omega_serv/interfaces/cli/main.py:1463
 msgid ""
 "Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce"
 " système."
 msgstr "错误：此系统上未识别到任何服务管理器（systemd/OpenRC/runit）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1464
+#: src/omega_serv/interfaces/cli/main.py:1476
 #, python-brace-format
 msgid "{label} : {value}"
 msgstr "{label}：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1467
+#: src/omega_serv/interfaces/cli/main.py:1479
 msgid "Connecteurs (moteur natif) :"
 msgstr "连接器（原生引擎）："
 
-#: src/omega_serv/interfaces/cli/main.py:1469
+#: src/omega_serv/interfaces/cli/main.py:1481
 #, python-brace-format
 msgid "  {label} : {value}"
 msgstr "  {label}：{value}"
 
-#: src/omega_serv/interfaces/cli/main.py:1489
+#: src/omega_serv/interfaces/cli/main.py:1501
 #, python-brace-format
 msgid "{stamp} : aucune automatisation à échéance."
 msgstr "{stamp}：没有到期的自动任务。"
 
-#: src/omega_serv/interfaces/cli/main.py:1491
+#: src/omega_serv/interfaces/cli/main.py:1503
 msgid "réussie"
 msgstr "成功"
 
-#: src/omega_serv/interfaces/cli/main.py:1491
+#: src/omega_serv/interfaces/cli/main.py:1503
 msgid "échec"
 msgstr "失败"
 
-#: src/omega_serv/interfaces/cli/main.py:1492
+#: src/omega_serv/interfaces/cli/main.py:1504
 #, python-brace-format
 msgid "{stamp} : {log_id} : {state} - {message}"
 msgstr "{stamp}：{log_id}：{state} - {message}"
 
-#: src/omega_serv/interfaces/cli/main.py:1503
+#: src/omega_serv/interfaces/cli/main.py:1515
 #, python-brace-format
 msgid "Service : {service_name}"
 msgstr "服务    : {service_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1504
+#: src/omega_serv/interfaces/cli/main.py:1516
 #, python-brace-format
 msgid "Actif   : {active}"
 msgstr "运行中  : {active}"
 
-#: src/omega_serv/interfaces/cli/main.py:1505
+#: src/omega_serv/interfaces/cli/main.py:1517
 #, python-brace-format
 msgid "Activé au démarrage : {enabled}"
 msgstr "开机启动：{enabled}"
 
-#: src/omega_serv/interfaces/cli/main.py:1506
+#: src/omega_serv/interfaces/cli/main.py:1518
 #, python-brace-format
 msgid "État    : {state} ({sub_state})"
 msgstr "状态    : {state}（{sub_state}）"
 
-#: src/omega_serv/interfaces/cli/main.py:1508
+#: src/omega_serv/interfaces/cli/main.py:1520
 #, python-brace-format
 msgid "Description : {description}"
 msgstr "描述：{description}"
 
-#: src/omega_serv/interfaces/cli/main.py:1562
+#: src/omega_serv/interfaces/cli/main.py:1574
 #, python-brace-format
 msgid ""
 "Erreur : génération d'unité non supportée pour {value} (seul systemd est "
@@ -5135,57 +5151,57 @@ msgid ""
 msgstr ""
 "错误：不支持为 {value} 生成单元（V1 仅支持 systemd，见 OMEGA-SERV_PLAN_DEVELOPPEMENT.md §5）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1562
-#: src/omega_serv/interfaces/cli/main.py:1588
+#: src/omega_serv/interfaces/cli/main.py:1574
+#: src/omega_serv/interfaces/cli/main.py:1600
 msgid "aucun gestionnaire détecté"
 msgstr "未检测到管理器"
 
-#: src/omega_serv/interfaces/cli/main.py:1588
+#: src/omega_serv/interfaces/cli/main.py:1600
 #, python-brace-format
 msgid "Erreur : désinstallation d'unité non supportée pour {value}."
 msgstr "错误：不支持为 {value} 卸载单元。"
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "CRITICAL"
 msgstr "CRITICAL"
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "HIGH"
 msgstr "HIGH"
 
-#: src/omega_serv/interfaces/cli/main.py:1599
+#: src/omega_serv/interfaces/cli/main.py:1611
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:33
 msgid "MEDIUM"
 msgstr "MEDIUM"
 
-#: src/omega_serv/interfaces/cli/main.py:1600
+#: src/omega_serv/interfaces/cli/main.py:1612
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "INFO"
 msgstr "INFO"
 
-#: src/omega_serv/interfaces/cli/main.py:1600
+#: src/omega_serv/interfaces/cli/main.py:1612
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:34
 msgid "LOW"
 msgstr "LOW"
 
-#: src/omega_serv/interfaces/cli/main.py:1606
+#: src/omega_serv/interfaces/cli/main.py:1618
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:104
 msgid "Aucun problème détecté."
 msgstr "未检测到问题。"
 
-#: src/omega_serv/interfaces/cli/main.py:1610
+#: src/omega_serv/interfaces/cli/main.py:1622
 #, python-brace-format
 msgid "[{label}] {rule_id} {rule_name}"
 msgstr "[{label}] {rule_id} {rule_name}"
 
-#: src/omega_serv/interfaces/cli/main.py:1612
+#: src/omega_serv/interfaces/cli/main.py:1624
 #, python-brace-format
 msgid "    -> {recommendation}"
 msgstr "    -> {recommendation}"
 
-#: src/omega_serv/interfaces/cli/main.py:1642
+#: src/omega_serv/interfaces/cli/main.py:1654
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:114
 #, python-brace-format
 msgid ""
@@ -5194,17 +5210,17 @@ msgid ""
 msgstr ""
 "汇总：{critical} critical，{high} high，{medium} medium，{low} low，{info} info"
 
-#: src/omega_serv/interfaces/cli/main.py:1643
+#: src/omega_serv/interfaces/cli/main.py:1655
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : NON SÉCURISÉ"
 msgstr "状态：不安全"
 
-#: src/omega_serv/interfaces/cli/main.py:1643
+#: src/omega_serv/interfaces/cli/main.py:1655
 #: src/omega_serv/interfaces/tui/screens/audit_screen.py:116
 msgid "État : sécurisé"
 msgstr "状态：安全"
 
-#: src/omega_serv/interfaces/cli/main.py:1659
+#: src/omega_serv/interfaces/cli/main.py:1671
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:190
 #, python-brace-format
 msgid ""
@@ -5214,18 +5230,18 @@ msgstr ""
 "有新版本可用：{latest}（已安装：{installed}）。\n"
 "压缩包：{url}"
 
-#: src/omega_serv/interfaces/cli/main.py:1661
+#: src/omega_serv/interfaces/cli/main.py:1673
 #, python-brace-format
 msgid "Nouveautés : {url}"
 msgstr "更新内容：{url}"
 
-#: src/omega_serv/interfaces/cli/main.py:1663
+#: src/omega_serv/interfaces/cli/main.py:1675
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:193
 #, python-brace-format
 msgid "Vous avez la dernière version publiée ({version})."
 msgstr "您使用的已是最新发布版本（{version}）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1665
+#: src/omega_serv/interfaces/cli/main.py:1677
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:195
 #, python-brace-format
 msgid ""
@@ -5233,7 +5249,7 @@ msgid ""
 "({latest}) : version en cours, pas encore publiée."
 msgstr "您的版本（{installed}）比最新发布的版本（{latest}）更新：这是开发中的版本，尚未发布。"
 
-#: src/omega_serv/interfaces/cli/main.py:1668
+#: src/omega_serv/interfaces/cli/main.py:1680
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:198
 #, python-brace-format
 msgid ""
@@ -5241,907 +5257,968 @@ msgid ""
 "illisible : réessayez plus tard."
 msgstr "已安装版本：{version}。网站无法访问或版本列表无法读取：请稍后再试。"
 
-#: src/omega_serv/interfaces/cli/main.py:1677
+#: src/omega_serv/interfaces/cli/main.py:1696
+#, python-brace-format
+msgid "Jeton d'installation non écrit ({path}) : {reason}"
+msgstr "未写入安装令牌（{path}）：{reason}"
+
+#: src/omega_serv/interfaces/cli/main.py:1770
 msgid ""
 "Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : "
 "interface interactive. Avec une commande : ligne de commande, scriptable."
 msgstr "安全 Web 服务器（WAF、TLS、RIPOSTE、Active Defense）。不带参数：交互式界面。带命令：命令行，可用于脚本。"
 
-#: src/omega_serv/interfaces/cli/main.py:1679
+#: src/omega_serv/interfaces/cli/main.py:1772
 msgid "Toutes les commandes : omega-serv help. Manuel : man omega-serv."
 msgstr "所有命令：omega-serv help。手册：man omega-serv。"
 
-#: src/omega_serv/interfaces/cli/main.py:1681
-#: src/omega_serv/interfaces/cli/main.py:1707
-#: src/omega_serv/interfaces/cli/main.py:1709
-#: src/omega_serv/interfaces/cli/main.py:1943
-#: src/omega_serv/interfaces/cli/main.py:1944
-#: src/omega_serv/interfaces/cli/main.py:1949
-#: src/omega_serv/interfaces/cli/main.py:1950
-#: src/omega_serv/interfaces/cli/main.py:1951
-#: src/omega_serv/interfaces/cli/main.py:1956
-#: src/omega_serv/interfaces/cli/main.py:1957
-#: src/omega_serv/interfaces/cli/main.py:1963
-#: src/omega_serv/interfaces/cli/main.py:1964
-#: src/omega_serv/interfaces/cli/main.py:1965
-#: src/omega_serv/interfaces/cli/main.py:1970
-#: src/omega_serv/interfaces/cli/main.py:1971
-#: src/omega_serv/interfaces/cli/main.py:1972
-#: src/omega_serv/interfaces/cli/main.py:1980
-#: src/omega_serv/interfaces/cli/main.py:1983
-#: src/omega_serv/interfaces/cli/main.py:1987
+#: src/omega_serv/interfaces/cli/main.py:1774
+#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1802
+#: src/omega_serv/interfaces/cli/main.py:2042
+#: src/omega_serv/interfaces/cli/main.py:2043
+#: src/omega_serv/interfaces/cli/main.py:2048
+#: src/omega_serv/interfaces/cli/main.py:2049
+#: src/omega_serv/interfaces/cli/main.py:2050
 #: src/omega_serv/interfaces/cli/main.py:2055
+#: src/omega_serv/interfaces/cli/main.py:2056
+#: src/omega_serv/interfaces/cli/main.py:2062
 #: src/omega_serv/interfaces/cli/main.py:2063
-#: src/omega_serv/interfaces/cli/main.py:2068
-#: src/omega_serv/interfaces/cli/main.py:2080
+#: src/omega_serv/interfaces/cli/main.py:2064
+#: src/omega_serv/interfaces/cli/main.py:2069
+#: src/omega_serv/interfaces/cli/main.py:2070
+#: src/omega_serv/interfaces/cli/main.py:2071
+#: src/omega_serv/interfaces/cli/main.py:2079
+#: src/omega_serv/interfaces/cli/main.py:2082
+#: src/omega_serv/interfaces/cli/main.py:2086
+#: src/omega_serv/interfaces/cli/main.py:2154
+#: src/omega_serv/interfaces/cli/main.py:2162
+#: src/omega_serv/interfaces/cli/main.py:2167
+#: src/omega_serv/interfaces/cli/main.py:2179
 msgid "FICHIER"
 msgstr "文件"
 
-#: src/omega_serv/interfaces/cli/main.py:1682
+#: src/omega_serv/interfaces/cli/main.py:1775
 msgid ""
 "Fichier de configuration (défaut : config/omega-serve.json de "
 "l'installation)."
 msgstr "配置文件（默认：安装目录中的 config/omega-serve.json）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1685
+#: src/omega_serv/interfaces/cli/main.py:1778
 msgid "Accepte un certificat auto-signé sur une adresse publique."
 msgstr "在公网地址上接受自签名证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1686
+#: src/omega_serv/interfaces/cli/main.py:1779
 msgid ""
 "Accepte des zones à mot de passe sans TLS (mots de passe lisibles sur le "
 "réseau)."
 msgstr "接受不使用 TLS 的密码保护区域（密码在网络上可被读取）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1687
+#: src/omega_serv/interfaces/cli/main.py:1780
 msgid "Méthode HTTP (défaut : GET)."
 msgstr "HTTP 方法（默认：GET）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1690
+#: src/omega_serv/interfaces/cli/main.py:1783
 msgid ""
 "Démarre le serveur au premier plan (c'est ce que lance le service système). "
 "Refuse de tourner en root."
 msgstr "在前台启动服务器（系统服务运行的就是它）。拒绝以 root 身份运行。"
 
-#: src/omega_serv/interfaces/cli/main.py:1696
+#: src/omega_serv/interfaces/cli/main.py:1789
 msgid "Fichier de configuration : création, vérification, TLS, sauvegardes."
 msgstr "配置文件：创建、检查、TLS、备份。"
 
-#: src/omega_serv/interfaces/cli/main.py:1697
+#: src/omega_serv/interfaces/cli/main.py:1790
 msgid "Crée le fichier de configuration par défaut."
 msgstr "创建默认配置文件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1698
+#: src/omega_serv/interfaces/cli/main.py:1791
 msgid "Écrase le fichier existant."
 msgstr "覆盖已有文件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1701
+#: src/omega_serv/interfaces/cli/main.py:1794
 msgid ""
 "Vérifie la configuration et l'environnement (chemins, droits, certificats) "
 "sans démarrer."
 msgstr "检查配置和环境（路径、权限、证书），不启动服务器。"
 
-#: src/omega_serv/interfaces/cli/main.py:1705
+#: src/omega_serv/interfaces/cli/main.py:1798
 msgid "Affiche la configuration chargée, en JSON."
 msgstr "以 JSON 格式显示已加载的配置。"
 
-#: src/omega_serv/interfaces/cli/main.py:1706
+#: src/omega_serv/interfaces/cli/main.py:1799
 msgid "Active TLS dans la configuration."
 msgstr "在配置中启用 TLS。"
 
-#: src/omega_serv/interfaces/cli/main.py:1708
+#: src/omega_serv/interfaces/cli/main.py:1801
 msgid "Certificat à utiliser (sinon celui déjà configuré)."
 msgstr "要使用的证书（否则使用已配置的证书）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1710
+#: src/omega_serv/interfaces/cli/main.py:1803
 msgid "Clé privée à utiliser (sinon celle déjà configurée)."
 msgstr "要使用的私钥（否则使用已配置的私钥）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1712
+#: src/omega_serv/interfaces/cli/main.py:1805
 msgid ""
 "direct : omega-serv chiffre lui-même ; behind_proxy : derrière un reverse "
 "proxy (défaut : direct)."
 msgstr "direct：由 omega-serv 自行加密；behind_proxy：位于反向代理之后（默认：direct）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1714
+#: src/omega_serv/interfaces/cli/main.py:1807
 msgid "Désactive TLS dans la configuration."
 msgstr "在配置中禁用 TLS。"
 
-#: src/omega_serv/interfaces/cli/main.py:1717
+#: src/omega_serv/interfaces/cli/main.py:1810
 msgid ""
 "Crée une sauvegarde : la configuration toujours, le reste selon les options "
 "--include-*."
 msgstr "创建备份：始终包含配置，其余内容取决于 --include-* 选项。"
 
-#: src/omega_serv/interfaces/cli/main.py:1718
+#: src/omega_serv/interfaces/cli/main.py:1811
 msgid "Ajoute les règles et listes du WAF."
 msgstr "加入 WAF 的规则和列表。"
 
-#: src/omega_serv/interfaces/cli/main.py:1720
+#: src/omega_serv/interfaces/cli/main.py:1813
 msgid ""
 "Ajoute les utilisateurs et les zones protégées (secrets : demande --confirm-"
 "secrets)."
 msgstr "加入用户和受保护区域（机密内容：需要 --confirm-secrets）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1722
+#: src/omega_serv/interfaces/cli/main.py:1815
 msgid ""
 "Ajoute les certificats et les clés TLS (secrets : demande --confirm-"
 "secrets)."
 msgstr "加入 TLS 证书和密钥（机密内容：需要 --confirm-secrets）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1724
+#: src/omega_serv/interfaces/cli/main.py:1817
 msgid "Ajoute la base Active Defense."
 msgstr "加入 Active Defense 数据库。"
 
-#: src/omega_serv/interfaces/cli/main.py:1726
+#: src/omega_serv/interfaces/cli/main.py:1819
 msgid "Ajoute les pages d'erreur personnalisées."
 msgstr "加入自定义错误页面。"
 
-#: src/omega_serv/interfaces/cli/main.py:1728
+#: src/omega_serv/interfaces/cli/main.py:1821
 msgid "Ajoute les préférences de l'interface."
 msgstr "加入界面偏好设置。"
 
-#: src/omega_serv/interfaces/cli/main.py:1730
+#: src/omega_serv/interfaces/cli/main.py:1823
 msgid "Ajoute la bibliothèque des journaux."
 msgstr "加入日志库。"
 
-#: src/omega_serv/interfaces/cli/main.py:1731
+#: src/omega_serv/interfaces/cli/main.py:1824
 msgid "Ajoute la base RIPOSTE."
 msgstr "加入 RIPOSTE 数据库。"
 
-#: src/omega_serv/interfaces/cli/main.py:1733
+#: src/omega_serv/interfaces/cli/main.py:1826
 msgid ""
 "Tout sauvegarder : toutes les options --include-* (secrets compris : demande"
 " --confirm-secrets)."
 msgstr "全部备份：所有 --include-* 选项（包括机密内容：需要 --confirm-secrets）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1735
+#: src/omega_serv/interfaces/cli/main.py:1828
 msgid ""
 "Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés "
 "privées)."
 msgstr "确认加入未加密的机密内容（密码哈希、私钥）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1736
-#: src/omega_serv/interfaces/cli/main.py:1785
-#: src/omega_serv/interfaces/cli/main.py:1786
-#: src/omega_serv/interfaces/cli/main.py:1800
-#: src/omega_serv/interfaces/cli/main.py:1821
-#: src/omega_serv/interfaces/cli/main.py:1901
-#: src/omega_serv/interfaces/cli/main.py:1903
-#: src/omega_serv/interfaces/cli/main.py:1904
-#: src/omega_serv/interfaces/cli/main.py:1905
-#: src/omega_serv/interfaces/cli/main.py:2014
-#: src/omega_serv/interfaces/cli/main.py:2053
+#: src/omega_serv/interfaces/cli/main.py:1829
+#: src/omega_serv/interfaces/cli/main.py:1878
+#: src/omega_serv/interfaces/cli/main.py:1879
+#: src/omega_serv/interfaces/cli/main.py:1895
+#: src/omega_serv/interfaces/cli/main.py:1920
+#: src/omega_serv/interfaces/cli/main.py:2000
+#: src/omega_serv/interfaces/cli/main.py:2002
+#: src/omega_serv/interfaces/cli/main.py:2003
+#: src/omega_serv/interfaces/cli/main.py:2004
+#: src/omega_serv/interfaces/cli/main.py:2113
+#: src/omega_serv/interfaces/cli/main.py:2152
 msgid "TEXTE"
 msgstr "文本"
 
-#: src/omega_serv/interfaces/cli/main.py:1737
+#: src/omega_serv/interfaces/cli/main.py:1830
 msgid "Texte libre enregistré avec la sauvegarde."
 msgstr "与备份一起保存的自由文本。"
 
-#: src/omega_serv/interfaces/cli/main.py:1739
+#: src/omega_serv/interfaces/cli/main.py:1832
 msgid "Restaure une sauvegarde."
 msgstr "恢复备份。"
 
-#: src/omega_serv/interfaces/cli/main.py:1740
+#: src/omega_serv/interfaces/cli/main.py:1833
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:80
 #: src/omega_serv/interfaces/tui/screens/waf_custom_rule_screen.py:101
 msgid "ID"
 msgstr "ID"
 
-#: src/omega_serv/interfaces/cli/main.py:1741
+#: src/omega_serv/interfaces/cli/main.py:1834
 msgid "Identifiant de la sauvegarde (voir config list-backups)."
 msgstr "备份标识符（见 config list-backups）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1743
+#: src/omega_serv/interfaces/cli/main.py:1836
 msgid ""
 "Arrête le service, restaure, puis le redémarre (nécessaire si le service "
 "tourne)."
 msgstr "停止服务、恢复，然后重新启动服务（服务正在运行时必需）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1745
+#: src/omega_serv/interfaces/cli/main.py:1838
 msgid "Liste les sauvegardes."
 msgstr "列出备份。"
 
-#: src/omega_serv/interfaces/cli/main.py:1747
+#: src/omega_serv/interfaces/cli/main.py:1840
 msgid "Profils de configuration prêts à l'emploi."
 msgstr "现成可用的配置方案。"
 
-#: src/omega_serv/interfaces/cli/main.py:1748
+#: src/omega_serv/interfaces/cli/main.py:1841
 msgid "Liste les profils disponibles."
 msgstr "列出可用的配置方案。"
 
-#: src/omega_serv/interfaces/cli/main.py:1749
+#: src/omega_serv/interfaces/cli/main.py:1842
 msgid "Nom du profil (voir profile list)."
 msgstr "配置方案名称（见 profile list）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1750
+#: src/omega_serv/interfaces/cli/main.py:1843
 msgid "Affiche un profil et les valeurs qu'il fixe."
 msgstr "显示一个配置方案及其设定的值。"
 
-#: src/omega_serv/interfaces/cli/main.py:1754
+#: src/omega_serv/interfaces/cli/main.py:1847
 msgid ""
 "Applique un profil à la configuration (modifications et conflits affichés "
 "d'abord)."
 msgstr "将配置方案应用到配置（先显示更改和冲突）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1757
+#: src/omega_serv/interfaces/cli/main.py:1850
 msgid "Montre seulement ce qui changerait, sans rien écrire."
 msgstr "只显示将会更改的内容，不写入任何东西。"
 
-#: src/omega_serv/interfaces/cli/main.py:1758
+#: src/omega_serv/interfaces/cli/main.py:1851
 msgid "Applique malgré des problèmes bloquants."
 msgstr "即使存在阻断性问题也应用。"
 
-#: src/omega_serv/interfaces/cli/main.py:1762
+#: src/omega_serv/interfaces/cli/main.py:1855
 msgid "Modules optionnels (waf, fastcgi, active_defense, riposte...)."
 msgstr "可选模块（waf, fastcgi, active_defense, riposte...）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1763
+#: src/omega_serv/interfaces/cli/main.py:1856
 msgid "Liste les options et leur état."
 msgstr "列出选项及其状态。"
 
-#: src/omega_serv/interfaces/cli/main.py:1764
+#: src/omega_serv/interfaces/cli/main.py:1857
 msgid "Nom de l'option (voir option list)."
 msgstr "选项名称（见 option list）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1765
+#: src/omega_serv/interfaces/cli/main.py:1858
 msgid "Active une option."
 msgstr "启用一个选项。"
 
-#: src/omega_serv/interfaces/cli/main.py:1766
+#: src/omega_serv/interfaces/cli/main.py:1859
 msgid ""
 "Première activation du WAF : tous les packs de secure/waf/rules/ sont "
 "ajoutés, en mode log-only."
 msgstr "首次启用 WAF：添加 secure/waf/rules/ 中的所有规则包，模式为 log-only。"
 
-#: src/omega_serv/interfaces/cli/main.py:1769
+#: src/omega_serv/interfaces/cli/main.py:1862
 msgid "Désactive une option."
 msgstr "禁用一个选项。"
 
-#: src/omega_serv/interfaces/cli/main.py:1774
+#: src/omega_serv/interfaces/cli/main.py:1867
 msgid ""
 "Montre comment le serveur traiterait une requête (chemin, règles, statut, "
 "en-têtes), sans l'envoyer."
 msgstr "显示服务器将如何处理一个请求（路径、规则、状态、头部），但不发送它。"
 
-#: src/omega_serv/interfaces/cli/main.py:1776
-#: src/omega_serv/interfaces/cli/main.py:1784
-#: src/omega_serv/interfaces/cli/main.py:1819
-#: src/omega_serv/interfaces/cli/main.py:2013
-#: src/omega_serv/interfaces/cli/main.py:2023
+#: src/omega_serv/interfaces/cli/main.py:1869
+#: src/omega_serv/interfaces/cli/main.py:1877
+#: src/omega_serv/interfaces/cli/main.py:1918
+#: src/omega_serv/interfaces/cli/main.py:2112
+#: src/omega_serv/interfaces/cli/main.py:2122
 msgid "CHEMIN"
 msgstr "路径"
 
-#: src/omega_serv/interfaces/cli/main.py:1777
+#: src/omega_serv/interfaces/cli/main.py:1870
 msgid "Chemin demandé, par exemple /docs/index.html."
 msgstr "请求的路径，例如 /docs/index.html。"
 
-#: src/omega_serv/interfaces/cli/main.py:1780
+#: src/omega_serv/interfaces/cli/main.py:1873
 msgid "Pare-feu applicatif (WAF)."
 msgstr "应用防火墙（WAF）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1782
+#: src/omega_serv/interfaces/cli/main.py:1875
 msgid ""
 "Soumet une requête fictive au WAF et affiche sa décision (règles, score, "
 "statut)."
 msgstr "向 WAF 提交一个模拟请求并显示其判定（规则、得分、状态）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1784
+#: src/omega_serv/interfaces/cli/main.py:1877
 msgid "Chemin de la requête."
 msgstr "请求路径。"
 
-#: src/omega_serv/interfaces/cli/main.py:1785
+#: src/omega_serv/interfaces/cli/main.py:1878
 msgid "Chaîne de requête, sans le « ? »."
 msgstr "查询字符串，不含“?”。"
 
-#: src/omega_serv/interfaces/cli/main.py:1786
+#: src/omega_serv/interfaces/cli/main.py:1879
 msgid "Corps de la requête."
 msgstr "请求正文。"
 
-#: src/omega_serv/interfaces/cli/main.py:1788
+#: src/omega_serv/interfaces/cli/main.py:1881
 msgid "Adresse du client simulé (défaut : 127.0.0.1)."
 msgstr "模拟客户端的地址（默认：127.0.0.1）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1791
+#: src/omega_serv/interfaces/cli/main.py:1884
 msgid "Affiche les réseaux jamais bannis automatiquement (lu par omega-jail)."
 msgstr "显示永不自动封禁的网络（由 omega-jail 读取）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1794
+#: src/omega_serv/interfaces/cli/main.py:1887
 msgid "Adresses bannies."
 msgstr "被封禁的地址。"
 
-#: src/omega_serv/interfaces/cli/main.py:1795
+#: src/omega_serv/interfaces/cli/main.py:1888
 msgid "Affiche les bans : réseau, origine, expiration, motif."
 msgstr "显示封禁：网络、来源、到期时间、原因。"
 
-#: src/omega_serv/interfaces/cli/main.py:1797
+#: src/omega_serv/interfaces/cli/main.py:1890
+msgid ""
+"text (défaut, traduit) ou json (pour les autres outils, jamais traduit)."
+msgstr "text（默认，已翻译）或 json（供其他工具使用，从不翻译）。"
+
+#: src/omega_serv/interfaces/cli/main.py:1892
 msgid "Bannit une adresse ou un réseau."
 msgstr "封禁一个地址或网络。"
 
-#: src/omega_serv/interfaces/cli/main.py:1798
-#: src/omega_serv/interfaces/cli/main.py:1806
+#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1903
 #: src/omega_serv/interfaces/cli/riposte_action_commands.py:322
 msgid "RESEAU"
 msgstr "网络"
 
-#: src/omega_serv/interfaces/cli/main.py:1799
+#: src/omega_serv/interfaces/cli/main.py:1894
 msgid "Adresse IP ou réseau CIDR, par exemple 203.0.113.7 ou 203.0.113.0/24."
 msgstr "IP 地址或 CIDR 网络，例如 203.0.113.7 或 203.0.113.0/24。"
 
-#: src/omega_serv/interfaces/cli/main.py:1800
+#: src/omega_serv/interfaces/cli/main.py:1895
 msgid "Motif du ban."
 msgstr "封禁原因。"
 
-#: src/omega_serv/interfaces/cli/main.py:1801
-#: src/omega_serv/interfaces/cli/main.py:2061
+#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:2160
 msgid "SECONDES"
 msgstr "秒数"
 
-#: src/omega_serv/interfaces/cli/main.py:1802
+#: src/omega_serv/interfaces/cli/main.py:1897
 msgid ""
 "Durée du ban. Sans durée, le ban est permanent et demande --confirm-"
 "permanent."
 msgstr "封禁时长。不指定时长则为永久封禁，需要 --confirm-permanent。"
 
-#: src/omega_serv/interfaces/cli/main.py:1803
+#: src/omega_serv/interfaces/cli/main.py:1898
 msgid "Confirme un ban permanent."
 msgstr "确认永久封禁。"
 
-#: src/omega_serv/interfaces/cli/main.py:1805
+#: src/omega_serv/interfaces/cli/main.py:1899
+#: src/omega_serv/interfaces/cli/main.py:1905
+msgid "OUTIL"
+msgstr "工具"
+
+#: src/omega_serv/interfaces/cli/main.py:1900
+msgid ""
+"Outil qui pose le ban (ex. omega-fire) : lui seul pourra le lever avec "
+"--origin."
+msgstr "设置封禁的工具（例如 omega-fire）：只有它能用 --origin 解除该封禁。"
+
+#: src/omega_serv/interfaces/cli/main.py:1902
 msgid "Lève un ban."
 msgstr "解除封禁。"
 
-#: src/omega_serv/interfaces/cli/main.py:1807
+#: src/omega_serv/interfaces/cli/main.py:1904
 msgid "Adresse ou réseau, tel qu'affiché par blocklist list."
 msgstr "地址或网络，与 blocklist list 显示的一致。"
 
-#: src/omega_serv/interfaces/cli/main.py:1811
+#: src/omega_serv/interfaces/cli/main.py:1906
+msgid "Ne lève le ban que s'il a été posé avec cette origine."
+msgstr "仅当封禁是以此来源设置时才解除。"
+
+#: src/omega_serv/interfaces/cli/main.py:1910
 msgid ""
 "Active Defense : état, simulation, purge (voir aussi threats, incidents, "
 "deception)."
 msgstr "Active Defense：状态、模拟、清理（另见 threats、incidents、deception）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1814
+#: src/omega_serv/interfaces/cli/main.py:1913
 msgid ""
 "Affiche l'état : mode, mode guerre, leurres, nombre de sources suivies."
 msgstr "显示状态：模式、战争模式、诱饵、被跟踪来源的数量。"
 
-#: src/omega_serv/interfaces/cli/main.py:1817
+#: src/omega_serv/interfaces/cli/main.py:1916
 msgid ""
 "Montre la décision qu'Active Defense prendrait pour une source, sans rien "
 "écrire."
 msgstr "显示 Active Defense 会对某个来源做出的判定，不写入任何东西。"
 
-#: src/omega_serv/interfaces/cli/main.py:1818
+#: src/omega_serv/interfaces/cli/main.py:1917
 msgid "Adresse de la source simulée."
 msgstr "模拟来源的地址。"
 
-#: src/omega_serv/interfaces/cli/main.py:1820
+#: src/omega_serv/interfaces/cli/main.py:1919
 msgid "Chemin observé (défaut : /)."
 msgstr "观察到的路径（默认：/）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1822
+#: src/omega_serv/interfaces/cli/main.py:1921
 msgid "User-Agent de la source."
 msgstr "来源的 User-Agent。"
 
-#: src/omega_serv/interfaces/cli/main.py:1823
+#: src/omega_serv/interfaces/cli/main.py:1922
 #: src/omega_serv/interfaces/cli/riposte_query_commands.py:230
 msgid "CLASSE"
 msgstr "类别"
 
-#: src/omega_serv/interfaces/cli/main.py:1824
+#: src/omega_serv/interfaces/cli/main.py:1923
 msgid "Classe d'attaque (défaut : scan ; liste affichée si inconnue)."
 msgstr "攻击类别（默认：scan；未知时显示列表）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1825
+#: src/omega_serv/interfaces/cli/main.py:1924
 msgid "POINTS"
 msgstr "分数"
 
-#: src/omega_serv/interfaces/cli/main.py:1826
+#: src/omega_serv/interfaces/cli/main.py:1925
 msgid "Points ajoutés au score de menace (défaut : 10)."
 msgstr "加到威胁得分上的分数（默认：10）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1829
+#: src/omega_serv/interfaces/cli/main.py:1928
 msgid ""
 "Purge les menaces expirées, ferme les incidents redevenus calmes, supprime "
 "les incidents fermés depuis plus de 90 jours."
 msgstr "清理已过期的威胁，关闭已恢复平静的事件，删除关闭超过 90 天的事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1832
+#: src/omega_serv/interfaces/cli/main.py:1931
 msgid "Logs d'omega-serv."
 msgstr "omega-serv 的日志。"
 
-#: src/omega_serv/interfaces/cli/main.py:1834
+#: src/omega_serv/interfaces/cli/main.py:1933
 msgid ""
 "Fait tourner les logs dont l'automatisation (Rotate / archivage) est à "
 "échéance."
 msgstr "轮转自动任务（轮转 / 归档）已到期的日志。"
 
-#: src/omega_serv/interfaces/cli/main.py:1835
+#: src/omega_serv/interfaces/cli/main.py:1934
 msgid ""
 "Lancée chaque nuit par le timer systemd ou la ligne crontab installés par "
 "l'interface."
 msgstr "每晚由界面安装的 systemd 定时器或 crontab 行启动。"
 
-#: src/omega_serv/interfaces/cli/main.py:1838
+#: src/omega_serv/interfaces/cli/main.py:1937
 msgid "Moteur HTTP (Python ou natif)."
 msgstr "HTTP 引擎（Python 或原生）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1840
+#: src/omega_serv/interfaces/cli/main.py:1939
 msgid ""
 "Affiche le moteur demandé, celui qui tourne et la raison d'un éventuel "
 "repli."
 msgstr "显示请求的引擎、正在运行的引擎以及可能回退的原因。"
 
-#: src/omega_serv/interfaces/cli/main.py:1844
+#: src/omega_serv/interfaces/cli/main.py:1943
 msgid "RIPOSTE : bans de plus en plus longs pour les récidivistes."
 msgstr "RIPOSTE：对再犯者施加越来越长的封禁。"
 
-#: src/omega_serv/interfaces/cli/main.py:1846
+#: src/omega_serv/interfaces/cli/main.py:1945
 msgid ""
 "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; "
 "utile au diagnostic)."
 msgstr "在前台运行 RIPOSTE 进程（通常由 serve 启动；用于诊断）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1848
+#: src/omega_serv/interfaces/cli/main.py:1947
 msgid "Affiche l'état de RIPOSTE (lecture seule)."
 msgstr "显示 RIPOSTE 状态（只读）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1852
+#: src/omega_serv/interfaces/cli/main.py:1951
 msgid "Menaces suivies par Active Defense."
 msgstr "Active Defense 跟踪的威胁。"
 
-#: src/omega_serv/interfaces/cli/main.py:1853
+#: src/omega_serv/interfaces/cli/main.py:1952
 msgid "Liste les sources suivies avec leur score et leur niveau."
 msgstr "列出被跟踪的来源及其得分和级别。"
 
-#: src/omega_serv/interfaces/cli/main.py:1855
+#: src/omega_serv/interfaces/cli/main.py:1954
 msgid "Seulement ce niveau."
 msgstr "仅此级别。"
 
-#: src/omega_serv/interfaces/cli/main.py:1857
+#: src/omega_serv/interfaces/cli/main.py:1956
 msgid "Affiche le détail d'une source suivie."
 msgstr "显示一个被跟踪来源的详情。"
 
-#: src/omega_serv/interfaces/cli/main.py:1858
-#: src/omega_serv/interfaces/cli/main.py:1892
+#: src/omega_serv/interfaces/cli/main.py:1957
+#: src/omega_serv/interfaces/cli/main.py:1991
 msgid "SOURCE"
 msgstr "来源"
 
-#: src/omega_serv/interfaces/cli/main.py:1859
+#: src/omega_serv/interfaces/cli/main.py:1958
 msgid "Identifiant de la source, tel qu'affiché par threats list."
 msgstr "来源标识符，与 threats list 显示的一致。"
 
-#: src/omega_serv/interfaces/cli/main.py:1862
+#: src/omega_serv/interfaces/cli/main.py:1961
 msgid "Incidents Active Defense."
 msgstr "Active Defense 事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1863
+#: src/omega_serv/interfaces/cli/main.py:1962
 msgid "Identifiant de l'incident (voir incidents list)."
 msgstr "事件标识符（见 incidents list）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1864
+#: src/omega_serv/interfaces/cli/main.py:1963
 msgid "Liste les incidents."
 msgstr "列出事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1866
+#: src/omega_serv/interfaces/cli/main.py:1965
 msgid "Seulement les incidents ouverts (open) ou fermés (closed)."
 msgstr "仅显示未关闭（open）或已关闭（closed）的事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1867
+#: src/omega_serv/interfaces/cli/main.py:1966
 msgid "HEURES"
 msgstr "小时"
 
-#: src/omega_serv/interfaces/cli/main.py:1868
+#: src/omega_serv/interfaces/cli/main.py:1967
 msgid "Seulement les incidents des N dernières heures."
 msgstr "仅显示最近 N 小时的事件。"
 
-#: src/omega_serv/interfaces/cli/main.py:1870
+#: src/omega_serv/interfaces/cli/main.py:1969
 msgid "Affiche un incident et sa chronologie."
 msgstr "显示一个事件及其时间线。"
 
-#: src/omega_serv/interfaces/cli/main.py:1874
+#: src/omega_serv/interfaces/cli/main.py:1973
 msgid "Ferme un incident (et l'exporte si l'export automatique est activé)."
 msgstr "关闭一个事件（如果启用了自动导出，则同时导出）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1878
+#: src/omega_serv/interfaces/cli/main.py:1977
 msgid "Exporte les indicateurs de compromission (IoC) d'un incident."
 msgstr "导出一个事件的入侵指标（IoC）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1880
+#: src/omega_serv/interfaces/cli/main.py:1979
 msgid "FORMATS"
 msgstr "格式"
 
-#: src/omega_serv/interfaces/cli/main.py:1881
+#: src/omega_serv/interfaces/cli/main.py:1980
 msgid ""
 "Un ou plusieurs formats séparés par des virgules : json, csv, stix, misp "
 "(défaut : json)."
 msgstr "一个或多个以逗号分隔的格式：json, csv, stix, misp（默认：json）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1884
+#: src/omega_serv/interfaces/cli/main.py:1983
 msgid "Écrit le rapport Markdown d'un incident."
 msgstr "写出一个事件的 Markdown 报告。"
 
-#: src/omega_serv/interfaces/cli/main.py:1888
+#: src/omega_serv/interfaces/cli/main.py:1987
 msgid "Leurres Active Defense."
 msgstr "Active Defense 诱饵。"
 
-#: src/omega_serv/interfaces/cli/main.py:1889
+#: src/omega_serv/interfaces/cli/main.py:1988
 msgid "Liste les sources envoyées vers un leurre."
 msgstr "列出被引向诱饵的来源。"
 
-#: src/omega_serv/interfaces/cli/main.py:1891
+#: src/omega_serv/interfaces/cli/main.py:1990
 msgid "Libère une source de son leurre."
 msgstr "将一个来源从其诱饵中释放。"
 
-#: src/omega_serv/interfaces/cli/main.py:1893
+#: src/omega_serv/interfaces/cli/main.py:1992
 msgid "Identifiant de la source, tel qu'affiché par deception list."
 msgstr "来源标识符，与 deception list 显示的一致。"
 
-#: src/omega_serv/interfaces/cli/main.py:1896
+#: src/omega_serv/interfaces/cli/main.py:1995
 msgid "Certificats TLS (via OpenSSL)."
 msgstr "TLS 证书（通过 OpenSSL）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1902
+#: src/omega_serv/interfaces/cli/main.py:2001
 msgid "Organisation (défaut : OMEGA-SERV)."
 msgstr "组织（默认：OMEGA-SERV）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1903
+#: src/omega_serv/interfaces/cli/main.py:2002
 msgid "Service ou département."
 msgstr "部门。"
 
-#: src/omega_serv/interfaces/cli/main.py:1904
+#: src/omega_serv/interfaces/cli/main.py:2003
 msgid "Ville."
 msgstr "城市。"
 
-#: src/omega_serv/interfaces/cli/main.py:1905
+#: src/omega_serv/interfaces/cli/main.py:2004
 msgid "Région."
 msgstr "省或地区。"
 
-#: src/omega_serv/interfaces/cli/main.py:1906
+#: src/omega_serv/interfaces/cli/main.py:2005
 msgid "Pays, code à deux lettres (FR, BE...)."
 msgstr "国家，两个字母的代码（FR, BE...）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1910
+#: src/omega_serv/interfaces/cli/main.py:2009
 msgid "Noms de domaine supplémentaires couverts par le certificat."
 msgstr "证书涵盖的其他域名。"
 
-#: src/omega_serv/interfaces/cli/main.py:1912
+#: src/omega_serv/interfaces/cli/main.py:2011
 msgid "Adresses IP couvertes par le certificat."
 msgstr "证书涵盖的 IP 地址。"
 
-#: src/omega_serv/interfaces/cli/main.py:1914
+#: src/omega_serv/interfaces/cli/main.py:2013
 msgid "Nom commun : le nom de domaine principal."
 msgstr "通用名称：主域名。"
 
-#: src/omega_serv/interfaces/cli/main.py:1916
+#: src/omega_serv/interfaces/cli/main.py:2015
 msgid ""
 "Génère un certificat auto-signé aux chemins de la configuration (l'ancien "
 "est sauvegardé)."
 msgstr "在配置的路径上生成自签名证书（旧证书会被备份）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1919
-#: src/omega_serv/interfaces/cli/main.py:1930
-#: src/omega_serv/interfaces/cli/main.py:1954
-#: src/omega_serv/interfaces/cli/main.py:1988
+#: src/omega_serv/interfaces/cli/main.py:2018
+#: src/omega_serv/interfaces/cli/main.py:2029
+#: src/omega_serv/interfaces/cli/main.py:2053
+#: src/omega_serv/interfaces/cli/main.py:2087
 #: src/omega_serv/interfaces/cli/riposte_query_commands.py:244
 msgid "JOURS"
 msgstr "天数"
 
-#: src/omega_serv/interfaces/cli/main.py:1920
-#: src/omega_serv/interfaces/cli/main.py:1955
+#: src/omega_serv/interfaces/cli/main.py:2019
+#: src/omega_serv/interfaces/cli/main.py:2054
 msgid "Validité en jours (défaut : 365)."
 msgstr "有效期天数（默认：365）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1922
-#: src/omega_serv/interfaces/cli/main.py:1942
+#: src/omega_serv/interfaces/cli/main.py:2021
+#: src/omega_serv/interfaces/cli/main.py:2041
 msgid "Type de clé (défaut : rsa2048)."
 msgstr "密钥类型（默认：rsa2048）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1923
-#: src/omega_serv/interfaces/cli/main.py:1934
-#: src/omega_serv/interfaces/cli/main.py:1952
-#: src/omega_serv/interfaces/cli/main.py:1973
-#: src/omega_serv/interfaces/cli/main.py:2000
-#: src/omega_serv/interfaces/cli/main.py:2009
+#: src/omega_serv/interfaces/cli/main.py:2022
+#: src/omega_serv/interfaces/cli/main.py:2033
+#: src/omega_serv/interfaces/cli/main.py:2051
+#: src/omega_serv/interfaces/cli/main.py:2072
+#: src/omega_serv/interfaces/cli/main.py:2099
+#: src/omega_serv/interfaces/cli/main.py:2108
 msgid "MOT-DE-PASSE"
 msgstr "密码"
 
-#: src/omega_serv/interfaces/cli/main.py:1924
+#: src/omega_serv/interfaces/cli/main.py:2023
 msgid "Chiffre la clé privée avec ce mot de passe (facultatif)."
 msgstr "用此密码加密私钥（可选）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1928
+#: src/omega_serv/interfaces/cli/main.py:2027
 msgid "Crée une autorité de certification locale dans secure/certificates/ca."
 msgstr "在 secure/certificates/ca 中创建本地证书颁发机构。"
 
-#: src/omega_serv/interfaces/cli/main.py:1929
+#: src/omega_serv/interfaces/cli/main.py:2028
 msgid "Nom de l'autorité de certification."
 msgstr "证书颁发机构的名称。"
 
-#: src/omega_serv/interfaces/cli/main.py:1931
+#: src/omega_serv/interfaces/cli/main.py:2030
 msgid "Validité en jours (défaut : 3650)."
 msgstr "有效期天数（默认：3650）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1933
+#: src/omega_serv/interfaces/cli/main.py:2032
 msgid "Type de clé (défaut : rsa4096)."
 msgstr "密钥类型（默认：rsa4096）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1935
+#: src/omega_serv/interfaces/cli/main.py:2034
 msgid ""
 "Mot de passe de la clé de CA ; sans cette option, il est demandé deux fois "
 "au clavier (conseillé)."
 msgstr "CA 密钥的密码；不使用此选项时，会通过键盘询问两次（推荐）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1939
+#: src/omega_serv/interfaces/cli/main.py:2038
 msgid ""
 "Génère une clé et une demande de signature (CSR) à faire signer par une CA."
 msgstr "生成一个密钥和一个证书签名请求（CSR），交由 CA 签名。"
 
-#: src/omega_serv/interfaces/cli/main.py:1943
+#: src/omega_serv/interfaces/cli/main.py:2042
 msgid "Clé privée à créer."
 msgstr "要创建的私钥。"
 
-#: src/omega_serv/interfaces/cli/main.py:1944
+#: src/omega_serv/interfaces/cli/main.py:2043
 msgid "Demande de signature à créer."
 msgstr "要创建的签名请求。"
 
-#: src/omega_serv/interfaces/cli/main.py:1947
+#: src/omega_serv/interfaces/cli/main.py:2046
 msgid "Mot de passe de la clé de CA (sinon demandé au clavier, conseillé)."
 msgstr "CA 密钥的密码（否则通过键盘询问，推荐）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1948
+#: src/omega_serv/interfaces/cli/main.py:2047
 msgid "Signe une demande de signature (CSR) avec une CA."
 msgstr "用 CA 签署一个证书签名请求（CSR）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1949
+#: src/omega_serv/interfaces/cli/main.py:2048
 msgid "Demande de signature à signer."
 msgstr "要签署的签名请求。"
 
-#: src/omega_serv/interfaces/cli/main.py:1950
-#: src/omega_serv/interfaces/cli/main.py:1971
+#: src/omega_serv/interfaces/cli/main.py:2049
+#: src/omega_serv/interfaces/cli/main.py:2070
 msgid "Clé privée de la CA."
 msgstr "CA 的私钥。"
 
-#: src/omega_serv/interfaces/cli/main.py:1951
-#: src/omega_serv/interfaces/cli/main.py:1972
+#: src/omega_serv/interfaces/cli/main.py:2050
+#: src/omega_serv/interfaces/cli/main.py:2071
 msgid "Certificat de la CA."
 msgstr "CA 的证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1956
+#: src/omega_serv/interfaces/cli/main.py:2055
 msgid "Certificat signé à écrire."
 msgstr "要写出的已签名证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1958
+#: src/omega_serv/interfaces/cli/main.py:2057
 msgid "Écrit aussi la chaîne complète (certificat puis CA)."
 msgstr "同时写出完整证书链（先证书，后 CA）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1962
+#: src/omega_serv/interfaces/cli/main.py:2061
 msgid ""
 "Installe un certificat existant aux chemins de la configuration (Let's "
 "Encrypt, CA d'entreprise...)."
 msgstr "将已有证书安装到配置的路径上（Let's Encrypt、企业 CA...）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1963
+#: src/omega_serv/interfaces/cli/main.py:2062
 msgid "Clé privée."
 msgstr "私钥。"
 
-#: src/omega_serv/interfaces/cli/main.py:1964
+#: src/omega_serv/interfaces/cli/main.py:2063
 msgid "Certificat."
 msgstr "证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1966
+#: src/omega_serv/interfaces/cli/main.py:2065
 msgid "Chaîne des certificats intermédiaires (facultatif)."
 msgstr "中间证书链（可选）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1969
+#: src/omega_serv/interfaces/cli/main.py:2068
 msgid "Révoque un certificat émis par une CA locale."
 msgstr "吊销由本地 CA 签发的证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1970
+#: src/omega_serv/interfaces/cli/main.py:2069
 msgid "Certificat à révoquer."
 msgstr "要吊销的证书。"
 
-#: src/omega_serv/interfaces/cli/main.py:1977
+#: src/omega_serv/interfaces/cli/main.py:2076
 msgid "Certificat à lire (défaut : celui de la configuration)."
 msgstr "要读取的证书（默认：配置中的证书）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1979
+#: src/omega_serv/interfaces/cli/main.py:2078
 msgid ""
 "Vérifie un certificat : dates, correspondance avec la clé, droits de la clé."
 " Code 1 s'il a expiré."
 msgstr "检查证书：日期、与密钥是否匹配、密钥权限。已过期时返回代码 1。"
 
-#: src/omega_serv/interfaces/cli/main.py:1982
+#: src/omega_serv/interfaces/cli/main.py:2081
 msgid "Affiche le détail d'un certificat (même rapport que verify)."
 msgstr "显示证书详情（与 verify 相同的报告）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1986
+#: src/omega_serv/interfaces/cli/main.py:2085
 msgid "Même rapport que verify, avec une alerte si l'expiration approche."
 msgstr "与 verify 相同的报告，到期临近时发出警告。"
 
-#: src/omega_serv/interfaces/cli/main.py:1989
+#: src/omega_serv/interfaces/cli/main.py:2088
 msgid "Seuil d'alerte en jours (défaut : 30)."
 msgstr "警告阈值天数（默认：30）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1993
+#: src/omega_serv/interfaces/cli/main.py:2092
 msgid "Authentification HTTP Basic : utilisateurs et zones protégées."
 msgstr "HTTP Basic 认证：用户和受保护区域。"
 
-#: src/omega_serv/interfaces/cli/main.py:1994
+#: src/omega_serv/interfaces/cli/main.py:2093
 msgid "Nom d'utilisateur."
 msgstr "用户名。"
 
-#: src/omega_serv/interfaces/cli/main.py:1995
+#: src/omega_serv/interfaces/cli/main.py:2094
 msgid ""
 "Mot de passe (sinon demandé au clavier, conseillé : il resterait dans "
 "l'historique)."
 msgstr "密码（否则通过键盘询问，推荐：否则会留在命令历史中）。"
 
-#: src/omega_serv/interfaces/cli/main.py:1996
+#: src/omega_serv/interfaces/cli/main.py:2095
 msgid "Début de chemin protégé, par exemple /admin."
 msgstr "受保护路径的开头，例如 /admin。"
 
-#: src/omega_serv/interfaces/cli/main.py:1998
+#: src/omega_serv/interfaces/cli/main.py:2097
 msgid "Crée un utilisateur."
 msgstr "创建用户。"
 
-#: src/omega_serv/interfaces/cli/main.py:2003
+#: src/omega_serv/interfaces/cli/main.py:2102
 msgid "Supprime un utilisateur."
 msgstr "删除用户。"
 
-#: src/omega_serv/interfaces/cli/main.py:2007
+#: src/omega_serv/interfaces/cli/main.py:2106
 msgid "Change le mot de passe d'un utilisateur."
 msgstr "修改用户的密码。"
 
-#: src/omega_serv/interfaces/cli/main.py:2012
+#: src/omega_serv/interfaces/cli/main.py:2111
 msgid "Protège un chemin par mot de passe."
 msgstr "用密码保护一个路径。"
 
-#: src/omega_serv/interfaces/cli/main.py:2015
+#: src/omega_serv/interfaces/cli/main.py:2114
 msgid "Nom affiché par le navigateur dans la demande de connexion."
 msgstr "浏览器在登录提示中显示的名称。"
 
-#: src/omega_serv/interfaces/cli/main.py:2017
+#: src/omega_serv/interfaces/cli/main.py:2116
 msgid "Utilisateurs autorisés dans la zone."
 msgstr "允许进入该区域的用户。"
 
-#: src/omega_serv/interfaces/cli/main.py:2018
+#: src/omega_serv/interfaces/cli/main.py:2117
 msgid "METHODE"
 msgstr "方法"
 
-#: src/omega_serv/interfaces/cli/main.py:2019
+#: src/omega_serv/interfaces/cli/main.py:2118
 msgid ""
 "Seules ces méthodes HTTP sont acceptées dans la zone (défaut : toutes celles"
 " que le serveur autorise)."
 msgstr "该区域只接受这些 HTTP 方法（默认：服务器允许的所有方法）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2022
+#: src/omega_serv/interfaces/cli/main.py:2121
 msgid "Retire la protection d'un chemin."
 msgstr "移除一个路径的保护。"
 
-#: src/omega_serv/interfaces/cli/main.py:2026
+#: src/omega_serv/interfaces/cli/main.py:2125
 msgid "Liste les utilisateurs et les zones protégées."
 msgstr "列出用户和受保护区域。"
 
-#: src/omega_serv/interfaces/cli/main.py:2028
+#: src/omega_serv/interfaces/cli/main.py:2127
 msgid ""
 "Vérifie que les fichiers des utilisateurs et des zones ne sont lisibles que "
 "par leur propriétaire."
 msgstr "检查用户和区域文件是否只能由其所有者读取。"
 
-#: src/omega_serv/interfaces/cli/main.py:2032
+#: src/omega_serv/interfaces/cli/main.py:2131
 msgid "Service système (systemd, OpenRC ou runit)."
 msgstr "系统服务（systemd、OpenRC 或 runit）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2033
+#: src/omega_serv/interfaces/cli/main.py:2132
 msgid "Nom du service (défaut : omega-serv)."
 msgstr "服务名称（默认：omega-serv）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2034
+#: src/omega_serv/interfaces/cli/main.py:2133
 msgid "Fichier d'unité (défaut : /etc/systemd/system/<nom>.service)."
 msgstr "单元文件（默认：/etc/systemd/system/<名称>.service）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2037
+#: src/omega_serv/interfaces/cli/main.py:2136
 msgid "Affiche l'état du service."
 msgstr "显示服务状态。"
 
-#: src/omega_serv/interfaces/cli/main.py:2038
+#: src/omega_serv/interfaces/cli/main.py:2137
 msgid "Démarre le service."
 msgstr "启动服务。"
 
-#: src/omega_serv/interfaces/cli/main.py:2039
+#: src/omega_serv/interfaces/cli/main.py:2138
 msgid "Arrête le service."
 msgstr "停止服务。"
 
-#: src/omega_serv/interfaces/cli/main.py:2040
+#: src/omega_serv/interfaces/cli/main.py:2139
 msgid "Redémarre le service (nécessaire après une mise à jour)."
 msgstr "重启服务（更新后必需）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2042
+#: src/omega_serv/interfaces/cli/main.py:2141
 msgid ""
 "Recharge sans couper : règles WAF et zones ; bind, port, TLS et moteur "
 "demandent un redémarrage."
 msgstr "不中断地重新加载：WAF 规则和区域；bind、端口、TLS 和引擎需要重启。"
 
-#: src/omega_serv/interfaces/cli/main.py:2043
+#: src/omega_serv/interfaces/cli/main.py:2142
 msgid "Active le démarrage automatique au boot."
 msgstr "启用开机自动启动。"
 
-#: src/omega_serv/interfaces/cli/main.py:2044
+#: src/omega_serv/interfaces/cli/main.py:2143
 msgid "Désactive le démarrage automatique au boot."
 msgstr "禁用开机自动启动。"
 
-#: src/omega_serv/interfaces/cli/main.py:2051
+#: src/omega_serv/interfaces/cli/main.py:2150
 msgid ""
 "Crée l'unité systemd du service (systemd seulement ; demande les droits "
 "administrateur)."
 msgstr "创建服务的 systemd 单元（仅限 systemd；需要管理员权限）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2054
+#: src/omega_serv/interfaces/cli/main.py:2153
 msgid "Description de l'unité (défaut : OMEGA-SERV web server)."
 msgstr "单元描述（默认：OMEGA-SERV web server）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2056
+#: src/omega_serv/interfaces/cli/main.py:2155
 msgid "Python à utiliser (défaut : celui du .venv de l'installation)."
 msgstr "要使用的 Python（默认：安装目录 .venv 中的 Python）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2058
+#: src/omega_serv/interfaces/cli/main.py:2157
 msgid "Compte système qui fait tourner le service (défaut : omega-serv)."
 msgstr "运行服务的系统账户（默认：omega-serv）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2060
+#: src/omega_serv/interfaces/cli/main.py:2159
 msgid "Groupe du service (défaut : omega-serv)."
 msgstr "服务的组（默认：omega-serv）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2062
+#: src/omega_serv/interfaces/cli/main.py:2161
 msgid "Délai laissé à l'arrêt avant de forcer (défaut : 15)."
 msgstr "停止时强制结束前的等待时间（默认：15）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2066
+#: src/omega_serv/interfaces/cli/main.py:2165
 msgid "Supprime l'unité du service."
 msgstr "删除服务单元。"
 
-#: src/omega_serv/interfaces/cli/main.py:2071
+#: src/omega_serv/interfaces/cli/main.py:2170
 msgid "Audit de sécurité."
 msgstr "安全审计。"
 
-#: src/omega_serv/interfaces/cli/main.py:2073
+#: src/omega_serv/interfaces/cli/main.py:2172
 msgid ""
 "Audite l'installation : configuration, droits, TLS, service. Code 1 si "
 "critique, 2 si élevé, 3 si la configuration est illisible."
 msgstr "审计安装：配置、权限、TLS、服务。严重时返回代码 1，高时返回 2，配置无法读取时返回 3。"
 
-#: src/omega_serv/interfaces/cli/main.py:2076
+#: src/omega_serv/interfaces/cli/main.py:2175
 msgid "Format du rapport (défaut : text)."
 msgstr "报告格式（默认：text）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2078
+#: src/omega_serv/interfaces/cli/main.py:2177
 msgid "N'affiche que ce niveau et les plus graves (défaut : info)."
 msgstr "只显示此级别及更严重的级别（默认：info）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2088
+#: src/omega_serv/interfaces/cli/main.py:2187
+msgid ""
+"Liens avec les autres outils omega (omega-connect) : jeton d'installation et"
+" fiche de l'instance."
+msgstr "与其他 omega 工具的连接（omega-connect）：安装令牌和实例信息卡。"
+
+#: src/omega_serv/interfaces/cli/main.py:2190
+msgid ""
+"Crée ou met à jour le jeton d'installation (var/omega-jeton.json) et "
+"l'affiche en JSON."
+msgstr "创建或更新安装令牌（var/omega-jeton.json），并以 JSON 输出。"
+
+#: src/omega_serv/interfaces/cli/main.py:2191
+msgid ""
+"Lancée par install.sh et à chaque ouverture de l'interface. Jamais en root."
+msgstr "由 install.sh 以及每次打开界面时运行。从不以 root 运行。"
+
+#: src/omega_serv/interfaces/cli/main.py:2194
+msgid ""
+"Affiche la fiche de cette instance (fonctions actives, service, journaux "
+"partagés), pour omega-connect."
+msgstr "显示此实例的信息卡（已启用的功能、服务、共享日志），供 omega-connect 使用。"
+
+#: src/omega_serv/interfaces/cli/main.py:2196
+msgid "Format de sortie : json seulement (non traduit, versionné)."
+msgstr "输出格式：仅 json（不翻译，带版本）。"
+
+#: src/omega_serv/interfaces/cli/main.py:2200
 msgid ""
 "Affiche la version installée ; --check la compare à la dernière version "
 "publiée sur le site."
 msgstr "显示已安装的版本；--check 会将其与网站上发布的最新版本进行比较。"
 
-#: src/omega_serv/interfaces/cli/main.py:2090
+#: src/omega_serv/interfaces/cli/main.py:2202
 msgid ""
 "Lit la liste des versions publiées (download/sha.txt du site) ; rien n'est "
 "envoyé."
 msgstr "读取已发布版本的列表（网站的 download/sha.txt）；不会发送任何内容。"
 
-#: src/omega_serv/interfaces/cli/main.py:2094
+#: src/omega_serv/interfaces/cli/main.py:2206
 msgid ""
 "Affiche l'arbre de toutes les commandes, ou d'une branche (ex. : omega-serv "
 "help riposte)."
 msgstr "显示所有命令或某个分支的命令树（例如：omega-serv help riposte）。"
 
-#: src/omega_serv/interfaces/cli/main.py:2095
+#: src/omega_serv/interfaces/cli/main.py:2207
 msgid "Branche à afficher (facultatif)."
 msgstr "要显示的分支（可选）。"
+
+#: src/omega_serv/interfaces/cli/main.py:2247
+#, python-brace-format
+msgid ""
+"Erreur : lancée en root, cette commande créerait dans {root} des fichiers "
+"que le service ne pourrait plus modifier. Relancez-la sans sudo, sous le "
+"compte propriétaire du dossier ({owner})."
+msgstr ""
+"错误：以 root 运行时，此命令会在 {root} 中创建服务无法再修改的文件。请不使用 sudo，以该文件夹的所有者账户（{owner}）重新运行。"
 
 #: src/omega_serv/interfaces/cli/riposte_action_commands.py:51
 #: src/omega_serv/interfaces/cli/riposte_commands.py:300

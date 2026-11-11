@@ -2,6 +2,7 @@
 lighty.* d'omega-serv - OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md lot 11 :
 reseaux jamais bannis automatiquement, motifs de chemins sensibles corriges.
 Ignore si le projet omega-waf n'est pas present sur la machine."""
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,6 +26,7 @@ def _request(ip: str, path: str) -> HttpRequest:
 @unittest.skipUnless(_SCRIPT.exists(), f"script absent : {_SCRIPT}")
 class _OmegaWafCase(unittest.TestCase):
     networks: tuple[str, ...] | None = None  # None = valeurs par defaut d'omega-serv
+    mode: str = "block"
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -38,7 +40,7 @@ class _OmegaWafCase(unittest.TestCase):
             "rate_store_file": str(root / "rate-store.lua"),
         }
         reputation = ReputationConfig() if self.networks is None else ReputationConfig(never_auto_block=self.networks)
-        self.adapter = LuaWafAdapter(_SCRIPT.read_text(encoding="utf-8"), WafConfig(mode="block", reputation=reputation), paths)
+        self.adapter = LuaWafAdapter(_SCRIPT.read_text(encoding="utf-8"), WafConfig(mode=self.mode, reputation=reputation), paths)
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -95,3 +97,28 @@ class TestSensitivePatternsFixed(_OmegaWafCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLogOnlyNeverBans(_OmegaWafCase):
+    """2026-11-10 : en log-only, le script ne pose aucun ban - sinon sa ligne AJOUT BLOCKLIST devenait un
+    ban reseau fail2ban (jail omega-waf-blocklist-sync) alors que le serveur neutralisait le 451."""
+    mode = "log-only"
+
+    def test_no_blocklist_and_no_ajout_line_in_log_only(self):
+        decisions = self.hammer("198.51.100.7")
+        self.assertFalse(self.banned("198.51.100.7"))
+        log = self.blocklist_log.read_text() if self.blocklist_log.exists() else ""
+        self.assertNotIn("AJOUT BLOCKLIST", log)
+        self.assertIn("BAN EVITE ip=198.51.100.7", log)
+        self.assertTrue(all(d.status_code is None for d in decisions), "log-only ne bloque jamais")
+
+
+class TestUnwritableBlocklist(_OmegaWafCase):
+    @unittest.skipIf(os.geteuid() == 0, "root outrepasse les permissions Unix")
+    def test_no_ajout_line_when_blocklist_cannot_be_written(self):
+        self.blocklist.write_text("")
+        self.blocklist.chmod(0o444)  # lisible, jamais inscriptible : l'ajout echoue
+        self.hammer("198.51.100.8")
+        log = self.blocklist_log.read_text()
+        self.assertNotIn("AJOUT BLOCKLIST ip=198.51.100.8", log)
+        self.assertIn("ECHEC BLOCKLIST ip=198.51.100.8", log)

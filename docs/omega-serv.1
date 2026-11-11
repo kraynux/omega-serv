@@ -2,7 +2,7 @@
 .\" Genere par tools/cli_reference.py depuis le code : ne pas modifier a la main.
 .nr HY 0
 .ds AD l
-.TH OMEGA\-SERV 1 "" "omega\-serv 2.6.0" "Commandes utilisateur"
+.TH OMEGA\-SERV 1 "" "omega\-serv 2.6.1" "Commandes utilisateur"
 .nh
 .ad l
 .SH NOM
@@ -186,6 +186,11 @@ service                 Service système (systemd, OpenRC ou runit).
   disable               Désactive le démarrage automatique au boot.
   install               Crée l'unité systemd du service (systemd
                         seulement ; demande les droits administrateur).
+  permissions           Répare les droits partagés avec le service :
+                        fichiers de var/ appartenant à root rendus au
+                        propriétaire du dossier, var/ et secure/auth/
+                        partagés avec le groupe du service (demande les
+                        droits administrateur).
   uninstall             Supprime l'unité du service.
 audit                   Audit de sécurité.
   security              Audite l'installation : configuration, droits,
@@ -200,6 +205,21 @@ declaration             Déclaration anonyme d'utilisateur (volontaire,
                         réception).
   send\-scheduled        Envoi quotidien, lancé par serve (pas à utiliser
                         à la main).
+synchro                 Liens avec les autres outils omega (omega\-
+                        connect) : jeton d'installation et fiche de
+                        l'instance.
+  jeton                 Crée ou met à jour le jeton d'installation
+                        (var/omega\-jeton.json) et l'affiche en JSON.
+  fiche                 Affiche la fiche de cette instance (fonctions
+                        actives, service, journaux partagés), pour
+                        omega\-connect.
+  groupe\-service        Donne (ou retire) au service de cette instance
+                        le groupe omega\-synchro, pour qu'il lise la zone
+                        neutre : complément systemd
+                        <service>.service.d/omega\-synchro.conf, l'unité
+                        n'est pas touchée. Demandé par omega\-connect ;
+                        pris en compte au prochain redémarrage du
+                        service.
 version                 Affiche la version installée ; \-\-check la
                         compare à la dernière version publiée sur le
                         site.
@@ -400,6 +420,11 @@ Adresses bannies.
 .TP
 \fBblocklist list\fR
 Affiche les bans : réseau, origine, expiration, motif.
+.RS
+.TP
+\fB\-\-format\fR \fI{text,json}\fR
+text (défaut, traduit) ou json (pour les autres outils, jamais traduit).
+.RE
 .TP
 \fBblocklist add\fR
 Bannit une adresse ou un réseau.
@@ -416,6 +441,9 @@ Durée du ban. Sans durée, le ban est permanent et demande \-\-confirm\-permane
 .TP
 \fB\-\-confirm\-permanent\fR
 Confirme un ban permanent.
+.TP
+\fB\-\-origin\fR \fIOUTIL\fR
+Outil qui pose le ban (ex. omega\-fire) : lui seul pourra le lever avec \-\-origin.
 .RE
 .TP
 \fBblocklist remove\fR
@@ -424,6 +452,9 @@ Lève un ban.
 .TP
 \fB\-\-network\fR \fIRESEAU\fR
 Adresse ou réseau, tel qu'affiché par blocklist list. (obligatoire)
+.TP
+\fB\-\-origin\fR \fIOUTIL\fR
+Ne lève le ban que s'il a été posé avec cette origine.
 .RE
 .SS active\-defense
 Active Defense : état, simulation, purge (voir aussi threats, incidents, deception).
@@ -1090,6 +1121,17 @@ Délai laissé à l'arrêt avant de forcer (défaut : 15).
 Fichier d'unité (défaut : /etc/systemd/system/<nom>.service).
 .RE
 .TP
+\fBservice permissions\fR
+Répare les droits partagés avec le service : fichiers de var/ appartenant à root rendus au propriétaire du dossier, var/ et secure/auth/ partagés avec le groupe du service (demande les droits administrateur).
+.RS
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : omega\-serv).
+.TP
+\fB\-\-group\fR \fINOM\fR
+Groupe du service (défaut : celui de son unité, sinon omega\-serv).
+.RE
+.TP
 \fBservice uninstall\fR
 Supprime l'unité du service.
 .RS
@@ -1153,6 +1195,32 @@ Retire la déclaration (supprimée à la réception).
 .TP
 \fBdeclaration send\-scheduled\fR
 Envoi quotidien, lancé par serve (pas à utiliser à la main).
+.SS synchro
+Liens avec les autres outils omega (omega\-connect) : jeton d'installation et fiche de l'instance.
+.TP
+\fBsynchro jeton\fR
+Crée ou met à jour le jeton d'installation (var/omega\-jeton.json) et l'affiche en JSON.
+.br
+Lancée par install.sh et à chaque ouverture de l'interface. Jamais en root.
+.TP
+\fBsynchro fiche\fR
+Affiche la fiche de cette instance (fonctions actives, service, journaux partagés), pour omega\-connect.
+.RS
+.TP
+\fB\-\-format\fR \fI{json}\fR
+Format de sortie : json seulement (non traduit, versionné).
+.RE
+.TP
+\fBsynchro groupe\-service\fR
+Donne (ou retire) au service de cette instance le groupe omega\-synchro, pour qu'il lise la zone neutre : complément systemd <service>.service.d/omega\-synchro.conf, l'unité n'est pas touchée. Demandé par omega\-connect ; pris en compte au prochain redémarrage du service.
+.RS
+.TP
+\fBACTION\fR
+ajouter ou retirer.
+.TP
+\fB\-\-service\-name\fR \fINOM\fR
+Nom du service (défaut : celui de cette instance).
+.RE
 .SS version
 Affiche la version installée ; \-\-check la compare à la dernière version publiée sur le site.
 .RS

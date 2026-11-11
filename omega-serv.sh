@@ -23,6 +23,9 @@ GREEN='\033[0;32m'
 WHITE='\033[1;37m'
 NC='\033[0m'
 
+# `synchro jeton|fiche` (contrats d'interconnexion, 2026-11-10) : sortie JSON lue par omega-connect,
+# donc sans bannière.
+if [ "${1:-}" != "synchro" ]; then
 echo -e "${WHITE}${NC}"
 echo -e "${WHITE}DÉMARRAGE DE L'APPLICATION${NC}"
 echo -e "${WHITE}${NC}"
@@ -30,6 +33,7 @@ echo -e "${WHITE}    ░▒▓████████████████�
 echo -e "${WHITE}    ░▒▓ Ω M E G A - S E R V ▓▒░${NC}"
 echo -e "${WHITE}    ░▒▓█████████████████████▓▒░${NC}"
 echo -e "${WHITE}${NC}"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/.venv"
@@ -42,7 +46,14 @@ if [ ! -d "$VENV_DIR" ]; then
 fi
 
 if ! "$VENV_DIR/bin/python" -c "import omega_serv" 2>/dev/null; then
-    echo "⚠️  Le venv semble incomplet, reinstallation..."
+    # Jamais de `pip install` en root (2026-11-10, comme omega-jail.sh) : omega-connect lance certaines
+    # commandes avec sudo, et pip ecrirait alors en root dans le dossier de l'utilisateur.
+    if [ "$(id -u)" -eq 0 ]; then
+        echo -e "${RED}❌ Environnement virtuel incomplet : $VENV_DIR${NC}" >&2
+        echo "Relancez sans sudo : $SCRIPT_DIR/install.sh" >&2
+        exit 1
+    fi
+    echo "⚠️  Le venv semble incomplet, reinstallation..." >&2
     if [ -d "$SCRIPT_DIR/vendor/omega-lib" ]; then
         "$VENV_DIR/bin/pip" install -q -e "$SCRIPT_DIR/vendor/omega-lib"
     fi
