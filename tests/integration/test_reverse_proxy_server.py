@@ -430,6 +430,68 @@ class TestReverseProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(json.loads(body), {"zone": "/api/", "hits": 1, "misses": 1})
 
 
+    async def test_correctif_262_extra_bytes_from_backend_never_reach_another_client(self):
+        # D22 : bout en bout - chaque client recoit SA reponse, jamais celle glissee par le backend
+        responses = [b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nhelloHTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nPWNED!"]
+        writers = []
+
+        async def handle(reader, writer):
+            writers.append(writer)
+            try:
+                while True:
+                    await reader.readuntil(b"\r\n\r\n")
+                    writer.write(responses.pop(0) if responses else b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nreel")
+                    await writer.drain()
+            except (asyncio.IncompleteReadError, ConnectionError):
+                pass
+
+        upstream = await asyncio.start_server(handle, "127.0.0.1", 0)
+        try:
+            await self._start_omega_serv(upstream.sockets[0].getsockname()[1])
+            bodies = [(await self._request("GET", f"/api/{name}"))[2] for name in ("a", "b", "c")]
+            self.assertEqual(bodies, [b"hello", b"reel", b"reel"])
+        finally:
+            await self.server.close()
+            for writer in writers:
+                writer.close()
+            upstream.close()
+            await upstream.wait_closed()
+            self.server = _ClosedServer()
+
+    async def test_correctif_262_real_client_behind_trusted_relay_reaches_backend_and_log(self):
+        # P11, condition de l'auteur (Tailscale) : relais local de confiance -> vrai client partout, jamais 127.0.0.1
+        upstream_port, capture = await self._start_upstream(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+        self.config = OmegaServConfig.from_dict({
+            "server": {"bind": "127.0.0.1", "port": 0},
+            "options": {
+                "reverse_proxy": {"enabled": True, "zones": [{
+                    "url_prefix": "/api/", "upstreams": [{"host": "127.0.0.1", "port": upstream_port}],
+                    "connect_timeout_seconds": 2, "read_timeout_seconds": 2}]},
+                "trusted_proxy": {"enabled": True, "trusted_networks": ["127.0.0.1/32"]},
+            },
+        })
+        self.server = build_server(self.config, self.root, LocalFilesystem(), FileLineLogger())
+        await self.server.start()
+        self.port = self.server.sockets[0].getsockname()[1]
+        await self._request("GET", "/api/t", headers={"X-Forwarded-For": "203.0.113.9", "X-Real-IP": "10.0.0.1"})
+        sent = capture["received"].decode("latin-1")
+        self.assertIn("X-Forwarded-For: 203.0.113.9\r\n", sent)
+        self.assertIn("X-Real-IP: 203.0.113.9\r\n", sent)
+        self.assertNotIn("10.0.0.1", sent)
+        await self.server.close()
+        self.server = _ClosedServer()
+        access = "".join(path.read_text() for path in self.root.rglob("access*.log"))
+        line = next(line for line in access.splitlines() if "/api/t" in line)
+        self.assertTrue(line.startswith("203.0.113.9 "), line)
+
+
+class _ClosedServer:
+    """Serveur deja ferme par le test : asyncTearDown n'a plus rien a fermer."""
+
+    async def close(self):
+        return None
+
+
 async def _fake_https_upstream(raw_response: bytes, ssl_context: ssl.SSLContext) -> asyncio.AbstractServer:
     async def handle(reader, writer):
         await reader.read(4096)

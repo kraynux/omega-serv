@@ -16,9 +16,10 @@ signalés explicitement, même mineurs.
 ## version 2.6.2 : Publié
 
 **Correctif de sécurité, mise à jour conseillée** pour toute installation qui utilise le moteur natif
-(`server.engine = native`). Trois failles trouvées par les analyses de sécurité préparant la 3.0.0
-(`~/DEV/SERV/OMEGA-SERV_ANALYSES_PROXY_NATIF.md`, plan `OMEGA-SERV_PLAN_CORRECTIF_2.6.2.md`), chacune prouvée par
-un essai avant correction. Aucune option nouvelle, aucun changement de configuration à faire.
+(`server.engine = native`) ou le reverse proxy (`options.reverse_proxy`). Sept failles trouvées par les analyses
+de sécurité préparant la 3.0.0 (`~/DEV/SERV/OMEGA-SERV_ANALYSES_PROXY_NATIF.md`, plan
+`OMEGA-SERV_PLAN_CORRECTIF_2.6.2.md`), chacune prouvée par un essai avant correction. Aucune option nouvelle,
+aucun changement de configuration à faire.
 
 ### Sécurité
 
@@ -48,12 +49,37 @@ un essai avant correction. Aucune option nouvelle, aucun changement de configura
   l'erreur était ignorée et la trame perdue. La requête attendait alors 60 s puis passait en `fail-open` : **un
   verdict « bloquer » pouvait ainsi se perdre**. Désormais les trames attendent que le canal se libère et partent
   toutes, dans l'ordre.
+- **Reverse proxy : la réponse d'un visiteur pouvait partir chez un autre (D22).** Une connexion vers le backend
+  revenait au pool sans vérifier qu'il ne restait rien à lire après le corps annoncé. Un backend qui envoyait
+  plus d'octets que son `Content-Length` (bogue, ou compromission) glissait ainsi une réponse au visiteur
+  suivant, et toutes les réponses suivantes étaient décalées d'un visiteur. Une réponse HTTP/1.0 ou un
+  `Connection: close, …` (liste de jetons) n'empêchaient pas non plus le recyclage. Désormais une connexion ne
+  revient au pool que si la réponse est HTTP/1.1, sans jeton `close`, et lue exactement sans octet en trop ; une
+  connexion du pool qui a reçu des octets pendant son attente est jetée.
+- **Reverse proxy : longueur de réponse ambiguë (D21).** Avec `Content-Length` et `Transfer-Encoding` reçus
+  ensemble, le proxy croyait `Content-Length` : réponse tronquée et reste de la réponse laissé dans la
+  connexion recyclée. Désormais `Content-Length` avec `Transfer-Encoding`, plusieurs longueurs différentes, ou
+  une longueur qui n'est pas faite que de chiffres donnent **502**, et la connexion est fermée (RFC 9112 §6.3).
+- **Reverse proxy : une requête POST pouvait être envoyée deux fois au backend (D42).** Après une erreur sur une
+  connexion réutilisée, le proxy renvoyait la requête sur une connexion neuve, quelle que soit sa méthode, alors
+  que la règle de reprise excluait POST. Une action (commande, paiement, message) pouvait ainsi être exécutée
+  deux fois. Désormais POST, PUT, PATCH, DELETE et les autres méthodes non rejouables ouvrent toujours une
+  connexion neuve, et ne sont donc jamais renvoyées. La reprise reste pour GET, HEAD et OPTIONS, seulement si la
+  connexion réutilisée n'a renvoyé aucun octet de réponse.
+- **Reverse proxy : un client pouvait se faire passer pour une autre adresse auprès du backend (D25).**
+  `X-Real-IP`, `Forwarded`, `Proxy-Connection` et les en-têtes nommés dans `Connection:` passaient tels quels du
+  client au backend. Un backend qui faisait confiance à `X-Real-IP` (cas courant) croyait donc l'adresse choisie
+  par le client. Désormais ces en-têtes sont retirés, et `X-Real-IP` est écrit avec l'adresse réelle du client,
+  la même que `X-Forwarded-For` : derrière un relais de confiance déclaré dans `trusted_proxy` (Tailscale, par
+  exemple), c'est l'adresse du visiteur, jamais celle du relais. `X-Forwarded-Port` passe comme avant.
 
 ### Tests
 
-- 7 tests ajoutés (4 d'intégration du moteur natif, 2 du processus de sécurité, 1 de l'instantané), écrits
-  avant chaque correction. Cinq échouaient sur 2.6.1 ; les deux autres gardent contre une régression du
-  correctif (client coupé par RST pendant l'attente, canal perdu pendant que des trames attendent).
+- 20 tests ajoutés, écrits avant chaque correction ; 15 échouaient sur 2.6.1, les 5 autres gardent contre une
+  régression du correctif :
+  - moteur natif et processus de sécurité : 7 (4 d'intégration, 2 du processus de sécurité, 1 de l'instantané) ;
+  - reverse proxy : 13 (8 du client vers le backend, 3 des en-têtes envoyés, 2 d'intégration de bout en bout,
+    dont le vrai client derrière un relais de confiance, retrouvé dans les en-têtes et dans le journal).
 
 ## version 2.6.1 : Publié
 

@@ -155,6 +155,9 @@ HOP_BY_HOP_HEADERS = frozenset({
     "te", "trailers", "transfer-encoding", "upgrade",
 })
 
+CLIENT_FORWARDING_HEADERS_DROPPED = frozenset({"proxy-connection", "forwarded", "x-real-ip"})
+"""Correctif 2.6.2 (D25) : jamais relayes depuis le client vers le backend (`X-Real-IP` est reecrit)."""
+
 PROXY_HOPS_HEADER = "X-Omega-Proxy-Hops"
 MAX_PROXY_HOPS = 5
 """Seuil du garde-fou anti-boucle indirecte (§23 angle mort #16) - meme
@@ -183,13 +186,29 @@ def build_outgoing_headers(
 ) -> tuple[tuple[str, str], ...]:
     hop_by_hop = HOP_BY_HOP_HEADERS - {"connection", "upgrade"} if preserve_upgrade else HOP_BY_HOP_HEADERS
     original_host = request.header("host")
+    # Correctif 2.6.2 (D25) : les en-tetes nommes dans `Connection:` sont des en-tetes de saut (RFC 9110 §7.6.1),
+    # jamais relayes (sauf `upgrade` sur le chemin WebSocket) ; `Proxy-Connection`, `Forwarded` et `X-Real-IP`
+    # fournis par le client sont retires : un client pouvait se faire passer pour une autre adresse aupres d'un
+    # backend qui leur fait confiance. `X-Real-IP` est reecrit avec la meme adresse que `X-Forwarded-For` (vrai
+    # client derriere un relais de confiance comme Tailscale, sinon le pair TCP). `X-Forwarded-Port` passe comme
+    # avant (decision de l'auteur, a revoir en 3.0.0).
+    named_in_connection = {
+        token.strip().lower()
+        for name, value in request.headers if name.lower() == "connection"
+        for token in value.split(",") if token.strip()
+    }
+    if preserve_upgrade:
+        named_in_connection.discard("upgrade")
+    dropped = named_in_connection | CLIENT_FORWARDING_HEADERS_DROPPED | {
+        "host", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", PROXY_HOPS_HEADER.lower(),
+    }
     headers = [
         (name, value) for name, value in request.headers
-        if name not in hop_by_hop
-        and name not in ("host", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", PROXY_HOPS_HEADER.lower())
+        if name.lower() not in hop_by_hop and name.lower() not in dropped
     ]
     headers.append(("Host", original_host if zone.preserve_host_header and original_host else f"{upstream.host}:{upstream.port}"))
     headers.append(("X-Forwarded-For", request.remote_ip))
+    headers.append(("X-Real-IP", request.remote_ip))
     headers.append(("X-Forwarded-Proto", "https" if request.is_tls else "http"))
     if original_host:
         headers.append(("X-Forwarded-Host", original_host))

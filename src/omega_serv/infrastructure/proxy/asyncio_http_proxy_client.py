@@ -34,7 +34,22 @@ connexion) et sans `Connection: close` explicite est retournee au pool -
 une connexion recuperee du pool qui s'avere en realite deja morte
 cote upstream (ferme silencieusement pendant son inactivite, tres
 courant) declenche une seule reprise automatique avec une connexion
-fraiche, jamais une erreur immediate remontee a l'appelant."""
+fraiche, jamais une erreur immediate remontee a l'appelant.
+
+Correctif 2.6.2 (D21, D22, D42 - OMEGA-SERV_PLAN_CORRECTIF_2.6.2.md §7) :
+- D21 : `Content-Length` avec `Transfer-Encoding`, ou plusieurs longueurs
+  differentes, ou une longueur qui n'est pas faite que de chiffres -> erreur
+  (502 cote appelant), connexion fermee, jamais recyclee (RFC 9112 §6.3).
+- D22 : une connexion ne revient au pool que si la reponse est HTTP/1.1, sans
+  jeton `close`, de longueur connue lue exactement, et SANS octet en attente
+  apres le corps ; reprise du pool : connexion jetee si fermee, a EOF ou avec
+  des octets en attente. Sinon ces octets devenaient la reponse du client
+  suivant.
+- D42 : les methodes non rejouables (POST, PUT, PATCH, DELETE...) ouvrent
+  toujours une connexion neuve, donc jamais de reprise ; la reprise interne
+  ne vaut que pour GET/HEAD/OPTIONS et seulement si la connexion reutilisee
+  n'a renvoye AUCUN octet de reponse. Avant : n'importe quelle requete etait
+  renvoyee apres n'importe quelle erreur (POST recu deux fois)."""
 from __future__ import annotations
 
 import asyncio
@@ -51,12 +66,23 @@ from omega_serv.ports.http_proxy_client_port import (
 )
 
 
-def _parse_status_line(line: bytes) -> int:
+def _parse_status_line(line: bytes) -> tuple[str, int]:
     text = line.decode("latin-1", errors="replace")
     parts = text.split(None, 2)
     if len(parts) < 2 or not parts[0].startswith("HTTP/"):
         raise ValueError(f"ligne de statut invalide : {text!r}")
-    return int(parts[1])
+    return parts[0], int(parts[1])
+
+
+async def _read_headers(reader: asyncio.StreamReader, read_timeout: float) -> list[tuple[str, str]]:
+    response_headers: list[tuple[str, str]] = []
+    while True:
+        line = await asyncio.wait_for(reader.readline(), timeout=read_timeout)
+        if line in (b"\r\n", b""):
+            break
+        name, _, value = line.decode("latin-1").partition(":")
+        response_headers.append((name.strip(), value.strip()))
+    return response_headers
 
 
 async def _read_status_and_headers(
@@ -65,16 +91,48 @@ async def _read_status_and_headers(
     status_line = await asyncio.wait_for(reader.readline(), timeout=read_timeout)
     if not status_line:
         raise HttpProxyConnectionError(f"upstream a fermé la connexion sans réponse ({host}:{port})")
-    status_code = _parse_status_line(status_line)
+    _version, status_code = _parse_status_line(status_line)
+    return status_code, await _read_headers(reader, read_timeout)
 
-    response_headers: list[tuple[str, str]] = []
-    while True:
-        line = await asyncio.wait_for(reader.readline(), timeout=read_timeout)
-        if line in (b"\r\n", b""):
-            break
-        name, _, value = line.decode("latin-1").partition(":")
-        response_headers.append((name.strip(), value.strip()))
-    return status_code, response_headers
+
+def _response_content_length(response_headers: list[tuple[str, str]]) -> int | None:
+    """D21 : longueur du corps sans ambiguite, sinon ValueError (502, connexion jamais recyclee)."""
+    values = [value for name, value in response_headers if name.lower() == "content-length"]
+    has_transfer_encoding = any(name.lower() == "transfer-encoding" for name, _ in response_headers)
+    if not values:
+        return None
+    if has_transfer_encoding:
+        raise ValueError("réponse avec Content-Length et Transfer-Encoding (RFC 9112 §6.3)")
+    # Chiffres seulement (ni signe, ni liste « 2, 2 » - deja refusee avant) ; en-tetes repetes : meme valeur.
+    if not all(value.isascii() and value.isdigit() for value in values) or len({int(value) for value in values}) != 1:
+        raise ValueError(f"Content-Length invalide ou contradictoire : {values!r}")
+    return int(values[0])
+
+
+def _asks_close(response_headers: list[tuple[str, str]]) -> bool:
+    """D22 : `Connection` est une liste de jetons (`close, x`), sans tenir compte de la casse."""
+    return any(
+        token.strip().lower() == "close"
+        for name, value in response_headers if name.lower() == "connection"
+        for token in value.split(",")
+    )
+
+
+def _has_pending_bytes(reader: asyncio.StreamReader) -> bool:
+    """D22 : octets deja recus et pas encore lus. asyncio n'a pas d'acces public : attribut interne
+    `_buffer` (stable depuis Python 3.4). S'il disparaissait, on repond « oui » : plus aucun recyclage,
+    jamais un recyclage sale (le test de reutilisation du pool le signalerait aussitot)."""
+    buffer = getattr(reader, "_buffer", None)
+    return buffer is None or len(buffer) > 0
+
+
+_REPLAYABLE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+"""D42 : meme liste que `_IDEMPOTENT_RETRY_METHODS` (application/server/serve_proxy.py) - seules
+ces methodes passent par une connexion du pool et peuvent etre rejouees sur une connexion neuve."""
+
+
+class _NoResponseFromReusedConnection(HttpProxyConnectionError):
+    """D42 : connexion du pool morte avant le moindre octet de reponse - seul cas de reprise interne."""
 
 
 async def _open_connection(
@@ -113,8 +171,10 @@ class AsyncioHttpProxyClient:
         pool = self._idle.get(key)
         while pool:
             reader, writer = pool.pop()
-            if not writer.is_closing():
-                return reader, writer
+            if writer.is_closing() or reader.at_eof() or reader.exception() is not None or _has_pending_bytes(reader):
+                writer.close()  # D22 : fermee, fermee par le backend, ou octets arrives hors reponse
+                continue
+            return reader, writer
         return None
 
     def _release_connection(self, key: _PoolKey, connection: _Connection) -> None:
@@ -138,12 +198,14 @@ class AsyncioHttpProxyClient:
     ) -> HttpProxyResult:
         key = self._pool_key(host, port, ssl_context)
 
-        reused = self._borrow_idle_connection(key)
+        reused = self._borrow_idle_connection(key) if method in _REPLAYABLE_METHODS else None  # D42
         if reused is not None:
             try:
-                return await self._send_and_read(key, reused, method, path, headers, body, read_timeout, host, port)
-            except HttpProxyConnectionError:
-                pass
+                return await self._send_and_read(
+                    key, reused, method, path, headers, body, read_timeout, host, port, reused=True,
+                )
+            except _NoResponseFromReusedConnection:
+                pass  # connexion morte dans le pool, rien recu : une seule reprise, connexion neuve
 
         connection = await _open_connection(host, port, connect_timeout, ssl_context)
         return await self._send_and_read(key, connection, method, path, headers, body, read_timeout, host, port)
@@ -159,31 +221,35 @@ class AsyncioHttpProxyClient:
         read_timeout: float,
         host: str,
         port: int,
+        reused: bool = False,
     ) -> HttpProxyResult:
         reader, writer = connection
+        response_started = False
         try:
             request_line = f"{method} {path} HTTP/1.1\r\n"
             header_lines = "".join(f"{name}: {value}\r\n" for name, value in headers)
             writer.write((request_line + header_lines + "\r\n").encode("latin-1") + body)
             await writer.drain()
 
-            status_code, response_headers = await _read_status_and_headers(reader, read_timeout, host, port)
-            content_length = next(
-                (int(value) for name, value in response_headers if name.lower() == "content-length"), None,
-            )
-            upstream_wants_close = any(
-                name.lower() == "connection" and value.lower() == "close" for name, value in response_headers
-            )
+            status_line = await asyncio.wait_for(reader.readline(), timeout=read_timeout)
+            if not status_line:
+                raise ConnectionResetError("upstream a fermé la connexion sans réponse")
+            response_started = True
+            version, status_code = _parse_status_line(status_line)
+            response_headers = await _read_headers(reader, read_timeout)
+            content_length = _response_content_length(response_headers)  # D21
 
             if content_length is not None:
                 response_body = await asyncio.wait_for(reader.readexactly(content_length), timeout=read_timeout)
-                reusable = not upstream_wants_close
+                # D22 : HTTP/1.1, aucun jeton close, et rien apres le corps annonce
+                reusable = version == "HTTP/1.1" and not _asks_close(response_headers) and not _has_pending_bytes(reader)
             else:
                 response_body = await asyncio.wait_for(reader.read(), timeout=read_timeout)
                 reusable = False
         except (asyncio.IncompleteReadError, asyncio.TimeoutError, ValueError, OSError) as e:
             await _close_quietly(writer)
-            raise HttpProxyConnectionError(f"erreur de communication avec l'upstream ({host}:{port}) : {e}") from e
+            error = _NoResponseFromReusedConnection if reused and not response_started else HttpProxyConnectionError
+            raise error(f"erreur de communication avec l'upstream ({host}:{port}) : {e}") from e
 
         if reusable:
             self._release_connection(key, (reader, writer))

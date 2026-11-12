@@ -5,6 +5,7 @@ from dataclasses import replace
 from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.application.server.serve_proxy import (
     AllUpstreamsAtCapacityError,
+    build_outgoing_headers,
     resolve_upstream,
     serve_proxy,
 )
@@ -732,6 +733,42 @@ class TestProxyHopGuard(unittest.IsolatedAsyncioTestCase):
         response = await serve_proxy(request, _zone(), client, ProxyLoadBalancerState(), ProxyHealthState())
         self.assertEqual(response.status, 200)
         self.assertEqual(len(client.calls), 1)
+
+
+
+class TestCorrectif262ForwardingHeaders(unittest.TestCase):
+    """Correctif 2.6.2 (D25, P11) : en-tetes fournis par le client jamais relayes au backend."""
+
+    _FORGED = (("X-Real-IP", "10.0.0.1"), ("Forwarded", "for=10.0.0.1"), ("Proxy-Connection", "keep-alive"),
+               ("Connection", "X-Secret-Hop, keep-alive"), ("X-Secret-Hop", "saut"), ("X-Forwarded-For", "10.0.0.2"),
+               ("X-Forwarded-Port", "8443"), ("Accept", "text/html"))
+
+    def _sent(self, headers, preserve_upgrade=False, remote_ip="203.0.113.9"):
+        request = _request(headers=list(headers), remote_ip=remote_ip)
+        sent = build_outgoing_headers(request, _zone(), _zone().upstreams[0], preserve_upgrade=preserve_upgrade)
+        return [(name.lower(), value) for name, value in sent]
+
+    def test_forged_identity_headers_never_reach_the_backend(self):
+        sent = self._sent(self._FORGED)
+        names = [name for name, _ in sent]
+        for name in ("forwarded", "proxy-connection", "x-secret-hop", "connection"):
+            self.assertNotIn(name, names)
+        self.assertEqual([v for n, v in sent if n == "x-real-ip"], ["203.0.113.9"])  # reecrit, une seule fois
+        self.assertEqual([v for n, v in sent if n == "x-forwarded-for"], ["203.0.113.9"])
+        self.assertNotIn("10.0.0.1", " ".join(v for _, v in sent))
+
+    def test_unrelated_headers_and_x_forwarded_port_still_forwarded(self):
+        sent = dict(self._sent(self._FORGED))
+        self.assertEqual(sent["accept"], "text/html")
+        self.assertEqual(sent["x-forwarded-port"], "8443")  # decision de l'auteur : passe comme avant
+
+    def test_websocket_keeps_upgrade_but_drops_other_named_headers(self):
+        sent = self._sent([("Connection", "Upgrade, X-Secret-Hop"), ("Upgrade", "websocket"), ("X-Secret-Hop", "saut")],
+                          preserve_upgrade=True)
+        names = [name for name, _ in sent]
+        self.assertIn("connection", names)
+        self.assertIn("upgrade", names)
+        self.assertNotIn("x-secret-hop", names)
 
 
 if __name__ == "__main__":

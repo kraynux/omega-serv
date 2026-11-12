@@ -2,8 +2,8 @@ OMEGA-SERV 2.6.2 - Ce qui change pour vous
 ==========================================
 
 Un correctif de sécurité. Mise à jour conseillée si vous utilisez le moteur natif
-(server.engine = native). Rien à changer dans votre configuration. Le détail technique
-complet reste dans le CHANGELOG.
+(server.engine = native) ou le reverse proxy. Rien à changer dans votre configuration.
+Le détail technique complet reste dans le CHANGELOG.
 
 
 SÉCURITÉ
@@ -16,6 +16,14 @@ SÉCURITÉ
   quand body_max_inspect_bytes était réglé au-delà d'environ 170 Ko.
 - Processus de sécurité : une décision de blocage ne peut plus se perdre quand le canal
   vers le moteur natif est momentanément plein.
+- Reverse proxy : la réponse d'un visiteur ne peut plus partir chez un autre visiteur
+  quand un backend envoie plus de données qu'il n'en annonce.
+- Reverse proxy : une réponse de longueur ambiguë est refusée (502) au lieu d'être
+  tronquée.
+- Reverse proxy : une requête POST (commande, paiement, formulaire) n'est plus jamais
+  envoyée deux fois au backend.
+- Reverse proxy : un visiteur ne peut plus se faire passer pour une autre adresse auprès
+  du backend avec X-Real-IP ou Forwarded.
 
 
 À SAVOIR
@@ -23,3 +31,6 @@ SÉCURITÉ
 - Si vous avez réglé options.waf.inspect.body_max_inspect_bytes très haut, le journal
   d'erreurs indique au démarrage jusqu'où le moteur natif inspecte le corps des
   requêtes. Le serveur démarre normalement.
+- Le backend reçoit maintenant X-Real-IP, avec la vraie adresse du visiteur (la même que
+  X-Forwarded-For). Derrière Tailscale ou un autre relais, déclarez-le dans trusted_proxy
+  pour que ce soit l'adresse du visiteur, et pas celle du relais.

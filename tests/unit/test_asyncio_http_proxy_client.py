@@ -393,5 +393,145 @@ class TestAsyncioHttpProxyClientTls(unittest.IsolatedAsyncioTestCase):
             await server.wait_closed()
 
 
+
+class _ScriptedBackend:
+    """Backend HTTP/1.1 persistant : rend `scripts[i]` a la i-eme requete (toutes connexions confondues),
+    puis une reponse propre. Garde les connexions pour les fermer avant `server.close()`."""
+
+    def __init__(self, scripts, close_after=()):
+        self.scripts = list(scripts)
+        self.close_after = set(close_after)
+        self.received: list[bytes] = []
+        self.connections = 0
+        self.writers = []
+
+    async def handle(self, reader, writer):
+        self.connections += 1
+        self.writers.append(writer)
+        try:
+            while True:
+                head = await reader.readuntil(b"\r\n\r\n")
+                length = next((int(line.split(b":")[1]) for line in head.split(b"\r\n")
+                               if line.lower().startswith(b"content-length:")), 0)
+                if length:
+                    await reader.readexactly(length)
+                self.received.append(head)
+                index = len(self.received) - 1
+                writer.write(self.scripts[index] if index < len(self.scripts)
+                             else b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nreel")
+                await writer.drain()
+                if index in self.close_after:
+                    break
+        except (asyncio.IncompleteReadError, ConnectionError):
+            pass
+        writer.close()
+
+    def methods(self) -> list[bytes]:
+        return [head.split(b" ", 1)[0] for head in self.received]
+
+
+class TestCorrectif262ProxyClient(unittest.IsolatedAsyncioTestCase):
+    """Correctif 2.6.2 (OMEGA-SERV_PLAN_CORRECTIF_2.6.2.md §7) : D21, D22, D42. Chaque test echouait sur 2.6.1."""
+
+    async def _run(self, backend, calls):
+        server = await asyncio.start_server(backend.handle, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+        client = AsyncioHttpProxyClient()
+        results = []
+        try:
+            for method, path in calls:
+                try:
+                    results.append(await client.forward_request(
+                        "127.0.0.1", port, method, path, (), b"x=1" if method == "POST" else b"", 2.0, 2.0))
+                except HttpProxyConnectionError as e:
+                    results.append(e)
+        finally:
+            await _close_pooled_connections(client)
+            for writer in backend.writers:
+                writer.close()
+            server.close()
+            await server.wait_closed()
+        return results
+
+    async def test_d22_extra_bytes_after_body_never_reach_the_next_client(self):
+        backend = _ScriptedBackend([(b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nhello"
+                                     b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nPWNED!")])
+        first, second, third = await self._run(backend, [("GET", "/a"), ("GET", "/b"), ("GET", "/c")])
+        self.assertEqual(first.body, b"hello")
+        self.assertEqual(second.body, b"reel")  # 2.6.1 : PWNED!, puis la reponse de B allait a C
+        self.assertEqual(third.body, b"reel")
+        self.assertEqual(len(backend.received), 3)
+
+    async def test_d22_connection_close_token_list_and_http10_never_recycled(self):
+        for response in (b"HTTP/1.1 200 OK\r\nConnection: keep-alive, Close\r\nContent-Length: 2\r\n\r\nok",
+                         b"HTTP/1.0 200 OK\r\nContent-Length: 2\r\n\r\nok"):
+            with self.subTest(response=response):
+                backend = _ScriptedBackend([response])
+                await self._run(backend, [("GET", "/a"), ("GET", "/b")])
+                self.assertEqual(backend.connections, 2)
+
+    async def test_d22_bytes_arriving_while_idle_discard_the_pooled_connection(self):
+        backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok"])
+        server = await asyncio.start_server(backend.handle, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+        client = AsyncioHttpProxyClient()
+        try:
+            await client.forward_request("127.0.0.1", port, "GET", "/a", (), b"", 2.0, 2.0)
+            backend.writers[0].write(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nPWNED!")  # hors reponse
+            await asyncio.sleep(0.05)
+            second = await client.forward_request("127.0.0.1", port, "GET", "/b", (), b"", 2.0, 2.0)
+            self.assertEqual(second.body, b"reel")
+            self.assertEqual(backend.connections, 2)
+        finally:
+            await _close_pooled_connections(client)
+            for writer in backend.writers:
+                writer.close()
+            server.close()
+            await server.wait_closed()
+
+    async def test_d21_ambiguous_length_is_an_error_and_never_recycled(self):
+        cases = {
+            "CL + TE": b"HTTP/1.1 200 OK\r\nContent-Length: 9\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nabcd\r\n0\r\n\r\n",
+            "CL differents": b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Length: 3\r\n\r\nokk",
+            "CL liste differente": b"HTTP/1.1 200 OK\r\nContent-Length: 2, 3\r\n\r\nokk",
+            "CL signe": b"HTTP/1.1 200 OK\r\nContent-Length: +2\r\n\r\nok",
+            "CL liste identique": b"HTTP/1.1 200 OK\r\nContent-Length: 2, 2\r\n\r\nok",
+        }
+        for label, response in cases.items():
+            with self.subTest(label):
+                backend = _ScriptedBackend([response])
+                first, second = await self._run(backend, [("GET", "/a"), ("GET", "/b")])
+                self.assertIsInstance(first, HttpProxyConnectionError)
+                self.assertEqual(second.body, b"reel")
+                self.assertEqual(len(backend.received), 2)  # aucune requete rejouee
+                self.assertEqual(backend.connections, 2)
+
+    async def test_d21_repeated_identical_content_length_still_accepted(self):
+        # garde : deja accepte en 2.6.1, comportement inchange
+        backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Length: 2\r\n\r\nok"])
+        (first,) = await self._run(backend, [("GET", "/a")])
+        self.assertEqual(first.body, b"ok")
+
+    async def test_d42_post_never_uses_a_pooled_connection_and_is_sent_once(self):
+        backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nokXX\r\n"])
+        _first, second = await self._run(backend, [("GET", "/a"), ("POST", "/payer")])
+        self.assertEqual(second.body, b"reel")
+        self.assertEqual(backend.methods().count(b"POST"), 1)  # 2.6.1 : 2
+
+    async def test_d42_non_replayable_methods_open_a_new_connection(self):
+        for method in ("POST", "PUT", "PATCH", "DELETE"):
+            with self.subTest(method):
+                backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok"])
+                await self._run(backend, [("GET", "/a"), (method, "/b")])
+                self.assertEqual(backend.connections, 2)
+
+    async def test_d42_get_is_not_replayed_once_the_response_has_started(self):
+        backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok",
+                                    b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\nabc"], close_after={1})
+        _first, second = await self._run(backend, [("GET", "/a"), ("GET", "/b")])
+        self.assertIsInstance(second, HttpProxyConnectionError)
+        self.assertEqual(len(backend.received), 2)  # coupee en pleine reponse : jamais rejouee
+
+
 if __name__ == "__main__":
     unittest.main()
