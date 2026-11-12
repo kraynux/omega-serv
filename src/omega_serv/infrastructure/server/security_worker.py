@@ -17,6 +17,7 @@ import os
 import signal
 import socket
 import sys
+from collections import deque
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -76,6 +77,7 @@ def _start_task(coro) -> None:  # type: ignore[no-untyped-def]
 
 _WATCH_SYNC_SECONDS = 1.0     # leurres affectes ailleurs (RIPOSTE) : vus par le natif en au plus 1 s
 _WATCH_ENTRIES_PER_FRAME = 2000  # ≈ 100 Kio par trame, loin de MAX_PAYLOAD
+_PENDING_WARNING = 1000  # trames en attente sur un canal : signale une fois (natif qui ne lit plus)
 
 
 class SecurityWorker:
@@ -85,6 +87,8 @@ class SecurityWorker:
         self.open_channels = len(channels)
         self.done: asyncio.Event | None = None
         self._watched: dict[str, float] = {}  # adresse -> echeance deja envoyee au natif
+        # Correctif 2.6.2 (D19) : trames qui attendent que le canal se libere, par canal, dans l'ordre d'envoi.
+        self._pending: dict[socket.socket, deque[bytes]] = {}
         server.watch_sink = self._watch
 
     async def run(self) -> None:
@@ -109,11 +113,51 @@ class SecurityWorker:
             return
         for start in range(0, len(fresh), _WATCH_ENTRIES_PER_FRAME):
             chunk = fresh[start:start + _WATCH_ENTRIES_PER_FRAME]
-            try:
-                channel.sendall(ipc.encode(ipc.watch_frame(chunk)))
-            except OSError:
+            if not self._send(channel, ipc.encode(ipc.watch_frame(chunk))):
                 return  # canal perdu : le natif s'arrete, ou un nouveau processus de securite renverra la liste
-            self._watched.update(chunk)
+            self._watched.update(chunk)  # envoyee ou en file : la file garantit l'envoi tant que le canal vit
+
+    # ------------------------------------------------------------------ envoi vers le natif
+    def _send(self, channel: socket.socket, data: bytes) -> bool:
+        """Correctif 2.6.2 (D19) : avant, canal non bloquant + `except OSError: pass` -> un verdict (meme « bloquer »)
+        ou une entree WATCH disparaissait quand le canal etait plein ; la requete attendait 60 s puis passait en
+        fail-open. Desormais : envoi direct si rien n'attend, sinon file videe des que le canal se libere, toujours
+        dans l'ordre (SEQPACKET : une trame part entiere ou pas du tout). False seulement si le canal est perdu - sa
+        fermeture reste faite par la lecture, qui voit la fin du canal (comme avant)."""
+        if channel.fileno() < 0:
+            return False
+        queue = self._pending.get(channel)
+        if queue is not None:
+            queue.append(data)
+            if len(queue) == _PENDING_WARNING:
+                print(f"processus de securite : {len(queue)} trames attendent que le moteur natif lise son canal",
+                      file=sys.stderr)
+            return True
+        try:
+            channel.send(data)
+            return True
+        except BlockingIOError:
+            self._pending[channel] = deque([data])
+            asyncio.get_running_loop().add_writer(channel.fileno(), self._flush, channel)
+            return True
+        except OSError:
+            return False
+
+    def _flush(self, channel: socket.socket) -> None:
+        queue = self._pending.get(channel)
+        while queue:
+            try:
+                channel.send(queue[0])
+            except BlockingIOError:
+                return  # toujours plein : add_writer rappellera
+            except OSError:
+                break  # canal perdu : la lecture le fermera
+            queue.popleft()
+        self._drop_pending(channel)
+
+    def _drop_pending(self, channel: socket.socket) -> None:
+        if self._pending.pop(channel, None) is not None and channel.fileno() >= 0:
+            asyncio.get_running_loop().remove_writer(channel.fileno())
 
     async def _sync_watch_list(self) -> None:
         """Affectations ecrites par un autre processus (RIPOSTE, autre processus de securite) ou deja presentes au
@@ -176,6 +220,7 @@ class SecurityWorker:
             client.close()
 
     def _close(self, channel: socket.socket) -> None:
+        self._drop_pending(channel)
         asyncio.get_running_loop().remove_reader(channel.fileno())
         channel.close()
         self.open_channels -= 1
@@ -208,12 +253,7 @@ class SecurityWorker:
         except Exception as e:  # noqa: BLE001 - moteur Python : exception = connexion fermee sans reponse
             print(f"processus de securite : erreur sur {request_id} : {type(e).__name__} : {e}", file=sys.stderr)
             data = ipc.encode(ipc.abort_frame(frame.request_id))
-        if channel.fileno() < 0:
-            return
-        try:
-            channel.sendall(data)
-        except OSError:
-            pass
+        self._send(channel, data)
 
 
 def run_security_worker(server: AsyncioHttpServer, channel_fds: list[int], reload: Callable[[], None]) -> int:

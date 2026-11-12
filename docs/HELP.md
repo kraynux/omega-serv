@@ -1,4 +1,4 @@
-# omega-serv 2.6.1 : aide de la ligne de commande
+# omega-serv 2.6.2 : aide de la ligne de commande
 
 > Fichier généré par `tools/cli_reference.py` depuis le code : ne pas le modifier à la main.
 

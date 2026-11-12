@@ -130,10 +130,10 @@ Omega-serv **root के रूप में शुरू होने से �
 
 ### डाउनलोड
 
-नवीनतम संस्करण का आर्काइव और हर संस्करण के SHA-256 फ़िंगरप्रिंट: [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+नवीनतम संस्करण का आर्काइव और हर संस्करण के SHA-256 फ़िंगरप्रिंट: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +143,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. इंस्टॉलेशन
 
 ```bash
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +163,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/ के PARENT फ़ोल्डर से (कभी उसके अंदर से नहीं)
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 ./install.sh
 ```

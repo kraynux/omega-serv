@@ -130,10 +130,10 @@ Omega-serv **từ chối khởi động với quyền root**. Không mô-đun b�
 
 ### Tải xuống
 
-Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +143,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. Cài đặt
 
 ```bash
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +163,7 @@ Nếu `omega-serv/` đã tồn tại (bản cài đặt trước), **đừng bao
 
 ```bash
 # Từ thư mục CHA của omega-serv/ (không bao giờ từ bên trong)
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 ./install.sh
 ```

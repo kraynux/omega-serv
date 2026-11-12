@@ -12,6 +12,8 @@ from omega_serv.domain.security.security_headers import apply_security_headers
 from omega_serv.infrastructure.server.native_snapshot import (
     SNAPSHOT_FORMAT,
     build_native_snapshot,
+    native_inspect_body_limit,
+    native_inspect_body_notice,
     native_unsupported_features,
     write_native_snapshot,
 )
@@ -108,6 +110,29 @@ class TestNativeSnapshot(unittest.TestCase):
         # Lot 5 : listing de repertoire seul -> processus Python pour les routes deleguees, sans etape de securite
         listing = OmegaServConfig.from_dict({"options": {"dirlisting": {"enabled": True}}})
         self.assertFalse(build_native_snapshot(listing, self.root, 1)["inspect"]["security_stage"])
+
+    def test_inspected_body_fits_the_inspect_frame(self):
+        # Correctif 2.6.2 (D20) : body_max_inspect_bytes au-dela de ce que la trame INSPECT peut porter -> trame
+        # refusee et requete servie SANS controle en fail-open. La part envoyee est plafonnee, avertissement seulement.
+        def config(body: int, header: int = 16_384) -> OmegaServConfig:
+            return OmegaServConfig.from_dict({"server": {"max_header_size": header},
+                                              "options": {"waf": {"enabled": True,
+                                                                  "inspect": {"body_max_inspect_bytes": body}}}})
+        full = (1 << 20) + 24  # trame complete (en-tete 24 octets + 1 Mio)
+        self.assertEqual(native_inspect_body_limit(config(65_536)), full - 24 - 16_384 - 8_192 - 16_384)
+        self.assertEqual(native_inspect_body_limit(config(65_536), 212_992 - 512),
+                         212_992 - 512 - 24 - 16_384 - 8_192 - 16_384)  # systeme qui refuse d'agrandir les tampons
+        self.assertEqual(native_inspect_body_limit(config(65_536, header=4 << 20)), 0)  # tete demesuree : rien du corps
+        self.assertEqual(build_native_snapshot(config(65_536), self.root, 1)["inspect"]["body_bytes"], 65_536)
+        self.assertEqual(build_native_snapshot(config(2_000_000), self.root, 1)["inspect"]["body_bytes"],
+                         native_inspect_body_limit(config(2_000_000)))
+        self.assertIsNone(native_inspect_body_notice(config(65_536), full))  # configuration par defaut : rien a dire
+        notice = native_inspect_body_notice(config(2_000_000), full)
+        assert notice is not None
+        self.assertIn("corps inspecte limite", notice)
+        self.assertIn("2000000", notice)
+        self.assertIsNotNone(native_inspect_body_notice(config(200_000), 212_992 - 512))  # petit tampon : averti
+        self.assertIsNone(native_inspect_body_notice(OmegaServConfig.from_dict({}), full))  # WAF coupe
 
     def test_waf_filter_section(self):
         # Plan WAF natif, lot 0 : null sans WAF ; regles retraduites ; pack introuvable -> indisponible (tout a Python)

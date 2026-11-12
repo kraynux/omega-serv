@@ -130,10 +130,10 @@ Omega-serv **verweigert den Start als root**. In keinem mitgelieferten Profil, a
 
 ### Download
 
-Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Archiv der neuesten Version und SHA-256-Prüfsummen jeder Version: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +143,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. Installation
 
 ```bash
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +163,7 @@ Wenn `omega-serv/` bereits existiert (frühere Installation), **starten Sie `tar
 
 ```bash
 # Aus dem ÜBERGEORDNETEN Ordner von omega-serv/ (niemals von innen)
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 ./install.sh
 ```

@@ -146,6 +146,8 @@ struct Connection {
     bool log_access_even_if_write_fails = false;
     bool keep_alive_after_write = false;
     bool want_write = false;
+    // Correctif 2.6.2 (D29) : surveillance epoll vide pendant l'attente d'un verdict (voir pause_interest).
+    bool interest_paused = false;
 
     // Lot 4 : corps capture pour l'INSPECT (premiers octets, waf.inspect), identifiant numerique de la requete.
     std::string body_capture;
@@ -186,10 +188,16 @@ struct Server::Worker {
     struct Outgoing {
         std::string encoded;
         std::vector<int> fds;  // HANDOFF : descripteurs a transmettre (fermes ici apres envoi)
+        std::uint64_t inspect_key = 0;  // INSPECT : requete a refuser si le noyau rejette la trame (correctif 2.6.2)
     };
     std::deque<Outgoing> data_out;
     std::unordered_map<std::uint64_t, int> awaiting_verdict;  // identifiant de requete -> fd de la connexion
     static constexpr std::size_t kMaxQueuedInspects = 4096;
+    // Correctif 2.6.2 (D20) : plus grande trame que le canal accepte d'un bloc (SOCK_SEQPACKET : tampon d'envoi moins
+    // l'en-tete du noyau). Le systeme le fixe a 208 Kio par defaut (net.core.wmem_default) : bien en dessous de
+    // kMaxPayload. Le superviseur l'agrandit quand le systeme le permet ; la valeur reelle est relue ici.
+    std::size_t max_message = ipc::kHeaderSize + ipc::kMaxPayload;
+    static constexpr std::size_t kInspectFrameMargin = 16 * 1024;  // champs de la trame hors tete et corps
 
     Worker(Server& owner, std::size_t rank) : server(owner), index(rank) {}
     ~Worker() {
@@ -227,6 +235,18 @@ struct Server::Worker {
             return;
         }
         data_fd = fd;
+        int sndbuf = 0;
+        socklen_t length = sizeof sndbuf;
+        max_message = ipc::kHeaderSize + ipc::kMaxPayload;
+        if (::getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sndbuf, &length) == 0 && sndbuf > 1024) {
+            max_message = std::min(max_message, static_cast<std::size_t>(sndbuf) - 512);  // en-tete du noyau : marge
+        }
+    }
+
+    // Part du corps qui tient dans une trame INSPECT a cote de cette tete (correctif 2.6.2, D20).
+    std::uint64_t inspect_body_budget(const Connection& c) const {
+        const std::size_t used = ipc::kHeaderSize + kInspectFrameMargin + c.raw_head.size();
+        return used >= max_message ? 0 : static_cast<std::uint64_t>(max_message - used);
     }
 
     void poll_new_data_channel() {
@@ -252,6 +272,21 @@ struct Server::Worker {
             if (result == 1) {
                 set_data_interest(true);
                 return true;
+            }
+            if (result == 2) {  // D20 : trame refusee par le noyau - le canal reste bon, seule cette requete est refusee
+                Outgoing rejected = std::move(data_out.front());
+                data_out.pop_front();
+                for (int fd : rejected.fds) ::close(fd);  // connexion confiee non transmise : le client voit une fin
+                const auto waiting = rejected.inspect_key != 0 ? awaiting_verdict.find(rejected.inspect_key)
+                                                               : awaiting_verdict.end();
+                if (waiting != awaiting_verdict.end()) {
+                    auto it = connections.find(waiting->second);
+                    if (it != connections.end() && it->second->phase == Phase::inspect &&
+                        it->second->inspect_key == rejected.inspect_key) {
+                        inspection_failed(*it->second, "requete trop grande pour le canal", true);
+                    }
+                }
+                continue;
             }
             if (result < 0) {
                 data_channel_lost("envoi impossible");
@@ -344,7 +379,8 @@ struct Server::Worker {
             return;
         }
         fds.push_back(client);
-        if (pending.size() <= kInlineBytes) {
+        // D20 : en ligne seulement si la trame tient dans le tampon du canal ; sinon memfd (deja prevu au-dela de 768 Kio).
+        if (pending.size() <= kInlineBytes && pending.size() + kInspectFrameMargin <= max_message) {
             frame.add(ipc::tag::kHandoffBytes, std::move(pending));
         } else {
             const int memfd = ::memfd_create("omega-handoff", MFD_CLOEXEC);
@@ -408,29 +444,51 @@ struct Server::Worker {
                                                       std::chrono::system_clock::now().time_since_epoch()).count()))
             frame.add_u8(ipc::tag::kInspectBlocklistClear, 1);
         std::string encoded = ipc::encode(frame);
-        if (encoded.size() > ipc::kHeaderSize + ipc::kMaxPayload) {
-            inspection_failed(c, "requete trop grande pour le canal");
+        if (encoded.size() > max_message) {
+            // Correctif 2.6.2 (D20) : condition que le client provoque lui-meme (tete ou corps enormes) - la laisser
+            // passer en fail-open serait un contournement du controle. Toujours refusee, quel que soit on_error.
+            inspection_failed(c, "requete trop grande pour le canal", true);
             return;
         }
-        data_out.push_back(Outgoing{std::move(encoded), {}});
+        data_out.push_back(Outgoing{std::move(encoded), {}, c.inspect_key});
         c.phase = Phase::inspect;
+        pause_interest(c);
         c.deadline = after_seconds(static_cast<double>(settings.timeout_ms) / 1000.0);
         c.has_deadline = true;
         awaiting_verdict[c.inspect_key] = c.fd;
         flush_data_out();
     }
 
+    // Correctif 2.6.2 (D29) : pendant l'attente du verdict, plus aucune surveillance en lecture. En declenchement par
+    // niveau, un client a demi ferme (ou des octets deja recus) faisait tourner le fil a 100 % jusqu'au verdict.
+    // EPOLLHUP / EPOLLERR restent toujours signales : client parti, voir abandon_inspection. Une simple
+    // demi-fermeture est vue apres la reponse, comme dans le moteur Python (qui ne lit pas pendant le traitement).
+    void pause_interest(Connection& c) {
+        epoll_event event{};
+        event.events = 0;
+        event.data.fd = c.fd;
+        ::epoll_ctl(epoll_fd, EPOLL_CTL_MOD, c.fd, &event);
+        c.interest_paused = true;
+    }
+
+    void abandon_inspection(Connection& c) {
+        awaiting_verdict.erase(c.inspect_key);  // verdict tardif ignore (apply_verdict ne le trouve plus)
+        close_connection(c);                    // ConnectionResetError : fin silencieuse, comme asyncio
+    }
+
     // Processus de securite indisponible, en retard ou canal plein : waf.on_internal_error (Auth : toujours refuse).
-    void inspection_failed(Connection& c, const char* why) {
+    // `always_refuse` : requete impossible a controler (trop grande pour le canal) - jamais servie sans controle.
+    void inspection_failed(Connection& c, const char* why, bool always_refuse = false) {
         awaiting_verdict.erase(c.inspect_key);
         if (c.delegating) {  // route Python injoignable : rien a servir a sa place (jamais une boucle de routage)
             log_error(c, std::string("route confiée à Python indisponible (") + why + ")", c.request.request_id);
             respond(c, error_response(503), true);
             return;
         }
-        const bool fail_closed = c.snapshot->inspect->fail_closed;
+        const bool fail_closed = always_refuse || c.snapshot->inspect->fail_closed;
         log_error(c, std::string("controle de securite indisponible (") + why + ") : requete " +
-                         (fail_closed ? "refusee (503, fail-closed)" : "servie sans controle (fail-open)"),
+                         (always_refuse ? "refusee (503, jamais servie sans controle)"
+                          : fail_closed ? "refusee (503, fail-closed)" : "servie sans controle (fail-open)"),
                   c.request.request_id);
         if (!fail_closed && c.snapshot->inspect->blocklist_path &&
             blocklist_for(*c.snapshot->inspect->blocklist_path)
@@ -649,8 +707,9 @@ struct Server::Worker {
     }
 
     void set_write_interest(Connection& c, bool want) {
-        if (c.want_write == want) return;
+        if (c.want_write == want && !c.interest_paused) return;  // surveillance suspendue : toujours retablie
         c.want_write = want;
+        c.interest_paused = false;
         // En ecriture : EPOLLOUT SEUL. Des octets deja recus (pipelining) ou une demi-fermeture garderaient
         // EPOLLIN / EPOLLRDHUP actifs en permanence (declenchement par niveau) : la boucle tournerait a vide
         // tant que le client ne lit pas. Python ne lit pas non plus pendant l'ecriture.
@@ -833,7 +892,7 @@ struct Server::Worker {
             const std::string method = latin1_to_utf8(c.head.method);
             for (const std::string& allowed : snapshot.inspect->body_methods) c.capture_body = c.capture_body || allowed == method;
         }
-        c.capture_limit = c.capture_body ? snapshot.inspect->body_bytes : 0;
+        c.capture_limit = c.capture_body ? std::min(snapshot.inspect->body_bytes, inspect_body_budget(c)) : 0;
         c.phase = Phase::read_body;
         c.deadline = after_seconds(c.phase_timeout);  // nouveau wait_for(..., timeout) pour le corps
         c.has_deadline = true;
@@ -1150,6 +1209,10 @@ struct Server::Worker {
                 auto it = connections.find(fd);
                 if (it == connections.end()) continue;
                 Connection& c = *it->second;
+                if (c.phase == Phase::inspect) {  // D29 : seuls EPOLLHUP / EPOLLERR arrivent ici (pause_interest)
+                    if (events[i].events & (EPOLLHUP | EPOLLERR)) abandon_inspection(c);
+                    continue;
+                }
                 if (c.phase == Phase::handshake) {
                     on_handshake(c);
                     continue;

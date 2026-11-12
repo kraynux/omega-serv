@@ -130,10 +130,10 @@ Omega-serv **ปฏิเสธการเริ่มทำงานในฐ�
 
 ### ดาวน์โหลด
 
-ไฟล์เก็บถาวรของเวอร์ชันล่าสุดและค่าแฮช SHA-256 ของทุกเวอร์ชัน: [omega-serv-2.6.1.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+ไฟล์เก็บถาวรของเวอร์ชันล่าสุดและค่าแฮช SHA-256 ของทุกเวอร์ชัน: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.1.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +143,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. การติดตั้ง
 
 ```bash
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +163,7 @@ chmod +x install.sh
 
 ```bash
 # จากโฟลเดอร์แม่ของ omega-serv/ (ห้ามทำจากภายใน)
-tar -xzf omega-serv-2.6.1.tar.gz
+tar -xzf omega-serv-2.6.2.tar.gz
 cd omega-serv/
 ./install.sh
 ```

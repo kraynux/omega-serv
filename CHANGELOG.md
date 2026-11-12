@@ -13,6 +13,48 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## version 2.6.2 : Publié
+
+**Correctif de sécurité, mise à jour conseillée** pour toute installation qui utilise le moteur natif
+(`server.engine = native`). Trois failles trouvées par les analyses de sécurité préparant la 3.0.0
+(`~/DEV/SERV/OMEGA-SERV_ANALYSES_PROXY_NATIF.md`, plan `OMEGA-SERV_PLAN_CORRECTIF_2.6.2.md`), chacune prouvée par
+un essai avant correction. Aucune option nouvelle, aucun changement de configuration à faire.
+
+### Sécurité
+
+- **Moteur natif : un client pouvait occuper un cœur à 100 % pendant l'attente d'un verdict (D29).** Pendant que
+  le processus de sécurité Python juge une requête, la connexion du client restait surveillée en lecture ; un
+  client qui fermait son côté écriture faisait tourner le fil à vide jusqu'au verdict (jusqu'à 60 s, davantage en
+  mode guerre, qui retient volontairement les verdicts des sources hostiles). Mesuré : 99 % d'un cœur par
+  connexion. Désormais la connexion n'est plus surveillée en lecture pendant l'attente ; un client réellement
+  parti est détecté et sa connexion libérée aussitôt. Une simple demi-fermeture est traitée comme par le moteur
+  Python : la réponse est envoyée, puis la connexion se ferme.
+- **Moteur natif : une requête trop grande pour être inspectée était servie sans contrôle (D20).** La requête
+  soumise au processus de sécurité (tête et début du corps) voyage dans une trame dont la taille est limitée par
+  le tampon du canal (208 Kio par défaut sur Linux). Au-delà, en `waf.on_internal_error = fail-open` (réglage par
+  défaut), la requête était servie **sans WAF ni limite de débit** : c'était le cas dès que
+  `waf.inspect.body_max_inspect_bytes` dépassait environ 170 Kio, ou avec un `server.max_header_size` très
+  élevé. Pire, une trame refusée par le système faisait perdre le canal entier du fil, et toutes les inspections
+  suivantes de ce fil passaient sans contrôle. Désormais :
+  - les canaux sont créés avec un tampon assez grand pour une trame complète quand le système le permet
+    (`net.core.wmem_max`), et le moteur natif relit la capacité réelle ;
+  - la part du corps envoyée est plafonnée à ce qui tient dans la trame. Un avertissement est écrit dans le
+    journal d'erreurs au démarrage et au rechargement quand ce plafond réduit `body_max_inspect_bytes` (jamais un
+    refus de démarrer) ;
+  - une requête impossible à inspecter est **toujours refusée (503)**, quel que soit `on_internal_error`, et
+    seule cette requête est touchée : le canal reste en service.
+- **Processus de sécurité : un verdict pouvait se perdre en silence (D19).** Les verdicts et la liste des
+  sources surveillées partent vers le moteur natif sur un canal non bloquant ; quand ce canal était plein,
+  l'erreur était ignorée et la trame perdue. La requête attendait alors 60 s puis passait en `fail-open` : **un
+  verdict « bloquer » pouvait ainsi se perdre**. Désormais les trames attendent que le canal se libère et partent
+  toutes, dans l'ordre.
+
+### Tests
+
+- 7 tests ajoutés (4 d'intégration du moteur natif, 2 du processus de sécurité, 1 de l'instantané), écrits
+  avant chaque correction. Cinq échouaient sur 2.6.1 ; les deux autres gardent contre une régression du
+  correctif (client coupé par RST pendant l'attente, canal perdu pendant que des trames attendent).
+
 ## version 2.6.1 : Publié
 
 Correctifs issus de l'étude de l'interconnecteur de la suite (`~/DEV/CONNECT/`), étape 1 : rendre chaque outil

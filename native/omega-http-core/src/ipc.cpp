@@ -152,6 +152,7 @@ int send_encoded_nowait(int socket_fd, const std::string& encoded, const std::ve
         if (sent == static_cast<ssize_t>(encoded.size())) return 0;
         if (sent < 0 && errno == EINTR) continue;
         if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) return 1;
+        if (sent < 0 && errno == EMSGSIZE) return 2;  // correctif 2.6.2 (D20) : cette trame seulement
         return -1;
     }
 }

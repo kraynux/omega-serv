@@ -153,6 +153,33 @@ def recv_frame(sock: socket.socket, timeout: float | None) -> tuple[Frame, int |
     return frame, (fds[0] if fds else None)
 
 
+DATA_CHANNEL_BUFFER = HEADER_SIZE + MAX_PAYLOAD + 64 * 1024
+"""Tampon d'envoi demande pour les canaux INSPECT/VERDICT (correctif 2.6.2, D20). Une trame SOCK_SEQPACKET plus grande
+que le tampon d'envoi est refusee par le noyau (EMSGSIZE) ; par defaut 208 Kio (net.core.wmem_default), bien en dessous
+de MAX_PAYLOAD. Le noyau plafonne la demande a net.core.wmem_max : le natif relit la valeur obtenue."""
+
+
+def data_channel_pair() -> tuple[socket.socket, socket.socket]:
+    """Canal natif <-> processus de securite, tampons d'envoi agrandis autant que le systeme le permet."""
+    pair = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+    for end in pair:
+        try:
+            end.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, DATA_CHANNEL_BUFFER)
+        except OSError:
+            pass  # valeur par defaut du systeme : le natif plafonne ses trames en consequence
+    return pair
+
+
+def data_channel_message_max() -> int:
+    """Plus grande trame qu'un canal de donnees accepte sur ce systeme (meme calcul que le natif, server.cpp)."""
+    first, second = data_channel_pair()
+    try:
+        return min(HEADER_SIZE + MAX_PAYLOAD, first.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF) - 512)
+    finally:
+        first.close()
+        second.close()
+
+
 def sealed_memfd(content: bytes, name: str = "omega-serv-snapshot") -> int:
     """memfd en lecture seule pour le natif : scelle (ni ecriture, ni retaille) apres remplissage."""
     fd = os.memfd_create(name, os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)

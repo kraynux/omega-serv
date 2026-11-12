@@ -546,7 +546,8 @@ class TestServeSupervisor(unittest.TestCase):
         self.assertEqual(statuses.count(429), 5, statuses)
         self.assertEqual(len([s for s in statuses if s != 429]), 3, statuses)
 
-    def _serve_waf(self, extra_waf: dict | None = None) -> int:
+    def _serve_waf(self, extra_waf: dict | None = None, extra_server: dict | None = None,
+                   security: dict | None = None) -> int:
         """WAF avec les packs body-sqli et scanner-ua ; rend le pid du processus de securite."""
         rules = self.root / "secure" / "waf" / "rules"
         rules.mkdir(parents=True, exist_ok=True)
@@ -555,8 +556,10 @@ class TestServeSupervisor(unittest.TestCase):
             shutil.copy(REPO / "secure" / "waf" / "rules" / name, rules / name)
         waf = {"enabled": True, "mode": "block", "rules": {"paths": [f"secure/waf/rules/{n}" for n in names]},
                **(extra_waf or {})}
-        (self.root / "config" / "omega-serve.json").write_text(json.dumps({
-            "server": {"engine": "native", "port": self.port}, "options": {"waf": waf}}))
+        config: dict = {"server": {"engine": "native", "port": self.port, **(extra_server or {})}, "options": {"waf": waf}}
+        if security is not None:
+            config["security"] = security
+        (self.root / "config" / "omega-serve.json").write_text(json.dumps(config))
         (self.root / "bin").mkdir()
         (self.root / "bin" / "omega-http-core").symlink_to(BINARY)
         self._serve()
@@ -728,6 +731,100 @@ class TestServeSupervisor(unittest.TestCase):
                 alerts.read_text(encoding="utf-8") if alerts.exists() else ""):
             time.sleep(0.1)
         self.assertIn('"stage": "rate_limit"', alerts.read_text(encoding="utf-8"))
+
+    # ------------------------------------------------ correctif de securite 2.6.2 (D29, D20)
+    @staticmethod
+    def _cpu_seconds(pid: int) -> float:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+        return (int(fields[11]) + int(fields[12])) / os.sysconf("SC_CLK_TCK")  # utime + stime
+
+    @staticmethod
+    def _read_all(sock: socket.socket, timeout: float = 5) -> bytes:
+        sock.settimeout(timeout)
+        data = b""
+        while True:
+            chunk = sock.recv(65536)
+            if not chunk:
+                return data
+            data += chunk
+
+    def test_half_closed_client_waiting_for_verdict_does_not_spin(self):
+        # D29 : socket du client surveillee en lecture pendant l'attente du verdict (declenchement par niveau) ->
+        # un client qui ferme son cote ecriture faisait tourner le fil a 100 % (99 % mesure le 2026-11-12).
+        security_pid = self._serve_waf()
+        native_pid = int(self._state()["native_pid"])
+        os.kill(security_pid, signal.SIGSTOP)  # verdict lent (mode guerre, magnet)
+        client = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            client.sendall(b"GET /?id=1%20union%20select%20password HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            client.shutdown(socket.SHUT_WR)
+            time.sleep(0.3)
+            before = self._cpu_seconds(native_pid)
+            time.sleep(2)
+            spent = self._cpu_seconds(native_pid) - before
+        finally:
+            os.kill(security_pid, signal.SIGCONT)
+        try:
+            self.assertLess(spent, 0.1, f"moteur natif occupe pendant l'attente du verdict : {spent:.2f} s de CPU sur 2 s")
+            self.assertTrue(self._read_all(client).startswith(b"HTTP/1.1 403 "))  # verdict rendu apres la reprise
+        finally:
+            client.close()
+
+    def test_client_reset_while_waiting_for_verdict_frees_the_connection(self):
+        # D29 : client parti (RST) pendant l'attente : connexion liberee tout de suite, verdict tardif ignore.
+        security_pid = self._serve_waf()
+        os.kill(security_pid, signal.SIGSTOP)
+        try:
+            client = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+            client.sendall(b"GET /?id=1%20union%20select%20password HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            time.sleep(0.3)
+            client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, (1).to_bytes(4, "little") + (0).to_bytes(4, "little"))
+            client.close()  # SO_LINGER 0 : RST
+            deadline = time.monotonic() + 5
+            while time.monotonic() < deadline and self._state()["connections"] != 0:
+                time.sleep(0.2)
+            self.assertEqual(self._state()["connections"], 0)
+        finally:
+            os.kill(security_pid, signal.SIGCONT)
+        self.assertEqual(self._status("/?id=1%20union%20select%20password"), 403)  # rien de casse ensuite
+
+    def _post(self, body: bytes) -> int:
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=15)
+        try:
+            conn.request("POST", "/index.html", body=body,
+                         headers={"Content-Type": "application/x-www-form-urlencoded"})
+            response = conn.getresponse()
+            response.read()
+            return response.status
+        finally:
+            conn.close()
+
+    def test_large_inspected_body_is_never_served_without_control(self):
+        # D20 : body_max_inspect_bytes au-dela de la trame INSPECT (1 Mio) -> trame refusee puis fail-open : le corps
+        # d'attaque de 1,5 Mo etait servi sans WAF (essai 2026-11-12). Desormais la part envoyee est plafonnee.
+        self._serve_waf({"inspect": {"body_max_inspect_bytes": 2_000_000}},
+                        security={"allowed_methods": ["GET", "HEAD", "POST"]})
+        attack = b"id=1 union select password from users "
+        self.assertEqual(self._post(attack), 403)
+        self.assertEqual(self._post(attack + b"x" * 1_500_000), 403)
+        errors = (self.root / "var" / "log" / "error.log").read_text()
+        self.assertNotIn("servie sans controle (fail-open)", errors)
+        self.assertIn("corps inspecte limite", errors)  # avertissement au demarrage
+
+    def test_inspect_frame_too_large_is_refused_even_in_fail_open(self):
+        # D20 : une tete demesuree (max_header_size tres grand) depasse la trame a elle seule : 503, jamais servie.
+        self._serve_waf(extra_server={"max_header_size": 4 * 1024 * 1024})
+        filler = "".join(f"X-Filler-{i}: {'a' * 30_000}\r\n" for i in range(40))  # environ 1,2 Mo de tete
+        client = socket.create_connection(("127.0.0.1", self.port), timeout=10)
+        try:
+            client.sendall(f"GET /?id=1%20union%20select%20password HTTP/1.1\r\nHost: localhost\r\n{filler}"
+                           "Connection: close\r\n\r\n".encode())
+            self.assertTrue(self._read_all(client, 10).startswith(b"HTTP/1.1 503 "))
+        finally:
+            client.close()
+        errors = (self.root / "var" / "log" / "error.log").read_text()
+        self.assertIn("trop grande pour le canal", errors)
+        self.assertNotIn("servie sans controle (fail-open)", errors)
 
 if __name__ == "__main__":
     unittest.main()

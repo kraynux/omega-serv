@@ -118,7 +118,8 @@ bool decode(std::string_view data, Frame& frame, std::string* error);
 bool send_frame(int socket_fd, const Frame& frame, int pass_fd = -1);
 int recv_frame(int socket_fd, Frame& frame, int* received_fd, std::string* error);
 // Envoi / reception sans attente (canal de donnees, dans la boucle epoll d'un fil).
-// send : 0 envoye, 1 a reessayer (EAGAIN), -1 erreur. recv : comme recv_frame, plus 2 = rien a lire (EAGAIN).
+// send : 0 envoye, 1 a reessayer (EAGAIN), 2 trame refusee par le noyau (EMSGSIZE : plus grande que le tampon
+// d'envoi du canal - le canal reste bon), -1 erreur. recv : comme recv_frame, plus 2 = rien a lire (EAGAIN).
 int send_encoded_nowait(int socket_fd, const std::string& encoded, const std::vector<int>& fds = {});
 int recv_frame_nowait(int socket_fd, Frame& frame, std::string* error);
 

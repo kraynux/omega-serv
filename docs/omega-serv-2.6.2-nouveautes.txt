@@ -1,0 +1,25 @@
+OMEGA-SERV 2.6.2 - Ce qui change pour vous
+==========================================
+
+Un correctif de sécurité. Mise à jour conseillée si vous utilisez le moteur natif
+(server.engine = native). Rien à changer dans votre configuration. Le détail technique
+complet reste dans le CHANGELOG.
+
+
+SÉCURITÉ
+--------
+- Moteur natif : un client ne peut plus occuper un cœur du processeur à 100 % pendant
+  que le contrôle de sécurité juge sa requête. Il lui suffisait de fermer une partie de
+  sa connexion au bon moment.
+- Moteur natif : une requête trop grande pour être inspectée n'est plus jamais servie
+  sans contrôle. Elle est refusée (503). Avant, elle passait sans WAF ni limite de débit
+  quand body_max_inspect_bytes était réglé au-delà d'environ 170 Ko.
+- Processus de sécurité : une décision de blocage ne peut plus se perdre quand le canal
+  vers le moteur natif est momentanément plein.
+
+
+À SAVOIR
+--------
+- Si vous avez réglé options.waf.inspect.body_max_inspect_bytes très haut, le journal
+  d'erreurs indique au démarrage jusqu'où le moteur natif inspecte le corps des
+  requêtes. Le serveur démarre normalement.

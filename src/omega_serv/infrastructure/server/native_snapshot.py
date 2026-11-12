@@ -50,6 +50,11 @@ from omega_serv.domain.security.waf.signature_engine import CompiledRulePack
 from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
 from omega_serv.infrastructure.icons.icon_files import read_icon_svg
+from omega_serv.infrastructure.server.native_ipc import (
+    HEADER_SIZE,
+    MAX_PAYLOAD,
+    data_channel_message_max,
+)
 from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
 from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
 
@@ -63,6 +68,33 @@ INSPECT_BASE_TIMEOUT_MS = 60_000
 """Le moteur Python n'a AUCUNE limite sur l'etape de securite : celle-ci ne doit jamais se declencher en
 fonctionnement normal (processus de securite arrete ou bloque seulement). S'y ajoute le ralentissement maximal du
 mode guerre, qui retient volontairement le verdict."""
+
+
+INSPECT_FRAME_MARGIN = 16 * 1024
+"""Champs de la trame INSPECT autres que la tete et le corps (adresses, identifiants, etiquettes) : large marge."""
+
+
+def native_inspect_body_limit(config: OmegaServConfig, message_max: int = HEADER_SIZE + MAX_PAYLOAD) -> int:
+    """Correctif 2.6.2 (D20) : part du corps qui tient dans une trame INSPECT a cote de la plus grande tete acceptee.
+    Au-dela, la trame etait refusee et la requete servie sans controle en fail-open. `message_max` : plus grande
+    trame que le canal accepte (1 Mio au plus ; 208 Kio sur un systeme qui refuse d'agrandir les tampons). Le natif
+    refait ce calcul avec la tete reelle de chaque requete (server.cpp, inspect_body_budget). Le transfert par memfd
+    (3.0.0) levera ce plafond."""
+    head = config.server.max_request_line_size + config.server.max_header_size
+    return max(0, message_max - HEADER_SIZE - INSPECT_FRAME_MARGIN - head)
+
+
+def native_inspect_body_notice(config: OmegaServConfig, message_max: int | None = None) -> str | None:
+    """Avertissement (journal d'erreurs, demarrage et rechargement du natif) quand le plafond s'applique ; None
+    sinon. Jamais un refus : une configuration qui demarrait continue de demarrer."""
+    if not config.option_enabled("waf"):
+        return None
+    wanted = parse_waf_config(config.options["waf"].settings).inspect.body_max_inspect_bytes
+    limit = native_inspect_body_limit(config, data_channel_message_max() if message_max is None else message_max)
+    if wanted <= limit:
+        return None
+    return (f"moteur natif : corps inspecte limite a {limit} octets (options.waf.inspect.body_max_inspect_bytes = "
+            f"{wanted}) - au-dela, le moteur Python inspecte plus loin dans le corps")
 
 
 def inspect_section(config: OmegaServConfig, project_root: Path | None = None) -> dict[str, Any] | None:
@@ -96,7 +128,8 @@ def inspect_section(config: OmegaServConfig, project_root: Path | None = None) -
     on_error = "fail-closed" if auth else (waf.on_internal_error if waf is not None else "fail-open")
     return {
         "body_methods": list(waf.inspect.body_methods) if waf is not None else [],
-        "body_bytes": waf.inspect.body_max_inspect_bytes if waf is not None else 0,
+        "body_bytes": (min(waf.inspect.body_max_inspect_bytes, native_inspect_body_limit(config))
+                       if waf is not None else 0),
         "timeout_ms": timeout_ms,
         "on_error": on_error,
         "security_stage": security_stage,

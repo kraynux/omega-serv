@@ -44,7 +44,11 @@ from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.logging.access_log_format import format_error_log_line
 from omega_serv.infrastructure.process.native_engine_process import native_binary_problem
 from omega_serv.infrastructure.server.native_engine import NativeEngine, NativeStartError
-from omega_serv.infrastructure.server.native_snapshot import inspect_section
+from omega_serv.infrastructure.server.native_ipc import data_channel_pair
+from omega_serv.infrastructure.server.native_snapshot import (
+    inspect_section,
+    native_inspect_body_notice,
+)
 from omega_serv.infrastructure.server.security_worker import run_security_worker
 from omega_serv.infrastructure.waf.shared_counters import SharedCounters
 from omega_serv.interfaces.cli.serve_workers import effective_worker_count, open_listen_socket
@@ -91,7 +95,7 @@ class SecurityProcess:
 
     def start(self, config: OmegaServConfig, channels: int, close_in_child: list[int]) -> list[socket.socket]:
         """Rend les extremites « natif » des canaux (a transmettre puis fermer par l'appelant)."""
-        pairs = [socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET) for _ in range(channels)]
+        pairs = [data_channel_pair() for _ in range(channels)]  # correctif 2.6.2 (D20) : tampons agrandis
         pid = os.fork()
         if pid == 0:  # processus de securite
             code = 1
@@ -263,6 +267,7 @@ class NativeSupervisor:
     # ------------------------------------------------------------------ demarrage
     def start(self) -> str | None:
         """None si le natif sert ; sinon la cause (natif arrete, socket fermee : repli Python possible)."""
+        self._notice_inspect_body_limit(self.config)
         self.listen_socket = open_listen_socket(self.config.server.bind, self.config.server.port,
                                                 self.config.server.listen_backlog)
         self.listen_socket.set_inheritable(False)  # transmise au natif seulement, le temps du lancement
@@ -425,9 +430,17 @@ class NativeSupervisor:
             self.security.signal(signal.SIGHUP)  # regles WAF, zones Auth... relues comme par le moteur Python
         self.config = new
         self.decision = decision
+        self._notice_inspect_body_limit(new)
         self.last_reload = f"generation {self.engine.generation} active"
         print(f"Rechargement termine (generation {self.engine.generation}).")
         self._write_state()
+
+    def _notice_inspect_body_limit(self, config: OmegaServConfig) -> None:
+        """Correctif 2.6.2 (D20) : body_max_inspect_bytes au-dela de ce que la trame INSPECT peut porter."""
+        notice = native_inspect_body_notice(config)
+        if notice is not None:
+            print(notice, file=sys.stderr)
+            log_error_line(self.container, config, notice)
 
     def _refuse(self, reason: str) -> None:
         message = f"Rechargement REFUSE - la configuration precedente reste active : {reason}"

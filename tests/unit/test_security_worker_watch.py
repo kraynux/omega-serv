@@ -114,5 +114,78 @@ class TestAudit(unittest.TestCase):
         self.assertEqual(self._inspect(notable=True, audit=False)[0], [])  # requete ordinaire : pas un desaccord
 
 
+def _inspect_frame(request_id: int) -> ipc.Frame:
+    return (ipc.Frame(ipc.INSPECT, request_id=request_id).add(ipc.INSPECT_PEER, "203.0.113.4")
+            .add(ipc.INSPECT_METHOD, "GET").add(ipc.INSPECT_TARGET, "/x").add(ipc.INSPECT_VERSION, "HTTP/1.1"))
+
+
+def _fill(sock: socket.socket) -> int:
+    """Remplit le tampon d'envoi du canal (natif qui ne lit plus pour l'instant) ; rend le nombre de trames."""
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4096)
+    sock.setblocking(False)
+    filler = ipc.encode(ipc.watch_frame([("198.51.100.1", 1.0)]))
+    count = 0
+    while True:
+        try:
+            sock.send(filler)
+        except BlockingIOError:
+            return count
+        count += 1
+
+
+class TestNoFrameLost(unittest.TestCase):
+    """Correctif 2.6.2 (D19) : canal non bloquant et erreur d'envoi avalee -> un verdict (meme « bloquer ») ou une
+    entree WATCH pouvait disparaitre quand le canal etait plein ; la requete attendait 60 s puis passait en
+    fail-open. Desormais : file d'envoi par canal, videe des que le canal se libere, dans l'ordre."""
+
+    def test_verdicts_and_watch_sent_while_channel_full_all_arrive_in_order(self):
+        ours, native = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        worker = SecurityWorker(_AuditServer(notable=False), [ours])
+
+        async def scenario() -> tuple[int, list[ipc.Frame]]:
+            filled = _fill(ours)
+            for request_id in range(1, 21):
+                await worker._inspect(ours, _inspect_frame(request_id))
+            worker._watch("203.0.113.7", 5000.0)
+            native.setblocking(False)
+            received: list[ipc.Frame] = []
+            deadline = asyncio.get_running_loop().time() + 5
+            while len(received) < filled + 21 and asyncio.get_running_loop().time() < deadline:
+                try:
+                    received.append(ipc.decode(native.recv(ipc.HEADER_SIZE + ipc.MAX_PAYLOAD)))
+                except BlockingIOError:
+                    await asyncio.sleep(0.01)
+            return filled, received
+
+        try:
+            filled, received = asyncio.run(scenario())
+        finally:
+            ours.close()
+            native.close()
+        self.assertGreater(filled, 0)
+        ours_frames = received[filled:]
+        self.assertEqual([f.request_id for f in ours_frames[:20]], list(range(1, 21)))
+        self.assertTrue(all(f.type == ipc.VERDICT for f in ours_frames[:20]))
+        self.assertEqual(ours_frames[20].type, ipc.WATCH)
+        self.assertEqual(ours_frames[20].all(ipc.WATCH_ENTRY), [b"203.0.113.7\x005001"])
+        self.assertIn("203.0.113.7", worker._watched)
+
+    def test_channel_lost_while_frames_wait_never_raises(self):
+        ours, native = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        worker = SecurityWorker(_AuditServer(notable=False), [ours])
+
+        async def scenario() -> None:
+            _fill(ours)
+            await worker._inspect(ours, _inspect_frame(1))  # en file
+            native.close()  # natif arrete
+            await asyncio.sleep(0.1)
+            await worker._inspect(ours, _inspect_frame(2))  # canal perdu : rien ne remonte
+
+        try:
+            asyncio.run(scenario())
+        finally:
+            ours.close()
+
+
 if __name__ == "__main__":
     unittest.main()
