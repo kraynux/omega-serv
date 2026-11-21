@@ -12,51 +12,23 @@ Python (plan §6), jamais un serveur partiellement fonctionnel."""
 from __future__ import annotations
 
 import http
+import ipaddress
 import json
+from collections.abc import Callable, Iterable
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
-
-from omega_lib.theme.policies import EXPORT_PALETTES
+from typing import TYPE_CHECKING, Any
 
 from omega_serv.application.server.engine_selection import (
     native_unsupported_features,  # noqa: F401 - reexport
 )
-from omega_serv.application.server.route_request import build_routing_tables
-from omega_serv.application.server.serve_proxy_admin import ADMIN_URL_PREFIX
-from omega_serv.application.server.serve_proxy_load import LOAD_URL_PREFIX
-from omega_serv.core.i18n import page_html_lang
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.http.error_pages import (
-    ERROR_CSS_FILENAME,
-    ERROR_CSS_PATH,
-    ERROR_CSS_URL_PREFIX,
-    error_pages_css,
-    render_default_error_page,
-)
-from omega_serv.domain.http.response import HttpResponse
-from omega_serv.domain.http.status_codes import HttpStatus, reason_phrase_for
-from omega_serv.domain.routing.dirlisting import CSS_URL_PREFIX, base_css
-from omega_serv.domain.routing.icon_registry import ICON_FILENAMES, ICON_URL_PREFIX
-from omega_serv.domain.security.active_defense.config import parse_active_defense_config
-from omega_serv.domain.security.csp import csp_header_name
-from omega_serv.domain.security.security_headers import apply_security_headers
-from omega_serv.domain.security.tls.cipher_suites import MODERN_CIPHER_SUITES
-from omega_serv.domain.security.waf.config import RateLimitConfig, WafConfig, parse_waf_config
-from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
-from omega_serv.domain.security.waf.native_rule_export import export_rule_packs
-from omega_serv.domain.security.waf.rate_limit_policy import effective_source_policies
-from omega_serv.domain.security.waf.signature_engine import CompiledRulePack
-from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
-from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
-from omega_serv.infrastructure.icons.icon_files import read_icon_svg
-from omega_serv.infrastructure.server.native_ipc import (
-    HEADER_SIZE,
-    MAX_PAYLOAD,
-    data_channel_message_max,
-)
-from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
-from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
+
+if TYPE_CHECKING:
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.routing.proxy_zone import ProxyZone, UpstreamTarget
+    from omega_serv.domain.security.waf.config import RateLimitConfig, WafConfig
+    from omega_serv.domain.security.waf.signature_engine import CompiledRulePack
+
 
 SNAPSHOT_FORMAT = 1
 _UNKNOWN_THEME = "\x00theme-inconnu"
@@ -70,37 +42,15 @@ fonctionnement normal (processus de securite arrete ou bloque seulement). S'y aj
 mode guerre, qui retient volontairement le verdict."""
 
 
-INSPECT_FRAME_MARGIN = 16 * 1024
-"""Champs de la trame INSPECT autres que la tete et le corps (adresses, identifiants, etiquettes) : large marge."""
-
-
-def native_inspect_body_limit(config: OmegaServConfig, message_max: int = HEADER_SIZE + MAX_PAYLOAD) -> int:
-    """Correctif 2.6.2 (D20) : part du corps qui tient dans une trame INSPECT a cote de la plus grande tete acceptee.
-    Au-dela, la trame etait refusee et la requete servie sans controle en fail-open. `message_max` : plus grande
-    trame que le canal accepte (1 Mio au plus ; 208 Kio sur un systeme qui refuse d'agrandir les tampons). Le natif
-    refait ce calcul avec la tete reelle de chaque requete (server.cpp, inspect_body_budget). Le transfert par memfd
-    (3.0.0) levera ce plafond."""
-    head = config.server.max_request_line_size + config.server.max_header_size
-    return max(0, message_max - HEADER_SIZE - INSPECT_FRAME_MARGIN - head)
-
-
-def native_inspect_body_notice(config: OmegaServConfig, message_max: int | None = None) -> str | None:
-    """Avertissement (journal d'erreurs, demarrage et rechargement du natif) quand le plafond s'applique ; None
-    sinon. Jamais un refus : une configuration qui demarrait continue de demarrer."""
-    if not config.option_enabled("waf"):
-        return None
-    wanted = parse_waf_config(config.options["waf"].settings).inspect.body_max_inspect_bytes
-    limit = native_inspect_body_limit(config, data_channel_message_max() if message_max is None else message_max)
-    if wanted <= limit:
-        return None
-    return (f"moteur natif : corps inspecte limite a {limit} octets (options.waf.inspect.body_max_inspect_bytes = "
-            f"{wanted}) - au-dela, le moteur Python inspecte plus loin dans le corps")
-
-
-def inspect_section(config: OmegaServConfig, project_root: Path | None = None) -> dict[str, Any] | None:
+def inspect_section(config: OmegaServConfig, project_root: Path | None = None,
+                    security_processes: int = 1) -> dict[str, Any] | None:
     """Lot 4 : null si aucune fonction de l'etape de securite n'est active (zero aller-retour) ; sinon ce que le
     natif doit savoir pour soumettre chaque requete au processus Python. Lu par les VRAIES fonctions de
     configuration (parse_waf_config, parse_active_defense_config), jamais recopie."""
+    from omega_serv.application.server.engine_selection import decide_proxy_zones
+    from omega_serv.application.server.routing_tables import build_routing_tables
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
+    from omega_serv.domain.security.waf.config import parse_waf_config
     waf = parse_waf_config(config.options["waf"].settings) if config.option_enabled("waf") else None
     auth = config.option_enabled("auth")
     active_defense = (parse_active_defense_config(config.options["active_defense"].settings)
@@ -111,14 +61,21 @@ def inspect_section(config: OmegaServConfig, project_root: Path | None = None) -
     # Lot 6 : routes applicatives -> connexion confiee a Python (prefixes : sur-ensemble, Python tranche)
     tables = build_routing_tables(config)
     handoff_any: list[str] = []
-    if tables.fastcgi_config is not None:
-        handoff_any.append(tables.fastcgi_config.url_prefix)
+    # Projets 3.0.0 §8.1 : toutes les zones FastCGI, arretees comprises (Python y repond 503, maintenance).
+    handoff_any.extend(zone.path_prefix for zone in tables.fastcgi_zones)
+    # Plan proxy natif v2, lot 4 : seules les zones que decide_proxy_zones confie a Python ; les zones natives sont
+    # relayees par le natif (options.reverse_proxy.engine = native, apercu jusqu'au lot 11).
+    delegated_zones = {decision.url_prefix for decision in decide_proxy_zones(config) if decision.engine == "python"}
     for zone in tables.proxy_zones or ():
-        handoff_any.append(zone.url_prefix)
+        if zone.url_prefix in delegated_zones:
+            handoff_any.append(zone.url_prefix)
     handoff_post = [zone.path_prefix for zone in tables.upload_zones]
     handoff_any = sorted({p for prefix in handoff_any for p in (prefix, prefix.rstrip("/")) if p})
     handoff_post = sorted({p for prefix in handoff_post for p in (prefix, prefix.rstrip("/")) if p})
-    if not security_stage and not delegated_routes and not handoff_any and not handoff_post:
+    # Plan proxy natif v2, lot 3 (P6) : au moins un processus de securite des qu'une zone proxy existe, meme sans
+    # option de securite ni zone confiee (sondes, route d'administration).
+    proxy_zones = bool(tables.proxy_zones)
+    if not security_stage and not delegated_routes and not handoff_any and not handoff_post and not proxy_zones:
         return None
     timeout_ms = INSPECT_BASE_TIMEOUT_MS
     if active_defense is not None:
@@ -128,22 +85,41 @@ def inspect_section(config: OmegaServConfig, project_root: Path | None = None) -
     on_error = "fail-closed" if auth else (waf.on_internal_error if waf is not None else "fail-open")
     return {
         "body_methods": list(waf.inspect.body_methods) if waf is not None else [],
-        "body_bytes": (min(waf.inspect.body_max_inspect_bytes, native_inspect_body_limit(config))
-                       if waf is not None else 0),
+        # Plan proxy natif v2, lot 4 (S23, P10 revu) : plus de plafond lie au canal, le corps capture passe par
+        # memfd au-dela d'une trame - les deux moteurs inspectent la meme part (C20).
+        "body_bytes": waf.inspect.body_max_inspect_bytes if waf is not None else 0,
         "timeout_ms": timeout_ms,
         "on_error": on_error,
         "security_stage": security_stage,
         "handoff_any": handoff_any,
         "handoff_post": handoff_post,
+        # Plan proxy natif v2, lot 3 (P6) : le fil i est servi par le processus i % N ; /.omega-serv-admin/ part
+        # toujours chez le n° 0 (seul responsable de la sante), quel que soit le fil qui a accepte la connexion.
+        "security_processes": max(1, security_processes),
         # Decision utilisateur 2026-11-02 : en fail-open, une adresse deja bannie reste refusee (451) - le natif lit
         # la MEME blocklist que le WAF Python (JsonBlocklistStore), seulement quand le controle est indisponible.
         "blocklist": (str(project_root / waf.blocklist.path)
                       if waf is not None and project_root is not None else None),
+        # Lot 2 : waf.inspect.body_over_limit = reject (WAF en mode "block") - corps plus grand que la partie
+        # inspectee refuse (413) apres la validation du Content-Length, comme read_and_discard_body.
+        "body_reject_over": (waf.inspect.body_max_inspect_bytes
+                             if waf is not None and waf.mode == "block" and waf.inspect.body_over_limit == "reject"
+                             else None),
+        # Lot 1N (D36, P4) : refus decides par le natif seul (banni ou debit depasse en fail-open) -> meme ligne
+        # waf-alerts que _log_waf_alert. Les 503 d'indisponibilite n'y vont pas (decision de l'auteur du 2026-11-12) :
+        # ce sont des pannes du serveur, pas des actes du visiteur - error.log seulement.
+        "waf_alerts": ({"path": str(project_root / waf.logging.path),
+                        "max_path_chars": waf.logging.max_path_chars,
+                        "max_user_agent_chars": waf.logging.max_user_agent_chars,
+                        "include_body_excerpt": waf.logging.include_body_excerpt,
+                        "body_excerpt_max_bytes": waf.logging.body_excerpt_max_bytes}
+                       if waf is not None and project_root is not None else None),
     }
 
 
 def _status_codes() -> list[int]:
     """Tout code d'erreur que le serveur peut produire (HttpStatus) ou relayer (http.HTTPStatus)."""
+    from omega_serv.domain.http.status_codes import HttpStatus
     return sorted({int(s) for s in HttpStatus} | {int(s) for s in http.HTTPStatus})
 
 
@@ -163,6 +139,14 @@ def waf_filter_section(config: OmegaServConfig, project_root: Path) -> dict[str,
     Memes packs et memes listes que build_waf_collaborators, compiles par les MEMES fonctions. Le natif ne s'en
     sert que pour reconnaitre une requete sans aucune correspondance ; « available: false » (pack illisible) ou
     une regle dans `unexported` -> les requetes concernees vont a Python, comme aujourd'hui."""
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
+    from omega_serv.domain.security.waf.config import parse_waf_config
+    from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
+    from omega_serv.domain.security.waf.rate_limit_policy import effective_source_policies
+    from omega_serv.domain.security.waf.reputation import effective_never_auto_block
+    from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
+    from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
+    from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
     if not config.option_enabled("waf"):
         return None
     waf = parse_waf_config(config.options["waf"].settings)
@@ -193,8 +177,15 @@ def waf_filter_section(config: OmegaServConfig, project_root: Path) -> dict[str,
     # Lot 6 : la limite de debit est comptee par le natif (toutes les requetes, etiquette INSPECT 11) - champ que
     # seul un natif recent lit ; un natif plus ancien voit les deux champs ci-dessus a false et envoie tout ici.
     if waf.rate_limit.enabled:
-        payload["rate_limit"] = rate_limit_payload(replace(waf.rate_limit, source_policies=effective_source_policies(
-            waf.rate_limit.source_policies, config.option_enabled("trusted_proxy"))))
+        source_policies = effective_source_policies(waf.rate_limit.source_policies, config.option_enabled("trusted_proxy"))
+        payload["rate_limit"] = rate_limit_payload(replace(waf.rate_limit, source_policies=source_policies))
+        # Plan proxy natif v2, lot 1N (decision de l'auteur du 2026-11-12) : pendant une indisponibilite du controle
+        # en fail-open, le natif repond lui-meme au depassement - meme statut, et alerte « throttle » pour une source
+        # sure (is_trusted_rate_limit_source : never_auto_block effectif + regles IP/reseau cochees `trusted`).
+        payload["rate_limit"]["response_status"] = waf.rate_limit.global_.response_status
+        payload["rate_limit"]["trusted_networks"] = _normalized_networks(
+            [*effective_never_auto_block(waf.reputation.never_auto_block, config.option_enabled("trusted_proxy")),
+             *(policy.network for policy in source_policies if policy.trusted)])
     blocking = [r for r in reasons if r not in ("deception", "rate_limit")]
     payload["native_decides_with_rate_limit"] = not blocking
     # Lot 3 : avec les leurres, le natif decide seul a condition de connaitre les sources suivies (trame WATCH) -
@@ -205,8 +196,21 @@ def waf_filter_section(config: OmegaServConfig, project_root: Path) -> dict[str,
     return payload
 
 
+def _normalized_networks(networks: list[str]) -> list[str]:
+    """`ip_network(strict=False)`, illisibles ignores - comme _parse_networks et _parse_network cote Python."""
+    normalized = []
+    for network in networks:
+        try:
+            normalized.append(str(ipaddress.ip_network(network, strict=False)))
+        except ValueError:
+            continue
+    return normalized
+
+
 def _auth_zones(config: OmegaServConfig, project_root: Path) -> list[Any]:
     # meme fichier que start_server.build_auth_zones_repository (sans importer tout le demarrage du serveur)
+    from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
+    from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem
     return list(JsonAuthZonesRepository(LocalFilesystem(), project_root / config.paths.auth_zones).load())
 
 
@@ -214,6 +218,7 @@ def rate_limit_payload(rate_limit: RateLimitConfig) -> dict[str, Any]:
     """Section `waf_filter.rate_limit` (lot 6) : regles de select_rate_limit, deja filtrees par
     effective_source_policies comme au demarrage (start_server) ; reseaux illisibles transmis tels quels (ignores des
     deux cotes). La feuille de style des pages d'erreur n'est jamais comptee (evaluate_waf_request)."""
+    from omega_serv.domain.http.error_pages import ERROR_CSS_PATH
     return {
         "global": {"requests": rate_limit.global_.requests, "window_seconds": rate_limit.global_.window_seconds},
         "path_policies": [{"prefix": p.prefix, "requests": p.requests, "window_seconds": p.window_seconds}
@@ -226,6 +231,7 @@ def rate_limit_payload(rate_limit: RateLimitConfig) -> dict[str, Any]:
 
 def waf_filter_payload(waf: WafConfig, packs: tuple[CompiledRulePack, ...]) -> dict[str, Any]:
     """Section `waf_filter` pour des packs deja compiles (instantane, et vecteurs de tools/differential)."""
+    from omega_serv.domain.security.waf.native_rule_export import export_rule_packs
     exported, unexported = export_rule_packs(packs)
     return {
         "available": True,
@@ -248,10 +254,200 @@ def waf_filter_payload(waf: WafConfig, packs: tuple[CompiledRulePack, ...]) -> d
     }
 
 
-def build_native_snapshot(config: OmegaServConfig, project_root: Path, generation: int) -> dict[str, Any]:
+def _zone_inspect_mode(zone: ProxyZone, security_stage: bool, waf_filter: dict[str, Any] | None,
+                      auth_prefixes: list[str]) -> str:
+    """Plan proxy natif v2, lot 3 (C1, C20) : INSPECT demande par la zone.
+    - « never » : aucune option de securite - zero aller-retour ;
+    - « filter » : la preselection native decide requete par requete, comme pour le statique (correspondance ou
+      doute -> INSPECT, plus la part check_every) ;
+    - « always » : chaque requete (magnet, filtre indisponible, zones Auth illisibles, zone entierement protegee)."""
+    if not security_stage:
+        return "never"
+    if waf_filter is None or not waf_filter.get("available") or not waf_filter.get("native_decides_with_watch"):
+        return "always"
+    if any(zone.url_prefix.startswith(prefix) for prefix in auth_prefixes):
+        return "always"
+    return "filter"
+
+
+Resolver = Callable[[Iterable[str]], dict[str, tuple[str, ...]]]
+
+_LAST_RESOLVED: dict[str, tuple[str, ...]] = {}
+"""Plan proxy natif v2, lot 6 (C18, decision de l'auteur du 2026-11-13) : dernieres adresses connues de chaque nom DNS
+de backend, dans le superviseur. Un rechargement dont la resolution echoue garde ces adresses ; sans elles (premier
+demarrage), le backend est hors service jusqu'au rechargement suivant."""
+
+
+def _default_resolver(hosts: Iterable[str]) -> dict[str, tuple[str, ...]]:
+    from omega_serv.infrastructure.probe.local_addresses import resolve_hosts
+    return resolve_hosts(hosts)
+
+
+def _native_backends(config: OmegaServConfig, zone: ProxyZone, resolver: Resolver, notes: list[str]) -> list[dict]:
+    """Lot 6 (Q2, C18, S27) : chaque adresse d'un nom DNS devient un backend (comme nginx) - poids, plafond, cookie
+    collant et sante par adresse (decision de l'auteur du 2026-11-13) ; `name` (`hote:port`) reste la cible des regles
+    par en-tete et des etats manuels. Une adresse qui designe ce serveur lui-meme (boucle) est hors service."""
+    from omega_serv.domain.routing.proxy_zone import (
+        normalize_host_address,
+        upstream_key,
+        upstream_targets_this_server,
+    )
+    names = [u.host for u in zone.upstreams if normalize_host_address(u.host) is None]
+    resolved = resolver(dict.fromkeys(names)) if names else {}
+    local: frozenset[str] | None = None
+    backends: list[dict] = []
+    for upstream in zone.upstreams:
+        literal = normalize_host_address(upstream.host)
+        if literal is not None:
+            backends.append(_backend(upstream, upstream_key(upstream), literal, None))
+            continue
+        addresses = tuple(a for a in (normalize_host_address(x) for x in resolved.get(upstream.host, ())) if a)
+        name = upstream_key(upstream)
+        if addresses:
+            _LAST_RESOLVED[name] = addresses
+            notes.append(f"reverse proxy : {name} résolu en {', '.join(addresses)} (zone {zone.url_prefix})")
+        elif name in _LAST_RESOLVED:
+            addresses = _LAST_RESOLVED[name]
+            notes.append(f"reverse proxy : {name} ne se résout pas : adresses précédentes gardées "
+                         f"({', '.join(addresses)}) (zone {zone.url_prefix})")
+        else:
+            notes.append(f"reverse proxy : {name} ne se résout pas : backend hors service jusqu'au prochain "
+                         f"rechargement (zone {zone.url_prefix})")
+            backends.append(_backend(upstream, name, None, "dns"))
+            continue
+        for address in addresses:
+            key = f"{upstream.host} ({address}):{upstream.port}"
+            unusable = None
+            if upstream.port == config.server.port:
+                if local is None:
+                    from omega_serv.infrastructure.probe.local_addresses import (
+                        local_interface_addresses,
+                    )
+                    local = local_interface_addresses()
+                if upstream_targets_this_server(address, upstream.port, config.server.bind, config.server.port, local):
+                    unusable = "boucle"
+                    notes.append(f"reverse proxy : {key} désigne ce serveur lui-même : adresse hors service "
+                                 f"(boucle) (zone {zone.url_prefix})")
+            backends.append(_backend(upstream, key, address, unusable))
+    return backends
+
+
+def _backend(upstream: UpstreamTarget, key: str, address: str | None, unusable: str | None) -> dict[str, Any]:
+    from omega_serv.domain.routing.proxy_zone import (
+        host_header_value,
+        sticky_cookie_value_for_key,
+        upstream_key,
+    )
+    return {
+        "key": key,
+        "name": upstream_key(upstream),
+        "host": upstream.host,
+        "port": upstream.port,
+        "host_header": host_header_value(upstream.host, upstream.port),
+        # Adresse IP canonique (litterale, ou resolue par Python pour une zone native) ; null : nom non resolu.
+        "address": address,
+        "tls": upstream.use_tls,
+        "weight": upstream.weight,
+        "max_concurrent": upstream.max_concurrent_requests,
+        "load_source": upstream.load_source,
+        "active_check": upstream.active_health_check_enabled,
+        "cookie": sticky_cookie_value_for_key(key),
+        "unusable": unusable,  # null | "dns" (nom non resolu) | "boucle" (adresse de ce serveur)
+    }
+
+
+def proxy_section(config: OmegaServConfig, security_stage: bool, waf_filter: dict[str, Any] | None,
+                  resolver: Resolver | None = None, notes: list[str] | None = None) -> dict[str, Any] | None:
+    """Plan proxy natif v2, lot 3 : zones, backends, regles, delais, budgets et INSPECT par zone, lus par les VRAIES
+    fonctions (parse_proxy_zones, decide_proxy_zones). Le natif le lit et le verifie ; il ne relaie rien avant le
+    lot 4 (toute zone reste dans inspect.handoff_any)."""
+    from omega_serv.application.server.engine_selection import decide_proxy_zones
+    from omega_serv.domain.routing.proxy_engine import parse_proxy_engine_settings
+    from omega_serv.domain.routing.proxy_zone import (
+        DEFAULT_MAX_RESPONSE_BODY_MB,
+        normalize_host_address,
+        parse_proxy_zones,
+        upstream_key,
+    )
+    option = config.options.get("reverse_proxy")
+    if option is None or not option.enabled:
+        return None
+    settings = parse_proxy_engine_settings(option.settings)
+    decisions = {decision.url_prefix: decision for decision in decide_proxy_zones(config)}
+    auth_prefixes = list(waf_filter.get("auth_prefixes", [])) if waf_filter else []
+    max_body_mb = option.settings.get("max_response_body_mb", DEFAULT_MAX_RESPONSE_BODY_MB)
+    zones = []
+    for zone in parse_proxy_zones(option.settings.get("zones", [])):
+        decision = decisions[zone.url_prefix]
+        zones.append({
+            "prefix": zone.url_prefix,
+            "engine": decision.engine,
+            "reasons": list(decision.reasons),
+            "inspect": _zone_inspect_mode(zone, security_stage, waf_filter, auth_prefixes),
+            "connect_timeout_ms": round(zone.connect_timeout_seconds * 1000),
+            "read_timeout_ms": round(zone.read_timeout_seconds * 1000),
+            "preserve_host": zone.preserve_host_header,
+            "verify_tls": zone.verify_upstream_tls,
+            "websocket": zone.websocket_enabled,
+            "websocket_idle_timeout_ms": round(zone.websocket_idle_timeout_seconds * 1000),  # lot 10 : 0 = aucun
+            "load_balancing": zone.load_balancing,
+            "sticky": ({"cookie_name": zone.sticky_cookie_name, "max_age_seconds": zone.sticky_cookie_max_age_seconds}
+                       if zone.sticky_session_enabled else None),
+            "routing_rules": [{"header": rule.header_name, "pattern": rule.pattern, "upstream": rule.upstream_key}
+                              for rule in zone.routing_rules],
+            "unhealthy_after": zone.unhealthy_after,
+            "healthy_after": zone.healthy_after,
+            "load_sample_max_age_ms": round(zone.load_sample_max_age_seconds * 1000),
+            # Lot 6 : une zone native resout ses noms DNS ici (une adresse = un backend) ; confiee : un backend par
+            # entree de la configuration, adresse null pour un nom (Python le resout a chaque connexion).
+            "upstreams": (_native_backends(config, zone, resolver or _default_resolver, notes if notes is not None else [])
+                          if decision.engine == "native" else
+                          [_backend(u, upstream_key(u), normalize_host_address(u.host), None) for u in zone.upstreams]),
+        })
+    return {
+        "engine": settings.engine,
+        "budgets": {
+            "pending_body_bytes": settings.max_pending_body_bytes,
+            "inspections": settings.max_concurrent_inspections,
+            "upstream_connections": settings.max_upstream_connections,
+        },
+        "max_response_body_bytes": int(max_body_mb) * 1024 * 1024,
+        "zones": zones,
+    }
+
+
+def build_native_snapshot(config: OmegaServConfig, project_root: Path, generation: int,
+                          security_processes: int = 1, resolver: Resolver | None = None,
+                          notes: list[str] | None = None) -> dict[str, Any]:
+    """`notes` (lot 6) : lignes pour error.log - resolution des noms DNS des backends (C18 : adresses ecrites dans le
+    journal), backends hors service."""
+    from omega_lib.theme.policies import EXPORT_PALETTES
+
+    from omega_serv.application.server.routing_tables import build_routing_tables
+    from omega_serv.application.server.serve_proxy_admin import ADMIN_URL_PREFIX
+    from omega_serv.application.server.serve_proxy_load import LOAD_URL_PREFIX
+    from omega_serv.core.i18n import page_html_lang
+    from omega_serv.domain.http.error_pages import (
+        ERROR_CSS_FILENAME,
+        ERROR_CSS_URL_PREFIX,
+        error_pages_css,
+        render_default_error_page,
+    )
+    from omega_serv.domain.http.response import HttpResponse
+    from omega_serv.domain.http.status_codes import HttpStatus, reason_phrase_for
+    from omega_serv.domain.routing.dirlisting import CSS_URL_PREFIX, base_css
+    from omega_serv.domain.routing.icon_registry import ICON_FILENAMES, ICON_URL_PREFIX
+    from omega_serv.domain.routing.proxy_zone import set_sticky_cookie_key
+    from omega_serv.domain.security.csp import csp_header_name
+    from omega_serv.domain.security.security_headers import apply_security_headers
+    from omega_serv.domain.security.tls.cipher_suites import MODERN_CIPHER_SUITES
+    from omega_serv.infrastructure.icons.icon_files import read_icon_svg
+    from omega_serv.infrastructure.proxy.sticky_cookie_key import load_or_create_sticky_cookie_key
     server = config.server
     security = config.security
     tables = build_routing_tables(config)
+    if config.option_enabled("reverse_proxy"):  # scan de securite n° 1 (F41/F42) : meme cle que le moteur Python
+        set_sticky_cookie_key(load_or_create_sticky_cookie_key(project_root))
 
     # En-tetes de securite produits par la VRAIE fonction (politique globale, path=None) ; le natif remplace
     # seulement la valeur de la CSP quand une zone `csp_zones` correspond au chemin (csp_policy_for_path).
@@ -274,6 +470,8 @@ def build_native_snapshot(config: OmegaServConfig, project_root: Path, generatio
         if body is not None:
             icons[name] = _text(body)
 
+    inspect = inspect_section(config, project_root, security_processes)
+    waf_filter = waf_filter_section(config, project_root)
     return {
         "format": SNAPSHOT_FORMAT,
         "generation": generation,
@@ -287,6 +485,7 @@ def build_native_snapshot(config: OmegaServConfig, project_root: Path, generatio
             "max_request_line_size": server.max_request_line_size,
             "read_timeout_seconds": server.read_timeout_seconds,
             "keepalive_timeout_seconds": server.keepalive_timeout_seconds,
+            "write_timeout_seconds": server.write_timeout_seconds,  # lot A (D31)
             "max_keepalive_requests": server.max_keepalive_requests,
             "shutdown_grace_period_seconds": server.shutdown_grace_period_seconds,
             "index_files": list(server.index_files),
@@ -354,8 +553,10 @@ def build_native_snapshot(config: OmegaServConfig, project_root: Path, generatio
             "access": str(project_root / config.logs.access),
             "error": str(project_root / config.logs.error),
         },
-        "inspect": inspect_section(config, project_root),
-        "waf_filter": waf_filter_section(config, project_root),
+        "inspect": inspect,
+        "waf_filter": waf_filter,
+        # Plan proxy natif v2, lot 3 : null sans reverse proxy.
+        "proxy": proxy_section(config, bool(inspect and inspect["security_stage"]), waf_filter, resolver, notes),
         # TLS direct (lot 3b) : memes fichiers et reglages que ssl_context_builder.build_ssl_context ;
         # null si TLS est desactive ou termine en amont (behind_proxy).
         "tls": None if not (config.tls.enabled and config.tls.mode == "direct") else {

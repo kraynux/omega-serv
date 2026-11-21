@@ -12,7 +12,10 @@ Ports uniquement (FilesystemPort/InstanceRegistryPort/ServiceManagerPort)
 create_instance.py : ce module reste donc importable directement depuis
 interfaces.tui/ sans passer par le regime d'injection __main__.py-only
 (meme categorie que build_users_repository/build_capability_scanner,
-verifie via lint-imports)."""
+verifie via lint-imports).
+
+Jamais l'instance qui execute ce code (2026-11-16) : `current_path` est obligatoire ; une entree egale a ce chemin,
+ou un repertoire qui le contient, est refusee avant toute action (ni arret du service, ni registre, ni disque)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -46,7 +49,14 @@ def uninstall_instance(
     *,
     entry: InstanceEntry,
     delete_directory: bool,
+    current_path: Path,
 ) -> UninstallInstanceResult:
+    current = filesystem.resolve_real_path(current_path)
+    target = filesystem.resolve_real_path(entry.path)
+    if target == current or target in current.parents:
+        return UninstallInstanceResult(False, _(
+            "Refusé : {path} est l'instance en cours d'utilisation (ou la contient). Une instance ne peut pas se "
+            "désinstaller elle-même : basculez d'abord sur une autre instance.").format(path=entry.path))
     messages: list[str] = []
     unit_path = systemd_unit_dir / f"{entry.service_name}.service"
 

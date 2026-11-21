@@ -72,31 +72,33 @@ from omega_serv.interfaces.tui.screens.waf_test_screen import WafTestScreen
 if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
+# Meme ordre dans les trois colonnes (demande de l'auteur du 2026-11-15) : État, puis l'essai (Tester / Simuler), puis
+# les reglages (Modules / Réglages), puis les listes propres a chaque bloc.
 _ACTIVE_DEFENSE_ITEMS: tuple[tuple[str, str], ...] = (
     ("status", _("État")),
+    ("simulate", _("Simuler")),
     ("settings", _("Réglages")),
     ("threats", _("Menaces")),
     ("incidents", _("Incidents")),
     ("deception", _("Deception")),
-    ("simulate", _("Simuler")),
 )
 
 _WAF_ITEMS: tuple[tuple[str, str], ...] = (
     ("waf-status", _("État")),
+    ("waf-test", _("Tester")),
     ("waf-modules", _("Modules")),
     ("waf-rate-limit", _("Limitations")),
-    ("waf-test", _("Tester")),
     ("waf-custom", _("Custom")),
     ("waf-magnet", _("Magnet")),
 )
 
 _RIPOSTE_ITEMS: tuple[tuple[str, str], ...] = (
     ("riposte-status", _("État")),
+    ("riposte-simulate", _("Simuler")),
+    ("riposte-settings", _("Réglages")),
     ("riposte-policies", _("Politiques")),
     ("riposte-actions", _("Actions")),
     ("riposte-recidives", _("Récidives")),
-    ("riposte-simulate", _("Simuler")),
-    ("riposte-settings", _("Réglages")),
 )
 
 
@@ -117,7 +119,7 @@ class ActiveDefenseMenuScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
+        with Vertical(classes="omega-panel omega-menu-panel"):
             with Center():
                 yield Static(_("ACTIVE SÉCURITÉ"), classes="omega-title")
             if is_missing_live_group(DEFAULT_SYSTEM_GROUP):

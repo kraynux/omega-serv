@@ -27,10 +27,16 @@ from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus
+from omega_serv.domain.routing.proxy_backend_traffic import BackendTraffic
 from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
 from omega_serv.domain.routing.proxy_health import ProxyHealthState
-from omega_serv.domain.routing.proxy_zone import ProxyZone, parse_proxy_zones, upstream_key
-from omega_serv.domain.security.trusted_proxy import is_trusted_proxy
+from omega_serv.domain.routing.proxy_zone import (
+    ProxyLoadBalancerState,
+    ProxyZone,
+    parse_proxy_zones,
+    upstream_key,
+)
+from omega_serv.domain.security.trusted_proxy import is_internal_route_caller
 
 ADMIN_URL_PREFIX = "/.omega-serv-admin/"
 
@@ -59,7 +65,11 @@ def _handle_health_get(config: OmegaServConfig, proxy_health_state: ProxyHealthS
     if zone is None:
         return HttpResponse.empty(HttpStatus.NOT_FOUND)
     statuses = {upstream_key(u): proxy_health_state.status_for(zone.url_prefix, u) for u in zone.upstreams}
-    return _json_response({"zone": zone.url_prefix, "upstreams": statuses})
+    payload: dict = {"zone": zone.url_prefix, "upstreams": statuses}
+    backends = proxy_health_state.backend_statuses(zone.url_prefix)
+    if backends is not None:  # lot 6 : zone relayee par le natif - une entree par adresse (nom DNS)
+        payload["backends"] = backends
+    return _json_response(payload)
 
 
 def _handle_health_post(
@@ -82,6 +92,42 @@ def _handle_health_post(
     return _json_response({"zone": zone.url_prefix, "upstream": target_upstream_key, "status": new_status})
 
 
+def backend_traffic_rows(
+    config: OmegaServConfig, proxy_health_state: ProxyHealthState, load_balancer: ProxyLoadBalancerState | None,
+) -> list[BackendTraffic]:
+    """Tableau de bord par type d'instance (2026-11-16) : une ligne par backend de chaque zone de reverse proxy, dans
+    l'ordre de la configuration. Zone relayee par le natif : ses mesures (une ligne par adresse) ; zone servie par ce
+    processus : ses propres compteurs."""
+    proxy_settings = config.options.get("reverse_proxy")
+    if proxy_settings is None or not proxy_settings.enabled:
+        return []
+    rows: list[BackendTraffic] = []
+    for zone in parse_proxy_zones(proxy_settings.settings.get("zones", [])):
+        relayed = proxy_health_state.relayed_traffic(zone.url_prefix)
+        if relayed is not None:
+            rows.extend(relayed)
+            continue
+        for upstream in zone.upstreams:
+            key = upstream_key(upstream)
+            requests, errors_502, errors_504 = proxy_health_state.traffic_counts(zone.url_prefix, upstream)
+            average = load_balancer.response_time_average(zone.url_prefix, upstream) if load_balancer else None
+            rows.append(BackendTraffic(
+                zone=zone.url_prefix, name=key, address=key, engine="python",
+                status=proxy_health_state.status_for(zone.url_prefix, upstream), requests=requests,
+                errors_502=errors_502, errors_504=errors_504,
+                avg_ms=None if average is None else average * 1000.0,
+                active=load_balancer.active_count(zone.url_prefix, upstream) if load_balancer else 0,
+            ))
+    return rows
+
+
+def _handle_backends_get(
+    config: OmegaServConfig, proxy_health_state: ProxyHealthState, load_balancer: ProxyLoadBalancerState | None,
+) -> HttpResponse:
+    rows = backend_traffic_rows(config, proxy_health_state, load_balancer)
+    return _json_response({"backends": [row.to_dict() for row in rows]})
+
+
 def _handle_cache_stats_get(proxy_cache_metrics: ProxyCacheMetrics, zone_prefix: str | None) -> HttpResponse:
     hits, misses = proxy_cache_metrics.snapshot(zone_prefix)
     return _json_response({"zone": zone_prefix, "hits": hits, "misses": misses})
@@ -93,9 +139,10 @@ def handle_admin_request(
     config: OmegaServConfig,
     proxy_health_state: ProxyHealthState,
     proxy_cache_metrics: ProxyCacheMetrics,
+    load_balancer: ProxyLoadBalancerState | None = None,
 ) -> HttpResponse:
-    if not is_trusted_proxy(request.peer_ip, trusted_networks):
-        return HttpResponse.empty(HttpStatus.FORBIDDEN)
+    if not is_internal_route_caller(request.peer_ip, trusted_networks, (name for name, _ in request.headers)):
+        return HttpResponse.empty(HttpStatus.FORBIDDEN)  # scan de securite n° 1 : pair de confiance, sans relais
 
     subpath = request.path[len(ADMIN_URL_PREFIX):].rstrip("/")
     query = {k: v[0] for k, v in parse_qs(request.query).items()}
@@ -113,6 +160,9 @@ def handle_admin_request(
         if not zone_prefix or not target_upstream_key or not new_status:
             return HttpResponse.empty(HttpStatus.BAD_REQUEST)
         return _handle_health_post(config, proxy_health_state, zone_prefix, target_upstream_key, new_status)
+
+    if subpath == "backends" and request.method == "GET":
+        return _handle_backends_get(config, proxy_health_state, load_balancer)
 
     if subpath == "cache-stats" and request.method == "GET":
         return _handle_cache_stats_get(proxy_cache_metrics, query.get("zone"))

@@ -37,9 +37,8 @@ via des classes (`theme-orange`, `theme-cyan`; le rouge est le defaut,
 401 et 451 n'ont pas besoin de classe supplementaire)."""
 from __future__ import annotations
 
-from html import escape
-
 from omega_serv.core.i18n import N_, P_, page_html_dir, page_html_lang
+from omega_serv.domain.http.html_text import escape
 from omega_serv.domain.http.status_codes import reason_phrase_for
 
 ERROR_CSS_URL_PREFIX = "/.omega-serv-error-css/"

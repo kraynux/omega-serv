@@ -20,6 +20,7 @@ import shlex
 from dataclasses import dataclass
 
 from omega_serv.core.i18n import _
+from omega_serv.domain.services.python_command import python_module_argv
 
 
 @dataclass(frozen=True)
@@ -69,14 +70,14 @@ def build_omega_serv_import_argv(
     python_executable: str, config_dir: str, domain: str,
 ) -> list[str]:
     return [
-        python_executable, "-m", "omega_serv", "certs", "import",
+        *python_module_argv(python_executable, "omega_serv", "certs", "import"),
         "--key", f"{config_dir}/live/{domain}/privkey.pem",
         "--cert", f"{config_dir}/live/{domain}/fullchain.pem",
     ]
 
 
 def build_omega_serv_restart_argv(python_executable: str, service_name: str) -> list[str]:
-    return [python_executable, "-m", "omega_serv", "service", "restart", "--service-name", service_name]
+    return python_module_argv(python_executable, "omega_serv", "service", "restart", "--service-name", service_name)
 
 
 def build_deploy_hook_script(

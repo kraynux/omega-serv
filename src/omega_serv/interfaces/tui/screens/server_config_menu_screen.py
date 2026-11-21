@@ -57,8 +57,10 @@ _MENU_ITEMS: tuple[tuple[str, str], ...] = (
     ("error-pages", _("Pages d'erreur")),
     ("trusted-proxy", _("Proxies de confiance")),
     ("reverse-proxy", _("Reverse Proxy")),
-    ("reverse-proxy-cache", _("Cache du reverse proxy")),
+    # TLS avant le cache (decision de l'auteur du 2026-11-15) : dans la grille a 2 colonnes, « Cache du reverse
+    # proxy » tombe juste sous « Reverse Proxy » au lieu d'etre en diagonale.
     ("tls", "TLS"),
+    ("reverse-proxy-cache", _("Cache du reverse proxy")),
 )
 
 _STATUS_MENU_ITEMS: tuple[tuple[str, str], ...] = (
@@ -74,7 +76,7 @@ class ServerConfigMenuScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
+        with Vertical(classes="omega-panel omega-menu-panel"):
             with Center():
                 yield Static(_("CONFIGURATION DÉTAILLÉE DU SERVEUR"), classes="omega-title")
             with Center(), Grid(classes="omega-home-menu omega-home-menu-2col") as menu:
@@ -82,7 +84,7 @@ class ServerConfigMenuScreen(OmegaScreen):
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)
                 menu.border_title = _("SOUS-ÉCRANS")
-            with Center(), Grid(classes="omega-home-menu omega-home-menu-2col") as status_menu:
+            with Center(), Grid(classes="omega-home-menu omega-home-menu-2col omega-status-menu") as status_menu:
                 for item_id, label in _STATUS_MENU_ITEMS:
                     with Container(classes="omega-btn-frame"):
                         yield Button(label, id=item_id)

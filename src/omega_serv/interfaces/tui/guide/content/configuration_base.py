@@ -82,13 +82,16 @@ BASE_CONFIG_SCREEN = ScreenGuide(
                 "lui-même le contenu statique, les redirections, le cache et TLS ; il cherche lui-même les règles "
                 "du WAF et sert seul une requête sur laquelle aucune ne correspond ; il confie au processus Python "
                 "les autres contrôles de sécurité (requête suspecte ou douteuse, Active Defense, "
-                "authentification), le listing, les pages internes et les routes applicatives (reverse proxy, FastCGI, envoi de fichiers). Dans les deux "
+                "authentification), le listing, les pages internes et les routes applicatives (FastCGI, envoi de "
+                "fichiers, zones de reverse proxy avec cache) ; il relaie lui-même les autres zones du reverse "
+                "proxy, WebSocket compris. Dans les deux "
                 "cas : mêmes réponses, mêmes journaux, même sécurité. Ce que le choix change, mesuré : FAQ, "
                 "« Moteur Python ou natif : qu'est-ce que ça change concrètement ? ».")
             ),
             utilisation=(
                 _("Python ou Natif C++. Le choix natif est GRISÉ tant qu'une cause l'empêche (binaire absent, "
-                "TLS en mode direct avec reverse proxy, FastCGI ou envoi de fichiers) : la liste des causes, "
+                "TLS en mode direct avec une zone de reverse proxy en cache, FastCGI ou envoi de fichiers) : la "
+                "liste des causes, "
                 "et comment lever chacune, s'affiche sous le choix. Lever d'abord la cause, puis revenir ici.")
             ),
             action=_("Enregistre dans server.engine."),

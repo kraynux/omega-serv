@@ -207,6 +207,38 @@ class TestGuideHelp(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, FaqScreen)
 
+    async def test_faq_groups_fold_by_theme_and_back_stays_outside_scroll(self):
+        """Retour de l'auteur du 2026-11-18 : un theme repliable par categorie, ferme a l'ouverture ; questions et
+        reponses de styles differents ; [Retour] hors defilement."""
+        from textual.containers import VerticalScroll
+        from textual.widgets import Collapsible
+
+        from omega_serv.interfaces.tui.guide.registry import ALL_FAQ_ENTRIES
+
+        container = self._container()
+        generate_default_config(container.configuration, container.filesystem, container.config_file)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await pilot.press("a")
+            await pilot.pause()
+            pilot.app.screen.query_one("#faq", Button).press()
+            await pilot.pause()
+            screen = pilot.app.screen
+            groups = list(screen.query(Collapsible))
+            self.assertEqual(len(groups), len({e.category for e in ALL_FAQ_ENTRIES}))
+            self.assertTrue(all(group.collapsed for group in groups))
+            self.assertEqual(len(screen.query(".omega-faq-question")), len(ALL_FAQ_ENTRIES))
+            self.assertEqual(len(screen.query(".omega-faq-answer")), len(ALL_FAQ_ENTRIES))
+            back = screen.query_one("#back", Button)
+            self.assertFalse(any(isinstance(a, VerticalScroll) for a in back.ancestors))
+            groups[0].collapsed = False
+            await pilot.pause()
+            self.assertTrue(groups[0].query(".omega-faq-question").first().region.height > 0)
+            back.press()
+            await pilot.pause()
+            self.assertNotIsInstance(pilot.app.screen, FaqScreen)
+
     async def test_export_html_writes_a_file_with_documented_screens_and_faq(self):
         container = self._container()
         generate_default_config(container.configuration, container.filesystem, container.config_file)

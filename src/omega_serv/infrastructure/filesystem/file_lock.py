@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import fcntl
 import os
+import stat
 import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -40,7 +41,11 @@ def exclusive_file_lock(
 ) -> Iterator[bool]:
     """Rend True si le verrou est tenu pendant le bloc, False si le bloc s'execute sans."""
     try:
-        fd = os.open(lock_path, os.O_RDONLY | os.O_CREAT, LOCK_FILE_MODE)
+        # Scan de securite n° 2 (2026-11-20, F9) : le dossier du verrou (var/lib/waf) est inscriptible par le compte
+        # du service - jamais a travers un lien (O_NOFOLLOW), et le mode pose sur le descripteur ouvert (fchmod),
+        # seulement sur un fichier ordinaire dont on est proprietaire.
+        fd = os.open(lock_path, os.O_RDONLY | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK,
+                     LOCK_FILE_MODE)
     except OSError as error:
         if on_unavailable is not None:
             on_unavailable("open_failed", error.strerror or str(error))
@@ -48,7 +53,9 @@ def exclusive_file_lock(
         return
     try:
         try:
-            os.chmod(lock_path, LOCK_FILE_MODE)
+            status = os.fstat(fd)
+            if stat.S_ISREG(status.st_mode) and status.st_uid == os.geteuid():
+                os.fchmod(fd, LOCK_FILE_MODE)
         except OSError:
             pass  # fichier d'un autre compte : il reste utilisable en lecture, donc verrouillable
         deadline = time.monotonic() + timeout_seconds

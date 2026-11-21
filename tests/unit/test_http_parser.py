@@ -136,6 +136,27 @@ class TestReadRequestHead(unittest.IsolatedAsyncioTestCase):
         error = await self._head_error(b"GET /" + b"x" * 9000 + b" HTTP/1.1\r\n\r\n")
         self.assertIsNone(error.request_line)  # ligne illisible (trop longue)
 
+class TestLongLineThenClose(unittest.IsolatedAsyncioTestCase):
+    """Plan proxy natif v2, lot 1N (D38) : ligne deja trop longue puis fermeture -> meme statut que si le CRLF etait
+    arrive (414 / 431), comme le natif. Avant : 400 « connexion fermee de maniere inattendue »."""
+
+    async def _status(self, raw: bytes) -> HttpStatus:
+        with self.assertRaises(HttpParseError) as ctx:
+            await read_request_head(_reader_from_bytes(raw), 64, 128)
+        return ctx.exception.status
+
+    async def test_request_line_too_long_then_close_is_414(self):
+        self.assertEqual(await self._status(b"GET /" + b"a" * 100), HttpStatus.URI_TOO_LONG)
+
+    async def test_header_line_too_long_then_close_is_431(self):
+        self.assertEqual(await self._status(b"GET / HTTP/1.1\r\nX: " + b"b" * 200),
+                         HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE)
+
+    async def test_line_within_limit_plus_cr_then_close_stays_400(self):
+        # Garde : max_size octets puis `\r` pourrait encore etre une ligne valide.
+        self.assertEqual(await self._status(b"GET /" + b"a" * 59 + b"\r"), HttpStatus.BAD_REQUEST)
+
+
 class TestReadAndDiscardBody(unittest.IsolatedAsyncioTestCase):
     async def _parse(self, raw: bytes, max_request_size: int = 1024, capture_max_bytes: int = 0):
         reader = _reader_from_bytes(raw)

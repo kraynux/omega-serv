@@ -18,9 +18,12 @@ class _FakeProxyClient:
         self._results = list(results) if results is not None else None
         self._error = error
         self.calls = []
+        self.headers = []
 
-    async def forward_request(self, host, port, method, path, headers, body, connect_timeout, read_timeout, ssl_context=None):
+    async def forward_request(self, host, port, method, path, headers, body, connect_timeout, read_timeout, ssl_context=None,
+                              max_body_bytes=None):
         self.calls.append((host, port, method, path, connect_timeout, read_timeout, ssl_context))
+        self.headers.append(headers)
         if self._error is not None:
             raise self._error
         if self._results is not None:
@@ -109,6 +112,17 @@ class TestPollUpstreamLoadForever(unittest.IsolatedAsyncioTestCase):
         await _run_briefly_then_stop(task)
         self.assertEqual(health_state.status_for(zone.url_prefix, upstream), "up")
         self.assertEqual(client.calls[0][3], "/healthz")
+
+    async def test_probe_sends_host_header(self):
+        # Lot 1 (D8) : la sonde partait sans `Host` - un backend a hotes virtuels la refusait (400/404 -> DOWN).
+        for host, expected in (("10.0.0.1", "10.0.0.1:3000"), ("::1", "[::1]:3000")):
+            with self.subTest(hote=host):
+                upstream = UpstreamTarget(host=host, port=3000, active_health_check_enabled=True)
+                client = _FakeProxyClient(results=[HttpProxyResult(200, (), b"ok")])
+                task = asyncio.create_task(poll_upstream_load_forever(
+                    _zone(upstreams=(upstream,)), upstream, client, ProxyHealthState(), None, None))
+                await _run_briefly_then_stop(task)
+                self.assertIn(("Host", expected), client.headers[0])
 
     async def test_pure_health_upstream_never_records_a_load_sample(self):
         """Meme un corps qui RESSEMBLERAIT a un score valide ne doit

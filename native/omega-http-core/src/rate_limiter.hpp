@@ -14,6 +14,7 @@
 
 #include <array>
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -43,6 +44,9 @@ public:
     [[nodiscard]] SelectedRate select(std::string_view path, std::string_view ip) const;
     // Feuille de style des pages d'erreur (GET/HEAD) : jamais comptee (evaluate_waf_request).
     [[nodiscard]] bool exempt(std::string_view method, std::string_view path) const;
+    // Lot 1N : statut du refus (rate_limit.global.response_status) et source sure (alerte « throttle »).
+    [[nodiscard]] int response_status() const { return response_status_; }
+    [[nodiscard]] bool trusted_source(std::string_view ip) const;
 
 private:
     struct PathRule { std::string prefix; std::int64_t requests; std::int64_t window; };
@@ -53,6 +57,8 @@ private:
     std::int64_t global_requests_ = 0;
     std::int64_t global_window_ = 60;
     std::string error_css_path_;
+    int response_status_ = 429;
+    std::vector<IpNetwork> trusted_;
 };
 
 class RateLimiter {
@@ -62,12 +68,17 @@ public:
     // `now` en secondes (horloge monotone).
     std::optional<std::uint32_t> check(const SelectedRate& rate, double now);
     void clear_for_tests();
+    [[nodiscard]] std::size_t tracked_for_tests();
 
 private:
-    struct Bucket { double tokens; double last_refill; };
+    // Lot A (D33) : ordre d'usage par tranche (debut = la moins recente) pour remplacer la bonne adresse quand la
+    // table est pleine. La liste pointe vers les cles de la table (noeuds stables) : aucune copie de la cle.
+    using Order = std::list<const std::string*>;
+    struct Bucket { double tokens; double last_refill; Order::iterator order; };
     struct Shard {
         std::mutex mutex;
         std::unordered_map<std::string, Bucket> buckets;
+        Order order;
         double last_sweep = 0.0;
     };
     static constexpr std::size_t kShards = 64;

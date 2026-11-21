@@ -73,9 +73,13 @@ strategie par eligibilite (`is_eligible`). `ProxyZone.unhealthy_after`/
 from __future__ import annotations
 
 import hashlib
+import hmac
+import ipaddress
+import re
+import socket
 import time
 import zlib
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -102,6 +106,11 @@ selection, rejetee explicitement lors de l'etude (YAGNI, §17).
 least-connections pour les upstreams sans score valide (§19.2)."""
 
 _VALID_LOAD_SOURCES = ("none", "native", "declarative")
+
+DEFAULT_MAX_RESPONSE_BODY_MB = 256
+"""Plan proxy natif v2, lot 1 (D23) : `options.reverse_proxy.max_response_body_mb` par defaut - le proxy Python lit
+toute la reponse en memoire avant de l'envoyer ; au-dela, 502 et une ligne dans error.log (decision de l'auteur).
+Ici depuis la passe memoire du 2026-11-19 : le routage en a besoin sans charger le code du proxy."""
 
 
 @dataclass(frozen=True)
@@ -146,6 +155,87 @@ class UpstreamTarget:
     seule route de sonde generique."""
 
 
+_HOSTNAME = re.compile(r"(?=.{1,253}\.?$)[A-Za-z0-9](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9])?"
+                       r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9])?)*\.?")
+
+
+def is_valid_upstream_host(host: str) -> bool:
+    """Plan proxy natif v2, lot 1 (D17+) : adresse IP ou nom DNS bien forme - rien d'autre (espace, `/`, `@`,
+    controle...) ne doit atteindre `Host` ni la resolution."""
+    return normalize_host_address(host) is not None or _HOSTNAME.fullmatch(host) is not None
+
+
+def normalize_host_address(host: str) -> str | None:
+    """Adresse IP canonique si `host` en est une, y compris sous les formes que la resolution accepte aussi
+    (`127.1`, `0x7f000001`, `2130706433`, IPv6 entre crochets) ; None pour un nom DNS."""
+    candidate = host[1:-1] if host.startswith("[") and host.endswith("]") else host
+    try:
+        return str(ipaddress.ip_address(candidate))
+    except ValueError:
+        pass
+    if ":" in candidate or not candidate or not candidate[0].isdigit():
+        return None
+    try:
+        return socket.inet_ntoa(socket.inet_aton(candidate))  # meme lecture que getaddrinfo pour une IPv4 numerique
+    except OSError:
+        return None
+
+
+def upstream_targets_this_server(host: str, port: int, server_bind: str, server_port: int,
+                                 local_addresses: Iterable[str] = ()) -> bool:
+    """Plan proxy natif v2, lot 1 (D17, D17+, S27) : l'upstream est ce serveur lui-meme (boucle de proxy). Avant :
+    comparaison de chaines exactes (`127.0.0.1`, `localhost`, adresse d'ecoute) - `::1`, `0.0.0.0`, le reste de
+    127/8, `127.1`, `::ffff:127.0.0.1` passaient. Lot 3 : `local_addresses` = adresses des interfaces de la machine
+    (lues par l'appelant), qui bouclent aussi quand le serveur ecoute sur 0.0.0.0 ou `::`. Les noms DNS ne sont pas
+    resolus ici : avertissement seulement (la resolution peut changer, decision de l'auteur du 2026-11-13)."""
+    if port != server_port:
+        return False
+    lowered = host.lower().rstrip(".")
+    if lowered == "localhost" or lowered.endswith(".localhost"):
+        return True
+    address = normalize_host_address(host)
+    if address is None:
+        return lowered == server_bind.lower()
+    ip = ipaddress.ip_address(address)
+    mapped = ip.ipv4_mapped if isinstance(ip, ipaddress.IPv6Address) else None
+    if ip.is_loopback or ip.is_unspecified or (mapped is not None and (mapped.is_loopback or mapped.is_unspecified)):
+        return True
+    if address == normalize_host_address(server_bind):
+        return True
+    return address in listening_local_addresses(server_bind, local_addresses)
+
+
+def listening_local_addresses(server_bind: str, local_addresses: Iterable[str]) -> frozenset[str]:
+    """Adresses d'interface sur lesquelles le serveur repond : toutes avec `::` (double pile), les IPv4 avec
+    0.0.0.0, aucune avec une adresse d'ecoute precise (deja comparee a part)."""
+    bind = normalize_host_address(server_bind)
+    if bind is None or not ipaddress.ip_address(bind).is_unspecified:
+        return frozenset()
+    normalized = {a for a in (normalize_host_address(x.split("%", 1)[0]) for x in local_addresses) if a is not None}
+    if bind == "0.0.0.0":
+        return frozenset(a for a in normalized if ipaddress.ip_address(a).version == 4)
+    return frozenset(normalized)
+
+
+_LINK_LOCAL_NETWORKS = (ipaddress.ip_network("169.254.0.0/16"), ipaddress.ip_network("fe80::/10"))
+
+
+def is_link_local_upstream(host: str) -> bool:
+    """Plan proxy natif v2, lot 3 (D17+) : 169.254/16 ou fe80::/10 - avertissement, jamais un refus."""
+    address = normalize_host_address(host.split("%", 1)[0])
+    if address is None:
+        return False
+    ip = ipaddress.ip_address(address)
+    return any(ip.version == network.version and ip in network for network in _LINK_LOCAL_NETWORKS)
+
+
+def host_header_value(host: str, port: int) -> str:
+    """Plan proxy natif v2, lot 1 (D28) : `Host` d'une requete vers un backend - adresse IPv6 entre crochets."""
+    if ":" in host and not host.startswith("["):
+        return f"[{host}]:{port}"
+    return f"{host}:{port}"
+
+
 def upstream_key(upstream: UpstreamTarget) -> str:
     """Identite STABLE d'un upstream (`host:port`) - cle de tout l'etat
     de repartition de charge (§27.1), jamais la position dans le tuple
@@ -161,7 +251,30 @@ def sticky_cookie_value_for(upstream: UpstreamTarget) -> str:
     upstream de la zone courante (`resolve_sticky_upstream` retourne
     None) et la requete retombe sur la strategie active - jamais une
     faille de securite, seulement une perte de l'affinite de session."""
-    return hashlib.sha256(upstream_key(upstream).encode("utf-8")).hexdigest()[:16]
+    return sticky_cookie_value_for_key(upstream_key(upstream))
+
+
+_sticky_cookie_key: bytes | None = None
+
+
+def set_sticky_cookie_key(key: bytes | None) -> None:
+    """Cle secrete de l'instance pour le cookie sticky (scan de securite n° 1, 2026-11-20, F41/F42), posee au demarrage
+    du serveur (infrastructure/proxy/sticky_cookie_key.py, fichier sous var/lib/proxy/). Sans elle : simple SHA-256."""
+    global _sticky_cookie_key
+    _sticky_cookie_key = key
+
+
+def sticky_cookie_value_for_key(key: str) -> str:
+    """Plan proxy natif v2, lot 6 : meme hachage pour un backend du relais natif - `host:port` pour une adresse IP
+    (valeur identique au moteur Python), `nom (adresse):port` pour chaque adresse d'un nom DNS (decision de l'auteur
+    du 2026-11-13 : le cookie colle a une adresse precise, comme nginx).
+
+    Scan de securite n° 1 (F41/F42) : un SHA-256 sans cle de `host:port` se retrouvait hors ligne en essayant les
+    adresses probables (boucle locale, reseaux prives, ports courants) et revelait la topologie interne. Avec la cle
+    de l'instance (cas du serveur) : HMAC-SHA256, impossible a inverser sans elle."""
+    if _sticky_cookie_key is not None:
+        return hmac.new(_sticky_cookie_key, key.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
 
 @dataclass(frozen=True)
@@ -238,6 +351,10 @@ class ProxyZone:
     desactive par defaut (§4 : chemin de code separe, jamais suppose).
     Sans effet sur les requetes HTTP ordinaires de la meme zone, qui
     continuent de suivre `serve_proxy()` normalement."""
+    websocket_idle_timeout_seconds: float = 3600.0
+    """Plan proxy natif v2, lot 10 (Q11, C17) : un tunnel WebSocket qui ne transporte aucun octet, dans aucun sens,
+    pendant ce delai est ferme (trame 1001 vers le client et vers le backend, puis fermeture - decision de l'auteur du
+    2026-11-14). `0` : aucun delai. Les deux moteurs."""
     load_balancing: str = "round_robin"
     """Strategie de repartition parmi `PROXY_LOAD_BALANCING_STRATEGIES`
     (§16). Sans effet si un seul upstream est declare."""
@@ -322,6 +439,7 @@ def parse_proxy_zones(raw_list: list[dict[str, Any]]) -> list[ProxyZone]:
             preserve_host_header=bool(item.get("preserve_host_header", False)),
             verify_upstream_tls=bool(item.get("verify_upstream_tls", True)),
             websocket_enabled=bool(item.get("websocket_enabled", False)),
+            websocket_idle_timeout_seconds=float(item.get("websocket_idle_timeout_seconds", 3600.0)),
             load_balancing=str(item.get("load_balancing", "round_robin")),
             sticky_session_enabled=bool(item.get("sticky_session_enabled", False)),
             sticky_cookie_name=str(item.get("sticky_cookie_name", "omega_proxy_sticky")),
@@ -356,6 +474,10 @@ def validate_proxy_zone(zone: ProxyZone) -> str | None:
     for upstream in zone.upstreams:
         if not upstream.host:
             return _("host d'upstream vide (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
+        if not is_valid_upstream_host(upstream.host):
+            # Lot 1 (D17+) : ni adresse IP ni nom DNS valide.
+            return _("host d'upstream invalide : {host!r} (zone {url_prefix!r})").format(
+                host=upstream.host, url_prefix=zone.url_prefix)
         if not (1 <= upstream.port <= 65535):
             return _("port d'upstream invalide : {port!r} (zone {url_prefix!r})").format(port=upstream.port, url_prefix=zone.url_prefix)
         if upstream.weight < 1:
@@ -378,6 +500,9 @@ def validate_proxy_zone(zone: ProxyZone) -> str | None:
         return _("connect_timeout_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
     if zone.read_timeout_seconds <= 0:
         return _("read_timeout_seconds doit être strictement positif (zone {url_prefix!r})").format(url_prefix=zone.url_prefix)
+    if not 0 <= zone.websocket_idle_timeout_seconds <= 31_536_000:  # lot 10 : 0 = aucun delai, un an au plus
+        return _("websocket_idle_timeout_seconds doit être compris entre 0 et 31536000 (zone {url_prefix!r})").format(
+            url_prefix=zone.url_prefix)
     if zone.load_balancing not in PROXY_LOAD_BALANCING_STRATEGIES:
         return (
             _("load_balancing invalide : {load_balancing!r} (zone {url_prefix!r}, attendu l'un de {value})").format(load_balancing=zone.load_balancing, url_prefix=zone.url_prefix, value=', '.join(PROXY_LOAD_BALANCING_STRATEGIES))
@@ -579,6 +704,14 @@ class ProxyLoadBalancerState:
             return False
         count = self._active_connections.get(zone_key, {}).get(upstream_key(upstream), 0)
         return count >= upstream.max_concurrent_requests
+
+    def active_count(self, zone_key: str, upstream: UpstreamTarget) -> int:
+        """Tableau de bord (2026-11-16) : requetes en cours vers ce backend."""
+        return self._active_connections.get(zone_key, {}).get(upstream_key(upstream), 0)
+
+    def response_time_average(self, zone_key: str, upstream: UpstreamTarget) -> float | None:
+        """Tableau de bord (2026-11-16) : moyenne glissante en secondes, None si jamais sollicite."""
+        return self._response_time_avg_seconds.get(zone_key, {}).get(upstream_key(upstream))
 
     def record_response_time(self, zone_key: str, upstream: UpstreamTarget, seconds: float) -> None:
         """Moyenne mobile exponentielle (facteur 0.3) plutot qu'une

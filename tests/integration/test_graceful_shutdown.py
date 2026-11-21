@@ -66,6 +66,32 @@ class TestGracefulShutdown(unittest.IsolatedAsyncioTestCase):
         except (ConnectionResetError, BrokenPipeError, OSError):
             pass
 
+    async def test_shutdown_waits_for_a_request_line_still_arriving(self):
+        # Lot 7 du plan proxy natif : seule une connexion qui n'a RIEN recu de sa requete suivante est fermee tout de
+        # suite ; une ligne de requete commencee (sans fin de ligne) garde le delai de grace.
+        _reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
+        writer.write(b"GET /index.ht")
+        await writer.drain()
+        await asyncio.sleep(0.1)
+        forced = await self.server.shutdown(grace_period_seconds=0.3)
+        self.assertEqual(forced, 1)
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except (ConnectionResetError, BrokenPipeError, OSError):
+            pass
+
+    async def test_shutdown_closes_an_idle_connection_at_once(self):
+        _reader, writer = await asyncio.open_connection("127.0.0.1", self.port)
+        await asyncio.sleep(0.1)
+        forced = await self.server.shutdown(grace_period_seconds=0.3)
+        self.assertEqual(forced, 0)  # rien recu : fermee tout de suite, jamais forcee apres le delai
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except (ConnectionResetError, BrokenPipeError, OSError):
+            pass
+
     async def test_shutdown_closes_listening_socket_first(self):
         await self.server.shutdown(grace_period_seconds=0.5)
         with self.assertRaises((ConnectionRefusedError, OSError)):

@@ -28,7 +28,11 @@ from omega_serv.interfaces.tui.controllers.startup_controller import (
     StartupState,
     resolve_startup_state,
 )
-from omega_serv.interfaces.tui.pending_instance_switch import PendingInstanceSwitch
+from omega_serv.interfaces.tui.pending_instance_switch import (
+    OPEN_ADMIN_WEB,
+    OPEN_AFTER_SWITCH_ENV_VAR,
+    PendingInstanceSwitch,
+)
 from omega_serv.interfaces.tui.pending_interface_restart import PendingInterfaceRestart
 from omega_serv.interfaces.tui.rendering.stylesheet_loader import load_paths_for
 from omega_serv.interfaces.tui.rendering.textual_theme_builder import build_all_textual_themes
@@ -100,10 +104,12 @@ class OmegaServApp(App[None]):
         # Version dans la barre de titre (decision utilisateur 2026-11-07) : pyproject.toml, seule source.
         self.title = f"{TITLE} {self._container.app_version}"
         self.pending_switch: PendingInstanceSwitch | None = None
+        self._open_after_switch = ""
         self.pending_restart: PendingInterfaceRestart | None = None
 
     def on_mount(self) -> None:
         switched_from = os.environ.pop(_SWITCHED_FROM_ENV_VAR, None)
+        self._open_after_switch = os.environ.pop(OPEN_AFTER_SWITCH_ENV_VAR, "")
         language_changed = os.environ.pop(LANGUAGE_CHANGED_ENV_VAR, None)
         if language_changed is not None:
             self.push_screen(LanguageChangedSplashScreen(native_name=STATE.language.native_name,
@@ -163,6 +169,11 @@ class OmegaServApp(App[None]):
 
     def _show_home(self, _result: None) -> None:
         self.push_screen(HomeScreen(container=self._container))
+        if self._open_after_switch == OPEN_ADMIN_WEB:  # bascule demandee par « Configuration distante »
+            from omega_serv.interfaces.tui.screens.admin_web_screen import AdminWebScreen
+
+            self._open_after_switch = ""
+            self.push_screen(AdminWebScreen(container=self._container))
 
     def watch_theme(self, _theme_name: str) -> None:
         self.sub_title = self._build_sub_title()

@@ -21,7 +21,7 @@ from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNo
 from omega_serv.interfaces.tui.app import OmegaServApp
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.home import HomeScreen
-from omega_serv.interfaces.tui.screens.service_screen import ServiceScreen
+from omega_serv.interfaces.tui.screens.service_screen import ServiceScreen, button_states
 from omega_serv.interfaces.tui.screens.terminal_warning import TerminalWarningScreen
 from omega_serv.ports.service_manager_port import ServiceManagerType
 
@@ -116,7 +116,7 @@ class FakeServiceManager:
     def remove_system_user(self, user: str, group: str) -> None:
         self.calls.append(("remove-system-user", f"{user}:{group}"))
 
-    def grant_directory_access(self, path: Path, group: str, extra_user: str, private_subdirs=()) -> None:
+    def grant_directory_access(self, path: Path, group: str, extra_user: str, private_subdirs=(), open_subdirs=()) -> None:
         self.calls.append(("grant-directory-access", f"{path}:{group}:{extra_user}"))
 
 
@@ -134,6 +134,11 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
 
     def tearDown(self):
         self._tmp.cleanup()
+
+    def _install_unit_on_disk(self, name: str = "omega-serv") -> None:
+        """Depuis 2026-11-15 les boutons suivent l'etat : Demarrer, Activer, Desinstaller... ne sont actifs que si
+        l'unite de CETTE installation existe."""
+        (self.systemd_unit_dir / f"{name}.service").write_text(f"[Service]\nWorkingDirectory={self.root}\n")
 
     def _container(self, manager: FakeServiceManager | None) -> DependencyContainer:
         factory = (lambda: manager) if manager is not None else (lambda: None)
@@ -189,6 +194,7 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Démarrer", hint)
 
     async def test_start_stop_updates_status_and_calls_manager(self):
+        self._install_unit_on_disk()
         manager = FakeServiceManager()
         app = OmegaServApp(self._container(manager))
         async with app.run_test(size=(120, 45)) as pilot:
@@ -204,6 +210,7 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Actif : False", str(pilot.app.screen.query_one("#service-status").content))
 
     async def test_reload_button_calls_manager_without_toggling_active_state(self):
+        self._install_unit_on_disk()
         manager = FakeServiceManager()
         manager.start("omega-serv")
         manager.calls.clear()
@@ -216,6 +223,7 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Actif : True", str(pilot.app.screen.query_one("#service-status").content))
 
     async def test_enable_disable_calls_manager(self):
+        self._install_unit_on_disk()
         manager = FakeServiceManager()
         app = OmegaServApp(self._container(manager))
         async with app.run_test(size=(120, 45)) as pilot:
@@ -312,6 +320,7 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(manager.unit_files, {})
 
     async def test_uninstall_confirmed_reaches_use_case_without_crashing(self):
+        self._install_unit_on_disk()
         manager = FakeServiceManager()
         app = OmegaServApp(self._container(manager))
         async with app.run_test(size=(120, 45)) as pilot:
@@ -347,8 +356,7 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
         app = OmegaServApp(container)
         async with app.run_test(size=(120, 45)) as pilot:
             await self._reach_service_screen(pilot)
-            pilot.app.screen.query_one("#service-name", Input).value = "mon-service-renomme"
-            await pilot.pause()
+            await self._rename(pilot, "mon-service-renomme")
             pilot.app.screen.query_one("#back", Button).press()
             await pilot.pause()
 
@@ -356,6 +364,116 @@ class TestTuiService(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#service-name", Input).value, "mon-service-renomme")
         self.assertEqual(container.settings_store.get("service_name"), "mon-service-renomme")
+
+
+    # --- 2026-11-15 : nom verrouille, renommage guide, boutons selon l'etat (projets 3.0.0 §7.6, §7.10) ---
+
+    async def _rename(self, pilot, name: str) -> None:
+        pilot.app.screen.query_one("#edit-name", Button).press()
+        await pilot.pause()
+        pilot.app.screen.query_one("#service-name", Input).value = name
+        pilot.app.screen.query_one("#edit-name", Button).press()
+        await pilot.pause()
+
+    async def test_name_is_locked_and_typing_saves_nothing_before_validation(self):
+        manager = FakeServiceManager()
+        container = self._container(manager)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_service_screen(pilot)
+            name_input = pilot.app.screen.query_one("#service-name", Input)
+            self.assertTrue(name_input.disabled)
+            pilot.app.screen.query_one("#edit-name", Button).press()
+            await pilot.pause()
+            self.assertFalse(name_input.disabled)
+            self.assertEqual(str(pilot.app.screen.query_one("#edit-name", Button).label), "Valider")
+            name_input.value = "omega-ser"  # faute de frappe en cours de saisie
+            await pilot.pause()
+            self.assertEqual(container.settings_store.get("service_name", ""), "")
+            pilot.app.screen.query_one("#back", Button).press()  # quitter sans valider : rien n'est garde
+            await pilot.pause()
+        self.assertEqual(container.settings_store.get("service_name", ""), "")
+
+    async def test_invalid_name_is_refused_with_the_reason_and_kept_for_correction(self):
+        manager = FakeServiceManager()
+        container = self._container(manager)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_service_screen(pilot)
+            await self._rename(pilot, "Mon Service")
+            self.assertIn("minuscules", str(pilot.app.screen.query_one("#service-message").content))
+            self.assertEqual(pilot.app.screen.query_one("#service-name", Input).value, "Mon Service")
+            self.assertFalse(pilot.app.screen.query_one("#service-name", Input).disabled)
+        self.assertEqual(container.settings_store.get("service_name", ""), "")
+
+    async def test_name_used_by_another_installation_is_refused(self):
+        (self.systemd_unit_dir / "autre.service").write_text("[Service]\nWorkingDirectory=/srv/autre-omega-serv\n")
+        manager = FakeServiceManager()
+        container = self._container(manager)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_service_screen(pilot)
+            await self._rename(pilot, "autre")
+            self.assertIn("/srv/autre-omega-serv", str(pilot.app.screen.query_one("#service-message").content))
+        self.assertEqual(container.settings_store.get("service_name", ""), "")
+
+    async def test_rename_of_an_installed_running_unit_is_explained_then_chained(self):
+        self._install_unit_on_disk()
+        manager = FakeServiceManager(known_service="omega-serv")
+        manager.start("omega-serv")
+        manager.enable("omega-serv")
+        manager.unit_files[self.systemd_unit_dir / "omega-serv.service"] = "unit"
+        manager.calls.clear()
+        container = self._container(manager)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_service_screen(pilot)
+            await self._rename(pilot, "site-perso")
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+            message = str(pilot.app.screen.query_one("Static.omega-confirm-title").content)
+            self.assertIn("RENOMMER", message)
+            body = "\n".join(str(s.content) for s in pilot.app.screen.query(Static))
+            for step in ("arrêter omega-serv", "désactiver omega-serv", "désinstaller l'unité omega-serv",
+                         "installer l'unité site-perso", "activer site-perso", "démarrer site-perso"):
+                self.assertIn(step, body)
+            manager._known_service = "site-perso"  # le faux gestionnaire ne connait qu'un nom a la fois
+            manager._check_known = lambda name: None
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+        names = [call for call in manager.calls if call[0] in ("stop", "disable", "enable", "start")]
+        self.assertEqual(names, [("stop", "omega-serv"), ("disable", "omega-serv"), ("enable", "site-perso"),
+                                 ("start", "site-perso")])
+        self.assertIn(self.systemd_unit_dir / "site-perso.service", manager.unit_files)
+        self.assertNotIn(self.systemd_unit_dir / "omega-serv.service", manager.unit_files)
+        self.assertEqual(container.settings_store.get("service_name"), "site-perso")
+
+    async def test_buttons_follow_the_state(self):
+        manager = FakeServiceManager()
+        app = OmegaServApp(self._container(manager))
+        async with app.run_test(size=(120, 45)) as pilot:
+            await self._reach_service_screen(pilot)
+            disabled = {b.id: b.disabled for b in pilot.app.screen.query(Button)}
+            self.assertFalse(disabled["install"])
+            for button_id in ("uninstall", "start", "stop", "enable", "disable", "repair-permissions"):
+                self.assertTrue(disabled[button_id], button_id)
+            self.assertEqual(len(pilot.app.screen.query("#refresh")), 0)  # plus de bouton Rafraichir
+
+
+class TestButtonStates(unittest.TestCase):
+    def _status(self, active, enabled):
+        return ServiceStatus(service_name="s", active=active, enabled=enabled)
+
+    def test_running_installed_unit(self):
+        states = button_states("systemd", True, self._status(True, True), True)
+        self.assertEqual({k for k, v in states.items() if v}, {"uninstall", "disable", "stop", "restart", "reload"})
+
+    def test_stopped_installed_unit_with_broken_permissions(self):
+        states = button_states("systemd", True, self._status(False, False), False)
+        self.assertEqual({k for k, v in states.items() if v},
+                         {"uninstall", "enable", "repair-permissions", "start"})
+
+    def test_no_manager_disables_everything(self):
+        self.assertFalse(any(button_states(None, False, None, None).values()))
 
 
 if __name__ == "__main__":

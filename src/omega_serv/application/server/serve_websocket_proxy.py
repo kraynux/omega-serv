@@ -20,11 +20,17 @@ least_connections. Le temps de reponse enregistre (`least_response_time`)
 ne mesure que la duree du HANDSHAKE (jusqu'au 101), jamais la duree du
 tube lui-meme.
 
-Aucun timeout applicatif une fois le tube etabli (§4, angle mort
-recense) : `_relay_bidirectional` ne borne jamais ses lectures - un
-WebSocket legitime peut rester ouvert des heures. Les timeouts HTTP
-existants (`read_timeout_seconds`/`keepalive_timeout_seconds`) ne
-s'appliquent qu'a la phase de handshake initiale, jamais au tube.
+Plan proxy natif v2, lot 10 (Q11, C14, C17 ; decisions de l'auteur du
+2026-11-14) : un tube qui ne transporte aucun octet, dans aucun sens,
+pendant `zone.websocket_idle_timeout_seconds` (3 600 s par defaut, 0 =
+aucun delai) est ferme par une trame 1001 vers le client et vers le
+backend - de meme a la fin du delai de grace de l'arret (annulation de la
+tache). La trame n'est inseree qu'entre deux trames (`WebSocketFrameTracker`
+ne lit que leurs en-tetes) ; une trame coupee en plein milieu : fermeture
+sans 1001. `TunnelStats` porte au journal les octets envoyes au client
+pendant le tube (comme `$body_bytes_sent` de nginx ; avant, 0). Les timeouts
+HTTP (`read_timeout_seconds`/`keepalive_timeout_seconds`) ne s'appliquent
+qu'a la phase de handshake initiale, jamais au tube.
 
 Phase 5bis (§17/§27.3) : le choix d'upstream suit `resolve_upstream()`
 (meme fonction que `serve_proxy.py`, regle d'en-tete > cookie sticky >
@@ -57,7 +63,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import os
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -67,13 +75,20 @@ from omega_serv.application.server.serve_proxy import (
     HOP_BY_HOP_HEADERS,
     MAX_PROXY_HOPS,
     AllUpstreamsAtCapacityError,
+    ForwardingContext,
     build_outgoing_headers,
     incoming_proxy_hop_count,
     resolve_upstream,
+    upstream_ssl_context,
 )
 from omega_serv.domain.http.cookies import build_set_cookie_header
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.status_codes import HttpStatus, reason_phrase_for
+from omega_serv.domain.http.websocket import (
+    WebSocketFrameTracker,
+    close_frame_to_client,
+    close_frame_to_server,
+)
 from omega_serv.domain.routing.proxy_health import ProxyHealthState
 from omega_serv.domain.routing.proxy_zone import (
     ProxyLoadBalancerState,
@@ -84,30 +99,85 @@ from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort, HttpPro
 
 _RELAY_CHUNK_BYTES = 65536
 _UPGRADE_HOP_BY_HOP_HEADERS = HOP_BY_HOP_HEADERS - {"connection", "upgrade"}
+_CLOSE_FLUSH_SECONDS = 2.0
+"""Lot 10 : temps laisse a la trame 1001 (et a ce qui la precede) pour partir, avant la fermeture."""
+
+
+@dataclass
+class TunnelStats:
+    """Lot 10 : rempli pendant le tube, lu par l'appelant pour la ligne d'access.log - meme apres une annulation
+    (arret du serveur), ou la valeur de retour n'existe pas."""
+
+    status: int | None = None
+    """Statut ecrit au client (None : rien d'ecrit)."""
+    bytes_to_client: int = 0
+    """Octets du backend envoyes au client apres le 101 (decision de l'auteur du 2026-11-14)."""
+
+
+class _Activity:
+    __slots__ = ("last",)
+
+    def __init__(self, now: float) -> None:
+        self.last = now
 
 
 async def _write_status_line_and_headers(
     writer: asyncio.StreamWriter, status_code: int, headers: tuple[tuple[str, str], ...],
 ) -> None:
     status_line = f"HTTP/1.1 {status_code} {reason_phrase_for(status_code)}\r\n"
-    header_lines = "".join(
-        f"{name}: {value}\r\n" for name, value in headers if name.lower() not in _UPGRADE_HOP_BY_HOP_HEADERS
-    )
+    kept = [(name, value) for name, value in headers if name.lower() not in _UPGRADE_HOP_BY_HOP_HEADERS]
+    if status_code != 101:
+        # Plan proxy natif v2, lot 1 (D14) : un refus transmettait le `Content-Length` du backend sans son corps
+        # (abandonne) - le client attendait des octets qui ne venaient jamais. Refus = aucun corps, annonce comme tel.
+        kept = [(name, value) for name, value in kept if name.lower() not in ("content-length", "connection")]
+        kept += [("Content-Length", "0"), ("Connection", "close")]
+    header_lines = "".join(f"{name}: {value}\r\n" for name, value in kept)
     writer.write((status_line + header_lines + "\r\n").encode("latin-1"))
     with contextlib.suppress(ConnectionResetError, BrokenPipeError, OSError):
         await writer.drain()
 
 
-async def _pump(source: asyncio.StreamReader, destination: asyncio.StreamWriter) -> None:
+async def _pump(
+    source: asyncio.StreamReader, destination: asyncio.StreamWriter, tracker: WebSocketFrameTracker,
+    activity: _Activity, stats: TunnelStats | None,
+) -> None:
+    loop = asyncio.get_running_loop()
     try:
         while True:
             chunk = await source.read(_RELAY_CHUNK_BYTES)
             if not chunk:
                 break
+            activity.last = loop.time()
+            tracker.feed(chunk)  # meme instant que write() : le reperage suit exactement ce qui est en file
             destination.write(chunk)
+            if stats is not None:
+                stats.bytes_to_client += len(chunk)
             await destination.drain()
     except (ConnectionResetError, BrokenPipeError, OSError):
         pass
+
+
+async def _idle_watchdog(activity: _Activity, idle_timeout: float) -> None:
+    loop = asyncio.get_running_loop()
+    while True:
+        remaining = activity.last + idle_timeout - loop.time()
+        if remaining <= 0:
+            return
+        await asyncio.sleep(remaining)
+
+
+async def _send_going_away(
+    client_writer: asyncio.StreamWriter, to_client: WebSocketFrameTracker,
+    upstream_writer: asyncio.StreamWriter, to_upstream: WebSocketFrameTracker,
+) -> None:
+    """Lot 10 : trame 1001 dans chaque sens ou elle tombe entre deux trames, puis un court delai pour partir."""
+    for writer, tracker, frame in ((client_writer, to_client, close_frame_to_client()),
+                                   (upstream_writer, to_upstream, close_frame_to_server(os.urandom(4)))):
+        if tracker.can_send_close and not writer.is_closing():
+            writer.write(frame)
+    for writer in (client_writer, upstream_writer):
+        with contextlib.suppress(Exception):
+            await asyncio.wait_for(writer.drain(), timeout=_CLOSE_FLUSH_SECONDS)
 
 
 async def _relay_bidirectional(
@@ -115,20 +185,33 @@ async def _relay_bidirectional(
     client_writer: asyncio.StreamWriter,
     upstream_reader: asyncio.StreamReader,
     upstream_writer: asyncio.StreamWriter,
+    idle_timeout: float = 0.0,
+    stats: TunnelStats | None = None,
 ) -> None:
-    client_to_upstream = asyncio.create_task(_pump(client_reader, upstream_writer))
-    upstream_to_client = asyncio.create_task(_pump(upstream_reader, client_writer))
+    activity = _Activity(asyncio.get_running_loop().time())
+    to_upstream, to_client = WebSocketFrameTracker(), WebSocketFrameTracker()
+    pumps = {
+        asyncio.create_task(_pump(client_reader, upstream_writer, to_upstream, activity, None)),
+        asyncio.create_task(_pump(upstream_reader, client_writer, to_client, activity, stats)),
+    }
+    watched = set(pumps)
+    if idle_timeout > 0:
+        watched.add(asyncio.create_task(_idle_watchdog(activity, idle_timeout)))
+    going_away = True  # annulation (fin du delai de grace de l'arret) : 1001 aussi
     try:
-        await asyncio.wait({client_to_upstream, upstream_to_client}, return_when=asyncio.FIRST_COMPLETED)
+        done, _ = await asyncio.wait(watched, return_when=asyncio.FIRST_COMPLETED)
+        going_away = not done & pumps  # seul le delai d'inactivite a expire ; sinon un cote a ferme
     finally:
-        for task in (client_to_upstream, upstream_to_client):
+        for task in watched:
             if not task.done():
                 task.cancel()
         with contextlib.suppress(Exception):
-            await asyncio.gather(client_to_upstream, upstream_to_client, return_exceptions=True)
+            await asyncio.gather(*watched, return_exceptions=True)
+        if going_away:
+            await _send_going_away(client_writer, to_client, upstream_writer, to_upstream)
         upstream_writer.close()
         with contextlib.suppress(Exception):
-            await upstream_writer.wait_closed()
+            await asyncio.wait_for(upstream_writer.wait_closed(), timeout=_CLOSE_FLUSH_SECONDS)
 
 
 async def serve_websocket_proxy(
@@ -141,6 +224,8 @@ async def serve_websocket_proxy(
     client_writer: asyncio.StreamWriter,
     client_ssl_context_verified: ssl.SSLContext | None = None,
     client_ssl_context_unverified: ssl.SSLContext | None = None,
+    forwarding: ForwardingContext | None = None,
+    stats: TunnelStats | None = None,
 ) -> int:
     """Retourne le statut ecrit au client (101 si le tube a ete etabli
     et relaye jusqu'a sa fermeture, tout autre statut si l'upstream a
@@ -159,13 +244,12 @@ async def serve_websocket_proxy(
     zone_key = zone.url_prefix
 
     target = request.path + (f"?{request.query}" if request.query else "")
-    outgoing_headers = build_outgoing_headers(request, zone, upstream, preserve_upgrade=True)
+    outgoing_headers = build_outgoing_headers(request, zone, upstream, preserve_upgrade=True, forwarding=forwarding)
 
-    ssl_context = None
-    if upstream.use_tls:
-        ssl_context = client_ssl_context_verified if zone.verify_upstream_tls else client_ssl_context_unverified
+    ssl_context = upstream_ssl_context(upstream, zone, client_ssl_context_verified, client_ssl_context_unverified)
 
     load_balancer.acquire(zone_key, upstream)
+    health_state.record_request(zone_key, upstream)
     started_at = time.monotonic()
     try:
         try:
@@ -176,6 +260,7 @@ async def serve_websocket_proxy(
         except HttpProxyConnectionError:
             load_balancer.record_response_time(zone_key, upstream, zone.read_timeout_seconds)
             health_state.record_failure(zone_key, upstream, unhealthy_after=zone.unhealthy_after)
+            health_state.record_error(zone_key, upstream, int(HttpStatus.BAD_GATEWAY))
             await _write_status_line_and_headers(client_writer, int(HttpStatus.BAD_GATEWAY), ())
             return int(HttpStatus.BAD_GATEWAY)
         load_balancer.record_response_time(zone_key, upstream, time.monotonic() - started_at)
@@ -188,11 +273,14 @@ async def serve_websocket_proxy(
                 max_age_seconds=zone.sticky_cookie_max_age_seconds,
             )))
         await _write_status_line_and_headers(client_writer, handshake.status_code, outgoing_response_headers)
+        if stats is not None:
+            stats.status = handshake.status_code
 
         if handshake.status_code != 101 or handshake.reader is None or handshake.writer is None:
             return handshake.status_code
 
-        await _relay_bidirectional(client_reader, client_writer, handshake.reader, handshake.writer)
+        await _relay_bidirectional(client_reader, client_writer, handshake.reader, handshake.writer,
+                                   zone.websocket_idle_timeout_seconds, stats)
         return handshake.status_code
     finally:
         load_balancer.release(zone_key, upstream)

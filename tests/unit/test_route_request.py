@@ -273,7 +273,7 @@ class TestRoutingTablesCache(unittest.IsolatedAsyncioTestCase):
         })
 
     async def test_same_config_reuses_tables_and_new_config_rebuilds_them(self):
-        from omega_serv.application.server.route_request import routing_tables
+        from omega_serv.application.server.routing_tables import routing_tables
 
         first = self._config("/new-1")
         self.assertIs(routing_tables(first), routing_tables(first))

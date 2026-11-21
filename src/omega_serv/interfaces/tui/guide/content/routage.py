@@ -348,6 +348,8 @@ REVERSE_PROXY_SCREEN = ScreenGuide(
     definition=(
         _("CRUD de zones de relais sortant : OMEGA-SERV agit lui-même comme reverse proxy vers un "
         "ou plusieurs backends (répartition de charge round-robin, TLS amont optionnel, WebSocket).")
+        + " " + _("Avec le moteur natif, chaque zone est relayée par le natif lui-même ; seule une zone avec "
+                  "cache est confiée à Python.")
     ),
     fields=(
         FieldGuide(
@@ -392,11 +394,56 @@ REVERSE_PROXY_SCREEN = ScreenGuide(
             action=_("Ajoute/modifie une zone."),
             reaction=_("Aucun effet sans rechargement."),
         ),
+        FieldGuide(
+            label=_("Fermer un tunnel WebSocket inactif après (secondes)"),
+            definition=(
+                _("Un tunnel WebSocket où rien ne passe, dans aucun sens, pendant ce délai est fermé : chaque côté "
+                  "reçoit une trame de fermeture 1001, puis la connexion est coupée.")
+            ),
+            utilisation=_("Nombre de secondes, 3600 par défaut ; 0 = jamais ; au plus 31536000 (un an)."),
+            action=_("Ajoute/modifie une zone (websocket_idle_timeout_seconds)."),
+            reaction=_("Aucun effet sans rechargement ; un tunnel déjà ouvert garde son délai."),
+        ),
+        FieldGuide(
+            label=_("Réglages communs"),
+            definition=(
+                _("Réglages valables pour toutes les zones : le moteur des zones (engine), la taille maximale d'une "
+                  "réponse lue en entier par le moteur Python (max_response_body_mb, 256 Mo ; au-delà, 502) et "
+                  "les budgets du moteur natif - mémoire des corps de requête en attente (max_pending_body_mb, "
+                  "128 Mo), inspections en attente (max_concurrent_inspections, 64), connexions vers les backends "
+                  "(max_upstream_connections, 512).")
+            ),
+            utilisation=(
+                _("engine : auto (par défaut : chaque zone relayée par le natif quand il est choisi, sauf le "
+                  "cache), python (toutes les zones confiées à Python, sans recompiler) ou native (refus si une "
+                  "zone ne peut pas être relayée par le natif). max_pending_body_mb doit valoir au moins "
+                  "server.max_request_size.")
+            ),
+            action=_("Enregistre dans options.reverse_proxy ; une valeur refusée n'est jamais écrite."),
+            reaction=_("Aucun effet sans rechargement. Un budget atteint donne 503, sans jamais couper les autres."),
+        ),
+        FieldGuide(
+            label=_("Colonne Moteur"),
+            definition=(
+                _("Moteur prévu pour chaque zone d'après la configuration : natif ; Python (cache) pour une zone avec "
+                  "cache ; Python (réglage) avec engine = python ; Python (repli) quand tout le serveur démarre avec "
+                  "le moteur Python (par exemple TLS direct avec une zone confiée) ; Python quand le serveur est réglé "
+                  "sur le moteur Python.")
+            ),
+            utilisation=(
+                _("Lecture seule. La ligne au-dessus du tableau rappelle les réglages communs en vigueur ; l'écran "
+                  "État montre le moteur qui tourne réellement.")
+            ),
+            action=_("Aucune : la colonne se met à jour après chaque modification d'une zone ou des réglages communs."),
+            reaction=_("Ce qui tourne ne change qu'au rechargement (moteur des zones) ou au redémarrage (moteur du "
+                       "serveur)."),
+        ),
     ),
     consequences=(
-        _("La PREMIÈRE activation de l'option reverse_proxy exige un REDÉMARRAGE COMPLET (le "
-        "client HTTP n'est construit qu'au démarrage). Une fois déjà activé, modifier les zones "
-        "ici ne demande plus qu'un simple rechargement. Le bouton 'État en direct' (zone "
+        _("Activer l'option reverse_proxy, puis modifier les zones, ne demande qu'un rechargement. "
+        "Exception : si le moteur natif a démarré sans processus de sécurité (aucune des options reverse "
+        "proxy, FastCGI, envoi de fichiers, listing, proxies de confiance, WAF, authentification ou Active "
+        "Defense), la première zone demande un redémarrage complet (le message du rechargement le dit). Le bouton 'État en direct' (zone "
         "sélectionnée) ouvre un écran séparé pour consulter/forcer l'état de santé de chaque "
         "backend du serveur RÉELLEMENT en cours d'exécution - voir sa fiche dédiée.")
     ),

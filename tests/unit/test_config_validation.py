@@ -154,5 +154,45 @@ class TestValidateConfig(unittest.TestCase):
         self.assertTrue(any("shutdown_grace_period_seconds" in e for e in errors))
 
 
+class TestLot1ProxyLoopDetection(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D17, D17+, S27) : boucle de proxy vers ce serveur, sous toutes ses formes."""
+
+    def _errors(self, host, port=8080, bind="127.0.0.1", decoy=False):
+        upstream = {"host": host, "port": port}
+        options = {"reverse_proxy": {"enabled": True, "zones": [
+            {"url_prefix": "/api/", "upstreams": [upstream if not decoy else {"host": "10.9.9.9", "port": 9}]}]}}
+        if decoy:
+            options["active_defense"] = {"enabled": True, "deception": {"enabled": True, "decoy_zones": {
+                "piege": {"upstreams": [upstream]}}}}
+        config = OmegaServConfig.from_dict({"server": {"bind": bind, "port": 8080}, "options": options})
+        return [e for e in validate_config(config) if "boucle" in e or "invalide" in e]
+
+    def test_every_form_of_this_server_is_a_loop(self):
+        for host in ("127.0.0.1", "127.0.0.2", "127.1", "0x7f000001", "2130706433", "::1", "[::1]", "::",
+                     "::ffff:127.0.0.1", "0.0.0.0", "localhost", "LOCALHOST.", "api.localhost"):
+            with self.subTest(host=host):
+                self.assertTrue(self._errors(host), host)
+
+    def test_bind_address_is_a_loop(self):
+        self.assertTrue(self._errors("192.168.1.10", bind="192.168.1.10"))
+
+    def test_other_port_or_remote_host_is_not_a_loop(self):
+        for host, port, bind in (("127.0.0.1", 9000, "127.0.0.1"), ("10.0.0.5", 8080, "0.0.0.0"),
+                                 ("backend.internal", 8080, "0.0.0.0"), ("192.168.1.11", 8080, "192.168.1.10")):
+            with self.subTest(host=host, port=port, bind=bind):
+                self.assertEqual(self._errors(host, port=port, bind=bind), [])
+
+    def test_decoy_pointing_to_this_server_is_a_loop(self):
+        self.assertTrue(any("decoy_zones.piege" in e for e in self._errors("::1", decoy=True)))
+
+    def test_malformed_host_is_refused(self):
+        for host in ("back end", "a/b", "user@host", "h\x00", "-debut.example", "x" * 64 + ".example"):
+            with self.subTest(host=host):
+                self.assertTrue(any("invalide" in e for e in self._errors(host, port=9000)), host)
+        for host in ("backend_1.internal", "api.example.com.", "10.0.0.5", "2001:db8::5"):
+            with self.subTest(host=host):
+                self.assertEqual(self._errors(host, port=9000), [])
+
+
 if __name__ == "__main__":
     unittest.main()

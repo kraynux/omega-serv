@@ -92,12 +92,25 @@ HOME_SCREEN = ScreenGuide(
             action=_("Ouvre l'écran de sauvegarde."),
             reaction=_("Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."),
         ),
+        FieldGuide(
+            label=_("Rapport complet"),
+            definition=_("Tout ce qui est configuré et actif, d'un coup d'œil : instance, profil, service et uptime, "
+                         "adresse et mode, moteur, TLS, options, nombres de zones, sécurité, contrôles, sauvegardes, "
+                         "journaux."),
+            utilisation=_("Le sommaire s'affiche ; le détail coché part dans l'export (HTML, TXT ou JSON)."),
+            action=_("Ouvre l'écran du rapport ; la génération tourne en arrière-plan."),
+            reaction=_("Lecture seule : aucun réglage n'est modifié, aucun secret n'est exporté."),
+        ),
     ),
     consequences=_("Cet écran ne modifie jamais la configuration lui-même - uniquement de la navigation."),
     points_de_vigilance=(
         (
-            _("Appuyer sur Échap depuis cet écran demande une confirmation de sortie de "
-            "l'application (contrairement aux autres écrans, où Échap revient simplement en arrière).")
+            _("Pour quitter : Échap, q ou Ctrl+Q depuis cet écran, avec confirmation (il n'y a plus de bouton "
+            "Quitter dans le menu). Ailleurs, Échap revient simplement en arrière.")
+        ),
+        (
+            _("Dans tous les écrans à liste ou à long formulaire, Retour et les boutons principaux restent dans une "
+            "barre fixe en bas, toujours visible : inutile de dérouler la liste pour revenir ou enregistrer.")
         ),
     ),
 )

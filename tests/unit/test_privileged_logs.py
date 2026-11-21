@@ -2,6 +2,7 @@
 (jamais de mot de passe hors du terminal), refus de sudo = LogPermissionError, rien d'autre que chgrp/chmod."""
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -112,10 +113,15 @@ def test_health_reads_samples_of_unreadable_logs_with_sudo(protected_log: Path) 
 
 
 def test_fix_commands_are_limited_and_shown_exactly() -> None:
+    # Scan de securite n° 2 (F4) : un seul programme qui ouvre le log sans suivre de lien, affiche comme avant.
     writer = sudo_fix_commands("writer_cannot_write", "/srv/access.log", "omega-serv")
-    assert writer == [["chgrp", "omega-serv", "--", "/srv/access.log"], ["chmod", "g+w", "--", "/srv/access.log"]]
+    assert len(writer) == 1 and writer[0][1] == "-I" and writer[0][2].endswith("secure_tree.py")
+    spec = json.loads(writer[0][3])
+    assert spec == {"op": "fix_file", "path": "/srv/access.log", "trusted_uid": os.getuid(), "group": "omega-serv",
+                    "add": 0o020, "remove": 0}
     assert shown_command(writer) == "sudo chgrp omega-serv /srv/access.log && sudo chmod g+w /srv/access.log"
-    assert sudo_fix_commands("world_writable", "/x", None) == [["chmod", "o-w", "--", "/x"]]
+    world = sudo_fix_commands("world_writable", "/x", None)
+    assert json.loads(world[0][3])["remove"] == 0o002 and shown_command(world) == "sudo chmod o-w /x"
     assert sudo_fix_commands("writer_cannot_write", "/x", None) == []
     assert sudo_fix_commands("silent", "/x", "omega-serv") == []
 

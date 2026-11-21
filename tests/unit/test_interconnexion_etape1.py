@@ -8,7 +8,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from omega_serv.application.security.manage_blocklist import add_blocklist_entry, remove_blocklist_entry
+from omega_serv.application.security.manage_blocklist import (
+    add_blocklist_entry,
+    remove_blocklist_entry,
+)
 from omega_serv.application.services.pid_file import write_pid_file
 from omega_serv.domain.security.waf.blocklist import validate_origin
 from omega_serv.infrastructure.filesystem.local_filesystem import LocalFilesystem

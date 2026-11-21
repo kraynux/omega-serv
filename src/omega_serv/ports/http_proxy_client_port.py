@@ -33,6 +33,29 @@ class HttpProxyConnectionError(Exception):
     infrastructure/proxy/, jamais par ce module."""
 
 
+class HttpProxyTlsError(HttpProxyConnectionError):
+    """Plan proxy natif v2, lot 8 (decision de l'auteur du 2026-11-13) : poignee de main TLS refusee par le backend ou
+    par nous - certificat refuse (`certificate`) ou autre echec du protocole. 502 comme toute connexion impossible,
+    et une ligne dans error.log, au plus une par backend et par minute. `reason` : texte d'OpenSSL, tel que le module
+    ssl le donne (verify_message pour un certificat, reason sinon)."""
+
+    def __init__(self, message: str, reason: str, certificate: bool) -> None:
+        super().__init__(message)
+        self.reason = reason
+        self.certificate = certificate
+
+
+class HttpProxyTimeoutError(HttpProxyConnectionError):
+    """Plan proxy natif v2, lot 1 (§2.1 point 4) : requete envoyee, mais le backend n'a pas repondu (ou a cesse
+    d'envoyer) dans `read_timeout_seconds` - 504 cote appelant, et un echec de sante. Une connexion impossible
+    reste une `HttpProxyConnectionError` (502)."""
+
+
+class HttpProxyResponseTooLargeError(HttpProxyConnectionError):
+    """Plan proxy natif v2, lot 1 (D23) : corps de reponse au-dela de `options.reverse_proxy.max_response_body_mb`
+    - 502 et une ligne dans error.log, mais pas un echec de sante (le backend repond)."""
+
+
 @dataclass(frozen=True)
 class WebSocketUpstreamHandshake:
     status_code: int
@@ -57,6 +80,7 @@ class HttpProxyClientPort(Protocol):
         connect_timeout: float,
         read_timeout: float,
         ssl_context: ssl.SSLContext | None = None,
+        max_body_bytes: int | None = None,
     ) -> HttpProxyResult:
         ...
 

@@ -6,40 +6,21 @@ executes l'un apres l'autre par les futures commandes CLI
 sans effet de bord), environnement ensuite (necessite le disque)."""
 from __future__ import annotations
 
+import ipaddress
+from collections.abc import Callable, Iterable
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from omega_serv.application.server.start_server import resolve_magnet_paths
-from omega_serv.core.i18n import _
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.routing.alias import parse_alias_rules, validate_alias_rule
-from omega_serv.domain.routing.fastcgi_zone import (
-    parse_fastcgi_config,
-    validate_fastcgi_config_structure,
-)
-from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
-from omega_serv.domain.routing.redirect import parse_redirect_rules
-from omega_serv.domain.routing.rewrite import parse_rewrite_rules
-from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
-from omega_serv.domain.security.auth.exceptions import AuthZonesFileError, UsersFileError
-from omega_serv.domain.security.auth.zones import validate_auth_zone
-from omega_serv.domain.security.tls.exceptions import CertificateToolError
-from omega_serv.domain.security.tls.validation import TlsStartupFacts, validate_tls_startup
-from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
-from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
-from omega_serv.domain.security.waf.keyword_list import (
-    analyze_path_list_text,
-    find_route_conflicts,
-    is_excepted,
-    is_suffix_entry,
-)
-from omega_serv.domain.security.waf.shared_counters import shared_recidive_errors
-from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_list
-from omega_serv.infrastructure.waf.lua_waf_adapter import WafMagnetScriptError, load_lua_waf_adapter
-from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_pack
-from omega_serv.ports.certificate_tool_port import CertificateToolPort
-from omega_serv.ports.filesystem_port import FilesystemPort
+from omega_serv.infrastructure.probe.local_addresses import resolve_hosts
+
+if TYPE_CHECKING:
+    from omega_serv.application.server.engine_selection import EngineProblem, EngineProblems
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.routing.proxy_zone import UpstreamTarget
+    from omega_serv.ports.certificate_tool_port import CertificateToolPort
+    from omega_serv.ports.filesystem_port import FilesystemPort
 
 _LOCAL_BIND_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 
@@ -51,11 +32,16 @@ def validate_config_environment(
     certificate_tool: CertificateToolPort | None = None,
     self_signed_public_bind_confirmed: bool = False,
     auth_without_tls_confirmed: bool = False,
+    local_addresses: Iterable[str] | None = None,
 ) -> list[str]:
     """Verifie que les chemins declares existent ou sont creables, et
     que webroot ne contient pas accidentellement les repertoires
     sensibles (spec §4.2 : secure/, config/, var/log/, var/run/,
-    var/backups/, src/ jamais accessibles depuis HTTP)."""
+    var/backups/, src/ jamais accessibles depuis HTTP).
+
+    `local_addresses` : adresses des interfaces de la machine (lues ici si None) - plan proxy natif v2, lot 3."""
+    from omega_serv.application.server.engine_selection import proxy_engine_problems
+    from omega_serv.core.i18n import _
     errors: list[str] = []
 
     webroot = (project_root / config.paths.webroot).resolve()
@@ -90,6 +76,10 @@ def validate_config_environment(
     auth_option = config.options.get("auth")
     if auth_option is not None and auth_option.enabled:
         errors.extend(_validate_auth_environment(config, filesystem, project_root, auth_without_tls_confirmed))
+    if auth_option is not None:
+        from omega_serv.application.auth.password_protection import protection_error_messages
+        from omega_serv.domain.security.auth.password_protection import SETTINGS_KEY
+        errors.extend(protection_error_messages(auth_option.settings.get(SETTINGS_KEY)))
 
     fastcgi_option = config.options.get("fastcgi")
     if fastcgi_option is not None and fastcgi_option.enabled:
@@ -103,7 +93,140 @@ def validate_config_environment(
     if aliases_option is not None and aliases_option.enabled:
         errors.extend(_validate_alias_environment(aliases_option.settings, project_root))
 
+    errors.extend(_interface_loop_errors(config, local_addresses))
+    # Plan proxy natif v2, lot 3 (P7, P8) : seul options.reverse_proxy.engine = native peut refuser (E9 : une
+    # configuration qui demarrait continue de demarrer).
+    errors.extend(problem.text for problem in proxy_engine_problems(config).errors)
     return errors
+
+
+def _proxied_upstreams(config: OmegaServConfig) -> list[tuple[str, UpstreamTarget]]:
+    """(libelle de la zone, upstream) : zones du reverse proxy, puis leurres d'Active Defense."""
+    from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
+    found: list[tuple[str, UpstreamTarget]] = []
+    if config.option_enabled("reverse_proxy"):
+        for zone in parse_proxy_zones(config.options["reverse_proxy"].settings.get("zones", [])):
+            found += [(f"options.reverse_proxy zone {zone.url_prefix!r}", u) for u in zone.upstreams]
+    if config.option_enabled("active_defense"):
+        try:
+            decoys = parse_active_defense_config(config.options["active_defense"].settings).deception.decoy_zones
+        except (ValueError, TypeError, KeyError):
+            decoys = {}
+        for name, decoy in decoys.items():
+            found += [(f"options.active_defense.deception.decoy_zones.{name}", u) for u in decoy.upstreams]
+    return found
+
+
+def _interface_loop_errors(config: OmegaServConfig, local_addresses: Iterable[str] | None) -> list[str]:
+    """Plan proxy natif v2, lot 3 (D17+, decision de l'auteur du 2026-11-13) : un upstream sur une adresse d'interface
+    de cette machine, au port d'ecoute, quand le serveur ecoute sur 0.0.0.0 ou `::` - boucle certaine, refusee comme
+    127.0.0.1. Les cas sans interface (127/8, ::1, adresse d'ecoute...) sont deja refuses par validate_config."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.proxy_zone import (
+        normalize_host_address,
+        upstream_targets_this_server,
+    )
+    from omega_serv.infrastructure.probe.local_addresses import local_interface_addresses
+    upstreams = _proxied_upstreams(config)
+    bind, port = config.server.bind, config.server.port
+    bind_address = normalize_host_address(bind)
+    if not upstreams or bind_address is None or not ipaddress.ip_address(bind_address).is_unspecified:
+        return []
+    addresses = tuple(local_interface_addresses() if local_addresses is None else local_addresses)
+    errors = []
+    for label, upstream in upstreams:
+        if upstream_targets_this_server(upstream.host, upstream.port, bind, port):
+            continue  # deja signale
+        if upstream_targets_this_server(upstream.host, upstream.port, bind, port, addresses):
+            errors.append(_("{zone} : l'upstream ({host}:{port}) est une adresse de ce serveur, qui écoute sur "
+                            "{bind} - boucle de proxy").format(zone=label, host=upstream.host, port=upstream.port,
+                                                               bind=bind))
+    return errors
+
+
+def unverified_upstream_tls_warnings(config: OmegaServConfig) -> list[EngineProblem]:
+    """Plan proxy natif v2, lot 8 (C15, decision de l'auteur du 2026-11-13) : zone dont un backend est en HTTPS sans
+    verification du certificat - dans error.log au demarrage et a chaque rechargement, dans les deux moteurs."""
+    from omega_serv.application.server.engine_selection import EngineProblem
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
+    if not config.option_enabled("reverse_proxy"):
+        return []
+    found = []
+    for zone in parse_proxy_zones(config.options["reverse_proxy"].settings.get("zones", [])):
+        if zone.verify_upstream_tls or not any(upstream.use_tls for upstream in zone.upstreams):
+            continue
+        label = f"options.reverse_proxy zone {zone.url_prefix!r}"
+        found.append(EngineProblem(
+            _("{zone} : verify_upstream_tls = false - le certificat des backends HTTPS n'est pas vérifié (un tiers "
+              "placé sur le réseau vers le backend peut se faire passer pour lui)").format(zone=label),
+            f"{label} : certificat des backends HTTPS non vérifié (verify_upstream_tls = false)"))
+    return found
+
+
+def config_problems(
+    config: OmegaServConfig,
+    local_addresses: Iterable[str] | None = None,
+    resolve_names: bool = False,
+    resolver: Callable[[Iterable[str]], dict[str, tuple[str, ...]]] = resolve_hosts,
+) -> EngineProblems:
+    """Avertissements et avis (plan proxy natif v2, lot 3 : P7, P8, D17+), jamais un refus. `resolve_names` : resoudre
+    les noms des backends (config check seulement : une resolution lente ne doit jamais retarder le demarrage)."""
+    from omega_serv.application.server.engine_selection import (
+        EngineProblem,
+        EngineProblems,
+        native_zone_prefixes,
+        proxy_engine_problems,
+    )
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.proxy_zone import (
+        is_link_local_upstream,
+        listening_local_addresses,
+        normalize_host_address,
+        upstream_targets_this_server,
+    )
+    from omega_serv.infrastructure.probe.local_addresses import local_interface_addresses
+    base = proxy_engine_problems(config)
+    warnings = list(base.warnings)
+    warnings += unverified_upstream_tls_warnings(config)
+    upstreams = _proxied_upstreams(config)
+    for label, upstream in upstreams:
+        if is_link_local_upstream(upstream.host):
+            warnings.append(EngineProblem(
+                _("{zone} : l'upstream {host} est une adresse locale au lien (169.254.0.0/16 ou fe80::/10) - "
+                  "attribuée automatiquement, souvent instable ; 169.254.169.254 est le service de métadonnées des "
+                  "hébergeurs. Vérifier que c'est voulu").format(zone=label, host=upstream.host),
+                f"{label} : upstream {upstream.host} en adresse locale au lien (169.254.0.0/16 ou fe80::/10)"))
+    names = [u.host for _label, u in upstreams if normalize_host_address(u.host) is None
+             and not u.host.lower().rstrip(".").endswith("localhost")]
+    if resolve_names and names:
+        resolved = resolver(names)
+        # Plan proxy natif v2, lot 6 (decision de l'auteur du 2026-11-13) : dans une zone relayee par le natif, un nom
+        # qui ne se resout pas met son backend hors service (jusqu'au rechargement) - jamais un refus.
+        native = native_zone_prefixes(config) if config.server.engine == "native" else frozenset()
+        for label, upstream in upstreams:
+            if (label.startswith("options.reverse_proxy zone ") and label.split(" zone ", 1)[1].strip("'") in native
+                    and upstream.host in names and not resolved.get(upstream.host)):
+                warnings.append(EngineProblem(
+                    _("{zone} : l'upstream {host} ne se résout pas - le moteur natif le met hors service jusqu'au "
+                      "prochain rechargement (les autres backends de la zone restent servis)").format(
+                        zone=label, host=upstream.host),
+                    f"{label} : upstream {upstream.host} non resolu (hors service dans le moteur natif)"))
+        bind, port = config.server.bind, config.server.port
+        own = listening_local_addresses(bind, local_interface_addresses() if local_addresses is None else local_addresses)
+        for label, upstream in upstreams:
+            if upstream.port != port:
+                continue
+            for address in resolved.get(upstream.host, ()):
+                if upstream_targets_this_server(address, port, bind, port, own):
+                    warnings.append(EngineProblem(
+                        _("{zone} : l'upstream {host}:{port} se résout aujourd'hui vers {address}, une adresse de ce "
+                          "serveur - boucle de proxy probable").format(zone=label, host=upstream.host, port=port,
+                                                                       address=address),
+                        f"{label} : upstream {upstream.host}:{port} resolu vers {address} (ce serveur)"))
+                    break
+    return EngineProblems(base.errors, tuple(warnings), base.notices)
 
 
 def _validate_alias_environment(settings: dict, project_root: Path) -> list[str]:
@@ -111,6 +234,8 @@ def _validate_alias_environment(settings: dict, project_root: Path) -> list[str]
     connait pas le dossier du projet, la verification se fait ici sur le
     chemin REEL (liens symboliques resolus) - un lien qui ramene vers
     <projet>/var ou secure/ reste refuse, un /var/... du systeme passe."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.alias import parse_alias_rules, validate_alias_rule
     errors: list[str] = []
     real_root = project_root.resolve()
     for rule in parse_alias_rules(settings.get("list", [])):
@@ -129,6 +254,8 @@ def _validate_upload_environment(settings: dict, filesystem: FilesystemPort, pro
     premier upload (infrastructure/upload/filesystem_upload_storage.py),
     pas une precondition bloquante comme fastcgi.script_root (qui doit
     deja exister car il contient du code source a executer)."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
     errors: list[str] = []
     for rule in parse_upload_zone_rules(settings.get("zones", [])):
         storage_dir = project_root / rule.storage_path
@@ -148,30 +275,37 @@ def _validate_fastcgi_environment(
     """Porte bloquante (plan de developpement §6) : script_root doit
     resoudre HORS webroot - propriete de securite structurelle : le
     handler statique ne peut alors jamais divulguer le code source PHP,
-    meme si FastCGI est mal configure ou indisponible."""
+    meme si FastCGI est mal configure ou indisponible.
+    Projets 3.0.0 §8.1 : verifie zone par zone. La porte « hors webroot » vaut aussi pour une zone arretee (elle
+    peut etre rallumee a tout moment) ; le dossier et la socket ne sont exiges que d'une zone active : une zone
+    arretee pour maintenance (fichiers en cours de remplacement, pool PHP-FPM arrete) ne bloque pas le demarrage."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.routing.fastcgi_zone import (
+        parse_fastcgi_zones,
+        validate_fastcgi_zones_structure,
+    )
     errors: list[str] = []
-    fastcgi_config = parse_fastcgi_config(settings)
-    errors.extend(_("options.fastcgi : {e}").format(e=e) for e in validate_fastcgi_config_structure(fastcgi_config))
-    if not fastcgi_config.script_root:
-        return errors
-
+    zones = parse_fastcgi_zones(settings)
+    errors.extend(_("options.fastcgi : {e}").format(e=e) for e in validate_fastcgi_zones_structure(zones))
     webroot = (project_root / webroot_relative).resolve()
-    script_root = (project_root / fastcgi_config.script_root).resolve()
-    try:
-        script_root.relative_to(webroot)
-        errors.append(
-            _("options.fastcgi.script_root ({script_root}) est à l'intérieur de paths.webroot ({webroot}) - interdit structurellement (spec §21, plan de développement §6)").format(script_root=script_root, webroot=webroot)
-        )
-    except ValueError:
-        pass
-
-    if not filesystem.is_dir(script_root):
-        errors.append(_("options.fastcgi.script_root n'est pas un dossier existant : {script_root}").format(script_root=script_root))
-
-    socket_path = project_root / fastcgi_config.socket_path
-    if not filesystem.exists(socket_path):
-        errors.append(_("options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM démarré ?)").format(socket_path=socket_path))
-
+    for zone in zones:
+        if not zone.script_root:
+            continue
+        script_root = (project_root / zone.script_root).resolve()
+        try:
+            script_root.relative_to(webroot)
+            errors.append(
+                _("options.fastcgi.script_root ({script_root}) est à l'intérieur de paths.webroot ({webroot}) - interdit structurellement (spec §21, plan de développement §6)").format(script_root=script_root, webroot=webroot)
+            )
+        except ValueError:
+            pass
+        if not zone.enabled:
+            continue
+        if not filesystem.is_dir(script_root):
+            errors.append(_("options.fastcgi.script_root n'est pas un dossier existant : {script_root}").format(script_root=script_root))
+        socket_path = project_root / zone.socket_path
+        if not filesystem.exists(socket_path):
+            errors.append(_("options.fastcgi.socket_path introuvable : {socket_path} (PHP-FPM démarré ?)").format(socket_path=socket_path))
     return errors
 
 
@@ -186,6 +320,9 @@ def _validate_auth_environment(
     qu'apres lecture du fichier reel), et la porte bloquante "Basic Auth
     expose sans TLS ni reverse-proxy declare" (spec §15.6 : "en acces
     distant, Basic Auth doit etre utilisee uniquement sous HTTPS")."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.auth.exceptions import AuthZonesFileError, UsersFileError
+    from omega_serv.domain.security.auth.zones import validate_auth_zone
     errors: list[str] = []
 
     tls_effectively_covered = config.tls.enabled or config.tls.mode == "behind_proxy"
@@ -240,6 +377,9 @@ def _validate_tls_environment(
     la cle, correspondance cle/certificat, expiration, auto-signe+bind
     public. La validation structurelle pure (mode/versions/chemins non
     vides) est deja faite par domain/config/validation.py::validate_config."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.domain.security.tls.validation import TlsStartupFacts, validate_tls_startup
     cert_path = project_root / config.tls.certificate_path
     key_path = project_root / config.tls.private_key_path
 
@@ -288,6 +428,13 @@ def _collect_site_routes(
     webroot (OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md, recensement 1.0) :
     aliases, redirections, reecritures, zones de reverse proxy, zones
     d'upload, FastCGI, zones Auth. Seules les options ACTIVES comptent."""
+    from omega_serv.domain.routing.alias import parse_alias_rules
+    from omega_serv.domain.routing.fastcgi_zone import parse_fastcgi_zones
+    from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
+    from omega_serv.domain.routing.redirect import parse_redirect_rules
+    from omega_serv.domain.routing.rewrite import parse_rewrite_rules
+    from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
+    from omega_serv.domain.security.auth.exceptions import AuthZonesFileError
     routes: list[tuple[str, str]] = []
 
     def settings_of(name: str) -> dict | None:
@@ -305,7 +452,7 @@ def _collect_site_routes(
     if (upload := settings_of("upload")) is not None:
         routes += [("upload", z.url_prefix) for z in parse_upload_zone_rules(upload.get("zones", []))]
     if (fastcgi := settings_of("fastcgi")) is not None:
-        routes.append(("fastcgi", parse_fastcgi_config(fastcgi).url_prefix))
+        routes += [("fastcgi", z.url_prefix) for z in parse_fastcgi_zones(fastcgi) if z.enabled]
     if settings_of("auth") is not None:
         zones_path = project_root / config.paths.auth_zones
         if filesystem.exists(zones_path):
@@ -325,6 +472,13 @@ def _route_conflict_errors(
     le webroot, seul le chemin exact de l'entree est verifie (un parcours
     complet serait trop lent sur un gros site) - le rejeu des logs reels
     de l'editeur integre couvre les cas plus profonds."""
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.waf.keyword_list import (
+        analyze_path_list_text,
+        find_route_conflicts,
+        is_excepted,
+        is_suffix_entry,
+    )
     analysis = analyze_path_list_text(text, anchor)
     entries, exceptions = analysis.entries, analysis.exceptions
     prefix = f"options.waf.rules.keyword_lists[{list_id!r}]"
@@ -358,6 +512,17 @@ def _validate_waf_environment(
     et sont chargeables - la validation structurelle pure
     (domain/security/waf/config.py::validate_waf_config) ne peut pas le
     savoir, elle n'a pas acces au disque."""
+    from omega_serv.application.server.start_server import resolve_magnet_paths
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
+    from omega_serv.domain.security.waf.exceptions import WafRuleLoadError, WafRuleValidationError
+    from omega_serv.domain.security.waf.shared_counters import shared_recidive_errors
+    from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_list
+    from omega_serv.infrastructure.waf.lua_waf_adapter import (
+        WafMagnetScriptError,
+        load_lua_waf_adapter,
+    )
+    from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_pack
     errors: list[str] = []
     waf_config = parse_waf_config(settings)
     errors.extend(_("options.waf : {e}").format(e=e) for e in validate_waf_config(waf_config))

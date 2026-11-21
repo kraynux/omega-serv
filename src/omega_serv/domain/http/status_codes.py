@@ -35,6 +35,7 @@ class HttpStatus(IntEnum):
     INTERNAL_SERVER_ERROR = 500
     BAD_GATEWAY = 502
     SERVICE_UNAVAILABLE = 503
+    GATEWAY_TIMEOUT = 504  # plan proxy natif v2, lot 1 (§2.1 point 4)
     HTTP_VERSION_NOT_SUPPORTED = 505
 
     @property
@@ -65,6 +66,7 @@ _REASON_PHRASES: dict[HttpStatus, str] = {
     HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS: "Unavailable For Legal Reasons",
     HttpStatus.INTERNAL_SERVER_ERROR: "Internal Server Error",
     HttpStatus.BAD_GATEWAY: "Bad Gateway",
+    HttpStatus.GATEWAY_TIMEOUT: "Gateway Timeout",
     HttpStatus.SERVICE_UNAVAILABLE: "Service Unavailable",
     HttpStatus.HTTP_VERSION_NOT_SUPPORTED: "HTTP Version Not Supported",
 }

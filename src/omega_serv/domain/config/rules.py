@@ -31,7 +31,7 @@ from typing import Literal
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.routing.alias import parse_alias_rules
-from omega_serv.domain.routing.fastcgi_zone import parse_fastcgi_config
+from omega_serv.domain.routing.fastcgi_zone import parse_fastcgi_zones
 from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
 from omega_serv.domain.routing.redirect import parse_redirect_rules
 from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules
@@ -82,7 +82,7 @@ def _collect_dispatch_zone_prefixes(config: OmegaServConfig) -> list[tuple[str, 
 
     fastcgi_option = config.options.get("fastcgi")
     if fastcgi_option is not None and fastcgi_option.enabled:
-        prefixes.append(("fastcgi", parse_fastcgi_config(fastcgi_option.settings).url_prefix))
+        prefixes.extend(("fastcgi", zone.url_prefix) for zone in parse_fastcgi_zones(fastcgi_option.settings))
 
     reverse_proxy_option = config.options.get("reverse_proxy")
     if reverse_proxy_option is not None and reverse_proxy_option.enabled:

@@ -5,6 +5,7 @@ from dataclasses import replace
 from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.application.server.serve_proxy import (
     AllUpstreamsAtCapacityError,
+    ForwardingContext,
     build_outgoing_headers,
     resolve_upstream,
     serve_proxy,
@@ -83,7 +84,8 @@ class _FakeProxyClient:
         self._delay = delay
         self.calls = []
 
-    async def forward_request(self, host, port, method, path, headers, body, connect_timeout, read_timeout, ssl_context=None):
+    async def forward_request(self, host, port, method, path, headers, body, connect_timeout, read_timeout, ssl_context=None,
+                              max_body_bytes=None):
         if self._delay:
             await asyncio.sleep(self._delay)
         call_index = len(self.calls)
@@ -272,8 +274,17 @@ class TestServeProxyStickySession(unittest.IsolatedAsyncioTestCase):
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b""))
         zone = self._zone()
         response = await serve_proxy(_request(), zone, client, ProxyLoadBalancerState(), ProxyHealthState())
-        self.assertIn("Set-Cookie", response.headers)
-        self.assertIn("omega_proxy_sticky=", response.headers["Set-Cookie"])
+        self.assertEqual(len(_cookies(response)), 1)
+        self.assertIn("omega_proxy_sticky=", _cookies(response)[0])
+
+    async def test_sticky_cookie_is_added_next_to_the_backend_cookies(self):
+        # Lot 1 (D6, C6) : le cookie collant ecrasait le Set-Cookie du backend, et un seul cookie du backend survivait.
+        client = _FakeProxyClient(result=HttpProxyResult(200, (("Set-Cookie", "a=1"), ("set-cookie", "b=2")), b""))
+        response = await serve_proxy(_request(), self._zone(), client, ProxyLoadBalancerState(), ProxyHealthState())
+        cookies = _cookies(response)
+        self.assertEqual(cookies[:2], ["a=1", "b=2"])
+        self.assertEqual(len(cookies), 3)
+        self.assertIn("omega_proxy_sticky=", cookies[2])
 
     async def test_request_with_valid_sticky_cookie_always_reaches_same_upstream(self):
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b""))
@@ -302,13 +313,13 @@ class TestServeProxyStickySession(unittest.IsolatedAsyncioTestCase):
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b""))
         zone = self._zone(sticky_session_enabled=False)
         response = await serve_proxy(_request(), zone, client, ProxyLoadBalancerState(), ProxyHealthState())
-        self.assertNotIn("Set-Cookie", response.headers)
+        self.assertEqual(_cookies(response), [])
 
     async def test_sticky_cookie_not_set_on_upstream_connection_error(self):
         client = _FakeProxyClient(error=HttpProxyConnectionError("connexion refusee"))
         zone = self._zone()
         response = await serve_proxy(_request(), zone, client, ProxyLoadBalancerState(), ProxyHealthState())
-        self.assertNotIn("Set-Cookie", response.headers)
+        self.assertEqual(_cookies(response), [])
 
     async def test_sticky_cookie_follows_upstream_that_actually_served_after_retry(self):
         """§18.4 x §17 : si le premier choix (sticky vers A) echoue et
@@ -325,7 +336,12 @@ class TestServeProxyStickySession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(client.calls), 2)
         self.assertEqual(client.calls[0][0], "10.0.0.1")
         self.assertEqual(client.calls[1][0], "10.0.0.2")
-        self.assertIn(sticky_cookie_value_for(self._UPSTREAM_B), response.headers["Set-Cookie"])
+        self.assertIn(sticky_cookie_value_for(self._UPSTREAM_B), _cookies(response)[0])
+
+
+def _cookies(response) -> list[str]:
+    """Lot 1 (D6) : tous les Set-Cookie, ou qu'ils soient ranges (en-tetes repetes compris)."""
+    return [value for name, value in response.all_headers() if name.lower() == "set-cookie"]
 
 
 class TestServeProxyRoutingRules(unittest.IsolatedAsyncioTestCase):
@@ -391,6 +407,30 @@ class TestServeProxyHealthAndRetry(unittest.IsolatedAsyncioTestCase):
         defaults = {"url_prefix": "/api/", "upstreams": (self._UPSTREAM_A, self._UPSTREAM_B)}
         defaults.update(overrides)
         return ProxyZone(**defaults)
+
+    async def test_down_upstream_without_active_check_gets_a_trial_and_comes_back(self):
+        # Lot 1 (D7) : sans sonde active, A (DOWN) n'etait jamais reessaye - tout partait vers B pour toujours.
+        import time
+        zone = self._zone()
+        health_state = ProxyHealthState()
+        for _ in range(zone.unhealthy_after):
+            health_state.record_failure(zone.url_prefix, self._UPSTREAM_A, unhealthy_after=zone.unhealthy_after,
+                                        now=time.monotonic() - 11)
+        client = _FakeProxyClient(result=HttpProxyResult(200, (), b"ok"))
+        load_balancer = ProxyLoadBalancerState()
+        await serve_proxy(_request(), zone, client, load_balancer, health_state)
+        self.assertEqual(client.calls[0][0], "10.0.0.1")  # requete d'essai
+        self.assertEqual(health_state.status_for(zone.url_prefix, self._UPSTREAM_A), "up")
+
+    async def test_recently_down_upstream_is_not_tried_yet(self):
+        zone = self._zone()
+        health_state = ProxyHealthState()
+        for _ in range(zone.unhealthy_after):
+            health_state.record_failure(zone.url_prefix, self._UPSTREAM_A, unhealthy_after=zone.unhealthy_after)
+        client = _FakeProxyClient(result=HttpProxyResult(200, (), b"ok"))
+        for _ in range(3):
+            await serve_proxy(_request(), zone, client, ProxyLoadBalancerState(), health_state)
+        self.assertEqual([call[0] for call in client.calls], ["10.0.0.2"] * 3)
 
     async def test_connection_failure_marks_upstream_down_after_threshold(self):
         client = _FakeProxyClient(error=HttpProxyConnectionError("boom"))
@@ -556,6 +596,26 @@ class TestServeProxyCache(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(second.headers["X-Omega-Cache"], "HIT")
         self.assertEqual(second.body, b"body")
         self.assertEqual(len(client.calls), 1)  # le backend n'est touche qu'une seule fois
+
+    async def test_range_request_bypasses_the_cache(self):
+        # Lot 1 (D13) : une requete partielle ne lit ni n'alimente le cache.
+        client = _FakeProxyClient(result=HttpProxyResult(206, (("Content-Range", "bytes 0-1/4"),), b"bo"))
+        store = _InMemoryProxyCacheStore()
+        response = await self._serve(self._zone(), client, request=_request(headers=[("Range", "bytes=0-1")]),
+                                     store=store)
+        self.assertEqual(response.headers["X-Omega-Cache"], "BYPASS")
+        second = await self._serve(self._zone(), client, store=store)
+        self.assertEqual(second.headers["X-Omega-Cache"], "MISS")
+
+    async def test_authenticated_private_response_is_not_shared(self):
+        # Lot 1 (D13) : une page privee d'un visiteur authentifie etait servie depuis le cache a un autre.
+        client = _FakeProxyClient(result=HttpProxyResult(200, (("Cache-Control", "max-age=60"),), b"prive"))
+        store = _InMemoryProxyCacheStore()
+        await self._serve(self._zone(), client, request=_request(headers=[("Authorization", "Basic eDp5")]),
+                          store=store)
+        anonymous = await self._serve(self._zone(), client, store=store)
+        self.assertEqual(anonymous.headers["X-Omega-Cache"], "MISS")
+        self.assertEqual(len(client.calls), 2)
 
     async def test_post_is_never_cached_even_when_zone_allows_caching(self):
         client = _FakeProxyClient(result=HttpProxyResult(200, (), b"body"))
@@ -757,10 +817,9 @@ class TestCorrectif262ForwardingHeaders(unittest.TestCase):
         self.assertEqual([v for n, v in sent if n == "x-forwarded-for"], ["203.0.113.9"])
         self.assertNotIn("10.0.0.1", " ".join(v for _, v in sent))
 
-    def test_unrelated_headers_and_x_forwarded_port_still_forwarded(self):
+    def test_unrelated_headers_still_forwarded(self):
         sent = dict(self._sent(self._FORGED))
         self.assertEqual(sent["accept"], "text/html")
-        self.assertEqual(sent["x-forwarded-port"], "8443")  # decision de l'auteur : passe comme avant
 
     def test_websocket_keeps_upgrade_but_drops_other_named_headers(self):
         sent = self._sent([("Connection", "Upgrade, X-Secret-Hop"), ("Upgrade", "websocket"), ("X-Secret-Hop", "saut")],
@@ -769,6 +828,49 @@ class TestCorrectif262ForwardingHeaders(unittest.TestCase):
         self.assertIn("connection", names)
         self.assertIn("upgrade", names)
         self.assertNotIn("x-secret-hop", names)
+
+
+class TestLot1ForwardedProtoAndPort(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (R1, R2, D28) : protocole et port vus par le visiteur, jamais ceux qu'un client
+    choisit ; ceux d'un relais de confiance (Tailscale Funnel, qui termine le TLS) sont gardes."""
+
+    _FORWARDING = ForwardingContext(listen_port=8080, trusted_networks=("127.0.0.1/32",))
+
+    def _sent(self, headers, peer_ip, zone=None, forwarding=_FORWARDING):
+        request = HttpRequest(
+            request_id="r1", remote_ip="203.0.113.9", peer_ip=peer_ip, method="GET", path="/api/x", raw_path="/api/x",
+            query="", headers=HttpHeaders.from_pairs(headers), body=None, content_length=None, is_tls=False)
+        zone = zone or _zone()
+        sent = build_outgoing_headers(request, zone, zone.upstreams[0], forwarding=forwarding)
+        return {name.lower(): value for name, value in sent}
+
+    def test_direct_client_cannot_choose_protocol_or_port(self):
+        sent = self._sent([("X-Forwarded-Proto", "https"), ("X-Forwarded-Port", "443")], peer_ip="198.51.100.7")
+        self.assertEqual((sent["x-forwarded-proto"], sent["x-forwarded-port"]), ("http", "8080"))
+
+    def test_trusted_relay_keeps_protocol_and_port(self):
+        sent = self._sent([("X-Forwarded-Proto", "HTTPS"), ("X-Forwarded-Port", "443")], peer_ip="127.0.0.1")
+        self.assertEqual((sent["x-forwarded-proto"], sent["x-forwarded-port"]), ("https", "443"))
+
+    def test_trusted_relay_values_must_be_well_formed(self):
+        for proto, port in (("javascript", "443"), ("https", "0"), ("https", "70000"), ("https", "44x"), ("", "")):
+            with self.subTest(proto=proto, port=port):
+                sent = self._sent([("X-Forwarded-Proto", proto), ("X-Forwarded-Port", port)], peer_ip="127.0.0.1")
+                self.assertIn(sent["x-forwarded-proto"], ("http", "https"))
+                self.assertTrue(sent["x-forwarded-port"] in ("8080", "443"))
+                if proto != "https":
+                    self.assertEqual(sent["x-forwarded-proto"], "http")
+                if port != "443":
+                    self.assertEqual(sent["x-forwarded-port"], "8080")
+
+    def test_without_context_the_client_port_is_dropped(self):
+        sent = self._sent([("X-Forwarded-Port", "443")], peer_ip="127.0.0.1", forwarding=None)
+        self.assertNotIn("x-forwarded-port", sent)
+
+    def test_ipv6_backend_host_is_bracketed(self):
+        # D28 : `Host: ::1:8080` etait envoye sans crochets.
+        zone = ProxyZone(url_prefix="/api/", upstreams=(UpstreamTarget(host="::1", port=8080),))
+        self.assertEqual(self._sent([], peer_ip="198.51.100.7", zone=zone)["host"], "[::1]:8080")
 
 
 if __name__ == "__main__":

@@ -6,8 +6,6 @@ c'est pourquoi l'envoi quotidien tourne dans un processus a part (jamais dans le
 from __future__ import annotations
 
 import json
-import urllib.error
-import urllib.request
 
 from omega_serv.domain.declaration.model import RECEPTION_URL
 from omega_serv.ports.declaration_port import SendOutcome
@@ -22,6 +20,9 @@ class HttpsDeclarationSender:
         self._timeout = timeout
 
     def send(self, payload: dict[str, object]) -> SendOutcome:
+        import urllib.error  # a l'envoi seulement (une fois par jour au plus) : urllib.request importe http.client,
+        import urllib.request  # email et tempfile, ~1 Mo dans chaque processus du serveur (2026-11-18)
+
         body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         request = urllib.request.Request(
             self._url, data=body, method="POST",

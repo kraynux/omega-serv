@@ -6,6 +6,7 @@ import asyncio
 import json
 import os
 import shutil
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -181,8 +182,9 @@ class TestTuiLogStatsAndHealth(unittest.IsolatedAsyncioTestCase):
 
             def run(self, args, input_text=None, timeout=None):
                 calls.append(args)
-                if "o-w" in args:
-                    os.chmod(args[-1], 0o644)
+                if args[-2].endswith("secure_tree.py"):  # scan de securite n° 2 (F4) : un seul fichier, par descripteur
+                    spec = json.loads(args[-1])
+                    os.chmod(spec["path"], os.stat(spec["path"]).st_mode & 0o7777 & ~spec["remove"])
                 return ProcessResult(0, "", "")
 
         container = self._container(privileged_runner_factory=FakeSudo)
@@ -203,8 +205,12 @@ class TestTuiLogStatsAndHealth(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             await self._wait(pilot, "_analysing")
         self.assertIn(["sudo", "-v"], calls)
-        self.assertIn(["sudo", "-n", "chmod", "o-w", "--", str(self.external_log)], calls)
-        self.assertEqual(self.external_log.stat().st_mode & 0o777, 0o644)
+        fix = next(call for call in calls if call[-2].endswith("secure_tree.py"))
+        self.assertEqual(fix[:4], ["sudo", "-n", sys.executable, "-I"])
+        self.assertEqual(json.loads(fix[-1]) | {"trusted_uid": 0},
+                         {"op": "fix_file", "path": str(self.external_log), "trusted_uid": 0, "group": None,
+                          "add": 0, "remove": 0o002})
+        self.assertEqual(self.external_log.stat().st_mode & 0o777, 0o664)  # o-w seulement
 
 
 if __name__ == "__main__":

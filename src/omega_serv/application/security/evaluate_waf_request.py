@@ -86,6 +86,9 @@ async def evaluate_waf_request(
         # sans aucune entree utilisateur (serve_error_css.py) : rien a inspecter.
         return WafDecision(action="allow", status_code=None, score=0, log_level="debug")
 
+    # Scan de securite n° 2 (2026-11-20, F27/F39) : regle de debit, exclusions et corps non inspecte choisis sur le
+    # chemin canonique, comme le routage - `//login`, `/%6cogin` ou `/x.php;.css` passaient a cote.
+    security_path = request.canonical_path or request.path
     blocked_entry = None if blocklist_known_clear else blocklist_port.is_blocked(request.remote_ip)
     if blocked_entry is not None:
         # 451 (page « Votre IP a été bannie ») pendant toute la durée du ban, quelle que soit la page
@@ -107,7 +110,7 @@ async def evaluate_waf_request(
         # avec son propre compteur ; `requests == 0` = illimite. Toujours APRES
         # la blocklist, toujours AVANT l'inspection (jamais coupee par une regle
         # de debit).
-        selected = select_rate_limit(request.path, request.remote_ip, waf_config.rate_limit)
+        selected = select_rate_limit(security_path, request.remote_ip, waf_config.rate_limit)
         if selected.requests > 0:
             if native_rate_limit is None:
                 result = rate_limit_port.check(selected.key, selected.requests, selected.window_seconds)
@@ -131,11 +134,16 @@ async def evaluate_waf_request(
                     ),
                 )
 
-    excluded = matches_any_prefix(request.path, waf_config.exclusions.path_prefixes) or is_extension_excluded(
-        request.path, waf_config.exclusions.extensions
+    excluded = matches_any_prefix(security_path, waf_config.exclusions.path_prefixes) or is_extension_excluded(
+        security_path.split(";", 1)[0], waf_config.exclusions.extensions
     )
     if excluded:
         return WafDecision(action="allow", status_code=None, score=0, log_level="debug")
+
+    if request.body and matches_any_prefix(security_path, waf_config.exclusions.do_not_inspect_body_path_prefixes):
+        # Plan proxy natif v2, lot 1 (D35) : reglage propose par l'interface mais lu nulle part - le WAF ne voit pas
+        # le corps de ces chemins ; la requete, elle, part entiere vers sa route.
+        request = replace(request, body=None)
 
     decision = waf_port.inspect(request)
 
@@ -219,7 +227,7 @@ def _magnet_volume_policy(request: HttpRequest, waf_config: WafConfig, magnet: W
     if (
         magnet.status_code == 429
         and rate_limit.enabled
-        and select_rate_limit(request.path, request.remote_ip, rate_limit).scope != "global"
+        and select_rate_limit(request.canonical_path or request.path, request.remote_ip, rate_limit).scope != "global"
     ):
         return None
     if is_trusted_rate_limit_source(

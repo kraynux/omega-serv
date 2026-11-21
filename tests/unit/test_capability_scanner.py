@@ -25,7 +25,7 @@ class TestMagnetDependencyDetection(unittest.TestCase):
     def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
         return SystemCapabilityScanner(
             project_root=tmp_path, filesystem=LocalFilesystem(),
-            configured_port=8080, fastcgi_socket=None,
+            configured_port=8080,
         )
 
     def test_magnet_available_when_lupa_installed(self):
@@ -51,7 +51,7 @@ class TestCertbotDetection(unittest.TestCase):
     def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
         return SystemCapabilityScanner(
             project_root=tmp_path, filesystem=LocalFilesystem(),
-            configured_port=8080, fastcgi_socket=None,
+            configured_port=8080,
         )
 
     def test_certbot_available_when_binary_found(self):
@@ -79,7 +79,7 @@ class TestScpDetection(unittest.TestCase):
     def _scanner(self, tmp_path: Path) -> SystemCapabilityScanner:
         return SystemCapabilityScanner(
             project_root=tmp_path, filesystem=LocalFilesystem(),
-            configured_port=8080, fastcgi_socket=None,
+            configured_port=8080,
         )
 
     def test_scp_available_when_binary_found(self):

@@ -124,3 +124,14 @@ def export_log_health_html(*, theme_name: str = DEFAULT_EXPORT_THEME, **argument
 
     template = _env.get_template("log_health_report.html.j2")
     return template.render(palette=resolve_export_palette(theme_name), **arguments)
+
+
+def export_full_report_html(*, sections: Sequence[dict], generated_at: str,
+                            theme_name: str = DEFAULT_EXPORT_THEME) -> str:
+    """Rapport complet (projets 3.0.0 §7.7) : sections deja presentees (application/report/
+    full_report_presentation.py), dans la langue de ce processus."""
+    from omega_serv.infrastructure.exporters.html_theme_resolver import resolve_export_palette
+
+    return _env.get_template("full_report.html.j2").render(
+        sections=sections, generated_at=generated_at, palette=resolve_export_palette(theme_name))
+

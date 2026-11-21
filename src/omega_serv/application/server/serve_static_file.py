@@ -22,6 +22,7 @@ from omega_serv.domain.routing.dirlisting import DirlistingSettings, render_dire
 from omega_serv.domain.routing.dirlisting_sort import DirEntryInfo
 from omega_serv.domain.routing.zone_resolver import Zone, resolve_zone
 from omega_serv.domain.security.access_policy import is_denied_path
+from omega_serv.domain.security.path_policy import canonical_path
 from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
 from omega_serv.ports.filesystem_port import FilesystemPort
 
@@ -73,7 +74,10 @@ def serve_static_file(
                 target_path, info = candidate, candidate_info
                 break
         else:
-            if resolve_zone(effective_display_path, list(dirlisting_zones)) is not None:
+            # Scan de securite n° 1 (2026-11-20, F27/F37) : zone de listage choisie sur le chemin canonique, pas sur
+            # le chemin brut (`/liste/%2e%2e/prive/` listait un dossier hors zone).
+            listing_zone_path = canonical_path(effective_display_path)
+            if listing_zone_path is not None and resolve_zone(listing_zone_path, list(dirlisting_zones)) is not None:
                 return _render_listing(
                     request, target_path, filesystem, security, dirlisting_settings, effective_display_path
                 )

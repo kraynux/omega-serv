@@ -8,8 +8,10 @@ vrai trou trouve, le WAF tournait avec ZERO regle chargee car rien ne
 permettait de configurer ceci autrement qu'a la main dans le JSON) et
 gerer la blocklist (container.blocklist_port_factory, injecte depuis
 __main__.py car le cas d'usage touche infrastructure/ transitivement).
-Les champs restants de WafConfig -inspect/scoring/reputation/logging-
-restent avances, edition manuelle pour l'instant, aucun besoin confirme
+Plan proxy natif v2, lot 11 : taille du corps inspectee et sort du corps
+au-dela (inspect.body_max_inspect_bytes, inspect.body_over_limit) ajoutes a
+la premiere section. Les autres champs de WafConfig -inspect/scoring/
+reputation/logging- restent avances, edition manuelle pour l'instant, aucun besoin confirme
 de formulaire dedie - D-008. rate_limit/exclusions ont depuis leur
 propre ecran (waf_rate_limit_screen.py, "Exclusions et debit")."""
 from __future__ import annotations
@@ -29,6 +31,10 @@ from omega_serv.application.security.manage_blocklist import (
 )
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
+from omega_serv.domain.security.waf.binary_formats import (
+    KNOWN_BINARY_FORMATS,
+    validate_binary_formats,
+)
 from omega_serv.domain.security.waf.config import parse_waf_config
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens._service_reload import reload_service_after_waf_change
@@ -76,6 +82,26 @@ class WafModulesScreen(OmegaScreen):
                   "journal d'erreurs."),
                 classes="omega-hint",
             )
+            yield Static(_("Taille du corps de requête inspectée (octets)"), classes="omega-subtitle")
+            yield Input(id="body-max-inspect-input")
+            yield Static(_("Corps plus grand que cette taille (pass/reject)"), classes="omega-subtitle")
+            yield Input(id="body-over-limit-input")
+            yield Static(
+                _("Le WAF n'inspecte que le début du corps, quelle que soit la route. Avec « pass », la suite part "
+                  "sans être inspectée ; avec « reject », la requête est refusée (413), en mode block seulement."),
+                classes="omega-hint",
+            )
+            # Lot 11 (constat F2, decision de l'auteur du 2026-11-14) : fichiers binaires connus, jamais lus comme texte.
+            yield Static(_("Fichiers binaires non inspectés (formats, séparés par des virgules ; vide = tout inspecter)"),
+                         classes="omega-subtitle")
+            yield Input(id="binary-formats-input")
+            yield Static(
+                _("Le format est reconnu au contenu réel du fichier (sa signature binaire), jamais à son extension ni "
+                  "au seul type annoncé. Un formulaire, du JSON, du XML ou du texte reste toujours inspecté, et dans "
+                  "un formulaire avec fichiers, seuls les fichiers reconnus sont retirés. Formats connus : {known}.")
+                .format(known=", ".join(KNOWN_BINARY_FORMATS)),
+                classes="omega-hint",
+            )
             with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
                 yield Button(_("Enregistrer"), id="save-mode", variant="primary")
 
@@ -90,13 +116,15 @@ class WafModulesScreen(OmegaScreen):
 
             yield Static(_("Liste de blocage"), classes="omega-subtitle")
             yield DataTable(id="blocklist-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Ajouter"), id="add-entry", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Supprimer"), id="delete-entry", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Bloquer un réseau"), id="add-entry", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Débloquer"), id="delete-entry", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -132,6 +160,9 @@ class WafModulesScreen(OmegaScreen):
         self.query_one("#mode-input", Input).value = waf_config.mode
         self.query_one("#on-internal-error-input", Input).value = waf_config.on_internal_error
         self.query_one("#native-check-input", Input).value = str(waf_config.native_check_every)
+        self.query_one("#body-max-inspect-input", Input).value = str(waf_config.inspect.body_max_inspect_bytes)
+        self.query_one("#body-over-limit-input", Input).value = waf_config.inspect.body_over_limit
+        self.query_one("#binary-formats-input", Input).value = ", ".join(waf_config.inspect.binary_formats)
 
         rule_paths_table = self.query_one("#rule-paths-table", DataTable)
         rule_paths_table.clear()
@@ -186,7 +217,7 @@ class WafModulesScreen(OmegaScreen):
             )
             return
         if button_id == "add-entry":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("AJOUTER UNE ENTRÉE"),
                     fields=[
@@ -257,6 +288,22 @@ class WafModulesScreen(OmegaScreen):
         if not (check_text.isascii() and check_text.isdigit()) or int(check_text) > 1_000_000:
             error_widget.update(_("Valeur invalide : {value!r} (attendu : un entier de 0 à 1000000)").format(value=check_text))
             return
+        # Plan proxy natif v2, lot 11 : reglages du lot 2 (taille inspectee, sort du corps au-dela).
+        inspect_text = self.query_one("#body-max-inspect-input", Input).value.strip()
+        if not (inspect_text.isascii() and inspect_text.isdigit()):
+            error_widget.update(_("Valeur invalide : {value!r} (attendu : un entier >= 0)").format(value=inspect_text))
+            return
+        over_limit = self.query_one("#body-over-limit-input", Input).value.strip()
+        if over_limit not in ("pass", "reject"):
+            error_widget.update(_("Valeur invalide : {value!r} (attendu : pass, reject)").format(value=over_limit))
+            return
+        formats_text = self.query_one("#binary-formats-input", Input).value
+        formats = [name.strip().lower() for name in formats_text.split(",") if name.strip()]
+        unknown = validate_binary_formats(formats)
+        if unknown:
+            error_widget.update(_("Format inconnu : {names} (connus : {known})").format(
+                names=", ".join(unknown), known=", ".join(KNOWN_BINARY_FORMATS)))
+            return
 
         existing = load_result.config.options.get("waf")
         enabled = existing.enabled if existing is not None else False
@@ -264,6 +311,11 @@ class WafModulesScreen(OmegaScreen):
         new_settings["mode"] = mode
         new_settings["on_internal_error"] = on_internal_error
         new_settings["native_check_every"] = int(check_text)
+        inspect = dict(new_settings.get("inspect") or {})
+        inspect["body_max_inspect_bytes"] = int(inspect_text)
+        inspect["body_over_limit"] = over_limit
+        inspect["binary_formats"] = formats
+        new_settings["inspect"] = inspect
         new_options = dict(load_result.config.options)
         new_options["waf"] = Option(name="waf", enabled=enabled, settings=new_settings)
         new_config = replace(load_result.config, options=new_options)
@@ -287,7 +339,7 @@ class WafModulesScreen(OmegaScreen):
             try:
                 duration_seconds = int(duration_text)
             except ValueError:
-                self.query_one("#form-error", Static).update(_("Durée invalide (nombre attendu) : {duration_text!r}").format(duration_text=duration_text))
+                self.report_form_error(_("Durée invalide (nombre attendu) : {duration_text!r}").format(duration_text=duration_text))
                 return
         confirm_permanent = is_yes(values["confirm_permanent"])
         port = factory(config, self._container.filesystem, self._container.project_root, self._container.clock)
@@ -306,7 +358,12 @@ class WafModulesScreen(OmegaScreen):
         self._report(result)
 
     def _report(self, result: ManageBlocklistResult) -> None:
-        error_widget = self.query_one("#form-error", Static)
-        error_widget.update("" if result.success else _("Erreur : {message}").format(message=result.message))
+        if not result.success:
+            # Lot V : pendant le formulaire d'ajout, l'erreur reste dans le formulaire (saisie gardee).
+            self.report_form_error(_("Erreur : {message}").format(message=result.message))
+            if self._form_errors is not None:
+                return
+        else:
+            self.query_one("#form-error", Static).update("")
         self.app.notify(result.message, severity="information" if result.success else "error")
         self._refresh()

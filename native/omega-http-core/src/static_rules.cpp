@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "http_parser.hpp"
+#include "text.hpp"
 
 namespace omega {
 
@@ -247,7 +248,12 @@ int days_in_month(long long y, int m) {
 }  // namespace
 
 // ================================================================================ chemins
-std::string latin1_to_utf8(std::string_view latin1) { return u32_to_utf8(latin1_to_u32(latin1)); }
+// Lot 11 (mesures) : texte tout ASCII (le cas des en-tetes) rendu tel quel, sans passer par les points de code -
+// meme resultat.
+std::string latin1_to_utf8(std::string_view latin1) {
+    if (all_ascii(latin1)) return std::string(latin1);
+    return u32_to_utf8(latin1_to_u32(latin1));
+}
 
 namespace {
 PathDecision normalize_text_path(U32 current);
@@ -331,6 +337,47 @@ PathDecision normalize_text_path(U32 current) {
     return decision;
 }
 }  // namespace
+
+std::optional<std::string> canonical_path_utf8(std::string_view utf8_path) {
+    // Scan de securite n° 2 (2026-11-20, F1-F3) : sans « / » initial, seul « * » garde une forme ; tout autre chemin
+    // relatif etait rendu tel quel et echappait aux prefixes des zones et des regles d'acces.
+    if (utf8_path.empty() || utf8_path.front() != '/') {
+        if (utf8_path == "*") return std::string(utf8_path);
+        return std::nullopt;
+    }
+    // Raccourci a resultat identique (le cas courant) : ni encodage, ni "\\", ni segment vide ou ".".
+    if (utf8_path.find('%') == std::string_view::npos && utf8_path.find('\\') == std::string_view::npos &&
+        utf8_path.find("//") == std::string_view::npos && utf8_path.find("/.") == std::string_view::npos)
+        return std::string(utf8_path);
+    U32 current = utf8_to_u32(utf8_path);
+    for (int pass = 0; pass < 2; ++pass) {  // _MAX_DECODE_PASSES
+        U32 decoded;
+        if (!python_unquote(current, decoded)) return std::nullopt;
+        if (decoded == current) break;
+        current = std::move(decoded);
+    }
+    for (char32_t c : current) {
+        if (c < 0x20) return std::nullopt;
+    }
+    std::replace(current.begin(), current.end(), U'\\', U'/');
+    std::string out;
+    std::size_t start = 0;
+    while (start <= current.size()) {
+        std::size_t end = current.find(U'/', start);
+        if (end == U32::npos) end = current.size();
+        const U32 segment = current.substr(start, end - start);
+        start = end + 1;
+        if (segment == U"..") return std::nullopt;
+        if (!segment.empty() && segment != U".") {
+            out += '/';
+            out += u32_to_utf8(segment);
+        }
+        if (end == current.size()) break;
+    }
+    if (out.empty()) return std::string("/");
+    if (!current.empty() && current.back() == U'/') out += '/';
+    return out;
+}
 
 // ============================================================================ conditionnels
 std::string make_etag(std::uint64_t size, std::int64_t mtime) {

@@ -72,7 +72,10 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import IO
+
+TYPE_CHECKING = False  # superviseur reduit du natif (lot 5, 2026-11-19) : sans typing (1,2 Mo)
+if TYPE_CHECKING:
+    from typing import IO
 
 _SHARED_LOG_FILE_MODE = 0o664
 _REOPEN_CHECK_SECONDS = 1.0

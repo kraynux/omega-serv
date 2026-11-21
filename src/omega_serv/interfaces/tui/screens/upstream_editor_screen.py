@@ -29,13 +29,16 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
 from omega_serv.core.i18n import _
-from omega_serv.domain.routing.proxy_zone import UpstreamTarget
+from omega_serv.domain.routing.proxy_zone import ProxyZone, UpstreamTarget, validate_proxy_zone
+from omega_serv.interfaces.tui.screens._base import FormHostMixin
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.yes_no import is_yes, to_text
 
 
-class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
+class UpstreamEditorScreen(FormHostMixin, ModalScreen[list[UpstreamTarget] | None]):
+    form_error_target = "#upstream-error"
     BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", _("Annuler"), show=True)]
 
     def __init__(self, *, upstreams: list[UpstreamTarget]) -> None:
@@ -130,7 +133,7 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
     def _upstream_from_values(self, values: dict[str, str]) -> UpstreamTarget | None:
         host = values["host"].strip()
         if not host:
-            self.query_one("#upstream-error", Static).update(_("Host requis."))
+            self.report_form_error(_("Host requis."))
             return None
         max_concurrent_text = values["max_concurrent_requests"].strip()
         try:
@@ -138,7 +141,7 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
             weight = int(values["weight"].strip())
             max_concurrent_requests = int(max_concurrent_text) if max_concurrent_text else None
         except ValueError:
-            self.query_one("#upstream-error", Static).update(
+            self.report_form_error(
                 _("Port, poids et plafond de connexions doivent être des nombres entiers (plafond vide = illimité)."),
             )
             return None
@@ -152,6 +155,21 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
             active_health_check_path=values["active_health_check_path"].strip() or "/",
         )
 
+    def _upstream_is_valid(self, upstream: UpstreamTarget, skip_index: int | None) -> bool:
+        """Lot V (2026-11-15) : meme controle que l'enregistrement de la zone (hote, port, poids, chemins), et pas
+        deux fois le meme backend - signale dans le formulaire, saisie gardee."""
+        error = validate_proxy_zone(ProxyZone(url_prefix="/", upstreams=(upstream,)))
+        if error is not None:
+            self.report_form_error(_("Erreur : {error}").format(error=error))
+            return False
+        duplicate = duplicate_error(self._upstreams, upstream, lambda u: (u.host.lower(), u.port),
+                                    _("le backend {host}:{port}").format(host=upstream.host, port=upstream.port),
+                                    skip_index)
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return False
+        return True
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "cancel":
             self.dismiss(None)
@@ -160,13 +178,13 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
             self.dismiss(list(self._upstreams))
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("AJOUTER UN BACKEND"), fields=self._fields_for(None)), self._add_upstream,
             )
             return
         if event.button.id == "edit" and self._selected_index is not None:
             upstream = self._upstreams[self._selected_index]
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("MODIFIER LE BACKEND"), fields=self._fields_for(upstream)), self._edit_upstream,
             )
             return
@@ -180,7 +198,7 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
         if values is None:
             return
         upstream = self._upstream_from_values(values)
-        if upstream is None:
+        if upstream is None or not self._upstream_is_valid(upstream, None):
             return
         self._upstreams.append(upstream)
         self.query_one("#upstream-error", Static).update("")
@@ -190,7 +208,7 @@ class UpstreamEditorScreen(ModalScreen[list[UpstreamTarget] | None]):
         if values is None or self._selected_index is None:
             return
         upstream = self._upstream_from_values(values)
-        if upstream is None:
+        if upstream is None or not self._upstream_is_valid(upstream, self._selected_index):
             return
         self._upstreams[self._selected_index] = upstream
         self.query_one("#upstream-error", Static).update("")

@@ -21,15 +21,18 @@ import json
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
 from omega_serv.domain.http.status_codes import HttpStatus
-from omega_serv.domain.security.trusted_proxy import is_trusted_proxy
-from omega_serv.infrastructure.probe.system_stats import collect_system_stats
+from omega_serv.domain.security.trusted_proxy import is_internal_route_caller
 
 LOAD_URL_PREFIX = "/.omega-serv-load/"
 
 
 def handle_load_request(request: HttpRequest, trusted_networks: list[str]) -> HttpResponse:
-    if not is_trusted_proxy(request.peer_ip, trusted_networks):
-        return HttpResponse.empty(HttpStatus.FORBIDDEN)
+    if not is_internal_route_caller(request.peer_ip, trusted_networks, (name for name, _ in request.headers)):
+        return HttpResponse.empty(HttpStatus.FORBIDDEN)  # scan de securite n° 1 : pair de confiance, sans relais
+
+    # Charge avec les tables de routage quand `trusted_proxy` est actif (routing_tables.build_routing_tables) : sans
+    # proxy de confiance, cette route repond toujours 403 et psutil n'est jamais charge (passe memoire 2026-11-19).
+    from omega_serv.infrastructure.probe.system_stats import collect_system_stats
 
     stats = collect_system_stats()
     body = json.dumps({

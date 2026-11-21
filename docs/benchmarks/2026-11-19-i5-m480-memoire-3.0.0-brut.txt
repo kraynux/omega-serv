@@ -1,0 +1,202 @@
+# Remesure d'omega-serv 3.0.0 (memoire, etude PROXY_ET_MEMOIRE §11), 2026-11-19 - tools/bench/memoire-3.0.0.sh
+# Machine : Intel Core i5 M480 (2 coeurs, 4 threads), noyau 6.18 ; service omega-serv de production en arriere-plan, sans trafic
+# Coeurs : serveur 0,2 ; client 1,3 (proxy : client et backend 1,3)
+# Meme protocole que les campagnes du 2026-11-04 (fichiers : compare/run.sh) et du 2026-11-14 (reverse proxy : proxy/run.sh) ;
+# nginx remesure dans la meme session comme reference. Colonnes : configuration, fichier, req/s, Mo/s, p50 ms, p99 ms,
+# reponses non 200 ; PSS de tous les processus du serveur au repos et apres la charge. bigfile.py : RSS.
+# Reverse proxy : 1re passe ecartee (port du backend 18960 occupe par un nginx de banc oublie, reponses non 200), refaite
+# a 11:10 apres l'arret de ce nginx.
+
+# omega-serv 3.0.0, machine a, 2026-11-19 10:43:36, coeurs serveur 0,2 client 1,3
+# Python 3.14.7, nginx version: nginx/1.30.5, oha 1.16.0
+## fichiers (compare/run.sh)
+=== repetition 1 10:43:37 charge: 1.24 1.23 0.77
+nginx-2                small.html      18595     19.0     1.3     7.1      0
+nginx-2                medium.png       9646    987.5     2.4    12.7      0
+nginx-2                large.bin         390   2041.3    18.5    48.1      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+omega-v2-1-0           small.html       1037      1.1    29.2    49.1      0
+omega-v2-1-0           medium.png        951     97.1    32.5    53.7      0
+omega-v2-1-0           large.bin         279   1459.8    27.7    45.9      0
+omega-v2-1-0 PSS_Mo repos=25 apres_charge=28
+omega-v2-1-1           small.html        992      1.0    31.5    46.4      0
+omega-v2-1-1           medium.png        835     85.2    37.3    63.1      0
+omega-v2-1-1           large.bin         259   1355.2    30.0    50.6      0
+omega-v2-1-1 PSS_Mo repos=22 apres_charge=24
+omega-v2-2-0           small.html       1733      1.8    23.6    29.2      0
+omega-v2-2-0           medium.png       1543    157.6    24.9    31.5      0
+omega-v2-2-0           large.bin         422   2210.0    19.8    44.8      0
+omega-v2-2-0 PSS_Mo repos=35 apres_charge=46
+omega-v2-2-1           small.html       1605      1.6    20.4    24.9      0
+omega-v2-2-1           medium.png       1404    143.4    22.5    28.7      0
+omega-v2-2-1           large.bin         414   2165.4    17.9    39.3      0
+omega-v2-2-1 PSS_Mo repos=40 apres_charge=50
+omega-v2-1-0-native    small.html      14503     14.8     2.1     5.2      0
+omega-v2-1-0-native    medium.png       4665    477.3     7.2    15.8      0
+omega-v2-1-0-native    large.bin         477   2497.8    16.3    34.0      0
+omega-v2-1-0-native PSS_Mo repos=10 apres_charge=10
+omega-v2-1-1-native    small.html      12923     13.2     2.9     6.1      0
+omega-v2-1-1-native    medium.png       4495    460.0     6.4    14.4      0
+omega-v2-1-1-native    large.bin         452   2363.2    17.5    27.8      0
+omega-v2-1-1-native PSS_Mo repos=28 apres_charge=30
+omega-v2-2-1-native    small.html      12974     13.3     2.6     6.6      0
+omega-v2-2-1-native    medium.png       4521    462.6     7.9    16.6      0
+omega-v2-2-1-native    large.bin         460   2407.4    17.2    30.4      0
+omega-v2-2-1-native PSS_Mo repos=28 apres_charge=28
+=== repetition 2 10:48:26 charge: 2.81 2.38 1.42
+nginx-2                small.html      21430     21.9     1.4     4.5      0
+nginx-2                medium.png      13637   1396.2     2.3     9.0      0
+nginx-2                large.bin         493   2579.5    15.6    26.2      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+omega-v2-1-0           small.html       1309      1.3    23.7    33.1      0
+omega-v2-1-0           medium.png       1193    121.8    25.9    37.5      0
+omega-v2-1-0           large.bin         337   1764.8    22.9    35.2      0
+omega-v2-1-0 PSS_Mo repos=20 apres_charge=23
+omega-v2-1-1           small.html       1168      1.2    26.5    39.8      0
+omega-v2-1-1           medium.png       1033    105.5    29.9    47.5      0
+omega-v2-1-1           large.bin         322   1682.4    24.2    36.3      0
+omega-v2-1-1 PSS_Mo repos=22 apres_charge=24
+omega-v2-2-0           small.html       1321      1.3    23.4    34.1      0
+omega-v2-2-0           medium.png       1516    154.9    29.3    42.9      0
+omega-v2-2-0           large.bin         403   2110.3    18.1    43.8      0
+omega-v2-2-0 PSS_Mo repos=35 apres_charge=46
+omega-v2-2-1           small.html       1584      1.6    33.4    38.4      0
+omega-v2-2-1           medium.png       1379    140.9    23.1    31.7      0
+omega-v2-2-1           large.bin         410   2144.8    18.3    42.2      0
+omega-v2-2-1 PSS_Mo repos=40 apres_charge=50
+omega-v2-1-0-native    small.html      14029     14.4     2.4     6.5      0
+omega-v2-1-0-native    medium.png       4599    470.6     7.5    18.8      0
+omega-v2-1-0-native    large.bin         458   2399.1    16.5    38.0      0
+omega-v2-1-0-native PSS_Mo repos=10 apres_charge=10
+omega-v2-1-1-native    small.html      12762     13.1     2.4     5.6      0
+omega-v2-1-1-native    medium.png       4466    457.0     8.4    17.5      0
+omega-v2-1-1-native    large.bin         441   2306.2    17.5    36.5      0
+omega-v2-1-1-native PSS_Mo repos=28 apres_charge=29
+omega-v2-2-1-native    small.html      12869     13.2     2.9     6.1      0
+omega-v2-2-1-native    medium.png       4509    461.4     7.6    15.7      0
+omega-v2-2-1-native    large.bin         485   2540.1    16.1    28.2      0
+omega-v2-2-1-native PSS_Mo repos=28 apres_charge=29
+=== repetition 3 10:53:14 charge: 3.35 2.63 1.75
+nginx-2                small.html      21741     22.3     1.4     4.2      0
+nginx-2                medium.png      14024   1435.7     1.9     8.0      0
+nginx-2                large.bin         495   2589.9    15.8    29.5      0
+nginx-2 PSS_Mo repos=4 apres_charge=4
+omega-v2-1-0           small.html       1324      1.4    23.6    31.3      0
+omega-v2-1-0           medium.png       1185    121.0    26.5    33.0      0
+omega-v2-1-0           large.bin         344   1798.7    22.5    37.2      0
+omega-v2-1-0 PSS_Mo repos=20 apres_charge=21
+omega-v2-1-1           small.html       1184      1.2    26.5    35.7      0
+omega-v2-1-1           medium.png       1072    109.4    29.2    38.0      0
+omega-v2-1-1           large.bin         325   1700.2    23.6    37.0      0
+omega-v2-1-1 PSS_Mo repos=22 apres_charge=24
+omega-v2-2-0           small.html       1818      1.9    18.0    21.3      0
+omega-v2-2-0           medium.png       1584    161.8    20.3    24.9      0
+omega-v2-2-0           large.bin         433   2264.9    18.5    37.4      0
+omega-v2-2-0 PSS_Mo repos=35 apres_charge=45
+omega-v2-2-1           small.html       1626      1.7    20.3    23.5      0
+omega-v2-2-1           medium.png       1415    144.6    22.4    26.8      0
+omega-v2-2-1           large.bin         330   1727.6    23.6    34.7      0
+omega-v2-2-1 PSS_Mo repos=40 apres_charge=50
+omega-v2-1-0-native    small.html      14521     14.9     2.0     5.0      0
+omega-v2-1-0-native    medium.png       4826    493.9     7.1    14.7      0
+omega-v2-1-0-native    large.bin         452   2364.9    17.5    23.7      0
+omega-v2-1-0-native PSS_Mo repos=10 apres_charge=10
+omega-v2-1-1-native    small.html      12707     13.0     3.7     8.7      0
+omega-v2-1-1-native    medium.png       4511    461.6     7.5    19.9      0
+omega-v2-1-1-native    large.bin         461   2415.0    17.4    25.0      0
+omega-v2-1-1-native PSS_Mo repos=28 apres_charge=30
+omega-v2-2-1-native    small.html      13017     13.3     2.4     5.0      0
+omega-v2-2-1-native    medium.png       4485    458.9     7.7    15.8      0
+omega-v2-2-1-native    large.bin         442   2312.3    17.8    27.3      0
+omega-v2-2-1-native PSS_Mo repos=28 apres_charge=28
+## gros telechargements (bigfile.py, RSS)
+--- 3.0.0 Python passage 1
+memoire du serveur : repos 39 Mo, pic 39 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 3 ms, mediane 2 ms
+--- 3.0.0 natif passage 1
+memoire du serveur : repos 24 Mo, pic 24 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 1 ms
+--- 3.0.0 Python passage 2
+memoire du serveur : repos 39 Mo, pic 39 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 3 ms, mediane 2 ms
+--- 3.0.0 natif passage 2
+memoire du serveur : repos 23 Mo, pic 24 Mo pendant 3 telechargements de 300 Mo
+petite page pendant ces telechargements : max 1 ms, mediane 1 ms
+## reverse proxy (proxy/run.sh) - REPRISE : 1re passe invalide, port 18960 occupe par un nginx de banc oublie
+nginx: [warn] could not build optimal types_hash, you should increase either types_hash_max_size: 1024 or types_hash_bucket_size: 64; ignoring types_hash_bucket_size
+=== repetition 1 11:09:08 charge: 3.17 3.21 2.65
+nginx-2                small.html       8987      9.2     3.0    11.9      0
+nginx-2                medium.png       3077    314.8     9.3    27.1      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html       7271      7.4     3.7    14.1      0
+nginx-2-tls            medium.png        672     68.5    44.0   106.0      0
+nginx-2-tls PSS_Mo repos=7 apres_charge=9
+omega-py-2-0           small.html       1081      1.1    31.8    51.6      0
+omega-py-2-0           medium.png        842     85.9    37.0    55.2      0
+omega-py-2-0 PSS_Mo repos=42 apres_charge=50
+omega-py-2-0-tls       small.html        931      1.0    33.4    59.6      0
+omega-py-2-0-tls       medium.png        399     40.5    78.4   184.9      0
+omega-py-2-0-tls PSS_Mo repos=49 apres_charge=71
+omega-nat-1-0          small.html       8294      8.5     3.2    12.1      0
+omega-nat-1-0          medium.png       3551    363.3     7.9    28.3      0
+omega-nat-1-0 PSS_Mo repos=27 apres_charge=28
+omega-nat-1-0-tls      small.html       4520      4.6     6.5    18.7      0
+omega-nat-1-0-tls      medium.png        407     41.3    78.2   170.2      0
+omega-nat-1-0-tls PSS_Mo repos=29 apres_charge=32
+omega-nat-1-1          small.html       6426      6.6     4.7    13.9      0
+omega-nat-1-1          medium.png       3030    309.9    10.0    22.5      0
+omega-nat-1-1 PSS_Mo repos=29 apres_charge=30
+omega-nat-1-1-tls      small.html       4424      4.5     6.7    14.9      0
+omega-nat-1-1-tls      medium.png        622     63.3    45.8   148.6      0
+omega-nat-1-1-tls PSS_Mo repos=31 apres_charge=34
+=== repetition 2 11:12:37 charge: 4.20 3.72 2.97
+nginx-2                small.html      10508     10.8     2.6    10.1      0
+nginx-2                medium.png       3266    334.1     9.0    24.7      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html       7609      7.8     3.5    14.4      0
+nginx-2-tls            medium.png        691     70.4    42.1   103.4      0
+nginx-2-tls PSS_Mo repos=8 apres_charge=9
+omega-py-2-0           small.html       1090      1.1    29.7    61.0      0
+omega-py-2-0           medium.png        825     84.2    41.2    65.9      0
+omega-py-2-0 PSS_Mo repos=42 apres_charge=50
+omega-py-2-0-tls       small.html        832      0.8    36.5    89.4      0
+omega-py-2-0-tls       medium.png        300     30.4    99.2   263.5      0
+omega-py-2-0-tls PSS_Mo repos=50 apres_charge=71
+omega-nat-1-0          small.html       6436      6.6     4.5    15.0      0
+omega-nat-1-0          medium.png       3611    369.4     7.9    25.1      0
+omega-nat-1-0 PSS_Mo repos=27 apres_charge=28
+omega-nat-1-0-tls      small.html       5207      5.3     5.7    19.3      0
+omega-nat-1-0-tls      medium.png        564     57.5    58.2   165.6      0
+omega-nat-1-0-tls PSS_Mo repos=29 apres_charge=32
+omega-nat-1-1          small.html       7936      8.1     3.5    12.0      0
+omega-nat-1-1          medium.png       3391    346.9     8.6    28.9      0
+omega-nat-1-1 PSS_Mo repos=29 apres_charge=30
+omega-nat-1-1-tls      small.html       5607      5.7     5.0    17.3      0
+omega-nat-1-1-tls      medium.png        639     65.1    46.0   123.9      0
+omega-nat-1-1-tls PSS_Mo repos=31 apres_charge=35
+=== repetition 3 11:16:06 charge: 6.16 4.72 3.51
+nginx-2                small.html       8517      8.7     3.3    12.2      0
+nginx-2                medium.png       2564    262.3    10.9    35.5      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html       5746      5.9     5.2    16.6      0
+nginx-2-tls            medium.png        525     53.4    53.8   164.2      0
+nginx-2-tls PSS_Mo repos=8 apres_charge=10
+omega-py-2-0           small.html        857      0.9    34.5    82.0      0
+omega-py-2-0           medium.png        726     74.1    50.2    92.6      0
+omega-py-2-0 PSS_Mo repos=41 apres_charge=51
+omega-py-2-0-tls       small.html        856      0.9    35.2    75.0      0
+omega-py-2-0-tls       medium.png        370     37.6    89.4   192.6      0
+omega-py-2-0-tls PSS_Mo repos=50 apres_charge=72
+omega-nat-1-0          small.html       7011      7.2     3.8    14.1      0
+omega-nat-1-0          medium.png       3438    351.7     9.1    27.1      0
+omega-nat-1-0 PSS_Mo repos=26 apres_charge=28
+omega-nat-1-0-tls      small.html       5238      5.4     5.8    17.1      0
+omega-nat-1-0-tls      medium.png        554     56.4    54.0   150.1      0
+omega-nat-1-0-tls PSS_Mo repos=29 apres_charge=32
+omega-nat-1-1          small.html       7076      7.2     4.0    13.7      0
+omega-nat-1-1          medium.png       3401    347.9     8.4    24.8      0
+omega-nat-1-1 PSS_Mo repos=29 apres_charge=30
+omega-nat-1-1-tls      small.html       4552      4.7     6.1    22.1      0
+omega-nat-1-1-tls      medium.png        467     47.5    62.2   162.4      0
+omega-nat-1-1-tls PSS_Mo repos=31 apres_charge=35
+FIN 11:19:36

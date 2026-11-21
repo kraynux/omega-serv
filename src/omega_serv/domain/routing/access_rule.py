@@ -62,7 +62,9 @@ def validate_access_rule(rule: AccessRule) -> str | None:
 
 
 def _applicable_rules(path: str, rules: list[AccessRule]) -> list[AccessRule]:
-    lower_path = path.lower()
+    # Scan de securite n° 2 (2026-11-20, F7) : extension lue sur le dernier segment, `/` final retire - `/x.db/`
+    # echappait a une regle `.db` alors que le service statique servait `x.db`. Meme regle dans engine.cpp.
+    lower_path = path.lower().rstrip("/")
     return [
         rule for rule in rules
         if not rule.extensions or any(lower_path.endswith(ext.lower()) for ext in rule.extensions)

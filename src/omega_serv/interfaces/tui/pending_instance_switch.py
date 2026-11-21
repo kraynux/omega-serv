@@ -8,6 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+OPEN_ADMIN_WEB = "admin-web"
+OPEN_AFTER_SWITCH_ENV_VAR = "OMEGA_SERV_OPEN_AFTER_SWITCH"
+"""Comme OMEGA_SERV_SWITCHED_FROM : seul canal qui traverse os.execv ; consomme des la lecture."""
+
 
 @dataclass(frozen=True)
 class PendingInstanceSwitch:
@@ -20,3 +24,6 @@ class PendingInstanceSwitch:
 
     python_executable: Path
     source_name: str
+    open_after: str = ""
+    """Ecran a ouvrir apres la bascule (OPEN_ADMIN_WEB : configuration distante, tableau de bord web lot 2) ; vide :
+    l'accueil seulement."""

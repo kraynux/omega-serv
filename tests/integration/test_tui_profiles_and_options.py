@@ -107,7 +107,7 @@ class TestTuiProfilesAndOptions(unittest.IsolatedAsyncioTestCase):
             await self._reach_home(pilot)
             await self._open_options(pilot)
             table = pilot.app.screen.query_one("#options-table", DataTable)
-            self.assertEqual(table.row_count, 15)  # + riposte (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md, lot 2)
+            self.assertEqual(table.row_count, 16)  # + riposte (lot 2 RIPOSTE), + admin_web (tableau de bord web, lot 2)
 
     async def test_enabling_option_persists_and_refreshes_table(self):
         app = OmegaServApp(self.container)

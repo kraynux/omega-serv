@@ -11,6 +11,7 @@ confiance declare - jamais en provenance directe d'Internet."""
 from __future__ import annotations
 
 import ipaddress
+from collections.abc import Iterable
 from functools import lru_cache
 
 from omega_serv.domain.http.headers import HttpHeaders
@@ -105,8 +106,21 @@ def _rightmost_untrusted(hops: list[str], trusted_networks: list[str]) -> str:
     confiance : la plus a gauche (comportement anterieur)."""
     for hop in reversed(hops):
         if not is_trusted_proxy(hop, trusted_networks):
-            return normalize_ip(hop)
-    return normalize_ip(hops[0])
+            return _ip_or_empty(hop)
+    return _ip_or_empty(hops[0])
+
+
+def _ip_or_empty(hop: str) -> str:
+    """Scan de securite n° 2 (2026-11-20, F40/F44) : un relais qui n'est pas une adresse IP (texte libre du client,
+    `Forwarded: for="=HYPERLINK(...)"`) rend "" et resolve_client_ip garde le pair TCP. Avant, ce texte devenait
+    l'« adresse » du client : identite Active Defense, indicateur IoC exporte en CSV, balisage dans la TUI."""
+    if len(hop) > _MAX_IP_TEXT:
+        return ""
+    try:
+        ipaddress.ip_address(hop)
+    except ValueError:
+        return ""
+    return normalize_ip(hop)
 
 
 def resolve_client_ip(
@@ -130,6 +144,25 @@ def resolve_client_ip(
             continue
         hops = _header_hops(header_name, value)
         if hops:
-            return _rightmost_untrusted(hops, trusted_networks)
+            return _rightmost_untrusted(hops, trusted_networks) or normalized_peer
 
     return normalized_peer
+
+
+INTERNAL_ROUTE_FORWARDING_HEADERS = frozenset({
+    "x-forwarded-for", "forwarded", "x-real-ip", "x-forwarded-host", "x-forwarded-proto", "x-forwarded-port",
+    "cf-connecting-ip", "true-client-ip", "x-client-ip",
+})
+"""Scan de securite n° 1 (2026-11-20, F20/F25/F30) : en-tetes qu'ajoute un proxy frontal. Les appels legitimes aux
+routes internes (`/.omega-serv-admin/` de la TUI, sonde `/.omega-serv-load/` d'une instance frontale) n'en portent
+aucun ; une requete relayee depuis Internet par un nginx/Caddy installe sur la MEME machine en porte, alors que son
+pair TCP (127.0.0.1) est de confiance. Meme liste dans le natif (engine.cpp)."""
+
+
+def is_internal_route_caller(peer_ip: str, trusted_networks: list[str] | tuple[str, ...],
+                             header_names: Iterable[str]) -> bool:
+    """Appel accepte sur une route interne : pair TCP de confiance ET aucun en-tete de relais (voir ci-dessus).
+    `header_names` : noms des en-tetes recus (casse quelconque)."""
+    if not is_trusted_proxy(peer_ip, trusted_networks):
+        return False
+    return not any(name.lower() in INTERNAL_ROUTE_FORWARDING_HEADERS for name in header_names)

@@ -82,6 +82,23 @@ TEST_CASE("limite de debit : meme suite de verdicts que le seau Python") {
     CHECK(refused > 100);
 }
 
+TEST_CASE("limite de debit : nombre d'adresses suivies plafonne, adresse active jamais remplacee (lot A, D33)") {
+    // Avant : une entree par adresse gardee 1 h sans plafond (+5,4 Mo pour 40 000 adresses IPv6, essai 2026-11-12).
+    auto& limiter = omega::RateLimiter::instance();
+    limiter.clear_for_tests();
+    const omega::SelectedRate active{"2001:db8::actif", 10, 60};
+    int refused = 0;
+    for (int i = 0; i < 250000; ++i) {
+        const double now = 1.0 + i * 1e-6;
+        (void)limiter.check(omega::SelectedRate{"2001:db8:" + std::to_string(i) + "::1", 10, 60}, now);
+        if (i % 20000 == 0) refused += limiter.check(active, now).has_value() ? 1 : 0;  // 13 essais sur 10 jetons
+    }
+    CHECK(limiter.tracked_for_tests() <= 100000);
+    CHECK(limiter.tracked_for_tests() > 90000);
+    CHECK(refused == 3);  // jamais remplacee : son seau se vide, elle est refusee apres 10 requetes
+    limiter.clear_for_tests();
+}
+
 TEST_CASE("limite de debit : section invalide refusee") {
     std::string error;
     const auto parsed = omega::parse_json(R"({"path_policies":[],"source_policies":[]})", &error);

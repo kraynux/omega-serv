@@ -187,5 +187,48 @@ class TestNoFrameLost(unittest.TestCase):
             ours.close()
 
 
+class _ResyncServer:
+    watch_sink = None
+
+    def __init__(self):
+        self.deception_calls = 0
+
+    def active_threat_sources(self):
+        return [("2001:db8::7", 4000.0)]
+
+    def active_deception_sources(self):
+        self.deception_calls += 1
+        return [("203.0.113.5", 3000.0)]
+
+
+class TestResyncAtStart(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D37) : la resynchronisation ne relisait que les leurres - les sources surveillees
+    pour leur etat de menace etaient perdues apres une relance du natif (table vide)."""
+
+    def test_first_pass_also_resends_threat_state_sources(self):
+        ours, native = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        self.addCleanup(ours.close)
+        self.addCleanup(native.close)
+        server = _ResyncServer()
+        worker = SecurityWorker(server, [ours])
+
+        async def two_passes():
+            original = module._WATCH_SYNC_SECONDS
+            module._WATCH_SYNC_SECONDS = 0.01
+            try:
+                task = asyncio.ensure_future(worker._sync_watch_list())
+                while server.deception_calls < 2:
+                    await asyncio.sleep(0.005)
+                task.cancel()
+            finally:
+                module._WATCH_SYNC_SECONDS = original
+
+        asyncio.run(two_passes())
+        entries = [entry for frame in _frames(native) for entry in frame.all(ipc.WATCH_ENTRY)]
+        self.assertIn(b"2001:db8::7\x004001", entries)  # etat de menace, au premier passage (arrondi haut)
+        self.assertIn(b"203.0.113.5\x003001", entries)
+        self.assertEqual(len(entries), 2)  # jamais renvoyees ensuite (deja connues)
+
+
 if __name__ == "__main__":
     unittest.main()

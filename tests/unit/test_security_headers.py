@@ -187,5 +187,30 @@ class TestApplySecurityHeaders(unittest.TestCase):
         self.assertEqual(response.headers["Strict-Transport-Security"], "max-age=100; includeSubDomains; preload")
 
 
+class TestLot1HeaderCase(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D27) : un en-tete de securite ecrit en minuscules par un backend partait en double
+    de celui qu'impose le serveur."""
+
+    def test_backend_lowercase_security_header_is_replaced_not_duplicated(self):
+        response = HttpResponse.empty(HttpStatus.OK)
+        response.set_header("x-frame-options", "ALLOWALL")
+        apply_security_headers(response, SecurityConfig())
+        values = [v for n, v in response.all_headers() if n.lower() == "x-frame-options"]
+        self.assertEqual(len(values), 1)
+        self.assertNotEqual(values[0], "ALLOWALL")
+
+    def test_set_header_replaces_a_case_variant(self):
+        response = HttpResponse.empty(HttpStatus.OK)
+        response.set_header("content-type", "text/plain")
+        response.set_header("Content-Type", "text/html")
+        self.assertEqual(response.all_headers(), [("Content-Type", "text/html")])
+
+    def test_repeated_headers_are_kept_in_order(self):
+        response = HttpResponse.empty(HttpStatus.OK)
+        response.add_header("Set-Cookie", "a=1")
+        response.add_header("Set-Cookie", "b=2")
+        self.assertEqual(response.all_headers(), [("Set-Cookie", "a=1"), ("Set-Cookie", "b=2")])
+
+
 if __name__ == "__main__":
     unittest.main()

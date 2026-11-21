@@ -19,7 +19,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.guide.menu_tree import GUIDE_MENU_ENTRIES
 from omega_serv.interfaces.tui.guide.registry import ALL_FAQ_ENTRIES, SCREEN_GUIDES
-from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._base import OmegaScreen, main_menu_title
 from omega_serv.interfaces.tui.screens._export_worker import run_html_export
 from omega_serv.interfaces.tui.screens.contact_support_screen import ContactSupportScreen
 from omega_serv.interfaces.tui.screens.faq_screen import FaqScreen
@@ -40,25 +40,35 @@ class GuideMenuScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
-            yield Static(_("GUIDE D'AIDE"), classes="omega-title")
+        # Retour de l'auteur (2026-11-15) : deux ascenseurs (panneau + tableau) a derouler pour atteindre Retour.
+        # Le panneau ne defile plus : le tableau prend la place restante et defile seul ; les quatre boutons sont dans
+        # la barre fixe du bas (Retour seul et centre, comme les autres grands menus) ; titre centre.
+        with Vertical(classes="omega-panel omega-main-panel omega-guide-panel"):
+            yield main_menu_title(_("GUIDE D'AIDE"))
             yield Static(
                 _("Parcourt l'ensemble des écrans d'OMEGA-SERV. Depuis n'importe quel écran "
                 "réel, la touche '?' ouvre directement sa fiche."),
                 classes="omega-hint",
             )
-            with Horizontal(classes="omega-actions"):
+            # Libelle, liste et bouton d'export sur une ligne (retour de l'auteur du 2026-11-15) : le theme choisi et
+            # l'export vont ensemble ; la liste seule, sans libelle, paraissait decalee.
+            with Horizontal(classes="omega-actions omega-guide-theme-row"):
+                yield Static(_("Thème de l'export HTML"), classes="omega-guide-theme-label")
+                yield Select(
+                    [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False,
+                    id="export-theme-select",
+                )
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Exporter"), id="export-html")
+            yield DataTable(id="guide-menu-table")
+        with Vertical(classes="omega-proxy-actions"):
+            with Horizontal(classes="omega-actions omega-riposte-actions omega-service-back"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("FAQ"), id="faq", variant="primary")
                 with Container(classes="omega-btn-frame"):
-                    yield Button(_("Exporter le guide en HTML"), id="export-html")
-                with Container(classes="omega-btn-frame"):
                     yield Button(_("Contact et support"), id="contact-support")
-            yield Select(
-                [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False, id="export-theme-select",
-            )
-            yield DataTable(id="guide-menu-table")
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+            with Horizontal(classes="omega-actions omega-riposte-actions omega-service-back"), \
+                    Container(classes="omega-btn-frame"):
                 yield Button(_("Retour"), id="back")
         yield Footer()
 

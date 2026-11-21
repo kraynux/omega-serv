@@ -7,13 +7,14 @@ from omega_serv.domain.logging.access_log_format import (
     AccessLogEntry,
     _format_apache_timestamp,
     format_combined_log_line,
-    sanitize_log_field,
 )
 from omega_serv.domain.logging.access_log_parser import parse_combined_log_line
+from omega_serv.domain.logging.error_log_line import sanitize_log_field
 
 
 def _reference_sanitize(value: str, max_length: int) -> str:
-    controls = {chr(c) for c in range(0x20)}
+    # scan de securite n° 2 (F44) : aussi DEL, les controles C1 et les separateurs de ligne Unicode
+    controls = {chr(c) for c in (*range(0x20), *range(0x7F, 0xA0), 0x2028, 0x2029)}
     return "".join(" " if ch in controls else ch for ch in value)[:max_length]
 
 

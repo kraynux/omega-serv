@@ -7,6 +7,7 @@ Le binaire n'est pas versionne : sans build (native/omega-http-core/build-releas
 import http.client
 import json
 import os
+import re
 import shutil
 import signal
 import socket
@@ -195,6 +196,97 @@ class TestNativeEngine(unittest.TestCase):
             engine.stop(2.0)
         self.assertIn("adresse bannie refusee par le moteur natif (451)",
                       (self.project.root / "var" / "log" / "error.log").read_text())
+        # Lot 1N (D36, P4) : une ligne waf-alerts, identique a celle de Python (RIPOSTE, jail omega-serv-waf-block).
+        alerts = self._native_alerts()
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0][1], self._python_alert_line(alerts[0][0], "blocklist", 451))
+
+    def _native_alerts(self) -> list[tuple[dict, str]]:
+        path = self.project.root / "var" / "log" / "waf-alerts.log"
+        lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+        return [(json.loads(line), line) for line in lines]
+
+    @staticmethod
+    def _python_alert_line(record: dict, stage: str, status: int, throttle: bool = False) -> str:
+        """La ligne que _log_waf_alert aurait ecrite pour la meme requete (horodatage et duree repris du natif)."""
+        from datetime import datetime
+
+        from omega_serv.domain.logging.waf_alert_format import WafAlertEntry, format_waf_alert_line
+        from omega_serv.domain.security.waf.config import WafLoggingConfig
+        from omega_serv.domain.security.waf.entities import WafDecision
+
+        entry = WafAlertEntry(
+            request_id=record["request_id"], timestamp=datetime.fromisoformat(record["timestamp"]),
+            remote_ip="127.0.0.1", method="GET", path="/", user_agent=None,
+            decision=WafDecision(action="block", status_code=status, score=0, log_level="warning", stage=stage,
+                                 throttle_only=throttle),
+            duration_ms=record["duration_ms"])
+        return format_waf_alert_line(entry, WafLoggingConfig())
+
+    def _rate_limited_without_channel(self, extra_rate_limit: dict, status: int = 429,
+                                      options: dict | None = None) -> list[tuple[int, str | None]]:
+        rules = self.project.root / "rules.json"
+        shutil.copy(next(p for p in sorted((REPO / "secure" / "waf" / "rules").glob("*.json")) if p.name != "custom.json"), rules)
+        config = OmegaServConfig.from_dict({"server": {"engine": "native", "port": self.port}, "options": {
+            "waf": {"enabled": True, "on_internal_error": "fail-open", "rules": {"paths": [str(rules)]},
+                    "rate_limit": {"enabled": True, "global": {"requests": 2, "window_seconds": 60,
+                                                                "response_status": status},
+                                   **extra_rate_limit}}, **(options or {})}})
+        engine = NativeEngine(BINARY, self.project.root, threads=1)
+        engine.start(config, [self.listen.fileno()])  # aucun canal de securite
+        answers = []
+        try:
+            for _ in range(3):
+                conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=3)
+                try:
+                    conn.request("GET", "/")
+                    response = conn.getresponse()
+                    response.read()
+                    answers.append((response.status, response.getheader("Retry-After")))
+                finally:
+                    conn.close()
+        finally:
+            engine.stop(2.0)
+        return answers
+
+    def test_fail_open_never_lifts_a_measured_rate_limit(self):
+        # Lot 1N (decision de l'auteur du 2026-11-12) : avant, la requete au-dela de la limite etait servie (200) quand
+        # le controle etait indisponible en fail-open.
+        answers = self._rate_limited_without_channel({})
+        self.assertEqual([status for status, _ in answers], [200, 200, 429])
+        self.assertTrue(answers[2][1] and int(answers[2][1]) > 0)  # Retry-After, comme le WAF
+        alerts = self._native_alerts()
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0][1], self._python_alert_line(alerts[0][0], "rate_limit", 429))
+        self.assertIn("limite de debit depassee : requete refusee par le moteur natif (429)",
+                      (self.project.root / "var" / "log" / "error.log").read_text())
+
+    def test_fail_open_rate_limit_of_a_trusted_source_is_logged_as_throttle(self):
+        # D4 : une source sure depasse la limite -> 429, mais alerte « throttle » (jamais comptee par fail2ban).
+        # Regle couvrant le loopback : prise en compte seulement avec le proxy de confiance (§3.14-a).
+        answers = self._rate_limited_without_channel({"source_policies": [
+            {"network": "127.0.0.0/8", "requests": 2, "window_seconds": 60, "trusted": True}]}, status=503,
+            options={"trusted_proxy": {"enabled": True, "trusted_networks": ["10.9.9.0/24"]}})
+        self.assertEqual([status for status, _ in answers], [200, 200, 503])
+        alerts = self._native_alerts()
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0][0]["action"], "throttle")
+        self.assertEqual(alerts[0][1], self._python_alert_line(alerts[0][0], "rate_limit", 503, throttle=True))
+
+    def test_unavailability_503_writes_no_waf_alert(self):
+        # Decision de l'auteur du 2026-11-12 : nos pannes (fail-closed) ne sont pas des actes du visiteur - error.log
+        # seulement, jamais de ligne comptee par fail2ban ou RIPOSTE.
+        rules = self.project.root / "rules.json"
+        shutil.copy(next(p for p in sorted((REPO / "secure" / "waf" / "rules").glob("*.json")) if p.name != "custom.json"), rules)
+        config = OmegaServConfig.from_dict({"server": {"engine": "native", "port": self.port}, "options": {
+            "waf": {"enabled": True, "on_internal_error": "fail-closed", "rules": {"paths": [str(rules)]}}}})
+        engine = NativeEngine(BINARY, self.project.root, threads=1)
+        engine.start(config, [self.listen.fileno()])
+        try:
+            self.assertEqual(self._get("/")[0], 503)
+        finally:
+            engine.stop(2.0)
+        self.assertEqual(self._native_alerts(), [])
 
     def test_contract_mismatch_refused(self):
         fake = _fake_binary(self.project.root, """
@@ -294,11 +386,15 @@ class TestServeSupervisor(unittest.TestCase):
             self.process.wait(5)
         self.assertEqual(self.real_state.exists(), self.real_state_existed, "ecriture dans le vrai var/ du depot")
 
-    def _serve(self) -> None:
+    def _serve(self, nofile: int | None = None) -> None:
         env = {**os.environ, "PYTHONPATH": str(self.root / "src")}
+        command = [PYTHON, "-m", "omega_serv", "--config", "config/omega-serve.json", "serve"]
+        if nofile is not None:  # lot A (D32) : plafond de descripteurs du serveur, herite par le natif qu'il lance
+            limit = (f"import os, resource, sys; resource.setrlimit(resource.RLIMIT_NOFILE, ({nofile}, {nofile})); "
+                     "os.execv(sys.executable, [sys.executable] + sys.argv[1:])")
+            command = [PYTHON, "-c", limit, *command[1:]]
         self.process = subprocess.Popen(
-            [PYTHON, "-m", "omega_serv", "--config", "config/omega-serve.json", "serve"],
-            cwd=self.root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            command, cwd=self.root, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         )
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:
@@ -766,7 +862,25 @@ class TestServeSupervisor(unittest.TestCase):
             os.kill(security_pid, signal.SIGCONT)
         try:
             self.assertLess(spent, 0.1, f"moteur natif occupe pendant l'attente du verdict : {spent:.2f} s de CPU sur 2 s")
-            self.assertTrue(self._read_all(client).startswith(b"HTTP/1.1 403 "))  # verdict rendu apres la reprise
+            # Plan proxy natif v2, lot 4 (decision de l'auteur du 2026-11-13) : comme le moteur Python, le depart du
+            # client n'est surveille que pendant la route, jamais pendant le controle de securite - le verdict est
+            # applique et la reponse part (lot 1N : abandon en 499).
+            self.assertTrue(self._read_all(client).startswith(b"HTTP/1.1 403 "))
+        finally:
+            client.close()
+        access = (self.root / "var" / "log" / "access.log").read_text()
+        self.assertRegex(access, r'"GET /\?id=1%20union%20select%20password HTTP/1.1" 403 ')
+        self.assertNotIn(" 499 ", access)
+
+    def test_half_closed_client_still_gets_a_quick_verdict(self):
+        # Lot 1N (P3), garde : comme _unless_client_leaves, le depart n'est constate qu'apres 250 ms de traitement -
+        # un verdict rendu avant part toujours, meme a un client a demi ferme (printf ... | nc -N).
+        self._serve_waf()
+        client = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            client.sendall(b"GET /?id=1%20union%20select%20password HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            client.shutdown(socket.SHUT_WR)
+            self.assertTrue(self._read_all(client).startswith(b"HTTP/1.1 403 "))
         finally:
             client.close()
 
@@ -780,36 +894,68 @@ class TestServeSupervisor(unittest.TestCase):
             time.sleep(0.3)
             client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, (1).to_bytes(4, "little") + (0).to_bytes(4, "little"))
             client.close()  # SO_LINGER 0 : RST
-            deadline = time.monotonic() + 5
-            while time.monotonic() < deadline and self._state()["connections"] != 0:
-                time.sleep(0.2)
-            self.assertEqual(self._state()["connections"], 0)
+            time.sleep(0.6)
         finally:
             os.kill(security_pid, signal.SIGCONT)
+        # Plan proxy natif v2, lot 4 (decision de l'auteur du 2026-11-13) : comme le moteur Python, rien n'est decide
+        # pendant le controle de securite - le verdict arrive, l'envoi echoue, et la ligne d'acces dit le statut
+        # decide avec 0 octet recu (lot 1N : 499 avant le verdict). Jamais de boucle a vide (D29), connexion liberee.
+        access = self.root / "var" / "log" / "access.log"
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and " 403 - " not in (access.read_text() if access.exists() else ""):
+            time.sleep(0.1)
+        self.assertIn(" 403 - ", access.read_text())
+        self.assertNotIn(" 499 ", access.read_text())
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self._state()["connections"] != 0:
+            time.sleep(0.2)
+        self.assertEqual(self._state()["connections"], 0)
         self.assertEqual(self._status("/?id=1%20union%20select%20password"), 403)  # rien de casse ensuite
 
-    def _post(self, body: bytes) -> int:
+    def _post(self, body: bytes, content_type: str = "application/x-www-form-urlencoded") -> int:
         conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=15)
         try:
-            conn.request("POST", "/index.html", body=body,
-                         headers={"Content-Type": "application/x-www-form-urlencoded"})
+            conn.request("POST", "/index.html", body=body, headers={"Content-Type": content_type})
             response = conn.getresponse()
             response.read()
             return response.status
         finally:
             conn.close()
 
+    def test_binary_upload_is_recognised_by_its_content_not_its_type(self):
+        # Lot 11 (F2) : signature PNG + type non textuel -> pas lu comme du texte (405 : la route statique refuse le
+        # POST, donc le WAF l'a laisse passer) ; meme corps annonce en formulaire, ou sans signature -> 403.
+        self._serve_waf(security={"allowed_methods": ["GET", "HEAD", "POST"]})
+        png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16 + b" union select password from users"
+        self.assertEqual(self._post(png, "image/png"), 405)
+        self.assertEqual(self._post(png, "application/x-www-form-urlencoded"), 403)
+        self.assertEqual(self._post(b"GIF00a union select password from users", "image/gif"), 403)
+
     def test_large_inspected_body_is_never_served_without_control(self):
         # D20 : body_max_inspect_bytes au-dela de la trame INSPECT (1 Mio) -> trame refusee puis fail-open : le corps
-        # d'attaque de 1,5 Mo etait servi sans WAF (essai 2026-11-12). Desormais la part envoyee est plafonnee.
+        # d'attaque de 1,5 Mo etait servi sans WAF (essai 2026-11-12). 2.6.2 : part envoyee plafonnee au canal.
+        # Plan proxy natif v2, lot 4 (S23) : le corps capture passe par memfd - une attaque placee a 1,5 Mo, dans la
+        # part configuree, est vue comme par le moteur Python (avant : hors de la part envoyee, servie).
         self._serve_waf({"inspect": {"body_max_inspect_bytes": 2_000_000}},
                         security={"allowed_methods": ["GET", "HEAD", "POST"]})
-        attack = b"id=1 union select password from users "
+        attack = b"&id=1 union select password from users"
         self.assertEqual(self._post(attack), 403)
-        self.assertEqual(self._post(attack + b"x" * 1_500_000), 403)
-        errors = (self.root / "var" / "log" / "error.log").read_text()
+        self.assertEqual(self._post(attack + b"&x=" + b"x" * 1_500_000), 403)
+        self.assertEqual(self._post(b"x=" + b"x" * 1_500_000 + attack), 403)
+        self.assertEqual(self._post(b"x=" + b"y" * 1_500_000), 405)  # propre : la route statique refuse le POST
+        error_log = self.root / "var" / "log" / "error.log"
+        errors = error_log.read_text() if error_log.exists() else ""
         self.assertNotIn("servie sans controle (fail-open)", errors)
-        self.assertIn("corps inspecte limite", errors)  # avertissement au demarrage
+        self.assertNotIn("corps inspecte limite", errors)
+        # S23 : chaque memfd ferme, cote natif comme cote Python (descripteurs comptes apres 20 envois).
+        state = self._state()
+        native_pid = int(state["native_pid"])
+        security_pid = int(state["extra"]["security_pid"])
+        before = (len(os.listdir(f"/proc/{native_pid}/fd")), len(os.listdir(f"/proc/{security_pid}/fd")))
+        for _ in range(20):
+            self.assertEqual(self._post(b"x=" + b"z" * 1_200_000), 405)
+        after = (len(os.listdir(f"/proc/{native_pid}/fd")), len(os.listdir(f"/proc/{security_pid}/fd")))
+        self.assertEqual(after, before)
 
     def test_inspect_frame_too_large_is_refused_even_in_fail_open(self):
         # D20 : une tete demesuree (max_header_size tres grand) depasse la trame a elle seule : 503, jamais servie.
@@ -825,6 +971,351 @@ class TestServeSupervisor(unittest.TestCase):
         errors = (self.root / "var" / "log" / "error.log").read_text()
         self.assertIn("trop grande pour le canal", errors)
         self.assertNotIn("servie sans controle (fail-open)", errors)
+
+    # ------------------------------------------------------------------ plan proxy natif v2, lot A (D10, D15)
+    def _counting_upstream(self) -> tuple[int, dict[str, int]]:
+        import http.server
+        import threading
+        hits: dict[str, int] = {}
+
+        class Upstream(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                hits[self.path] = hits.get(self.path, 0) + 1
+                self.send_response(200)
+                self.send_header("Content-Length", "5")
+                self.end_headers()
+                self.wfile.write(b"amont")
+
+            def log_message(self, *args):
+                pass
+
+        upstream = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Upstream)
+        threading.Thread(target=upstream.serve_forever, daemon=True).start()
+        self.addCleanup(upstream.server_close)
+        self.addCleanup(upstream.shutdown)
+        return upstream.server_address[1], hits
+
+    @staticmethod
+    def _proxy_option(upstream_port: int) -> dict:
+        return {"reverse_proxy": {"enabled": True, "zones": [{
+            "url_prefix": "/api/", "upstreams": [{"host": "127.0.0.1", "port": upstream_port,
+                                                  "active_health_check_enabled": True,
+                                                  "active_health_check_path": "/hc"}],
+            "load_poll_interval_seconds": 0.5, "load_poll_timeout_seconds": 1,
+            "connect_timeout_seconds": 2, "read_timeout_seconds": 2}]}}
+
+    def _write_native_config(self, options: dict) -> None:
+        (self.root / "config" / "omega-serve.json").write_text(json.dumps(
+            {"server": {"engine": "native", "port": self.port}, "options": options}))
+        if not (self.root / "bin" / "omega-http-core").exists():
+            (self.root / "bin").mkdir(exist_ok=True)
+            (self.root / "bin" / "omega-http-core").symlink_to(BINARY)
+
+    def _get(self, path: str) -> tuple[int, bytes]:
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            conn.request("GET", path)
+            response = conn.getresponse()
+            return response.status, response.read()
+        finally:
+            conn.close()
+
+    def test_security_process_probes_backends_from_start(self):
+        # D10 : start() n'etait jamais appele dans le processus de securite -> 0 sonde en mode natif (essai du
+        # 2026-11-11), et l'ecriture differee d'Active Defense jamais lancee. Sondes attendues sans aucun trafic.
+        upstream_port, hits = self._counting_upstream()
+        self._write_native_config(self._proxy_option(upstream_port))
+        self._serve()
+        self.assertEqual(self._state()["effective"], "native")
+        deadline = time.monotonic() + 6
+        while time.monotonic() < deadline and hits.get("/hc", 0) < 2:
+            time.sleep(0.1)
+        self.assertGreaterEqual(hits.get("/hc", 0), 2, hits)
+
+    def test_reverse_proxy_enabled_by_reload_reaches_backend(self):
+        # D15 : zone activee par SIGHUP -> le processus de securite ne construisait pas le client proxy : 404 du
+        # site local, aucune requete au backend (essai du 2026-11-11). trusted_proxy fait exister le processus.
+        upstream_port, hits = self._counting_upstream()
+        trusted = {"trusted_proxy": {"enabled": True, "trusted_networks": ["10.9.9.9/32"]}}
+        self._write_native_config(trusted)
+        self._serve()
+        self.assertEqual(self._state()["effective"], "native")
+        self.assertEqual(self._get("/api/x")[0], 404)
+        self._write_native_config({**trusted, **self._proxy_option(upstream_port)})
+        assert self.process is not None
+        self.process.send_signal(signal.SIGHUP)
+        deadline = time.monotonic() + 6
+        result = (0, b"")
+        while time.monotonic() < deadline and result != (200, b"amont"):
+            time.sleep(0.2)
+            result = self._get("/api/x")
+        self.assertEqual(result, (200, b"amont"))
+        self.assertGreaterEqual(hits.get("/api/x", 0), 1)
+
+    def test_reload_refused_without_security_process_names_the_option(self):
+        # D15 (E8) : sans processus de securite au demarrage, le rechargement est refuse - message qui nomme
+        # l'option (avant : « leurres / WAF / Active Defense / Auth », meme pour le reverse proxy).
+        upstream_port, _hits = self._counting_upstream()
+        self._write_native_config({})
+        self._serve()
+        self._write_native_config(self._proxy_option(upstream_port))
+        assert self.process is not None
+        self.process.send_signal(signal.SIGHUP)
+        error_log = self.root / "var" / "log" / "error.log"
+        deadline = time.monotonic() + 6
+        refused: list[str] = []
+        while time.monotonic() < deadline and not refused:
+            time.sleep(0.2)
+            text = error_log.read_text() if error_log.exists() else ""
+            refused = [line for line in text.splitlines() if "Rechargement REFUSE" in line]
+        self.assertEqual(len(refused), 1, refused)
+        self.assertIn("options.reverse_proxy", refused[0])
+        self.assertIn("redemarrage complet necessaire", refused[0])
+        self.assertNotIn("leurres", refused[0])
+        self.assertEqual(self._get("/api/x")[0], 404)
+
+    # ------------------------------------------------------------------ plan proxy natif v2, lot 3 (P7, P8)
+    def _wait_error_log(self, needle: str, timeout: float = 6) -> list[str]:
+        error_log = self.root / "var" / "log" / "error.log"
+        deadline = time.monotonic() + timeout
+        found: list[str] = []
+        while time.monotonic() < deadline and not found:
+            time.sleep(0.2)
+            text = error_log.read_text() if error_log.exists() else ""
+            found = [line for line in text.splitlines() if needle in line]
+        return found
+
+    def test_reload_refuses_engine_native_like_startup(self):
+        # P8 : reverse_proxy.engine = native ne peut pas etre tenu pour une zone que le relais ne sait pas encore
+        # servir (cache : toujours confie, Q6 ; WebSocket jusqu'au lot 10, deux backends jusqu'au lot 6) -> refuse au
+        # demarrage (config check, serve) ET au rechargement ; l'ancienne generation reste active.
+        upstream_port, _hits = self._counting_upstream()
+        self._write_native_config(self._proxy_option(upstream_port))
+        self._serve()
+        self.assertEqual(self._get("/api/x"), (200, b"amont"))
+        option = self._proxy_option(upstream_port)
+        option["reverse_proxy"]["engine"] = "native"
+        option["reverse_proxy"]["zones"][0]["cache_enabled"] = True
+        self._write_native_config(option)
+        assert self.process is not None
+        self.process.send_signal(signal.SIGHUP)
+        refused = self._wait_error_log("Rechargement REFUSE")
+        self.assertEqual(len(refused), 1, refused)
+        self.assertIn("engine = native", refused[0])
+        self.assertEqual(self._get("/api/x"), (200, b"amont"))
+
+    def test_reload_switches_a_zone_to_the_native_relay(self):
+        # Plan proxy natif v2, lot 4 : engine = native par rechargement -> la zone passe au relais natif (instantane
+        # recharge a chaud), et revient a Python avec engine = auto.
+        upstream_port, hits = self._counting_upstream()
+        self._write_native_config(self._proxy_option(upstream_port))
+        self._serve()
+        self.assertEqual(self._get("/api/x"), (200, b"amont"))
+        option = self._proxy_option(upstream_port)
+        option["reverse_proxy"]["engine"] = "native"
+        self._write_native_config(option)
+        assert self.process is not None
+        self.process.send_signal(signal.SIGHUP)
+        deadline = time.monotonic() + 6
+        while time.monotonic() < deadline and self._state().get("generation") != 2:
+            time.sleep(0.2)
+        self.assertEqual(self._state()["generation"], 2)
+        for _ in range(3):
+            self.assertEqual(self._get("/api/x"), (200, b"amont"))
+        time.sleep(3.2)  # HEALTH puis etat du moteur
+        self.assertGreaterEqual(int(self._state()["extra"]["proxy_relayed"]), 3)
+        self.assertGreaterEqual(hits.get("/api/x", 0), 4)
+
+    def test_direct_tls_with_proxy_zone_starts_in_python_with_a_warning(self):
+        # P7 (Q8 amendee) : TLS direct + zone confiee, engine = auto -> le serveur demarre (moteur Python), avec un
+        # avertissement dans error.log qui donne la sortie (TLS en amont). E9 : jamais un refus.
+        certs = self.root / "secure" / "certs"
+        certs.mkdir(parents=True)
+        subprocess.run(["openssl", "req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1",
+                        "-nodes", "-keyout", str(certs / "key.pem"), "-out", str(certs / "cert.pem"), "-days", "2",
+                        "-subj", "/CN=localhost"], check=True, capture_output=True)
+        (certs / "key.pem").chmod(0o600)
+        upstream_port, _hits = self._counting_upstream()
+        options = self._proxy_option(upstream_port)
+        options["reverse_proxy"]["zones"][0]["cache_enabled"] = True  # lot 11 : seul le cache reste confie avec auto
+        self._write_native_config(options)
+        config = json.loads((self.root / "config" / "omega-serve.json").read_text())
+        config["tls"] = {"enabled": True, "mode": "direct", "certificate": {
+            "certificate_path": "secure/certs/cert.pem", "private_key_path": "secure/certs/key.pem"}}
+        (self.root / "config" / "omega-serve.json").write_text(json.dumps(config))
+        self._serve()
+        assert self.process is not None
+        self.assertIsNone(self.process.poll(), "le serveur doit demarrer")
+        self.assertEqual(self._state()["effective"], "python")
+        warnings = self._wait_error_log("avertissement : TLS direct avec zone du reverse proxy")
+        self.assertEqual(len(warnings), 1, warnings)
+        self.assertIn("behind_proxy", warnings[0])
+
+    # ------------------------------------------------------------------ plan proxy natif v2, lot A (D30 a D32)
+    def _write_server_config(self, server: dict, tls: bool = False) -> None:
+        config: dict = {"server": {"engine": "native", "port": self.port, **server}}
+        if tls:
+            certs = self.root / "certs"
+            shutil.rmtree(certs, ignore_errors=True)
+            certs.mkdir()
+            subprocess.run(["openssl", "req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1",
+                            "-nodes", "-keyout", str(certs / "key.pem"), "-out", str(certs / "cert.pem"), "-days", "2",
+                            "-subj", "/CN=localhost"], check=True, capture_output=True)
+            config["tls"] = {"enabled": True, "mode": "direct",
+                             "certificate": {"certificate_path": "certs/cert.pem", "private_key_path": "certs/key.pem"}}
+        (self.root / "config" / "omega-serve.json").write_text(json.dumps(config))
+        (self.root / "bin").mkdir(exist_ok=True)
+        (self.root / "bin" / "omega-http-core").symlink_to(BINARY)
+
+    def _wait_connections(self, expected: int, timeout: float) -> int:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline and self._state()["connections"] != expected:
+            time.sleep(0.1)
+        return self._state()["connections"]
+
+    def test_tls_handshakes_count_in_max_connections(self):
+        # D30 : comptees seulement apres la poignee de main (60 s de delai) -> 300 connexions muettes tenues avec
+        # max_connections = 5 (essai du 2026-11-12). Desormais comptees des l'acceptation, les autres fermees.
+        self._write_server_config({"max_connections": 3, "read_timeout_seconds": 30}, tls=True)
+        self._serve()
+        self.assertEqual(self._state()["effective"], "native")
+        silent = [socket.create_connection(("127.0.0.1", self.port), timeout=2) for _ in range(12)]
+        try:
+            time.sleep(1.0)
+            closed = 0
+            for sock in silent:
+                sock.settimeout(0.3)
+                try:
+                    if sock.recv(1) == b"":
+                        closed += 1
+                except (TimeoutError, ConnectionResetError):
+                    pass
+            self.assertEqual(closed, 9)
+            self.assertEqual(self._wait_connections(3, 3), 3)
+        finally:
+            for sock in silent:
+                sock.close()
+
+    def test_tls_handshake_bounded_by_read_timeout(self):
+        self._write_server_config({"read_timeout_seconds": 1}, tls=True)
+        self._serve()
+        sock = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+        try:
+            self.assertEqual(sock.recv(1), b"")  # fermee apres 1 s (et non plus 60 s)
+        finally:
+            sock.close()
+
+    def test_client_that_never_reads_is_cut_after_write_timeout(self):
+        # D31 : aucun delai d'ecriture - 3 clients qui ne lisent pas gardaient max_connections indefiniment.
+        with open(self.root / "webroot" / "big.bin", "wb") as handle:
+            handle.write(b"x" * (32 * 1024 * 1024))
+        self._write_server_config({"write_timeout_seconds": 1})
+        self._serve()
+        sock = socket.socket()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        sock.connect(("127.0.0.1", self.port))
+        try:
+            sock.sendall(b"GET /big.bin HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            time.sleep(4)  # aucune lecture pendant 4 fois le delai
+            sock.settimeout(2)
+            received = 0
+            while True:  # coupe : ce qui etait deja en route, puis la fin de connexion, bien avant les 32 Mo
+                chunk = sock.recv(1 << 20)
+                if not chunk:
+                    break
+                received += len(chunk)
+            self.assertLess(received, 32 * 1024 * 1024)
+            self.assertEqual(self._wait_connections(0, 3), 0)
+        finally:
+            sock.close()
+        # Lot 1N (P3, comme Python depuis le lot 1) : envoi interrompu journalise avec son vrai statut et les octets
+        # du corps acquittes par le client (avant : aucune ligne).
+        match = re.search(r'"GET /big\.bin HTTP/1\.1" 200 (\d+|-) ', (self.root / "var" / "log" / "access.log").read_text())
+        self.assertIsNotNone(match)
+        assert match is not None
+        self.assertLess(0 if match[1] == "-" else int(match[1]), 32 * 1024 * 1024)
+
+    def _slow_post(self, pieces: int, piece: bytes, pause: float) -> tuple[bytes, float]:
+        """Lot 11 (F1) : POST dont le corps arrive en `pieces` morceaux espaces de `pause` secondes."""
+        self._write_server_config({"read_timeout_seconds": 1})
+        config_path = self.root / "config" / "omega-serve.json"
+        config = json.loads(config_path.read_text())
+        config["security"] = {"allowed_methods": ["GET", "HEAD", "POST"]}
+        config_path.write_text(json.dumps(config))
+        self._serve()
+        started = time.monotonic()
+        with socket.create_connection(("127.0.0.1", self.port), timeout=10) as sock:
+            sock.sendall(f"POST /index.html HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n"
+                         f"Content-Length: {pieces * len(piece)}\r\n\r\n".encode())
+            try:
+                for _ in range(pieces):
+                    time.sleep(pause)
+                    sock.sendall(piece)
+            except OSError:
+                pass  # le serveur a deja repondu et ferme
+            data = b""
+            while chunk := sock.recv(65536):
+                data += chunk
+        return data, time.monotonic() - started
+
+    def test_steady_slow_body_is_not_cut_at_the_read_timeout(self):
+        # Lot 11 (F1) : 3 Ko a ~2 Ko/s sur 1,5 s (> read_timeout 1 s) - au-dessus de 500 o/s, jamais 1 s sans octet.
+        data, elapsed = self._slow_post(15, b"x" * 200, 0.1)
+        self.assertNotIn(b" 408 ", data.split(b"\r\n", 1)[0])
+        self.assertGreater(elapsed, 1.4)
+
+    def test_trickling_body_under_the_minimum_rate_gets_408(self):
+        # 20 o toutes les 0,25 s = 80 o/s < 500 o/s : 408 vers 1,1 s, bien avant la fin de l'envoi (10 s).
+        data, elapsed = self._slow_post(40, b"x" * 20, 0.25)
+        self.assertIn(b" 408 ", data.split(b"\r\n", 1)[0])
+        self.assertLess(elapsed, 5)
+
+    def test_slow_client_that_keeps_reading_is_served(self):
+        # Garde D31 : delai SANS PROGRES - pauses de 0,1 s (< 1 s) sur un envoi qui dure plusieurs fois le delai.
+        with open(self.root / "webroot" / "big.bin", "wb") as handle:
+            handle.write(b"x" * (24 * 1024 * 1024))
+        self._write_server_config({"write_timeout_seconds": 1})
+        self._serve()
+        sock = socket.socket()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 256 * 1024)
+        sock.connect(("127.0.0.1", self.port))
+        sock.settimeout(5)
+        received, started = 0, time.monotonic()
+        try:
+            sock.sendall(b"GET /big.bin HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+            while True:
+                chunk = sock.recv(512 * 1024)
+                if not chunk:
+                    break
+                received += len(chunk)
+                time.sleep(0.1)
+        finally:
+            sock.close()
+        self.assertGreater(received, 24 * 1024 * 1024)
+        self.assertGreater(time.monotonic() - started, 3)
+
+    def test_out_of_file_descriptors_does_not_spin(self):
+        # D32 : EMFILE -> socket d'ecoute toujours lisible (declenchement par niveau) : 5,9 s de CPU en 3 s.
+        self._write_server_config({"max_connections": 1000, "read_timeout_seconds": 30})
+        self._serve(nofile=64)
+        native_pid = int(self._state()["native_pid"])
+        held = []
+        try:
+            for _ in range(120):
+                try:
+                    held.append(socket.create_connection(("127.0.0.1", self.port), timeout=2))
+                except OSError:
+                    break
+            time.sleep(0.5)
+            before = self._cpu_seconds(native_pid)
+            time.sleep(2)
+            self.assertLess(self._cpu_seconds(native_pid) - before, 0.3)
+        finally:
+            for sock in held:
+                sock.close()
+        assert self.process is not None
+        self.assertEqual(self._get("/")[0], 200)  # l'acceptation reprend des que des descripteurs se liberent
+
 
 if __name__ == "__main__":
     unittest.main()

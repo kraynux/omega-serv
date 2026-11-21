@@ -144,7 +144,7 @@ class TestExportChildSkipsConsoleFallback(unittest.TestCase):
     def test_child_env_flag_disables_terminal_detection(self):
         from unittest import mock
 
-        with mock.patch("omega_serv.bootstrap.early_language.SystemTerminalDetector") as detector, \
+        with mock.patch("omega_lib.infrastructure.terminal.detector.SystemTerminalDetector") as detector, \
                 mock.patch("omega_serv.bootstrap.early_language.install_interface_language") as install:
             install_language_early({EXPORT_CHILD_ENV_VAR: "1"})
         detector.assert_not_called()

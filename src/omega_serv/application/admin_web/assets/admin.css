@@ -1,0 +1,200 @@
+/* Administration web omega-serv - charte commune hpc + craftdark (KRAY/TRANSIT-HTML/CHARTE-CSS.md, reglage B du
+   2026-11-16). Servie par le processus d'administration (CSP : style-src 'self', jamais de style en ligne). */
+:root {
+    --bg-dark: #050814;
+    --bg-panel-solid: #0a1223;
+    --bg-raised: #111c33;
+    --cyan: #00e5ff;
+    --cyan-dim: #00b8cc;
+    --cyan-glow: rgba(0, 229, 255, 0.4);
+    --border-color: #1a2a40;
+    --text-title: #ffffff;
+    --text-1: #aab7c6;
+    --text-2: #909fb1;
+    --text-3: #78879a;
+    --text-4: #606e81;
+    --error: #ff5c7a;
+    --ok: #3ddc97;
+    --warn: #ffcc66;
+    --line-1: #f59e0b;
+    --line-2: #a78bfa;
+    --row-border: #0f192b;
+    --font-mono: 'Courier New', Courier, monospace;
+    --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg-dark);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+h1 {
+    font-family: var(--font-mono);
+    color: var(--text-title);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    text-shadow: var(--title-glow, 0 0 10px var(--cyan), 0 0 30px var(--cyan-glow));
+}
+h2 {
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    font-size: 1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+}
+.panel {
+    background: var(--bg-panel-solid);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 20px;
+    margin: 16px 0;
+}
+.login { max-width: 420px; margin: 8vh auto 0; }
+.nobr { white-space: nowrap; }
+label { display: block; margin: 12px 0 4px; color: var(--text-2); }
+input[type=text], input[type=password] {
+    width: 100%;
+    padding: 10px;
+    background: var(--bg-dark);
+    color: var(--text-title);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    font-size: 1rem;
+}
+input:focus { outline: 1px solid var(--cyan); }
+fieldset { border: none; margin: 12px 0 0; padding: 0; }
+legend { padding: 0; }
+input[type=radio] { accent-color: var(--cyan); }
+fieldset label { display: inline; margin-right: 16px; color: var(--text-1); }
+button {
+    margin-top: 18px;
+    padding: 10px 18px;
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+button:hover { color: var(--text-title); border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow); }
+.error { color: var(--error); margin-top: 12px; }
+.hint { color: var(--text-3); font-size: 0.9rem; }
+nav.top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+nav.top form { margin: 0; }
+nav.top button { margin-top: 0; }
+nav.top button.active { color: var(--bg-dark); background: var(--cyan); border-color: var(--cyan); }
+nav.top .who { margin-left: auto; color: var(--text-3); font-size: 0.9rem; }
+/* Theme de ce navigateur (plan §9.7) : petite liste dans la barre du haut. */
+nav.top .theme-select { padding: 6px; font-size: 0.85rem; max-width: 11rem; }
+
+/* Tableau de bord (lot 4) */
+main { max-width: 1400px; }
+nav.sub { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0 0; font-family: var(--font-mono); }
+nav.sub a { color: var(--text-2); text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; }
+nav.sub a:hover { color: var(--text-title); }
+nav.sub a.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.updated { margin: 8px 0 0; text-align: right; }
+.columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .columns { grid-template-columns: minmax(0, 1fr); } }
+.column-title { font-size: 1rem; margin: 16px 0 0; }
+.panel h2 { margin-top: 0; }
+dl.rows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+dl.rows dt { color: var(--text-2); }
+dl.rows dd { margin: 0; color: var(--text-1); overflow-wrap: anywhere; }
+.tone-ok { color: var(--ok); }
+.tone-warn { color: var(--warn); }
+.tone-error { color: var(--error); }
+.tone-dim { color: var(--text-4); }
+.tone-strong { color: var(--text-title); font-weight: bold; }
+.gauge { display: inline-block; width: 90px; height: 8px; margin-right: 8px; vertical-align: middle;
+         background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 2px; }
+.gauge .fill { display: block; height: 100%; background: var(--cyan); }
+.tone-bg-ok { background: var(--ok) !important; }
+.tone-bg-warn { background: var(--warn) !important; }
+.tone-bg-error { background: var(--error) !important; }
+.table-wrap { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th { text-align: left; color: var(--cyan-dim); font-family: var(--font-mono); font-weight: normal;
+     border-bottom: 1px solid var(--border-color); padding: 4px 8px 4px 0; }
+td { padding: 3px 8px 3px 0; border-bottom: 1px solid var(--row-border); overflow-wrap: anywhere; }
+.logs .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.logs .controls label { margin: 0; min-width: 0; max-width: 100%; }
+/* nom de journal long (chemin de la bibliotheque) : le menu reste dans le cadre, sur mobile aussi */
+.logs #log-select { display: block; width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+.logs .controls label:has(#log-select) { flex: 1 1 18rem; }
+.logs .controls button { margin-top: 0; }
+select, .logs input[type=text] {
+    padding: 8px; background: var(--bg-dark); color: var(--text-title);
+    border: 1px solid var(--border-color); border-radius: 3px; font-size: 0.95rem;
+}
+.logs input[type=text] { width: auto; }
+pre.log {
+    background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 3px;
+    padding: 12px; max-height: 70vh; overflow: auto; font-family: var(--font-mono); font-size: 0.85rem;
+    color: var(--text-1); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* Administration (lot 5) : un petit formulaire par bouton, confirmation sur une page a part */
+h3 { font-family: var(--font-mono); color: var(--text-2); font-size: 0.9rem; letter-spacing: 1px; margin: 18px 0 4px; }
+form.inline { display: inline-block; margin: 0 6px 4px 0; }
+form.inline button { margin-top: 0; padding: 4px 10px; font-size: 0.85rem; }
+form.row-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+form.row-form label { margin: 0; }
+form.row-form input[type=text] { width: auto; }
+form.row-form button { margin-top: 0; }
+button.danger { color: var(--error); }
+button.danger:hover { color: var(--text-title); border-color: var(--error); box-shadow: 0 0 10px var(--error); }
+.notice { border: 1px solid var(--border-color); border-radius: 3px; padding: 10px 12px; background: var(--bg-raised); }
+a { color: var(--cyan); }
+/* Telephone : jamais un mot ni un bouton coupe au milieu ; le tableau defile dans son cadre si besoin */
+.admin td { overflow-wrap: break-word; }
+form.inline button { white-space: nowrap; }
+
+/* Historique (lots 7 et 9) : graphes, deux colonnes sur grand ecran, une sur telephone. */
+.history .ranges { display: flex; gap: 8px; }
+.history .ranges button { margin-top: 0; }
+.history .ranges button.active { color: var(--bg-dark); background: var(--cyan); border-color: var(--cyan); }
+.history .ranges a.range { padding: 10px 18px; font-family: var(--font-mono); color: var(--cyan);
+    border: 1px solid var(--border-color); border-radius: 3px; text-decoration: none; }
+.history .ranges a.range.active { color: var(--bg-dark); background: var(--cyan); border-color: var(--cyan); }
+.history .ranges a.range:hover { border-color: var(--cyan); }
+.history .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+.chart { margin: 0; background: var(--bg-raised); border: 1px solid var(--border-color); border-radius: 4px;
+    padding: 10px 12px; min-width: 0; }
+.chart figcaption { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    font-family: var(--font-mono); color: var(--cyan); font-size: 0.85rem; margin-bottom: 6px; }
+.chart figcaption .last { color: var(--text-title); }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-svg .grid { stroke: var(--border-color); stroke-width: 1; }
+.chart-svg .axis { fill: var(--text-3); font-size: 11px; font-family: var(--font-mono); }
+.chart-svg .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-svg .line-0 { stroke: var(--cyan); }
+.chart-svg .area { stroke: none; }
+.chart-svg .area-0 { fill: var(--cyan); fill-opacity: 0.18; }
+.chart-svg .line-1 { stroke: var(--line-1); }
+.chart-svg .line-2 { stroke: var(--line-2); }
+.chart .key-0 { color: var(--cyan); }
+.chart .key-1 { color: var(--line-1); }
+.chart .key-2 { color: var(--line-2); }
+.history .ranges { flex-wrap: wrap; }
+.history .modes { margin-top: 8px; }
+.chart[hidden] { display: none; }
+@media (max-width: 480px) { .history .charts { grid-template-columns: 1fr; } }

@@ -14,6 +14,7 @@ deja `LuaWafAdapter` par configuration)."""
 from __future__ import annotations
 
 import asyncio
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -48,20 +49,28 @@ class MagnetCompatibilityCheck:
 async def check_magnet_compatibility(
     magnet: MagnetConfig, project_root: Path, filesystem: FilesystemPort,
 ) -> MagnetCompatibilityCheck:
-    from omega_serv.application.server.start_server import resolve_magnet_paths
+    from omega_serv.application.server.start_server import (
+        isolate_magnet_paths,
+        resolve_magnet_paths,
+    )
     from omega_serv.infrastructure.waf.lua_waf_adapter import (
         WafMagnetScriptError,
         load_lua_waf_adapter,
     )
 
     script_path = project_root / magnet.script
-    resolved_paths = resolve_magnet_paths(project_root, magnet.paths)
+    # Scan de securite n° 2 (2026-11-20, F19) : lance par l'administrateur - fichiers d'etat du script (var/,
+    # inscriptible par le compte du service) remplaces par un dossier prive et vide (isolate_magnet_paths).
+    private_dir = tempfile.TemporaryDirectory(prefix="omega-serv-magnet-check-")
+    resolved_paths = isolate_magnet_paths(resolve_magnet_paths(project_root, magnet.paths), Path(private_dir.name))
     waf_config = WafConfig(mode="block", magnet=magnet)
     try:
         adapter = load_lua_waf_adapter(filesystem, script_path, waf_config, resolved_paths)
     except WafMagnetScriptError as e:
+        private_dir.cleanup()
         return MagnetCompatibilityCheck(construction_error=str(e))
     except ImportError:
+        private_dir.cleanup()
         return MagnetCompatibilityCheck(dependency_missing=True)
 
     benign_request = HttpRequest(
@@ -77,4 +86,6 @@ async def check_magnet_compatibility(
         )
     except asyncio.TimeoutError:
         dry_run_error = _("délai dépassé (le script bloque trop longtemps sur une requête de test)")
+    finally:
+        private_dir.cleanup()
     return MagnetCompatibilityCheck(unsupported_members=adapter.unsupported_members, dry_run_error=dry_run_error)

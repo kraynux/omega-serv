@@ -8,8 +8,10 @@ sans jamais dependre de l'implementation reseau/parsing sous-jacente.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cached_property
 
 from omega_serv.domain.http.headers import HttpHeaders
+from omega_serv.domain.security.path_policy import canonical_path
 
 
 @dataclass(frozen=True)
@@ -28,6 +30,12 @@ class HttpRequest:
 
     def header(self, name: str, default: str | None = None) -> str | None:
         return self.headers.get(name, default)
+
+    @cached_property
+    def canonical_path(self) -> str | None:
+        """Chemin canonique (path_policy.canonical_path) : celui des decisions de securite. `path` reste le chemin
+        recu, transmis tel quel au backend d'une zone proxy. Calcule une fois par requete."""
+        return canonical_path(self.path)
 
 
 def split_request_target(target: str) -> tuple[str, str]:

@@ -11,6 +11,8 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
+from omega_serv.domain.logging.access_log_format import MONTH_ABBREVIATIONS
+
 _LINE_RE = re.compile(
     r'^(?P<ip>\S+) \S+ \S+ \[(?P<timestamp>[^\]]+)\] '
     r'"(?P<request>[^"]*)" (?P<status>\d{3}) (?P<size>\S+) '
@@ -36,12 +38,21 @@ class ParsedAccessLogEntry:
     illisible. Defaut "" : meme raison que `response_size`."""
 
 
+def parse_apache_timestamp(text: str) -> datetime:
+    """Lot 1 (D41) : `12/Nov/2026:10:00:00 +0000`, mois anglais lu sans dependre de la locale (`%b` de strptime la
+    suit aussi). ValueError si la date est illisible."""
+    day, month, rest = text.split("/", 2)
+    if month not in MONTH_ABBREVIATIONS:
+        raise ValueError(f"mois inconnu : {month!r}")
+    return datetime.strptime(f"{day}/{MONTH_ABBREVIATIONS.index(month) + 1:02d}/{rest}", "%d/%m/%Y:%H:%M:%S %z")
+
+
 def parse_combined_log_line(line: str) -> ParsedAccessLogEntry | None:
     match = _LINE_RE.match(line.strip())
     if match is None:
         return None
     try:
-        timestamp = datetime.strptime(match.group("timestamp"), "%d/%b/%Y:%H:%M:%S %z")
+        timestamp = parse_apache_timestamp(match.group("timestamp"))
     except ValueError:
         return None
     raw_size = match.group("size")

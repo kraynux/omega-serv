@@ -17,56 +17,29 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
 from types import FrameType
+from typing import TYPE_CHECKING
 
-from omega_serv.application.config.load_config import load_config
-from omega_serv.application.riposte.actuator import ActionTargets, RiposteActuator
-from omega_serv.application.riposte.commands import RiposteCommandRunner
-from omega_serv.application.riposte.console import (
-    decoy_profiles,
-    journal_paths,
-    riposte_config_of,
-    riposte_enabled,
-)
-from omega_serv.application.riposte.engine import RiposteEngine
-from omega_serv.application.riposte.follow_journals import JournalSource
-from omega_serv.application.riposte.get_status import get_riposte_status
-from omega_serv.application.riposte.run_riposte import run_riposte
-from omega_serv.application.riposte.safety import riposte_exempt_networks
-from omega_serv.application.server.start_server import build_blocklist_port
-from omega_serv.bootstrap.container import DependencyContainer
-from omega_serv.core.i18n import _
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.security.active_defense.config import (
-    parse_active_defense_config,
-)
-from omega_serv.domain.security.riposte.config import parse_riposte_config, validate_riposte_config
-from omega_serv.domain.security.riposte.events import (
-    parse_security_event_line,
-    parse_waf_alert_line,
-)
-from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
-    open_active_defense_connection,
-)
-from omega_serv.infrastructure.persistence.sqlite_deception_assignment_repository import (
-    SqliteDeceptionAssignmentRepository,
-)
-from omega_serv.infrastructure.persistence.sqlite_riposte_connection import open_riposte_connection
-from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
+from omega_serv.domain.services.python_command import python_module_argv
 from omega_serv.infrastructure.process.child_process import SpawnedChild
-from omega_serv.infrastructure.riposte.log_follower import LogFollower
-from omega_serv.infrastructure.riposte.process_lock import ProcessLock
-from omega_serv.interfaces.cli.riposte_text import format_status
+from omega_serv.interfaces.cli.child_supervisor import (
+    MAX_RESTARTS_IN_WINDOW,
+    RESTART_WINDOW_SECONDS,
+    STOP_GRACE_SECONDS,
+    ChildSupervisor,
+)
 
-RESTART_WINDOW_SECONDS = 60.0
-MAX_RESTARTS_IN_WINDOW = 5
-STOP_GRACE_SECONDS = 5.0
+if TYPE_CHECKING:
+    from omega_serv.application.riposte.actuator import ActionTargets
+    from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.domain.config.entities import OmegaServConfig
+
+__all__ = ["MAX_RESTARTS_IN_WINDOW", "RESTART_WINDOW_SECONDS", "STOP_GRACE_SECONDS", "RiposteChildSupervisor"]
 LOCK_RELATIVE_PATH = Path("var") / "run" / "riposte.lock"
 RECONCILE_SECONDS = 60.0
 
 
-class RiposteChildSupervisor:
-    """Pilote le processus `riposte run`. `tick()` est appele regulierement par le serveur
-    (toutes les secondes) ; jamais bloquant hors de `stop()`."""
+class RiposteChildSupervisor(ChildSupervisor):
+    """Pilote le processus `riposte run` (comportement commun : interfaces/cli/child_supervisor.py)."""
 
     def __init__(
         self,
@@ -76,58 +49,46 @@ class RiposteChildSupervisor:
         monotonic: Callable[[], float] = time.monotonic,
         log: Callable[[str], None] | None = None,
     ) -> None:
-        self._argv = list(argv)
-        self._spawn = spawn
-        self._monotonic = monotonic
-        self._log = log or (lambda message: print(message, file=sys.stderr))
-        self._child: SpawnedChild | None = None
-        self._deaths: list[float] = []
-        self.gave_up = False
-
-    def start(self) -> None:
-        try:
-            self._child = self._spawn(self._argv)
-        except OSError as error:
-            self._log(f"RIPOSTE : lancement impossible ({error}) - le serveur web continue sans RIPOSTE")
-            self.gave_up = True
-            return
-        print(f"RIPOSTE lance (PID {self._child.pid})")
-
-    def tick(self) -> None:
-        if self.gave_up or self._child is None or self._child.is_running():
-            return
-        now = self._monotonic()
-        self._deaths[:] = [t for t in self._deaths if now - t < RESTART_WINDOW_SECONDS] + [now]
-        if len(self._deaths) > MAX_RESTARTS_IN_WINDOW:
-            self._log(
-                f"RIPOSTE arrete {len(self._deaths)} fois en {int(RESTART_WINDOW_SECONDS)} s : plus de relance "
-                "(le serveur web continue ; voir les messages de RIPOSTE ci-dessus)"
-            )
-            self.gave_up = True
-            self._child = None
-            return
-        self._log(f"RIPOSTE (PID {self._child.pid}) arrete de facon inattendue : relance")
-        self.start()
-
-    def reload(self) -> None:
-        if self._child is not None:
-            self._child.send_signal(signal.SIGHUP)
-
-    def stop(self) -> None:
-        if self._child is not None:
-            self._child.stop(STOP_GRACE_SECONDS)
-            self._child = None
+        super().__init__("RIPOSTE", argv, spawn=spawn, monotonic=monotonic, log=log)
 
 
 def build_riposte_supervisor(config: OmegaServConfig, config_path: Path) -> RiposteChildSupervisor | None:
     """Rien si RIPOSTE est desactive (defaut) : aucun processus, aucun fichier."""
+    from omega_serv.application.riposte.console import riposte_enabled
     if not riposte_enabled(config):
         return None
-    argv = [sys.executable, "-m", "omega_serv", "--config", str(config_path), "riposte", "run"]
+    argv = python_module_argv(sys.executable, "omega_serv", "--config", str(config_path), "riposte", "run")
     return RiposteChildSupervisor(argv)
 
 
 def cmd_riposte_run(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.application.riposte.actuator import RiposteActuator
+    from omega_serv.application.riposte.commands import RiposteCommandRunner
+    from omega_serv.application.riposte.console import (
+        decoy_profiles,
+        journal_paths,
+        riposte_enabled,
+    )
+    from omega_serv.application.riposte.engine import RiposteEngine
+    from omega_serv.application.riposte.follow_journals import JournalSource
+    from omega_serv.application.riposte.run_riposte import run_riposte
+    from omega_serv.application.riposte.safety import riposte_exempt_networks
+    from omega_serv.domain.security.riposte.config import (
+        parse_riposte_config,
+        validate_riposte_config,
+    )
+    from omega_serv.domain.security.riposte.events import (
+        parse_security_event_line,
+        parse_waf_alert_line,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+        open_riposte_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
+    from omega_serv.infrastructure.riposte.log_follower import LogFollower
+    from omega_serv.infrastructure.riposte.process_lock import ProcessLock
+
     # Sous un gestionnaire de service, stdout n'est pas un terminal : sans cela, les messages
     # n'arriveraient dans journalctl qu'a l'arret (meme correctif que `serve`, 2026-10-26).
     for stream in (sys.stdout, sys.stderr):
@@ -258,6 +219,16 @@ class _Targets:
         self._ad_connection: object | None = None
 
     def build(self, config: OmegaServConfig) -> ActionTargets:
+        from omega_serv.application.riposte.actuator import ActionTargets
+        from omega_serv.application.riposte.console import riposte_config_of
+        from omega_serv.application.server.start_server import build_blocklist_port
+        from omega_serv.domain.security.active_defense.config import parse_active_defense_config
+        from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
+            open_active_defense_connection,
+        )
+        from omega_serv.infrastructure.persistence.sqlite_deception_assignment_repository import (
+            SqliteDeceptionAssignmentRepository,
+        )
         self.close()
         root = self._container.project_root
         blocklist = (
@@ -295,6 +266,16 @@ class _Targets:
 
 
 def cmd_riposte_status(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.application.riposte.console import riposte_enabled
+    from omega_serv.application.riposte.get_status import get_riposte_status
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.riposte.config import parse_riposte_config
+    from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+        open_riposte_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
+    from omega_serv.interfaces.cli.riposte_text import format_status
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
         print(_("Configuration illisible : ") + "; ".join(result.errors), file=sys.stderr)

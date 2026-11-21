@@ -43,7 +43,7 @@ class _FakeManager:
     def return_root_owned(self, path, owner):
         self.calls.append(("chown", path, owner))
 
-    def grant_directory_access(self, path, group, extra_user, private_subdirs=()):
+    def grant_directory_access(self, path, group, extra_user, private_subdirs=(), open_subdirs=()):
         self.calls.append(("grant", path, group, extra_user))
 
 
@@ -149,12 +149,12 @@ class TestSystemdPrivilegedCommands(unittest.TestCase):
         manager = SystemdServiceManager(runner)
         manager.return_root_owned(Path("/srv/x/var"), "kraynux")
         manager.grant_directory_access(Path("/srv/x/var"), "omega-serv", "kraynux")
+        # Scan de securite n° 2 (F11/F21) : plus aucun chown/chgrp/chmod par chemin, seulement secure_tree.py.
         for args, _input in runner.calls:
-            if "chown" in args or "chgrp" in args:
-                self.assertIn("-h", args)
-            if args[0] == "find" and "-exec" in args and args[args.index("-exec") + 1] in ("chown", "chgrp"):
-                self.assertIn("l", args)  # ! -type l
-        self.assertIn("-xdev", runner.calls[0][0])
+            self.assertNotIn("chown", args)
+            self.assertNotIn("chgrp", args)
+            self.assertNotEqual(args[0], "find")
+        self.assertTrue(runner.calls[0][0][2].endswith("secure_tree.py"))
 
     @patch("omega_serv.infrastructure.services.systemd_service_manager.running_as_root", return_value=True)
     def test_drop_in_commands(self, _root):

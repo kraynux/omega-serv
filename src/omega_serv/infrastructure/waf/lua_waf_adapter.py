@@ -73,6 +73,7 @@ malveillance :
   GIL entre eux, meme chacun sur son propre thread du pool."""
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -115,6 +116,10 @@ class LuaWafAdapter:
         self._config = config
         self.unsupported_members: frozenset[str] = unsupported_lighty_members(script_source)
         self.last_error: str | None = None
+        # Scan de securite n° 1 (2026-11-20, F34) : un seul runtime Lua et une seule table `lighty.env` pour les
+        # fils de l'executeur du WAF - sans verrou, un autre fil pouvait reecrire la table entre `_update_env` et
+        # l'execution du script : le verdict d'une requete etait calcule sur les donnees d'une autre.
+        self._lock = threading.Lock()
 
         self._runtime = lupa.LuaRuntime(
             unpack_returned_tuples=True,
@@ -167,10 +172,11 @@ class LuaWafAdapter:
         thread de la boucle asyncio est la responsabilite de
         l'APPELANT (voir note de tete de module)."""
         try:
-            self._update_env(request)
-            result = self._compiled()
-            self.last_error = None
-            return self._decision_from_return_code(result)
+            with self._lock:
+                self._update_env(request)
+                result = self._compiled()
+                self.last_error = None
+                return self._decision_from_return_code(result)
         except Exception as e:  # noqa: BLE001 - toute erreur de script devient une decision de repli, jamais une exception qui remonte
             self.last_error = str(e)
             return magnet_fallback_decision(self._config.magnet.on_error, self._config.mode)
@@ -187,8 +193,9 @@ class LuaWafAdapter:
         taux, blocklist progressive - ne doit jamais etre execute deux
         fois pour une seule requete simulee)."""
         try:
-            self._update_env(request)
-            self._compiled()
+            with self._lock:
+                self._update_env(request)
+                self._compiled()
             return None
         except Exception as e:  # noqa: BLE001
             return str(e)

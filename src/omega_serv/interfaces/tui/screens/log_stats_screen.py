@@ -107,13 +107,15 @@ class LogStatsScreen(OmegaScreen):
             yield Static(_("Thème d'export HTML"), classes="omega-subtitle")
             yield Select([(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False,
                          id="theme-select")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Exporter JSON"), id="export-json")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Exporter HTML"), id="export-html")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Exporter JSON"), id="export-json")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Exporter HTML"), id="export-html")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:

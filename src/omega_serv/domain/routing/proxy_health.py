@@ -26,11 +26,21 @@ que `ProxyLoadBalancerState`)."""
 from __future__ import annotations
 
 import json
-from typing import Literal
+import time
+from typing import TYPE_CHECKING, Literal
 
 from omega_serv.domain.routing.proxy_zone import UpstreamTarget, upstream_key
 
+if TYPE_CHECKING:
+    from omega_serv.domain.routing.proxy_backend_traffic import BackendTraffic
+
 ProxyUpstreamStatus = Literal["up", "down", "draining", "maintenance"]
+
+PASSIVE_RETRY_SECONDS = 10.0
+"""Plan proxy natif v2, lot 1 (D7, Q10) : un upstream DOWN sans sonde active n'etait JAMAIS reessaye - plus aucun
+succes possible, donc DOWN pour toujours. Comme `fail_timeout` de nginx (10 s par defaut) : apres ce delai, UNE
+requete d'essai (coupe-circuit a demi ouvert) ; succes -> UP aussitot, echec -> nouvelle attente. Un essai qui ne
+rapporte rien (requete annulee, client parti) expire au bout du meme delai."""
 
 
 def parse_load_score(load_source: str, body: bytes) -> float | None:
@@ -87,14 +97,41 @@ class ProxyHealthState:
         self._manual_state: dict[str, dict[str, Literal["draining", "maintenance"]]] = {}
         self._load_samples: dict[str, dict[str, list[float]]] = {}
         self._last_load_sample_at: dict[str, dict[str, float]] = {}
+        self._down_since: dict[str, dict[str, float]] = {}       # lot 1 (D7) : debut de la derniere attente
+        self._trial_started: dict[str, dict[str, float]] = {}    # lot 1 (D7) : essai a demi ouvert en cours
+        self._traffic: dict[str, dict[str, list[int]]] = {}       # tableau de bord : [requetes, 502, 504]
 
-    def record_failure(self, zone_key: str, upstream: UpstreamTarget, *, unhealthy_after: int) -> None:
+    # ------------------------------------------------------------------ tableau de bord (2026-11-16)
+    def record_request(self, zone_key: str, upstream: UpstreamTarget) -> None:
+        """Une tentative envoyee a ce backend (proxy_backend_traffic.py : definition commune aux deux moteurs)."""
+        self._traffic.setdefault(zone_key, {}).setdefault(upstream_key(upstream), [0, 0, 0])[0] += 1
+
+    def record_error(self, zone_key: str, upstream: UpstreamTarget, status: int) -> None:
+        """Tentative en echec : 504 (delai de lecture depasse), sinon 502."""
+        counts = self._traffic.setdefault(zone_key, {}).setdefault(upstream_key(upstream), [0, 0, 0])
+        counts[2 if status == 504 else 1] += 1
+
+    def traffic_counts(self, zone_key: str, upstream: UpstreamTarget) -> tuple[int, int, int]:
+        """(requetes, 502, 504) depuis le demarrage du processus."""
+        counts = self._traffic.get(zone_key, {}).get(upstream_key(upstream), [0, 0, 0])
+        return counts[0], counts[1], counts[2]
+
+    def relayed_traffic(self, zone_key: str) -> list[BackendTraffic] | None:
+        """Mesures d'une zone relayee par le moteur natif (infrastructure/server/relayed_health.py) ; None ici :
+        la zone est servie par ce processus, qui compte lui-meme."""
+        return None
+
+    def record_failure(
+        self, zone_key: str, upstream: UpstreamTarget, *, unhealthy_after: int, now: float | None = None,
+    ) -> None:
         key = upstream_key(upstream)
         self._consecutive_successes.setdefault(zone_key, {})[key] = 0
         failures = self._consecutive_failures.setdefault(zone_key, {})
         failures[key] = failures.get(key, 0) + 1
-        if failures[key] >= unhealthy_after:
+        trial_failed = self._trial_started.get(zone_key, {}).pop(key, None) is not None
+        if failures[key] >= unhealthy_after or trial_failed:
             self._down.setdefault(zone_key, set()).add(key)
+            self._down_since.setdefault(zone_key, {})[key] = time.monotonic() if now is None else now
 
     def record_success(self, zone_key: str, upstream: UpstreamTarget, *, healthy_after: int) -> None:
         """Un succes remet TOUJOURS le compteur d'echecs a zero (§18.3 :
@@ -106,8 +143,26 @@ class ProxyHealthState:
         self._consecutive_failures.setdefault(zone_key, {})[key] = 0
         successes = self._consecutive_successes.setdefault(zone_key, {})
         successes[key] = successes.get(key, 0) + 1
-        if successes[key] >= healthy_after:
+        trial_succeeded = self._trial_started.get(zone_key, {}).pop(key, None) is not None
+        if successes[key] >= healthy_after or trial_succeeded:  # lot 1 (D7) : essai reussi -> UP aussitot
             self._down.get(zone_key, set()).discard(key)
+
+    def start_half_open_trial(
+        self, zone_key: str, upstream: UpstreamTarget, *, now: float, retry_after: float = PASSIVE_RETRY_SECONDS,
+    ) -> bool:
+        """Lot 1 (D7) : True si `upstream` est DOWN (etat automatique, jamais draining ni maintenance), que son
+        attente est ecoulee et qu'aucun essai n'est en cours - l'essai est alors reserve (un seul a la fois)."""
+        key = upstream_key(upstream)
+        if self.status_for(zone_key, upstream) != "down":
+            return False
+        trials = self._trial_started.setdefault(zone_key, {})
+        started = trials.get(key)
+        if started is not None and now - started < retry_after:
+            return False
+        if now - self._down_since.get(zone_key, {}).get(key, now) < retry_after:
+            return False
+        trials[key] = now
+        return True
 
     def mark_draining(self, zone_key: str, target_upstream_key: str) -> None:
         self._manual_state.setdefault(zone_key, {})[target_upstream_key] = "draining"
@@ -128,6 +183,11 @@ class ProxyHealthState:
         if manual is not None:
             return manual
         return "down" if key in self._down.get(zone_key, set()) else "up"
+
+    def backend_statuses(self, zone_key: str) -> dict[str, str] | None:
+        """Plan proxy natif v2, lot 6 : etat de chaque adresse d'une zone relayee par le moteur natif (voir
+        infrastructure/server/relayed_health.py) ; None ici, ou chaque upstream est un seul backend."""
+        return None
 
     def is_eligible(self, zone_key: str, upstream: UpstreamTarget) -> bool:
         """`True` seulement pour `up` - `down`/`draining`/`maintenance`

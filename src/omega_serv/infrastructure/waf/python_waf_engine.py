@@ -6,6 +6,7 @@ ce module ne fait qu'assembler, jamais de logique de detection ici."""
 from __future__ import annotations
 
 from omega_serv.domain.http.request import HttpRequest
+from omega_serv.domain.security.waf.binary_formats import inspectable_body
 from omega_serv.domain.security.waf.config import WafConfig
 from omega_serv.domain.security.waf.entities import WafDecision
 from omega_serv.domain.security.waf.normalization import decode_bounded_for_inspection
@@ -34,7 +35,9 @@ class PythonWafEngine:
         texts: dict[str, str] = {}
 
         if inspect.path and "path" in used:
-            texts["path"] = decode_bounded_for_inspection(request.path, inspect.decode_depth)
+            # Scan de securite n° 2 (2026-11-20, F8) : chemin canonique (`\\`, `%5c`, `//` ramenes a la forme
+            # servie) - les signatures ancrees sur `/x` manquaient `\\x` ou `//x`, servis pourtant comme `/x`.
+            texts["path"] = decode_bounded_for_inspection(request.canonical_path or request.path, inspect.decode_depth)
         if inspect.query and "query" in used:
             texts["query"] = decode_bounded_for_inspection(request.query, inspect.decode_depth)
         if inspect.headers and "headers" in used:
@@ -51,7 +54,11 @@ class PythonWafEngine:
                 texts["referer"] = referer
 
         if request.body and request.method in inspect.body_methods and "body" in used:
-            body_text = request.body.decode("utf-8", errors="replace")
-            texts["body"] = decode_bounded_for_inspection(body_text, inspect.decode_depth)
+            # Lot 11 (F2) : fichier binaire reconnu a sa signature (contenu reel, jamais l'extension) et type annonce
+            # non textuel -> pas lu comme du texte ; en multipart, seules ses parties fichier sont retirees.
+            body = inspectable_body(request.body, request.header("content-type"), inspect.binary_formats)
+            if body:
+                body_text = body.decode("utf-8", errors="replace")
+                texts["body"] = decode_bounded_for_inspection(body_text, inspect.decode_depth)
 
         return texts

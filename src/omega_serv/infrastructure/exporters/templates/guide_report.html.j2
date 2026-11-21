@@ -53,6 +53,7 @@
     color: {{ palette.secondary }};
     font-size: 0.75rem;
   }
+  .answer { white-space: pre-line; }
 </style>
 </head>
 <body>
@@ -93,7 +94,7 @@
     <div class="box">
       <p class="acces">{{ entry.category }}</p>
       <p><span class="field-label">Q. {{ entry.question }}</span></p>
-      <p>R. {{ entry.answer }}</p>
+      <p class="answer">R. {{ entry.answer }}</p>
     </div>
     {% endfor %}
 

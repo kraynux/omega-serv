@@ -9,18 +9,22 @@ depend de `SCREEN_GUIDES`, concept propre a ce projet)."""
 from __future__ import annotations
 
 import termios
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, ClassVar
 
 from textual.app import SuspendNotSupported
 from textual.binding import Binding, BindingType
+from textual.containers import Horizontal
 from textual.screen import Screen
+from textual.widgets import Static
 
 from omega_serv.core.i18n import _
 
 if TYPE_CHECKING:
     from textual.app import App
+
+    from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 
 
 _INPUT_THREAD_JOIN_TIMEOUT_SECONDS = 1.0
@@ -98,7 +102,66 @@ def show_contextual_help(app: App[None], screen_class_name: str) -> None:
         app.push_screen(HelpScreen())
 
 
-class OmegaScreen(Screen[None]):
+def main_menu_title(text: str) -> Horizontal:
+    """Titre d'un grand menu (Service, Instances, Audit, Sauvegarde, Rapport complet, Profils) : centre, dans un
+    cadre de la largeur du formulaire des Reglages, comme le Retour centre de sa barre fixe (demande de l'auteur du
+    2026-11-15 : un titre court dans un petit cadre a gauche faisait deplace face a un Retour centre)."""
+    return Horizontal(Static(text, classes="omega-title omega-main-title"), classes="omega-main-title-row")
+
+
+class FormHostMixin:
+    """Lot V (decision de l'auteur du 2026-11-15) : un ecran qui ouvre des formulaires `DynamicFormScreen`.
+    `push_form` applique la saisie AVANT de fermer le formulaire ; toute erreur signalee par `report_form_error`
+    pendant l'application le garde ouvert, saisie intacte, avec l'explication. Hors formulaire, l'erreur va dans
+    la ligne `form_error_target` de l'ecran, comme avant."""
+
+    form_error_target: ClassVar[str] = "#form-error"
+    _form_errors: list[str] | None = None
+
+    def report_form_error(self, message: str) -> None:
+        if self._form_errors is not None:
+            self._form_errors.append(message)
+            return
+        self.query_one(self.form_error_target, Static).update(message)  # type: ignore[attr-defined]
+
+    def yes_no_inputs_error(self, *input_ids: str) -> str | None:
+        """Champs oui/non poses directement sur l'ecran : avant, « ouii » valait silencieusement non (lot V,
+        2026-11-15). Renvoie l'explication du premier champ qui n'est ni oui ni non, en le nommant par son
+        intitule (le sous-titre juste au-dessus), et met le curseur dessus."""
+        from textual.widgets import Input
+
+        from omega_serv.interfaces.tui.yes_no import is_no, is_yes, no, yes
+
+        for input_id in input_ids:
+            field = self.query_one(input_id, Input)  # type: ignore[attr-defined]
+            if is_yes(field.value) or is_no(field.value):
+                continue
+            label = input_id.lstrip("#")
+            siblings = list(field.parent.children) if field.parent is not None else []
+            for widget in reversed(siblings[:siblings.index(field)] if field in siblings else []):
+                if isinstance(widget, Static) and widget.has_class("omega-subtitle"):
+                    label = str(widget.render()).strip()
+                    break
+            field.focus()
+            return _("« {label} » : répondez {yes} ou {no} (saisi : {value!r}).").format(
+                label=label, yes=yes(), no=no(), value=field.value)
+        return None
+
+    def push_form(self, form: DynamicFormScreen, apply: Callable[[dict[str, str] | None], None]) -> None:
+        def submit(values: dict[str, str]) -> str | None:
+            self._form_errors = []
+            try:
+                apply(values)
+                errors = self._form_errors
+            finally:
+                self._form_errors = None
+            return "\n".join(errors) or None
+
+        form.submit = submit
+        self.app.push_screen(form)  # type: ignore[attr-defined]
+
+
+class OmegaScreen(FormHostMixin, Screen[None]):
     """Ecran navigable standard : ajoute `echap` -> retour, sans qu'aucun
     ecran n'ait a redeclarer son propre binding. `home.py` et
     `quit_confirm.py` n'en heritent pas (voir leurs propres fichiers)."""

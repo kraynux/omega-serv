@@ -75,15 +75,22 @@ memoire de CET ecran (qui ne tourne pas dans le processus serveur)."""
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.application.server.engine_levels import zone_engine_labels
+from omega_serv.application.server.serve_proxy import DEFAULT_MAX_RESPONSE_BODY_MB
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
+from omega_serv.domain.routing.proxy_engine import (
+    PROXY_ENGINES,
+    parse_proxy_engine_settings,
+    validate_proxy_engine_settings,
+)
 from omega_serv.domain.routing.proxy_zone import (
     PROXY_LOAD_BALANCING_STRATEGIES,
     ProxyZone,
@@ -108,6 +115,11 @@ if TYPE_CHECKING:
     from omega_serv.bootstrap.container import DependencyContainer
 
 
+def _number_text(value: float) -> str:
+    """3600.0 -> « 3600 » ; 1.5 reste « 1.5 »."""
+    return str(int(value)) if float(value).is_integer() else str(value)
+
+
 class ReverseProxyScreen(OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
@@ -116,15 +128,21 @@ class ReverseProxyScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
+        with VerticalScroll(classes="omega-panel"):
             yield Static(_("REVERSE PROXY SORTANT"), classes="omega-title")
+            # Lot 11 (retour de l'auteur du 2026-11-14) : reglages en vigueur et zones d'abord, explication ensuite
+            # (elle repoussait le tableau hors de l'ecran).
+            yield Static("", id="form-error", classes="omega-hint")
+            yield Static("", id="proxy-common-summary", classes="omega-subtitle")
+            yield DataTable(id="proxy-zones-table")
             yield Static(
                 _("Cette fonction permet à Omega-Serv de se comporter lui-même comme un reverse "
                 "proxy : au lieu de servir des fichiers, il redirigé les requêtes reçues vers un "
                 "ou plusieurs serveurs backend que vous indiquez, puis renvoie leur réponse au "
                 "client. Avant de créer une zone, l'option doit d'abord être activée depuis le "
-                "menu Options — sa toute première activation exige un redémarrage complet du "
-                "serveur ; modifier les zones ensuite se recharge à chaud, sans coupure.\n\n"
+                "menu Options ; l'activer puis modifier les zones se recharge à chaud, sans "
+                "coupure (avec le moteur natif, la première zone peut demander un redémarrage "
+                "complet : le message le dit).\n\n"
                 "Pour créer ou modifier une zone, vous renseignez d'abord ses réglages généraux "
                 "(préfixe d'URL à intercepter, stratégie de répartition, délais réseau), puis la "
                 "liste de ses serveurs backends (adresse, port, chiffrement, poids) sur un second "
@@ -148,12 +166,16 @@ class ReverseProxyScreen(OmegaScreen):
                 "selon un en-tête de la requête, la prise en charge du WebSocket, et un cache des "
                 "réponses (à configurer et consulter depuis l'écran « Cache du reverse proxy »). "
                 "Comme pour le reste des zones du projet, c'est le préfixe le plus long qui "
-                "correspond qui l'emporte toujours."),
+                "correspond qui l'emporte toujours.\n\n"
+                "Avec le moteur natif, chaque zone est relayée par le natif lui-même ; seule une "
+                "zone avec cache est confiée à Python. Le bouton « Réglages communs » règle ce "
+                "choix et les limites valables pour toutes les zones."),
                 classes="omega-hint",
             )
-            yield Static("", id="form-error", classes="omega-hint")
-            yield DataTable(id="proxy-zones-table")
-            with Horizontal(classes="omega-actions"):
+        # Lot 11 (retour de l'auteur du 2026-11-14) : barre d'actions HORS de la zone qui defile, toujours visible
+        # (meme disposition que les ecrans RIPOSTE) ; deux rangees - six boutons ne tiennent pas en 80 colonnes.
+        with Vertical(classes="omega-proxy-actions"):
+            with Horizontal(classes="omega-actions omega-riposte-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Ajouter"), id="add", variant="primary")
                 with Container(classes="omega-btn-frame"):
@@ -162,6 +184,9 @@ class ReverseProxyScreen(OmegaScreen):
                     yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("État en direct"), id="live-status", disabled=True)
+            with Horizontal(classes="omega-actions omega-riposte-actions"):
+                with Container(classes="omega-btn-frame"):
+                    yield Button(_("Réglages communs"), id="general-settings")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Retour"), id="back")
         yield Footer()
@@ -169,8 +194,10 @@ class ReverseProxyScreen(OmegaScreen):
     def on_mount(self) -> None:
         table = self.query_one("#proxy-zones-table", DataTable)
         table.cursor_type = "row"
-        table.add_columns(_("Préfixe URL"), _("Stratégie"), _("Upstreams"), _("Préserve Host"), _("Vérifie TLS"), "WebSocket", _("Sticky"))
+        table.add_columns(_("Préfixe URL"), _("Stratégie"), _("Upstreams"), _("Préserve Host"), _("Vérifie TLS"), "WebSocket", _("Sticky"),
+                          _("Moteur"))
         self._refresh_table()
+        table.focus()
 
     def _zones(self) -> list[ProxyZone]:
         result = load_config(self._container.configuration, self._container.config_file)
@@ -188,16 +215,36 @@ class ReverseProxyScreen(OmegaScreen):
             for u in upstreams
         )
 
+    def _refresh_summary(self, config: Any) -> dict[str, str]:
+        """Lot 11 : reglages communs en vigueur (sans ouvrir le formulaire) ; rend le moteur prevu par zone."""
+        summary = self.query_one("#proxy-common-summary", Static)
+        if config is None:
+            summary.update("")
+            return {}
+        option = config.options.get("reverse_proxy")
+        settings = dict(option.settings) if option is not None else {}
+        engine = parse_proxy_engine_settings(settings)
+        summary.update(_("Réglages communs : moteur des zones {engine} ; moteur natif : {pending} Mo de corps en "
+                         "attente, {inspections} inspections, {connections} connexions vers les backends ; moteur "
+                         "Python : réponses jusqu'à {response} Mo.").format(
+            engine=engine.engine, pending=engine.max_pending_body_mb,
+            inspections=engine.max_concurrent_inspections, connections=engine.max_upstream_connections,
+            response=settings.get("max_response_body_mb", DEFAULT_MAX_RESPONSE_BODY_MB)))
+        return zone_engine_labels(config)
+
     def _refresh_table(self) -> None:
         table = self.query_one("#proxy-zones-table", DataTable)
         table.clear()
+        result = load_config(self._container.configuration, self._container.config_file)
+        engines = self._refresh_summary(result.config if result.success else None)
         for index, zone in enumerate(self._zones()):
             table.add_row(
                 zone.url_prefix, zone.load_balancing, self._format_upstreams(zone.upstreams),
                 _("Oui") if zone.preserve_host_header else _("Non"),
                 _("Oui") if zone.verify_upstream_tls else _("Non"),
                 _("Oui") if zone.websocket_enabled else _("Non"),
-                _("Oui") if zone.sticky_session_enabled else _("Non"), key=str(index),
+                _("Oui") if zone.sticky_session_enabled else _("Non"),
+                engines.get(zone.url_prefix, "—"), key=str(index),
             )
         self._selected_index = None
         self.query_one("#edit", Button).disabled = True
@@ -231,6 +278,11 @@ class ReverseProxyScreen(OmegaScreen):
                 "websocket_enabled",
                 _("Autoriser Upgrade: websocket sur cette zone (oui/non)"),
                 to_text(z.websocket_enabled),
+            ),
+            (
+                "websocket_idle_timeout_seconds",
+                _("Fermer un tunnel WebSocket inactif après (secondes, 0 = jamais)"),
+                _number_text(z.websocket_idle_timeout_seconds),
             ),
             (
                 "sticky_session_enabled",
@@ -305,14 +357,16 @@ class ReverseProxyScreen(OmegaScreen):
             return
         if event.button.id == "add":
             self.app.push_screen(
-                DynamicFormScreen(title=_("AJOUTER UNE ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(None)),
+                DynamicFormScreen(title=_("AJOUTER UNE ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(None),
+                                  validate=lambda values: self._zone_form_error(values, None)),
                 lambda values: self._zone_fields_confirmed(values, existing_zone=None),
             )
             return
         if event.button.id == "edit" and self._selected_index is not None:
             zone = self._zones()[self._selected_index]
             self.app.push_screen(
-                DynamicFormScreen(title=_("MODIFIER LA ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(zone)),
+                DynamicFormScreen(title=_("MODIFIER LA ZONE PROXY (1/2 : paramètres)"), fields=self._fields_for(zone),
+                                  validate=lambda values: self._zone_form_error(values, zone)),
                 lambda values: self._zone_fields_confirmed(values, existing_zone=zone),
             )
             return
@@ -322,9 +376,95 @@ class ReverseProxyScreen(OmegaScreen):
                 self._delete_zone,
             )
             return
+        if event.button.id == "general-settings":
+            self.push_form(
+                DynamicFormScreen(title=_("RÉGLAGES COMMUNS DU REVERSE PROXY"), fields=self._general_fields()),
+                self._general_settings_confirmed,
+            )
+            return
         if event.button.id == "live-status" and self._selected_index is not None:
             zone = self._zones()[self._selected_index]
             self.app.push_screen(ReverseProxyUpstreamStatusScreen(container=self._container, zone=zone))
+
+    def _proxy_settings(self) -> dict[str, Any]:
+        result = load_config(self._container.configuration, self._container.config_file)
+        if not result.success or result.config is None:
+            return {}
+        option = result.config.options.get("reverse_proxy")
+        return dict(option.settings) if option is not None else {}
+
+    def _general_fields(self) -> list[tuple[str, str, str]]:
+        """Plan proxy natif v2, lot 11 : reglages communs a toutes les zones (P8, D23, budgets C2)."""
+        settings = self._proxy_settings()
+        engine = parse_proxy_engine_settings(settings)
+        return [
+            ("engine", _("Moteur des zones avec le moteur natif ({values} ; auto = natif si possible, sinon Python)")
+             .format(values=", ".join(PROXY_ENGINES)), engine.engine),
+            ("max_response_body_mb", _("Taille maximale d'une réponse lue en entier par le moteur Python (Mo)"),
+             str(settings.get("max_response_body_mb", DEFAULT_MAX_RESPONSE_BODY_MB))),
+            ("max_pending_body_mb", _("Moteur natif : mémoire des corps de requête en attente d'envoi (Mo, au moins "
+                                      "server.max_request_size)"), str(engine.max_pending_body_mb)),
+            ("max_concurrent_inspections", _("Moteur natif : inspections en attente de verdict, au plus"),
+             str(engine.max_concurrent_inspections)),
+            ("max_upstream_connections", _("Moteur natif : connexions ouvertes vers les backends, au plus"),
+             str(engine.max_upstream_connections)),
+        ]
+
+    def _general_settings_confirmed(self, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
+        keys = ("max_response_body_mb", "max_pending_body_mb", "max_concurrent_inspections", "max_upstream_connections")
+        try:
+            numbers = {key: int(values[key].strip()) for key in keys}
+        except ValueError:
+            self.report_form_error(_("Valeurs invalides (nombres entiers attendus)."))
+            return
+        load_result = load_config(self._container.configuration, self._container.config_file)
+        if not load_result.success or load_result.config is None:
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
+            return
+        existing = load_result.config.options.get("reverse_proxy")
+        new_settings = dict(existing.settings) if existing is not None else {}
+        new_settings.update(numbers, engine=values["engine"].strip())
+        errors = validate_proxy_engine_settings(new_settings, load_result.config.server.max_request_size)
+        if numbers["max_response_body_mb"] < 1:
+            errors.insert(0, _("options.reverse_proxy.max_response_body_mb doit être un entier supérieur ou égal à 1"))
+        if errors:
+            self.report_form_error(_("Erreur : {error}").format(error=errors[0]))
+            return
+        new_options = dict(load_result.config.options)
+        new_options["reverse_proxy"] = Option(name="reverse_proxy", enabled=existing.enabled if existing else False,
+                                              settings=new_settings)
+        self._container.configuration.save(self._container.config_file,
+                                           replace(load_result.config, options=new_options))
+        self.query_one("#form-error", Static).update("")
+        self._refresh_table()
+        notify_reload_required(self, self._container, _("Réglages communs du reverse proxy mis à jour."))
+
+    def _zone_form_error(self, values: dict[str, str], existing_zone: ProxyZone | None) -> str | None:
+        """Lot V (2026-11-15) : controle des parametres AVANT de passer aux backends - nombres, prefixe, strategie,
+        prefixe deja pris par une autre zone. L'erreur reste dans le formulaire, saisie gardee (les ecrans suivants
+        s'ouvrent seulement si tout est bon)."""
+        self._form_errors = []
+        try:
+            partial = self._zone_from_values(values)
+            errors = self._form_errors
+        finally:
+            self._form_errors = None
+        if errors or partial is None:
+            return "\n".join(errors) or None
+        # Controle complet avec les backends deja connus (ou un backend fictif valide) : seuls les champs du
+        # formulaire peuvent alors etre en faute.
+        upstreams = existing_zone.upstreams if existing_zone is not None and existing_zone.upstreams else (
+            UpstreamTarget(host="127.0.0.1", port=80),)
+        error = validate_proxy_zone(replace(partial, upstreams=upstreams))
+        if error is not None:
+            return _("Erreur : {error}").format(error=error)
+        taken = {zone.url_prefix for zone in self._zones()} - (
+            {existing_zone.url_prefix} if existing_zone is not None else set())
+        if partial.url_prefix in taken:
+            return _("Une autre zone utilise déjà le préfixe {prefix!r}.").format(prefix=partial.url_prefix)
+        return None
 
     def _zone_from_values(self, values: dict[str, str]) -> ProxyZone | None:
         """Construit une zone PARTIELLE (upstreams et routing_rules
@@ -342,8 +482,9 @@ class ReverseProxyScreen(OmegaScreen):
             load_smoothing_samples = int(values["load_smoothing_samples"].strip())
             load_sample_max_age = float(values["load_sample_max_age_seconds"].strip())
             cache_default_ttl = float(values["cache_default_ttl_seconds"].strip())
+            websocket_idle_timeout = float(values["websocket_idle_timeout_seconds"].strip())
         except ValueError:
-            self.query_one("#form-error", Static).update(_("Delais/duree/seuils invalides (nombres attendus)."))
+            self.report_form_error(_("Delais/duree/seuils invalides (nombres attendus)."))
             return None
         return ProxyZone(
             url_prefix=values["url_prefix"].strip(),
@@ -353,6 +494,7 @@ class ReverseProxyScreen(OmegaScreen):
             preserve_host_header=is_yes(values["preserve_host_header"]),
             verify_upstream_tls=not is_no(values["verify_upstream_tls"]),
             websocket_enabled=is_yes(values["websocket_enabled"]),
+            websocket_idle_timeout_seconds=websocket_idle_timeout,
             load_balancing=values["load_balancing"].strip(),
             sticky_session_enabled=is_yes(values["sticky_session_enabled"]),
             sticky_cookie_name=values["sticky_cookie_name"].strip(),
@@ -402,7 +544,7 @@ class ReverseProxyScreen(OmegaScreen):
         zone = replace(zone_with_upstreams, routing_rules=tuple(rules))
         error = validate_proxy_zone(zone)
         if error is not None:
-            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
+            self.report_form_error(_("Erreur : {error}").format(error=error))
             return
         zones = self._zones()
         if existing_zone is None:
@@ -423,7 +565,7 @@ class ReverseProxyScreen(OmegaScreen):
     def _save_zones(self, zones: list[ProxyZone]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("reverse_proxy")
         enabled = existing.enabled if existing is not None else False
@@ -445,6 +587,7 @@ class ReverseProxyScreen(OmegaScreen):
                 "preserve_host_header": z.preserve_host_header,
                 "verify_upstream_tls": z.verify_upstream_tls,
                 "websocket_enabled": z.websocket_enabled,
+                "websocket_idle_timeout_seconds": z.websocket_idle_timeout_seconds,
                 "load_balancing": z.load_balancing,
                 "sticky_session_enabled": z.sticky_session_enabled,
                 "sticky_cookie_name": z.sticky_cookie_name,

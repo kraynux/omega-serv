@@ -23,6 +23,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Select, Static
 from omega_serv.application.config.load_config import load_config
 from omega_serv.core.capability_registry import CapabilityRegistry
 from omega_serv.core.i18n import _
+from omega_serv.domain.routing.fastcgi_zone import active_socket_paths
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens._export_worker import run_html_export
 from omega_serv.interfaces.tui.screens.capability_detail_screen import CapabilityDetailScreen
@@ -45,7 +46,7 @@ class CapabilitiesScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Vertical(classes="omega-panel"):
+        with Vertical(classes="omega-panel omega-main-panel"):
             yield Static(_("REGISTRE DES CAPACITÉS"), classes="omega-title")
             yield Static("", id="scan-error", classes="omega-hint")
             yield CapabilitiesTable(id="capabilities-table")
@@ -53,15 +54,19 @@ class CapabilitiesScreen(OmegaScreen):
             yield Select(
                 [(name, name) for name in EXPORT_PALETTES], value=DEFAULT_EXPORT_THEME, allow_blank=False, id="export-theme-select",
             )
-            with Horizontal(classes="omega-actions"):
+        # Barre d'actions fixe en bas, hors du panneau, puis Retour seul (meme disposition que les autres ecrans ;
+        # demande de l'auteur du 2026-11-17).
+        with Vertical(classes="omega-proxy-actions"):
+            with Horizontal(classes="omega-actions omega-riposte-actions"):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Rafraîchir"), id="refresh", variant="primary")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Exporter JSON"), id="export-json")
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Exporter HTML"), id="export-html")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+            with Horizontal(classes="omega-actions omega-riposte-actions omega-service-back"), \
+                    Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -75,18 +80,17 @@ class CapabilitiesScreen(OmegaScreen):
             return
         config = load_result.config
 
-        fastcgi_socket = None
         fastcgi_option = config.options.get("fastcgi")
-        if fastcgi_option is not None and fastcgi_option.enabled:
-            socket_relative = fastcgi_option.settings.get("socket_path", "var/run/php-fpm.sock")
-            fastcgi_socket = self._container.project_root / socket_relative
+        fastcgi_sockets = tuple(self._container.project_root / path
+                                for path in active_socket_paths(fastcgi_option.settings)) \
+            if fastcgi_option is not None and fastcgi_option.enabled else ()
 
         error_widget.update(_("Analyse en cours..."))
         self.query_one("#refresh", Button).disabled = True
-        self.run_worker(lambda: self._scan_in_thread(config, fastcgi_socket), thread=True, exclusive=True)
+        self.run_worker(lambda: self._scan_in_thread(config, fastcgi_sockets), thread=True, exclusive=True)
 
-    def _scan_in_thread(self, config: OmegaServConfig, fastcgi_socket: Path | None) -> None:
-        scanner = self._container.build_capability_scanner(config.server.port, fastcgi_socket)
+    def _scan_in_thread(self, config: OmegaServConfig, fastcgi_sockets: tuple[Path, ...]) -> None:
+        scanner = self._container.build_capability_scanner(config.server.port, fastcgi_sockets)
         registry = CapabilityRegistry(scanner.scan())
         self.app.call_from_thread(self._finish_scan, registry)
 

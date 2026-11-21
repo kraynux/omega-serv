@@ -4,11 +4,27 @@ recopiees a la main). Chaque commande et chaque option porte son texte d'aide da
 from __future__ import annotations
 
 import argparse
+import importlib
 import shutil
 import textwrap
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from omega_serv.core.i18n import _
+
+CommandHandler = Callable[[argparse.Namespace, Any], int]
+
+
+def lazy_command(module: str, name: str) -> CommandHandler:
+    """Commande dont le module n'est importe qu'au moment de l'executer (remesure memoire 3.0.0, 2026-11-18) : le
+    parseur reste complet (aide, manuel), mais `serve` ne charge plus le code des commandes qu'il n'execute pas."""
+    def run(args: argparse.Namespace, container: Any) -> int:
+        return int(getattr(importlib.import_module(module), name)(args, container))
+
+    run.__name__ = run.__qualname__ = name
+    run.__module__ = module
+    return run
 
 
 def add_command(

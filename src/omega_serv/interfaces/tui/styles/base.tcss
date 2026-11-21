@@ -455,7 +455,9 @@ Screen {
    cadre de 32). Cadre de bouton 20 (18 cellules de libelle : « Einschränkungen » = 15), padding 1 1 :
    3 x (20 + 2 bordure + 2 padding) + 2 x 2 de marge = 76 colonnes, tient dans 80. */
 .omega-security-menu {
-    padding: 1 1;
+    /* Sans ligne vide au-dessus ni au-dessous des boutons (retour de l'auteur du 2026-11-15) : meme serrage
+       qu'INTERVENTION MANUELLE et que les cadres de Configuration detaillee, Retour remonte de deux lignes. */
+    padding: 0 1;
 }
 
 .omega-security-menu .omega-btn-frame {
@@ -468,7 +470,9 @@ Screen {
     width: 76;
     height: 5;
     padding: 0 1;
-    margin-top: 1;
+    /* Colle aux trois colonnes, comme « Options et verification » sous « Sous-ecrans » (retour de l'auteur du
+       2026-11-15) : une ligne de gagnee pour que Retour remonte, sans barre fixe (reservee aux ecrans de modules). */
+    margin-top: 0;
     align: center middle;
 }
 
@@ -489,6 +493,22 @@ Screen {
 .omega-riposte-actions {
     padding: 0 2;
     margin-top: 0;
+}
+
+/* Ecran Reverse proxy (lot 11) : deux rangees de boutons hors de la zone qui defile. */
+.omega-proxy-actions {
+    height: auto;
+}
+
+/* Registre des capacites (2026-11-17, barre d'actions fixe en bas) : le tableau prend la place restante et defile
+   lui-meme ; en hauteur automatique il debordait du panneau et poussait « Theme d'export HTML » hors de l'ecran. */
+#capabilities-table {
+    height: 1fr;
+    min-height: 4;
+}
+
+#proxy-zones-table {
+    margin-bottom: 1;
 }
 
 /* Modale a plusieurs choix (choice_screen.py) : boutons empiles, pleine largeur de la boite. */
@@ -530,4 +550,242 @@ LogStatsScreen #library-table, LogHealthScreen #health-table {
 
 LogHealthScreen #health-disks, LogHealthScreen #health-archives, LogHealthScreen #health-automations {
     margin-bottom: 1;
+}
+
+/* Fleche des listes deroulantes (Select) : Textual la dessine en $foreground 50 %, a peine visible dans certains
+   themes tant que la liste n'a pas le focus (constat de l'auteur, 2026-11-15). Couleur d'accent du theme, valable
+   pour les 10 themes omega : on voit qu'il y a un choix a ouvrir. */
+SelectCurrent .arrow {
+    color: $primary;
+}
+
+/* Ecran Service en formulaire (decision de l'auteur du 2026-11-15) : titre + etat a gauche, boutons de meme largeur
+   a droite (colonnes de 14 ; les boutons larges en valent 2), comme la selection des modules WAF ; Retour seul en
+   bas, hors de la zone qui defile. */
+.omega-panel.omega-service-panel {
+    /* 80x24 : les 5 lignes de 3 rangees tiennent avec le titre encadre garde ; seules les marges verticales du cadre
+       sont retirees (terminal_frame.tcss pose padding 1 2, d'ou la double classe pour passer devant). */
+    padding: 0 2;
+}
+
+.omega-service-panel > .omega-title {
+    margin: 0 0 1 0;
+}
+
+/* Formulaire centre sous le titre centre (grand menu, 2026-11-15) : en 80 colonnes rien ne bouge, sur un terminal
+   large le formulaire reste aligne sur le titre et le Retour. Le centrage porte sur le groupe des lignes (elles
+   restent alignees a gauche entre elles) ; il se fait ici et non sur le panneau, dont les textes d'aide pleine
+   largeur annuleraient le decalage. */
+.omega-service-form {
+    width: 100%;
+    height: auto;
+    align-horizontal: center;
+    /* Aeration sous le titre (retour de l'auteur du 2026-11-15 : « trop serre ») ; la ligne Pilotage demande une
+       ligne de defilement de plus en 80x24, choix assume. */
+    margin-top: 1;
+}
+
+.omega-service-row {
+    width: auto;
+    height: 3;
+}
+
+.omega-service-label {
+    width: 18;
+    height: 3;
+    padding: 0 1 0 0;
+}
+
+.omega-service-label-title {
+    text-style: bold;
+    color: $primary;
+}
+
+.omega-service-label-state {
+    color: $foreground;
+}
+
+.omega-service-row .omega-btn-frame {
+    width: 13;
+    height: 3;
+}
+
+.omega-service-row .omega-btn-frame.omega-service-wide {
+    width: 26;
+}
+
+.omega-service-row Button {
+    width: 1fr;
+    min-width: 0;
+    padding: 0;
+    background: $surface;
+    border: none;
+    color: $foreground;
+}
+
+.omega-service-row Button.-error {
+    color: $error;
+}
+
+.omega-service-row Button:hover,
+.omega-service-row Button:focus {
+    background: $accent;
+    color: $background;
+    text-style: bold;
+}
+
+.omega-service-row Button:disabled {
+    text-opacity: 45%;
+}
+
+.omega-service-name-input {
+    width: 39;
+    height: 3;
+}
+
+.omega-service-back {
+    height: auto;
+    width: 1fr;
+    align: center middle;
+    margin-top: 0;
+}
+
+/* Assistant de profil personnalise : la liste des points a accepter prend la hauteur de son contenu (un Vertical
+   vaut 1fr par defaut : dans une zone qui defile il tombait a une ligne et coupait la fin du formulaire). */
+#accept-box, .omega-accept-item {
+    height: auto;
+}
+
+.omega-accept-item > .omega-accept-message {
+    padding: 0;
+}
+
+.omega-accept-item > Checkbox {
+    margin-bottom: 1;
+}
+
+/* Grands menus (demande de l'auteur du 2026-11-15) : titre centre dans un cadre de 70 colonnes (comme celui des
+   Reglages), aligne sur le Retour centre de la barre fixe. Le panneau garde ses marges laterales seulement. */
+.omega-main-title-row {
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+.omega-main-title-row > .omega-main-title {
+    width: 70;
+    max-width: 100%;
+    content-align: center middle;
+    margin: 0 0 1 0;
+}
+
+.omega-panel.omega-main-panel {
+    padding: 0 2;
+}
+
+/* Menus Active Securite et Configuration detaillee (retour de l'auteur du 2026-11-15) : une seule ligne entre le
+   plafond et le cadre du titre (celle de la marge du titre) au lieu de deux. */
+.omega-panel.omega-menu-panel {
+    padding: 0 2;
+}
+
+/* « Options et verification » (Configuration detaillee) serre comme INTERVENTION MANUELLE d'Active Securite (retour
+   de l'auteur du 2026-11-15) : pas de ligne vide au-dessus ni au-dessous des boutons, Retour remonte de deux lignes.
+   Meme largeur que « Sous-ecrans » (padding lateral 4 garde, regle suivante). */
+.omega-home-menu-2col.omega-status-menu {
+    height: 5;
+}
+
+/* Meme serrage pour « Sous-ecrans » sur ce menu seulement (le menu principal garde son padding). */
+.omega-menu-panel .omega-home-menu-2col {
+    padding: 0 4;
+}
+
+/* Guide d'aide (retour de l'auteur du 2026-11-15) : un seul ascenseur, celui du tableau, qui prend la place restante
+   (le panneau ne defile plus, il ne deborde plus) ; theme d'export sur une ligne avec son libelle. */
+.omega-guide-panel {
+    overflow-y: hidden;
+}
+
+.omega-guide-panel > #guide-menu-table {
+    height: 1fr;
+    max-height: 100%;
+}
+
+.omega-actions.omega-guide-theme-row {
+    width: 100%;
+    height: 3;
+    margin-top: 0;
+    margin-bottom: 1;
+}
+
+.omega-guide-panel > .omega-hint {
+    padding: 0;
+}
+
+.omega-guide-theme-label {
+    width: auto;
+    height: 3;
+    content-align: left middle;
+    padding: 0 1 0 0;
+}
+
+.omega-guide-theme-row > Select {
+    width: 26;
+    margin-right: 1;
+}
+
+/* Configuration distante, lot 8 : bilan « prêt / ce qui manque », une ligne par point et son bouton. */
+.omega-readiness {
+    height: auto;
+}
+
+.omega-readiness-row {
+    height: auto;
+}
+
+.omega-readiness-text {
+    width: 1fr;
+    height: auto;
+    padding: 1 1 0 0;
+}
+
+/* Bouton d'un point du bilan : sous son texte, a gauche, au style des autres boutons (.omega-actions). */
+.omega-readiness-actions {
+    margin-top: 0;
+    margin-left: 2;
+}
+
+/* FAQ (retour de l'auteur du 2026-11-18) : themes repliables, question en accent, reponse decalee. */
+.omega-faq-group {
+    margin: 0 0 1 0;
+    padding: 0;
+    border-top: none;
+    background: transparent;
+}
+
+.omega-faq-group CollapsibleTitle {
+    color: $secondary;
+    text-style: bold;
+    padding: 0 1;
+}
+
+.omega-faq-group CollapsibleTitle:focus {
+    background: $boost;
+    color: $secondary;
+}
+
+.omega-faq-group Contents {
+    padding: 0 0 0 2;
+}
+
+.omega-faq-question {
+    color: $accent;
+    text-style: bold;
+    padding: 1 0 0 0;
+}
+
+.omega-faq-answer {
+    color: $foreground;
+    padding: 0 0 0 3;
 }

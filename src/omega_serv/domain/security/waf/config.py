@@ -13,6 +13,11 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from omega_serv.core.i18n import _
+from omega_serv.domain.security.waf.binary_formats import (
+    DEFAULT_BINARY_FORMATS,
+    KNOWN_BINARY_FORMATS,
+    validate_binary_formats,
+)
 from omega_serv.domain.security.waf.entities import KeywordListDefinition
 from omega_serv.domain.security.waf.keyword_list import (
     parse_keyword_list_definition,
@@ -24,6 +29,13 @@ from omega_serv.domain.security.waf.reputation import (
 )
 
 
+def _format_names(value: Any) -> tuple[str, ...]:
+    """Liste de noms ; toute autre forme est gardee telle quelle pour que la validation la refuse."""
+    if isinstance(value, (list, tuple)):
+        return tuple(str(item) for item in value)
+    return (repr(value),)
+
+
 @dataclass(frozen=True)
 class InspectConfig:
     path: bool = True
@@ -32,6 +44,13 @@ class InspectConfig:
     body_methods: tuple[str, ...] = ("POST", "PUT", "PATCH")
     body_max_inspect_bytes: int = 65536
     decode_depth: int = 2
+    # Plan proxy natif v2, lot 2 (decision de l'auteur du 2026-11-12) : le WAF n'inspecte jamais plus que
+    # `body_max_inspect_bytes`, sur aucune route (le corps entier coutait jusqu'a 3 s de CPU par Mo, mesure du lot 2).
+    # Au-dela : "pass" = la suite part sans inspection ; "reject" = 413 (en mode "block" seulement).
+    body_over_limit: str = "pass"
+    # Lot 11, constat F2 (decision de l'auteur du 2026-11-14) : corps reconnus a leur signature (contenu reel) et non
+    # inspectes comme du texte - voir binary_formats.py. Liste vide : tout corps est inspecte (avant le lot 11).
+    binary_formats: tuple[str, ...] = DEFAULT_BINARY_FORMATS
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> InspectConfig:
@@ -43,6 +62,8 @@ class InspectConfig:
             body_methods=tuple(data.get("body_methods", defaults.body_methods)),
             body_max_inspect_bytes=int(data.get("body_max_inspect_bytes", defaults.body_max_inspect_bytes)),
             decode_depth=int(data.get("decode_depth", defaults.decode_depth)),
+            body_over_limit=data.get("body_over_limit", defaults.body_over_limit),
+            binary_formats=_format_names(data.get("binary_formats", defaults.binary_formats)),
         )
 
 
@@ -385,6 +406,13 @@ def validate_waf_config(config: WafConfig) -> list[str]:
         errors.append(_("options.waf.inspect.decode_depth doit être >= 1"))
     if config.inspect.body_max_inspect_bytes < 0:
         errors.append(_("options.waf.inspect.body_max_inspect_bytes doit être >= 0"))
+    if config.inspect.body_over_limit not in ("pass", "reject"):
+        errors.append(_("options.waf.inspect.body_over_limit invalide : {value!r} (pass ou reject)").format(
+            value=config.inspect.body_over_limit))
+    unknown_formats = validate_binary_formats(config.inspect.binary_formats)
+    if unknown_formats:
+        errors.append(_("options.waf.inspect.binary_formats : format inconnu {names} (connus : {known})").format(
+            names=", ".join(unknown_formats), known=", ".join(KNOWN_BINARY_FORMATS)))
     if config.scoring.block_threshold <= 0:
         errors.append(_("options.waf.scoring.block_threshold doit être strictement positif"))
     if not (100 <= config.scoring.response_status < 600):

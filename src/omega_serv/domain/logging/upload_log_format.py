@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-from omega_serv.domain.logging.access_log_format import sanitize_log_field
+from omega_serv.domain.logging.error_log_line import sanitize_log_field
 from omega_serv.domain.upload.entities import UploadResult
 
 

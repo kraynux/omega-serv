@@ -435,6 +435,20 @@ class TestValidateFastCgiEnvironment(unittest.TestCase):
         errors = validate_config_environment(config, self.filesystem, self.project_root)
         self.assertTrue(any("url_prefix" in e for e in errors))
 
+    def test_disabled_zone_skips_folder_and_socket_but_not_the_webroot_gate(self):
+        """Projets 3.0.0 §8.1 : une zone arretee pour maintenance ne bloque pas le demarrage (dossier en cours de
+        remplacement, pool PHP-FPM arrete), mais sa racine ne peut jamais etre dans le webroot."""
+        (self.project_root / "webroot" / "inside").mkdir()
+        base = {"url_prefix": "/app/", "script_root": "php-app", "socket_path": "var/run/php-fpm.sock"}
+        maintenance = {"url_prefix": "/wiki/", "script_root": "gone", "socket_path": "var/run/none.sock",
+                       "enabled": False}
+        config = OmegaServConfig.from_dict({"options": {"fastcgi": {"enabled": True, "zones": [base, maintenance]}}})
+        self.assertEqual(validate_config_environment(config, self.filesystem, self.project_root), [])
+        inside = {**maintenance, "script_root": "webroot/inside"}
+        config = OmegaServConfig.from_dict({"options": {"fastcgi": {"enabled": True, "zones": [base, inside]}}})
+        self.assertTrue(any("webroot" in e for e in validate_config_environment(config, self.filesystem,
+                                                                              self.project_root)))
+
 
 class TestValidateUploadEnvironment(unittest.TestCase):
     def setUp(self):

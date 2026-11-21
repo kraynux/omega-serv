@@ -11,16 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-# Neutralisation des caracteres de controle 0x00-0x1F, en une passe C (str.translate) : execute plusieurs fois par requete.
-_CONTROL_TO_SPACE = str.maketrans(dict.fromkeys(range(0x20), " "))
-
-
-def sanitize_log_field(value: str, max_length: int = 512) -> str:
-    """Protection contre l'injection de log (spec §23.4) : les champs
-    venant du client (referer, user-agent, chemin) doivent avoir leurs
-    caracteres de controle (dont CR/LF) neutralises et leur longueur
-    bornee avant ecriture."""
-    return value.translate(_CONTROL_TO_SPACE)[:max_length]
+from omega_serv.domain.logging.error_log_line import sanitize_log_field
 
 
 def _quoted_field(value: str) -> str:
@@ -30,8 +21,14 @@ def _quoted_field(value: str) -> str:
     return value.replace('"', "\\x22")
 
 
+MONTH_ABBREVIATIONS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+"""Plan proxy natif v2, lot 1 (D41) : mois du format Combined, en anglais quelle que soit la locale - `%b` suivait
+LC_TIME (« nov. » en francais) et les failregex d'omega-jail, lnav et le natif ne liraient plus la ligne."""
+
+
 def _format_apache_timestamp(ts: datetime) -> str:
-    text = ts.strftime("%d/%b/%Y:%H:%M:%S %z")
+    month = MONTH_ABBREVIATIONS[ts.month - 1]
+    text = ts.strftime(f"%d/{month}/%Y:%H:%M:%S %z")
     return text + "+0000" if text.endswith(" ") else text  # date sans fuseau : UTC
 
 
@@ -69,8 +66,3 @@ def format_combined_log_line(entry: AccessLogEntry) -> str:
         f'{sanitize_log_field(entry.request_id, 64)}'
     )
 
-
-def format_error_log_line(timestamp: datetime, message: str, request_id: str | None = None) -> str:
-    ts = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-    suffix = f" [{sanitize_log_field(request_id, 64)}]" if request_id else ""
-    return f"[{ts}] {sanitize_log_field(message, 2048)}{suffix}"

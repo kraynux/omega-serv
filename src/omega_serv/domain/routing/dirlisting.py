@@ -31,7 +31,6 @@ application/server/serve_static_file.py, seul detenteur d'un
 FilesystemPort)."""
 from __future__ import annotations
 
-import html
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -40,6 +39,7 @@ from omega_lib.theme.policies import DEFAULT_EXPORT_THEME, EXPORT_PALETTES
 
 from omega_serv.core.i18n import N_, P_, page_html_dir, page_html_lang
 from omega_serv.domain.config.entities import SecurityConfig
+from omega_serv.domain.http import html_text
 from omega_serv.domain.routing.dirlisting_sort import (
     DirEntryInfo,
     DirlistingSort,
@@ -147,7 +147,7 @@ def _rendered_side_content(raw_content: str | None, encode: bool) -> str:
     if raw_content is None:
         return ""
     if encode:
-        return f"<pre class=\"omega-listing-meta\">{html.escape(raw_content)}</pre>"
+        return f"<pre class=\"omega-listing-meta\">{html_text.escape(raw_content)}</pre>"
     return raw_content
 
 
@@ -175,7 +175,7 @@ def _format_size(size: int | None) -> str:
     while value >= 1024 and unit_index < len(_SIZE_UNITS) - 1:
         value /= 1024
         unit_index += 1
-    unit = html.escape(P_(_SIZE_UNITS[unit_index]))
+    unit = html_text.escape(P_(_SIZE_UNITS[unit_index]))
     if unit_index == 0:
         return f"{int(value)} {unit}"
     return f"{value:.1f} {unit}"
@@ -187,9 +187,9 @@ def _header_link(label: str, key: SortKey, sort: DirlistingSort) -> str:
 
 def _render_entry_item(name: str, info: DirEntryInfo, url_path: str) -> str:
     css_class = "omega-dir" if info.is_directory else "omega-file"
-    href = html.escape(url_path.rstrip("/") + "/" + name)
+    href = html_text.escape(url_path.rstrip("/") + "/" + name)
     icon = icon_for_file(name, is_directory=info.is_directory)
-    label = html.escape(name) + ("/" if info.is_directory else "")
+    label = html_text.escape(name) + ("/" if info.is_directory else "")
     return (
         f'<li class="{css_class}">'
         f'<a class="omega-listing-name" href="{href}">'
@@ -228,32 +228,32 @@ def render_directory_listing_html(
 
     criteria_item = (
         f'<li class="omega-listing-header">'
-        f'{_header_link(html.escape(P_("NOM")), "name", sort)}'
-        f'{_header_link(html.escape(P_("DERNIÈRE MODIFICATION")), "mtime", sort)}'
-        f'{_header_link(html.escape(P_("TAILLE")), "size", sort)}'
+        f'{_header_link(html_text.escape(P_("NOM")), "name", sort)}'
+        f'{_header_link(html_text.escape(P_("DERNIÈRE MODIFICATION")), "mtime", sort)}'
+        f'{_header_link(html_text.escape(P_("TAILLE")), "size", sort)}'
         "</li>"
     )
     parent_path = _parent_url_path(url_path)
     parent_item = (
-        f'<li class="omega-dir omega-parent"><a class="omega-listing-name" href="{html.escape(parent_path)}">'
+        f'<li class="omega-dir omega-parent"><a class="omega-listing-name" href="{html_text.escape(parent_path)}">'
         f'<img class="omega-listing-icon" src="{ICON_URL_PREFIX}{DIRECTORY_ICON}" alt="">'
-        f"{html.escape(P_('.. (dossier parent)'))}</a>"
+        f"{html_text.escape(P_('.. (dossier parent)'))}</a>"
         '<span class="omega-listing-mtime"></span><span class="omega-listing-size"></span></li>'
         if parent_path is not None else ""
     )
     items = criteria_item + parent_item + "".join(
         _render_entry_item(name, entry_info.get(name, DirEntryInfo()), url_path) for name in visible
     )
-    title = html.escape(url_path)
-    index_title = html.escape(P_("Index de {path}")).replace("{path}", title)
+    title = html_text.escape(url_path)
+    index_title = html_text.escape(P_("Index de {path}")).replace("{path}", title)
 
     show_readme = settings.show_readme and readme_content is not None
     header_html = _rendered_side_content(header_content if settings.show_header else None, settings.encode_header)
     readme_html = _rendered_side_content(readme_content if show_readme else None, settings.encode_readme)
 
-    base_css_href = f"{CSS_URL_PREFIX}{html.escape(settings.theme)}.css"
+    base_css_href = f"{CSS_URL_PREFIX}{html_text.escape(settings.theme)}.css"
     external_css_link = (
-        f'<link rel="stylesheet" href="{html.escape(settings.external_css)}">' if settings.external_css else ""
+        f'<link rel="stylesheet" href="{html_text.escape(settings.external_css)}">' if settings.external_css else ""
     )
 
     footer_html = (
@@ -262,7 +262,7 @@ def render_directory_listing_html(
         else (
             '<div class="omega-listing-footer-wrap">'
             '<hr class="omega-listing-footer-rule">'
-            f'<p class="omega-listing-footer">{html.escape(P_("Propulsé par"))} '
+            f'<p class="omega-listing-footer">{html_text.escape(P_("Propulsé par"))} '
             '<a href="https://github.com/kraynux/omega-serv">OMEGA-SERV</a></p>'
             "</div>"
         )

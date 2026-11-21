@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
@@ -36,11 +37,13 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             yield Static(_("DECEPTION"), classes="omega-title")
             yield Static("", id="deception-error", classes="omega-hint")
             yield DataTable(id="deception-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Libérer"), id="release", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Libérer"), id="release", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -64,7 +67,7 @@ class DeceptionScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         for assignment in active_defense.deception_assignment_repository.list_active():
             status = _("active") if is_assignment_active(assignment, now) else _("expirée")
             table.add_row(
-                assignment.subject_id, assignment.profile_name, status,
+                Text(assignment.subject_id), assignment.profile_name, status,  # F44 : jamais du balisage
                 assignment.assigned_at.isoformat(), assignment.expires_at.isoformat(),
                 key=assignment.subject_id,
             )

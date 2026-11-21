@@ -27,6 +27,7 @@ from omega_serv.domain.routing.access_rule import (
     validate_access_rule,
 )
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -60,15 +61,17 @@ class AccessControlScreen(OmegaScreen):
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="access-rules-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Ajouter"), id="add", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Modifier"), id="edit", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Ajouter"), id="add", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Modifier"), id="edit", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -105,7 +108,7 @@ class AccessControlScreen(OmegaScreen):
             self.dismiss()
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("AJOUTER UNE RÈGLE D'ACCÈS"),
                     fields=[
@@ -120,7 +123,7 @@ class AccessControlScreen(OmegaScreen):
         if event.button.id == "edit" and self._selected_index is not None:
             rules = self._rules()
             rule = rules[self._selected_index]
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("MODIFIER LA RÈGLE D'ACCÈS"),
                     fields=[
@@ -151,9 +154,13 @@ class AccessControlScreen(OmegaScreen):
         )
         error = validate_access_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
+            self.report_form_error(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
+        duplicate = duplicate_error(rules, rule, lambda r: (r.path_prefix, tuple(sorted(r.extensions))), _("une règle pour {value!r}").format(value=rule.path_prefix))
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         rules.append(rule)
         self._save_rules(rules)
 
@@ -166,9 +173,13 @@ class AccessControlScreen(OmegaScreen):
         )
         error = validate_access_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
+            self.report_form_error(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
+        duplicate = duplicate_error(rules, rule, lambda r: (r.path_prefix, tuple(sorted(r.extensions))), _("une règle pour {value!r}").format(value=rule.path_prefix), self._selected_index)
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         rules[self._selected_index] = rule
         self._save_rules(rules)
 
@@ -182,7 +193,7 @@ class AccessControlScreen(OmegaScreen):
     def _save_rules(self, rules: list[AccessRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("access_control")
         enabled = existing.enabled if existing is not None else False

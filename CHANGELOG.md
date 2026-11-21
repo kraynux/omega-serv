@@ -13,6 +13,1224 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## version 3.0.0 : Construite le 2026-11-21
+
+Version majeure : reverse proxy relayé par le moteur natif (plan v2, lots A à 11), tableau de bord web, mémoire
+réduite, deux audits de sécurité complets (87 failles corrigées). Résumé pour l'utilisateur :
+`omega-serv-3.0.0-nouveautes.txt`. Lot A (correctifs prioritaires) : chaque défaut a d'abord été prouvé par un
+essai, puis corrigé, avec des tests qui échouent sur la 2.6.2.
+
+### Sécurité
+
+- **Authentification Basic : mots de passe faux limités AVANT le calcul (2026-11-20).** Une vérification scrypt
+  coûte 0,3 à 0,5 s : après 10 échecs d'une même adresse, ou 30 pour un même nom d'utilisateur, en 5 minutes,
+  réponse **429** immédiate (Retry-After) sans aucun calcul jusqu'à la fin de la fenêtre ; plus de 10 vérifications
+  en attente : **503** immédiat au lieu d'un empilement (2 calculs simultanés au plus, hors de la boucle du
+  serveur). Le cache des succès (scan n° 1) garde 5 minutes **renouvelées** à chaque requête, avec un plafond
+  d'une heure, une éviction LRU (4096 entrées) et une purge à chaque modification d'utilisateur ou de zone ; il est
+  consulté avant la limite : un visiteur déjà vérifié n'est jamais refusé. Compteurs par processus (mode boost :
+  par processus de travail). Deux moteurs (le natif confie ces requêtes au processus Python). Les 7 valeurs sont
+  réglables dans Configuration détaillée → Authentification → **Protection des mots de passe**
+  (`options.auth.password_protection`, bornes vérifiées ; appliquées au rechargement).
+- **Scan de sécurité n° 2 (2026-11-20), 45 failles corrigées (WAF, Active Defense, TLS, RIPOSTE, CLI/TUI,
+  administration web, services).** Rapport : `CLAUDE-SECURITY-20261120-150934/` ; tests
+  `tests/unit/test_security_scan2_rules.py`, `tests/integration/test_security_scan2_paths.py` et
+  `native/.../test_security_scan2.cpp`.
+  - **Cible de requête sans « / » initial** (`GET private/x`) : elle échappait aux zones d'authentification et aux
+    règles d'accès puis était servie. Seules la forme `/…`, la forme absolue `http(s)://…` et `*` sont acceptées
+    (sinon 400), dans les deux moteurs. `..;` compte comme `..` (backends Java). WAF (signatures de chemin), limites
+    de débit par dossier, exclusions et règles par extension (`/x.db/`) jugés sur le chemin canonique.
+  - **Compte du service → root ou opérateur** : le nom de service lu dans `var/settings.json` (modifiable par le
+    service) est validé partout où root s'en sert (systemctl avec `--`, `/etc/systemd/system`, minuterie Certbot,
+    `synchro groupe-service`, option `--service-name`) ; un nom douteux donne le nom par défaut ou un refus. Le
+    partage de `var/` avec le groupe du service ne passe plus par `find … -exec chgrp/chmod` en root mais par un
+    parcours qui ne suit jamais un lien (`infrastructure/services/secure_tree.py`) ; `var/backups` n'est plus setgid,
+    sauvegardes complètes et exports créés 0700/0600 dès l'ouverture. Santé des logs « Corriger avec sudo »,
+    restauration d'archive de log (dossier neuf 0700, refus si lien), purge des exports, rotation des logs et verrou
+    de la liste de blocage ne suivent plus un lien posé dans `var/`. `waf test` et « Vérifier la compatibilité »
+    Magnet exécutent le script avec un état privé et vide (plus le fichier Lua de `var/cache`).
+  - **WAF** : expressions livrées SQLI-005, CMDI-001/002, XSS-005/007 bornées (retour arrière quadratique sur la
+    boucle) ; `Content-Type` lu comme PHP (coupé à `;`, `,` ou blanc), corps non inspecté seulement pour un type
+    explicitement binaire dont la signature correspond ; partie fichier multipart = paramètre `filename` exact.
+    Active Defense identifie une source par son adresse IP seule (changer de User-Agent sortait de la quarantaine) :
+    champ User-Agent du simulateur et option `active-defense simulate --user-agent` retirés, plus d'indicateur
+    User-Agent fictif dans les exports STIX/MISP.
+  - **Administration web** : sans TLS, en-tête `Host` limité aux adresses IP, `localhost` et noms de la machine
+    (421 sinon : DNS rebinding) ; cookies `omega_admin*` retirés avant tout relais vers PHP ou un backend (deux
+    moteurs) ; verrou des échecs par couple compte + adresse ; même temps de réponse avec un mauvais mot de passe et
+    un code de secours ; le jeton du maître n'est envoyé à une instance locale sans TLS que si le port est tenu par
+    root, un compte système ou le propriétaire de l'installation ; visionneuse web des journaux coupée sur `\n` seul
+    et champs de journal sans contrôles C1 ni U+2028/2029 (deux moteurs).
+  - **Secrets locaux** : phrases de passe des clés et de la CA passées à `openssl` par l'entrée standard (plus
+    `pass:` visible dans `ps`) ; en-têtes ressemblant à un identifiant (`X-Api-Key`, `*-Token`, `Proxy-Authorization`…)
+    toujours masqués dans le journal enrichi ; `omega-serv.sh` et les relances internes en `python -I`.
+  - **Divers** : adresse relayée qui n'est pas une IP → adresse du pair TCP (deux moteurs) ; cellules CSV des IoC
+    neutralisées ; motif de bannissement sans caractères de contrôle ; textes venus du réseau affichés sans balisage
+    dans la TUI ; requêtes en pipeline du moteur natif reprises par la boucle d'événements (plus de récursion).
+
+- **Scan de sécurité n° 1 (2026-11-20), 42 failles corrigées dans les deux moteurs.** Rapport :
+  `CLAUDE-SECURITY-20261120-074442/` ; tests `tests/*/test_security_scan1_*.py` et `native/.../test_security_scan1.cpp`.
+  - **Zones d'authentification, règles d'accès, listage, FastCGI et zones proxy contournables par une autre
+    écriture du chemin (16 failles HIGH).** Ces décisions comparaient le chemin brut ; le fichier servi venait du
+    chemin décodé. `//private/x`, `/%70rivate/x`, `/private%2fx` ou `/private\x` servaient `/private/x` sans
+    identifiants. Toutes ces décisions se prennent désormais sur un chemin canonique unique (décodé comme le fichier
+    servi, `\` en `/`, segments vides retirés) ; le backend d'une zone proxy reçoit toujours le chemin d'origine.
+    Un chemin sans forme canonique (encodage invalide, NUL, caractère de contrôle) est refusé : 400.
+  - **`..` doublement encodé (`%252e%252e`) accepté** : il sortait d'une zone `allow` et levait le refus des
+    fichiers cachés (`.env`, `.git/`) dans tout le webroot. Refusé (400), comme `..` écrit tel quel.
+  - **Contrebande de requêtes vers le backend du proxy** : un client qui nommait `Content-Length` dans `Connection`
+    faisait retirer la longueur alors que son corps partait. La longueur envoyée au backend est maintenant toujours
+    recalculée sur le corps transmis.
+  - **`/.omega-serv-admin/` et `/.omega-serv-load/` ouverts à Internet derrière un proxy installé sur la même
+    machine** (pair 127.0.0.1 de confiance). Un appel portant un en-tête de relais (`X-Forwarded-For`,
+    `Forwarded`, `X-Real-IP`...) y est refusé (403) ; la TUI et la sonde d'une instance frontale n'en envoient pas.
+  - **Déni de service** : la vérification scrypt d'un mot de passe Basic (0,3 à 0,5 s) gelait tout le serveur
+    Python ; elle tourne maintenant à part (deux à la fois), et un succès est retenu 5 min (le navigateur renvoie
+    ses identifiants à chaque requête). Suivi de réputation du WAF plafonné à 100 000 adresses. Script magnet Lua :
+    une exécution à la fois (le verdict d'une requête pouvait se calculer sur les données d'une autre). Natif : une
+    entrée de blocklist contenant `%` ne fait plus lire un tableau vide.
+  - **Mineurs** : backend HTTPS d'un leurre d'Active Defense relayé en clair ; fausses lignes possibles dans
+    `admin-audit.log` (`\r`, U+2028) ; en-tête client `Proxy` transmis en `HTTP_PROXY` à FastCGI (« httpoxy ») et
+    noms avec `_` ignorés désormais ; cookie de session collante signé par une clé de l'instance
+    (`var/lib/proxy/sticky-cookie.key`) au lieu d'un SHA-256 réversible - l'affinité repart une fois après la mise
+    à jour.
+- **TLS direct : les poignées de main n'étaient pas comptées dans `server.max_connections` (D30), dans les deux
+  moteurs.** Une connexion TLS n'existait pour le serveur qu'une fois sa poignée de main terminée, avec un délai de
+  60 s. Mesuré : avec `max_connections = 5`, 300 connexions muettes restaient ouvertes. Désormais une connexion TLS
+  compte dès son acceptation, comme en clair ; au-delà de la capacité, elle est fermée aussitôt. La poignée de
+  main est bornée par `server.read_timeout_seconds` au lieu de 60 s. Moteur Python : il faut Python 3.11 ou plus.
+  Sous Python 3.10, qui est en fin de vie, seule la borne de durée s'applique.
+- **Un client qui ne lisait pas sa réponse gardait sa place indéfiniment (D31), dans les deux moteurs.**
+  `server.write_timeout_seconds` était lu, validé et réglable dans l'interface, mais aucun moteur ne l'appliquait.
+  Mesuré : 3 clients qui ne lisaient pas un gros fichier occupaient `max_connections = 3`, et tout nouveau
+  visiteur recevait 503. Désormais le délai s'applique **sans progrès**, comme `send_timeout` de nginx : un client
+  qui ne lit plus rien pendant tout le délai est coupé, tandis qu'un client lent qui continue de lire est servi
+  jusqu'au bout, quel que soit son débit.
+- **Moteur natif : boucle à vide quand le système manquait de descripteurs (D32).** Une fois la limite de fichiers
+  ouverts atteinte, la socket d'écoute restait signalée prête et le moteur tournait à vide. Mesuré : 5,9 s de CPU
+  en 3 s, soit deux cœurs à 100 %. Désormais l'acceptation s'arrête 1 s avec un message, puis reprend, comme le fait
+  asyncio dans le moteur Python.
+- **Limite de débit : mémoire sans plafond face à des adresses changeantes (D33), dans les deux moteurs.** Chaque
+  adresse source gardait son compteur pendant 1 h, sans limite de nombre. Une source IPv6 qui change d'adresse à
+  chaque requête faisait donc grossir la mémoire. Mesuré : +5,4 Mo pour 40 000 adresses. Désormais au plus
+  100 000 adresses sont suivies ; quand la table est pleine, la moins récemment vue est remplacée et repartira à
+  pleine capacité. Une adresse active n'est jamais remplacée. Le mode boost avait déjà un plafond.
+
+### Corrigé
+
+- **Gestion des logs, viewer Simple (2026-11-20).** La colonne « Message » coupait la ligne à 80 caractères :
+  l'ascenseur horizontal s'arrêtait avant la fin (User-Agent invisible) ; elle montre maintenant la ligne entière,
+  colorée avec les couleurs du thème (date, adresse, méthode, code HTTP, User-Agent). La colonne « Service »
+  prenait l'heure d'une date syslog pour le service (`Nov 20 10:00:00` → « 10 ») : seule l'étiquette
+  `machine service[pid]:` compte désormais. La colonne « Timeout » s'appelle « Durée » (temps de traitement écrit
+  en fin de ligne, absent d'un access log Combined).
+- **Moteur Python : débit en recul d'environ 13 % par rapport à la 2.6.2 (petits fichiers)** (trouvé le 2026-11-19).
+  Trois ajouts de sécurité des lots 1 à 4 coûtaient du calcul à chaque requête, sans changer leur règle : les
+  en-têtes de sécurité sont maintenant imposés en une passe (au lieu d'un parcours de tous les en-têtes pour chacun),
+  la cible est contrôlée par une recherche en C, et une requête servie aussitôt (fichier statique) ne crée plus de
+  surveillance « client parti » (Python 3.12 et plus ; inchangé avant). Mesuré sur la machine A, 1 processus :
+  −13 % → −7 % (petits fichiers), −6 % → −3 % (gros fichiers). Mêmes refus et mêmes en-têtes qu'avant (vérifié sur
+  des centaines de milliers de cas tirés au hasard). Test ajouté.
+- **Rapport complet : « Rapport impossible : string indices must be integers » dès que l'option reverse
+  proxy figurait dans la configuration, même désactivée** (trouvé le 2026-11-18 en préparant les captures). La liste
+  des zones était lue sur tout le réglage de l'option au lieu de sa seule liste `zones`. Test de non-régression
+  ajouté.
+- **Moteur natif : sondes de santé des backends et écriture différée d'Active Defense jamais lancées (D10).** Les
+  processus de sécurité du moteur natif ne démarraient pas leurs tâches de fond. Mesuré : 0 sonde en mode natif,
+  contre 7 en 3 s en mode Python. Un backend en panne n'était donc jamais écarté, et les écritures différées
+  d'Active Defense n'étaient jamais faites. Désormais elles démarrent au lancement, et les écritures en attente sont
+  vidées à l'arrêt, en 2 s au plus.
+- **Activer le reverse proxy par rechargement n'avait aucun effet (D15).** Le client vers les backends n'était
+  construit qu'au démarrage : après un rechargement (SIGHUP, ou *Recharger* dans l'écran Service), la zone
+  renvoyait le 404 du site local. Désormais il est construit au rechargement, dans les deux moteurs. Une zone déjà
+  active garde ses connexions et son état de santé.
+- **Moteur natif : message de refus de rechargement trompeur.** Sans processus de sécurité lancé au démarrage, le
+  rechargement qui active une option traitée par Python est refusé ; le message parlait toujours de « leurres /
+  WAF / Active Defense / Auth ». Il nomme désormais l'option en cause, par exemple `options.reverse_proxy`, et dit
+  pourquoi un redémarrage est nécessaire.
+- Message du rechargement (moteur Python) : « WAF, Auth, routage et reverse proxy relus », au lieu de « règles WAF
+  et zones Auth uniquement ».
+
+- **Reverse proxy : lecture stricte des réponses du backend (lot 1).** La réponse à un HEAD, un 204 ou un 304 n'a
+  jamais de corps, et le proxy ne l'attend plus. Avant, il attendait un corps qui ne venait pas, puis répondait 502
+  et comptait le backend en échec (D1, D2). Une réponse `chunked` est décodée, validée et relayée, au lieu d'arriver
+  au client avec son découpage brut ou en 502 (D3). La ligne de statut et les en-têtes du backend sont lus
+  strictement : caractère de contrôle, en-tête replié, trop d'en-têtes ou statut invalide donnent 502 (D24). Les
+  réponses intermédiaires 1xx sont ignorées jusqu'à la réponse finale. Un `content-length` en minuscules ne donne
+  plus deux `Content-Length` au client (D27). Une connexion vérifiée en TLS et une connexion non vérifiée ne
+  partagent plus le même pool (D4).
+- **Reverse proxy : corps de réponse plafonné (D23).** Le proxy Python lit toute la réponse en mémoire avant de
+  l'envoyer, sans limite jusqu'ici. Nouvelle option `options.reverse_proxy.max_response_body_mb` (256 par défaut) :
+  au-delà, 502 et une ligne dans le journal d'erreurs.
+
+- **Reverse proxy : tous les `Set-Cookie` du backend sont relayés (D6).** Un seul survivait. Le cookie de session
+  collante ne les écrase plus : il s'ajoute à côté. Un en-tête de sécurité écrit en minuscules par le backend n'est
+  plus doublé, il est remplacé par celui qu'impose le serveur (D27).
+- **Reverse proxy : protocole et port transmis au backend (R1, R2).** `X-Forwarded-Proto` et `X-Forwarded-Port`
+  envoyés par un client ne sont plus repris : le backend reçoit le protocole et le port réels d'omega-serv. Seul un
+  relais déclaré dans `trusted_proxy` peut les fournir, par exemple Tailscale Funnel, qui termine le HTTPS devant
+  omega-serv. Le backend écrit alors ses liens en `https` avec le bon port.
+- Reverse proxy : `Host` vers un backend IPv6 écrit entre crochets (D28).
+
+- **Cache du reverse proxy (D13).** Une page privée d'un visiteur authentifié n'est plus mise en cache, sauf si le
+  backend la déclare `public` : avant, elle pouvait être servie à un autre visiteur. Une requête partielle (`Range`)
+  ne passe plus par le cache, une réponse 206 n'y entre jamais, et `Vary: *` empêche la mise en cache. Après un
+  redémarrage, la taille occupée n'est plus comptée deux fois, ce qui faisait évincer trop tôt. Une entrée
+  illisible n'est plus une erreur.
+- **WebSocket (D14).** La zone est choisie après les réécritures, comme pour les autres requêtes. Un refus de mise à
+  niveau par le backend n'annonce plus un corps qui n'arrive jamais : le navigateur n'attend plus.
+
+- **Reverse proxy : boucle vers soi-même mieux détectée (D17).** `config check` ne reconnaissait que
+  `127.0.0.1`, `localhost` et l'adresse d'écoute. Il refuse maintenant aussi `::1`, `::`, `0.0.0.0`, tout
+  127.x.x.x, les formes courtes comme `127.1` et les adresses IPv4 dans IPv6, y compris pour les backends des
+  leurres d'Active Defense. Un nom d'hôte de backend mal formé est refusé.
+
+- **WAF : plus de lien caché entre options (D34, P9).** Activer le reverse proxy, FastCGI ou l'envoi de fichiers
+  faisait lire et inspecter le corps entier des requêtes sur toutes les routes, dans le moteur Python seulement.
+  Désormais seules ces routes lisent le corps entier, pour le transmettre. Depuis le lot 2, le WAF n'en inspecte que
+  `waf.inspect.body_max_inspect_bytes`, sur toutes les routes.
+- **WAF : `exclusions.do_not_inspect_body_path_prefixes` enfin appliqué (D35).** Le réglage était proposé par
+  l'interface mais lu nulle part. Le corps des requêtes vers ces chemins n'est plus inspecté, et il part toujours
+  entier vers la route.
+- **Moteur natif : après une relance du moteur, les sources surveillées pour leur niveau de menace le restent
+  (D37).** Avant, seules les affectations de leurres étaient renvoyées au moteur.
+- **Journal d'accès : mois toujours en anglais (D41)**, quelle que soit la locale du système. Les failregex
+  d'omega-jail, lnav et les statistiques en dépendent. Même correction pour la lecture des dates des certificats.
+
+### Sécurité (suite)
+
+- **Cible de requête : caractères de contrôle et segments `.` ou `..` refusés (D26), dans les deux moteurs, sur
+  toutes les routes.** Le proxy recopiait vers le backend une cible qui contenait des caractères de contrôle. Une
+  cible comme `/api/../admin` restait dans la zone `/api/`, et les règles d'accès étaient évaluées sur ce chemin
+  brut, alors que le backend la comprenait souvent comme `/admin` : une protection pouvait ainsi être contournée.
+  Désormais, une cible qui contient un octet de contrôle, ou un segment `.` ou `..` écrit tel quel ou encodé
+  (`%2e`, avec `%2f` et `%5c` comptés comme séparateurs), reçoit **400**. Les navigateurs normalisent ces chemins
+  avant de les envoyer.
+
+- **Client parti avant la réponse : journalisé en 499 (P3, D39).** Avant, l'abandon d'un client n'était pas
+  journalisé, ou l'était avec le statut d'une réponse qu'il n'avait jamais reçue. Désormais, comme nginx, un client
+  qui ferme sa connexion pendant le traitement, demi-fermeture comprise, donne une ligne `499` dans `access.log`, et
+  la requête vers le backend est annulée. Une réponse interrompue en cours d'envoi est journalisée avec son vrai
+  statut et les octets reçus par le client. Les jails d'omega-jail ne comptent que 401 et 404 : aucun effet.
+
+- **Reverse proxy : un backend écarté sans sonde active n'était jamais réessayé (D7).** Il restait DOWN pour
+  toujours, jusqu'au redémarrage. Désormais, 10 s après sa mise à l'écart, il reçoit une requête d'essai, une seule
+  à la fois. Un succès le remet en service, un échec relance l'attente. C'est le comportement de nginx.
+- **Reverse proxy : les sondes de santé partent avec un en-tête `Host` (D8).** Un backend à hôtes virtuels pouvait
+  les refuser et passer DOWN à tort.
+- **Moteur natif : connexions confiées au processus de sécurité.** Elles comptent maintenant dans
+  `server.max_connections` (D9), et un arrêt du service les laisse finir dans `shutdown_grace_period_seconds` au
+  lieu de les couper net (D11). C'est le cas d'une requête proxifiée ou d'un envoi de fichier en cours.
+
+- **Moteur natif : refus décidés seul enfin tracés dans `waf-alerts` (D36, lot 1N).** Quand le contrôle de
+  sécurité est indisponible en `fail-open`, le natif refuse lui-même une adresse bannie (451), mais n'écrivait
+  aucune alerte : RIPOSTE et le jail `omega-serv-waf-block` ne voyaient rien. Il écrit maintenant la même ligne que
+  Python, vérifiée octet pour octet sur 423 cas : mêmes clés dans le même ordre, mêmes plafonds, extrait du corps
+  avec les mots de passe masqués. Les 503 dus à une panne du serveur (`fail-closed`, requête trop grande pour le
+  canal, route Python injoignable) restent dans `error.log` seulement : ce ne sont pas des actes du visiteur, et
+  une alerte ferait bannir des visiteurs innocents.
+- **Moteur natif : la limite de débit n'était plus appliquée pendant une panne du contrôle en `fail-open` (lot
+  1N).** Une source qui dépassait la limite était servie normalement. Désormais le natif répond lui-même, comme le
+  WAF : statut de la règle (429 par défaut), `Retry-After`, connexion fermée, et une alerte `rate_limit`, notée
+  `throttle` pour une source sûre afin que fail2ban ne la compte jamais. Le débit est maintenant compté même quand
+  le processus de sécurité est absent.
+- **Moteur natif : client parti pendant l'attente du verdict (P3, lot 1N).** Comme dans le moteur Python depuis le
+  lot 1, et comme nginx : un client qui ferme sa connexion, demi-fermeture comprise, ou qui la coupe, pendant le
+  contrôle de sécurité donne une ligne `499` et rien n'est envoyé. Le départ n'est constaté qu'aux vérifications
+  faites toutes les 250 ms, donc un verdict rapide part toujours, même à un client à demi fermé. Une réponse
+  interrompue en cours d'envoi, y compris par `write_timeout_seconds`, est maintenant journalisée avec son vrai
+  statut et les octets du corps reçus par le client ; avant, elle n'avait aucune ligne.
+- **Moteur natif : liste de blocage lue sans verrou global (D33, seconde moitié, lot 1N).** Chaque requête
+  inspectée prenait deux verrous communs à tous les fils, pendant le `stat()` du fichier et le parcours de toutes les
+  entrées. Mesuré : 3,2 µs par requête avec 10 bannis et 9 µs avec 1000, et un débit total qui baissait quand on
+  ajoutait des fils (215 000 vérifications par seconde à 4 fils contre 311 000 à 1). Désormais les adresses exactes
+  sont indexées et la liste est partagée en lecture seule. De plus, au lieu d'un `stat()` du fichier à chaque
+  requête, le natif est prévenu de ses changements par `inotify` (demande de l'auteur) : il demande seulement au
+  noyau si un changement attend. Résultat : environ 1,05 µs par requête quel que soit le nombre de bannis, et
+  2 millions de vérifications par seconde à 4 fils. La fraîcheur est la même qu'avec `stat()` : le noyau signale le
+  changement avant que l'écrivain ait fini son remplacement, donc un nouveau ban s'applique dès la requête suivante.
+  Chaque dossier du chemin est surveillé : le noyau ne signale pas toujours la suppression d'un dossier, et un
+  dossier `var/lib/waf` supprimé puis recréé serait sinon passé inaperçu. Dans les cas où `inotify` ne peut pas
+  garantir cette fraîcheur, le natif revient au `stat()` à chaque requête : lien symbolique dans le chemin, système
+  de fichiers réseau, dossier absent, structure du chemin changée.
+- **WAF : un gros corps de requête gelait le contrôle de sécurité (déni de service, lot 2).** Sur les routes proxy,
+  FastCGI et envoi de fichiers, le WAF inspectait le corps entier. Mesuré : un seul POST binaire de 2 Mo occupait le
+  processus 6 s, et un GET envoyé en même temps attendait autant. En moteur natif, les inspections et les requêtes
+  proxifiées étaient bloquées pendant ce temps. Avec 10 Mio, il fallait environ 30 s. Ce défaut existait déjà en
+  2.6.2, sur toutes les routes dès que le reverse proxy était actif. Désormais, le WAF n'inspecte que les
+  `waf.inspect.body_max_inspect_bytes` premiers octets (64 Ko par défaut), sur toutes les routes, dans les deux
+  moteurs. La route reçoit toujours le corps entier. Au plus, l'inspection coûte maintenant 17 ms pour un
+  formulaire, 45 ms pour un JSON avec accents et 80 ms pour un corps binaire, quelle que soit la taille du corps.
+- **Nouvelle option `waf.inspect.body_over_limit` (lot 2).** `pass`, la valeur par défaut, laisse la suite du corps
+  partir sans inspection, comme les WAF du marché. `reject` refuse avec **413** tout corps plus grand que la partie
+  inspectée, en mode `block` : rien de non inspecté ne passe. C'est utile pour un site qui ne reçoit jamais de gros
+  envois. Le refus est expliqué dans `error.log` et n'écrit aucune alerte : une limite de taille n'est pas une
+  attaque, et ne doit pas faire bannir.
+- **WAF : décodage des corps non ASCII accéléré, avec un résultat identique (lot 2).** Le décodage `%XX`
+  (`urllib.parse.unquote`) traitait séparément chaque morceau ASCII d'un texte non ASCII. Il est maintenant fait par
+  une seule expression régulière, et une normalisation Unicode inutile est évitée. Le texte inspecté est exactement
+  le même : c'est vérifié contre l'ancienne fonction sur 140 000 cas. Exemple : 1 Mo de binaire se décode en 43 ms au
+  lieu de 595 ms.
+- **Ligne de requête ou d'en-tête trop longue, puis fermeture (D38, lot 1N).** Le moteur Python répondait 400, le
+  natif 414 ou 431. Les deux répondent maintenant 414 ou 431, le statut qu'aurait eu la même ligne terminée.
+
+### Ajouté (lot 3)
+
+Le lot 3 prépare le relais natif sans rien activer pour les visiteurs : jusqu'au lot 4, toute zone du reverse proxy
+reste relayée par le moteur Python, exactement comme avant.
+
+- **Option `options.reverse_proxy.engine` (P8)** : `auto` (par défaut), `native` ou `python`. `auto` relaiera par le
+  moteur natif chaque zone qui le peut ; `python` confie toutes les zones au moteur Python, sans recompiler ; `native`
+  exige que toutes les zones soient relayées par le natif. Tant que le relais natif n'existe pas, `native` est
+  refusé par `config check`, au démarrage et au rechargement, avec un message qui le dit. Avec
+  `server.engine = python`, l'option est sans effet et `config check` l'indique par un avis : ce retour en arrière
+  démarre toujours (décision du 2026-11-13). Une zone avec cache restera toujours relayée par Python.
+- **Budgets du relais natif (C2)**, trois nouvelles options sous `options.reverse_proxy` (décision du
+  2026-11-13) : `max_pending_body_mb` (128), mémoire de tous les corps reçus en attente de leur envoi ;
+  `max_concurrent_inspections` (64), contrôles de sécurité en attente ; `max_upstream_connections` (512),
+  connexions vers les backends. Ces plafonds valent pour tout le serveur, tous fils confondus, et donneront 503 une
+  fois atteints. Ils ne concernent que le moteur natif. `max_pending_body_mb` doit contenir au moins une requête de
+  la taille maximale acceptée (`server.max_request_size`). L'écran et le guide viendront au lot 11.
+- **`config check` affiche maintenant des avertissements et des avis**, sans rendre la configuration invalide :
+  - moteur natif avec TLS direct et une zone du reverse proxy, FastCGI ou l'envoi de fichiers : le serveur démarre
+    avec le moteur Python, comme avant, et l'avertissement donne la sortie : terminer TLS devant omega-serv
+    (`tls.mode = behind_proxy`). Le même avertissement est écrit dans `error.log` au démarrage (P7). Rien ne cesse de
+    démarrer après la mise à jour ;
+  - backend en adresse locale au lien (169.254.0.0/16, fe80::/10) : adresse instable, et 169.254.169.254 est le
+    service de métadonnées des hébergeurs ;
+  - backend désigné par un nom DNS qui se résout vers ce serveur, sur son port d'écoute : boucle probable. La
+    résolution est faite par `config check` seulement, en 3 s au plus, jamais au démarrage.
+- **Boucle vers soi-même par une interface locale refusée (D17+).** Quand le serveur écoute sur `0.0.0.0` ou `::`,
+  un backend qui vise l'adresse d'une interface de la machine, sur le port d'écoute, est ce serveur lui-même. Une
+  telle configuration ne marchait pas : 502 après 5 sauts. Elle est maintenant refusée, comme `127.0.0.1`, pour les
+  zones du reverse proxy et pour les leurres d'Active Defense.
+- **Moteur natif avec deux processus de sécurité : `/.omega-serv-admin/` arrive toujours au processus n° 0 (P6).**
+  Chaque fil du natif est servi par un processus ; la route d'administration pouvait donc atteindre l'un ou
+  l'autre, chacun avec son propre état des backends. Une connexion vers cette route acceptée par un fil de l'autre
+  processus est maintenant confiée au fil 0, qui la traite entièrement : contrôles, sécurité, puis route. Un seul
+  processus : rien ne change. Les sondes faites par le seul n° 0 et l'état partagé viendront au lot 6.
+- Moteur natif : au moins un processus de sécurité dès qu'une zone proxy existe, même sans option de sécurité (P6).
+  C'était déjà le cas tant que les zones sont confiées à Python ; c'est désormais une règle écrite.
+- Instantané du moteur natif : nouvelle section `proxy` (zones, backends, règles, délais, budgets, contrôle de
+  sécurité demandé par zone, choix « native » ou « confiée »), lue et vérifiée par le natif, sans effet avant le
+  lot 4. Nouvelle option du binaire `--dump-proxy`, pour les tests.
+
+### Ajouté (lot 4) : premier relais natif, en aperçu
+
+- **Relais natif des zones du reverse proxy, activé seulement par `options.reverse_proxy.engine = native`**
+  (décision du 2026-11-13). `auto`, la valeur par défaut, garde toutes les zones dans le moteur Python
+  jusqu'à la fin du chantier : personne n'est concerné sans l'avoir demandé. Une zone relayée par le natif ne passe
+  plus par Python, sauf pour le contrôle de sécurité quand une option le demande. Périmètre de l'aperçu : un seul
+  backend désigné par son adresse IP, en HTTP clair, réponse avec `Content-Length` ou sans corps. Une zone à
+  plusieurs backends, avec cookie collant, règles par en-tête, plafond de requêtes ou nom DNS fait refuser
+  `engine = native` (lot 6), comme le TLS vers le backend (lot 8), le TLS direct (lot 9) et le WebSocket (lot 10).
+  Au lot 4, une réponse `chunked` ou délimitée par la fermeture donnait 502 ; le lot 5 les relaie (voir plus bas).
+- Ce que le relais natif reproduit du proxy Python, vérifié octet pour octet par le banc différentiel :
+  - requête vers le backend réécrite à partir des en-têtes analysés : en-têtes de saut et ceux nommés dans
+    `Connection:` retirés, `X-Forwarded-*`, `X-Real-IP` et compteur de sauts écrits, `Host` réécrit sauf
+    `preserve_host_header`, protocole et port d'un relais de confiance repris ;
+  - réponse lue strictement (ligne de statut, en-têtes, 1xx ignorées, HEAD, 204 et 304 sans corps,
+    `Content-Length` contradictoire refusé), `Set-Cookie` multiples gardés, en-têtes de sécurité imposés sans
+    doublon, page d'erreur, `X-Omega-Cache: BYPASS` ;
+  - 502 pour un backend injoignable ou une réponse invalide, 504 pour un délai dépassé après l'envoi, 502 pour un
+    compteur de sauts à 5 ou plus, avant toute connexion ;
+  - journal d'accès identique ; client parti pendant le relais : 499, requête vers le backend annulée.
+- **Budgets du relais appliqués** : corps en attente au-delà de `max_pending_body_mb`, contrôles en attente
+  au-delà de `max_concurrent_inspections`, connexions au-delà de `max_upstream_connections` donnent 503 tout de
+  suite, avec une ligne dans `error.log`.
+- **Contrôle de sécurité (S22)** : aucun octet n'est envoyé au backend avant le verdict requis. Une zone avec
+  magnet, une zone entièrement protégée par Auth ou un filtre natif indisponible envoient chaque requête au
+  contrôle ; sinon, la présélection native décide comme pour le statique. Zéro désaccord avec `check_every = 1`.
+- **Corps inspecté par memfd (S23, P10 revu)** : le moteur natif transmet au contrôle de sécurité toute la part
+  `waf.inspect.body_max_inspect_bytes`, même au-delà de ce qu'une trame peut porter. Avant, il en envoyait moins
+  que Python au-delà d'environ 200 Ko, avec un avertissement dans `error.log` ; cet avertissement disparaît. Les
+  deux moteurs inspectent maintenant la même part.
+- **Une seule autorité pour la limite de débit (D12)** : quand une route est confiée à Python (zone proxy avec
+  cache, FastCGI, envoi de fichiers), le moteur natif compte la requête lui-même, et Python **lui rend la
+  connexion** après sa réponse (`HANDOFF_DONE`, prévu par le contrat IPC). Chaque requête repasse donc par le
+  natif. Avant, Python gardait la connexion et comptait ses requêtes dans son propre magasin : une source pouvait
+  faire deux fois la limite en mêlant statique et routes confiées. Effet de bord heureux : sur une connexion
+  keep-alive, une requête statique qui suit une requête confiée est de nouveau servie par le natif.
+- État du moteur (`engine-state.json`) : requêtes relayées par le natif et budgets en cours d'usage, remontés
+  environ une fois par seconde.
+
+### Ajouté (lot 5) : relais natif en flux, pool de connexions
+
+Toujours en aperçu, seulement avec `options.reverse_proxy.engine = native`.
+
+- **Réponses relayées en flux, jamais gardées entières en mémoire (C12).** Le natif envoie la réponse au client au
+  fur et à mesure qu'elle arrive du backend :
+  - avec `Content-Length`, la longueur annoncée est reprise telle quelle ;
+  - une réponse `chunked` est vérifiée au fil de l'eau, avec les règles du proxy Python, puis redécoupée par le
+    serveur ; les extensions et les trailers sont retirés (Q4) ;
+  - une réponse terminée par la fermeture du backend est relayée en `chunked` à un client HTTP/1.1, qui garde sa
+    connexion ; un client HTTP/1.0 reçoit une réponse terminée par la fermeture (décision du
+    2026-11-13).
+
+  Le tampon vers le client est borné par connexion : au-delà de 128 Kio en attente, la lecture du backend est
+  suspendue, puis reprise sous 32 Kio. Un client lent face à un backend rapide ne fait plus grossir la mémoire.
+- **Page d'erreur décidée avant l'envoi de la tête (C7)** : une réponse 4xx ou 5xx `chunked` ou terminée par la
+  fermeture n'est envoyée qu'au premier octet de son corps ; un corps vide reçoit la page d'erreur, comme avec Python.
+- **Délais (C11)** : le délai `read_timeout_seconds` vaut pour le premier octet puis entre deux blocs reçus ; quand le
+  client lit trop lentement et que le backend est suspendu, c'est `server.write_timeout_seconds` qui s'applique.
+- **Pool de connexions vers les backends (S14)**, avec les règles de la 2.6.2 : une connexion n'est gardée que si la
+  réponse s'est terminée exactement, en HTTP/1.1, sans jeton `close` et sans octet en trop. 10 connexions inactives
+  au plus par backend, réparties entre les fils, fermées après 60 s d'inactivité ou dès que le backend les ferme
+  (décision du 2026-11-13 : constantes, pas de nouvelle option). Une connexion inactive reste comptée
+  dans `max_upstream_connections` et cède sa place quand le budget est atteint. Seules GET, HEAD et OPTIONS
+  empruntent une connexion du pool (D42).
+- **Un seul nouvel essai (C8)**, comme le proxy Python : une connexion du pool morte avant le moindre octet de
+  réponse (fermée, RST ou délai) est remplacée par une connexion neuve. Les nouveaux essais en cours sont plafonnés
+  pour tout le moteur, à `max(3, max_upstream_connections / 5)`, contre la tempête d'essais (S19).
+- **Fin par la fermeture au-delà de `max_response_body_mb` (S13, D23)** : la réponse, déjà commencée, est coupée
+  sans bloc final, avec une ligne dans `error.log` (décision du 2026-11-13). C'est le seul cas que
+  l'option borne dans le natif : une réponse avec `Content-Length` ou `chunked` passe en flux, sans limite.
+- **Taille journalisée et abandon (P2, P3)** : `access.log` donne les octets du corps réellement relayés, découpage
+  `chunked` retiré. Un client qui part pendant le flux donne le statut déjà envoyé et les octets acquittés, jamais
+  499 ; 499 reste pour un client parti avant le moindre octet.
+- État du moteur : nouveaux essais (cumul) et connexions inactives du pool. Le superviseur exige du binaire la
+  capacité `proxy_stream` dès qu'une zone est relayée par le natif : un binaire du lot 4 fait replier sur Python.
+
+### Ajouté (lot 6) : équilibrage, santé et noms DNS dans le relais natif
+
+Toujours en aperçu, seulement avec `options.reverse_proxy.engine = native`. Une zone à plusieurs backends, avec cookie
+collant, règles par en-tête, plafond de requêtes ou nom DNS ne fait plus refuser `engine = native`.
+
+- **Les 7 stratégies de répartition**, le cookie collant, les règles par en-tête, le plafond
+  `max_concurrent_requests`, la santé passive (`unhealthy_after`, `healthy_after`) et le coupe-circuit à demi ouvert
+  (une requête d'essai 10 s après la panne), avec les règles exactes du proxy Python. Vérifié par 240 scénarios
+  aléatoires rejoués dans le vrai `resolve_upstream` Python et dans le natif : même backend à chaque choix (plus de
+  4 000 choix, les 7 stratégies, des refus 503).
+- **État commun à tous les fils du natif** : connexions en cours, temps de réponse, santé et coupe-circuit. Le choix
+  et la réservation se font ensemble, sous un verrou par zone : le plafond d'un backend est exact sur tous les fils,
+  et une seule requête d'essai à demi ouverte part pour tout le moteur. Cet état survit aux rechargements (clé : zone
+  et backend, jamais sa position).
+- **Nouvel essai sur un autre backend** pour GET, HEAD et OPTIONS, comme Python, mais seulement si le backend n'a
+  encore rien répondu (le natif relaie en flux).
+- **Processus de sécurité n° 0 (P6)** : lui seul sonde les backends des zones natives (sondes actives et de charge) ;
+  chaque résultat, chaque score de charge (`real_load`) et chaque état manuel (drainage, maintenance) posé par
+  l'administration part au natif, qui l'applique à tous ses fils. En retour, le natif lui envoie l'état de ses
+  backends environ une fois par seconde : l'écran Reverse proxy montre l'état réel.
+- **Noms DNS (C18)** : résolus par Python à la construction de l'instantané ; chaque adresse devient un backend, avec
+  son propre poids, son plafond, son cookie collant et sa santé (décision du 2026-11-13). Les adresses
+  obtenues sont écrites dans `error.log`. Un nom qui ne se résout pas met son backend hors service, avec un
+  avertissement dans `config check` et une ligne dans `error.log` ; au rechargement, les adresses précédentes sont
+  gardées (décision du 2026-11-13). Une adresse qui désigne ce serveur lui-même est hors service
+  (boucle). Les sondes actives visent le nom : leur résultat vaut pour toutes ses adresses.
+- **Surveillance portée par le verdict (P5, S26)** : quand une inspection fait surveiller une source (leurre, mode
+  guerre), l'entrée part avec le verdict, et le natif l'applique avant de répondre. La requête suivante de cette
+  source est donc inspectée, quel que soit le fil. Avant, l'entrée partait sur un autre canal et pouvait arriver
+  après la requête suivante.
+- Le superviseur exige du binaire la capacité `proxy_balance` dès qu'une zone est relayée par le natif.
+
+### Ajouté (lot 7) : rechargement et arrêt propre
+
+- **Rechargement pendant le trafic (C13)** : une requête déjà commencée (réponse longue, envoi lent, contrôle de
+  sécurité en attente) finit avec la configuration de son début ; vérifié par des tests pendant chacun de ces cas.
+- **Pool rattaché à la génération** : à chaque rechargement, les connexions inactives vers un backend inchangé (même
+  adresse, même port) restent ; celles des backends retirés sont fermées. La santé, la charge et les compteurs d'un
+  backend inchangé sont gardés ; ceux des backends et zones retirés sont oubliés.
+
+### Ajouté (lot 8) : TLS vers le backend dans le relais natif
+
+- **Zones avec un backend HTTPS relayées par le natif** (`engine = native`) : poignée de main non bloquante, bornée
+  par `connect_timeout_seconds` comme en Python ; pool de connexions TLS gardées et reprises.
+- **Même TLS que Python** : contexte construit comme `ssl.create_default_context()` (TLS 1.2 au minimum, mêmes suites
+  de chiffrement proposées, vérifié contre le moteur Python), même magasin de confiance (celui du système,
+  `SSL_CERT_FILE` et `SSL_CERT_DIR` compris). SNI seulement pour un nom ; le nom ou l'adresse IP du backend est vérifié
+  dans son certificat.
+- **Pool séparé selon la vérification** : la clé du pool comprend l'adresse, le port, la politique de vérification et
+  le nom du backend. Une connexion ouverte sans vérification ne sert jamais une zone qui l'exige.
+- Le binaire annonce la capacité `proxy_tls` ; un binaire plus ancien garde ces zones en Python.
+
+### Ajouté (lot 9) : TLS direct pour les zones relayées par le natif
+
+- **`tls.mode = direct` avec `options.reverse_proxy.engine = native` n'est plus refusé** : le natif chiffre lui-même
+  vers le client, avec le même contexte TLS que le statique, et relaie la zone. Avant, une zone ne pouvait pas être
+  relayée par le natif en TLS direct, et `engine = native` était refusé au démarrage. Une zone que le natif ne relaie
+  pas (cache, WebSocket jusqu'au lot 10) garde les règles d'avant : refus avec `engine = native`, démarrage en Python
+  avec un avertissement pour `auto`.
+- **Route d'administration en TLS direct** : avec plusieurs processus de sécurité, `/.omega-serv-admin/` arrive
+  toujours au processus n° 0, seul responsable de la santé des backends (P6). La connexion TLS passe au fil 0 avec sa
+  session. Avant, seule une connexion en clair était déplacée.
+- Poignées de main TLS comptées dans `max_connections` dès l'acceptation : fait au lot A (D30), valable aussi pour le
+  relais.
+- **Écran État** : la ligne « Reverse proxy » du tableau des moteurs affiche « natif » quand toutes les zones sont
+  relayées par le natif ; avant, elle affichait « confié à Python », ou « impossible (repli) » en TLS direct. Le
+  détail par zone viendra au lot 11.
+- Le binaire annonce la capacité `proxy_tls_direct`, exigée dès qu'une zone est relayée par le natif en TLS direct ;
+  un binaire plus ancien est refusé au démarrage, et le serveur démarre avec le moteur Python.
+
+### Ajouté (lot 10) : WebSocket dans le relais natif
+
+- **Une zone `websocket_enabled` est relayée par le natif** : mise à niveau, puis tunnel dans les deux sens, sans
+  passer la connexion à Python. Avant, la zone était confiée à Python, et `engine = native` était refusé avec elle en
+  TLS direct. Les règles sont celles du proxy Python : `Connection` et `Upgrade` transmis au backend, connexion neuve,
+  aucun nouvel essai, refus du backend renvoyé sans son corps, 502 sans corps si le backend est injoignable, cookie
+  collant posé seulement avec le 101, backend réservé pendant tout le tunnel.
+- **Nouvelle option de zone `websocket_idle_timeout_seconds`** (Q11) : 3 600 s par défaut, `0` pour aucun délai,
+  dans les deux moteurs. Écran Reverse proxy et guide au lot 11 ; l'écran garde la valeur déjà réglée quand on
+  modifie une zone.
+- Le binaire annonce la capacité `proxy_websocket`, exigée dès qu'une zone WebSocket est relayée par le natif ; un
+  binaire plus ancien est refusé au démarrage, et le serveur démarre avec le moteur Python.
+
+### Ajouté (lot 11) : fin de l'aperçu, écrans et documentation
+
+- **`options.reverse_proxy.engine = auto` (défaut) relaie par le natif** : avec `server.engine = native`, chaque zone
+  que le natif sait relayer l'est ; seule une zone avec cache reste confiée à Python (Q6). Jusqu'au lot 10, `auto`
+  gardait toutes les zones en Python et seul `engine = native` activait le relais. `python` reste le retour en
+  arrière sans recompiler.
+- **Écran Reverse proxy** : bouton « Réglages communs » (moteur des zones, `max_response_body_mb`,
+  `max_pending_body_mb`, `max_concurrent_inspections`, `max_upstream_connections`), validé comme `config check`
+  avant d'écrire ; champ de zone « Fermer un tunnel WebSocket inactif après » (`websocket_idle_timeout_seconds`).
+  Retour de l'auteur (2026-11-14, « rien n'a changé ») : le bouton était sur une rangée coupée en 80×24, sous un
+  long texte. Les deux rangées de boutons sont maintenant hors de la zone qui défile, toujours visibles ; une
+  ligne au-dessus du tableau résume les réglages communs en vigueur ; nouvelle colonne « Moteur » par zone
+  (natif, Python (cache), Python (réglage), Python (repli), Python) ; le tableau passe avant l'explication.
+  Fiche « Colonne Moteur » dans l'aide F1.
+- **Écran WAF - Modules** : taille du corps inspectée (`inspect.body_max_inspect_bytes`) et sort du corps au-delà
+  (`inspect.body_over_limit`, `pass` ou `reject`), réglages du lot 2.
+- **Écran État & Ressources** : quand certaines zones seulement sont confiées à Python, chacune est listée sous la
+  ligne « Reverse proxy » (natif) ; un préfixe trop long est coupé.
+- **Envoi lent accepté s'il progresse** (constat F1 de la mesure du §7, décision de l'auteur du 2026-11-14 : dans le
+  code, pas une option). Le corps d'une requête devait arriver en entier dans `read_timeout_seconds` (10 s) : un
+  envoi de 100 Ko à 5 Ko/s recevait 408, un fichier de 8 Mo sous 6,4 Mbit/s aussi (proxy, zones d'envoi,
+  FastCGI). Désormais, dans les deux moteurs, l'échéance est min(dernier octet + délai, début du corps + délai +
+  reçu / 500 o/s), comme `mod_reqtimeout` d'Apache : un envoi régulier passe, un envoi au compte-gouttes (sous
+  500 o/s en moyenne) ou arrêté plus longtemps que le délai reçoit toujours 408. La tête de la requête garde son
+  délai total (anti-slowloris inchangé).
+- **WAF : fichiers binaires reconnus à leur contenu** (constat F2, décision de l'auteur du 2026-11-14). Le corps
+  était lu comme du texte quel que soit son type : 1 Mo d'octets aléatoires envoyé en `application/octet-stream`
+  était refusé à chaque fois (motifs de commande shell trouvés par hasard), et une vraie image subit le même sort.
+  Nouveau réglage `waf.inspect.binary_formats` (écran WAF - Modules ; par défaut les 20 formats connus : images,
+  vidéo, son, PDF, archives ; vide = tout inspecter) : un corps n'est pas lu comme du texte quand **sa signature
+  binaire** (premiers octets, jamais l'extension) correspond à un format de la liste **et** que son type annoncé
+  n'est pas textuel (formulaire, JSON, XML, texte : toujours inspectés, même précédés d'une fausse signature). En
+  `multipart/form-data`, seules les parties fichier reconnues sont retirées ; les champs restent inspectés. Un seul
+  endroit pour les deux moteurs (le natif confie déjà le corps à Python pour l'inspection).
+- **Relais natif plus économe** (mesures du lot 11, accord de l'auteur du 2026-11-14 pour changer la constante du
+  lot 5). Sur la machine C (proxy sur 4 cœurs, 32 clients, page de 1 Ko), le relais plafonnait à 78 600 req/s
+  pour 39,7 µs de CPU par requête, dont 33,2 dans le noyau ; nginx en demandait 7,5. En cause, compté appel par
+  appel :
+  - **pool trop petit** : 10 connexions inactives par backend, partagées entre les fils (2 par fil sur 4), soit une
+    connexion neuve vers le backend toutes les 5 requêtes. Désormais 32 par backend **et par fil**, et toutes les
+    connexions inactives du moteur restent sous la moitié de `max_upstream_connections` : un fil trouve toujours
+    de la place pour une connexion neuve ;
+  - **connexion reprise du pool** : elle reste inscrite à epoll et la requête part aussitôt, sans attendre un tour
+    de boucle (avant : retrait, inscription, puis changement de surveillance, soit 3 `epoll_ctl`) ; remise au pool
+    sans `epoll_ctl` quand la surveillance est déjà la bonne ; client en attente de la réponse relayée surveillé
+    une seule fois au lieu de deux ;
+  - **texte des en-têtes** : les conversions latin-1 et UTF-8 passaient par les points de code, caractère par
+    caractère ; un texte tout ASCII (le cas des en-têtes) est désormais rendu tel quel, avec le même résultat.
+
+  Résultat sur la même machine : 7 `epoll_ctl` par requête deviennent 2, plus aucune connexion neuve, 13 µs de
+  CPU par requête, environ 190 000 à 206 000 req/s. Le proxy Python garde ses 10 connexions par processus.
+- Guide (fiches Reverse proxy et WAF - Modules, FAQ du moteur, nouvelle question sur le proxy natif, avec les
+  mesures), README, comparatif (nouvelle section 5 : reverse proxy mesuré sur les trois machines, en HTTP et en
+  HTTPS, face à nginx, lighttpd, Apache, Caddy et Traefik) et notes de version (`docs/omega-serv-3.0.0-nouveautes.txt`) mis à jour ; README : rechargement à
+  chaud décrit partout de la même façon (D40).
+
+### Ajouté : interface et confort 
+
+Suivi : `~/DEV/SERV/OMEGA-SERV_PROJETS_3.0.0.md` §7 (étude, décisions, avancement).
+
+- **Audit de sécurité : chaque fichier sensible est nommé, avec la raison et le contenu réel.** Avant, l'écran
+  disait seulement « N fichier(s) sensible(s) sous webroot » : dans un dossier de plusieurs centaines de fichiers,
+  il fallait deviner lesquels. La liste était calculée mais jamais affichée. Désormais, sous le constat, chaque
+  fichier est donné avec :
+  - la raison : nom connu (`.env`, `.htpasswd`, `wp-config.php`…) ou extension (`.key`, `.pem`, `.crt`, `.p12`) ;
+  - ce qu'il contient vraiment, lu au début du fichier et non deviné d'après le nom : clé privée, certificat,
+    conteneur PKCS#12, dossier, contenu présent ou fichier vide.
+
+  Dix fichiers au plus sont listés à l'écran et dans la CLI texte, puis « et N autres ». La liste complète est
+  dans `omega-serv audit security --format json` (`details.entries`). Un fichier de plus de 1 Mio n'est pas lu.
+- **Changement de gravité : un fichier vide n'est plus critique.** Un fichier vide au nom sensible, comme un
+  exemple posé pour afficher une icône dans le directory listing, n'expose rien. Il devient un constat
+  d'information, **PERM-004**. PERM-003 reste critique pour les fichiers qui ont du contenu.
+- **Correction : un dossier `.git` dans le webroot n'était pas signalé.** L'audit descendait dedans sans le
+  nommer. Il est désormais signalé lui-même, puisqu'il contient tout l'historique du site.
+- **Authentification : bouton « Modifier » pour les zones protégées.** Avant, une faute de frappe obligeait à
+  supprimer la zone puis à tout ressaisir. Désormais :
+  - le formulaire s'ouvre déjà rempli et la zone garde sa place dans la liste ;
+  - un préfixe déjà pris par une autre zone est refusé (nouvelle fonction `update_zone`) ;
+  - en création comme en modification, une saisie invalide est signalée dans le formulaire et ce qui a été tapé
+    est gardé.
+- **Configuration détaillée : « TLS » et « Cache du reverse proxy » échangent leur place.** Le cache se trouve
+  maintenant juste sous « Reverse Proxy » dans la grille, au lieu d'être en diagonale.
+- **Listes déroulantes : la flèche prend la couleur d'accent du thème**, dans les 10 thèmes de l'interface. Avant,
+  elle était dessinée à moitié éteinte, et rien n'indiquait qu'il fallait cliquer pour ouvrir la liste tant
+  qu'elle n'avait pas le focus.
+
+- **Menu Service refait en formulaire.** Il y a cinq lignes, dans l'ordre d'usage : nom du service, installation,
+  démarrage avec la machine, permissions, pilotage. Le titre et l'état actuel sont à gauche, des boutons de même
+  largeur à droite, et Retour est seul en bas, hors de la zone qui défile.
+  - **Seuls les boutons utiles sont actifs** : Démarrer est grisé si le service tourne, Installer si l'unité
+    existe, Activer si c'est déjà fait…
+  - L'état se met à jour seul toutes les 3 s et après chaque action. Le bouton « Rafraîchir » est retiré.
+  - **Permissions vérifiées à l'ouverture, en lecture seule** : il faut que `var/` soit partagé avec le compte du
+    service ; `var/backups`, privé, est ignoré. Il n'y a pas de bouton « Vérifier » : l'état s'affiche (correctes,
+    « N à réparer », compte absent) et « Réparer les permissions » n'est actif que si quelque chose est faux.
+  - À 80×24, la ligne Pilotage demande deux lignes de défilement ; elle est visible en entier dès 26 lignes.
+- **Correction : le nom du service était enregistré à chaque frappe.** Une faute de frappe, avec l'unité installée
+  et le serveur en marche, faisait piloter par l'écran une unité inexistante. L'ancienne continuait de tourner
+  sans que le TUI puisse l'arrêter ou la désinstaller, et « Installer » créait une seconde unité pour le même
+  dossier et le même port.
+  - Le champ est désormais **verrouillé** : [Modifier] puis [Valider]. Rien n'est enregistré avant Valider.
+  - Le format est contrôlé : 1 à 64 caractères, minuscules, chiffres, `-`, `_` et `.`, sans `.service`.
+  - Si une unité de cette installation existe sous l'ancien nom, une fenêtre détaille l'**enchaînement** avant
+    toute action : arrêter et désactiver l'ancienne, la désinstaller, installer la nouvelle, puis la réactiver
+    au démarrage et la redémarrer si c'était le cas. Une seule authentification sudo est demandée
+    (`application/services/rename_service.py`).
+  - Si une étape échoue, l'enchaînement s'arrête et le message dit laquelle.
+  - Un nom déjà pris par une autre installation est refusé.
+  - Une unité du même nom qui pointe vers un autre dossier n'est plus prise pour la nôtre.
+
+- **Lot V : une saisie refusée ne fait plus tout recommencer.** Sur plusieurs écrans de la Configuration
+  détaillée, une valeur refusée fermait le formulaire et l'erreur ne s'affichait que sur l'écran derrière : il
+  fallait rouvrir le formulaire et tout ressaisir. Désormais l'explication s'affiche **dans le formulaire**, qui
+  reste ouvert avec ce qui a été tapé.
+  - **Écrans concernés** : Alias, Redirections, Rewrites, Contrôle d'accès, Cache, Directory listing, Proxies de
+    confiance, limites de débit du WAF, WAF - Modules (entrée de blocklist), Reverse proxy (réglages communs ; les
+    paramètres d'une zone sont contrôlés avant de passer aux backends), éditeurs de backends et de règles de
+    routage, Cache du reverse proxy, Instances (création), assistant CA (trois étapes), export des IOC d'un
+    incident.
+  - Mécanisme commun (`FormHostMixin.push_form` et `report_form_error`) : la saisie est appliquée avant que le
+    formulaire se ferme.
+  - **Doublons refusés** : un deuxième alias, une deuxième redirection ou un deuxième rewrite au même préfixe,
+    une règle d'accès identique, une zone de cache ou de directory listing en double, un réseau de confiance
+    déjà listé, une règle de débit en double, deux fois le même backend, une zone de reverse proxy au préfixe déjà
+    pris. Le message donne la ligne existante. Avant, ces doublons s'enregistraient sans un mot et seule la
+    première entrée servait.
+  - **Réponses oui/non contrôlées**, dans les formulaires comme sur les écrans (Sécurité générique, Directory
+    listing, Active Defense, Magnet, limite de débit). Avant, une faute comme « ouii » valait **non** en silence.
+    Désormais la saisie est refusée, et le champ est nommé avec ce qui a été tapé.
+  - Dans un éditeur de règles de routage, une cible qui n'est pas un backend de la zone est refusée tout de suite
+    (avant : à la fin, formulaires déjà fermés). Un backend est contrôlé dès sa saisie (hôte, port, poids, chemins).
+
+- **Sauvegarde : export et import.** Objectif : désinstaller, réinstaller, et retrouver le serveur à
+  l'identique à partir d'un fichier. Avant, une sauvegarde restait dans `var/backups/` de l'instance : supprimer le
+  dossier l'effaçait aussi, et la restauration ne voyait que ce dossier.
+  - **Exporter** copie la sauvegarde choisie hors du dossier omega-serv. Le fichier est lisible par son
+    propriétaire seul et il est accompagné de son empreinte `.sha256` ; rien n'est jamais écrasé.
+  - **Importer une sauvegarde** vérifie l'archive avant de l'accepter : empreinte obligatoire et juste ; ni chemin
+    absolu, ni `..`, ni lien, ni fichier spécial ; seulement les emplacements d'une sauvegarde omega-serv ;
+    `config/omega-serve.json` présent ; taille et nombre de fichiers bornés.
+  - L'archive importée rejoint la liste. La restauration reste une étape à part.
+  - Ligne de commande : `config export-backup`, `config import-backup`.
+- **Restauration : version et conflit de port annoncés avant.**
+  - Chaque sauvegarde porte une fiche, `.omega-serv-backup.json` : version d'omega-serv, instance, adresse, port
+    et nom du service. La fiche est retirée après la restauration.
+  - Une version différente est signalée.
+  - Si l'adresse et le port de l'archive sont déjà pris par une autre instance enregistrée, la confirmation le dit
+    et propose de garder l'adresse, le port et le nom de service de l'instance. Ils sont remis juste après
+    l'extraction, avant tout redémarrage. En ligne de commande, il faut `--keep-current-port`, sinon rien n'est
+    restauré.
+- **Sauvegarde : contenu du site en case facultative** (« peut être long »), jamais comprise dans « Tout
+  sauvegarder ». La liste montre un indicateur d'attente pendant la création, l'export, l'import et la
+  restauration. En ligne de commande : `--include-site-content`.
+- **Correction : les profils personnalisés (`config/profiles/custom/`) sont désormais dans toute sauvegarde**
+  (constat A.1 de l'étude 3.0.0).
+- Écran Sauvegarde : les boutons sont regroupés par usage (Créer et Importer, puis Restaurer, Exporter et
+  Supprimer pour la ligne choisie), et Retour est seul en bas, hors de la zone qui défile.
+
+- **Profils personnalisés** (projets 3.0.0 §1, §B et §7.1) : Profils → « Créer un profil personnalisé ».
+  - **Point de départ** : un serveur web minimal sans aucune protection débrayable. Ce que le cœur HTTP impose
+    reste actif et n'est pas proposé : analyse stricte, confinement au webroot, rejet de la traversée,
+    normalisation, HSTS jamais sans TLS.
+  - **Choix uniquement par listes déroulantes** : en-têtes de sécurité, CSP (rapport seulement ou appliquée),
+    fichiers cachés, Host, méthodes HTTP, WAF, authentification, directory listing, FastCGI, cache, proxy de
+    confiance, contrôle d'accès, reverse proxy.
+  - **Vérification en direct** des « trous » : bloquants (ex. FastCGI avec GET et HEAD seulement) ou à accepter un
+    par un (ex. pas d'en-têtes de sécurité, fichiers cachés servis, PUT/DELETE sans authentification, pas de WAF).
+    S'y ajoutent les contrôles de la configuration qui en résulterait. « Enregistrer » n'est actif que si tout
+    est bon, et une saisie fautive ne ferme jamais l'écran.
+  - **Identification obligatoire et bornée**, relue par le tableau de bord : nom de 3 à 32 caractères
+    `a-z 0-9 - _` qui ne reprend jamais un nom existant, libellé de 3 à 40 caractères, description de 200 au plus.
+  - **Non modifiable** : on en recrée un, en repartant des choix d'un profil existant. Suppression avec
+    confirmation, pour les profils personnalisés seulement. Le nombre n'est pas limité.
+  - **Application** : un profil personnalisé ne fixe que la sécurité et l'état des options. Adresse, port, TLS,
+    chemins, journaux et réglages des options restent ceux de l'instance. C'est la recommandation §E.1, appliquée
+    le 2026-11-15 et à confirmer par l'auteur. Le comportement des profils fournis ne change pas.
+  - **Stockage** dans `config/profiles/custom/`. Ce dossier est compris dans toute sauvegarde, repris par
+    `migrate-state.sh` et exclu de l'archive livrée.
+  - **Écran Profils** : colonnes Nom, Type et Libellé, boutons Créer et Supprimer, Retour seul en bas.
+
+- **Rapport complet** (projets 3.0.0 §7.7 et §7.10) : tout ce qui est configuré et actif, en une fois, sans passer
+  par chaque menu. Il couvre les réglages et le système, jamais le trafic.
+  - **Sommaire à l'écran** : le minimum validé par l'auteur, qu'on ne peut pas décocher :
+    - identité : instance, dossier, version, profil appliqué, machine ;
+    - fonctionnement : service, unité, en marche, démarrage, **uptime**, compte, processus ;
+    - adresse et **mode** : site web, reverse proxy, ou les deux ;
+    - **moteur utilisé**, avec la raison d'un repli et le moteur de chaque zone ;
+    - **TLS** et jours avant expiration ;
+    - **options** actives ou non ;
+    - nombres d'alias, redirections, rewrites, zones et backends ;
+    - sécurité ;
+    - contrôles de la configuration ;
+    - sauvegardes : nombre, dernière, place occupée ;
+    - journaux.
+  - **Détail en cases à cocher, dans l'export seulement** : zones, reverse proxy, règles WAF, Active Defense et
+    RIPOSTE, journaux suivis, réglages de toutes les options, audit complet.
+  - **Génération en arrière-plan**, avec un indicateur d'attente.
+  - **Exports** : HTML dans les 5 thèmes d'export, TXT, ou JSON. Le JSON contient les données brutes et sert aussi
+    au futur tableau de bord. Les exports sont produits dans la langue des exports.
+  - **Aucun secret** : toute clé qui évoque un mot de passe, un jeton, une clé ou un hachage devient vrai ou faux.
+- **Menu principal** : « Rapport complet » arrive sous « Sauvegarde de configuration » ; « Aide » et « Options »
+  descendent d'un cran. **Le bouton « Quitter » est retiré** : Échap, `q` et Ctrl+Q demandent toujours
+  confirmation, et le pied d'écran affiche « q Quitter ».
+- **Retours d'étapes** (2026-11-15) :
+  - **Assistant de profil personnalisé**, corrigé : l'ascenseur n'allait pas au bout du formulaire. La boîte des
+    points à accepter tombait à une ligne et coupait la fin. Chaque point est maintenant un paragraphe, suivi de sa
+    case « J'accepte ce point ».
+  - **Sauvegarde, deux cases**, hors « Tout sauvegarder » comme le contenu du site :
+    - « **Inclure les données des zones personnalisées** » (`--include-zone-data`) : cible des alias, dossiers du
+      listing, scripts FastCGI ;
+    - « **Inclure les rapports d'export** » (`--include-exports`) : dossier des exports des Réglages.
+    
+    L'écran rappelle que les réglages de toutes les zones sont déjà dans la configuration, toujours sauvegardée.
+    Un dossier hors du dossier omega-serv est signalé, pas archivé, et un dossier déjà couvert par le contenu du
+    site n'est archivé qu'une fois. À l'import, ces dossiers sont acceptés seulement si la configuration de
+    l'archive les désigne, jamais un emplacement de l'installation (`src`, `tools`, `native`…).
+  - **Correctif sauvegarde** : décocher « Contenu du site » décochait aussi « Tout sauvegarder ». Seules les cases
+    qui en font partie le décochent maintenant.
+  - **Barre d'actions fixe en bas** sur 18 écrans, comme RIPOSTE et Reverse proxy : la dernière rangée de
+    boutons, Retour compris, reste visible quelle que soit la longueur de la liste ou du formulaire. Écrans
+    concernés :
+    - Alias, Rewrites, Directory listing, Cache, Contrôle d'accès, Redirections, Authentification, Pages
+      d'erreur ;
+    - WAF Modules, WAF Exclusions et débit, WAF Magnet ;
+    - Active Defense : Réglages, Menaces, Incidents, Deception ;
+    - Voir et traiter IP, Statistiques, Santé des logs, Instances, Audit.
+    
+    Libellés précisés, hors de leur section : « Ajouter une zone » / « Supprimer la zone » (Listing),
+    « Enregistrer les exclusions » (WAF débit), « Bloquer un réseau » / « Débloquer » (WAF Modules).
+  - **Grands menus** (Service, Instances, Audit, Sauvegarde, Rapport complet, Profils, Guide d'aide) : titre
+    centré dans un cadre de 70 colonnes (comme Réglages) et Retour seul, centré, en bas. Le formulaire Service est
+    centré sous son titre, avec une ligne d'air entre les deux.
+  - **Guide d'aide** : il fallait faire défiler deux ascenseurs (panneau et tableau) pour atteindre Retour. Le
+    panneau ne défile plus, le tableau prend la place restante et défile seul. FAQ et Contact et support passent
+    au centre de la barre fixe, Retour seul et centré dessous. Le choix du thème d'export, qui paraissait décalé,
+    est sur une ligne avec son libellé et le bouton « Exporter » juste derrière (avant : « Exporter le guide en
+    HTML » en haut, loin du thème qu'il utilise).
+  - **FAQ** : les 89 questions tenaient sur une seule longue page, questions et réponses de la même couleur.
+    Chaque thème est maintenant repliable : fermé à l'ouverture, avec son nombre de questions entre
+    parenthèses, il s'ouvre par un clic ou par Entrée. La question est en gras dans la couleur d'accent du
+    thème, la réponse en texte normal, décalée dessous. Les thèmes sont triés sans tenir compte des majuscules
+    ni des accents. Retour reste fixé en bas, hors défilement.
+  - **Aide** : un point de vigilance de l'accueil et une entrée de FAQ (« Interface ») expliquent la barre fixe et
+    les grands menus.
+  - **Guide du site** (2026-11-18) : la Partie 2 (fiches d'écran et FAQ) est désormais produite depuis l'aide F1
+    par `tools/docs/guide_site.py`, dans les 17 langues : elle dit toujours la même chose que F1 (102 fiches,
+    96 questions). Sept questions qui n'existaient que sur le site (reverse proxy, logs) rejoignent la FAQ
+    intégrée. La Partie 1 couvre la 3.0.0 : moteur natif, administration web, zones FastCGI, export et import de
+    sauvegarde, échéances des certificats, nouveaux cas de dépannage.
+  - **Menu Active Sécurité** : les trois colonnes suivent le même ordre, État, puis l'essai, puis les réglages,
+    puis les écrans propres au bloc :
+    - WAF : État, Tester, Modules, Limitations, Custom, Magnet ;
+    - Active Defense : État, Simuler, Réglages, Menaces, Incidents, Deception ;
+    - RIPOSTE : État, Simuler, Réglages, Politiques, Actions, Récidives.
+    
+    Même ordre dans la liste du Guide d'aide, et la fiche du menu l'explique.
+  - **Menus Active Sécurité et Configuration détaillée** : une seule ligne entre le haut de l'écran et le titre
+    (deux avant) ; plus de ligne vide au-dessus ni au-dessous des boutons dans les cadres (WAF, Active Defense,
+    RIPOSTE, Sous-écrans, Options et vérification, sur le modèle d'Intervention manuelle) ; Intervention manuelle
+    collée aux trois colonnes. Retour remonte, sans barre fixe : elle reste réservée aux écrans de modules. Sans
+    ascenseur à partir de 38 lignes (Active Sécurité) et de 44 (Configuration détaillée).
+  - **Étude** FastCGI / PHP-FPM par zone : `OMEGA-SERV_PROJETS_3.0.0.md` §8, puis codée (ci-dessous).
+- **FastCGI / PHP-FPM : plusieurs zones, un interrupteur par zone** (décisions de l'auteur du 2026-11-15, projets
+  §8.1) :
+  - l'écran FastCGI devient une liste (Ajouter, Modifier, Désactiver / Activer, Supprimer, barre fixe). Chaque
+    zone a son préfixe, sa racine de scripts (toujours hors du webroot), sa socket PHP-FPM, ses délais, ses
+    extensions, ses fichiers d'index et sa liste blanche. Le préfixe le plus long l'emporte ; deux zones au même
+    préfixe sont refusées ;
+  - **interrupteur par zone** : une zone désactivée répond 503 (maintenance) sur tout son préfixe, sans servir un
+    fichier du webroot à sa place, et les autres zones continuent. Son dossier et sa socket ne sont plus exigés
+    au démarrage ; la règle « hors du webroot » s'applique toujours. L'option `fastcgi` reste l'interrupteur
+    général ;
+  - **compatibilité** : une configuration à un seul enregistrement (`options.fastcgi.url_prefix`...) est lue
+    comme une zone ; l'écran l'écrit au nouveau format (`options.fastcgi.zones`) au premier enregistrement ;
+  - suivent les zones : le moteur natif (toutes les zones confiées à Python), la vérification de la
+    configuration, le recouvrement de préfixes, les routes protégées des listes WAF, le rapport complet (nombre et
+    détail des zones), la sauvegarde (« données des zones » : une racine de scripts par zone, à l'export comme à
+    l'import) et l'écran Capacités (une ligne par socket des zones actives) ;
+  - omega-serv ne transmet jamais de valeur PHP par requête (`PHP_VALUE`), qui déborderait sur les autres zones
+    d'un même pool. Des réglages PHP différents passent par un pool PHP-FPM par zone. L'aide (fiche FastCGI et
+    deux entrées de FAQ) donne le minimum que le fichier de chaque pool doit contenir (`listen`, droits de la
+    socket, compte) et rappelle que son édition reste de la responsabilité de l'administrateur : omega-serv ne
+    l'installe, ne l'écrit ni ne la vérifie ;
+  - export HTML du guide : les retours à la ligne des réponses de FAQ sont gardés.
+
+### Ajouté : zones, FastCGI et État & Ressources (chantiers 1 à 3)
+
+Suivi : `~/DEV/SERV/OMEGA-SERV_PROJETS_3.0.0.md` §8-§9.
+
+- **Dossiers de zones absents** (P1). Après une restauration, ils sont listés dans la TUI et la CLI. « Vérifier la
+  configuration » et `config check` avertissent (alias, listing), et une ligne est écrite dans error.log au
+  démarrage. Une zone FastCGI active sans dossier restait déjà bloquante.
+- **FastCGI : taille maximale de requête par zone** (`max_request_size`, en octets). Vide, c'est la valeur de l'écran
+  Limites ; elle peut être plus grande ou plus petite. Le refus 413 a lieu avant PHP, dans les deux moteurs.
+- **État & Ressources selon le type d'instance** :
+  - le type est affiché en tête : site, application PHP, reverse proxy (zone sur `/`) ou mixte ;
+  - une section BACKENDS est ajoutée dans FLUX, pour les reverse proxy et les instances mixtes. Elle donne par
+    backend l'état, les requêtes, les requêtes en cours, les 502/504 et le temps moyen, dans les deux moteurs, en
+    direct et sans historique ;
+  - nouvelle route interne `/.omega-serv-admin/backends`.
+- **Écran Instances** :
+  - l'instance courante figure toujours en tête, marquée « (courante) », même hors registre ;
+  - la désinstaller est refusée par le programme lui-même, plus seulement par le bouton grisé ;
+  - nouvelle disposition des boutons : ligne 1 Rafraîchir, Créer, Désinstaller ; ligne 2 Piloter, Configuration
+    distante, Relier au maître.
+- **Activer TOTP : boutons « Copier le secret » et « Copier le lien »**, quand le QR code ne peut pas être scanné.
+  La copie passe par le presse-papiers du système (wl-copy, xclip, xsel), ou par le terminal en SSH.
+
+### Ajouté : tableau de bord web (administration à distance)
+
+Plan : `~/DEV/SERV/OMEGA-SERV_PLAN-DETAILLE_TABLEAU_DE_BORD_WEB.md` (lots 1 à 9, §9). Modules suivants :
+`~/DEV/SERV/OMEGA-SERV_ETUDE_MODULES_ADMIN_WEB.md`.
+
+Un panneau dans le navigateur pour suivre l'instance depuis un autre appareil (téléphone, portable), et agir sur
+ce qui ne touche que `var/`. Il ne modifie jamais la configuration ni les comptes, et ne redémarre jamais le serveur.
+
+- **Principe et sécurité**
+  - Option `admin_web`, désactivée par défaut. Le panneau est servi par un processus d'administration à part,
+    lancé par `serve` comme RIPOSTE, sous le compte du service, dans les trois modes (Python, workers, natif).
+  - Il a son propre port, **9643** par défaut, jamais le port du site. Il écoute sur 127.0.0.1 par défaut.
+  - TLS est obligatoire hors de la machine (certificat du site ou certificat dédié). Les adresses hors des réseaux
+    permis reçoivent 403 avant même la page de connexion (par défaut : la machine, Tailscale et le réseau local).
+  - Un problème du panneau (certificat absent, port pris) n'empêche jamais le site de démarrer. La raison est
+    écrite une fois dans error.log et dans `var/run/admin/etat.json`, sans relance en boucle.
+  - Les pages ne contiennent aucun style ni script en ligne (CSP stricte).
+- **Comptes et connexion**
+  - Deux rôles : « lecture » (Tableau de bord) et « administration » (Tableau de bord et Administration).
+  - Les comptes se créent seulement dans la TUI (Configuration distante → Comptes) ou par la CLI
+    (`admin-web account …`). Le rôle se choisit dans un menu déroulant. Les mots de passe sont stockés hachés
+    (scrypt).
+  - TOTP : QR code, secret et lien otpauth, plus 10 codes de secours. Il est obligatoire hors de la machine pour
+    les comptes administration.
+  - Cinq échecs imposent une attente. Le mode Administration redemande la saisie après 15 minutes. Toute action est
+    écrite dans `var/log/admin-audit.log`.
+  - Un compte lecture qui coche « Administration » est prévenu par un message, au lieu d'arriver en silence sur le
+    Tableau de bord.
+- **Vues**
+  - **État & Ressources** (comme dans la TUI, BACKENDS compris), **Journaux** (instantané ou direct, fichiers de
+    la bibliothèque, filtre), **Sécurité** (bans, RIPOSTE, incidents) et **Journal d'audit**. Rafraîchies toutes
+    les 2 s, calculées une seule fois pour tous les navigateurs ouverts, et plus du tout quand personne ne regarde.
+  - **Historique** : relevé toutes les 10 s, même sans page ouverte.
+    - Plages 1 h, 3 h, 12 h, 24 h, 7 jours et 30 jours, en « Moyenne » ou « Max 1 min ».
+    - Graphes : processeur, mémoire, swap, charge, réseau, requêtes/s, connexions et sockets, disque (E/S et
+      espace), processus, processeur et mémoire d'omega-serv, température, batterie.
+    - **Téléchargements / Téléversement** des sites : octets comptés par le noyau pour chaque connexion, dans les
+      deux moteurs (`var/run/traffic/`).
+    - Les graphes en pourcentage sont remplis et affichent « utilisé / total · % ».
+    - Fichier `var/run/admin/history.json` (environ 350 Ko une fois plein).
+  - **Trafic** (façon GoAccess, sans pays) : pages, pages en 404, adresses IP (masquables), statuts, référents,
+    navigateurs et robots, requêtes par heure. Périodes : aujourd'hui, 7 ou 30 jours. Lu au fil de l'eau dans la
+    même passe que l'Historique (environ 86 000 lignes/s mesurées) ; `var/lib/admin/stats/`, 31 jours gardés.
+  - **Certificats** : ceux de l'instance et leur échéance. Aussi dans la TUI : TLS → « Échéances des
+    certificats ». Seulement les fichiers locaux, lus par openssl toutes les 12 h ; les clés ne sont jamais lues.
+  - **Alertes locales** : rien n'est envoyé hors de la machine.
+    - Règles : disque, mémoire, swap, processeur, température, batterie, taux de 5xx sur 5 minutes, backend hors
+      service, incident Active Defense, certificat (30, 14, 7 et 1 jour avant l'échéance).
+    - Chaque règle a un seuil, une durée et un retour à la normale plus bas que le seuil, pour ne pas clignoter.
+    - `var/log/alertes.log`, 30 jours d'historique. Réglages et maintenance dans la TUI.
+  - **Sessions** : navigateurs connectés. Un compte administration ferme n'importe quelle session, un compte
+    lecture les siennes. Aussi dans la TUI : Comptes → Sessions.
+  - **10 thèmes omega**, comme la TUI. Réglage « Comme la TUI » par défaut, et choix possible dans chaque
+    navigateur. Les couleurs trop pâles sont ajustées pour rester lisibles.
+- **Administration** (comptes administration)
+  - Actions : bannir et débannir une adresse IP, fermer un incident, arrêt d'urgence et reprise de RIPOSTE, passer
+    un backend en DRAINING, MAINTENANCE ou automatique, archiver un journal ou supprimer une archive, recharger la
+    configuration.
+  - Chaque bouton passe par une page de confirmation, et chaque action est écrite dans le journal d'audit.
+- **Instance maître** : une page Instances suit d'autres omega-serv, toutes les 5 s, avec actions à distance.
+  - Ajout par code d'appairage (10 minutes, usage unique) ou par sonde HTTP ; empreinte du certificat épinglée.
+  - « Relier au maître » depuis l'écran Instances ; CLI `admin-web master …` et `admin-web instances …`.
+- **Tout le parcours dans la TUI** (Instances → Configuration distante)
+  - Cadre État « prêt / ce qui manque », avec un bouton par manque : Activer, Générer le certificat, Comptes,
+    Redémarrer, Recharger.
+  - Certificat dédié généré pour la machine.
+  - Enregistrer refuse un port déjà pris ou une adresse absente.
+  - Le pare-feu actif est signalé. Si omega-fire et l'instance sont inscrits dans la zone omega-connect, le bouton
+    **Ouvrir le port** passe par omega-fire (nouvelle commande `port ouvrir`), y compris pour ufw et firewalld.
+
+### Corrigé : tableau de bord web (essais réels du 2026-11-17)
+
+- Vue **Sécurité** en erreur dès qu'Active Defense était actif : « SQLite objects created in a thread can only be
+  used in that same thread ». La base était ouverte une seule fois, puis lue depuis un autre fil du processus
+  d'administration. Elle est maintenant ouverte une fois par fil, ce qui fait quelques connexions au plus. Trouvé
+  le 2026-11-18 en préparant les captures.
+- Vue **Certificats** et alertes d'échéance : toujours « échéance inconnue (openssl absent) », même avec openssl
+  installé, car le processus d'administration ne recevait pas l'outil openssl. Les alertes « certificat bientôt
+  expiré » ne pouvaient donc jamais se déclencher. Corrigé le 2026-11-18, avec 2 tests de non-régression.
+- Connexion refusée à chaque essai (403) : `Referrer-Policy: no-referrer` faisait envoyer `Origin: null` par les
+  navigateurs. La politique est maintenant `same-origin`.
+- Page Administration jamais affichée (`ERR_EMPTY_RESPONSE`) quand le service ne pouvait pas lire `var/backups`.
+  Désormais :
+  - la page s'affiche et renvoie vers « Réparer les permissions » ;
+  - une erreur imprévue donne une réponse 500 et une ligne dans le journal, jamais une connexion fermée sans
+    réponse.
+- Les trois colonnes d'État étaient vidées par la même erreur de droits ; seule la ligne Sauvegarde le signale
+  maintenant.
+- Cadre SERVICE SYSTÈME : il affichait « Aucun gestionnaire de service reconnu ».
+- Journaux : changer le nombre de lignes ou le filtre n'avait aucun effet sans passer par un autre journal.
+- Mobile : le menu « Journal » sortait de l'écran ; le titre de connexion coupait « omega-serv » au tiret.
+- Instance neuve :
+  - un journal d'accès créé après le démarrage du panneau voyait ses premières visites sautées (requêtes/s,
+    Trafic) ;
+  - le premier trafic d'un serveur lancé juste avant le panneau était pris pour un point de départ.
+- « Relier au maître » était actif sans administration web, et sans effet.
+
+### Amélioré : mémoire
+
+- **Mémoire de chaque processus du serveur nettement sous celle de la 2.6.2.** Mesuré sur une instance, au repos :
+  moteur Python 49 → 20 Mo (2.6.2 : 32 Mo) ; moteur natif pour un site statique 53 → 10 Mo (2.6.2 : 35 Mo) ; natif
+  avec WAF 67 → 28 Mo (2.6.2 : 44 Mo) ; natif avec WAF et reverse proxy 70 → 29 Mo (2.6.2 : 50 Mo) ; mode boost à
+  2 workers 45 → 38 Mo. Débit inchangé.
+  - deux hash scrypt « témoins » (protection contre la devinette des comptes) étaient calculés au démarrage, dans
+    chaque processus. Le second restait dans la mémoire du processus (16 Mio, comportement de l'allocateur glibc).
+    Ils sont maintenant calculés au premier besoin, et un grand bloc mémoire est toujours rendu au système dès
+    qu'une option en manipule (authentification, reverse proxy, envoi de fichiers, FastCGI). Le démarrage gagne
+    aussi environ 0,6 s par processus ;
+  - le code d'une option n'est chargé que si elle est active, au démarrage ou au rechargement qui l'active, jamais
+    pendant une requête : WAF, Active Defense, authentification, reverse proxy, WebSocket, FastCGI, envoi de
+    fichiers, réécritures, alias, redirections, RIPOSTE ;
+  - le code de l'administration web, de l'envoi de la déclaration et de la sauvegarde n'est chargé qu'au moment
+    où il sert ;
+  - moteur natif : une fois le natif lancé, le superviseur se relance lui-même en version réduite (même PID, pour
+    systemd et l'écran Service) : ~6 Mo au lieu de ~22. La configuration y est relue sur SIGHUP par un processus
+    éphémère, avec les mêmes contrôles et les mêmes messages. Le processus de sécurité (WAF, authentification,
+    reverse proxy...) est lancé à part, avec la configuration acceptée, au lieu d'hériter de tout ce que le
+    superviseur avait chargé. Avec plusieurs processus de sécurité (`server.workers`), le superviseur reste complet,
+    comme avant ;
+  - le serveur ne charge plus la détection du terminal ni la mise en forme du texte de la console ;
+  - `ssl` n'est chargé que si le serveur en a besoin (TLS, backend en HTTPS) : asyncio le chargeait toujours
+    (1,6 Mo) ; le reverse proxy ne prépare plus ses connexions TLS vers les backends s'ils sont tous en HTTP ;
+  - moteur natif : le processus de sécurité naît du superviseur réduit et partage avec lui les pages de
+    l'interpréteur ; mode boost : le code du serveur est chargé une fois avant le lancement des workers, qui le
+    partagent au lieu de le charger chacun.
+- **Remesuré au protocole du comparatif** (19 novembre, trois machines, nginx remesuré dans la même session) : au repos → après la charge, moteur natif 10 → 10-16 Mo, moteur Python 20-22 → 23-28 Mo, natif avec WAF 28-30 → 30-33 Mo, reverse proxy natif 27-29 → 28-33 Mo ; gros téléchargements simultanés 39 Mo (Python) et 23 à 26 Mo (natif). Un test entrelacé, code 3.0.0 avant et après ce travail, donne le même débit à 1 à 4 % près. Le comparatif des serveurs web (sections 4, 5 et 6, avec des lignes 3.0.0 à côté de 1.0, 2.0 et 2.5) et sa version graphique sont mis à jour en 17 langues ; chiffres bruts dans `docs/benchmarks/2026-11-19-*-memoire-3.0.0-brut.txt`, outil `tools/bench/memoire-3.0.0.sh`.
+- **FAQ** : nouvelle question « Je décoche une option (WAF, reverse proxy...) : sa mémoire est-elle rendue ? » (non : au prochain redémarrage) ; chiffres de mémoire corrigés dans « Moteur Python ou natif », « Combien de processus choisir ? » et « Reverse proxy avec le moteur natif » (17 langues, guide du site régénéré).
+- **Corrigé :** un rechargement (SIGHUP) arrivé pendant le démarrage du processus de sécurité du moteur natif
+  l'arrêtait ; il est maintenant appliqué dès que ce processus est prêt.
+- Tests : 11 gardes (`test_memory_serve_imports.py`) : modules lourds absents du démarrage de `serve` et du
+  superviseur réduit, code d'une option absent sans elle et chargé par le rechargement qui l'active, témoins non
+  calculés à l'import, commandes chargées à la demande, mémoire rendue après trois scrypt ; superviseur réduit
+  (`test_native_watch.py`, `test_native_reduced_supervisor.py` avec le vrai binaire : même PID, rechargement
+  accepté puis refusé, natif tué relancé, arrêt propre ; processus de sécurité né du superviseur, SIGHUP pendant
+  son démarrage, relance) ; `ssl` chargé tard (`test_lazy_ssl.py` : vrai serveur et client TLS asyncio, modules
+  d'asyncio dépendant de `ssl` vérifiés sur les sources). Suite complète : 4292 tests uniques.
+
+### Changements de comportement
+
+- **Administration web : port par défaut 9643** (8443 est souvent pris, par exemple par KULA).
+- **access.log : les appels internes acceptés à `/.omega-serv-admin/`** (État & Ressources de la TUI, panneau web)
+  ne sont plus écrits, dans les deux moteurs. Un appel refusé (403) reste écrit, pour omega-jail et RIPOSTE.
+- **« Réparer les permissions »** (Accueil → Service) partage maintenant `var/backups/logs` avec le service (2770),
+  pour que le panneau web puisse archiver et supprimer des archives. `var/backups` devient seulement traversable
+  par le service (2710) ; le reste y reste privé. La vérification des permissions le contrôle aussi.
+
+- **Moteur natif, réglage par défaut : le reverse proxy est relayé par le natif** (lot 11). Une configuration qui
+  n'a pas `options.reverse_proxy.engine` passe donc du proxy Python au relais natif au premier démarrage de la
+  3.0.0. En TLS direct, une zone ordinaire ne fait plus démarrer le serveur avec le moteur Python.
+
+- **Tunnel WebSocket inactif fermé, dans les deux moteurs** (décision du 2026-11-14) : sans aucun octet, dans aucun
+  sens, pendant `websocket_idle_timeout_seconds` (3 600 s par défaut), le serveur envoie une trame de fermeture 1001
+  (« going away ») au client et au backend, puis ferme. Avant, un tunnel restait ouvert sans limite. Une application
+  qui garde un tunnel silencieux plus d'une heure doit envoyer des pings, ou régler `0`.
+- **Arrêt (SIGTERM) : les tunnels WebSocket reçoivent une trame 1001 à la fin du délai de grâce**, dans les deux
+  moteurs (C14). Avant, ils étaient coupés sans trame. La trame n'est jamais insérée au milieu d'une trame : le
+  serveur lit seulement l'en-tête des trames (2 à 14 octets), jamais leur contenu ; une trame coupée en plein milieu
+  est fermée sans 1001.
+- **`access.log`, tunnel WebSocket, dans les deux moteurs** (décision du 2026-11-14) : la taille est le nombre
+  d'octets envoyés au client pendant le tunnel, comme `$body_bytes_sent` de nginx ; avant, 0. La ligne est écrite à
+  la fermeture du tunnel, arrêt du serveur compris : avant, un tunnel coupé à l'arrêt n'en laissait aucune.
+- **Moteur natif : une connexion gardée ouverte prend la nouvelle configuration dès sa requête suivante**
+  (décision du 2026-11-13), comme le moteur Python. Avant, elle gardait celle de son ouverture jusqu'à sa
+  fermeture (au plus 100 requêtes ou le délai keep-alive) : une règle de sécurité changée par rechargement pouvait
+  mettre ce temps à s'appliquer à ce client (C20).
+- **Arrêt (SIGTERM), dans les deux moteurs : une connexion keep-alive qui attend sa prochaine requête est fermée
+  tout de suite** (décision du 2026-11-13, comme nginx). Seules les requêtes en cours (envois, relais,
+  contrôles) ont le délai de grâce pour finir ; elles reçoivent `Connection: close`. Avant, un client resté connecté
+  retenait l'arrêt jusqu'au bout du délai de grâce (10 s par défaut), puis `error.log` signalait un « arrêt forcé ».
+  Une requête dont un seul octet est arrivé compte comme en cours : elle a le délai de grâce, même si ses en-têtes ne
+  sont pas finis.
+- **Backend HTTPS dont le certificat est refusé, dans les deux moteurs** (décision du 2026-11-13) : une
+  ligne dans `error.log` donne la raison d'OpenSSL, au plus une par backend et par minute, par exemple
+  `reverse proxy : certificat de 10.0.0.5:8443 refusé : self-signed certificate`. Un autre échec de la poignée de main
+  TLS (backend qui répond en clair, version refusée) donne `reverse proxy : poignée de main TLS avec … impossible :
+  <raison>`. Avant, le client recevait 502 sans aucune trace dans les journaux.
+- **`verify_upstream_tls = false` avec un backend HTTPS, dans les deux moteurs** (décision du 2026-11-13) :
+  avertissement dans `config check`, et ligne dans `error.log` au démarrage et à chaque rechargement. Avant, seul
+  l'audit de sécurité le signalait.
+- **Relais natif (aperçu, `engine = native`), écarts voulus avec le proxy Python, qui lit toute la réponse avant
+  de l'envoyer :**
+  - une réponse `chunked` ou terminée par la fermeture arrive au client en `chunked`, là où Python envoie
+    `Content-Length` ; le corps et la taille journalisée sont les mêmes ;
+  - une erreur du backend après l'envoi de la tête (connexion perdue, réponse tronquée, délai entre deux blocs)
+    coupe la connexion du client, avec une ligne dans `error.log`, là où Python répond 502 : la réponse commencée
+    n'est jamais remplacée (C4) ;
+  - une réponse avec `Content-Length` ou `chunked` plus grande que `max_response_body_mb` passe, là où Python
+    répond 502 (D23).
+  - lot 6 : le nouvel essai sur un autre backend n'a lieu que si le backend n'a encore rien envoyé ; Python rejoue
+    aussi après une réponse invalide ou coupée, qu'il a lue en entier avant de répondre (C8) ;
+  - lot 6 : un nom DNS donne un backend par adresse, avec son cookie collant ; Python garde un seul backend par nom,
+    résolu à chaque connexion. La valeur du cookie d'un backend désigné par son adresse IP reste la même.
+- **Moteur natif, client qui part pendant le contrôle de sécurité.** Comme
+  le moteur Python, le départ du client n'est plus surveillé pendant le contrôle de sécurité, seulement pendant la
+  route (relais vers le backend). Le verdict est donc appliqué : un client à demi fermé reçoit sa réponse, et un
+  client coupé (RST) donne la ligne d'un envoi échoué, avec le statut décidé. Le lot 1N journalisait 499 dans ces
+  deux cas ; les deux moteurs se comportent maintenant de la même façon.
+- `/../fichier` ou `/%2e%2e/fichier` sur une route statique : 400 au lieu de 403.
+- Reverse proxy : **504** quand le backend ne répond pas dans `read_timeout_seconds` (502 avant) ; 502 reste pour
+  un backend injoignable ou une réponse invalide. Le délai vaut désormais entre deux blocs reçus, et plus pour la
+  réponse entière.
+- Reverse proxy : un `Transfer-Encoding` autre que `chunked` dans une réponse du backend donne 502.
+- TLS direct : une connexion au-delà de `max_connections` est fermée tout de suite, au lieu de recevoir un 503
+  après la poignée de main (D30).
+- Un client qui ne lit pas sa réponse est coupé après `server.write_timeout_seconds`, 15 s par défaut (D31).
+- TLS direct : une poignée de main inachevée est coupée après `server.read_timeout_seconds`, 10 s par défaut, au
+  lieu de 60 s (D30).
+- Moteur natif, contrôle indisponible en `fail-open` : une source au-delà de sa limite de débit reçoit 429, au
+  lieu d'être servie.
+- Moteur natif : une requête dont le client se ferme à demi pendant le contrôle de sécurité, plus de 250 ms, est
+  abandonnée (`499`), au lieu de recevoir sa réponse (règle nginx, décision du 2026-11-12).
+- Moteur Python : une ligne trop longue suivie d'une fermeture donne 414 ou 431 au lieu de 400.
+- WAF : sur les routes proxy, FastCGI et envoi de fichiers, seuls les 64 premiers Ko du corps sont inspectés, comme
+  ailleurs (`waf.inspect.body_max_inspect_bytes`). Une attaque placée plus loin n'est plus vue, sauf avec
+  `waf.inspect.body_over_limit = reject`.
+- `config check` : un backend sur l'adresse d'une interface de la machine, au port d'écoute, avec une écoute sur
+  `0.0.0.0` ou `::`, est refusé (lot 3).
+- `config check` peut afficher des lignes « Avertissement » et « Avis » avant « configuration valide » (lot 3).
+
+### Tests
+
+- 17 tests ajoutés pour le lot A ; tous échouent sur la 2.6.2 (code Python et binaire natif de l'archive), sauf 2
+  gardes qui vérifient qu'un client lent qui lit reste servi :
+  - D10 et D15 : 5 (sondes en mode natif dès le démarrage, zone activée par rechargement dans les deux moteurs,
+    refus qui nomme l'option, client gardé au second rechargement) ;
+  - D30 : 4 ; D31 : 4 ; D32 : 1 ; D33 : 3, dont 1 test C++ (250 000 adresses).
+- Tests C++ verts en version normale et sous ASan et UBSan.
+- Lot 0, 45 tests de caractérisation du reverse proxy, lancés dans les deux moteurs (Python, et natif sous son
+  superviseur) :
+  - 38 tests de comportement voulu, devant un faux backend scripté : sécurité sur la route proxifiée (WAF 403 et
+    alerte, 451, 429, 401, accès refusé, backend jamais atteint), 401 et 404 du backend dans `access.log`, découpage
+    des réponses, en-têtes, compteur de sauts, délais, abandon du client ;
+  - 1 banc différentiel (profil `proxy`, 24 cas) qui compare octet pour octet les réponses et les journaux des deux
+    moteurs ;
+  - 6 tests de grille des options de sécurité (aucune, WAF bloquant, `log-only`, limite de débit, Auth, WAF et Auth),
+    avec contrôle croisé du filtre natif : zéro désaccord.
+- 9 défauts connus du proxy Python sont marqués dans chaque moteur, en attente du lot 1 : HEAD avec longueur, 204 et
+  304, réponses chunked, `Set-Cookie` multiples, `Content-Length` en double, caractère de contrôle dans la cible,
+  504, abandon du client.
+- Lot 1N :
+  - 423 vecteurs `wafalert` : la ligne `waf-alerts` du natif comparée octet pour octet à la vraie
+    `format_waf_alert_line` (horodatage, plafonds, échappement JSON, extrait du corps et masquage) ;
+  - 26 vecteurs de lignes trop longues suivies d'une fermeture, autour de la limite exacte, plus 3 tests Python ;
+  - intégration native : alerte du 451 identique à Python, 429 en `fail-open` (`block` et `throttle`, statut
+    réglé), aucune alerte pour un 503 de panne, 499 sur demi-fermeture et sur RST pendant l'attente du verdict,
+    garde du verdict rapide servi à un client à demi fermé, ligne d'accès d'un envoi coupé par
+    `write_timeout_seconds` ;
+  - C++ : décodage UTF-8 comme CPython, masquage du corps, horodatage, arrondi de la durée, index de la liste de
+    blocage (adresses exactes, réseaux, échéances, IPv4 et IPv6). Pour `inotify` :
+    - remplacement vu dès l'appel suivant ;
+    - fichier abîmé ;
+    - dossier supprimé puis recréé, et dossier parent renommé puis recréé ;
+    - retour au `stat()` pour un lien symbolique ou un dossier absent ;
+    - course à 4 fils, sans aucune réponse périmée sur plus de 200 000 vérifications. Tests C++ verts en version normale et sous ASan ;
+    la liste de blocage sous ThreadSanitizer, 4 fils de lecture pendant 300 remplacements du fichier, sans
+    signalement.
+  - les 8 nouveaux tests échouent sur la 2.6.2, sauf les 4 gardes, qui y passent.
+- Lot 2 : rapport de mesure dans `~/DEV/SERV/mesures-lot2-proxy-natif-20261112/`. 16 tests ajoutés :
+  - inspection limitée sur la route proxy, avec le corps transmis entier ;
+  - 4 Mo binaires sans gel, dans les deux moteurs ;
+  - `reject` dans les deux moteurs : 413, backend jamais atteint, explication dans `error.log` ;
+  - équivalence du décodage, validation de l'option, instantané natif.
+
+  12 de ces tests échouent sur la 2.6.2 ; les 4 gardes y passent.
+- Lot 3 : 47 tests ajoutés.
+  - 34 tests unitaires : réglages et budgets, choix par zone et ses raisons, un test par cas du tableau P7 (TLS direct
+    avec `auto`, `native` et `python`), FastCGI et envoi de fichiers jamais refusés (E9), retour en arrière accepté
+    (E10), boucles par interface locale (zones et leurres), adresse locale au lien, nom DNS (résolu seulement par
+    `config check`), instantané `proxy`, contrôle demandé par zone, processus de sécurité, sortie de `config check`.
+  - 5 tests C++ (doctest) : lecture de la section `proxy`, incohérences refusées, sortie relisible,
+    `security_processes`.
+  - 8 tests d'intégration :
+    - différentiel : ce que le natif lit, par `--dump-proxy`, est identique à ce que Python écrit, sur des zones
+      variées (IPv6, nom DNS, TLS, cache, WebSocket, règles, cookie collant, accents) ;
+    - 6 sections incohérentes refusées par le natif ;
+    - administration toujours confiée au processus n° 0 sous rafale parallèle, avec une garde : sans second
+      processus, rien n'est déplacé ;
+    - refus de `engine = native` au rechargement, l'ancienne génération restant active ;
+    - démarrage en TLS direct avec une zone proxy : moteur Python et avertissement dans `error.log`.
+  - Tests C++ verts en version normale et sous ASan et UBSan, aiguillage de l'administration compris.
+- Lot 4 :
+  - 5 tests C++ du relais : requête réécrite comme `build_outgoing_headers`, compteur de sauts lu comme `int()`,
+    tête de réponse stricte et cadrage du corps, réponse relayée ;
+  - les tests de caractérisation du lot 0 lancés une troisième fois, sur la zone relayée par le natif : 20 verts,
+    2 marqués pour le lot 5 (chunked, fermeture) ; une garde montre que la zone est bien relayée par le natif
+    en `engine = native` et confiée à Python en `auto`, et que chaque budget revient à zéro ;
+  - banc différentiel : relais natif identique au proxy Python, octet pour octet, sur tout le corpus hors lot 5 ;
+  - grille C20 : relais natif ajouté, mêmes statuts et alertes que Python, zéro désaccord (S25) ;
+  - D12 : même seau pour le statique et le proxy, dans le moteur Python, le natif avec zone confiée et le relais
+    natif ; ce test échoue sans le retour de la connexion ;
+  - connexion rendue au natif : requête statique suivante servie par lui, requêtes envoyées d'un bloc conservées,
+    descripteurs stables après 90 retours ;
+  - relais : budget des corps (503), requête bloquée jamais relayée, 502 expliqué pour une réponse chunked,
+    descripteurs et budgets stables après 45 relais (erreurs et 504 compris) ;
+  - memfd : attaque placée à 1,5 Mo vue par le natif comme par Python, descripteurs stables après 20 envois de
+    1,2 Mo, dans le natif et le processus de sécurité ;
+  - rechargement qui fait passer une zone au relais natif.
+  - 52 tests d'intégration du relais passés aussi sur le binaire ASan et UBSan, sans aucun rapport.
+- Lot 5 : 23 tests Python et 4 tests C++ ajoutés.
+  - Analyseur de réponse du natif comparé aux vraies fonctions du proxy Python (`_read_final_head`,
+    `_body_framing`, `_read_chunked`…) sur 1 529 réponses, écrites à la main ou obtenues par mutations aléatoires :
+    même verdict, même statut, même découpage, même corps, mêmes octets restants. Aucun écart, ni sur 20 058 réponses
+    de plus essayées une fois.
+  - 4 tests C++ du décodeur `chunked` : même résultat quel que soit le découpage des octets reçus, refus stricts
+    (taille, CRLF, extensions et trailers aux limites exactes), fin de flux, jeton `close`.
+  - Fuzzing de l'analyseur de réponse et du décodeur (`fuzz_upstream`) : 741 114 exécutions en 5 minutes, aucun
+    plantage, et le même résultat quel que soit le découpage.
+  - 15 tests du relais en flux : `chunked` redécoupé sans trailers, premier bloc reçu avant la fin du backend,
+    fin par la fermeture en `chunked` avec connexion gardée, client HTTP/1.0, page d'erreur d'un corps vide,
+    32 Mio et 16 Mio intacts, mémoire bornée face à un client lent, coupure du backend après la tête, délai entre
+    deux blocs, départ du client pendant le flux (jamais 499), dépassement de `max_response_body_mb`, délai
+    d'écriture, pool (GET réutilise, POST jamais), nouvel essai sur une connexion du pool morte dans les deux
+    moteurs, réservations revenues à zéro.
+  - 3 tests des refus du natif sur une zone relayée, contrôle indisponible : 451 et 429 avec la même ligne
+    `waf-alerts` que Python, aucune alerte pour une panne en `fail-closed`.
+  - 4 tests unitaires : capacité `proxy_stream` exigée du binaire, étiquettes HEALTH identiques des deux côtés.
+  - Tests du lot 0 sur la zone relayée : les 2 marques du lot 5 retirées, tous verts. Banc différentiel sur tout le
+    corpus, sans exclusion : seul le découpage vers le client diffère, et il est vérifié.
+  - 67 tests d'intégration du relais passés aussi sur le binaire ASan et UBSan, sans aucun rapport.
+  - Test RIPOSTE « vraie attaque, vrai bannissement » rendu sûr : il ouvrait la base de RIPOSTE avant sa création
+    et échouait sur une machine chargée, avec ou sans le lot 5. RIPOSTE n'est pas modifié.
+
+- Lot 6 : 24 tests Python ajoutés.
+  - Choix du backend comparé au vrai `resolve_upstream` Python : 240 scénarios aléatoires (graine fixe) rejoués par
+    le binaire (`--simulate-balance`) - même backend à chaque choix, plus de 4 000 choix, les 7 stratégies, plafonds,
+    cookie collant, règles, santé, coupe-circuit, scores de charge, états manuels ; plus l'essai à demi ouvert unique
+    après 10 s.
+  - 8 tests de bout en bout : répartition et poids identiques à Python, cookie collant et règle par en-tête dans les
+    deux moteurs, 503 au plafond, plafond exact sous rafale parallèle (2 réponses sur 8), backend mort rejoué puis
+    marqué hors service et relu par l'administration, drainage posé par l'administration appliqué par le natif, nom
+    DNS résolu (une adresse morte écartée), nom non résolu hors service.
+  - 14 tests unitaires : backends de l'instantané (clé et cookie identiques à Python pour une IP, une adresse par
+    backend pour un nom, résolution gardée, boucle), avertissement de `config check`, processus n° 0 (sondes seules,
+    trames vers le natif, état relu par l'administration, nom DNS agrégé), WATCH porté par le verdict, capacité.
+  - Tests existants mis à jour : lacunes « équilibrage » et « nom DNS » levées (le refus de `engine = native` porte
+    désormais sur le WebSocket), champs nouveaux de l'instantané dans les tests C++.
+  - 80 tests d'intégration du relais passés aussi sur le binaire ASan et UBSan, sans aucun rapport.
+
+- Lot 7 : 7 tests d'intégration ajoutés (3 dans les deux moteurs) et 2 tests de l'arrêt du moteur Python.
+  - Rechargement pendant une réponse longue en flux (réponse intacte, puis requête suivante de la même connexion
+    vers le nouveau backend), pendant un envoi lent (fini avec l'ancienne configuration) et pendant un contrôle de
+    sécurité en attente (processus de sécurité suspendu : verdict appliqué, backend jamais atteint).
+  - Connexion inactive du pool vers un backend retiré : fermée au rechargement.
+  - Arrêt : une connexion keep-alive inactive ne retarde plus l'arrêt, sans « arrêt forcé » ; une réponse en cours
+    finit entière, puis la connexion est fermée et plus rien n'est accepté.
+  - Arrêt : une tête de requête commencée (ligne de requête lue, en-têtes pas finis, ou ligne de requête pas encore
+    complète) garde le délai de grâce ; une connexion qui n'a rien reçu est fermée sans être comptée comme forcée.
+    Ces tests viennent d'une régression trouvée par la suite complète du lot 7 : le moteur Python fermait aussi une
+    requête dont la ligne était déjà lue.
+  - Chacun de ces tests échoue sur le code d'avant le lot 7 (binaire natif recompilé depuis la sauvegarde, et moteur
+    Python d'avant) : 10,2 s d'arrêt au lieu de moins de 5 s, ancien backend servi après le rechargement, connexion
+    gardée au pool.
+
+- Lot 8 : 10 tests d'intégration (dans les deux moteurs, avec une CA de test générée par `openssl`) et 8 tests
+  unitaires.
+  - Certificat auto-signé : servi sans vérification (et signalé au démarrage puis au rechargement), refusé avec
+    vérification (502, une seule ligne pour trois requêtes, aucune requête arrivée au backend).
+  - Vraie CA (`SSL_CERT_FILE`) : certificat accepté ; pas de SNI pour une adresse IP ; nom envoyé en SNI et vérifié ;
+    certificat d'un autre nom refusé, avec le même texte que Python.
+  - Mêmes versions et mêmes suites proposées que Python, relevées par le backend de test.
+  - Pool : connexion TLS reprise trois fois (tickets TLS 1.3 compris) ; zone non vérifiée jamais servie par une
+    connexion vérifiée, et l'inverse.
+  - Réponse de 4 Mio lue lentement : arrivée entière (lecture TLS suspendue puis reprise).
+  - Poignée de main jamais finie : 502 dans le délai de connexion, sans ligne TLS ; backend qui répond en clair : même
+    ligne dans les deux moteurs.
+  - Sur le code d'avant le lot 8 (binaire recompilé depuis la sauvegarde, Python d'avant) : 17 sous-tests échouent,
+    tous ceux du natif et ceux des nouvelles lignes d'`error.log` ; les sous-tests Python qui passent décrivent un
+    comportement qui existait déjà.
+
+- Lot 9 : 9 tests d'intégration (7 dans les deux moteurs, client en HTTPS) et 7 tests unitaires.
+  - Zone relayée en TLS direct : `X-Forwarded-Proto: https` vers le backend ; corps de 300 Kio envoyé en POST ;
+    keep-alive qui mélange zone et statique sur une même connexion TLS ; trois requêtes envoyées d'un bloc, servies
+    dans l'ordre.
+  - Réponse de 4 Mio lue lentement : arrivée entière (écritures TLS partielles, reprise) ; réponse `chunked` en
+    plusieurs fois ; client parti au milieu d'une réponse de 8 Mio : une ligne dans `access.log`, serveur intact.
+  - Administration en TLS avec deux processus de sécurité : les 80 requêtes arrivent au n° 0 ; avec un seul
+    processus, rien ne bouge.
+  - Sur le code d'avant le lot 9 (binaire recompilé depuis la sauvegarde, Python d'avant) : 7 sous-tests natifs
+    échouent (configuration refusée), et 40 requêtes d'administration sur 80 arrivent au processus n° 1.
+  - Tests du lot 3 mis à jour : le refus de `engine = native` en TLS direct ne vaut plus que pour une zone confiée.
+
+- Lot 10 : 13 tests d'intégration, tous dans les deux moteurs, avec un vrai backend WebSocket (trames masquées,
+  écho), 7 tests unitaires et 7 tests C++.
+  - Mise à niveau et écho dans les deux sens ; `Connection`, `Upgrade` et `Sec-WebSocket-Key` transmis au backend ;
+    tête 101 identique octet pour octet dans les deux moteurs ; ligne d'`access.log` avec les octets envoyés.
+  - Octets envoyés avec le 101 transmis ; refus du backend sans corps, identique dans les deux moteurs ; backend
+    injoignable : 502 sans corps ; requête ordinaire d'une zone WebSocket toujours relayée.
+  - Délai d'inactivité : 1001 vers le client (sans masque) et vers le backend (masquée), puis fermeture ; échanges
+    réguliers : tunnel gardé ; `0` : jamais fermé ; trame coupée en plein milieu : pas de 1001 de ce côté.
+  - Flux de 8 Mio lu lentement : arrivé entier ; backend qui ferme : derniers octets reçus, puis fermeture ; arrêt :
+    1001 à la fin du délai de grâce, et ligne d'accès ; tunnel en TLS direct.
+  - Sur le code d'avant le lot 10 (binaire recompilé depuis la sauvegarde, Python d'avant) : les 13 sous-tests natifs
+    échouent (configuration refusée : zone WebSocket confiée à Python), et 6 sous-tests Python.
+  - Trois anciens tests qui prenaient une zone WebSocket comme exemple de zone confiée portent maintenant sur une
+    zone avec cache.
+
+- Lot 11 : 9 tests unitaires (`auto` relaie tout sauf le cache, TLS direct garde le natif, lignes de l'écran État),
+  3 tests d'écran (réglages communs validés et écrits, délai WebSocket de zone, inspection du corps du WAF), 6
+  tests de la colonne « Moteur », 1 test d'écran en 80×24 (résumé, colonne, boutons visibles), 14 tests
+  unitaires des constats F1 et F2 (échéance du corps, signatures, formulaires, multipart, réglage), 5 tests
+  d'intégration (envoi lent régulier accepté et envoi au compte-gouttes refusé, dans chaque moteur ; image
+  et faux formulaire derrière le WAF avec le moteur natif) et 2
+  tests d'intégration du pool (plus de 10 connexions inactives gardées ; jamais plus de la moitié de
+  `max_upstream_connections`).
+  - 11 tests existants prenaient `auto` comme exemple de zone confiée : ils utilisent `engine = python` (ou une
+    zone avec cache) et vérifient en plus qu'`auto` relaie. Différentiel : un trajet confié (identique octet pour
+    octet) et un trajet `auto` relayé (seul le découpage vers le client diffère).
+  - Test C++ de course de la liste de blocage : seuil relatif (chaque version vérifiée par un lecteur), 400/400 en
+    Release et sous ASan.
+  - Fuzzing, 10 minutes par cible, aucun plantage : analyseur HTTP 10,8 M d'entrées, moteur 1,1 M, canal 38,6 M,
+    WAF 5,9 M, réponse du backend 0,47 M (tête 101 comprise), nouvelle cible WebSocket 18,6 M (repérage des trames
+    identique quel que soit le découpage). L'instantané du fuzzer du moteur datait d'avant le lot A : corrigé.
+  - ASan et UBSan, 143 tests du relais (différentiels compris), avant puis après le correctif du relais : aucun
+    rapport. Tests du proxy natif après le correctif : 296 réussis, 2 sautés, 90 sous-tests.
+  - Mesures (A, B, C, 6 proxys, HTTP et HTTPS) : `docs/benchmarks/2026-11-14-*-reverse-proxy-brut.txt`, premier
+    passage compris ; comparatif, section 5.
+
+- Compléments (2026-11-15) : 38 tests ajoutés.
+  - Audit : 4 tests unitaires (raison et contenu réel des fichiers sensibles, fichier vide en PERM-004, dossier
+    `.git` signalé, liste bornée à 10 lignes).
+  - Authentification : 3 tests de `update_zone` (correction sur place à la même position, zone invalide ou
+    absente sans effet, préfixe d'une autre zone refusé).
+  - Service : 10 tests unitaires (format du nom, plans, renommage qui enchaîne les étapes et rétablit l'état,
+    arrêt au premier échec, service arrêté seulement déplacé, unité d'une autre installation jamais renommée,
+    contrôle des permissions partagées).
+  - Lot V : 5 tests d'écran (erreur dans le formulaire avec saisie intacte, doublons, oui/non stricts).
+  - Sauvegarde : 4 tests unitaires (export puis import sur une installation neuve puis restauration, empreinte
+    exigée, archive dangereuse ou étrangère refusée, manifeste, profils et contenu du site facultatif) et 2 tests
+    d'écran (Exporter / Importer, conflit de port expliqué et port actuel gardé).
+  - Profils personnalisés : 6 tests unitaires (identification bornée, trou bloquant, trous à accepter un par un,
+    application qui garde l'identité et les réglages, profils fournis inchangés, enregistrement sans fuite des
+    métadonnées) et 2 tests d'écran (créer, accepter chaque trou, enregistrer, supprimer ; profil fourni
+    impossible à supprimer).
+  - Rapport complet : 1 test d'écran (sommaire, exports HTML, TXT et JSON) et 1 test de retrait des secrets.
+  - Tests existants adaptés au nouveau comportement (erreur gardée dans le formulaire, menu Service, menu
+    principal sans Quitter, arbre des menus du guide).
+  - Suite complète : 4017 tests uniques ; les tests d'écran et différentiels en échec sous charge repassent seuls.
+  - Retours de l'auteur : 1 test unitaire (données des zones et rapports d'export : cases facultatives, dossier
+    hors projet signalé, pas de doublon avec le contenu du site, import accepté, archive qui vise `src/`
+    refusée) ; le test d'écran « Tout sauvegarder » vérifie que les trois cases de contenu restent à part.
+  - Zones FastCGI : 6 tests unitaires (ancien format lu comme une zone, liste vide, interrupteur, ancien format
+    retiré à l'enregistrement, doublons nommés, sockets des zones actives), 1 test de vérification (zone désactivée :
+    ni dossier ni socket exigés, mais jamais dans le webroot), 2 tests d'intégration sur un vrai serveur (chaque
+    zone atteint son propre pool, le plus long préfixe l'emporte ; zone désactivée en 503 pendant que les autres
+    répondent), le test de sauvegarde étendu à deux zones au nouveau format. Les 3 tests de l'écran FastCGI sont
+    réécrits pour la liste (ajouter, modifier, doublon, désactiver, supprimer ; racine dans le webroot refusée ;
+    ancien format repris puis réécrit).
+
 ## version 2.6.2 : Publié
 
 **Correctif de sécurité, mise à jour conseillée** pour toute installation qui utilise le moteur natif

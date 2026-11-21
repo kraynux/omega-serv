@@ -22,6 +22,7 @@ l'index, jamais une erreur remontee a l'appelant)."""
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 import shutil
 import time
@@ -66,9 +67,9 @@ class FilesystemProxyCacheStore:
                     stat = entry_path.stat()
                 except OSError:
                     continue
-                zone_key = zone_dir.name
-                cache_key = entry_path.stem
-                self._index[(zone_key, cache_key)] = _IndexEntry(
+                # Lot 1 (D13) : meme cle que pendant l'execution (nom de dossier assaini). Avant, le nom de dossier
+                # ici et la cle de zone brute ailleurs : chaque entree comptee deux fois apres un redemarrage.
+                self._index[(zone_dir.name, entry_path.stem)] = _IndexEntry(
                     path=entry_path, size_bytes=stat.st_size, last_accessed_at=stat.st_mtime,
                 )
 
@@ -77,18 +78,32 @@ class FilesystemProxyCacheStore:
 
     def get(self, zone_key: str, cache_key: str) -> ProxyCacheEntry | None:
         path = self._entry_path(zone_key, cache_key)
+        index_key = (_sanitize_zone_key(zone_key), cache_key)
         try:
             raw = path.read_bytes()
         except OSError:
-            self._index.pop((zone_key, cache_key), None)
+            self._index.pop(index_key, None)
+            return None
+        entry = self._decode_or_discard(index_key, path, raw)
+        if entry is None:
             return None
         now = time.time()
-        index_entry = self._index.get((zone_key, cache_key))
+        index_entry = self._index.get(index_key)
         if index_entry is not None:
             index_entry.last_accessed_at = now
         else:
-            self._index[(zone_key, cache_key)] = _IndexEntry(path=path, size_bytes=len(raw), last_accessed_at=now)
-        return _decode_entry(raw)
+            self._index[index_key] = _IndexEntry(path=path, size_bytes=len(raw), last_accessed_at=now)
+        return entry
+
+    def _decode_or_discard(self, index_key: tuple[str, str], path: Path, raw: bytes) -> ProxyCacheEntry | None:
+        """Lot 1 (D13) : une entree illisible (fichier tronque, ancien format) est un absent, jamais une erreur
+        pendant la requete ; elle est retiree."""
+        try:
+            return _decode_entry(raw)
+        except (ValueError, KeyError, TypeError, IndexError, binascii.Error):
+            path.unlink(missing_ok=True)
+            self._index.pop(index_key, None)
+            return None
 
     def get_variants(self, zone_key: str, primary_key: str) -> tuple[ProxyCacheEntry, ...]:
         zone_dir = self._base_dir / _sanitize_zone_key(zone_key)
@@ -101,11 +116,14 @@ class FilesystemProxyCacheStore:
                 raw = path.read_bytes()
             except OSError:
                 continue
-            cache_key = path.stem
-            index_entry = self._index.get((zone_key, cache_key))
+            index_key = (zone_dir.name, path.stem)
+            entry = self._decode_or_discard(index_key, path, raw)
+            if entry is None:
+                continue
+            index_entry = self._index.get(index_key)
             if index_entry is not None:
                 index_entry.last_accessed_at = now
-            entries.append(_decode_entry(raw))
+            entries.append(entry)
         return tuple(entries)
 
     def set(self, zone_key: str, cache_key: str, entry: ProxyCacheEntry) -> None:
@@ -114,12 +132,13 @@ class FilesystemProxyCacheStore:
         raw = _encode_entry(entry)
         path.write_bytes(raw)
         now = time.time()
-        self._index[(zone_key, cache_key)] = _IndexEntry(path=path, size_bytes=len(raw), last_accessed_at=now)
+        self._index[(_sanitize_zone_key(zone_key), cache_key)] = _IndexEntry(
+            path=path, size_bytes=len(raw), last_accessed_at=now)
         self._evict_if_needed()
 
     def delete(self, zone_key: str, cache_key: str) -> None:
         self._entry_path(zone_key, cache_key).unlink(missing_ok=True)
-        self._index.pop((zone_key, cache_key), None)
+        self._index.pop((_sanitize_zone_key(zone_key), cache_key), None)
 
     def clear(self, *, zone_key: str | None = None) -> int:
         if zone_key is None:
@@ -138,7 +157,7 @@ class FilesystemProxyCacheStore:
             return 0
         count = sum(1 for _ in zone_dir.glob("*.json"))
         shutil.rmtree(zone_dir, ignore_errors=True)
-        for key in [k for k in self._index if k[0] == zone_key]:
+        for key in [k for k in self._index if k[0] == zone_dir.name]:
             self._index.pop(key, None)
         return count
 

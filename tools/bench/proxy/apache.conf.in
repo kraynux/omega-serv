@@ -1,0 +1,31 @@
+ServerRoot "/usr/lib/httpd"
+Listen 127.0.0.1:PORT
+PidFile "@W@/logs/apache.pid"
+ErrorLog "@W@/logs/apache-error.log"
+LoadModule mpm_event_module modules/mod_mpm_event.so
+LoadModule unixd_module modules/mod_unixd.so
+LoadModule authz_core_module modules/mod_authz_core.so
+LoadModule mime_module modules/mod_mime.so
+LoadModule log_config_module modules/mod_log_config.so
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule socache_shmcb_module modules/mod_socache_shmcb.so
+LoadModule ssl_module modules/mod_ssl.so
+StartServers WORKERS
+ServerLimit WORKERS
+ThreadsPerChild 64
+MaxRequestWorkers MAXRW
+MinSpareThreads 1
+MaxSpareThreads MAXRW
+MaxConnectionsPerChild 0
+KeepAlive On
+MaxKeepAliveRequests 100000
+TypesConfig /etc/httpd/conf/mime.types
+LogFormat "%h %l %u %t \"%r\" %>s %b" common
+CustomLog "@W@/logs/apache-access.log" common
+SSLSessionCache "shmcb:@W@/logs/apache-ssl-cache(512000)"
+SSLEngine SSLSWITCH
+SSLCertificateFile "@W@/tls/cert.pem"
+SSLCertificateKeyFile "@W@/tls/key.pem"
+ProxyPass "/" "http://127.0.0.1:18960/"
+ProxyPassReverse "/" "http://127.0.0.1:18960/"

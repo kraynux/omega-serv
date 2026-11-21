@@ -12,7 +12,8 @@ qu'omega-fire) :
   une demande de mot de passe dans la TUI figerait l'application (_service_reload.py)."""
 from __future__ import annotations
 
-import shutil
+import os
+import stat
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -33,8 +34,29 @@ class ClearResult:
     failed: tuple[str, ...]
 
 
+def _inside_project(directory: Path, project_root: Path) -> tuple[str, ...] | None:
+    """Composants de `directory` sous la racine du projet (sans resolution), None s'il est ailleurs."""
+    try:
+        return Path(os.path.abspath(directory)).relative_to(Path(os.path.abspath(project_root))).parts
+    except ValueError:
+        return None
+
+
 def check_clearable(directory: Path, project_root: Path) -> Path:
-    """Chemin reel du dossier a vider, ou UnsafeDirectoryError s'il ne doit jamais l'etre."""
+    """Chemin reel du dossier a vider, ou UnsafeDirectoryError s'il ne doit jamais l'etre.
+
+    Scan de securite n° 2 (2026-11-20, F13) : sous le projet (var/exports, var/screenshots par defaut), var/ est
+    inscriptible par le compte du service - un dossier ou un composant remplace par un lien est refuse ; avant,
+    le lien etait resolu et l'operateur vidait la cible (~/.ssh, un autre projet...)."""
+    parts = _inside_project(directory, project_root)
+    if parts is not None:
+        current = Path(os.path.abspath(project_root))
+        for part in parts:
+            current = current / part
+            if current.is_symlink():
+                raise UnsafeDirectoryError(str(directory), _("le chemin passe par un lien symbolique"))
+    elif directory.is_symlink():
+        raise UnsafeDirectoryError(str(directory), _("le chemin passe par un lien symbolique"))
     target = directory.resolve()
     project = project_root.resolve()
     if target in _SYSTEM_DIRS or target.parent == Path("/home"):
@@ -53,14 +75,36 @@ def clear_directory(directory: Path, project_root: Path) -> ClearResult:
     target.mkdir(parents=True, exist_ok=True)
     removed = 0
     failed: list[str] = []
-    for entry in sorted(target.iterdir()):
-        try:
-            if entry.is_dir() and not entry.is_symlink():
-                shutil.rmtree(entry)
+    # Suppression relative au descripteur du dossier, ouvert sans suivre de lien (F13) : un lien pose entre la
+    # verification et la suppression fait echouer l'ouverture au lieu de detourner la purge.
+    dir_fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        for name in sorted(os.listdir(dir_fd)):
+            try:
+                if stat.S_ISDIR(os.stat(name, dir_fd=dir_fd, follow_symlinks=False).st_mode):
+                    _remove_tree_at(name, dir_fd)
+                else:
+                    os.unlink(name, dir_fd=dir_fd)
+            except OSError as exc:
+                failed.append(f"{name} ({exc.strerror or exc})")
             else:
-                entry.unlink()
-        except OSError as exc:
-            failed.append(f"{entry.name} ({exc.strerror or exc})")
-        else:
-            removed += 1
+                removed += 1
+    finally:
+        os.close(dir_fd)
     return ClearResult(target, removed, tuple(failed))
+
+
+def _remove_tree_at(name: str, parent_fd: int) -> None:
+    """Supprime le dossier `name` (relatif a `parent_fd`) et son contenu, sans jamais suivre un lien (F13).
+    shutil.rmtree(dir_fd=...) n'existe qu'a partir de Python 3.11 ; omega-serv tourne des 3.10."""
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
+    fd = os.open(name, flags, dir_fd=parent_fd)
+    try:
+        for child in os.listdir(fd):
+            if stat.S_ISDIR(os.stat(child, dir_fd=fd, follow_symlinks=False).st_mode):
+                _remove_tree_at(child, fd)
+            else:
+                os.unlink(child, dir_fd=fd)
+    finally:
+        os.close(fd)
+    os.rmdir(name, dir_fd=parent_fd)

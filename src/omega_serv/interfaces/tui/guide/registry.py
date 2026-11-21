@@ -32,12 +32,19 @@ from omega_serv.interfaces.tui.guide.content.routage import (
 )
 from omega_serv.interfaces.tui.guide.content.securite_active import ALL_ACTIVE_SECURITY_GUIDES
 from omega_serv.interfaces.tui.guide.content.service_et_instances import (
+    ADMIN_ACCOUNTS_SCREEN,
+    ADMIN_ALERTS_SCREEN,
+    ADMIN_MASTER_SCREEN,
+    ADMIN_SESSIONS_SCREEN,
+    ADMIN_WEB_SCREEN,
+    BACKUP_CODES_SCREEN,
     CONFIG_CHECK_SCREEN,
     INSTANCES_SCREEN,
     OPTIONS_SCREEN,
     RESOURCE_STATUS_SCREEN,
     SERVICE_SCREEN,
     SIMULATE_REQUEST_SCREEN,
+    TOTP_ENROL_SCREEN,
 )
 from omega_serv.interfaces.tui.guide.content.services_avances import (
     AUTH_MENU_SCREEN,
@@ -73,6 +80,13 @@ _ALL_GUIDES: tuple[ScreenGuide, ...] = (
     OPTIONS_SCREEN,
     SERVICE_SCREEN,
     INSTANCES_SCREEN,
+    ADMIN_WEB_SCREEN,
+    ADMIN_ACCOUNTS_SCREEN,
+    ADMIN_SESSIONS_SCREEN,
+    ADMIN_MASTER_SCREEN,
+    ADMIN_ALERTS_SCREEN,
+    TOTP_ENROL_SCREEN,
+    BACKUP_CODES_SCREEN,
     RESOURCE_STATUS_SCREEN,
     SIMULATE_REQUEST_SCREEN,
     CONFIG_CHECK_SCREEN,

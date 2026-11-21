@@ -100,7 +100,9 @@ class TestAlias(_ServerTestBase):
 
     async def test_alias_target_confinement_still_enforced(self):
         status, _, _ = await self._request("GET", "/shared/../../etc/passwd")
-        self.assertEqual(status, 403)
+        # Plan proxy natif v2, lot 1 (D26, decision de l'auteur) : segment `..` refuse des l'analyse, 400 (avant : 403
+        # au confinement de l'alias). Le confinement reste teste par les chemins encodes dans test_static_server.
+        self.assertEqual(status, 400)
 
 
 class TestDirectoryListing(_ServerTestBase):

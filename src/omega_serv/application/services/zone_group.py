@@ -18,6 +18,7 @@ from omega_lib.synchro.service_group import DROP_IN_NAME, drop_in_text, grants_z
 
 from omega_serv.application.services.install_service import ManageServiceResult
 from omega_serv.core.i18n import _
+from omega_serv.domain.services.service_name import is_safe_service_name
 from omega_serv.domain.services.systemd_unit import find_name_hijack
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.service_manager_port import ServiceManagerPort
@@ -29,7 +30,15 @@ def _paths(unit_dir: Path, service_name: str) -> tuple[Path, Path, Path]:
     return unit_path, directory, directory / DROP_IN_NAME
 
 
+def _refused(service_name: str) -> ManageServiceResult:
+    """Scan de securite n° 2 (2026-11-20, F10/F12/F14) : cette commande tourne sous root et le nom vient souvent
+    de var/settings.json, ecrit par le compte du service - `../x` ou `/etc/x` sortait de /etc/systemd/system."""
+    return ManageServiceResult(False, _("Nom de service refusé : {service!r}.").format(service=service_name))
+
+
 def zone_group_present(filesystem: FilesystemPort, unit_dir: Path, service_name: str) -> bool:
+    if not is_safe_service_name(service_name):
+        return False
     _unit, _directory, path = _paths(unit_dir, service_name)
     try:
         return filesystem.is_file(path) and grants_zone_group(filesystem.read_text(path))
@@ -45,6 +54,8 @@ def add_zone_group(
     project_root: Path,
     group_exists: Callable[[str], bool],
 ) -> ManageServiceResult:
+    if not is_safe_service_name(service_name):
+        return _refused(service_name)
     unit_path, directory, path = _paths(unit_dir, service_name)
     if not filesystem.is_file(unit_path):
         return ManageServiceResult(False, _("Unité introuvable : {unit_path}").format(unit_path=unit_path))
@@ -83,6 +94,8 @@ def remove_zone_group(
     unit_dir: Path,
     service_name: str,
 ) -> ManageServiceResult:
+    if not is_safe_service_name(service_name):
+        return _refused(service_name)
     _unit, directory, path = _paths(unit_dir, service_name)
     if not filesystem.exists(path):
         return ManageServiceResult(True, _("Le service {service} n'a pas le groupe {group} : rien à retirer.").format(

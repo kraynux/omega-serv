@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from omega_serv.domain.logging.access_log_format import sanitize_log_field
+from omega_serv.domain.logging.error_log_line import sanitize_log_field
 from omega_serv.domain.security.active_defense.value_objects import AttackClass, ThreatLevel
 
 SECURITY_EVENTS_SCHEMA_VERSION = 1

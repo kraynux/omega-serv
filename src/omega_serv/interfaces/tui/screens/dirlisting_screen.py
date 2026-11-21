@@ -22,6 +22,7 @@ from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.dirlisting import DirlistingSettings
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -85,13 +86,15 @@ class DirlistingScreen(OmegaScreen):
 
             yield Static(_("ZONES OÙ LE LISTING EST ACTIF"), classes="omega-subtitle")
             yield DataTable(id="zones-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Ajouter"), id="add", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Ajouter une zone"), id="add", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Supprimer la zone"), id="delete", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -152,7 +155,7 @@ class DirlistingScreen(OmegaScreen):
             self._save_settings()
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("AJOUTER UNE ZONE"), fields=[("prefix", _("Préfixe de zone (ex: /files/)"), "")]),
                 self._add_prefix,
             )
@@ -168,9 +171,13 @@ class DirlistingScreen(OmegaScreen):
             return
         prefix = values["prefix"].strip()
         if not prefix.startswith("/"):
-            self.query_one("#form-error", Static).update(_("Le préfixe doit commencer par '/' : {prefix!r}").format(prefix=prefix))
+            self.report_form_error(_("Le préfixe doit commencer par '/' : {prefix!r}").format(prefix=prefix))
             return
         prefixes = self._prefixes()
+        duplicate = duplicate_error(prefixes, prefix, lambda v: v, _("le préfixe {value!r}").format(value=prefix))
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         prefixes.append(prefix)
         self._save_settings_dict({"zone_prefixes": prefixes})
 
@@ -182,14 +189,18 @@ class DirlistingScreen(OmegaScreen):
         self._save_settings_dict({"zone_prefixes": prefixes})
 
     def _save_settings(self) -> None:
+        invalid = self.yes_no_inputs_error("#show-header-input", "#encode-header-input", "#hide-header-file-input", "#show-readme-input", "#encode-readme-input", "#hide-readme-file-input")
+        if invalid is not None:
+            self.query_one("#form-error", Static).update(invalid)
+            return
         theme = self.query_one("#theme-select", Select).value
         if theme not in EXPORT_PALETTES:
-            self.query_one("#form-error", Static).update(_("Thème inconnu : {theme!r}").format(theme=theme))
+            self.report_form_error(_("Thème inconnu : {theme!r}").format(theme=theme))
             return
         header_file = self.query_one("#header-file-input", Input).value.strip()
         readme_file = self.query_one("#readme-file-input", Input).value.strip()
         if not header_file or not readme_file:
-            self.query_one("#form-error", Static).update(_("Les noms de fichiers HEADER/README ne peuvent pas être vides."))
+            self.report_form_error(_("Les noms de fichiers HEADER/README ne peuvent pas être vides."))
             return
 
         self._save_settings_dict({
@@ -208,7 +219,7 @@ class DirlistingScreen(OmegaScreen):
     def _save_settings_dict(self, updates: dict[str, object], success_message: str = _("Zones mises à jour.")) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("dirlisting")
         enabled = existing.enabled if existing is not None else False

@@ -589,17 +589,23 @@ class TestTuiActiveDefense(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#add-path", Button).press()
             await pilot.pause()
             await self._submit_form(pilot, {"prefix": "screenshots"})
-            self.assertIn("préfixe invalide", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("préfixe invalide", str(pilot.app.screen.query_one("#df-error").content))  # lot V : dans le formulaire
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
 
             pilot.app.screen.query_one("#add-source", Button).press()
             await pilot.pause()
             await self._submit_form(pilot, {"network": "pas-une-ip"})
-            self.assertIn("réseau invalide", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("réseau invalide", str(pilot.app.screen.query_one("#df-error").content))  # lot V : dans le formulaire
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
 
             pilot.app.screen.query_one("#add-source", Button).press()
             await pilot.pause()
             await self._submit_form(pilot, {"network": "100.64.0.0/10", "requests": "beaucoup"})
-            self.assertIn("nombre entier", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("nombre entier", str(pilot.app.screen.query_one("#df-error").content))  # lot V : dans le formulaire
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
 
             pilot.app.screen.query_one("#exclusion-prefixes-input", Input).value = "healthz"
             pilot.app.screen.query_one("#save-exclusions", Button).press()

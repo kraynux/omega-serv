@@ -165,6 +165,24 @@ class TestInventoryOutputs(unittest.TestCase):
             self.tool.write_csv([entry, other], csv_path)
             self.assertEqual(self.tool.load_line_decisions(csv_path)[other.ident][0], "TRADUIRE")
 
+    def test_rule_note_never_repeated_across_regenerations(self):
+        # 2026-11-19 : la note de la regle, deja ecrite dans le CSV, se recollait a chaque generation.
+        with tempfile.TemporaryDirectory() as tmp:
+            rules = {("A-DECIDER", "regle"): ("NE-PAS-TRADUIRE", "note de regle")}
+            entry = self.tool.Entry("omega-serv", "domaine", "x.py", 3, "", "", "A-DECIDER", "regle", "Texte")
+            csv_path = Path(tmp) / "inv.csv"
+            with csv_path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(["id", "decision_utilisateur", "note"])
+                writer.writerow([entry.ident, "", "ma note de ligne note de regle note de regle"])
+            for _ in range(3):
+                entry.category = "A-DECIDER"
+                self.tool.apply_decisions([entry], rules, self.tool.load_line_decisions(csv_path))
+                self.tool.write_csv([entry], csv_path)
+            self.assertEqual(entry.note, "ma note de ligne note de regle")
+            self.assertEqual(self.tool.merge_notes("", "note de regle"), "note de regle")
+            self.assertEqual(self.tool.merge_notes("note de regle", "note de regle"), "note de regle")
+
     def test_old_decisions_layout_still_read(self):
         with tempfile.TemporaryDirectory() as tmp:
             decisions = Path(tmp) / "dec.md"

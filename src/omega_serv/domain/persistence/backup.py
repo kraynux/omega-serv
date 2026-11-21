@@ -32,6 +32,16 @@ class BackupRequest:
     """Bibliotheque et favoris des journaux, sources distantes (chemin de cle seulement), rotations planifiees."""
     include_riposte: bool = False
     """Base RIPOSTE (memoire de recidive, decisions, actions) - les politiques sont dans la configuration."""
+    include_site_content: bool = False
+    """Contenu du site (`paths.webroot`), case facultative HORS « Tout sauvegarder » (decision de l'auteur du
+    2026-11-15) : ce n'est pas de la configuration et ce peut etre long ; l'ecran previent et montre l'attente."""
+    include_exports: bool = False
+    """Rapports d'export (dossier des exports des Reglages, `var/exports/` par defaut), hors « Tout sauvegarder »
+    (demande de l'auteur du 2026-11-15) : des documents produits, pas de la configuration."""
+    include_zone_data: bool = False
+    """Donnees des zones personnalisees (alias, listing, FastCGI : les dossiers vers lesquels elles pointent), hors
+    « Tout sauvegarder » (demande de l'auteur du 2026-11-15). Leurs reglages sont dans la configuration, toujours
+    sauvegardee. Voir application/persistence/zone_data.py."""
     description: str = ""
 
     @classmethod

@@ -100,9 +100,12 @@ class ProcessIpScreen(OmegaScreen):
             yield Static("", id="ip-error", classes="omega-hint")
             yield Static("", id="ip-search-result", classes="omega-hint")
             yield DataTable(id="top-ips-table")
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele
+        # RIPOSTE) : le classement des IP peut etre long.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
                 yield Button(_("Retirer cette IP des logs analyses"), id="remove-ip", variant="error", disabled=True)
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+            with Container(classes="omega-btn-frame"):
                 yield Button(_("Retour"), id="back")
         yield Footer()
 

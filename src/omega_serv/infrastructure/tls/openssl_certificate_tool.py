@@ -82,12 +82,14 @@ class OpensslCertificateTool:
             "-subj", _build_subject(params),
             "-addext", _build_san(params),
         ]
+        # Scan de securite n° 2 (2026-11-20, F26/F31/F32) : phrase de passe par l'entree standard, jamais en
+        # argument (`pass:...` se lisait dans /proc/<pid>/cmdline et `ps` par tout utilisateur local).
         if params.key_password:
-            args += ["-passout", f"pass:{params.key_password}"]
+            args += ["-passout", "stdin"]
         else:
             args += ["-nodes"]
 
-        result = self._runner.run(args, timeout=60)
+        result = self._runner.run(args, input_text=_stdin_password(params.key_password), timeout=60)
         if not result.ok:
             raise CertificateToolError(_("échec de génération du certificat auto-signé : {value}").format(value=result.stderr.strip()))
 
@@ -129,11 +131,11 @@ class OpensslCertificateTool:
             "-keyout", str(key_path),
             "-out", str(cert_path),
             "-subj", _build_subject(params),
-            "-passout", f"pass:{params.key_password}",
+            "-passout", "stdin",  # F26 : jamais la phrase de passe en argument
             "-addext", "basicConstraints=critical,CA:true",
             "-addext", "keyUsage=critical,keyCertSign,cRLSign",
         ]
-        result = self._runner.run(args, timeout=120)
+        result = self._runner.run(args, input_text=_stdin_password(params.key_password), timeout=120)
         if not result.ok:
             raise CertificateToolError(_("échec de génération de la CA locale : {value}").format(value=result.stderr.strip()))
 
@@ -177,14 +179,14 @@ class OpensslCertificateTool:
                 "-in", str(csr_path),
                 "-CA", str(ca_cert_path),
                 "-CAkey", str(ca_key_path),
-                "-passin", f"pass:{ca_key_password}",
+                "-passin", "stdin",  # F31 : jamais la phrase de passe de la CA en argument
                 "-CAserial", str(serial_path),
                 "-copy_extensions", "copy",
                 "-extfile", str(ext_file),
                 "-days", str(validity_days),
                 "-out", str(out_cert_path),
             ]
-            result = self._runner.run(args, timeout=60)
+            result = self._runner.run(args, input_text=_stdin_password(ca_key_password), timeout=60)
         finally:
             ext_file.unlink(missing_ok=True)
         if not result.ok:
@@ -242,8 +244,16 @@ class OpensslCertificateTool:
             f.write(line)
 
 
+_OPENSSL_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
 def _parse_openssl_date(raw: str) -> datetime:
-    return datetime.strptime(raw.strip().removesuffix(" GMT"), "%b %d %H:%M:%S %Y").replace(tzinfo=timezone.utc)
+    """`Nov 12 10:00:00 2026 GMT` - mois anglais lu sans dependre de la locale (lot 1, D41 : `%b` la suit)."""
+    month, rest = raw.strip().removesuffix(" GMT").split(" ", 1)
+    if month not in _OPENSSL_MONTHS:
+        raise ValueError(f"mois inconnu : {month!r}")
+    return datetime.strptime(f"{_OPENSSL_MONTHS.index(month) + 1:02d} {rest.strip()}", "%m %d %H:%M:%S %Y").replace(
+        tzinfo=timezone.utc)
 
 
 def _parse_certificate_text(text: str) -> CertificateInfo:
@@ -280,3 +290,8 @@ def _parse_certificate_text(text: str) -> CertificateInfo:
         key_bits=int(key_bits_match.group(1)) if key_bits_match else None,
         signature_algorithm=sig_algo_match.group(1) if sig_algo_match else "",
     )
+
+
+def _stdin_password(password: str | None) -> str | None:
+    """Phrase de passe pour `-passin stdin` / `-passout stdin` : premiere ligne de l'entree standard."""
+    return f"{password}\n" if password else None

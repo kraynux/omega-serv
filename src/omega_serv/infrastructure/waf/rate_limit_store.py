@@ -20,7 +20,12 @@ regagne sa capacite pleine (le token bucket se remplit lineairement sur
 `window_seconds`, toujours tres inferieur au TTL par defaut) - le
 supprimer ne change donc AUCUN comportement observable, une nouvelle
 entree pour la meme cle demarrerait de toute facon a pleine capacite
-(`consume_token(None, ...)`)."""
+(`consume_token(None, ...)`).
+
+Plan proxy natif v2, lot A (D33) : le TTL ne suffisait pas - en une heure, une source qui change d'adresse a chaque
+requete (IPv6) remplit la table sans limite (le natif : +5,4 Mo pour 40 000 adresses, essai du 2026-11-12). Plafond
+`MAX_TRACKED_KEYS`, identique au natif (`rate_limiter.cpp`) : table pleine, l'adresse la moins recemment vue est
+remplacee (ordre d'insertion du dict, cle replacee en fin a chaque requete) - elle repartira a pleine capacite."""
 from __future__ import annotations
 
 from omega_serv.domain.security.waf.rate_limit import TokenBucketState, consume_token
@@ -29,19 +34,24 @@ from omega_serv.ports.rate_limit_port import RateLimitCheckResult
 
 _DEFAULT_TTL_SECONDS = 3600.0
 _SWEEP_INTERVAL_SECONDS = 60.0
+MAX_TRACKED_KEYS = 100_000
 
 
 class InMemoryRateLimitStore:
-    def __init__(self, clock: ClockPort, ttl_seconds: float = _DEFAULT_TTL_SECONDS):
+    def __init__(self, clock: ClockPort, ttl_seconds: float = _DEFAULT_TTL_SECONDS,
+                 max_tracked_keys: int = MAX_TRACKED_KEYS):
         self._clock = clock
         self._buckets: dict[str, TokenBucketState] = {}
         self._ttl_seconds = ttl_seconds
+        self._max_tracked_keys = max_tracked_keys
         self._last_sweep = 0.0
 
     def check(self, key: str, requests: int, window_seconds: int) -> RateLimitCheckResult:
         now = self._clock.now().timestamp()
         self._sweep_stale_entries_if_due(now)
-        state = self._buckets.get(key)
+        state = self._buckets.pop(key, None)  # replacee en fin : l'ordre du dict = de la moins recente a la plus recente
+        if state is None and len(self._buckets) >= self._max_tracked_keys:
+            del self._buckets[next(iter(self._buckets))]
         result = consume_token(state, now, capacity=requests, window_seconds=window_seconds)
         self._buckets[key] = result.new_state
         retry_after = None if result.retry_after_seconds is None else int(result.retry_after_seconds) + 1

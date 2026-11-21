@@ -24,6 +24,11 @@ from __future__ import annotations
 from omega_serv.ports.clock_port import ClockPort
 
 _DEFAULT_TTL_SECONDS = 3600.0
+MAX_TRACKED_KEYS = 100_000
+"""Scan de securite n° 1 (2026-11-20, F35) : comme InMemoryRateLimitStore (plan D33), un plafond - une source qui
+change d'adresse a chaque requete (IPv6, botnet) ajoutait une cle par adresse pendant une heure, sans limite, et le
+balayage parcourait toute la table sur la boucle asyncio. Table pleine : le compteur le moins recemment touche est
+oublie (ordre d'insertion du dict, cle replacee en fin a chaque coup)."""
 _SWEEP_INTERVAL_SECONDS = 60.0
 _KEY_SEPARATOR = "\x00"
 
@@ -36,16 +41,25 @@ def _counter_key(ip: str, key: str) -> str:
 
 
 class InMemoryReputationTracker:
-    def __init__(self, clock: ClockPort, ttl_seconds: float = _DEFAULT_TTL_SECONDS):
+    def __init__(self, clock: ClockPort, ttl_seconds: float = _DEFAULT_TTL_SECONDS,
+                 max_tracked_keys: int = MAX_TRACKED_KEYS):
         self._clock = clock
         self._hits: dict[str, list[float]] = {}
         self._ttl_seconds = ttl_seconds
+        self._max_tracked_keys = max_tracked_keys
         self._last_sweep = 0.0
 
     def record_hit(self, ip: str, key: str = "global") -> None:
         now = self._clock.now().timestamp()
         self._sweep_stale_entries_if_due(now)
-        self._hits.setdefault(_counter_key(ip, key), []).append(now)
+        counter = _counter_key(ip, key)
+        timestamps = self._hits.pop(counter, None)  # replacee en fin : de la moins recente a la plus recente
+        if timestamps is None:
+            timestamps = []
+            if len(self._hits) >= self._max_tracked_keys:
+                del self._hits[next(iter(self._hits))]
+        timestamps.append(now)
+        self._hits[counter] = timestamps
 
     def count_hits_in_window(self, ip: str, window_seconds: int, key: str = "global") -> int:
         now = self._clock.now().timestamp()

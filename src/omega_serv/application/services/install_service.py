@@ -118,7 +118,17 @@ def repair_directory_permissions(
 
     # var/backups jamais partage avec le groupe (2026-11-10) : sauvegardes completes = users.json,
     # certificats et cles privees. Le service n'y lit ni n'y ecrit (sauvegardes faites par l'utilisateur).
-    grant_directory_access(project_root / "var", group, repairing_user, private_subdirs=("backups",))
+    # var/backups/logs ouvert au service (decision de l'auteur du 2026-11-17) : archives des journaux, que
+    # l'administration web (compte du service) liste, cree (« Archiver maintenant ») et supprime ; var/backups lui-meme
+    # devient seulement traversable (2710), le reste y reste prive.
+    logs_archives = project_root / "var" / "backups" / "logs"
+    if not logs_archives.is_symlink() and not logs_archives.exists():
+        try:
+            filesystem.make_directory(logs_archives, 0o770)
+        except OSError:
+            pass  # cree plus tard par la rotation ; le partage s'appliquera a la prochaine reparation
+    grant_directory_access(project_root / "var", group, repairing_user, private_subdirs=("backups",),
+                           open_subdirs=("backups/logs",))
     # secure/auth/ (2026-09-29, crash reel en boucle : PermissionError
     # sur secure/auth/zones.json) : users.json/zones.json sont ecrits
     # par l'ecran Authentification (interfaces/tui/screens/

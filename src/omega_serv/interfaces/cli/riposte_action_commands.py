@@ -12,40 +12,21 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from omega_serv.application.config.load_config import load_config
-from omega_serv.application.riposte.console import (
-    emergency_stop,
-    emergency_stop_active,
-    finished_commands,
-    process_running,
-    resume,
-    riposte_enabled,
-    set_policy_enabled,
-    submit_commands,
-)
-from omega_serv.bootstrap.container import DependencyContainer
-from omega_serv.core.i18n import _
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.security.riposte.actions import EXEMPT_DURATIONS, RiposteAction
-from omega_serv.domain.security.riposte.config import parse_riposte_config
-from omega_serv.infrastructure.persistence.sqlite_riposte_connection import open_riposte_connection
-from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
-from omega_serv.interfaces.cli.command_tree import add_command, add_group
-from omega_serv.interfaces.cli.riposte_text import (
-    action_detail_label,
-    action_label,
-    action_state_label,
-    command_result_text,
-    finished_by_label,
-)
+if TYPE_CHECKING:
+    from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.riposte.actions import RiposteAction
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
 
 WAIT_SECONDS = 3.0
 _POLL_SECONDS = 0.2
 
 
 def _load(args: argparse.Namespace, container: DependencyContainer) -> OmegaServConfig | None:
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.core.i18n import _
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
         print(_("Configuration illisible : ") + "; ".join(result.errors), file=sys.stderr)
@@ -54,12 +35,18 @@ def _load(args: argparse.Namespace, container: DependencyContainer) -> OmegaServ
 
 
 def _database(config: OmegaServConfig, container: DependencyContainer) -> Any:
+    from omega_serv.domain.security.riposte.config import parse_riposte_config
     option = config.options.get("riposte")
     return container.project_root / parse_riposte_config(option.settings if option is not None else {}).database
 
 
 def _open(config: OmegaServConfig, container: DependencyContainer, *, write: bool) -> SqliteRiposteStore | None:
     """`write` : depot d'une commande - jamais de creation de base (elle appartient au service)."""
+    from omega_serv.core.i18n import _
+    from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+        open_riposte_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
     try:
         connection = open_riposte_connection(_database(config, container), read_only=not write, create=False)
     except FileNotFoundError:
@@ -76,6 +63,8 @@ def _open(config: OmegaServConfig, container: DependencyContainer, *, write: boo
 def _submit(store: SqliteRiposteStore, container: DependencyContainer, commands: list[tuple[str, dict[str, Any]]],
             *, wait: float = WAIT_SECONDS) -> int:
     """Depose les commandes (dans l'ordre), attend leur execution et affiche les resultats."""
+    from omega_serv.application.riposte.console import submit_commands
+    from omega_serv.core.i18n import _
     try:
         ids = submit_commands(store, commands, container.clock.now())
     except OSError as error:
@@ -86,6 +75,9 @@ def _submit(store: SqliteRiposteStore, container: DependencyContainer, commands:
 
 def _wait_and_print(store: SqliteRiposteStore, container: DependencyContainer, ids: list[int],
                     *, wait: float = WAIT_SECONDS) -> int:
+    from omega_serv.application.riposte.console import finished_commands, process_running
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import command_result_text
     if not process_running(store, container.clock.now()):
         print(_("RIPOSTE est arrêté : la commande sera exécutée à son prochain démarrage."))
         return 0
@@ -106,6 +98,8 @@ def _wait_and_print(store: SqliteRiposteStore, container: DependencyContainer, i
 
 
 def _action_line(action: RiposteAction) -> str:
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import action_label, action_state_label
     tier = _(" palier {n}").format(n=action.tier_index + 1) if action.tier_index is not None else ""
     end = action.finished_at if action.finished_at is not None and not action.in_progress else action.ends_at
     return _("{id}  {ip}  {action}{tier}  [{policy}]  {state} - jusqu'au {end}").format(
@@ -114,6 +108,8 @@ def _action_line(action: RiposteAction) -> str:
 
 
 def cmd_riposte_actions_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.riposte.console import emergency_stop_active
+    from omega_serv.core.i18n import _
     config = _load(args, container)
     if config is None:
         return 1
@@ -131,6 +127,12 @@ def cmd_riposte_actions_list(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_riposte_actions_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import (
+        action_detail_label,
+        command_result_text,
+        finished_by_label,
+    )
     config = _load(args, container)
     if config is None:
         return 1
@@ -180,6 +182,8 @@ def cmd_riposte_actions_not_recidive(args: argparse.Namespace, container: Depend
 
 
 def _set_policy_enabled(args: argparse.Namespace, container: DependencyContainer, enabled: bool) -> int:
+    from omega_serv.application.riposte.console import riposte_enabled, set_policy_enabled
+    from omega_serv.core.i18n import _
     config = _load(args, container)
     if config is None:
         return 1
@@ -223,6 +227,7 @@ def cmd_riposte_sources_forget(args: argparse.Namespace, container: DependencyCo
 
 
 def cmd_riposte_exemptions_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
     config = _load(args, container)
     if config is None:
         return 1
@@ -251,6 +256,8 @@ def cmd_riposte_exemptions_remove(args: argparse.Namespace, container: Dependenc
 
 
 def cmd_riposte_stop(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.riposte.console import emergency_stop
+    from omega_serv.core.i18n import _
     config = _load(args, container)
     if config is None:
         return 1
@@ -266,6 +273,8 @@ def cmd_riposte_stop(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_riposte_resume(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.riposte.console import resume
+    from omega_serv.core.i18n import _
     config = _load(args, container)
     if config is None:
         return 1
@@ -279,6 +288,9 @@ def cmd_riposte_resume(args: argparse.Namespace, container: DependencyContainer)
 
 def register(riposte_sub: argparse._SubParsersAction, policies: argparse._SubParsersAction,
              sources: argparse._SubParsersAction) -> None:
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.riposte.actions import EXEMPT_DURATIONS
+    from omega_serv.interfaces.cli.command_tree import add_command, add_group
     action_id = _("Identifiant de l'action (voir riposte actions list).")
     policy_id = _("Identifiant de la politique (voir riposte policies list).")
     actions = add_group(riposte_sub, "actions", _("Bans et leurres posés par RIPOSTE."), "riposte_actions_command",

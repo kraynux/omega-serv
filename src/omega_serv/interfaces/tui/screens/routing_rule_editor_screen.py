@@ -23,11 +23,13 @@ from textual.widgets import Button, DataTable, Static
 
 from omega_serv.core.i18n import _
 from omega_serv.domain.routing.proxy_zone import RoutingRule, UpstreamTarget, upstream_key
+from omega_serv.interfaces.tui.screens._base import FormHostMixin
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 
 
-class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
+class RoutingRuleEditorScreen(FormHostMixin, ModalScreen[list[RoutingRule] | None]):
+    form_error_target = "#rule-error"
     BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", _("Annuler"), show=True)]
 
     def __init__(self, *, rules: list[RoutingRule], upstreams: list[UpstreamTarget]) -> None:
@@ -92,7 +94,13 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
         pattern = values["pattern"].strip()
         target = values["upstream_key"].strip()
         if not header_name or not pattern or not target:
-            self.query_one("#rule-error", Static).update(_("Tous les champs sont requis."))
+            self.report_form_error(_("Tous les champs sont requis."))
+            return None
+        known = set(self._upstream_keys)
+        if target not in known:
+            # Lot V (2026-11-15) : une cible inconnue n'etait vue qu'a la fin, formulaires deja fermes.
+            self.report_form_error(_("Upstream cible inconnu : {target!r} (connus : {known}).").format(
+                target=target, known=", ".join(sorted(known)) or "-"))
             return None
         return RoutingRule(header_name=header_name, pattern=pattern, upstream_key=target)
 
@@ -104,13 +112,13 @@ class RoutingRuleEditorScreen(ModalScreen[list[RoutingRule] | None]):
             self.dismiss(list(self._rules))
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("AJOUTER UNE RÈGLE"), fields=self._fields_for(None)), self._add_rule,
             )
             return
         if event.button.id == "edit" and self._selected_index is not None:
             rule = self._rules[self._selected_index]
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("MODIFIER LA RÈGLE"), fields=self._fields_for(rule)), self._edit_rule,
             )
             return

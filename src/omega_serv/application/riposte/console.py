@@ -13,32 +13,17 @@ import copy
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from omega_serv.application.riposte.engine import STATE_EMERGENCY_STOP
-from omega_serv.application.riposte.get_status import get_riposte_status
-from omega_serv.application.riposte.measure import MeasureResult, measure
-from omega_serv.application.riposte.safety import riposte_exempt_networks
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.config.option import Option
-from omega_serv.domain.security.active_defense.config import (
-    ActiveDefenseLoggingConfig,
-    parse_active_defense_config,
-)
-from omega_serv.domain.security.riposte.actions import RiposteCommand
-from omega_serv.domain.security.riposte.config import (
-    TIER_CEILING_SECONDS,
-    RiposteConfig,
-    RipostePolicy,
-    parse_riposte_config,
-    validate_riposte_config,
-)
-from omega_serv.domain.security.riposte.decide import Decision, SafetyContext, decide
-from omega_serv.domain.security.riposte.events import ObservedEvent
-from omega_serv.domain.security.riposte.history import Episode, SourceHistory
-from omega_serv.domain.security.waf.config import parse_waf_config
-from omega_serv.ports.configuration_port import ConfigurationPort
-from omega_serv.ports.riposte_store_port import RiposteStorePort
+if TYPE_CHECKING:
+    from omega_serv.application.riposte.measure import MeasureResult
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.riposte.actions import RiposteCommand
+    from omega_serv.domain.security.riposte.config import RiposteConfig, RipostePolicy
+    from omega_serv.domain.security.riposte.decide import Decision
+    from omega_serv.domain.security.riposte.events import ObservedEvent
+    from omega_serv.ports.configuration_port import ConfigurationPort
+    from omega_serv.ports.riposte_store_port import RiposteStorePort
 
 Commands = list[tuple[str, dict[str, Any]]]
 
@@ -47,6 +32,7 @@ Commands = list[tuple[str, dict[str, Any]]]
 
 
 def riposte_config_of(config: OmegaServConfig) -> RiposteConfig:
+    from omega_serv.domain.security.riposte.config import parse_riposte_config
     option = config.options.get("riposte")
     return parse_riposte_config(option.settings if option is not None else {})
 
@@ -58,6 +44,7 @@ def riposte_enabled(config: OmegaServConfig) -> bool:
 
 def decoy_profiles(config: OmegaServConfig) -> frozenset[str]:
     """Profils de leurre reellement disponibles (Active Defense actif) - validation des politiques."""
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
     option = config.options.get("active_defense")
     if option is None or not option.enabled:
         return frozenset()
@@ -65,12 +52,18 @@ def decoy_profiles(config: OmegaServConfig) -> frozenset[str]:
 
 
 def deception_available(config: OmegaServConfig) -> bool:
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
     option = config.options.get("active_defense")
     return option is not None and option.enabled and parse_active_defense_config(option.settings).deception.enabled
 
 
 def journal_paths(config: OmegaServConfig, project_root: Path) -> tuple[Path, Path]:
     """(waf-alerts.log, security-events.jsonl) tels que les ECRIT le serveur - memes reglages."""
+    from omega_serv.domain.security.active_defense.config import (
+        ActiveDefenseLoggingConfig,
+        parse_active_defense_config,
+    )
+    from omega_serv.domain.security.waf.config import parse_waf_config
     waf_option = config.options.get("waf")
     waf_log = parse_waf_config(waf_option.settings if waf_option is not None else {}).logging.path
     ad_option = config.options.get("active_defense")
@@ -99,6 +92,7 @@ def submit_commands(store: RiposteStorePort, commands: Commands, now: datetime) 
 
 
 def process_running(store: RiposteStorePort, now: datetime) -> bool:
+    from omega_serv.application.riposte.get_status import get_riposte_status
     return get_riposte_status(store, now).running
 
 
@@ -115,17 +109,20 @@ def finished_commands(store: RiposteStorePort, ids: list[int]) -> list[RiposteCo
 def emergency_stop(store: RiposteStorePort, now: datetime, *, revoke: bool) -> list[int]:
     """Pose le drapeau (persistant, effet immediat meme processus arrete) ; `revoke` depose en plus la levee
     de toutes les actions en cours. Retourne les commandes deposees."""
+    from omega_serv.application.riposte.engine import STATE_EMERGENCY_STOP
     store.set_state(STATE_EMERGENCY_STOP, "1")
     store.append_audit(now, "emergency_stop", "revoke" if revoke else "let_finish")
     return submit_commands(store, [("revoke_all", {})], now) if revoke else []
 
 
 def resume(store: RiposteStorePort, now: datetime) -> None:
+    from omega_serv.application.riposte.engine import STATE_EMERGENCY_STOP
     store.set_state(STATE_EMERGENCY_STOP, "0")
     store.append_audit(now, "resume", "")
 
 
 def emergency_stop_active(store: RiposteStorePort) -> bool:
+    from omega_serv.application.riposte.engine import STATE_EMERGENCY_STOP
     return store.get_state(STATE_EMERGENCY_STOP) == "1"
 
 
@@ -145,6 +142,7 @@ class SaveResult:
 
 def required_risks(policy: RipostePolicy) -> tuple[str, ...]:
     """Risques a confirmer explicitement (topo §6.5 : confirmation nommee « moins prudent que la norme »)."""
+    from omega_serv.domain.security.riposte.config import TIER_CEILING_SECONDS
     risks = []
     durations = list(policy.tiers_seconds or ())
     if policy.action == "decoy":
@@ -163,6 +161,11 @@ def _settings(config: OmegaServConfig) -> dict[str, Any]:
 
 def _save_settings(repository: ConfigurationPort, path: Path, config: OmegaServConfig,
                    settings: dict[str, Any], *, check: bool) -> SaveResult:
+    from omega_serv.domain.config.option import Option
+    from omega_serv.domain.security.riposte.config import (
+        parse_riposte_config,
+        validate_riposte_config,
+    )
     if check:
         problems = validate_riposte_config(parse_riposte_config(settings), decoy_profile_names=decoy_profiles(config))
         if problems:
@@ -190,6 +193,10 @@ def _with_policy(config: OmegaServConfig, policy: RipostePolicy, replaces: str |
 
 def policy_problems(config: OmegaServConfig, policy: RipostePolicy, *, replaces: str | None = None) -> SaveResult:
     """Ce que `save_policy` refuserait, sans rien ecrire (avant la confirmation finale du formulaire)."""
+    from omega_serv.domain.security.riposte.config import (
+        parse_riposte_config,
+        validate_riposte_config,
+    )
     settings = _with_policy(config, policy, replaces)
     if settings is None:
         return SaveResult(unknown=True)
@@ -272,6 +279,10 @@ def simulate_situation(
 ) -> Decision:
     """Decision expliquee avec la configuration reelle - rien n'est applique ni ecrit. `returns` episodes
     separes par un silence plus long que `episode_gap_seconds`, le dernier en cours."""
+    from omega_serv.application.riposte.safety import riposte_exempt_networks
+    from omega_serv.domain.security.riposte.decide import SafetyContext, decide
+    from omega_serv.domain.security.riposte.events import ObservedEvent
+    from omega_serv.domain.security.riposte.history import Episode, SourceHistory
     riposte = riposte_config_of(config)
     count = max(1, returns)
     spacing = timedelta(seconds=riposte.episode_gap_seconds + 60)
@@ -297,6 +308,8 @@ def single_policy_config(riposte: RiposteConfig, policy: RipostePolicy) -> Ripos
 def measure_policy(config: OmegaServConfig, policy: RipostePolicy, events: list[ObservedEvent],
                    now: datetime, *, days: int | None = 7) -> MeasureResult:
     """« Mesurer » (topo §6.5) : la politique seule, avec les reglages globaux et exclusions reels."""
+    from omega_serv.application.riposte.measure import measure
+    from omega_serv.application.riposte.safety import riposte_exempt_networks
     riposte = riposte_config_of(config)
     since = now - timedelta(days=days) if days else None
     return measure(events, single_policy_config(riposte, policy), riposte_exempt_networks(config, riposte), since=since)

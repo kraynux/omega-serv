@@ -12,7 +12,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from omega_lib.i18n.models import LanguageChoice
-from omega_lib.infrastructure.terminal.detector import SystemTerminalDetector
 
 from omega_serv.application.terminal.select_language import (
     install_interface_language,
@@ -45,13 +44,29 @@ def is_server_process(argv: list[str]) -> bool:
     return positionals[:2] in (["riposte", "run"], ["declaration", "send-scheduled"])
 
 
+def is_admin_web_process(argv: list[str]) -> bool:
+    """`omega-serv admin-web run` (processus d'administration lance par `serve`, tableau de bord web lot 2) : ses
+    pages suivent la langue reglee dans le TUI de l'instance (decision Q8 de l'auteur, 2026-11-16), sans le repli
+    console (sous systemd il n'y a pas de terminal, et le navigateur passe souvent par un VPN)."""
+    positionals = [token for token in argv if not token.startswith("-")]
+    if "--config" in argv:
+        index = argv.index("--config")
+        if index + 1 < len(argv) and argv[index + 1] in positionals:
+            positionals.remove(argv[index + 1])
+    return positionals[:2] == ["admin-web", "run"]
+
+
 EXPORT_CHILD_ENV_VAR = "OMEGA_SERV_EXPORT_CHILD"
 """Pose pour le processus qui genere un export dans une autre langue que l'interface (lot
 « langue des exports ») : il ecrit un fichier, jamais dans le terminal - pas de repli console."""
 
 
-def install_language_early(environ: Mapping[str, str], project_root: Path = PROJECT_ROOT) -> LanguageChoice:
-    exporting = environ.get(EXPORT_CHILD_ENV_VAR) == "1"
+def install_language_early(environ: Mapping[str, str], project_root: Path = PROJECT_ROOT, *,
+                           console_fallback: bool = True) -> LanguageChoice:
+    exporting = environ.get(EXPORT_CHILD_ENV_VAR) == "1" or not console_fallback
+    # Detection du terminal importee ici : `serve` n'en a pas besoin (shutil, bz2, lzma, zstd : 0,7 Mo, 2026-11-19).
+    from omega_lib.infrastructure.terminal.detector import SystemTerminalDetector
+
     return install_interface_language(
         settings_store=JsonSettingsStore(project_root / "var" / "settings.json"),
         catalog=GettextLanguageCatalog(),

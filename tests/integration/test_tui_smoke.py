@@ -100,10 +100,13 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
                 button_ids,
                 {
                     "capabilities", "service", "wizard", "instances", "profiles", "audit",
-                    "server-config", "backup", "active-defense", "help", "resource-status",
-                    "options", "logs", "quit",
+                    "server-config", "backup", "active-defense", "report", "help", "resource-status",
+                    "options", "logs",
                 },
             )
+            # 2026-11-15 : Rapport complet juste sous Sauvegarde (meme colonne de la grille a 2 colonnes).
+            order = [b.id for b in pilot.app.screen.query(Button)]
+            self.assertEqual(order.index("report"), order.index("backup") + 2)
 
     async def test_help_button_on_home_menu_opens_the_same_guide(self):
         app = OmegaServApp(self.container)
@@ -132,11 +135,12 @@ class TestTuiSmoke(unittest.IsolatedAsyncioTestCase):
             await pilot.click("#confirm")
         self.assertFalse(app.is_running)
 
-    async def test_quit_button_on_home_menu_requires_confirmation(self):
+    async def test_escape_on_home_menu_requires_confirmation(self):
+        """Le bouton « Quitter » est retire du menu (2026-11-15) : Echap y demande toujours confirmation."""
         app = OmegaServApp(self.container)
         async with app.run_test(size=(120, 40)) as pilot:
             await self._reach_home(pilot)
-            await pilot.click("#quit")
+            await pilot.press("escape")
             await pilot.pause()
             self.assertTrue(app.is_running)
             await pilot.click("#confirm")

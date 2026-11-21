@@ -1,6 +1,10 @@
 import unittest
 
-from omega_serv.domain.routing.proxy_health import ProxyHealthState, parse_load_score
+from omega_serv.domain.routing.proxy_health import (
+    PASSIVE_RETRY_SECONDS,
+    ProxyHealthState,
+    parse_load_score,
+)
 from omega_serv.domain.routing.proxy_zone import UpstreamTarget
 
 _UPSTREAM_A = UpstreamTarget(host="10.0.0.1", port=3000)
@@ -212,6 +216,49 @@ class TestProxyHealthStateLoadScore(unittest.TestCase):
         state.record_load_sample("/api/", _UPSTREAM_A, 40.0, smoothing_samples=3, now=100.0)
         self.assertIsNone(state.load_score_for("/api/", _UPSTREAM_B, max_age_seconds=60, now=100.0))
         self.assertIsNone(state.load_score_for("/autre/", _UPSTREAM_A, max_age_seconds=60, now=100.0))
+
+
+class TestLot1HalfOpenRecovery(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D7, Q10) : sans sonde active, un upstream DOWN n'etait jamais reessaye."""
+
+    def _down(self, now=100.0):
+        state = ProxyHealthState()
+        for _ in range(3):
+            state.record_failure("/api/", _UPSTREAM_A, unhealthy_after=3, now=now)
+        self.assertEqual(state.status_for("/api/", _UPSTREAM_A), "down")
+        return state
+
+    def test_trial_only_after_the_waiting_time(self):
+        state = self._down(now=100.0)
+        self.assertFalse(state.start_half_open_trial("/api/", _UPSTREAM_A, now=100.0 + PASSIVE_RETRY_SECONDS - 0.1))
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=100.0 + PASSIVE_RETRY_SECONDS))
+
+    def test_one_trial_at_a_time_and_success_brings_it_back_up_at_once(self):
+        state = self._down()
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.0))
+        self.assertFalse(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.5))  # un seul essai
+        state.record_success("/api/", _UPSTREAM_A, healthy_after=2)
+        self.assertEqual(state.status_for("/api/", _UPSTREAM_A), "up")  # sans attendre healthy_after
+
+    def test_failed_trial_restarts_the_waiting_time(self):
+        state = self._down()
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.0))
+        state.record_failure("/api/", _UPSTREAM_A, unhealthy_after=3, now=200.2)
+        self.assertEqual(state.status_for("/api/", _UPSTREAM_A), "down")
+        self.assertFalse(state.start_half_open_trial("/api/", _UPSTREAM_A, now=205.0))
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.2 + PASSIVE_RETRY_SECONDS))
+
+    def test_unreported_trial_expires(self):
+        # Essai annule (client parti, P3) : ni succes ni echec rapporte - jamais bloque pour toujours.
+        state = self._down()
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.0))
+        self.assertTrue(state.start_half_open_trial("/api/", _UPSTREAM_A, now=200.0 + PASSIVE_RETRY_SECONDS))
+
+    def test_manual_states_are_never_tried(self):
+        state = self._down()
+        state.mark_maintenance("/api/", "10.0.0.1:3000")
+        self.assertFalse(state.start_half_open_trial("/api/", _UPSTREAM_A, now=10_000.0))
+        self.assertFalse(ProxyHealthState().start_half_open_trial("/api/", _UPSTREAM_B, now=10_000.0))  # UP
 
 
 if __name__ == "__main__":

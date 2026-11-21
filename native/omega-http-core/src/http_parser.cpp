@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <string>
 
 namespace omega {
 
@@ -16,6 +17,70 @@ bool iequals(std::string_view a, std::string_view b) {
             return false;
     }
     return true;
+}
+
+// Scan de securite n° 2 (2026-11-20, F1-F3), comme http_parser.py::is_supported_target_form : forme origine
+// (« /... »), forme absolue http(s) ou « * » seulement. « GET private/x » echappait aux zones et etait servi.
+bool is_supported_target_form(std::string_view target) {
+    if (!target.empty() && target.front() == '/') return true;
+    if (target == "*") return true;
+    std::string lowered;
+    for (std::size_t i = 0; i < target.size() && i < 8; ++i)
+        lowered.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(target[i]))));
+    return lowered.rfind("http://", 0) == 0 || lowered.rfind("https://", 0) == 0;
+}
+
+// Plan proxy natif v2, lot 1 (D26) : comme http_parser.py::has_dot_segment - segment « . » ou « .. » dans le chemin,
+// tel quel ou encode (%2e ; %2f, %5c et la barre oblique inverse comptes comme separateurs).
+bool has_dot_segment(std::string_view target) {
+    std::string_view path = target;
+    if (path.empty() || path.front() != '/') {
+        const std::size_t scheme_end = target.find("://");
+        if (scheme_end == std::string_view::npos) return false;  // « * » ou forme d'autorite : aucun chemin
+        const std::string_view rest = target.substr(scheme_end + 3);
+        const std::size_t slash = rest.find('/');
+        path = slash == std::string_view::npos ? std::string_view() : rest.substr(slash);
+    }
+    path = path.substr(0, path.find_first_of("?#"));
+    // Scan de securite n° 1 (2026-11-20) : DEUX passes de decodage, comme le service des fichiers - une seule
+    // laissait passer « %252e%252e », devenu « .. » au service. Decodage octet par octet (jamais d'erreur).
+    auto hex_value = [](char ch) -> int {
+        if (ch >= '0' && ch <= '9') return ch - '0';
+        const char lower = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        if (lower >= 'a' && lower <= 'f') return lower - 'a' + 10;
+        return -1;
+    };
+    std::string decoded(path);
+    for (int pass = 0; pass < 2; ++pass) {
+        std::string next;
+        next.reserve(decoded.size());
+        for (std::size_t i = 0; i < decoded.size(); ++i) {
+            if (decoded[i] == '%' && i + 2 < decoded.size()) {
+                const int high = hex_value(decoded[i + 1]);
+                const int low = hex_value(decoded[i + 2]);
+                if (high >= 0 && low >= 0) {
+                    next.push_back(static_cast<char>(high * 16 + low));
+                    i += 2;
+                    continue;
+                }
+            }
+            next.push_back(decoded[i]);
+        }
+        if (next == decoded) break;
+        decoded = std::move(next);
+    }
+    std::replace(decoded.begin(), decoded.end(), '\\', '/');
+    std::size_t start = 0;
+    while (start <= decoded.size()) {
+        const std::size_t end = std::min(decoded.find('/', start), decoded.size());
+        std::string_view segment(decoded.data() + start, end - start);
+        // Scan de securite n° 2 (2026-11-20, F15) : « ..;jsessionid » est un « .. » pour un backend Java (parametre
+        // de chemin) - la partie avant « ; » compte.
+        segment = segment.substr(0, segment.find(';'));
+        if (segment == "." || segment == "..") return true;
+        start = end + 1;
+    }
+    return false;
 }
 
 ParseResult make_error(int status, std::string reason) {
@@ -114,6 +179,13 @@ ParseResult parse_request_head(std::string_view buffer, const ParserLimits& limi
     const std::string_view version = line.substr(sp2 + 1);
     if (method.empty() || target.empty() || version.substr(0, 5) != "HTTP/")
         return fail(400, "ligne de requête malformée");
+    // Plan proxy natif v2, lot 1 (D26, P12) : aucun octet de controle dans la cible, comme _parse_request_line.
+    for (const char ch : target) {
+        const auto byte = static_cast<unsigned char>(ch);
+        if (byte < 0x21 || byte == 0x7F) return fail(400, "caractère de contrôle dans la cible");
+    }
+    if (!is_supported_target_form(target)) return fail(400, "cible de requête hors forme origine");
+    if (has_dot_segment(target)) return fail(400, "segment . ou .. dans la cible");
     // Durcissement 2026-11-02 (RFC 9112 §2.3, RFC 9110 §6.2), comme _HTTP_VERSION_RE cote Python.
     auto ascii_digit = [](char c) { return c >= '0' && c <= '9'; };
     if (version.size() != 8 || !ascii_digit(version[5]) || version[6] != '.' || !ascii_digit(version[7]))

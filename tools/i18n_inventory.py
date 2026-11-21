@@ -681,8 +681,17 @@ def apply_decisions(entries: list[Entry], rules: dict, lines: dict) -> None:
         rule_decision, rule_note = rules.get((e.auto, e.reason), ("", ""))
         line_decision, line_note = lines.get(e.ident, ("", ""))
         e.rule_decision, e.line_decision = rule_decision, line_decision
-        e.note = " ".join(x for x in (line_note, rule_note) if x)
+        e.note = merge_notes(line_note, rule_note)
         e.category = line_decision or rule_decision or e.auto
+
+
+def merge_notes(line_note: str, rule_note: str) -> str:
+    """Note de la ligne + note de la regle, une seule fois. Le CSV relu contient deja la note de la regle ecrite a la
+    generation precedente : sans ce retrait, elle se recollait a chaque passage (jusqu'a 120 fois, 2026-11-19)."""
+    if rule_note:
+        while line_note.endswith(rule_note):
+            line_note = line_note[: -len(rule_note)].rstrip()
+    return " ".join(x for x in (line_note, rule_note) if x)
 
 
 def write_rule_decisions(entries: list[Entry], rules: dict, path: Path) -> None:

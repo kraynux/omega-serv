@@ -1,0 +1,75 @@
+=== omega-nat-1-0 21:47:44 charge: 0.98 0.96 0.92
+repos : PSS=51Mo descripteurs=26 connexions_client=0 connexions_backend=1
+1Ko seul : 9536 req/s 9.8 Mo/s p99=10.1ms non200=0 ; CPU par requete : natif 123.1 us, Python 0.1 us
+1Ko avec 500 lecteurs lents : 8351 req/s 8.5 Mo/s p99=12.2ms non200=0
+  slowread complets=500/500 coupes=0 {} duree_s=12.0 ; PSS max=52Mo
+attente de 100 lecteurs tres lents : CPU natif 0.5% Python 0.15% (sur 20 s)
+  slowread complets=100/100 coupes=0 {} duree_s=51.4
+  slowhead n=200 fermees_apres_s min=10.2 mediane=10.2 max=11.2
+  slowbody n=50 taille=100000 debit=5000o/s resultats={'200': 50} duree_max_s=20.2
+chunked 4 x 100 Mo : fetch intacts=4/4 encodage=chunked Mo/s=112.4 duree_s=3.6 ; PSS max=53Mo
+longueur 4 x 100 Mo : fetch intacts=4/4 encodage=longueur Mo/s=101.5 duree_s=3.9
+chunked 5 x 10 Mo lus a 1 Mo/s : slowread complets=5/5 coupes=0 {} duree_s=14.3 ; PSS max=53Mo
+POST 1 Mo x8 : 463 req/s 0.0 Mo/s p99=34.9ms non200=0
+POST 8 Mo x4 : 50 req/s 0.0 Mo/s p99=138.0ms non200=0
+POST image 1 Mo x8 : 455 req/s 0.0 Mo/s p99=37.0ms non200=0
+POST image 8 Mo x4 : 57 req/s 0.0 Mo/s p99=113.1ms non200=0
+apres : PSS=62Mo descripteurs=89 (repos 26) connexions_client=0 connexions_backend=64 vivant=oui
+mixte (oha, 32 connexions) : 10218 req/s 10.5 Mo/s p99=10.5ms non200=0
+  mixed requetes=20000 incorrectes=0 une_connexion=oui req/s=1546
+=== omega-nat-1-1 21:51:22 charge: 3.07 1.72 1.21
+repos : PSS=51Mo descripteurs=27 connexions_client=0 connexions_backend=1
+1Ko seul : 8917 req/s 9.1 Mo/s p99=10.5ms non200=0 ; CPU par requete : natif 151.7 us, Python 0.2 us
+1Ko avec 500 lecteurs lents : 6970 req/s 7.1 Mo/s p99=13.2ms non200=0
+  slowread complets=500/500 coupes=0 {} duree_s=11.5 ; PSS max=52Mo
+attente de 100 lecteurs tres lents : CPU natif 0.0% Python 0.15% (sur 20 s)
+  slowread complets=100/100 coupes=0 {} duree_s=51.4
+  slowhead n=200 fermees_apres_s min=10.1 mediane=10.2 max=11.2
+  slowbody n=50 taille=100000 debit=5000o/s resultats={'200': 50} duree_max_s=21.0
+chunked 4 x 100 Mo : fetch intacts=4/4 encodage=chunked Mo/s=87.0 duree_s=4.6 ; PSS max=63Mo
+longueur 4 x 100 Mo : fetch intacts=4/4 encodage=longueur Mo/s=80.5 duree_s=5.0
+chunked 5 x 10 Mo lus a 1 Mo/s : slowread complets=5/5 coupes=0 {} duree_s=15.5 ; PSS max=63Mo
+POST 1 Mo x8 : 11 req/s 0.0 Mo/s p99=1144.7ms non200=98
+POST 8 Mo x4 : 9 req/s 0.0 Mo/s p99=3264.3ms non200=82
+POST image 1 Mo x8 : 317 req/s 0.0 Mo/s p99=59.1ms non200=0
+POST image 8 Mo x4 : 54 req/s 0.0 Mo/s p99=141.0ms non200=0
+apres : PSS=68Mo descripteurs=91 (repos 27) connexions_client=0 connexions_backend=64 vivant=oui
+=== omega-py-2-0 21:54:36 charge: 3.43 2.46 1.60
+repos : PSS=58Mo descripteurs=26 connexions_client=0 connexions_backend=1
+1Ko seul : 1135 req/s 1.2 Mo/s p99=54.3ms non200=0 ; CPU par requete : natif 0.0 us, Python 1673.5 us
+1Ko avec 500 lecteurs lents : 1086 req/s 1.1 Mo/s p99=52.3ms non200=0
+  slowread complets=500/500 coupes=0 {} duree_s=11.8 ; PSS max=117Mo
+attente de 100 lecteurs tres lents : CPU natif 0.0% Python 0.5% (sur 20 s)
+  slowread complets=100/100 coupes=0 {} duree_s=51.5
+  slowhead n=200 fermees_apres_s min=10.2 mediane=10.2 max=10.2
+  slowbody n=50 taille=100000 debit=5000o/s resultats={'200': 50} duree_max_s=20.2
+chunked 4 x 100 Mo : fetch intacts=4/4 encodage=longueur Mo/s=69.9 duree_s=5.7 ; PSS max=840Mo
+longueur 4 x 100 Mo : fetch intacts=4/4 encodage=longueur Mo/s=75.2 duree_s=5.3
+chunked 5 x 10 Mo lus a 1 Mo/s : slowread complets=5/5 coupes=0 {} duree_s=14.7 ; PSS max=191Mo
+POST 1 Mo x8 : 188 req/s 0.0 Mo/s p99=68.2ms non200=0
+POST 8 Mo x4 : 24 req/s 0.0 Mo/s p99=261.2ms non200=0
+POST image 1 Mo x8 : 190 req/s 0.0 Mo/s p99=70.8ms non200=0
+POST image 8 Mo x4 : 35 req/s 0.0 Mo/s p99=236.9ms non200=0
+apres : PSS=145Mo descripteurs=48 (repos 26) connexions_client=0 connexions_backend=6 vivant=oui
+mixte (oha, 32 connexions) : 1340 req/s 1.4 Mo/s p99=36.0ms non200=0
+  mixed requetes=20000 incorrectes=0 une_connexion=oui req/s=676
+=== nginx-2 21:58:33 charge: 2.23 2.22 1.68
+repos : PSS=6Mo descripteurs=33 connexions_client=0 connexions_backend=1
+1Ko seul : 12148 req/s 12.4 Mo/s p99=7.3ms non200=0 ; CPU par requete : natif 0.0 us, Python 94.2 us
+1Ko avec 500 lecteurs lents : 8806 req/s 9.0 Mo/s p99=10.8ms non200=0
+  slowread complets=500/500 coupes=0 {} duree_s=12.0 ; PSS max=9Mo
+attente de 100 lecteurs tres lents : CPU natif 0.0% Python 0.0% (sur 20 s)
+  slowread complets=100/100 coupes=0 {} duree_s=51.4
+  slowhead n=200 fermees_apres_s min=60.3 mediane=60.4 max=60.4
+  slowbody n=50 taille=100000 debit=5000o/s resultats={'200': 50} duree_max_s=20.2
+chunked 4 x 100 Mo : fetch intacts=4/4 encodage=chunked Mo/s=124.5 duree_s=3.2 ; PSS max=7Mo
+longueur 4 x 100 Mo : fetch intacts=4/4 encodage=longueur Mo/s=105.6 duree_s=3.8
+chunked 5 x 10 Mo lus a 1 Mo/s : slowread complets=5/5 coupes=0 {} duree_s=14.4 ; PSS max=7Mo
+POST 1 Mo x8 : 369 req/s 0.0 Mo/s p99=83.1ms non200=0
+POST 8 Mo x4 : 46 req/s 0.0 Mo/s p99=162.6ms non200=0
+POST image 1 Mo x8 : 255 req/s 0.0 Mo/s p99=119.9ms non200=0
+POST image 8 Mo x4 : 46 req/s 0.0 Mo/s p99=221.1ms non200=0
+apres : PSS=7Mo descripteurs=35 (repos 33) connexions_client=0 connexions_backend=3 vivant=oui
+mixte (oha, 32 connexions) : 15815 req/s 16.2 Mo/s p99=7.2ms non200=0
+  mixed requetes=20000 incorrectes=0 une_connexion=oui req/s=1968
+FIN

@@ -256,10 +256,34 @@ def target_cases() -> list[str]:
         for extra in heads:
             raw = f"GET /p {version}\r\n{extra}\r\n".encode("latin-1")
             lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
+    # Plan proxy natif v2, lot 1 (D26, P12) : octets de controle dans la cible -> 400 dans les deux analyseurs.
+    control_targets = ["/a\x01b", "/a\tb", "/a\x7fb", "/\x00", "/ok\x1f", "/a\x0bb", "/\x80\xff", "/normal", "/a%01b"]
+    for target in control_targets + [rand_text("/a\x00\x01\x09\x0b\x1f\x7f\x80%", 1, 8) for _ in range(150)]:
+        raw = f"GET {target} HTTP/1.1\r\nHost: h\r\n\r\n".encode("latin-1")
+        lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
+    # Lot 1 (D26) : segments « . » et « .. », ecrits ou encodes -> 400 dans les deux analyseurs.
+    dot_targets = ["/api/../admin", "/a/./b", "/..", "/.", "/a/..", "/a/.b", "/a/..b", "/%2e%2e/x", "/%2E%2e/x",
+                   "/a%2f..%2fb", "/a%5c..", "/a\\..\\b", "/x?y=/../z", "/x#/../", "http://h/a/../b", "http://h",
+                   "http://h/..", "*", "/a/%2e", "/a/%2e%2", "/%%2e", "/...", "/a.b/c..d"]
+    for target in dot_targets + [rand_text("/.%2eEfF5cC\\a?#", 1, 10) for _ in range(300)]:
+        raw = f"GET {target} HTTP/1.1\r\nHost: h\r\n\r\n".encode("latin-1")
+        lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
     # flux coupe (fin de flux apres ces octets)
     for raw in (b"", b"G", b"GET /p HTTP/1.1", b"GET /p HTTP/1.1\r\n", b"GET /p HTTP/1.1\r\nHost: h\r\n",
                 b"GET /p HTTP/1.1\r\nHo", b"GET /p HTTP/1.1\r\nHost: h\r", b"GET /p HTTP/9.9\r\n"):
         lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
+    # Lot 1N (D38) : ligne trop longue puis fin de flux, autour de la limite (8192 / 16384 ici) - un `\r` final
+    # tient encore dans la limite + 1.
+    for size in (8190, 8191, 8192, 8193, 8194, 8195, 9000):
+        line = b"GET /" + b"a" * (size - 5)
+        for tail in (b"", b"\r"):
+            raw = line + tail
+            lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
+    for size in (16382, 16383, 16384, 16385, 16386, 17000):
+        header = b"X: " + b"b" * (size - 3)
+        for tail in (b"", b"\r"):
+            raw = b"GET /p HTTP/1.1\r\n" + header + tail
+            lines.append(f"reqline\t{hx(raw)}\t{hx(asyncio.run(parse(raw)))}")
     return lines
 
 
@@ -313,10 +337,62 @@ def ipc_cases() -> list[str]:
     return lines
 
 
+def waf_alert_cases() -> list[str]:
+    """Plan proxy natif v2, lot 1N (D36, P4) : ligne `waf-alerts` des refus decides par le natif seul - la VRAIE
+    format_waf_alert_line, champ par champ (cles, ordre, plafonds, redaction du corps, echappement JSON)."""
+    from datetime import datetime, timedelta, timezone
+
+    from omega_serv.domain.logging.waf_alert_format import WafAlertEntry, format_waf_alert_line
+    from omega_serv.domain.security.waf.config import WafLoggingConfig
+    from omega_serv.domain.security.waf.entities import WafDecision
+
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    bodies = [None, b"", b"a=1", b"user=admin&password=Secret123", b"password=", b"=x", b"&&a=b&&", b"x=%41%4", b"x=%zz",
+              b"pass%77ord=s", b"PassWord=s&tok\xe2\x84\xaaen=t", b"a=b+c%2Bd", b"k=\xc3\xa9t\xc3\xa9", b"k=%c3%a9%c3",
+              b"\xff\xfe=1", b"k=v\xed\xa0\x80w", b"\xe0\x80\xf0\x90\x80z", b"ligne\n\"guillemet\"\\", b"json {\"a\": 1}",
+              b"a=1&a=2&b", b"%F0%9F%98%80=%E2%82", b"x=\x01\x1f\x7f", b"q=" + "é".encode() * 40]
+    texts = ["", "a", "/p", "/é", "/a\"b\\c", "/\x00\x1f\x7f", "/" + "x" * 3000, "Mozilla/5.0 (X11)", "ü" * 200]
+    cases = []
+    for body in bodies:
+        cases.append((body, "/form", "curl/8", 2048, 120, True, 4096))
+    for _ in range(400):
+        body = None if RNG.random() < 0.2 else bytes(RNG.choice(b"az=&%+019AFf\xc3\xa9\xff\x80\xe2\x84\xaa\n\"\\")
+                                                     for _ in range(RNG.randint(0, 40)))
+        cases.append((body, RNG.choice(texts) + rand_text("/aé\x01\"", 0, 5), RNG.choice([None, *texts]),
+                      RNG.choice([0, 1, 5, 2048]), RNG.choice([0, 3, 120]), RNG.random() < 0.7, RNG.choice([0, 1, 7, 4096])))
+    lines = []
+    for index, (body, path, user_agent, max_path, max_ua, include, max_bytes) in enumerate(cases):
+        unix_us = 1762900000_000000 + index * 123457
+        if index % 7 == 0:
+            unix_us -= unix_us % 1000000  # microsecondes nulles : omises par isoformat()
+        duration = RNG.choice([0.0, 0.0004, 0.0125, 1.5, 12.3456, 0.1, 2.0])
+        stage, action, status = RNG.choice([("blocklist", "block", 451), ("rate_limit", "block", 429),
+                                            ("rate_limit", "throttle", 429), ("rate_limit", "block", 503)])
+        request_id = RNG.choice(["0123456789abcdef", "r" * 80])
+        remote_ip = RNG.choice(["203.0.113.7", "2001:db8::1", "1" * 70])
+        method = RNG.choice(["GET", "POST", "M" * 20])
+        settings = WafLoggingConfig(include_body_excerpt=include, body_excerpt_max_bytes=max_bytes,
+                                    max_user_agent_chars=max_ua, max_path_chars=max_path)
+        entry = WafAlertEntry(
+            request_id=request_id, timestamp=epoch + timedelta(microseconds=unix_us), remote_ip=remote_ip,
+            method=method, path=path, user_agent=user_agent,
+            decision=WafDecision(action="block", status_code=status, score=0, log_level="warning", stage=stage,
+                                 throttle_only=action == "throttle"),
+            duration_ms=duration,
+            body_excerpt=body.decode("utf-8", errors="replace") if body else None,  # comme _log_waf_alert
+        )
+        fields = [str(unix_us), request_id, remote_ip, method, path, "\x00" if user_agent is None else user_agent,
+                  action, stage, str(status), repr(duration), "-" if body is None else body.hex(),
+                  str(max_path), str(max_ua), "1" if include else "0", str(max_bytes)]
+        lines.append("wafalert\t" + "\t".join(utf8hx(f) for f in fields) + "\t"
+                     + utf8hx(format_waf_alert_line(entry, settings)))
+    return lines
+
+
 def main() -> int:
     out = Path(sys.argv[1])
     out.parent.mkdir(parents=True, exist_ok=True)
-    lines = path_cases() + date_cases() + range_cases() + conditional_cases() + misc_cases() + ip_cases() + csp_cases() + target_cases() + ipc_cases()
+    lines = path_cases() + date_cases() + range_cases() + conditional_cases() + misc_cases() + ip_cases() + csp_cases() + target_cases() + ipc_cases() + waf_alert_cases()
     out.write_text("\n".join(lines) + "\n", encoding="ascii")
     print(f"{len(lines)} vecteurs -> {out}")
     return 0

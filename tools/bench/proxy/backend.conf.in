@@ -1,0 +1,14 @@
+# Backend commun a tous les proxys : nginx statique, 2 processus, keep-alive.
+worker_processes 2;
+pid @W@/backend/nginx.pid;
+error_log @W@/logs/backend-error.log;
+events { worker_connections 4096; }
+http {
+  include /etc/nginx/mime.types;
+  sendfile on; tcp_nopush on;
+  keepalive_requests 1000000; keepalive_timeout 120s;
+  access_log off;
+  client_body_temp_path @W@/backend/tmp; proxy_temp_path @W@/backend/tmp; fastcgi_temp_path @W@/backend/tmp; uwsgi_temp_path @W@/backend/tmp; scgi_temp_path @W@/backend/tmp;
+  # X-Backend : run.sh verifie que la reponse vient bien du backend (le proxy relaie, il ne sert pas lui-meme)
+  server { listen 127.0.0.1:18960; root @W@/www; add_header X-Backend 1 always; }
+}

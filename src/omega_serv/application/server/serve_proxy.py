@@ -99,7 +99,11 @@ backend deja sature)."""
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from omega_serv.application.server.client_tls import fallback_client_context
 
 if TYPE_CHECKING:
     import ssl
@@ -108,6 +112,7 @@ if TYPE_CHECKING:
     from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
     from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
 
+from omega_serv.domain.http.admin_cookies import without_admin_cookies
 from omega_serv.domain.http.cookies import build_set_cookie_header, parse_cookie_header
 from omega_serv.domain.http.request import HttpRequest
 from omega_serv.domain.http.response import HttpResponse
@@ -125,21 +130,62 @@ from omega_serv.domain.routing.proxy_cache import (
 )
 from omega_serv.domain.routing.proxy_health import ProxyHealthState
 from omega_serv.domain.routing.proxy_zone import (
+    DEFAULT_MAX_RESPONSE_BODY_MB,
     ProxyLoadBalancerState,
     ProxyZone,
     UpstreamTarget,
+    host_header_value,
     resolve_routing_rule_upstream,
     resolve_sticky_upstream,
     sticky_cookie_value_for,
     upstream_key,
 )
+from omega_serv.domain.security.trusted_proxy import is_trusted_proxy
 from omega_serv.ports.http_proxy_client_port import (
     HttpProxyClientPort,
     HttpProxyConnectionError,
+    HttpProxyResponseTooLargeError,
     HttpProxyResult,
+    HttpProxyTimeoutError,
+    HttpProxyTlsError,
 )
 
 _IDEMPOTENT_RETRY_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+TLS_FAILURE_LOG_INTERVAL_SECONDS = 60.0
+"""Plan proxy natif v2, lot 8 (decision de l'auteur du 2026-11-13) : un echec TLS vers un backend (certificat refuse,
+protocole) est ecrit dans error.log au plus une fois par backend et par minute - une ligne par requete inonderait le
+journal. Meme regle et meme texte dans le moteur natif (server.cpp, log_tls_failure)."""
+_tls_failure_logged_at: dict[str, float] = {}
+
+
+def log_tls_failure(log_error: ErrorLogger | None, upstream: UpstreamTarget, error: HttpProxyTlsError,
+                    now: float | None = None) -> bool:
+    """Ecrit la ligne si la derniere pour ce backend date de plus d'une minute ; True si elle est ecrite."""
+    if log_error is None:
+        return False
+    key = f"{upstream.host}:{upstream.port}"
+    now = time.monotonic() if now is None else now
+    last = _tls_failure_logged_at.get(key)
+    if last is not None and now - last < TLS_FAILURE_LOG_INTERVAL_SECONDS:
+        return False
+    _tls_failure_logged_at[key] = now
+    if error.certificate:
+        log_error(f"reverse proxy : certificat de {key} refusé : {error.reason}")
+    else:
+        log_error(f"reverse proxy : poignée de main TLS avec {key} impossible : {error.reason}")
+    return True
+
+
+ErrorLogger = Callable[[str], None]
+
+
+@dataclass(frozen=True)
+class ForwardingContext:
+    """Plan proxy natif v2, lot 1 (R1, R2) : ce qu'il faut savoir du serveur pour ecrire X-Forwarded-Proto et
+    X-Forwarded-Port - port d'ecoute reel, et reseaux des relais de confiance (`trusted_proxy`, vide si coupe)."""
+    listen_port: int
+    trusted_networks: tuple[str, ...] = ()
 
 
 class AllUpstreamsAtCapacityError(Exception):
@@ -181,8 +227,23 @@ def incoming_proxy_hop_count(request: HttpRequest) -> int:
         return 0
 
 
+def upstream_ssl_context(
+    upstream: UpstreamTarget, zone: ProxyZone,
+    verified: ssl.SSLContext | None, unverified: ssl.SSLContext | None,
+) -> ssl.SSLContext | None:
+    """Contexte TLS vers un backend `use_tls`, jamais None pour lui (scan de securite n° 1, 2026-11-20, F36) : les
+    contextes ne sont construits au demarrage que pour les zones du reverse proxy ; un leurre d'Active Defense en
+    HTTPS recevait None et sa requete (Cookie, Authorization, corps) partait EN CLAIR. A defaut, un contexte construit
+    ici, avec les memes regles (build_client_ssl_context) et la meme verification que la zone le demande."""
+    if not upstream.use_tls:
+        return None
+    chosen = verified if zone.verify_upstream_tls else unverified
+    return chosen if chosen is not None else fallback_client_context(zone.verify_upstream_tls)
+
+
 def build_outgoing_headers(
     request: HttpRequest, zone: ProxyZone, upstream: UpstreamTarget, *, preserve_upgrade: bool = False,
+    forwarding: ForwardingContext | None = None,
 ) -> tuple[tuple[str, str], ...]:
     hop_by_hop = HOP_BY_HOP_HEADERS - {"connection", "upgrade"} if preserve_upgrade else HOP_BY_HOP_HEADERS
     original_host = request.header("host")
@@ -190,8 +251,10 @@ def build_outgoing_headers(
     # jamais relayes (sauf `upgrade` sur le chemin WebSocket) ; `Proxy-Connection`, `Forwarded` et `X-Real-IP`
     # fournis par le client sont retires : un client pouvait se faire passer pour une autre adresse aupres d'un
     # backend qui leur fait confiance. `X-Real-IP` est reecrit avec la meme adresse que `X-Forwarded-For` (vrai
-    # client derriere un relais de confiance comme Tailscale, sinon le pair TCP). `X-Forwarded-Port` passe comme
-    # avant (decision de l'auteur, a revoir en 3.0.0).
+    # client derriere un relais de confiance comme Tailscale, sinon le pair TCP).
+    # Lot 1 (R1, R2) : `X-Forwarded-Proto` et `X-Forwarded-Port` du client ne sont gardes que s'ils viennent d'un
+    # relais de confiance (Tailscale Funnel termine le TLS : sans cela le backend ecrivait ses liens en http),
+    # et seulement bien formes ; sinon le protocole et le port reels d'omega-serv.
     named_in_connection = {
         token.strip().lower()
         for name, value in request.headers if name.lower() == "connection"
@@ -200,16 +263,38 @@ def build_outgoing_headers(
     if preserve_upgrade:
         named_in_connection.discard("upgrade")
     dropped = named_in_connection | CLIENT_FORWARDING_HEADERS_DROPPED | {
-        "host", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", PROXY_HOPS_HEADER.lower(),
+        "host", "x-forwarded-for", "x-forwarded-proto", "x-forwarded-host", "x-forwarded-port",
+        PROXY_HOPS_HEADER.lower(),
     }
+    # Scan de securite n° 1 (2026-11-20, F8) : le cadrage du corps n'est jamais celui du client. Un client qui
+    # nommait `Content-Length` dans `Connection` le faisait retirer alors que son corps partait quand meme : le
+    # backend lisait ce corps comme une seconde requete (contrebande). La longueur est recalculee sur le corps
+    # reellement transmis, des qu'un corps a ete annonce (Content-Length ou Transfer-Encoding) ou recu.
+    dropped.add("content-length")
     headers = [
-        (name, value) for name, value in request.headers
+        (name, without_admin_cookies(value) if name.lower() == "cookie" else value) for name, value in request.headers
         if name.lower() not in hop_by_hop and name.lower() not in dropped
     ]
-    headers.append(("Host", original_host if zone.preserve_host_header and original_host else f"{upstream.host}:{upstream.port}"))
+    # Scan de securite n° 2 (2026-11-20, F16) : session de l'administration web jamais transmise au backend.
+    headers = [(name, value) for name, value in headers if name.lower() != "cookie" or value]
+    if request.body or request.header("content-length") is not None or request.header("transfer-encoding") is not None:
+        headers.append(("Content-Length", str(len(request.body or b""))))
+    headers.append(("Host", original_host if zone.preserve_host_header and original_host
+                     else host_header_value(upstream.host, upstream.port)))
     headers.append(("X-Forwarded-For", request.remote_ip))
     headers.append(("X-Real-IP", request.remote_ip))
-    headers.append(("X-Forwarded-Proto", "https" if request.is_tls else "http"))
+    from_trusted_relay = forwarding is not None and is_trusted_proxy(request.peer_ip, forwarding.trusted_networks)
+    proto = "https" if request.is_tls else "http"
+    relayed_proto = (request.header("x-forwarded-proto") or "").strip().lower()
+    if from_trusted_relay and relayed_proto in ("http", "https"):
+        proto = relayed_proto
+    headers.append(("X-Forwarded-Proto", proto))
+    if forwarding is not None:
+        port = forwarding.listen_port
+        relayed_port = (request.header("x-forwarded-port") or "").strip()
+        if from_trusted_relay and relayed_port.isascii() and relayed_port.isdigit() and 1 <= int(relayed_port) <= 65535:
+            port = int(relayed_port)
+        headers.append(("X-Forwarded-Port", str(port)))
     if original_host:
         headers.append(("X-Forwarded-Host", original_host))
     headers.append((PROXY_HOPS_HEADER, str(incoming_proxy_hop_count(request) + 1)))
@@ -256,6 +341,13 @@ def resolve_upstream(
                 return sticky_upstream
 
     remaining = [u for u in zone.upstreams if upstream_key(u) not in exclude]
+    now = time.monotonic()
+    for upstream in remaining:
+        # Lot 1 (D7, Q10) : un DOWN sans sonde active recoit une requete d'essai une fois son attente ecoulee -
+        # sinon il ne pouvait plus jamais redevenir UP.
+        if (not upstream.active_health_check_enabled and not load_balancer.is_at_capacity(zone_key, upstream)
+                and health_state.start_half_open_trial(zone_key, upstream, now=now)):
+            return upstream
     healthy = [u for u in remaining if health_state.is_eligible(zone_key, u)]
     if not healthy:
         # §18.1 : rien de sain - retenter quand meme le moins pire plutot que refuser.
@@ -276,32 +368,44 @@ async def _attempt_forward(
     health_state: ProxyHealthState,
     client_ssl_context_verified: ssl.SSLContext | None,
     client_ssl_context_unverified: ssl.SSLContext | None,
-) -> HttpProxyResult | None:
+    max_body_bytes: int | None = None,
+    log_error: ErrorLogger | None = None,
+    forwarding: ForwardingContext | None = None,
+) -> HttpProxyResult | HttpProxyConnectionError:
     """Une tentative vers UN upstream deja choisi - retourne le
-    `HttpProxyResult` sur succes, `None` sur erreur de connexion (deja
-    enregistree aupres de `load_balancer`/`health_state` dans les deux
-    cas, succes comme echec)."""
+    `HttpProxyResult` sur succes, l'erreur sinon (deja enregistree aupres
+    de `load_balancer`/`health_state` dans les deux cas). Lot 1 : un delai
+    depasse (504) et une connexion impossible (502) comptent pour la sante ;
+    un corps trop grand (D23) non - le backend repond - mais il est journalise."""
     zone_key = zone.url_prefix
     target = request.path + (f"?{request.query}" if request.query else "")
-    outgoing_headers = build_outgoing_headers(request, zone, upstream)
+    outgoing_headers = build_outgoing_headers(request, zone, upstream, forwarding=forwarding)
 
-    ssl_context = None
-    if upstream.use_tls:
-        ssl_context = client_ssl_context_verified if zone.verify_upstream_tls else client_ssl_context_unverified
+    ssl_context = upstream_ssl_context(upstream, zone, client_ssl_context_verified, client_ssl_context_unverified)
 
     load_balancer.acquire(zone_key, upstream)
+    health_state.record_request(zone_key, upstream)
     started_at = time.monotonic()
     try:
         try:
             result = await proxy_client.forward_request(
                 upstream.host, upstream.port, request.method, target,
                 outgoing_headers, request.body or b"", zone.connect_timeout_seconds, zone.read_timeout_seconds,
-                ssl_context,
+                ssl_context, max_body_bytes,
             )
-        except HttpProxyConnectionError:
+        except HttpProxyResponseTooLargeError as error:
+            load_balancer.record_response_time(zone_key, upstream, time.monotonic() - started_at)
+            health_state.record_error(zone_key, upstream, 502)
+            if log_error is not None:
+                log_error(f"reverse proxy : réponse de {upstream.host}:{upstream.port} refusée (502) : {error}")
+            return error
+        except HttpProxyConnectionError as error:
             load_balancer.record_response_time(zone_key, upstream, zone.read_timeout_seconds)
             health_state.record_failure(zone_key, upstream, unhealthy_after=zone.unhealthy_after)
-            return None
+            health_state.record_error(zone_key, upstream, 504 if isinstance(error, HttpProxyTimeoutError) else 502)
+            if isinstance(error, HttpProxyTlsError):
+                log_tls_failure(log_error, upstream, error)
+            return error
         load_balancer.record_response_time(zone_key, upstream, time.monotonic() - started_at)
         health_state.record_success(zone_key, upstream, healthy_after=zone.healthy_after)
         return result
@@ -317,6 +421,9 @@ async def _serve_proxy_uncached(
     health_state: ProxyHealthState,
     client_ssl_context_verified: ssl.SSLContext | None,
     client_ssl_context_unverified: ssl.SSLContext | None,
+    max_body_bytes: int | None = None,
+    log_error: ErrorLogger | None = None,
+    forwarding: ForwardingContext | None = None,
 ) -> HttpResponse:
     if incoming_proxy_hop_count(request) >= MAX_PROXY_HOPS:
         # Boucle indirecte entre instances (§23 angle mort #16) - refus AVANT toute
@@ -328,10 +435,11 @@ async def _serve_proxy_uncached(
         return HttpResponse.empty(HttpStatus.SERVICE_UNAVAILABLE)
     result = await _attempt_forward(
         request, zone, upstream, proxy_client, load_balancer, health_state,
-        client_ssl_context_verified, client_ssl_context_unverified,
+        client_ssl_context_verified, client_ssl_context_unverified, max_body_bytes, log_error, forwarding,
     )
 
-    if result is None and request.method in _IDEMPOTENT_RETRY_METHODS and len(zone.upstreams) > 1:
+    if (isinstance(result, HttpProxyConnectionError) and not isinstance(result, HttpProxyResponseTooLargeError)
+            and request.method in _IDEMPOTENT_RETRY_METHODS and len(zone.upstreams) > 1):
         # `exclude` garantit un upstream different de celui qui vient d'echouer (len(zone.upstreams) > 1).
         try:
             retry_upstream = resolve_upstream(
@@ -342,21 +450,35 @@ async def _serve_proxy_uncached(
         if retry_upstream is not None:
             result = await _attempt_forward(
                 request, zone, retry_upstream, proxy_client, load_balancer, health_state,
-                client_ssl_context_verified, client_ssl_context_unverified,
+                client_ssl_context_verified, client_ssl_context_unverified, max_body_bytes, log_error, forwarding,
             )
-            if result is not None:
+            if isinstance(result, HttpProxyResult):
                 upstream = retry_upstream
 
-    if result is None:
+    if isinstance(result, HttpProxyTimeoutError):
+        return HttpResponse.empty(HttpStatus.GATEWAY_TIMEOUT)  # lot 1 (§2.1 point 4) : delai depasse chez le backend
+    if not isinstance(result, HttpProxyResult):
         return HttpResponse.empty(HttpStatus.BAD_GATEWAY)
 
     response = HttpResponse.empty(result.status_code)
     for name, value in result.headers:
-        if name.lower() not in HOP_BY_HOP_HEADERS:
-            response.set_header(name, value)
+        lowered = name.lower()
+        if lowered in HOP_BY_HOP_HEADERS:
+            continue
+        if lowered == "content-length":
+            # Lot 1 (D27) : la longueur envoyee au client est celle du corps relaye, calculee par le serveur - jamais
+            # recopiee (un `content-length` en minuscules donnait deux en-tetes). Sauf HEAD : pas de corps, la
+            # longueur annoncee par le backend est celle de la ressource (D1).
+            if request.method == "HEAD":
+                response.set_header("Content-Length", value)
+            continue
+        if lowered == "set-cookie":
+            response.add_header("Set-Cookie", value)  # lot 1 (D6) : tous les cookies du backend
+            continue
+        response.set_header(name, value)
     response.body = result.body
     if zone.sticky_session_enabled:
-        response.set_header("Set-Cookie", build_set_cookie_header(
+        response.add_header("Set-Cookie", build_set_cookie_header(  # lot 1 (C6) : sans ecraser ceux du backend
             zone.sticky_cookie_name, sticky_cookie_value_for(upstream),
             max_age_seconds=zone.sticky_cookie_max_age_seconds,
         ))
@@ -366,7 +488,10 @@ async def _serve_proxy_uncached(
 def _cache_entry_to_response(entry: ProxyCacheEntry) -> HttpResponse:
     response = HttpResponse.empty(entry.status_code)
     for name, value in entry.headers:
-        response.set_header(name, value)
+        if name.lower() == "set-cookie":
+            response.add_header(name, value)  # lot 1 (D6)
+        else:
+            response.set_header(name, value)
     response.body = entry.body
     return response
 
@@ -382,11 +507,16 @@ async def serve_proxy(
     cache_store: ProxyCacheStorePort | None = None,
     cache_locks: ProxyCacheLocks | None = None,
     cache_metrics: ProxyCacheMetrics | None = None,
+    max_body_bytes: int | None = DEFAULT_MAX_RESPONSE_BODY_MB * 1024 * 1024,
+    log_error: ErrorLogger | None = None,
+    forwarding: ForwardingContext | None = None,
 ) -> HttpResponse:
-    if not zone.cache_enabled or cache_store is None or cache_locks is None or not is_cacheable_request(request.method):
+    # Lot 1 (D13) : une requete partielle (Range) ne lit ni n'alimente jamais le cache.
+    if (not zone.cache_enabled or cache_store is None or cache_locks is None or not is_cacheable_request(request.method)
+            or request.header("range") is not None):
         response = await _serve_proxy_uncached(
             request, zone, proxy_client, load_balancer, health_state,
-            client_ssl_context_verified, client_ssl_context_unverified,
+            client_ssl_context_verified, client_ssl_context_unverified, max_body_bytes, log_error, forwarding,
         )
         response.set_header("X-Omega-Cache", "BYPASS")
         return response
@@ -426,10 +556,11 @@ async def serve_proxy(
 
         response = await _serve_proxy_uncached(
             request, zone, proxy_client, load_balancer, health_state,
-            client_ssl_context_verified, client_ssl_context_unverified,
+            client_ssl_context_verified, client_ssl_context_unverified, max_body_bytes, log_error, forwarding,
         )
-        headers_tuple = tuple(response.headers.items())
-        if is_cacheable_response(response.status, headers_tuple, allow_set_cookie=zone.cache_allow_set_cookie):
+        headers_tuple = tuple(response.all_headers())  # lot 1 (D6) : les Set-Cookie comptent pour le cache
+        if is_cacheable_response(response.status, headers_tuple, allow_set_cookie=zone.cache_allow_set_cookie,
+                                 request_had_authorization=request.header("authorization") is not None):
             ttl_seconds = resolve_cache_ttl_seconds(
                 headers_tuple, respect_upstream_headers=zone.cache_respect_upstream_headers,
                 default_ttl_seconds=zone.cache_default_ttl_seconds,

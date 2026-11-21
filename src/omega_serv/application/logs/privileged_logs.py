@@ -51,18 +51,52 @@ def read_privileged_sample(runner: ProcessRunnerPort, path: str, size: int, samp
 
 
 def sudo_fix_commands(code: str, path: str, account: str | None) -> list[list[str]]:
-    """Commandes de correction d'un constat de Sante des logs ; [] si sudo n'y peut rien de sur."""
+    """Commandes de correction d'un constat de Sante des logs ; [] si sudo n'y peut rien de sur.
+
+    Scan de securite n° 2 (2026-11-20, F4) : plus de `chgrp`/`chmod` sur le chemin - var/log est inscriptible par
+    le compte du service, qui y remplacait le log par un lien et root changeait alors le groupe et les droits de la
+    cible (/etc/shadow...). Le fichier est ouvert sans suivre de lien douteux, puis corrige par son descripteur
+    (secure_tree.py, op fix_file). Meme effet que `chgrp` + `chmod g+w` (ou `chmod o-w`), affiche ainsi."""
     if code == "writer_cannot_write" and account:
-        return [["chgrp", account, "--", path], ["chmod", "g+w", "--", path]]
+        return [_fix_file_command(path, account, add=0o020, remove=0)]
     if code == "world_writable":
-        return [["chmod", "o-w", "--", path]]
+        return [_fix_file_command(path, None, add=0, remove=0o002)]
     return []
+
+
+def _fix_file_command(path: str, group: str | None, add: int, remove: int) -> list[str]:
+    import json
+    import os
+    import sys
+    from pathlib import Path
+
+    # Chemin du script lance par root, sans l'importer : l'application (et la TUI) n'importe pas l'infrastructure.
+    script = Path(__file__).resolve().parents[2] / "infrastructure" / "services" / "secure_tree.py"
+    spec = {"op": "fix_file", "path": path, "trusted_uid": os.getuid(), "group": group, "add": add, "remove": remove}
+    return [sys.executable, "-I", str(script), json.dumps(spec)]
+
+
+def _human_command(command: list[str]) -> list[str]:
+    """`chgrp`/`chmod` equivalents d'une commande fix_file, pour l'affichage avant confirmation."""
+    import json
+
+    if len(command) == 4 and command[1] == "-I" and command[2].endswith("secure_tree.py"):
+        spec = json.loads(command[3])
+        shown: list[str] = []
+        if spec.get("group"):
+            shown.append(f"chgrp {spec['group']} {spec['path']}")
+        if spec.get("add") == 0o020:
+            shown.append(f"chmod g+w {spec['path']}")
+        if spec.get("remove") == 0o002:
+            shown.append(f"chmod o-w {spec['path']}")
+        return shown
+    return [" ".join(part for part in command if part != "--")]
 
 
 def shown_command(commands: list[list[str]]) -> str:
     """Les commandes telles qu'affichees avant confirmation (sans le `-n` technique)."""
     prefix = "" if running_as_root() else "sudo "
-    return " && ".join(prefix + " ".join(part for part in command if part != "--") for command in commands)
+    return " && ".join(prefix + text for command in commands for text in _human_command(command))
 
 
 def run_sudo_fix(runner: ProcessRunnerPort, commands: list[list[str]]) -> str | None:

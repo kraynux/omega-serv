@@ -65,7 +65,13 @@ std::shared_ptr<const Snapshot> snapshot_from_frame(const ipc::Frame& frame, int
 
 std::vector<std::string> native_capabilities() {
     return {"static", "range", "precompressed", "redirects", "rewrites", "aliases", "access_rules",
-            "security_headers", "trusted_proxy", "access_log", "tls"};
+            "security_headers", "trusted_proxy", "access_log", "tls",
+            "handoff_done", "proxy_relay",  // plan proxy natif v2, lot 4
+            "proxy_stream",   // lot 5 : chunked, fin par la fermeture, flux, pool
+            "proxy_balance",  // lot 6 : equilibrage, sante partagee, noms DNS
+            "proxy_tls",      // lot 8 : TLS vers le backend
+            "proxy_tls_direct",   // lot 9 : relais sous TLS direct
+            "proxy_websocket"};   // lot 10 : tunnel WebSocket natif (C17)
 }
 
 std::shared_ptr<const Snapshot> snapshot_from_config_frame(std::uint32_t frame_generation, const std::string* size_field,
@@ -196,6 +202,14 @@ int run_controlled(int control_fd, ServerOptions options, const char* binary_ver
                 health.add_u64(ipc::tag::kHealthRequests, server.requests_served());
                 health.add_u64(ipc::tag::kHealthRejected, server.rejected_over_capacity());
                 health.add_u32(ipc::tag::kHealthGeneration, current->generation);
+                health.add_u64(ipc::tag::kHealthProxyRelayed, server.proxy_relayed());
+                health.add_u64(ipc::tag::kHealthProxyPendingBody, server.proxy_pending_body());
+                health.add_u64(ipc::tag::kHealthProxyInspections, server.proxy_inspections());
+                health.add_u64(ipc::tag::kHealthUpstreamConnections, server.upstream_connections());
+                health.add_u64(ipc::tag::kHealthUpstreamRetries, server.upstream_retries());
+                health.add_u64(ipc::tag::kHealthUpstreamIdle, server.upstream_idle());
+                health.add_u64(ipc::tag::kHealthBytesIn, server.bytes_in());
+                health.add_u64(ipc::tag::kHealthBytesOut, server.bytes_out());
                 ipc::send_frame(control_fd, health);
                 continue;
             }

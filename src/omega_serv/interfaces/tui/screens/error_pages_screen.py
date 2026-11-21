@@ -83,8 +83,10 @@ class ErrorPagesScreen(OmegaScreen):
             yield Static(_("Statuts gérés"), classes="omega-subtitle")
             yield DataTable(id="statuses-table")
 
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"), Container(classes="omega-btn-frame"):
+            yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:

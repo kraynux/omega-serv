@@ -11,6 +11,7 @@ import dataclasses
 import shutil
 from pathlib import Path
 
+from omega_serv.application.persistence.backup_manifest import MANIFEST_NAME
 from omega_serv.core.i18n import _
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
 from omega_serv.domain.persistence.snapshots import SnapshotStatus
@@ -29,6 +30,8 @@ class RestoreResult:
     """La sauvegarde contient une base et le serveur tourne : refusee (decision utilisateur 2026-11-01) -
     l'interface propose « Arreter, restaurer, redemarrer »."""
     databases: tuple[str, ...] = ()
+    missing_zone_folders: tuple[str, ...] = ()
+    """Dossiers de zones actives absents apres la restauration (projets 3.0.0 §8.2, P1) : messages a montrer."""
 
 
 def archive_databases(archive_store: ArchiveStore, archive_path: Path) -> tuple[str, ...]:
@@ -87,6 +90,9 @@ def restore_backup(
                 aside_dir or archive_store.base_dir / f"avant-restauration-{snapshot_id}",
             )
         archive_store.extract_archive(archive_path, project_root)
+        manifest_copy = project_root / MANIFEST_NAME  # fiche de l'archive : jamais un fichier du projet
+        if manifest_copy.is_file():
+            manifest_copy.unlink()
     except (ArchiveStoreError, OSError) as exc:
         metadata_store.save(dataclasses.replace(metadata, status=SnapshotStatus.FAILED, error_message=str(exc)))
         return RestoreResult(False, _("Échec de restauration : {exc}").format(exc=exc), databases=databases)

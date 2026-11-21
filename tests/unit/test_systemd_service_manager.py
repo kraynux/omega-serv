@@ -1,3 +1,7 @@
+import grp
+import json
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -5,6 +9,7 @@ from unittest.mock import patch
 
 from omega_serv.domain.services.exceptions import ServiceControlError, ServiceNotFoundError
 from omega_serv.domain.services.systemd_unit import SystemdUnitParams
+from omega_serv.infrastructure.services import secure_tree
 from omega_serv.infrastructure.services.systemd_service_manager import (
     _CONTROL_TIMEOUT_SECONDS,
     _TIMEOUT_SECONDS,
@@ -44,7 +49,7 @@ class _FakeProcessRunner:
 class TestSystemdServiceManager(unittest.TestCase):
     @patch(_ROOT, return_value=True)
     def test_start_success(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "omega-serv"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "omega-serv"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("omega-serv"))
 
@@ -73,7 +78,7 @@ class TestSystemdServiceManager(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_start_uses_the_longer_control_timeout(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         manager.start("svc")
         self.assertEqual(runner.call_timeouts, [_CONTROL_TIMEOUT_SECONDS])
@@ -88,14 +93,14 @@ class TestSystemdServiceManager(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_start_not_found(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "ghost"): ProcessResult(5, "", "Unit ghost.service not found.")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "ghost"): ProcessResult(5, "", "Unit ghost.service not found.")})
         manager = SystemdServiceManager(runner)
         with self.assertRaises(ServiceNotFoundError):
             manager.start("ghost")
 
     @patch(_ROOT, return_value=True)
     def test_start_control_error(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "svc"): ProcessResult(1, "", "permission denied")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "svc"): ProcessResult(1, "", "permission denied")})
         manager = SystemdServiceManager(runner)
         with self.assertRaises(ServiceControlError):
             manager.start("svc")
@@ -103,10 +108,10 @@ class TestSystemdServiceManager(unittest.TestCase):
     @patch(_ROOT, return_value=True)
     def test_stop_restart_enable_disable_all_use_correct_verb(self, _mock_root):
         runner = _FakeProcessRunner({
-            ("systemctl", "stop", "svc"): ProcessResult(0, "", ""),
-            ("systemctl", "restart", "svc"): ProcessResult(0, "", ""),
-            ("systemctl", "enable", "svc"): ProcessResult(0, "", ""),
-            ("systemctl", "disable", "svc"): ProcessResult(0, "", ""),
+            ("systemctl", "stop", "--", "svc"): ProcessResult(0, "", ""),
+            ("systemctl", "restart", "--", "svc"): ProcessResult(0, "", ""),
+            ("systemctl", "enable", "--", "svc"): ProcessResult(0, "", ""),
+            ("systemctl", "disable", "--", "svc"): ProcessResult(0, "", ""),
         })
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.stop("svc"))
@@ -116,14 +121,14 @@ class TestSystemdServiceManager(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_reload_success(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "reload", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("systemctl", "reload", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.reload("svc"))
 
     @patch(_ROOT, return_value=True)
     def test_reload_fails_cleanly_without_exec_reload(self, _mock_root):
         runner = _FakeProcessRunner({
-            ("systemctl", "reload", "svc"): ProcessResult(1, "", "Job type reload is not applicable.")
+            ("systemctl", "reload", "--", "svc"): ProcessResult(1, "", "Job type reload is not applicable.")
         })
         manager = SystemdServiceManager(runner)
         with self.assertRaises(ServiceControlError):
@@ -175,17 +180,17 @@ class TestSystemdServiceManagerPrivilegeElevation(unittest.TestCase):
 
     @patch(_ROOT, return_value=False)
     def test_control_operation_prefixed_with_sudo_when_not_root(self, _mock_root):
-        runner = _FakeProcessRunner({("sudo", "systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("sudo", "systemctl", "start", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("svc"))
-        self.assertEqual(runner.calls, [["sudo", "systemctl", "start", "svc"]])
+        self.assertEqual(runner.calls, [["sudo", "systemctl", "start", "--", "svc"]])
 
     @patch(_ROOT, return_value=True)
     def test_control_operation_not_prefixed_when_already_root(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("svc"))
-        self.assertEqual(runner.calls, [["systemctl", "start", "svc"]])
+        self.assertEqual(runner.calls, [["systemctl", "start", "--", "svc"]])
 
     @patch(_ROOT, return_value=False)
     def test_status_and_is_active_never_prefixed_with_sudo(self, _mock_root):
@@ -250,16 +255,16 @@ class TestSystemdServiceManagerSudoAuthentication(unittest.TestCase):
 
     @patch(_ROOT, return_value=False)
     def test_authenticates_interactively_before_the_captured_command(self, _mock_root):
-        runner = _FakeProcessRunner({("sudo", "systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("sudo", "systemctl", "start", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("svc"))
         self.assertEqual(runner.interactive_calls, [["sudo", "-v"]])
-        self.assertEqual(runner.calls, [["sudo", "systemctl", "start", "svc"]])
+        self.assertEqual(runner.calls, [["sudo", "systemctl", "start", "--", "svc"]])
 
     @patch(_ROOT, return_value=False)
     def test_failed_or_cancelled_authentication_never_runs_the_real_command(self, _mock_root):
         runner = _FakeProcessRunner(
-            {("sudo", "systemctl", "start", "svc"): ProcessResult(0, "", "")},
+            {("sudo", "systemctl", "start", "--", "svc"): ProcessResult(0, "", "")},
             interactive_auth_returncode=1,
         )
         manager = SystemdServiceManager(runner)
@@ -270,7 +275,7 @@ class TestSystemdServiceManagerSudoAuthentication(unittest.TestCase):
 
     @patch(_ROOT, return_value=True)
     def test_no_interactive_authentication_needed_when_already_root(self, _mock_root):
-        runner = _FakeProcessRunner({("systemctl", "start", "svc"): ProcessResult(0, "", "")})
+        runner = _FakeProcessRunner({("systemctl", "start", "--", "svc"): ProcessResult(0, "", "")})
         manager = SystemdServiceManager(runner)
         self.assertTrue(manager.start("svc"))
         self.assertEqual(runner.interactive_calls, [], "aucune authentification sudo necessaire en etant deja root")
@@ -403,71 +408,83 @@ class TestSystemdServiceManagerGrantDirectoryAccess(unittest.TestCase):
     classiques du repertoire, restees `kraynux:kraynux 755` sans droit
     d'ecriture pour le compte de service dedie."""
 
+    @staticmethod
+    def _spec(call):
+        """Commande secure_tree.py : [python, -I, secure_tree.py, json] -> dict."""
+        assert call[-3] == "-I" and call[-2].endswith("secure_tree.py"), call
+        return json.loads(call[-1])
+
     @patch(_ROOT, return_value=False)
-    def test_runs_chgrp_chmod_setgid_usermod_in_order_with_sudo(self, _mock_root):
+    def test_runs_secure_share_then_usermod_with_sudo(self, _mock_root):
+        """Scan de securite n° 2 (F11/F21) : plus de `find -exec chgrp/chmod` en root, un seul parcours par
+        descripteurs (secure_tree.py), puis usermod."""
         path = Path("/home/kraynux/DEV/SERV/omega-serv/var")
-        runner = _FakeProcessRunner({
-            ("sudo", "find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
-            ("sudo", "find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
-            ("sudo", "find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
-            ("sudo", "usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
-        })
-        manager = SystemdServiceManager(runner)
-        manager.grant_directory_access(path, "omega-serv", "kraynux")
-        self.assertEqual(
-            runner.calls,
-            [
-                ["sudo", "find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"],
-                ["sudo", "find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"],
-                ["sudo", "find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"],
-                ["sudo", "usermod", "-aG", "omega-serv", "kraynux"],
-            ],
-        )
+        runner = _AnyProcessRunner()
+        SystemdServiceManager(runner).grant_directory_access(path, "omega-serv", "kraynux")
+        self.assertEqual(len(runner.calls), 2)
+        self.assertEqual(runner.calls[0][0], "sudo")
+        self.assertEqual(self._spec(runner.calls[0]),
+                         {"op": "share", "root": str(path), "group": "omega-serv", "private": [], "open": []})
+        self.assertEqual(runner.calls[1], ["sudo", "usermod", "-aG", "omega-serv", "kraynux"])
 
     @patch(_ROOT, return_value=True)
     def test_not_prefixed_when_already_root(self, _mock_root):
-        path = Path("/srv/omega-serv/var")
-        runner = _FakeProcessRunner({
-            ("find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
-            ("find", str(path), "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
-            ("find", str(path), "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
-            ("usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
-        })
-        manager = SystemdServiceManager(runner)
-        manager.grant_directory_access(path, "omega-serv", "kraynux")
+        runner = _AnyProcessRunner()
+        SystemdServiceManager(runner).grant_directory_access(Path("/srv/omega-serv/var"), "omega-serv", "kraynux")
         self.assertTrue(all(call[0] != "sudo" for call in runner.calls))
 
     @patch(_ROOT, return_value=True)
     def test_raises_on_first_failing_step(self, _mock_root):
-        path = Path("/srv/omega-serv/var")
-        runner = _FakeProcessRunner({
-            ("find", str(path), "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(1, "", "operation not permitted"),
-        })
-        manager = SystemdServiceManager(runner)
+        runner = _AnyProcessRunner(ProcessResult(1, "", "operation not permitted"))
         with self.assertRaises(ServiceControlError):
-            manager.grant_directory_access(path, "omega-serv", "kraynux")
+            SystemdServiceManager(runner).grant_directory_access(Path("/srv/omega-serv/var"), "omega-serv", "kraynux")
         self.assertEqual(len(runner.calls), 1)
 
     @patch(_ROOT, return_value=True)
-    def test_private_subdirs_are_pruned_then_made_owner_only(self, _mock_root):
-        """2026-11-10 : var/backups (cles privees, users.json) jamais partage avec le groupe."""
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "var"
-            (path / "backups").mkdir(parents=True)
-            backups = str(path / "backups")
-            prune = ["-path", backups, "-prune", "-o"]
-            runner = _FakeProcessRunner({
-                ("find", str(path), *prune, "!", "-type", "l", "-exec", "chgrp", "-h", "omega-serv", "{}", "+"): ProcessResult(0, "", ""),
-                ("find", str(path), *prune, "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"): ProcessResult(0, "", ""),
-                ("find", str(path), *prune, "-type", "d", "-exec", "chmod", "g+s", "{}", "+"): ProcessResult(0, "", ""),
-                ("find", backups, "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"): ProcessResult(0, "", ""),
-                ("usermod", "-aG", "omega-serv", "kraynux"): ProcessResult(0, "", ""),
-            })
-            manager = SystemdServiceManager(runner)
-            manager.grant_directory_access(path, "omega-serv", "kraynux", private_subdirs=("backups",))
-            self.assertIn(["find", backups, "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"], runner.calls)
-            self.assertEqual(len(runner.calls), 5)
+    def test_private_and_open_subdirs_are_passed(self, _mock_root):
+        runner = _AnyProcessRunner()
+        SystemdServiceManager(runner).grant_directory_access(
+            Path("/srv/x/var"), "omega-serv", "kraynux", private_subdirs=("backups",), open_subdirs=("backups/logs",))
+        spec = self._spec(runner.calls[0])
+        self.assertEqual((spec["private"], spec["open"]), (["backups"], ["backups/logs"]))
 
+    def test_secure_tree_shares_without_following_links(self):
+        """Parcours reel (groupe courant) : partage de var/, var/backups ferme puis seulement traversable SANS
+        setgid (F23), var/backups/logs partage, liens jamais suivis."""
+        group = grp.getgrgid(os.getgid()).gr_name
+        with tempfile.TemporaryDirectory() as tmp:
+            var = Path(tmp) / "var"
+            (var / "a").mkdir(parents=True)
+            (var / "backups" / "logs").mkdir(parents=True)
+            (var / "a" / "f").write_text("x")
+            (var / "backups" / "cle").write_text("secret")
+            outside = Path(tmp) / "dehors"
+            outside.write_text("y")
+            outside.chmod(0o600)
+            os.symlink(outside, var / "a" / "lien")
+            secure_tree.share(str(var), group, ["backups"], ["backups/logs"])
+            mode = lambda p: stat.S_IMODE(os.lstat(p).st_mode)
+            self.assertEqual(mode(var / "a" / "f") & 0o060, 0o060)
+            self.assertTrue(os.lstat(var / "a").st_mode & stat.S_ISGID)
+            self.assertEqual(mode(var / "backups"), 0o710)
+            self.assertEqual(mode(var / "backups" / "cle"), 0o600)
+            self.assertEqual(mode(var / "backups" / "logs") & 0o070, 0o070)
+            self.assertEqual(mode(outside), 0o600)  # cible du lien intacte
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class _AnyProcessRunner:
+    """Repond `result` a toute commande et garde les appels."""
+
+    def __init__(self, result=None):
+        self.result = result or ProcessResult(0, "", "")
+        self.calls = []
+
+    def run(self, args, input_text=None, timeout=None):
+        self.calls.append(list(args))
+        return self.result
+
+    def run_interactive(self, args):
+        return 0

@@ -88,13 +88,17 @@ class TestStaticServerIntegration(unittest.IsolatedAsyncioTestCase):
         status, _, _ = await self._request("GET", "/.env")
         self.assertEqual(status, 403)
 
-    async def test_traversal_is_403(self):
-        status, _, _ = await self._request("GET", "/../secure/secret.txt")
-        self.assertEqual(status, 403)
+    # Plan proxy natif v2, lot 1 (D26, decision de l'auteur) : tout segment « . » ou « .. » est refuse des
+    # l'analyse de la cible (400), sur toutes les routes - avant : 403 par le resolveur du statique seulement.
+    async def test_traversal_is_refused(self):
+        status, _, data = await self._request("GET", "/../secure/secret.txt")
+        self.assertEqual(status, 400)
+        self.assertNotIn(b"nope", data)  # contenu du fichier hors du webroot
 
-    async def test_percent_encoded_traversal_is_403(self):
-        status, _, _ = await self._request("GET", "/%2e%2e/secure/secret.txt")
-        self.assertEqual(status, 403)
+    async def test_percent_encoded_traversal_is_refused(self):
+        status, _, data = await self._request("GET", "/%2e%2e/secure/secret.txt")
+        self.assertEqual(status, 400)
+        self.assertNotIn(b"nope", data)  # contenu du fichier hors du webroot
 
     async def test_missing_file_gets_default_html_error_page(self):
         status, headers, data = await self._request("GET", "/nope.html")
@@ -223,6 +227,44 @@ class TestStaticServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertIn(b"408", data)
         writer.close()
 
+
+    async def _large_body_port(self) -> int:
+        """Lot 11 (F1) : meme serveur, corps jusqu'a 64 Kio (le serveur commun plafonne a 100 octets)."""
+        config = replace(self.config, server=replace(self.config.server, max_request_size=65536))
+        server = build_server(config, self.root, self.filesystem, self.logger)
+        await server.start()
+        self.addAsyncCleanup(server.close)
+        return server.sockets[0].getsockname()[1]
+
+    async def test_steady_slow_body_is_not_cut_at_the_read_timeout(self):
+        # Lot 11 (F1) : 3 Ko a ~2 Ko/s sur 1,5 s (> read_timeout 1 s) - delai relance a chaque bloc, debit > 500 o/s.
+        reader, writer = await asyncio.open_connection("127.0.0.1", await self._large_body_port())
+        writer.write(b"POST / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Length: 3000\r\n\r\n")
+        for _ in range(15):
+            await asyncio.sleep(0.1)
+            writer.write(b"x" * 200)
+            await writer.drain()
+        data = await reader.read(200)
+        self.assertNotIn(b" 408 ", data.split(b"\r\n", 1)[0])
+        writer.close()
+
+    async def test_trickling_body_under_the_minimum_rate_gets_408(self):
+        reader, writer = await asyncio.open_connection("127.0.0.1", await self._large_body_port())
+        writer.write(b"POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 800\r\n\r\n")
+        data = b""
+        try:
+            for _ in range(40):  # 20 o toutes les 0,25 s = 80 o/s : la reponse arrive pendant l'envoi
+                try:
+                    data = await asyncio.wait_for(reader.read(200), 0.25)
+                    break
+                except asyncio.TimeoutError:
+                    pass
+                writer.write(b"x" * 20)
+                await writer.drain()
+        except ConnectionError:
+            pass
+        self.assertIn(b"408", data)
+        writer.close()
 
 if __name__ == "__main__":
     unittest.main()

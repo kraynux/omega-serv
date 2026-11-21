@@ -111,6 +111,73 @@ class TestReloadScoped(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.server.sockets[0].getsockname()[1], self.port)
 
 
+class TestReverseProxyEnabledByReload(unittest.IsolatedAsyncioTestCase):
+    """Plan proxy natif v2, lot A (D15) : le client proxy n'etait construit qu'au demarrage - une zone activee par
+    rechargement restait sans effet (404 du site local, essai du 2026-11-11), alors que le README l'annonce."""
+
+    async def asyncSetUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "webroot").mkdir()
+        (self.root / "webroot" / "index.html").write_text("ok")
+        self.backend_hits = 0
+
+        async def backend(reader, writer):
+            await reader.readuntil(b"\r\n\r\n")
+            self.backend_hits += 1
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\namont")
+            await writer.drain()
+            writer.close()
+
+        self.backend = await asyncio.start_server(backend, "127.0.0.1", 0)
+        self.backend_port = self.backend.sockets[0].getsockname()[1]
+        self.filesystem = LocalFilesystem()
+        self.server = build_server(self._config(proxy=False), self.root, self.filesystem, FileLineLogger())
+        await self.server.start()
+        self.port = self.server.sockets[0].getsockname()[1]
+
+    async def asyncTearDown(self):
+        await self.server.close()
+        self.backend.close()
+        await self.backend.wait_closed()
+        self._tmp.cleanup()
+
+    def _config(self, proxy: bool) -> OmegaServConfig:
+        data: dict = {"server": {"bind": "127.0.0.1", "port": 0}}
+        if proxy:
+            data["options"] = {"reverse_proxy": {"enabled": True, "zones": [{
+                "url_prefix": "/api/", "upstreams": [{"host": "127.0.0.1", "port": self.backend_port}],
+                "connect_timeout_seconds": 2, "read_timeout_seconds": 2}]}}
+        return OmegaServConfig.from_dict(data)
+
+    def _get_sync(self, path):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            conn.request("GET", path)
+            response = conn.getresponse()
+            return response.status, response.read()
+        finally:
+            conn.close()
+
+    async def _get(self, path):
+        return await asyncio.to_thread(self._get_sync, path)
+
+    async def test_reverse_proxy_enabled_via_reload_reaches_backend(self):
+        self.assertEqual((await self._get("/api/x"))[0], 404)
+        self.assertIsNone(try_reload_server(self.server, self._config(proxy=True), self.root, self.filesystem))
+        self.assertEqual(await self._get("/api/x"), (200, b"amont"))
+        self.assertEqual(self.backend_hits, 1)
+        self.assertEqual(self.server.sockets[0].getsockname()[1], self.port)
+
+    async def test_second_reload_keeps_the_same_proxy_client(self):
+        # Garde : client, pool et etat de sante jamais remplaces par un SIGHUP une fois l'option active.
+        reload_server(self.server, self._config(proxy=True), self.root, self.filesystem)
+        client = self.server._proxy_client
+        reload_server(self.server, self._config(proxy=True), self.root, self.filesystem)
+        self.assertIs(self.server._proxy_client, client)
+        self.assertEqual(await self._get("/api/x"), (200, b"amont"))
+
+
 class _KeywordListServerCase(unittest.IsolatedAsyncioTestCase):
     """Serveur reel avec une liste de chemins hostile (seuil de recidive 2)."""
 

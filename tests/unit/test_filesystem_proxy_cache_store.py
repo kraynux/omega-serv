@@ -150,5 +150,36 @@ class TestFilesystemProxyCacheStore(unittest.TestCase):
         self.assertEqual(second_store.stats().entry_count, 1)
 
 
+class TestLot1CacheIndex(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D13) : index reconstruit au demarrage avec une autre cle que pendant l'execution."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.base_dir = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_restart_does_not_count_entries_twice(self):
+        FilesystemProxyCacheStore(self.base_dir).set("/api/", "abc", _entry(b"x" * 1000))
+        store = FilesystemProxyCacheStore(self.base_dir)  # redemarrage
+        store.set("/api/", "abc", _entry(b"y" * 1000))  # meme entree, reecrite
+        self.assertEqual(len(store._index), 1)
+
+    def test_clearing_a_zone_after_restart_empties_its_index(self):
+        FilesystemProxyCacheStore(self.base_dir).set("/api/", "abc", _entry())
+        store = FilesystemProxyCacheStore(self.base_dir)
+        self.assertEqual(store.clear(zone_key="/api/"), 1)
+        self.assertEqual(store._index, {})
+
+    def test_unreadable_entry_is_a_miss_and_is_removed(self):
+        store = FilesystemProxyCacheStore(self.base_dir)
+        store.set("/api/", "abc", _entry())
+        path = store._entry_path("/api/", "abc")
+        path.write_text("{tronque")
+        self.assertIsNone(store.get("/api/", "abc"))
+        self.assertFalse(path.exists())
+
+
 if __name__ == "__main__":
     unittest.main()

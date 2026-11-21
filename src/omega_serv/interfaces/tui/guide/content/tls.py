@@ -38,6 +38,30 @@ TLS_STATUS_SCREEN = ScreenGuide(
     ),
 )
 
+CERTIFICATE_EXPIRY_SCREEN = ScreenGuide(
+    screen_class_name="CertificateExpiryScreen",
+    title=_("Échéances des certificats"),
+    acces=_("Configuration détaillée -> TLS -> Échéances des certificats"),
+    definition=_("Liste tous les certificats de cette instance : celui du site, celui du panneau web et chaque fichier "
+                 "de secure/certificates/ qui contient un certificat (CA locale, copies de Certbot). Pour chacun : fin "
+                 "de validité, jours restants, noms couverts."),
+    fields=(
+        FieldGuide(
+            label=_("Rafraîchir"),
+            definition=_("Relit tous les certificats."),
+            utilisation=_("Aucune saisie."),
+            action=_("openssl lit chaque fichier, hors du fil de l'écran."),
+            reaction=_("Aucun effet (lecture seule)."),
+        ),
+    ),
+    consequences=_("Aucune - purement consultatif. Le panneau web montre la même liste (vue Certificats) et ouvre une "
+                   "alerte à 30, 14, 7 et 1 jour de l'échéance."),
+    points_de_vigilance=(
+        _("Certificats sur cette machine seulement : ceux des backends distants ne sont pas vérifiés (aucune "
+          "connexion). Les clés privées ne sont jamais lues. Sans openssl, l'échéance est « inconnue »."),
+    ),
+)
+
 GENERATE_SELF_SIGNED_SCREEN = ScreenGuide(
     screen_class_name="GenerateSelfSignedScreen",
     title=_("Générer un certificat auto-signé"),
@@ -337,6 +361,7 @@ TLS_TOGGLE_SCREEN = ScreenGuide(
 ALL_TLS_GUIDES: tuple[ScreenGuide, ...] = (
     TLS_MENU_SCREEN,
     TLS_STATUS_SCREEN,
+    CERTIFICATE_EXPIRY_SCREEN,
     GENERATE_SELF_SIGNED_SCREEN,
     CA_WIZARD_SCREEN,
     LETS_ENCRYPT_SCREEN,

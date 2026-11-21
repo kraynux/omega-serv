@@ -55,7 +55,7 @@ def _from_dict(data: dict) -> SnapshotMetadata:
 class BackupMetadataStore:
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
-        self._base_dir.mkdir(parents=True, exist_ok=True)
+        self._base_dir.mkdir(parents=True, exist_ok=True, mode=0o700)  # scan de securite n° 2 (F23) : prive
 
     def _path_for(self, snapshot_id: str) -> Path:
         return self._base_dir / f"{snapshot_id}.json"

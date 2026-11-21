@@ -7,7 +7,7 @@
 
 **Một máy chủ web HTTP/1.1 độc lập, di động và được gia cố theo mặc định.**
 
-OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP-FPM. Nó được thiết kế để dễ khởi chạy, dễ quản trị từ terminal và khó dùng sai: các kiểm tra giao thức HTTP hoạt động ngay từ khi khởi động, còn các chức năng nâng cao hơn — WAF, TLS, xác thực, reverse proxy — vẫn là tùy chọn và phải được bật một cách chủ động.
+OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP-FPM hoặc các ứng dụng của bạn qua reverse proxy của nó. Nó được thiết kế để dễ khởi chạy, dễ quản trị từ terminal và khó dùng sai: các kiểm tra giao thức HTTP hoạt động ngay từ khi khởi động, còn các chức năng nâng cao hơn — WAF, TLS, xác thực, reverse proxy — vẫn là tùy chọn và phải được bật một cách chủ động.
 
 > Được xây dựng bởi [kraynux](https://github.com/kraynux) cho [Omega-Server](https://kraynux.snake-mackarel.ts.net)
 
@@ -15,7 +15,8 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 [Hướng dẫn đầy đủ](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/vi/guide.html) ·
 [Ảnh chụp màn hình](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) ·
 [Máy chủ demo](https://craftdark.snake-mackarel.ts.net) ·
-[So sánh các máy chủ web](comparatif-serveurs-web.md)
+[So sánh các máy chủ web](comparatif-serveurs-web.md) ·
+[So sánh máy chủ web dạng biểu đồ](comparatif-server-web-graphique.md)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -33,7 +34,7 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 
 ---
 
-**OMEGA-SERV** là một máy chủ HTTP/1.1 viết bằng Python thuần (chỉ dùng thư viện chuẩn cho lõi máy chủ), được thiết kế để phục vụ nội dung tĩnh và, tùy chọn, PHP-FPM, với cơ chế gia cố giao thức bật sẵn theo mặc định và các mô-đun bảo mật (WAF, TLS, xác thực) có thể xếp chồng thay vì bị áp đặt. Một bộ máy native C++ tùy chọn có thể phục vụ các yêu cầu thay cho bộ máy Python, với cùng các kiểm tra bảo mật. Nó tác động lên chính máy cục bộ đang chạy nó, không phải lên mục tiêu từ xa (cùng họ với `omega-fire`); được tổ chức theo Clean Architecture, với `bootstrap/` đóng vai trò gốc lắp ghép (composition root).
+**OMEGA-SERV** là một máy chủ HTTP/1.1 viết bằng Python thuần (chỉ dùng thư viện chuẩn cho lõi máy chủ), được thiết kế để phục vụ nội dung tĩnh và, tùy chọn, PHP-FPM hoặc các ứng dụng đặt sau reverse proxy của nó, với cơ chế gia cố giao thức bật sẵn theo mặc định và các mô-đun bảo mật (WAF, TLS, xác thực) có thể xếp chồng thay vì bị áp đặt. Một bộ máy native C++ tùy chọn có thể phục vụ các yêu cầu thay cho bộ máy Python, với cùng các kiểm tra bảo mật. Nó tác động lên chính máy cục bộ đang chạy nó, không phải lên mục tiêu từ xa (cùng họ với `omega-fire`); được tổ chức theo Clean Architecture, với `bootstrap/` đóng vai trò gốc lắp ghép (composition root).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/A.png" width="24%" />
@@ -74,6 +75,7 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 - [6b. Bộ máy HTTP và số tiến trình](#6b-bộ-máy-http-và-số-tiến-trình)
 - [7. Mô-đun tùy chọn](#7-mô-đun-tùy-chọn)
   - [7a. Reverse proxy đi ra — chi tiết](#7a-reverse-proxy-đi-ra--chi-tiết)
+  - [7b. Quản trị web (bảng điều khiển)](#7b-quản-trị-web-bảng-điều-khiển)
 - [8. Gia cố HTTP (bật theo mặc định)](#8-gia-cố-http-bật-theo-mặc-định)
 - [9. TLS](#9-tls)
   - [9a. Chứng chỉ tự ký (tối thiểu)](#9a-chứng-chỉ-tự-ký-tối-thiểu)
@@ -101,10 +103,12 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 
 - Phục vụ nội dung tĩnh (tệp, liệt kê thư mục tùy chọn, alias, chuyển hướng, rewrite, cache) với cơ chế phân giải đường dẫn an toàn (traversal, mã hóa kép, liên kết tượng trưng). Tệp lớn được gửi theo từng khối từ đĩa, không bao giờ nạp vào bộ nhớ; mỗi tệp mang một `ETag` và một `Last-Modified` (tải lại = phản hồi 304 rỗng), chấp nhận yêu cầu một phần `Range` (tải tiếp, video); ảnh, media, phông chữ, CSS và JS nhận một `Cache-Control` mặc định, có thể sửa trong màn hình Cache. Tệp văn bản nén sẵn: nếu `site.css.br` hoặc `site.css.gz` tồn tại cạnh `site.css` (tạo bằng `brotli -k site.css` hoặc `gzip -k site.css`) và trình duyệt chấp nhận, chúng được gửi thay thế, không bao giờ là một phiên bản cũ hơn bản gốc.
 - Gia cố giao thức HTTP mặc định: phân tích yêu cầu nghiêm ngặt, không có tùy chọn để tắt (từ chối sự mơ hồ `Content-Length`/`Transfer-Encoding`), danh sách phương thức được phép tường minh, kiểm tra tiêu đề `Host`, tiêu đề bảo mật và CSP cơ bản trên các phản hồi của trang và các trang lỗi của nó.
-- Tùy chọn: lọc WAF (chữ ký, giới hạn tốc độ, danh sách chặn), TLS trực tiếp (chứng chỉ tự ký, do CA cục bộ ký, hoặc công khai qua Let's Encrypt/Certbot với gia hạn tự động), xác thực HTTP Basic theo vùng, PHP qua FastCGI/PHP-FPM, vùng tải lên được cô lập.
-- Nhiều tiến trình máy chủ, tối đa một tiến trình cho mỗi lõi vật lý của máy với bộ máy Python (màn hình Khả năng chịu tải và giới hạn); các bộ đếm bảo mật (rate limit, tái phạm) được chia sẻ giữa chúng và luôn chính xác.
+- Tùy chọn: lọc WAF (chữ ký, giới hạn tốc độ, danh sách chặn), TLS trực tiếp (chứng chỉ tự ký, do CA cục bộ ký, hoặc công khai qua Let's Encrypt/Certbot với gia hạn tự động), xác thực HTTP Basic theo vùng, PHP qua FastCGI/PHP-FPM (nhiều vùng, mỗi vùng có công tắc riêng), vùng tải lên được cô lập.
+- Tùy chọn: một **reverse proxy** tới một hoặc nhiều ứng dụng (cân bằng tải, tình trạng backend, cache, WebSocket, TLS tới backend; phản hồi được bộ máy native chuyển tiếp dạng luồng — xem [7a](#7a-reverse-proxy-đi-ra--chi-tiết)), và hai mô-đun phòng thủ: **Active Defense** (mồi nhử, làm chậm, sự cố — xem [11](#11-active-defense-deception--chế-độ-chiến-tranh)) và **RIPOSTE** (lệnh cấm ngày càng dài đối với các địa chỉ quay lại — xem [11d](#11d-riposte-phản-ứng-theo-bậc-qua-thời-gian)).
+- Tùy chọn: một **bảng điều khiển web** (quản trị từ xa) trên cổng riêng của nó, để theo dõi instance từ điện thoại hoặc một máy tính khác — trạng thái, nhật ký, bảo mật, lịch sử 30 ngày, lưu lượng, chứng chỉ, cảnh báo cục bộ. Tài khoản đọc hoặc quản trị, TOTP, TLS bắt buộc khi truy cập từ ngoài máy; nó tác động lên việc vận hành (lệnh cấm, RIPOSTE, backend, bản lưu trữ log, nạp lại), không bao giờ lên cấu hình (xem [7b](#7b-quản-trị-web-bảng-điều-khiển)).
+- Hai bộ máy tùy chọn: Python (mặc định) hoặc native C++, dùng tất cả các lõi (xem [6b](#6b-bộ-máy-http-và-số-tiến-trình)). Với bộ máy Python, nhiều tiến trình máy chủ, tối đa một tiến trình cho mỗi lõi vật lý (màn hình Khả năng chịu tải và giới hạn); các bộ đếm bảo mật (rate limit, tái phạm) được chia sẻ giữa chúng và luôn chính xác.
 - Tự kiểm tra cấu hình của chính mình (`audit security`) và tự cài đặt như dịch vụ hệ thống (systemd/OpenRC/runit).
-- CLI không tương tác có thể viết script từ đầu đến cuối, **và giao diện tương tác (Textual)** bao bọc đúng các trường hợp sử dụng đó. Giao diện **điều khiển hoàn toàn bằng chuột và/hoặc bàn phím**: sổ đăng ký khả năng, hồ sơ/tùy chọn, cấu hình chi tiết (alias/chuyển hướng/rewrite/FastCGI/dirlisting/xác thực/cache/WAF/proxy tin cậy/reverse proxy đi ra/TLS), quản lý log (Thư viện/Yêu thích, 3 trình xem — đơn giản/cổ điển/lnav hợp nhất —, Xem và xử lý IP, Thống kê, nguồn từ xa SSH, xoay vòng/sao lưu/tự động hóa/khôi phục/dọn dẹp/xuất, Tình trạng log), dịch vụ hệ thống, đa instance (sổ đăng ký, tạo mới), kiểm tra/mô phỏng/kiểm toán, sao lưu/khôi phục cấu hình, trình hướng dẫn lần đầu chạy, thiết lập ứng dụng (giao diện, hồ sơ hiển thị, đường dẫn xuất/ảnh chụp), hướng dẫn trợ giúp theo ngữ cảnh (phiếu cho từng màn hình với ví dụ cụ thể, FAQ, xuất HTML, độ bao phủ đầy đủ được kiểm chứng bằng test), luôn chỉ rõ cần nạp lại hay khởi động lại sau mỗi lần lưu, cấu hình Active Defense đầy đủ mà không cần sửa tệp thủ công.
+- CLI không tương tác có thể viết script từ đầu đến cuối, **và giao diện tương tác (Textual)** bao bọc đúng các trường hợp sử dụng đó. Giao diện **điều khiển hoàn toàn bằng chuột và/hoặc bàn phím**: sổ đăng ký khả năng, hồ sơ/tùy chọn (gồm cả hồ sơ tùy chỉnh), cấu hình chi tiết (alias/chuyển hướng/rewrite/FastCGI/dirlisting/xác thực/cache/WAF/proxy tin cậy/reverse proxy đi ra/TLS), quản lý log (Thư viện/Yêu thích, 3 trình xem — đơn giản/cổ điển/lnav hợp nhất —, Xem và xử lý IP, Thống kê, nguồn từ xa SSH, xoay vòng/sao lưu/tự động hóa/khôi phục/dọn dẹp/xuất, Tình trạng log), dịch vụ hệ thống, đa instance (sổ đăng ký, tạo mới, cấu hình từ xa), kiểm tra/mô phỏng/kiểm toán, sao lưu/khôi phục cấu hình (xuất và nhập để cài đặt lại), báo cáo đầy đủ (mọi thứ đã được cấu hình và đang hoạt động, xuất HTML/TXT/JSON), trình hướng dẫn lần đầu chạy, thiết lập ứng dụng (giao diện, hồ sơ hiển thị, đường dẫn xuất/ảnh chụp), hướng dẫn trợ giúp theo ngữ cảnh (phiếu cho từng màn hình với ví dụ cụ thể, FAQ, xuất HTML, độ bao phủ đầy đủ được kiểm chứng bằng test), luôn chỉ rõ cần nạp lại hay khởi động lại sau mỗi lần lưu, cấu hình Active Defense đầy đủ mà không cần sửa tệp thủ công.
 
 ### Những gì OMEGA-SERV không làm
 
@@ -116,6 +120,7 @@ OMEGA-SERV phục vụ các trang web tĩnh và, nếu bạn muốn, PHP qua PHP
 ### OMEGA-SERV so với các máy chủ web trên thị trường
 
 Xem [Đo đạc & so sánh](comparatif-serveurs-web.md)  
+[So sánh máy chủ web dạng biểu đồ](comparatif-server-web-graphique.md) — Đồng hồ hiệu năng, xếp hạng theo hạng mục  
 So sánh có đo đạc giữa: [Nginx](https://nginx.org/) · [Lighttpd](https://www.lighttpd.net/) · [Caddy](https://caddyserver.com/) · [Apache](https://www.apache.org) · [Traefik](https://traefik.io/) · [Omega-Serv](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/vi/)
 
 ### Cảnh báo sử dụng
@@ -130,10 +135,10 @@ Omega-serv **từ chối khởi động với quyền root**. Không mô-đun b�
 
 ### Tải xuống
 
-Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+Bản lưu trữ của phiên bản mới nhất và dấu SHA-256 của từng phiên bản: [omega-serv-3.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-3.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-3.0.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +148,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. Cài đặt
 
 ```bash
-tar -xzf omega-serv-2.6.2.tar.gz
+tar -xzf omega-serv-3.0.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +168,7 @@ Nếu `omega-serv/` đã tồn tại (bản cài đặt trước), **đừng bao
 
 ```bash
 # Từ thư mục CHA của omega-serv/ (không bao giờ từ bên trong)
-tar -xzf omega-serv-2.6.2.tar.gz
+tar -xzf omega-serv-3.0.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -241,7 +246,7 @@ serv
 
 ### Luồng tổng quát
 
-Màn hình khởi động (splash, đóng khi nhấn phím hoặc nhấp chuột) → menu chính (Trình hướng dẫn lần đầu chạy / Sổ đăng ký khả năng / Hồ sơ / Cấu hình chi tiết / Bảo mật chủ động / Quản lý log / Dịch vụ / Đa instance / Trạng thái & Tài nguyên / Kiểm toán / Sao lưu) → chọn một mục rồi một hành động, mỗi biểu mẫu kiểm tra các trường bắt buộc trước khi tiếp tục → xác nhận tường minh trước mọi thao tác nhạy cảm hoặc phá hủy (khởi động lại, xóa, khôi phục...) → luôn chỉ rõ bước tiếp theo (nạp lại nóng tự động, hoặc xác nhận khởi động lại hoàn toàn) sau mỗi lần lưu làm thay đổi cấu hình đang được phục vụ. Việc thích ứng với terminal (màu sắc, kích thước, suy giảm cấu trúc của hồ sơ hiển thị) là tự động, không cần cờ thủ công.
+Màn hình khởi động (splash, đóng khi nhấn phím hoặc nhấp chuột) → menu chính (Trình hướng dẫn lần đầu chạy / Sổ đăng ký khả năng / Hồ sơ / Cấu hình chi tiết / Bảo mật chủ động / Quản lý log / Dịch vụ / Đa instance / Trạng thái & Tài nguyên / Kiểm toán / Sao lưu / Báo cáo đầy đủ / Trợ giúp / Tùy chọn) → chọn một mục rồi một hành động, mỗi biểu mẫu kiểm tra các trường bắt buộc trước khi tiếp tục → xác nhận tường minh trước mọi thao tác nhạy cảm hoặc phá hủy (khởi động lại, xóa, khôi phục...) → luôn chỉ rõ bước tiếp theo (nạp lại nóng tự động, hoặc xác nhận khởi động lại hoàn toàn) sau mỗi lần lưu làm thay đổi cấu hình đang được phục vụ. Việc thích ứng với terminal (màu sắc, kích thước, suy giảm cấu trúc của hồ sơ hiển thị) là tự động, không cần cờ thủ công.
 
 #### Phím tắt (giao diện tương tác)
 
@@ -272,15 +277,16 @@ Hướng dẫn trợ giúp (phím `a`) có màn hình **Liên hệ và hỗ tr�
 
 - **Trình hướng dẫn lần đầu chạy** — lộ trình có hướng dẫn gồm 8 bước (chào mừng → khả năng ở chế độ chỉ đọc → chọn hồ sơ → bind/cổng → TLS tùy chọn → kiểm tra → tóm tắt + ghi → đề xuất cài đặt dịch vụ); cho phép tạo một cấu hình hoàn chỉnh và khởi chạy máy chủ mà không cần biết CLI.
 - **Sổ đăng ký khả năng** — thăm dò hệ thống ở chế độ chỉ đọc (hệ thống init, cổng cấu hình đã bị chiếm hay chưa, có `openssl`/`logrotate`/`tailscale`/`lnav` hay không, dung lượng đĩa, giới hạn file descriptor...), xuất JSON/HTML.
-- **Hồ sơ** — cùng trường hợp sử dụng với `profile` trong CLI, luôn hiển thị diff trước khi ghi.
-- **Cấu hình chi tiết của máy chủ** — CRUD đầy đủ cho alias/chuyển hướng/rewrite/dirlisting/proxy tin cậy/reverse proxy đi ra/FastCGI/cache/xác thực/kiểm soát truy cập/trang lỗi, cùng menu con **TLS** (trạng thái, tạo chứng chỉ tự ký, trình hướng dẫn CA cục bộ, trình hướng dẫn Let's Encrypt/Certbot, gia hạn tự động, thu hồi, bật/tắt); khung thứ hai **TÙY CHỌN VÀ KIỂM TRA** gom các lối tắt tới **Tùy chọn** (`option` trong CLI) và **Kiểm tra cấu hình** (`config check` trong CLI) — cùng lộ trình chỉnh thiết lập rồi kiểm tra, hai màn hình này không còn truy cập trực tiếp từ menu chính. WAF không còn nằm ở đây (xem "Bảo mật chủ động" bên dưới): nó chủ yếu hiển thị trạng thái vận hành thay đổi liên tục, không phải một biểu mẫu cấu hình tĩnh đơn giản. Mỗi lần lưu luôn chỉ rõ bước tiếp theo: nạp lại nóng tự động và lặng lẽ nếu dịch vụ đang chạy (dirlisting, truy cập, alias/chuyển hướng/rewrite, cache, trang lỗi, proxy tin cậy, vùng reverse proxy/FastCGI, người dùng/vùng xác thực), hoặc xác nhận tường minh việc khởi động lại hoàn toàn khi thay đổi liên quan đến socket lắng nghe, TLS hoặc Active Defense — không màn hình nào còn để bạn phải đoán có cần khởi động lại máy chủ hay không.
-- **Bảo mật chủ động** — một màn hình duy nhất gom ba khối đặt cạnh nhau, theo thứ tự của một cuộc tấn công: **WAF**, **Active Defense** và **RIPOSTE** (phản ứng theo bậc qua thời gian). **Active Defense** (Trạng thái, Mối đe dọa được theo dõi với điểm/mức, Sự cố với dòng thời gian/xuất IoC/báo cáo, phân bổ Deception, Mô phỏng một quyết định ở chế độ dry-run, **Thiết lập** — cấu hình đầy đủ mà không bao giờ phải sửa tay `config/omega-serve.json`) và **WAF** (Trạng thái, Mô-đun — chế độ/gói quy tắc/danh sách chặn, Thử một yêu cầu, Custom — tạo quy tắc tùy chỉnh và nạp các danh sách đường dẫn/từ khóa có thể sửa bằng chuột, Magnet — nhập một script `mod_magnet` bên ngoài có kiểm tra tương thích trước khi kích hoạt). Bên dưới ba khối, **CAN THIỆP THỦ CÔNG**: cấm hoặc gỡ cấm một địa chỉ IP bằng tay, trạng thái của mọi lệnh cấm.
+- **Hồ sơ** — cùng trường hợp sử dụng với `profile` trong CLI, luôn hiển thị diff trước khi ghi. **Tạo hồ sơ tùy chỉnh**: xuất phát từ một máy chủ tối thiểu và chọn từng lớp bảo vệ trong các danh sách thả xuống (tiêu đề bảo mật, CSP, phương thức, giới hạn, tùy chọn); các thiếu sót được báo ngay lập tức, hoặc chặn việc lưu, hoặc phải chấp nhận từng cái một (xem [5. Hồ sơ](#5-hồ-sơ)).
+- **Cấu hình chi tiết của máy chủ** — CRUD đầy đủ cho alias/chuyển hướng/rewrite/dirlisting/proxy tin cậy/reverse proxy đi ra/FastCGI/cache/xác thực/kiểm soát truy cập/trang lỗi, cùng menu con **TLS** (trạng thái, tạo chứng chỉ tự ký, trình hướng dẫn CA cục bộ, trình hướng dẫn Let's Encrypt/Certbot, gia hạn tự động, thu hồi, bật/tắt, **Ngày hết hạn chứng chỉ**); khung thứ hai **TÙY CHỌN VÀ KIỂM TRA** gom các lối tắt tới **Tùy chọn** (`option` trong CLI) và **Kiểm tra cấu hình** (`config check` trong CLI) — cùng lộ trình chỉnh thiết lập rồi kiểm tra, hai màn hình này không còn truy cập trực tiếp từ menu chính. WAF không còn nằm ở đây (xem "Bảo mật chủ động" bên dưới): nó chủ yếu hiển thị trạng thái vận hành thay đổi liên tục, không phải một biểu mẫu cấu hình tĩnh đơn giản. Mỗi lần lưu luôn chỉ rõ bước tiếp theo: nạp lại nóng tự động và lặng lẽ nếu dịch vụ đang chạy (dirlisting, truy cập, alias/chuyển hướng/rewrite, cache, trang lỗi, proxy tin cậy, vùng reverse proxy/FastCGI, người dùng/vùng xác thực), hoặc xác nhận tường minh việc khởi động lại hoàn toàn khi thay đổi liên quan đến socket lắng nghe, TLS hoặc Active Defense — không màn hình nào còn để bạn phải đoán có cần khởi động lại máy chủ hay không.
+- **Bảo mật chủ động** — một màn hình duy nhất gom ba khối đặt cạnh nhau, theo thứ tự của một cuộc tấn công: **WAF**, **Active Defense** và **RIPOSTE** (phản ứng theo bậc qua thời gian). **Active Defense** (Trạng thái, Mối đe dọa được theo dõi với điểm/mức, Sự cố với dòng thời gian/xuất IoC/báo cáo, phân bổ Deception, Mô phỏng một quyết định ở chế độ dry-run, **Thiết lập** — cấu hình đầy đủ mà không bao giờ phải sửa tay `config/omega-serve.json`) và **WAF** (Trạng thái, Mô-đun — chế độ/gói quy tắc/danh sách chặn, Thử một yêu cầu, Giới hạn — quy tắc tốc độ theo thư mục và theo IP/mạng, Custom — tạo quy tắc tùy chỉnh và nạp các danh sách đường dẫn/từ khóa có thể sửa bằng chuột, Magnet — nhập một script `mod_magnet` bên ngoài có kiểm tra tương thích trước khi kích hoạt). Bên dưới ba khối, **CAN THIỆP THỦ CÔNG**: cấm hoặc gỡ cấm một địa chỉ IP bằng tay, trạng thái của mọi lệnh cấm.
 - **Quản lý log** — menu hai cột. Cột **Thư viện**: trung tâm tham chiếu mọi log cần xử lý (thêm thủ công, một cú nhấp thêm ngay các log riêng của instance — access/error/WAF gốc, + script magnet nếu đang bật —, hoặc một **nguồn từ xa** được tải về qua SSH, xem bên dưới); **Yêu thích** (tổ hợp log + trình xem được lưu dưới một tên, mở trực tiếp); **Xem log** với 3 trình xem tùy chọn theo số log được chọn — Đơn giản (tail trực tiếp + thống kê chung IP/lỗi/mã HTTP trên mọi định dạng), Cổ điển (đọc + theo dõi), `lnav` hợp nhất (hiển thị terminal thực trong giao diện, log magnet được đưa vào sẵn + các đường dẫn thủ công **được ghim** để giữ lại giữa các phiên); **Xem và xử lý IP** (top IP trên một hoặc nhiều log tùy chọn, khoảng thời gian 24h/7 ngày/30 ngày/toàn bộ tệp, tính toán ở nền kèm chỉ báo tiến độ, gỡ một IP); **Thống kê** (báo cáo đầy đủ của một hoặc nhiều log — tổng hợp, trạng thái HTTP, top IP, đường dẫn, phân bố theo giờ, xu hướng theo ngày — có thể xuất JSON/HTML). Cột **Bảo trì**: xoay vòng/lưu trữ thủ công hoặc tự động theo ngưỡng kích thước, tạo bản sao lưu ngay, cấu hình/quản lý các tác vụ tự động lên lịch (được thực thi mỗi đêm bởi bộ hẹn giờ systemd, hoặc bởi một dòng crontab trên OpenRC/runit), khôi phục/dọn dẹp một bản lưu trữ, xuất danh sách; **Tình trạng log** (kiểm tra chỉ đọc các log, ổ đĩa và bản lưu trữ — quyền, log im lặng hoặc hư hỏng, xoay vòng, logrotate, số ngày trước khi đầy đĩa —, kèm thao tác cần làm cho từng phát hiện, sửa quyền — dùng sudo nếu cần —, xuất JSON/HTML/TXT). Khi một log không đọc được bằng tài khoản của bạn, Thống kê và Xem và xử lý IP sẽ hỏi mật khẩu sudo của bạn rồi đọc nó.
-- **Dịch vụ** — cùng các hành động với `service` trong CLI, nâng quyền `sudo` từng lần cho mỗi hành động, không bao giờ chạy toàn bộ ứng dụng bằng root.
-- **Đa instance** — sổ đăng ký toàn cục (`~/.config/omega-serv/instances.json`, nằm ngoài mọi thư mục dự án) các bản cài đặt đã biết trên máy, kèm trạng thái systemd của từng bản; tạo instance mới (sao chép cây thư mục, môi trường ảo và phụ thuộc riêng, cấu hình mới với cổng khác, kiểm tra không lồng nhau và không xung đột cổng) ngay từ giao diện. Nút về cơ bản không hiển thị khi chỉ có một bản cài đặt (nhãn "Đa instance" trở thành "Instances (N)" khi biết từ 2 bản trở lên); chuyển hẳn sang một instance khác (`os.execv`, xác nhận tường minh, splash riêng thông báo việc chuyển khi khởi động lại); gỡ cài đặt hoàn toàn một instance (gỡ unit, gỡ tài khoản hệ thống riêng nếu không còn instance nào khác dùng, và tùy chọn xóa thư mục, không bao giờ mặc định).
-- **Trạng thái & Tài nguyên** — tổng quan trong nháy mắt, làm mới mỗi 2 giây: trạng thái máy chủ (tiến trình/PID, trạng thái dịch vụ hệ thống, hồ sơ/tùy chọn đang bật/TLS/cổng), luồng log truy cập trực tiếp (lưu lượng, phân bố theo mã trạng thái, IP duy nhất, tỷ lệ lỗi), tài nguyên hệ thống (CPU/RAM/đĩa/swap/tải/mạng, qua `psutil`); cũng gom lối tắt **Mô phỏng yêu cầu** (cùng trường hợp sử dụng với lệnh CLI tương ứng).
-- **Kiểm tra bảo mật** — cùng trường hợp sử dụng với lệnh CLI tương ứng.
-- **Sao lưu cấu hình** — bản lưu trữ tar.gz của tệp cấu hình và, khi được chọn tường minh, các quy tắc WAF/vùng xác thực/chứng chỉ (bắt buộc xác nhận khi có bí mật thật được đưa vào)/cơ sở dữ liệu Active Defense, khôi phục, liệt kê, xóa.
+- **Dịch vụ** — cùng các hành động với `service` trong CLI, trình bày thành một biểu mẫu năm dòng theo thứ tự sử dụng (tên dịch vụ, cài đặt, khởi động cùng máy, quyền, điều khiển); chỉ các nút hữu ích mới được bật, trạng thái tự cập nhật, và **Khôi phục quyền** sửa việc chia sẻ `var/` với tài khoản của dịch vụ. Nâng quyền `sudo` từng lần cho mỗi hành động, không bao giờ chạy toàn bộ ứng dụng bằng root.
+- **Đa instance** — sổ đăng ký toàn cục (`~/.config/omega-serv/instances.json`, nằm ngoài mọi thư mục dự án) các bản cài đặt đã biết trên máy, kèm trạng thái systemd của từng bản; tạo instance mới (sao chép cây thư mục, môi trường ảo và phụ thuộc riêng, cấu hình mới với cổng khác, kiểm tra không lồng nhau và không xung đột cổng) ngay từ giao diện. Nút về cơ bản không hiển thị khi chỉ có một bản cài đặt (nhãn "Đa instance" trở thành "Instances (N)" khi biết từ 2 bản trở lên); chuyển hẳn sang một instance khác (`os.execv`, xác nhận tường minh, splash riêng thông báo việc chuyển khi khởi động lại); gỡ cài đặt hoàn toàn một instance (gỡ unit, gỡ tài khoản hệ thống riêng nếu không còn instance nào khác dùng, và tùy chọn xóa thư mục, không bao giờ mặc định). Instance hiện tại luôn nằm ở đầu danh sách, với một cột **Truy cập từ xa**; hai nút dẫn tới **Cấu hình từ xa** (quản trị web, xem [7b](#7b-quản-trị-web-bảng-điều-khiển)) và **Nối với instance chủ**.
+- **Trạng thái & Tài nguyên** — tổng quan trong nháy mắt, làm mới mỗi 2 giây: trạng thái máy chủ (tiến trình/PID, trạng thái dịch vụ hệ thống, hồ sơ/tùy chọn đang bật/TLS/cổng), luồng log truy cập trực tiếp (lưu lượng, phân bố theo mã trạng thái, IP duy nhất, tỷ lệ lỗi), tài nguyên hệ thống (CPU/RAM/đĩa/swap/tải/mạng, qua `psutil`). Loại instance được hiển thị ở đầu (trang web, ứng dụng PHP, reverse proxy hoặc hỗn hợp); khi có reverse proxy, một mục **BACKEND** cho biết với mỗi backend: trạng thái, số yêu cầu, lỗi 502/504 và thời gian trung bình; cũng gom lối tắt **Mô phỏng yêu cầu** (cùng trường hợp sử dụng với lệnh CLI tương ứng).
+- **Kiểm tra bảo mật** — cùng trường hợp sử dụng với lệnh CLI tương ứng; mỗi tệp nhạy cảm được tìm thấy đều được nêu tên, kèm lý do và nội dung thực sự của nó.
+- **Sao lưu cấu hình** — bản lưu trữ tar.gz của tệp cấu hình và, khi được chọn tường minh, các quy tắc WAF/vùng xác thực/chứng chỉ (bắt buộc xác nhận khi có bí mật thật được đưa vào)/cơ sở dữ liệu Active Defense và RIPOSTE, khôi phục, liệt kê, xóa. Nội dung của trang web là một ô tùy chọn. **Xuất** sao chép một bản sao lưu ra ngoài thư mục omega-serv kèm dấu vân tay của nó, **Nhập** kiểm tra bản sao lưu trước khi chấp nhận: bạn có thể gỡ cài đặt, cài đặt lại và lấy lại máy chủ của mình. Trước khi khôi phục, phiên bản của bản sao lưu và một xung đột cổng có thể xảy ra đều được thông báo.
+- **Báo cáo đầy đủ** — mọi thứ đã được cấu hình và đang hoạt động, trong một lần: một bản tóm tắt trên màn hình, và phần chi tiết tùy chọn (vùng, reverse proxy, quy tắc WAF, Active Defense…) trong bản xuất HTML, TXT hoặc JSON. Không có bí mật nào trong đó: mật khẩu, mã thông báo và khóa trở thành đúng hoặc sai.
 
 > Ghi chú về các tác vụ xoay vòng tự động lên lịch: tác vụ tự động đầu tiên sẽ cài đặt một tác vụ hằng ngày — bộ hẹn giờ systemd (sẽ hỏi mật khẩu sudo), nếu không được thì một dòng trong crontab của bạn (OpenRC, runit hoặc không có trình quản lý dịch vụ, cần có một daemon cron đang chạy), nếu vẫn không được thì dòng bạn cần tự thêm sẽ được hiển thị. Mỗi đêm, `omega-serv logs run-automations` lưu trữ, dưới tài khoản của bạn, từng log đã đến hạn; xóa tác vụ tự động cuối cùng sẽ gỡ bỏ tác vụ hằng ngày.
 
@@ -289,7 +295,7 @@ Hướng dẫn trợ giúp (phím `a`) có màn hình **Liên hệ và hỗ tr�
 Chỉ là tùy chọn giao diện — không bao giờ nhầm với `config/omega-serve.json` (cấu hình máy chủ): giao diện đang dùng, hồ sơ hiển thị (`complete`/`standard`/`reduced`/`mono`, cần khởi động lại), đường dẫn bản xuất (mặc định `var/exports/`), đường dẫn ảnh chụp màn hình (mặc định `var/screenshots/`), dọn dẹp một trong hai thư mục (bắt buộc xác nhận).
 
 ```bash
-# Chạy máy chủ (tiền cảnh, SIGTERM = dừng sạch với thời gian ân hạn, SIGHUP = nạp lại nóng WAF/Auth)
+# Chạy máy chủ (tiền cảnh, SIGTERM = dừng sạch với thời gian ân hạn, SIGHUP = nạp lại nóng cấu hình)
 ./omega-serv.sh serve
 
 # Cấu hình
@@ -367,6 +373,12 @@ Chỉ là tùy chọn giao diện — không bao giờ nhầm với `config/omeg
 ./omega-serv.sh config backup --include-active-defense --description "menaces/incidents"
 ./omega-serv.sh config list-backups
 ./omega-serv.sh config restore --snapshot-id snapshot_20260908_170003_762484
+./omega-serv.sh config export-backup --snapshot-id snapshot_20260908_170003_762484 ~/sauvegardes
+./omega-serv.sh config import-backup ~/sauvegardes/omega-serv-principale-snapshot_20260908_170003_762484.tar.gz
+
+# Quản trị web (bảng điều khiển trong trình duyệt, tùy chọn admin_web)
+./omega-serv.sh admin-web account add alice --role administration
+./omega-serv.sh admin-web account totp-enable alice
 
 # Dịch vụ hệ thống (systemd/OpenRC/runit, tự động phát hiện)
 ./omega-serv.sh service install --user omega-serv --group omega-serv
@@ -436,6 +448,8 @@ Hồ sơ cuối cùng được chọn là **hồ sơ hạn chế hơn trong hai*
 | `hardened` | Mở ra ngoài với đặc quyền tối thiểu: bind cục bộ mặc định (khuyến nghị reverse proxy cho Internet), chỉ phương thức GET/HEAD, CSP nghiêm ngặt, chống slowloris — WAF **không bao giờ** được bật tự động, kể cả ở đây |
 | `development` | Chỉ để phát triển cục bộ, không bao giờ được giới thiệu là phù hợp cho Internet: bắt buộc bind loopback, CSP ở chế độ report-only, trang lỗi chi tiết |
 
+**Hồ sơ tùy chỉnh**: *Hồ sơ → Tạo hồ sơ tùy chỉnh* xuất phát từ một máy chủ tối thiểu không bật bất kỳ lớp bảo vệ nào có thể tắt, rồi mỗi lựa chọn được thực hiện trong một danh sách thả xuống. Các thiếu sót được kiểm tra ngay lập tức: một số chặn việc lưu, số khác phải được chấp nhận từng cái một. Một hồ sơ tùy chỉnh chỉ ấn định phần bảo mật và trạng thái của các tùy chọn; địa chỉ, cổng, TLS, đường dẫn và log vẫn là của instance. Nó không thể sửa đổi: muốn thay đổi thì tạo lại một hồ sơ mới, xuất phát từ các lựa chọn của một hồ sơ có sẵn. Nó được lưu trong `config/profiles/custom/`, và có trong mọi bản sao lưu.
+
 Thứ tự hợp nhất cấu hình: giá trị an toàn tích hợp → hồ sơ được chọn → các tùy chọn đang bật được giữ lại (tồn tại qua việc đổi hồ sơ) → lớp phủ tường minh của người dùng. Một diff đầy đủ luôn được hiển thị trước khi ghi (`profile apply`).
 
 [↑ Mục lục](#mục-lục)
@@ -456,7 +470,7 @@ src/omega_serv/
 └── bootstrap/         DependencyContainer, phân giải thư mục gốc của dự án
 ```
 
-Các quy tắc được `import-linter` kiểm chứng (8 hợp đồng): `domain`/`core` không bao giờ phụ thuộc vào các lớp bên ngoài; `interfaces.tui` không bao giờ phụ thuộc trực tiếp vào `infrastructure`; `textual` chỉ nằm trong `interfaces.tui`; `subprocess` chỉ nằm trong `infrastructure/process/subprocess_runner.py` (và `infrastructure/lnav/`, luồng PTY tương tác); `ssl` chỉ nằm trong `infrastructure/tls/ssl_context_builder.py`; `jinja2` chỉ nằm trong `infrastructure/exporters/html_exporter.py`; `sqlite3` chỉ nằm trong `infrastructure/persistence/sqlite_active_defense_connection.py` (kho lưu trữ quan hệ duy nhất của dự án, dành riêng cho Active Defense); `lupa` chỉ nằm trong `infrastructure/waf/lua_waf_adapter.py` (script WAF bổ trợ « magnet »).
+Các quy tắc được `import-linter` kiểm chứng (8 hợp đồng): `domain`/`core` không bao giờ phụ thuộc vào các lớp bên ngoài; `interfaces.tui` không bao giờ phụ thuộc trực tiếp vào `infrastructure`; `textual` chỉ nằm trong `interfaces.tui`; `subprocess` chỉ nằm trong `infrastructure/process/subprocess_runner.py` (và `infrastructure/lnav/`, luồng PTY tương tác); `ssl` chỉ nằm trong `infrastructure/tls/ssl_context_builder.py`; `jinja2` chỉ nằm trong `infrastructure/exporters/html_exporter.py`; `sqlite3` chỉ nằm trong `infrastructure/persistence/` (cơ sở dữ liệu của Active Defense và RIPOSTE, bản sao nhất quán cho các bản sao lưu); `lupa` chỉ nằm trong `infrastructure/waf/lua_waf_adapter.py` (script WAF bổ trợ « magnet »).
 
 [↑ Mục lục](#mục-lục)
 
@@ -465,8 +479,8 @@ Các quy tắc được `import-linter` kiểm chứng (8 hợp đồng): `domai
 Có hai bộ máy có thể phục vụ yêu cầu. Với **bộ máy Python**, mặc định, trình thông dịch Python xử lý mọi yêu cầu. **Bộ máy native** (C++, `bin/omega-http-core`) tự đọc, phân tích và phục vụ yêu cầu; máy chủ Python giữ cấu hình, việc giám sát và các quyết định bảo mật.
 
 - **Hai thiết lập**: bộ máy (màn hình **Cấu hình cơ bản**) và số tiến trình (màn hình **Khả năng chịu tải và giới hạn**). Số tiến trình bị giới hạn theo bộ máy và bộ xử lý phát hiện được: với bộ máy Python, tối đa một cho mỗi lõi vật lý; với bộ máy native, vốn đã dùng mọi lõi, đó là các tiến trình kiểm tra bảo mật, 1, hoặc 2 từ 4 lõi vật lý trở lên. Màn hình cho biết lợi ích của việc tăng lên trên máy và từ chối giá trị quá lớn; những gì đang chạy được hiển thị nguyên văn (« bộ máy native, 1 tiến trình »). Đổi bộ máy hoặc số tiến trình cần khởi động lại hoàn toàn. Lựa chọn thay đổi điều gì, đã đo: FAQ của hướng dẫn và [bảng so sánh máy chủ web](comparatif-serveurs-web.md).
-- **Cùng phản hồi, cùng nhật ký**: với bộ máy native, nội dung tĩnh, chuyển hướng, viết lại, bí danh, bộ nhớ đệm, trang lỗi và tiêu đề bảo mật do bộ máy native phục vụ; nó tự dò các quy tắc WAF và tự phục vụ một yêu cầu không khớp quy tắc nào, còn mọi yêu cầu khác (WAF khớp hoặc nghi ngờ, Active Defense, xác thực) đi qua một tiến trình Python áp dụng đúng các kiểm tra như cũ và ghi cùng các nhật ký bảo mật (RIPOSTE và omega-jail không thấy khác biệt nào); liệt kê thư mục và các trang nội bộ được yêu cầu từ Python; reverse proxy, FastCGI, gửi tệp và WebSocket được giao cho nó trong suốt kết nối. TLS trực tiếp do bộ máy native xử lý với cùng thư viện và cùng thiết lập.
-- **Không bao giờ pha trộn**: một quy tắc duy nhất quyết định bộ máy thực tế và mọi nơi đều hiển thị nó (màn hình **Trạng thái & Tài nguyên**, `omega-serv engine status`). Nếu bộ máy native không thể phục vụ mọi thứ (TLS trực tiếp cùng reverse proxy, FastCGI hoặc gửi tệp) hoặc không khởi động được, bộ máy Python sẽ phục vụ và lý do được hiển thị. Trong **Cấu hình cơ bản**, lựa chọn bộ máy native bị mờ khi còn một chức năng đang bật ngăn cản, kèm những gì cần đổi để có thể dùng nó; một thiết lập lưu ở nơi khác mà sẽ làm mất bộ máy native thì trước hết đòi xác nhận.
+- **Cùng phản hồi, cùng nhật ký**: với bộ máy native, nội dung tĩnh, chuyển hướng, viết lại, bí danh, bộ nhớ đệm, trang lỗi và tiêu đề bảo mật do bộ máy native phục vụ; nó tự dò các quy tắc WAF và tự phục vụ một yêu cầu không khớp quy tắc nào, còn mọi yêu cầu khác (WAF khớp hoặc nghi ngờ, Active Defense, xác thực) đi qua một tiến trình Python áp dụng đúng các kiểm tra như cũ và ghi cùng các nhật ký bảo mật (RIPOSTE và omega-jail không thấy khác biệt nào); liệt kê thư mục và các trang nội bộ được yêu cầu từ Python. Reverse proxy được bộ máy native chuyển tiếp, kể cả WebSocket và TLS tới backend; chỉ các vùng có cache, FastCGI và gửi tệp được giao cho Python trong suốt kết nối. TLS trực tiếp do bộ máy native xử lý với cùng thư viện và cùng thiết lập.
+- **Không bao giờ pha trộn**: một quy tắc duy nhất quyết định bộ máy thực tế và mọi nơi đều hiển thị nó (màn hình **Trạng thái & Tài nguyên**, `omega-serv engine status`). Nếu bộ máy native không thể phục vụ mọi thứ (TLS trực tiếp cùng một vùng reverse proxy có cache, FastCGI hoặc gửi tệp) hoặc không khởi động được, bộ máy Python sẽ phục vụ và lý do được hiển thị. Trong **Cấu hình cơ bản**, lựa chọn bộ máy native bị mờ khi còn một chức năng đang bật ngăn cản, kèm những gì cần đổi để có thể dùng nó; một thiết lập lưu ở nơi khác mà sẽ làm mất bộ máy native thì trước hết đòi xác nhận.
 - **Nếu bước kiểm tra Python không phản hồi**, `waf.on_internal_error` quyết định: phục vụ không kiểm tra hoặc từ chối (503). Trong trường hợp này, vùng xác thực luôn bị từ chối, và một địa chỉ đã bị cấm vẫn bị từ chối (451).
 
 [↑ Mục lục](#mục-lục)
@@ -478,17 +492,20 @@ Tất cả đều tắt mặc định trong mọi hồ sơ được cung cấp �
 | Mô-đun | Vai trò |
 |---|---|
 | `waf` | Chữ ký (đường dẫn nhạy cảm, UA/Referer của trình quét, SQLi/XSS/CMDi trong phần thân), danh sách có thể sửa dưới dạng tệp văn bản (từ khóa, hoặc đường dẫn nhạy cảm với ngoại lệ `!`, chế độ Quan sát và tái phạm riêng cho từng danh sách — hai danh sách tham chiếu được cung cấp, nạp tường minh), giới hạn tốc độ (token bucket, quy tắc theo thư mục và theo IP/mạng), danh sách chặn (CIDR + thời hạn), danh tiếng/leo thang, nhập một script WAF `mod_magnet` có sẵn của Lighttpd làm lớp tăng cường tùy chọn kiểu « magnet » (không cần viết lại, phần bổ sung `pip install -e ".[magnet]"` — mang tính cộng thêm, không bao giờ có thể gỡ một lệnh chặn gốc; kiểm tra tương thích lúc nhập, màn hình TUI riêng) — chế độ `log-only` về mặt cấu trúc không thể chặn |
-| TLS | Trực tiếp (tự ký, CA cục bộ, hoặc công khai qua Let's Encrypt/Certbot với gia hạn tự động), không bao giờ có mTLS/OCSP ở V1 |
+| TLS | Trực tiếp (tự ký, CA cục bộ, hoặc công khai qua Let's Encrypt/Certbot với gia hạn tự động), không có mTLS và OCSP |
 | Xác thực | HTTP Basic theo vùng (`url_prefix`), `hashlib.scrypt` với cơ chế chống tấn công định thời (thời gian không đổi kể cả với người dùng không tồn tại) |
-| FastCGI/PHP-FPM | Chỉ một `(url_prefix, script_root)`, `script_root` theo thiết kế bị giới hạn bên ngoài `webroot/` (trình xử lý tĩnh không bao giờ có thể làm lộ mã nguồn PHP) |
-| Reverse proxy đi ra | Omega-serv tự đóng vai trò proxy tới một hoặc nhiều backend (chiều ngược với `server.tls.mode = "behind_proxy"`) — cân bằng tải (round-robin, có trọng số, least-connections, ip-hash, least-response-time, tải thực), gắn phiên và quy tắc định tuyến theo tiêu đề, kiểm tra sức khỏe thụ động và chủ động, cache phản hồi (nhiều biến thể `Vary`), backpressure, chống vòng lặp, API quản trị nóng |
-| Tải lên | Vùng được cô lập, hạn ngạch theo vùng, tên tệp do máy chủ tạo — không có streaming ở V1 (giới hạn bởi `server.max_request_size`) |
+| FastCGI/PHP-FPM | Một hoặc nhiều vùng `(url_prefix, script_root)`, mỗi vùng có công tắc riêng (vùng bị tắt = 503 bảo trì) và kích thước yêu cầu tối đa riêng; `script_root` theo thiết kế bị giới hạn bên ngoài `webroot/` (trình xử lý tĩnh không bao giờ có thể làm lộ mã nguồn PHP) |
+| Reverse proxy đi ra | Omega-serv tự đóng vai trò proxy tới một hoặc nhiều backend (chiều ngược với `server.tls.mode = "behind_proxy"`) — cân bằng tải (round-robin, có trọng số, least-connections, ip-hash, least-response-time, tải thực), gắn phiên và quy tắc định tuyến theo tiêu đề, kiểm tra sức khỏe thụ động và chủ động, cache phản hồi (nhiều biến thể `Vary`), backpressure, chống vòng lặp, WebSocket, API quản trị nóng; được bộ máy native chuyển tiếp khi bộ máy này được chọn (trừ các vùng có cache). |
+| Tải lên | Vùng được cô lập, hạn ngạch theo vùng, tên tệp do máy chủ tạo — tệp được nhận trọn vẹn trước khi ghi (không theo luồng), giới hạn bởi `server.max_request_size`; một lần gửi chậm vẫn được chấp nhận miễn là nó còn tiến triển |
 | `active_defense` | Deception + chế độ chiến tranh dựa trên các tín hiệu WAF đã được tính (không bao giờ là điểm số thứ hai): mồi nhử tĩnh, làm chậm/ghi log chi tiết/giới hạn tốc độ có mục tiêu, sự cố + xuất IoC |
 | `riposte` | Phản ứng theo bậc qua thời gian: ghi nhớ tái phạm theo địa chỉ, lệnh cấm ngày càng dài (blocklist của WAF, cấm mạng qua omega-jail) hoặc kéo dài mồi nhử, gỡ bỏ và dừng khẩn cấp — tiến trình riêng |
+| `admin_web` | Bảng điều khiển web (quản trị từ xa) trên cổng riêng của nó, mặc định 9643, tiến trình riêng — xem [7b](#7b-quản-trị-web-bảng-điều-khiển) |
 
 ### 7a. Reverse proxy đi ra — chi tiết
 
 OMEGA-SERV có thể tự đóng vai trò reverse proxy tới một hoặc nhiều backend HTTP/HTTPS — đừng bao giờ nhầm với `server.tls.mode = "behind_proxy"` (OMEGA-SERV **phía sau** một proxy, cơ chế ngược lại). Các vùng có thể cấu hình với CRUD đầy đủ (TUI: *Cấu hình chi tiết → Reverse Proxy*), một hoặc nhiều upstream cho mỗi vùng.
+
+- **Bộ máy** — với bộ máy native, mỗi vùng được chính bộ máy native chuyển tiếp (phản hồi dạng luồng, backpressure, kho kết nối tới các backend, WebSocket, TLS tới backend và TLS trực tiếp); chỉ một vùng có cache được giao cho Python. Với bộ máy Python, phản hồi của backend được đọc trọn vẹn trước khi gửi, giới hạn bởi `max_response_body_mb` (mặc định 256 MB). Thiết lập `options.reverse_proxy.engine` (nút *Thiết lập chung*) mặc định là `auto`; `python` giao mọi vùng cho Python, đó là cách quay lại mà không cần biên dịch lại; `native` từ chối khi khởi động một vùng mà bộ máy native không thể chuyển tiếp. Cùng các kiểm tra bảo mật được áp dụng trước mọi lần gửi tới backend, và nhật ký giống hệt nhau ở cả hai bộ máy.
 
 - **Cân bằng tải** — `round_robin` (mặc định), `weighted_round_robin`/`weighted_least_connections`/`ip_hash` (có trọng số), `least_connections`, `least_response_time`, `real_load` (tải thực). Chế độ `real_load` gốc (thăm dò `/.omega-serv-load/`, dùng lại cùng số đo `psutil` với màn hình « Trạng thái & Tài nguyên », không bao giờ gọi lần thứ hai) hoặc dạng khai báo (thăm dò HTTP bên thứ ba, định dạng tối thiểu `{"load_percent": ...}` hoặc một số trần) — chi tiết theo từng upstream, cùng một vùng có thể trộn cả hai.
 - **Gắn phiên và định tuyến có điều kiện** — cookie sticky không trong suốt (không bao giờ để lộ host:port thật cho client) và quy tắc theo tiêu đề (bằng nhau hoặc tiền tố), cả hai đều được lọc theo điều kiện hợp lệ của upstream đích (quay về chiến lược đang dùng một cách gọn gàng nếu upstream đích không khả dụng).
@@ -496,8 +513,19 @@ OMEGA-SERV có thể tự đóng vai trò reverse proxy tới một hoặc nhi�
 - **Backpressure** — mức trần kết nối hoạt động có thể cấu hình cho mỗi upstream; một upstream bão hòa từ chối gọn gàng bằng 503, khác với upstream bị hỏng (502, vẫn được thử lại).
 - **Cache phản hồi** — chỉ GET/HEAD, không bao giờ là phản hồi lỗi, không bao giờ có `Set-Cookie` trừ khi bật tường minh theo vùng; tuân thủ `Cache-Control`/`Vary` của upstream (tùy chọn có thể tắt nhưng nguy hiểm, cùng triết lý với việc kiểm tra TLS). Nhiều biến thể của cùng một tài nguyên (`Vary`) thực sự cùng tồn tại trên đĩa, không bao giờ chỉ đơn giản « bản đến sau thắng ». Khóa chống stampede (chỉ một yêu cầu đồng thời thực sự dựng lại cache). Tiêu đề chẩn đoán `X-Omega-Cache: HIT`/`MISS`/`BYPASS` trên mỗi phản hồi. Giám sát/dọn dẹp trong một màn hình TUI riêng (*Cache của reverse proxy*).
 - **Chống vòng lặp** — loại bỏ tiêu đề hop-by-hop, `X-Forwarded-*` luôn bị ghi đè (không bao giờ hợp nhất với tiêu đề của client), bộ đếm `X-Omega-Proxy-Hops` tăng ở mỗi lần chuyển tiếp (từ chối gọn gàng khi vượt quá 5 bước — phát hiện vòng lặp gián tiếp giữa hai instance, điều mà một bước kiểm tra cấu hình cục bộ đơn thuần không bao giờ thấy được).
-- **WebSocket** — cho phép nâng cấp theo vùng, một upstream duy nhất được cố định trong suốt thời gian của đường ống một khi đã thiết lập, không có timeout ở tầng ứng dụng.
+- **WebSocket** — cho phép nâng cấp theo vùng, một upstream duy nhất được cố định trong suốt thời gian của đường ống một khi đã thiết lập. Một đường ống không hoạt động bị đóng sau một giờ theo mặc định (`websocket_idle_timeout_seconds` của vùng, 0 = không bao giờ), với một khung đóng 1001 theo cả hai chiều; khi máy chủ dừng, các đường ống được đóng theo cùng cách vào cuối thời gian ân hạn. `access.log` ghi một dòng `101` khi đường ống đóng, kèm số byte đã gửi cho client.
 - **Quản trị nóng** — một API HTTP cục bộ nhỏ (`/.omega-serv-admin/`, được bảo vệ bởi `trusted_proxy` giống như thăm dò tải gốc) cho phép TUI đọc/ép trạng thái DRAINING/MAINTENANCE của một backend và đọc tỷ lệ hit/miss của cache **của máy chủ đang thực sự chạy** (màn hình riêng *Trạng thái trực tiếp của backend*) — TUI và máy chủ là hai tiến trình riêng biệt không có bộ nhớ dùng chung, kênh HTTP cục bộ này là cầu nối duy nhất giữa hai bên.
+
+### 7b. Quản trị web (bảng điều khiển)
+
+Tùy chọn `admin_web`, tắt theo mặc định: một bảng điều khiển trong trình duyệt để theo dõi instance từ một thiết bị khác (điện thoại, máy tính xách tay) và tác động lên việc vận hành. Nó không bao giờ sửa cấu hình hay tài khoản, và không bao giờ khởi động lại máy chủ.
+
+- **Thiết lập trong TUI** — *Đa instance → Cấu hình từ xa*: một khung **Trạng thái** cho biết mọi thứ đã sẵn sàng hay còn thiếu gì, với một nút cho mỗi thiếu sót (bật, tạo chứng chỉ, tạo tài khoản, mở cổng tường lửa qua omega-fire, khởi động lại). Khi đã sẵn sàng, nó cho biết địa chỉ cần mở trên thiết bị kia. Không cần gõ lệnh ở nơi nào khác.
+- **Tách biệt khỏi trang web** — một tiến trình quản trị riêng, được `serve` khởi chạy dưới tài khoản của dịch vụ, trong cả hai bộ máy, với cổng riêng (mặc định 9643, không bao giờ trùng cổng của trang web) và mặc định trên 127.0.0.1. Một sự cố của bảng điều khiển (thiếu chứng chỉ, cổng đã bị chiếm) không bao giờ ngăn trang web khởi động.
+- **Truy cập được bảo vệ** — TLS bắt buộc khi truy cập từ ngoài máy (chứng chỉ của trang web hoặc chứng chỉ riêng); chỉ các mạng được phép mới thấy trang đăng nhập (mặc định là chính máy này, Tailscale và mạng cục bộ). Tài khoản "đọc" hoặc "quản trị", chỉ được tạo trong TUI hoặc CLI, mật khẩu được băm (scrypt). TOTP với mã QR và 10 mã dự phòng, bắt buộc với tài khoản quản trị khi truy cập từ ngoài máy. TOTP tuân theo chuẩn (RFC 6238: 6 chữ số, mỗi 30 giây), nên hoạt động với các ứng dụng xác thực phổ biến: Aegis, FreeOTP, 2FAS, Google Authenticator, Microsoft Authenticator, hoặc các trình quản lý mật khẩu hỗ trợ mã (Bitwarden, KeePassXC, 1Password, Proton Pass). Nếu không quét được mã QR, có thể nhập khóa bí mật hoặc mở trực tiếp liên kết `otpauth://` trên điện thoại. Thời gian chờ bắt buộc sau năm lần thất bại; mọi hành động đều được ghi vào `var/log/admin-audit.log`.
+- **Các trang xem** — Trạng thái & Tài nguyên, Nhật ký, Bảo mật (lệnh cấm, RIPOSTE, sự cố), **Lịch sử** (đo mỗi 10 giây, từ 1 giờ đến 30 ngày: bộ xử lý, bộ nhớ, mạng, yêu cầu, đĩa, nhiệt độ, lưu lượng của các trang web), **Lưu lượng** (trang, 404, địa chỉ, trạng thái, trang giới thiệu, trình duyệt và robot), **Chứng chỉ** và ngày hết hạn của chúng, **Cảnh báo cục bộ** (đĩa, bộ nhớ, bộ xử lý, tỷ lệ 5xx, backend ngừng hoạt động, sự cố, chứng chỉ; không có gì được gửi ra ngoài máy), các **Phiên** đang mở, Nhật ký kiểm tra. 10 giao diện của TUI, trang thích ứng với điện thoại.
+- **Quản trị** (tài khoản quản trị) — cấm hoặc gỡ cấm một địa chỉ IP, đóng một sự cố, dừng khẩn cấp và tiếp tục RIPOSTE, trạng thái của một backend (DRAINING, MAINTENANCE hoặc tự động), lưu trữ một log, nạp lại cấu hình; mỗi hành động đều đi qua một trang xác nhận.
+- **Instance chủ** — một instance có thể theo dõi và điều khiển các instance khác (trang **Instance**), được nối với nhau bằng một mã ghép nối dùng một lần; dấu vân tay chứng chỉ của chúng được ghim lại.
 
 [↑ Mục lục](#mục-lục)
 
@@ -505,6 +533,8 @@ OMEGA-SERV có thể tự đóng vai trò reverse proxy tới một hoặc nhi�
 
 - Phân tích yêu cầu, không có tùy chọn để tắt: tiêu đề/dòng yêu cầu được giới hạn **trong khi** đọc (không bao giờ sau đó), từ chối việc gập tiêu đề lỗi thời, `Transfer-Encoding` luôn bị từ chối (không bao giờ đoán).
 - `Content-Length` trùng lặp bị từ chối; tiêu đề `Expect` (ví dụ `100-continue`) bị từ chối gọn gàng (417).
+- Đích của yêu cầu được kiểm tra trên mọi tuyến, ở cả hai bộ máy: ký tự điều khiển, hoặc đoạn `.`/`..` viết nguyên dạng hoặc được mã hóa (`%2e`, `%2f`, `%5c`) → 400 — `/api/../admin` không còn có thể thoát ra khỏi một vùng.
+- Thân yêu cầu gửi quá chậm: nó phải tiến triển ít nhất 500 byte mỗi giây (cùng quy tắc với `mod_reqtimeout` của Apache), nếu không thì 408; một lần gửi đều đặn không bao giờ bị cắt, kể cả khi kéo dài. Một client rời đi trước khi có phản hồi sẽ khiến yêu cầu bị hủy, kể cả yêu cầu tới backend (`499` trong nhật ký).
 - Danh sách phương thức được phép tường minh (405 + `Allow` nếu không), tiêu đề `Host` được kiểm tra (thiếu/rỗng/trùng lặp-kể-cả-giống-hệt/ký tự điều khiển → 400); kiểm tra này bật theo mặc định và chỉ tắt được trong cấu hình (`security.require_valid_host`).
 - Tiêu đề bảo mật và CSP cơ bản (`enforce`/`report-only`) được áp dụng cho các phản hồi của trang, kể cả các trang lỗi của nó (403, 404…), và không bao giờ bị một mô-đun gỡ bỏ hay ghi đè. Ngoại lệ: các phản hồi gửi đi trước mọi xử lý yêu cầu (yêu cầu sai định dạng hoặc quá lớn, hết thời gian chờ, `Host` không hợp lệ, phương thức bị từ chối, máy chủ quá tải) sẽ không có các tiêu đề này — đó là những trang lỗi ngắn không chứa nội dung của trang. Bật theo mặc định, chỉ tắt được trong màn hình **Bảo mật chung** (`security.security_headers_enabled`). `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy` luôn là `same-origin`, không có rủi ro thực sự làm hỏng trang. `Cross-Origin-Embedder-Policy` luôn được phát tường minh (không bao giờ vắng mặt — trình quét bên ngoài phân biệt « chưa được xem xét » với « cố ý cho phép »), mặc định `unsafe-none` trên **mọi** hồ sơ kể cả `hardened`: khác với hai tiêu đề trên, `require-corp`/`credentialless` có thể chặn các tài nguyên cross-origin (phông chữ, ảnh, iframe bên thứ ba) của chính trang đang phục vụ — có thể điều chỉnh (`security.coep_mode`). Vùng CSP (`security.csp_zones`): ngoại lệ **tường minh** theo tiền tố đường dẫn (ví dụ `unsafe-inline` chỉ dưới `/mot-thu-muc/` thực sự cần đến), mỗi vùng thay thế hoàn toàn chính sách mặc định cho tiền tố của nó — không bao giờ hợp nhất, không bao giờ nới lỏng toàn cục; mọi ngoại lệ vẫn hiển thị trong `audit security` (CSP-001/CSP-002 cũng quét các vùng), kể cả khi có chủ ý. Tạo có hướng dẫn qua một trình hướng dẫn từng directive một (màn hình **Bảo mật chung**), mỗi trường được điền sẵn giá trị **hiện tại** của chính sách toàn cục — để chỉ sửa những gì cần thay đổi thay vì bắt đầu lại từ một trường rỗng vô tình hy sinh các directive khác; một xác nhận tường minh bổ sung được yêu cầu nếu vùng được lắp ráp nới lỏng `unsafe-inline`/`unsafe-eval`/một nguồn chung `*`.
 - Địa chỉ IPv4-ánh-xạ-IPv6 (`::ffff:x.x.x.x`) được chuẩn hóa trước mọi phép so sánh (danh sách chặn, proxy tin cậy, giới hạn tốc độ) — nếu không sẽ là một lối vượt qua đã biết.
@@ -516,7 +546,7 @@ OMEGA-SERV có thể tự đóng vai trò reverse proxy tới một hoặc nhi�
 
 ### 9a. Chứng chỉ tự ký (tối thiểu)
 
-Bao phủ nhu cầu thực tế cục bộ/phòng lab/VPN (Tailscale...): một listener duy nhất, `ssl.SSLContext` trực tiếp, RSA 2048/4096 hoặc ECDSA P-256/P-384.
+Bao phủ nhu cầu thực tế cục bộ/phòng lab/VPN (Tailscale...): một listener duy nhất với TLS trực tiếp, do bộ máy Python hoặc bộ máy native xử lý với cùng các thiết lập, RSA 2048/4096 hoặc ECDSA P-256/P-384.
 
 ### 9b. CA cục bộ
 
@@ -530,7 +560,7 @@ secure/certificates/ca/
 └── index.txt      # 0600 - theo dõi trạng thái V(hợp lệ)/R(đã thu hồi) cho mỗi chứng chỉ đã ký
 ```
 
-Luồng: `certs generate-ca` (mật khẩu khóa CA **bắt buộc**, nhập tương tác với xác nhận hai lần nếu bỏ `--password`) → `certs generate-csr` (khóa + CSR máy chủ) → `certs sign-csr` (ký bằng CA, sao chép SAN từ CSR, tạo `fullchain.pem` nếu được yêu cầu) → trỏ `tls.certificate.certificate_path` tới `fullchain.pem` này. Một chứng chỉ bị lộ được thu hồi qua `certs revoke` (đánh dấu `index.txt`, trước tiên kiểm tra rằng chứng chỉ đúng là do CA này cấp — nếu không thì từ chối). Không phân phối CRL ở V1, cũng không có CA bên ngoài/CSR cho cơ quan bên thứ ba, không có mTLS.
+Luồng: `certs generate-ca` (mật khẩu khóa CA **bắt buộc**, nhập tương tác với xác nhận hai lần nếu bỏ `--password`) → `certs generate-csr` (khóa + CSR máy chủ) → `certs sign-csr` (ký bằng CA, sao chép SAN từ CSR, tạo `fullchain.pem` nếu được yêu cầu) → trỏ `tls.certificate.certificate_path` tới `fullchain.pem` này. Một chứng chỉ bị lộ được thu hồi qua `certs revoke` (đánh dấu `index.txt`, trước tiên kiểm tra rằng chứng chỉ đúng là do CA này cấp — nếu không thì từ chối). Không phân phối CRL, cũng không có CA bên ngoài/CSR cho cơ quan bên thứ ba, không có mTLS.
 
 ### 9c. Let's Encrypt / ACME (Certbot) — công khai, tự lưu trữ
 
@@ -546,13 +576,13 @@ Các điều kiện tiên quyết hoàn toàn nằm ngoài phạm vi của Omega
 
 ## 10. Kiểm tra bảo mật
 
-`audit security` **không chặn**: nó chạy lại các cổng vốn đã chặn của `config check` ở mức `CRITICAL`, sau đó áp dụng các quy tắc tham vấn (TLS, CSP, phương thức nguy hiểm, timeout, vệ sinh tải lên thuần; quyền tệp, hạn chứng chỉ, unit systemd đã cài, kích thước log qua I/O thực). `WAF-001` (WAF vẫn ở `log-only`) được quan sát theo thời gian qua một tệp trạng thái nhỏ (`var/run/waf-mode-state.json`) — chỉ kích hoạt sau ≥14 ngày được quan sát ở `log-only` qua các lần chạy lặp lại, không phải ở lần `audit` đầu tiên.
+`audit security` **không chặn**: nó chạy lại các cổng vốn đã chặn của `config check` ở mức `CRITICAL`, sau đó áp dụng các quy tắc tham vấn (TLS, CSP, phương thức nguy hiểm, timeout, vệ sinh tải lên thuần; quyền tệp, hạn chứng chỉ, unit systemd đã cài, kích thước log qua I/O thực). `WAF-001` (WAF vẫn ở `log-only`) được quan sát theo thời gian qua một tệp trạng thái nhỏ (`var/run/waf-mode-state.json`) — chỉ kích hoạt sau ≥14 ngày được quan sát ở `log-only` qua các lần chạy lặp lại, không phải ở lần `audit` đầu tiên. Mỗi tệp nhạy cảm được tìm thấy dưới webroot đều được nêu tên, kèm lý do (tên đã biết như `.env`, hoặc phần mở rộng như `.key`) và nội dung thực sự của nó, đọc ở phần đầu tệp; một tệp rỗng chỉ là thông tin, và một thư mục `.git` được báo cáo chính nó.
 
 [↑ Mục lục](#mục-lục)
 
 ## 11. Active Defense (deception + chế độ chiến tranh)
 
-Mô-đun tùy chọn (`option enable active_defense`, tắt mặc định) đánh giá hành vi thù địch dựa trên các tín hiệu WAF đã được tính (`WafDecision`/danh tiếng/danh sách chặn — không bao giờ tính điểm độc lập lần thứ hai), và có thể chuyển một nguồn sang mồi nhử, làm chậm phản hồi của nó và ghi log chi tiết hơn, dựng một sự cố có thể khai thác, rồi xuất các chỉ báo xâm phạm (IoC). Không bao giờ tự chặn lưu lượng — việc chặn ở tầng mạng vẫn thuộc về `omega-fire`; Active Defense quan sát, chuyển hướng, làm chậm và ghi nhận.
+Mô-đun tùy chọn (`option enable active_defense`, tắt mặc định) đánh giá hành vi thù địch dựa trên các tín hiệu WAF đã được tính (`WafDecision`/danh tiếng/danh sách chặn — không bao giờ tính điểm độc lập lần thứ hai), và có thể chuyển một nguồn sang mồi nhử, làm chậm phản hồi của nó và ghi log chi tiết hơn, dựng một sự cố có thể khai thác, rồi xuất các chỉ báo xâm phạm (IoC). Không bao giờ tự cấm một địa chỉ — các lệnh cấm thuộc về RIPOSTE (danh sách chặn của WAF, cấm ở tầng mạng qua omega-jail) và tường lửa `omega-fire`; Active Defense quan sát, chuyển hướng, làm chậm và ghi nhận.
 
 **Mối đe dọa và điểm số**: mỗi nguồn (`IP + hash SHA-256 của User-Agent`) tích lũy điểm (`WAF-001` chặn +10, leo thang danh tiếng +25, đã bị cấm từ trước +25, POST lên một mồi nhử đã được gán +30 — giảm -5 mỗi 15 phút không có sự kiện mới) được phân loại thành `normal`/`suspicious`/`hostile`/`contained` (`contained` còn đòi hỏi nguồn đã bị cấm từ trước). `mode: monitor` quan sát mà không hành động; `mode: enforce` thực sự áp dụng các hành động bên dưới.
 
@@ -562,7 +592,7 @@ Mô-đun tùy chọn (`option enable active_defense`, tắt mặc định) đán
 - `rate_limit` — giới hạn tốc độ riêng cho từng nguồn (`war_mode.rate_limit.requests`/`window_seconds`), dùng lại cùng cơ chế với WAF dưới một khóa riêng.
 - `create_incident` — tự động mở/gộp một sự cố khi vượt `thresholds.incident_score`.
 
-**Deception**: một nguồn `hostile`/`contained` có thể được gán cho một mồi nhử tĩnh (`fake_admin`, `fake_cms`, `fake_api`, `fake_secrets` — phản hồi trông hợp lý nhưng luôn cố định, không bao giờ đọc tệp thật hay chạy tiến trình con) được chọn theo lớp tấn công quan sát được (`deception.profiles.<tên>.match_attack_classes`, một hoặc nhiều trong số `scan`/`credential_stuffing`/`sqli`/`xss`/`path_traversal`/`upload_probe`/`api_probe`/`unknown`). Hai mức cô lập, được chấp nhận và tài liệu hóa đúng như vậy:
+**Deception**: một nguồn `hostile`/`contained` có thể được gán cho một mồi nhử tĩnh (`fake_admin`, `fake_cms`, `fake_api`, `fake_secrets` — phản hồi trông hợp lý nhưng luôn cố định, không bao giờ đọc tệp thật hay chạy tiến trình con) được chọn theo lớp tấn công quan sát được (`deception.profiles.<tên>.match_attack_classes`, một hoặc nhiều trong số `scan`/`credential_stuffing`/`sqli`/`xss`/`path_traversal`/`upload_probe`/`api_probe`/`command_injection`/`unknown`). Hai mức cô lập, được chấp nhận và tài liệu hóa đúng như vậy:
 - **Mức 1** (fixture trong tiến trình, `isolation_level: "fixture"`, mặc định) — cô lập YẾU một cách tường minh: cùng tiến trình, cùng người dùng OS với production, chỉ chấp nhận được vì fixture không bao giờ làm gì khác ngoài trả về một mẫu tĩnh. TÊN của hồ sơ phải khớp chính xác với một trong 4 fixture ở trên — nếu không sẽ bị từ chối khi kiểm tra (`validate_active_defense_config`), để tránh cái bẫy một mồi nhử đặt sai tên rồi âm thầm không bao giờ được kích hoạt.
 - **Mức 2** (backend thực sự cô lập, `isolation_level: "proxy"`) — chuyển tiếp tới một tiến trình riêng qua `options.active_defense.settings.deception.decoy_zones.<tên>` (upstream `host`/`port` của một máy chủ đã đang chạy, không bao giờ được tạo tự động; không bao giờ đọc từ `options.reverse_proxy` — một mồi nhử không bao giờ có thể vô tình trỏ tới một vùng production, được kiểm tra ở `config check`), dùng lại cùng cơ chế reverse proxy đi ra với production (`serve_proxy()` — upstream không thể liên lạc tại thời điểm có yêu cầu thật: trả 502 cho kẻ tấn công, không bao giờ sập).
 
@@ -598,6 +628,8 @@ Giới hạn tốc độ của WAF (token bucket, `options.waf.rate_limit`, mặ
 - **Quy tắc theo IP/mạng** (`network`, `requests`, `window_seconds`, `trusted`): cùng nguyên tắc; mạng chính xác nhất thắng. Thứ tự ưu tiên: thư mục, rồi IP/mạng, rồi giới hạn toàn cục.
 - **Việc cấm không đổi với công chúng**: một lần vượt giới hạn của IP công khai vẫn được ghi `"action": "block"` trong `waf-alerts.log`, do đó có thể bị omega-jail cấm (3 lần từ chối trong 10 phút → 12 giờ). Một **nguồn an toàn** — mạng `never_auto_block` hoặc quy tắc được đánh dấu `trusted: true` — vẫn nhận 429 nhưng được ghi `"action": "throttle"`, thứ mà jail không bao giờ đếm.
 - **Script magnet**: giới hạn tốc độ riêng của nó (phản hồi 429) không bao giờ được tính là một phát hiện, do đó không bao giờ dẫn đến tự động cấm; với một yêu cầu thuộc phạm vi một quy tắc thư mục hoặc IP/mạng, quy tắc gốc là căn cứ và 429 của magnet bị bỏ qua (các chữ ký tấn công của nó vẫn được áp dụng).
+- **Chỉ một giới hạn cho mỗi địa chỉ**, bất kể bộ máy và tuyến (tĩnh, reverse proxy): một yêu cầu không bao giờ bị đếm hai lần.
+- **WAF bị tắt**: giới hạn tốc độ và các lệnh cấm (trang 451) là một phần của WAF; tắt WAF cũng tắt chúng.
 - Một quy tắc tốc độ **không bao giờ** tắt việc kiểm tra của WAF; ngược lại, một ngoại lệ kiểm tra (`exclusions.path_prefixes`) không bao giờ gỡ bỏ rate limit. Khi không bật `trusted_proxy`, một quy tắc bao phủ `127.0.0.1`/`::1` bị bỏ qua (cùng rào chắn với `never_auto_block`).
 
 [↑ Mục lục](#mục-lục)
@@ -628,13 +660,13 @@ Một khung **CAN THIỆP THỦ CÔNG**, bên dưới ba khối của Bảo mậ
 
 ## 12. Dịch vụ và vận hành
 
-Tự động phát hiện systemd/OpenRC/runit (`service install/status/start/stop/restart/enable/disable/uninstall`). Unit systemd được tạo áp dụng cơ chế gia cố mặc định không thương lượng: `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`, `ProtectHome`, `ReadWritePaths` giới hạn ở `var/`, bắt buộc người dùng/nhóm riêng, `UMask=0007`, `Restart=on-failure`. Dừng sạch khi nhận SIGTERM (xả các kết nối đang xử lý, thời gian ân hạn có thể cấu hình rồi đóng cưỡng bức); nạp lại nóng khi nhận SIGHUP (chỉ quy tắc WAF và vùng Auth — bind/cổng/TLS và Active Defense không bao giờ thay đổi được nếu không khởi động lại hoàn toàn).
+Tự động phát hiện systemd/OpenRC/runit (`service install/status/start/stop/restart/enable/disable/uninstall`). Unit systemd được tạo áp dụng cơ chế gia cố mặc định không thương lượng: `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`, `ProtectHome`, `ReadWritePaths` giới hạn ở `var/`, bắt buộc người dùng/nhóm riêng, `UMask=0007`, `Restart=on-failure`. Dừng sạch khi nhận SIGTERM (xả các kết nối đang xử lý, thời gian ân hạn có thể cấu hình rồi đóng cưỡng bức); nạp lại nóng khi nhận SIGHUP (cấu hình: quy tắc WAF, vùng Auth, định tuyến, các vùng reverse proxy và FastCGI — bind/cổng/TLS và Active Defense không bao giờ thay đổi được nếu không khởi động lại hoàn toàn). Một lần nạp lại không bao giờ đọc lại chính chương trình: sau khi cập nhật, hãy khởi động lại dịch vụ.
 
 [↑ Mục lục](#mục-lục)
 
 ## 13. Log
 
-`var/log/access.log` (định dạng Apache combined + `request_id`, thoát ký tự chống chèn log), `var/log/error.log`. Xoay vòng theo kích thước/số tệp được giữ lại (`logs.rotation`). WAF gốc: `var/log/waf-alerts.log` (`options.waf.logging.path`). Script magnet: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, mặc định `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — chỉ được thêm sẵn vào Thư viện (nút *Thêm các log đã biết của Omega-Serv*) nếu magnet đang bật; còn `lnav` thì luôn đề xuất chúng (tệp không tồn tại chỉ đơn giản bị bỏ qua khi khởi chạy).
+`var/log/access.log` (định dạng Apache combined + `request_id`, thoát ký tự chống chèn log; `499` cho client rời đi trước khi có bất kỳ phản hồi nào; một dòng `101` cho mỗi đường ống WebSocket, ghi khi đường ống đóng), `var/log/error.log` (bao gồm các lần từ chối chứng chỉ của một backend HTTPS, tối đa một dòng cho mỗi backend mỗi phút). Xoay vòng theo kích thước/số tệp được giữ lại (`logs.rotation`). WAF gốc: `var/log/waf-alerts.log` (`options.waf.logging.path`). Script magnet: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, mặc định `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — chỉ được thêm sẵn vào Thư viện (nút *Thêm các log đã biết của Omega-Serv*) nếu magnet đang bật; còn `lnav` thì luôn đề xuất chúng (tệp không tồn tại chỉ đơn giản bị bỏ qua khi khởi chạy). Quản trị web: `var/log/admin-audit.log` (các lần đăng nhập và hành động) và `var/log/alertes.log` (cảnh báo cục bộ, 30 ngày).
 
 ### 13a. Trình quản lý log
 

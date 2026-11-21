@@ -246,9 +246,21 @@ def redact_fields(data: dict[str, str], fields_to_redact: tuple[str, ...] = DEFA
     insensible a la casse, meme convention que WafLoggingConfig.mask_headers."""
     lowered_targets = {field.lower() for field in fields_to_redact}
     return {
-        key: ("***REDACTED***" if key.lower() in lowered_targets else value)
+        key: ("***REDACTED***" if key.lower() in lowered_targets or _looks_like_credential(key) else value)
         for key, value in data.items()
     }
+
+
+_CREDENTIAL_MARKERS = ("authorization", "token", "api-key", "apikey", "api_key", "secret", "password", "passwd",
+                       "cookie", "session", "csrf", "xsrf", "x-auth", "credential", "signature")
+"""Scan de securite n° 2 (2026-11-20, F30) : X-Api-Key, Proxy-Authorization, X-Auth-Token... etaient ecrits en
+clair dans le journal enrichi (seuls les noms EXACTS de redact_fields etaient masques). Tout nom d'en-tete qui
+contient l'un de ces mots est masque, quelle que soit la configuration."""
+
+
+def _looks_like_credential(name: str) -> bool:
+    lowered = name.lower()
+    return any(marker in lowered for marker in _CREDENTIAL_MARKERS)
 
 
 def hash_payload(payload: bytes) -> str:
@@ -268,6 +280,18 @@ def user_agent_fingerprint(user_agent: str) -> str:
     2026-10-26). Cache BORNE (4 096, le moins recent est oublie) : un attaquant qui change de
     User-Agent a chaque requete ne fait pas grossir la memoire, il perd seulement le cache."""
     return hash_payload(user_agent.encode("utf-8"))
+
+
+def source_subject_id(remote_ip: str) -> str:
+    """Identifiant d'une source pour TOUTES les decisions Active Defense : leurre, limite et ralentissement du mode
+    guerre, score, incidents (scan de securite n° 2 du 2026-11-20, F34). Avant : `ip:empreinte(User-Agent)` ; le
+    User-Agent etant choisi par le client, changer d'un caractere suffisait a sortir de la quarantaine (retour en
+    production, etat de menace vide). Desormais l'ADRESSE seule (forme `ip:empreinte` gardee, empreinte fixe :
+    les lecteurs qui coupent au dernier `:` et les identifiants deja ecrits restent compatibles)."""
+    return f"{remote_ip}:{_SOURCE_FINGERPRINT}"
+
+
+_SOURCE_FINGERPRINT = hash_payload(b"")
 
 
 def validate_playbook_action(action: ActionType, playbook: DefensePlaybook) -> bool:
@@ -346,7 +370,9 @@ def extract_indicator_candidates(incident: Incident) -> list[IndicatorCandidate]
     last_seen = max(o.observed_at for o in incident.observations)
     confidence = clamp_confidence(sum(o.score_delta for o in incident.observations))
     candidates = [IndicatorCandidate(kind="ip", value=source_ip, confidence=confidence, first_seen=first_seen, last_seen=last_seen)]
-    if user_agent_hash:
+    # Depuis le scan n° 2 (F34) l'empreinte est fixe (source = adresse seule) : ce n'est plus un indicateur, et
+    # l'exporter marquerait l'empreinte d'une chaine vide comme User-Agent malveillant dans chaque export.
+    if user_agent_hash and user_agent_hash != _SOURCE_FINGERPRINT:
         candidates.append(
             IndicatorCandidate(
                 kind="user_agent", value=user_agent_hash, confidence=confidence,

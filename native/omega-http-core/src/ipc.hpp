@@ -30,7 +30,10 @@ enum MessageType : std::uint16_t {
     kInspect = 10,
     kVerdict = 11,
     kHandoff = 12,  // natif -> Python : connexion confiee (socket client + octets deja lus) - lot 6
+    kHandoffDone = 13,  // Python -> natif : connexion rendue apres une reponse (plan proxy natif v2, lot 4, D12)
     kWatch = 14,    // Python -> natif : sources a toujours inspecter (plan WAF natif, lot 3)
+    kBackendEvent = 15,  // Python (processus n° 0) -> natif : sonde, score de charge, etat manuel (proxy natif, lot 6)
+    kBackendState = 16,  // natif -> Python (canal n° 0) : etat des backends, environ 1 fois/s (lot 6, Q7)
     kError = 20,
 };
 
@@ -55,6 +58,15 @@ inline constexpr std::uint16_t kHealthConnections = 1;  // u64
 inline constexpr std::uint16_t kHealthRequests = 2;     // u64
 inline constexpr std::uint16_t kHealthRejected = 3;     // u64
 inline constexpr std::uint16_t kHealthGeneration = 4;   // u32
+// Plan proxy natif v2, lot 4 : relais natif (C2 : budgets en cours ; Q7 : compteurs remontes environ 1 fois/s)
+inline constexpr std::uint16_t kHealthProxyRelayed = 5;        // u64 : requetes relayees par le natif (cumul)
+inline constexpr std::uint16_t kHealthProxyPendingBody = 6;    // u64 : octets de corps en attente
+inline constexpr std::uint16_t kHealthProxyInspections = 7;    // u64 : INSPECT du relais en attente
+inline constexpr std::uint16_t kHealthUpstreamConnections = 8; // u64 : connexions ouvertes vers les backends
+inline constexpr std::uint16_t kHealthUpstreamRetries = 9;     // u64 : nouveaux essais (cumul, lot 5)
+inline constexpr std::uint16_t kHealthUpstreamIdle = 10;       // u64 : connexions inactives du pool (lot 5)
+inline constexpr std::uint16_t kHealthBytesIn = 11;            // u64 : octets recus des visiteurs (cumul, lot 9b)
+inline constexpr std::uint16_t kHealthBytesOut = 12;           // u64 : octets envoyes aux visiteurs (cumul, lot 9b)
 // SHUTDOWN
 inline constexpr std::uint16_t kShutdownGraceMs = 1;  // u32
 // ERROR
@@ -74,11 +86,18 @@ inline constexpr std::uint16_t kInspectClientIp = 8; // texte : IP cliente resol
 inline constexpr std::uint16_t kInspectBlocklistClear = 9;  // u8 1 : etat ACTUEL de la blocklist lu, adresse absente
 inline constexpr std::uint16_t kInspectAudit = 10;  // u8 1 : jugee propre par le filtre WAF, envoyee pour controle (1/N)
 inline constexpr std::uint16_t kInspectRateLimit = 11;  // u32 : limite de debit comptee par le natif - 0 autorisee, N = Retry-After (s)
+inline constexpr std::uint16_t kInspectBodyFd = 12;  // u64 : taille du corps capture passe par memfd (fd 1), plan
+                                                    // proxy natif v2, lot 4 (S23) - remplace kInspectBody
                                                      // repond par route_request, pas par l'etape de securite
 // HANDOFF (fd 1 = socket du client ; fd 2 optionnel = memfd des octets deja lus s'ils sont trop gros pour la trame)
 inline constexpr std::uint16_t kHandoffBytes = 1;     // octets deja lus et non traites (tete de la requete comprise)
 inline constexpr std::uint16_t kHandoffServed = 2;    // u32 : requetes deja servies sur cette connexion (keep-alive)
 inline constexpr std::uint16_t kHandoffBytesFd = 3;   // u64 : taille des octets passes par memfd (fd 2)
+inline constexpr std::uint16_t kHandoffRateLimit = 4;  // u32 : limite de debit comptee par le natif pour la requete
+                                                      // confiee - 0 autorisee, N = Retry-After (s) (lot 4, D12)
+// HANDOFF_DONE (fd 1 = socket du client) : Python rend la connexion au natif apres sa reponse (keep-alive)
+inline constexpr std::uint16_t kHandoffDoneBytes = 1;   // octets deja lus par Python (requete suivante), peut etre vide
+inline constexpr std::uint16_t kHandoffDoneServed = 2;  // u32 : requetes servies sur la connexion
 // VERDICT
 inline constexpr std::uint16_t kVerdictDecision = 1;   // u8 : 1 continuer (routage natif), 2 repondre,
                                                        //      3 abandonner (exception Python : fermeture sans reponse)
@@ -89,6 +108,12 @@ inline constexpr std::uint16_t kVerdictKeepAlive = 5;  // u8 : keep-alive permis
 inline constexpr std::uint16_t kVerdictFile = 6;       // texte : corps lu dans ce fichier
 inline constexpr std::uint16_t kVerdictFileOffset = 7; // u64
 inline constexpr std::uint16_t kVerdictFileLength = 8; // u64
+// Plan proxy natif v2, lot 6 (P5, S26) : source que ce verdict fait surveiller (« adresse\0echeance », repete),
+// appliquee avant le verdict lui-meme - la requete suivante de la source est inspectee, sur tous les fils.
+inline constexpr std::uint16_t kVerdictWatch = 9;
+// BACKEND_EVENT : « zone\0nom\0probe|load|manual\0valeur », repete. BACKEND_STATE : « zone\0cle\0nom\0etat\0actives ».
+// Tableau de bord (2026-11-16) : BACKEND_STATE ajoute « \0requetes\0erreurs502\0erreurs504\0moyenne_us » (-1 : jamais).
+inline constexpr std::uint16_t kBackendEntry = 1;
 inline constexpr std::uint16_t kWatchEntry = 1;  // texte « adresse\0echeance » (secondes Unix), repete
 }  // namespace tag
 
@@ -122,5 +147,7 @@ int recv_frame(int socket_fd, Frame& frame, int* received_fd, std::string* error
 // d'envoi du canal - le canal reste bon), -1 erreur. recv : comme recv_frame, plus 2 = rien a lire (EAGAIN).
 int send_encoded_nowait(int socket_fd, const std::string& encoded, const std::vector<int>& fds = {});
 int recv_frame_nowait(int socket_fd, Frame& frame, std::string* error);
+// Idem, avec au plus un descripteur recu (SCM_RIGHTS) dans `received_fd` (-1 sinon) ; tout autre est ferme.
+int recv_frame_nowait(int socket_fd, Frame& frame, int* received_fd, std::string* error);
 
 }  // namespace omega::ipc

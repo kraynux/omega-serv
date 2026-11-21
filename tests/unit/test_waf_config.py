@@ -192,3 +192,15 @@ class TestNativeCheckEvery(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestBodyOverLimit(unittest.TestCase):
+    """Plan proxy natif v2, lot 2 : waf.inspect.body_over_limit ("pass" par defaut, ou "reject")."""
+
+    def test_default_is_pass_and_invalid_value_is_refused(self):
+        from omega_serv.domain.security.waf.config import parse_waf_config, validate_waf_config
+        self.assertEqual(parse_waf_config({}).inspect.body_over_limit, "pass")
+        self.assertEqual(parse_waf_config({"inspect": {"body_over_limit": "reject"}}).inspect.body_over_limit, "reject")
+        errors = validate_waf_config(parse_waf_config({"inspect": {"body_over_limit": "bloquer"}}))
+        self.assertTrue(any("body_over_limit" in error for error in errors))
+

@@ -10,6 +10,7 @@ from omega_serv.domain.services.exceptions import (
     ServiceNotFoundError,
     ServiceStatusError,
 )
+from omega_serv.domain.services.service_name import is_safe_service_name
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
 
@@ -31,6 +32,7 @@ class OpenRCServiceManager:
         return "openrc"
 
     def _control(self, service_name: str, operation: str) -> bool:
+        _require_safe_name(service_name, operation, "openrc")
         result = self._runner.run([self._rc_service, service_name, operation], timeout=_TIMEOUT_SECONDS)
         if result.returncode == 0:
             return True
@@ -99,3 +101,10 @@ class OpenRCServiceManager:
     def is_available(self) -> bool:
         result = self._runner.run([self._rc_service, "--version"], timeout=_TIMEOUT_SECONDS)
         return result.returncode == 0
+
+
+def _require_safe_name(service_name: str, operation: str, manager_type: str) -> None:
+    """Scan de securite n° 2 (2026-11-20, F22/F42) : jamais de commande privilegiee sur un nom qui n'est pas un nom
+    d'unite sur (motif `*`, option `-x`, chemin) - il vient souvent de var/settings.json, ecrit par le service."""
+    if not is_safe_service_name(service_name):
+        raise ServiceControlError(service_name, operation, _("nom de service refusé"), manager_type)

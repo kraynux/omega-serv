@@ -33,6 +33,10 @@ from omega_serv.domain.logs.analytics import compute_traffic_stats
 from omega_serv.domain.logs.models import LogEntry, TrafficStats
 from omega_serv.domain.logs.parser import parse_log_line
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens.log_line_highlight import (
+    highlight_log_line,
+    palette_from_theme,
+)
 from omega_serv.ports.live_tail_port import LiveTailPort
 
 if TYPE_CHECKING:
@@ -41,6 +45,9 @@ if TYPE_CHECKING:
 _REFRESH_SECONDS = 2.0
 _BUFFER_SIZE = 500
 _INITIAL_LINES = 200
+_MESSAGE_MAX = 4000
+"""Ligne entiere dans « Message » (retour utilisateur 2026-11-20 : coupee a 80 caracteres, l'ascenseur horizontal
+s'arretait avant le User-Agent) ; borne seulement contre une ligne demesuree."""
 _TOP_WIDTH = 29
 """Largeur utile du cadre de gauche avant son premier affichage (34 colonnes, cadre et barre deduits)."""
 
@@ -86,7 +93,7 @@ class LogSimpleViewerScreen(OmegaScreen):
 
     def on_mount(self) -> None:
         self.query_one("#entries-table", DataTable).add_columns(
-            _("Heure"), _("Niveau"), _("Source"), _("IP"), _("Service"), _("Code"), _("Timeout"), _("Message")
+            _("Heure"), _("Niveau"), _("Source"), _("IP"), _("Service"), _("Code"), _("Durée"), _("Message")
         )
         self._load_initial()
         self._render_stats()
@@ -234,39 +241,34 @@ class LogSimpleViewerScreen(OmegaScreen):
         # Suivi automatique seulement si on etait deja en bas : jamais arrache d'une lecture plus haut.
         follow = table.scroll_y >= table.max_scroll_y - 1
         table.clear()
+        palette = palette_from_theme(self.app.get_css_variables())
         for entry in self._buffer:
-            level_style = {"error": "red", "critical": "bold red", "warning": "yellow"}.get(entry.level.value, "")
+            level_style = {"error": palette.bad, "critical": f"bold {palette.bad}",
+                           "warning": palette.warn}.get(entry.level.value, "")
 
             if entry.http_status is None:
                 code_cell: Text | str = "-"
             else:
                 status = entry.http_status
-                if 200 <= status < 300:
-                    status_style = "green"
-                elif 300 <= status < 400:
-                    status_style = "cyan"
-                elif 400 <= status < 500:
-                    status_style = "yellow"
-                else:
-                    status_style = "red"
-                code_cell = Text(str(status), style=status_style)
+                code_cell = Text(str(status), style=palette.status(status))
 
             if entry.latency_ms is None:
                 timeout_cell: Text | str = "-"
             else:
                 latency = entry.latency_ms
-                latency_style = "green" if latency < 200 else ("yellow" if latency < 500 else "red")
+                latency_style = palette.good if latency < 200 else (palette.warn if latency < 500 else palette.bad)
                 timeout_cell = Text(f"{latency}ms", style=latency_style)
 
             table.add_row(
                 entry.timestamp.strftime("%H:%M:%S"),
                 Text(entry.level.value.upper(), style=level_style) if level_style else entry.level.value.upper(),
                 entry.source.value,
-                entry.ip or "-",
-                entry.service or "-",
+                # Scan de securite n° 2 (F43) : texte venu du client (ligne de requete) jamais lu comme balisage.
+                Text(entry.ip or "-"),
+                Text(entry.service or "-"),
                 code_cell,
                 timeout_cell,
-                entry.message[:80],
+                highlight_log_line(entry.message[:_MESSAGE_MAX], palette),
             )
         if follow:
             table.call_after_refresh(table.scroll_end, animate=False)

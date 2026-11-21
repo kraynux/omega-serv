@@ -4,12 +4,13 @@ est la seule couche autorisee a faire de l'I/O disque)."""
 from __future__ import annotations
 
 import os
-import shutil
 import stat
 import threading
 from pathlib import Path
 
-from omega_serv.ports.filesystem_port import PathInfo
+TYPE_CHECKING = False  # superviseur reduit du natif (lot 5) : PathInfo (dataclasses) charge a la demande
+if TYPE_CHECKING:
+    from omega_serv.ports.filesystem_port import PathInfo
 
 
 class LocalFilesystem:
@@ -40,6 +41,7 @@ class LocalFilesystem:
         return path.stat().st_mtime
 
     def path_info(self, path: Path) -> PathInfo | None:
+        from omega_serv.ports.filesystem_port import PathInfo
         # Memes erreurs ignorees que Path.is_file() / is_dir() (os.path.isfile) :
         # chemin absent, composant qui n'est pas un dossier, droits, nom invalide.
         try:
@@ -99,10 +101,12 @@ class LocalFilesystem:
 
     def copy_file(self, source: Path, destination: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
+        import shutil  # a la demande : 1,7 Mo (bz2, lzma, zstd), superviseur reduit du natif (lot 5)
         shutil.copy2(source, destination)
 
     def copy_directory(self, source: Path, destination: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
+        import shutil
         shutil.copytree(source, destination)
 
     def make_directory(self, path: Path, mode: int = 0o750) -> None:
@@ -112,6 +116,7 @@ class LocalFilesystem:
         path.unlink()
 
     def delete_directory(self, path: Path) -> None:
+        import shutil
         shutil.rmtree(path)
 
     def file_mode(self, path: Path) -> int:

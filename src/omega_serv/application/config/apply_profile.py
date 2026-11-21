@@ -8,7 +8,8 @@ d'afficher le diff avant toute confirmation (spec decision #18 : jamais
 un remplacement silencieux)."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from typing import Any
 
 from omega_serv.domain.config.diff import ConfigChange, diff_configs
 from omega_serv.domain.config.entities import OmegaServConfig
@@ -31,7 +32,22 @@ class ApplyProfileResult:
 
 
 def plan_profile_application(current_config: OmegaServConfig, profile: Profile) -> ApplyProfileResult:
-    new_config = compute_merged_config(profile, current_config.options)
+    # Profil personnalise (decision recommandee §E.1, appliquee le 2026-11-15) : il ne fixe que la securite et les
+    # options ; adresse, port, TLS, chemins et journaux de l'instance restent les siens (evite le piege A.4).
+    overlay: dict[str, Any] | None = None
+    options_to_keep = current_config.options
+    if profile.custom:
+        current = current_config.to_dict()
+        overlay = {key: current[key] for key in ("server", "tls", "paths", "logs") if key in current}
+        # Les reglages de chaque option (zones, listes...) sont gardes ; seul l'etat actif/inactif vient du profil -
+        # sinon l'option deja presente dans la configuration ecraserait le choix fait dans le profil.
+        wanted = profile.values.get("options", {})
+        options_to_keep = {
+            name: replace(option, enabled=bool(wanted[name]["enabled"]))
+            if isinstance(wanted.get(name), dict) and "enabled" in wanted[name] else option
+            for name, option in current_config.options.items()
+        }
+    new_config = compute_merged_config(profile, options_to_keep, overlay)
     changes = diff_configs(current_config.to_dict(), new_config.to_dict())
     conflicts = detect_conflicts(new_config)
     validation_errors = validate_config(new_config)

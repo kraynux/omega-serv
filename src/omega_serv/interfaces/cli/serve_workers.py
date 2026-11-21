@@ -89,6 +89,9 @@ def run_workers(
                 os._exit(code)
         children[pid] = index
 
+    import gc
+    gc.collect()
+    gc.freeze()  # objets deja charges (code precharge) : jamais parcourus par le ramasse-miettes des workers
     for index in range(1, worker_count + 1):
         spawn(index)
     print(f"OMEGA-SERV : {worker_count} worker(s) lance(s)")

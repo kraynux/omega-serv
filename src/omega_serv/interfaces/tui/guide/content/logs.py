@@ -204,6 +204,14 @@ LOG_SIMPLE_VIEWER_SCREEN = ScreenGuide(
             "ressemble à un access log Combined/Common - jamais affichée pour un auth.log/"
             "syslog.")
         ),
+        _("Colonne Message : la ligne entière (l'ascenseur horizontal va jusqu'à sa fin), colorée avec les "
+          "couleurs du thème : date, adresse IP, méthode, code HTTP (succès, redirection, erreur client, erreur "
+          "serveur), User-Agent en italique ; référent, taille et identifiant de requête atténués. Sur un "
+          "syslog : date, service, adresses et mots d'erreur ou d'avertissement."),
+        _("Colonne Service : l'étiquette d'un syslog ou d'un journal système (sshd, nginx, kernel...). Un access "
+          "log et les logs d'omega-serv n'en ont pas : « - »."),
+        _("Colonne Durée : temps de traitement quand le format l'écrit en fin de ligne (directive Apache %D ou "
+          "%T). L'access log d'omega-serv ne l'écrit pas : « - »."),
     ),
 )
 
@@ -477,7 +485,9 @@ RESTORE_LOG_ARCHIVE_SCREEN = ScreenGuide(
             label=_("Table des archives + Restaurer"),
             definition=_("Sélectionne une archive et l'extrait."),
             utilisation=_("Sélectionner une ligne active le bouton Restaurer."),
-            action=_("Extrait l'archive vers var/log/restored/<nom-archive>/."),
+            action=_("Extrait l'archive vers var/log/restored/<nom-archive>/, un dossier neuf réservé à votre "
+                     "compte. Refusé si ce dossier existe déjà ou si un lien symbolique se trouve sur le chemin "
+                     "(var/ est modifiable par le compte du service)."),
             reaction=_("Écriture réelle sur disque immédiate, aucun effet sur le serveur en cours."),
         ),
     ),

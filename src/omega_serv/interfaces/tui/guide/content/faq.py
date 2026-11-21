@@ -19,7 +19,7 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "les connexions en cours). La plupart des écrans de configuration détaillée "
             "déclenchent désormais ce rechargement automatiquement dès qu'un service systemd "
             "actif est détecté, et vous avertissent sinon. Quelques réglages (bind/port, "
-            "listen_backlog, TLS, 1ere activation de fastcgi/reverse_proxy, active_defense) "
+            "listen_backlog, TLS, 1ere activation de fastcgi, active_defense) "
             "exigent toujours un redémarrage complet - jamais un simple rechargement - car ils "
             "touchent le socket d'écoute ou des composants construits une seule fois au démarrage.")
         ),
@@ -43,7 +43,7 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             _("La réaction exacte de chaque champ est indiquée dans sa fiche du guide (touche F1 "
             "depuis l'écran concerne). En règle générale : tout ce qui touche le socket "
             "d'écoute (adresse, port, listen_backlog), le contexte TLS, ou un composant "
-            "construit une seule fois au démarrage (client FastCGI/reverse proxy à la première "
+            "construit une seule fois au démarrage (client FastCGI à la première "
             "activation, Active Defense) exige un redémarrage complet. Tout le reste se "
             "recharge à chaud.")
         ),
@@ -57,7 +57,7 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
         answer=(
             _("Piège réel rencontré (2026-10-10, correctif du rendu du directory listing sous une "
             "CSP stricte) : le rechargement à chaud (SIGHUP, écran SERVICE -> Recharger) ne relit "
-            "QUE certains éléments de CONFIGURATION (règles WAF, zones d'authentification) - il "
+            "QUE la CONFIGURATION (règles WAF, zones d'authentification, routage, reverse proxy) - il "
             "ne recharge JAMAIS le CODE Python lui-même, qui reste celui chargé en mémoire depuis "
             "le DERNIER DÉMARRAGE du processus, aussi anciens soient les fichiers sur disque. "
             "Après une mise à jour du code (nouvelle archive installée, correctif appliqué), un "
@@ -127,6 +127,31 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "soit sa provenance. Si l'échec persiste malgré une version à jour, vérifiez que le "
             "réseau est disponible pour les AUTRES dépendances (`textual`, `pyte`, `jinja2`, "
             "`psutil`), qui viennent bien de PyPI.")
+        ),
+    ),
+    FaqEntry(
+        category=_("WAF/Active Defense"),
+        question=_("J'ai coupé le WAF : pourquoi les adresses bannies passent et la limite de débit ne s'applique plus ?"),
+        answer=(
+            _("C'est voulu : la liste de blocage (page 451) et la limite de débit (429) font partie du WAF. Couper le "
+              "WAF les coupe aussi, dans les deux moteurs ; les bans déjà posés restent enregistrés et reprennent "
+              "effet quand le WAF est réactivé. Pour garder les bannissements et la limite de débit sans le filtrage "
+              "des attaques, laissez le WAF actif en mode log-only plutôt que de le couper.")
+        ),
+    ),
+    FaqEntry(
+        category=_("WAF/Active Defense"),
+        question=_("Une image ou une archive est refusée (403) par le WAF alors que le fichier est sain : pourquoi ?"),
+        answer=(
+            _("Lu comme du texte, un fichier binaire contient forcément des suites d'octets qui ressemblent à une "
+              "attaque (substitution de commande, injection). Depuis la 3.0.0, le WAF ne lit plus comme du texte un "
+              "fichier dont le format est reconnu à son contenu réel - la signature de ses premiers octets, jamais "
+              "son extension - parmi la liste de l'écran WAF - Modules (« Fichiers binaires non inspectés » : "
+              "images, vidéo, son, PDF, archives). Un formulaire, du JSON, du XML ou du texte reste toujours "
+              "inspecté, même précédé d'une fausse signature ; dans un formulaire avec fichiers, seuls les fichiers "
+              "reconnus sont retirés. Un fichier de format inconnu (ou un exécutable) reste inspecté et peut encore "
+              "être refusé : ajoutez son format à la liste s'il est connu, ou excluez son chemin du WAF en dernier "
+              "recours (cela retire aussi les autres contrôles sur ce chemin).")
         ),
     ),
     FaqEntry(
@@ -748,9 +773,12 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "pages 10 à 27 fois plus vite que le moteur Python sans contrôle de sécurité, et 8 à 30 fois plus "
             "vite avec le WAF, qui ne lui retire que 5 à 22 % de son débit ; les fichiers de 100 Ko 3,5 à 10 "
             "fois plus vite ; les gros fichiers 1,3 à 2,7 fois plus vite. Le temps de réponse des requêtes les "
-            "plus lentes est divisé par 5 à 15. En échange, il occupe environ 5 Mo de mémoire en plus, et "
-            "environ 8 Mo de plus avec le WAF (règles chargées dans le natif). Le listing, les pages internes, le reverse proxy, FastCGI, l'envoi de fichiers et "
-            "WebSocket sont confiés à Python : ces requêtes-là gardent la vitesse du moteur Python. Pour un "
+            "plus lentes est divisé par 5 à 15. Il occupe aussi moins de mémoire : environ 10 Mo contre 20 Mo "
+            "pour le moteur Python, et environ 30 Mo avec le WAF (règles chargées dans le natif, plus le "
+            "processus Python des contrôles de sécurité). Le reverse proxy, WebSocket "
+            "compris, est relayé par le natif. Le listing, les pages internes, FastCGI, l'envoi de fichiers et "
+            "les zones de reverse proxy avec cache sont confiés à Python : ces requêtes-là gardent la vitesse "
+            "du moteur Python. Pour un "
             "petit site peu visité, les deux suffisent largement : même le moteur Python avec le WAF sert des "
             "dizaines de millions de requêtes par jour sur une machine modeste.")
         ),
@@ -761,7 +789,7 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
         answer=(
             _("Ça dépend du moteur. Moteur Python : chaque processus sert les requêtes ; mesuré, 2 processus "
             "servent 1,6 à 2 fois plus que 1, et 4 environ 3,5 fois plus, jusqu'au nombre de cœurs physiques "
-            "(le maximum proposé). Chaque processus occupe environ 10 à 20 Mo de mémoire de plus. Moteur "
+            "(le maximum proposé). Chaque processus occupe environ 15 à 25 Mo de mémoire de plus. Moteur "
             "natif : il utilise déjà tous les cœurs, les processus réglés sont ceux des contrôles de sécurité, "
             "qui ne reçoivent que les requêtes à vérifier (correspondance ou doute du WAF, sources suivies par "
             "Active Defense, authentification). Pour le trafic ordinaire, un 2e processus n'apporte donc rien : "
@@ -775,14 +803,345 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
     ),
     FaqEntry(
         category=_("Moteur HTTP et performances"),
+        question=_("Je décoche une option (WAF, reverse proxy...) : sa mémoire est-elle rendue ?"),
+        answer=(
+            _("Pas tout de suite. Le code d'une option n'est chargé que si elle est active, au démarrage ou au "
+              "premier rechargement qui l'active. Une fois chargé, il reste en mémoire : Python ne décharge "
+              "jamais un module. Décochée puis appliquée, l'option ne fait plus rien et ne coûte plus de "
+              "processeur, mais sa mémoire (environ 2 Mo pour le WAF) n'est rendue qu'au prochain redémarrage "
+              "du service. Avec le moteur natif, activer la première option de sécurité ou couper la dernière "
+              "demande de toute façon un redémarrage complet, qui rend tout ; décocher une option parmi "
+              "d'autres se comporte comme avec le moteur Python. Pour retrouver la mémoire la plus basse : "
+              "redémarrer le service après avoir coupé des options.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
         question=_("Pourquoi le choix « Natif C++ » est-il grisé dans Configuration de base ?"),
         answer=(
             _("Parce qu'une cause empêche le moteur natif de tout servir : le binaire bin/omega-http-core "
             "est absent ou ne démarre pas sur cette machine (install.sh essaie alors de le recompiler), "
-            "ou TLS est en mode direct alors que le reverse proxy, FastCGI ou l'envoi de fichiers est actif "
+            "ou TLS est en mode direct alors qu'une zone de reverse proxy avec cache, FastCGI ou l'envoi de "
+            "fichiers est actif "
             "(ces routes demandent de confier la connexion au processus Python, impossible quand le natif "
             "chiffre lui-même). La liste des causes, et comment lever chacune, s'affiche sous le choix. "
             "Jamais de serveur à moitié natif : levez la cause, puis choisissez le natif.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Reverse proxy avec le moteur natif : qu'est-ce qui change par rapport à la version 2 ?"),
+        answer=(
+            _("Les zones sont relayées par le natif (sauf celles avec cache), avec les mêmes contrôles de "
+            "sécurité avant tout envoi au backend et les mêmes journaux. Changements visibles : une seule "
+            "limite de débit par adresse (le moteur natif la comptait deux fois sur le proxy) ; "
+            "max_connections, keep-alive et délais s'appliquent aussi aux connexions relayées ; un backend trop "
+            "lent donne 504 ; un client parti avant toute réponse est noté 499 dans access.log ; les refus "
+            "décidés par le natif (bannie, débit) ont leur ligne dans waf-alerts ; plusieurs Set-Cookie sont "
+            "gardés ; un caractère de contrôle dans l'adresse demandée donne 400 ; les sondes de santé tournent "
+            "dès le démarrage ; un processus de sécurité (environ 20 Mo) existe dès qu'une zone existe. Un "
+            "tunnel WebSocket inactif est fermé après une heure (réglable par zone). Retour en arrière sans "
+            "recompiler : Réglages communs, moteur des zones = python. Mesuré sur trois machines (comparatif "
+            "des serveurs web, section reverse proxy), le natif relaie les petites réponses 9 à 12 fois plus "
+            "vite que le moteur Python, à 0,82 à 0,91 fois nginx, devant lighttpd, Apache, Traefik et Caddy ; "
+            "les réponses de 100 Ko aussi vite ou plus vite que nginx. Le WAF lui retire 1 à 9 % de son débit.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Écran Reverse proxy : où voir quel moteur relaie chaque zone, et les réglages du moteur natif ?"),
+        answer=(
+            _("Sur l'écran Reverse proxy lui-même, sans rien ouvrir : la ligne au-dessus du tableau résume les "
+              "réglages communs en vigueur (moteur des zones, mémoire des corps en attente, inspections, connexions "
+              "vers les backends, taille des réponses lues par Python), et la colonne « Moteur » dit qui relaie "
+              "chaque zone : natif, Python (cache), Python (réglage), Python (repli) ou Python. Pour les modifier : "
+              "bouton « Réglages communs », toujours visible en bas de l'écran. C'est le moteur prévu par la "
+              "configuration ; l'écran État montre celui qui tourne réellement.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : que montre la vue Historique, et combien coûte-t-elle ?"),
+        answer=(
+            _("Plages 1 heure, 3 heures, 12 heures, 24 heures, 7 jours et 30 jours. Graphes de toute la machine : "
+              "processeur, mémoire, swap, charge (1, 5 et 15 min), réseau reçu et envoyé, connexions TCP et sockets, "
+              "disque (lecture, écriture, espace de la partition de l'instance), nombre de processus, température du "
+              "processeur et batterie (masqués quand la machine n'en a pas). Graphes de cette instance : requêtes par "
+              "seconde, processeur et mémoire des processus d'omega-serv, Téléchargements et Téléversement (octets "
+              "envoyés aux visiteurs et reçus d'eux, en-têtes et chiffrement TLS compris, comptés par le moteur "
+              "Python comme par le natif). Le processus d'administration fait un "
+              "relevé toutes les 10 secondes, même sans page ouverte ; les requêtes sont les lignes ajoutées au "
+              "journal d'accès, comptées sans être relues, donc le coût reste faible même sous forte charge.")
+            + " " + _("Moyenne ou Max 1 min : sur 24 heures, 7 et 30 jours, chaque point couvre 5 minutes, 30 minutes "
+                      "ou 2 heures ; Moyenne trace la moyenne de la tranche, Max 1 min sa minute la plus chargée, pour "
+                      "voir les pointes que la moyenne efface. Sur 1, 3 et 12 heures, les deux courbes sont les mêmes.")
+            + " " + _("Mémoire, swap, disque (espace), processeur et mémoire d'omega-serv, batterie : courbe remplie et, en haut à "
+                      "droite, la dernière mesure en taille utilisée sur le total, puis en pourcentage (cœurs pour le processeur "
+                      "d'omega-serv ; sur secteur ou temps restant pour la batterie).")
+            + " " + _("L'historique tient dans var/run/admin/history.json (environ 350 Ko une fois les 30 jours "
+                      "remplis), écrit toutes les 5 minutes et à l'arrêt : un redémarrage ne perd que les dernières "
+                      "minutes, qui apparaissent comme un trou dans les courbes. Pour l'arrêter : Instances -> "
+                      "Configuration distante -> Historique -> Désactivé.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Mon instance n'est pas dans l'écran Instances : comment régler son accès distant ?"),
+        answer=(
+            _("L'instance courante est toujours affichée en tête du tableau, marquée « (courante) », même si elle "
+              "n'a jamais été inscrite au registre (c'est le cas de l'installation d'origine, seules les instances "
+              "créées par « Créer une nouvelle instance » y sont inscrites). Sélectionnez-la puis « Configuration "
+              "distante » ; si le bouton est grisé, activez d'abord l'option admin_web dans Voir options actives. "
+              "Elle ne peut jamais être désinstallée depuis elle-même : basculez d'abord sur une autre instance.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : comment l'activer et la régler (port, TLS, accès depuis un autre appareil) ?"),
+        answer=(
+            _("Tout se fait dans Instances -> Configuration distante, sans commande à taper : le cadre État dit ce "
+              "qui manque, avec un bouton pour chaque point. 1. Activer (option admin_web, puis redémarrage "
+              "complet). 2. Adresse d'écoute : 127.0.0.1 pour cette machine seulement ; adresse du réseau local, de "
+              "Tailscale ou 0.0.0.0 pour un autre appareil (TLS « Certificat dédié » est alors choisi tout seul). "
+              "Enregistrer. 3. Générer le certificat (auto-signé, clé lisible par le service). 4. Comptes : créer un "
+              "compte ; hors de cette machine, un compte d'administration doit activer TOTP. 5. Recharger ou "
+              "Redémarrer jusqu'à « En écoute ». Le cadre donne aussi l'adresse à ouvrir sur l'autre appareil. Le "
+              "port par défaut est 9643 ; Enregistrer refuse un port déjà pris par un autre programme. La colonne "
+              "« Accès distant » de l'écran Instances montre si l'administration web est active. Un problème de "
+              "l'administration n'empêche jamais le site de démarrer.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : la page ne s'ouvre pas depuis un autre appareil, que vérifier ?"),
+        answer=(
+            _("Regardez d'abord le cadre État de Instances -> Configuration distante : chaque ✗ a son bouton. Si tout "
+              "est ✓ : rien ne répond = pare-feu (avec omega-fire inscrit dans la zone omega-connect, le bouton Ouvrir "
+              "le port s'en charge, ufw ou firewalld compris ; sinon le cadre signale ufw, firewalld ou nftables "
+              "actifs : ouvrez-y le port pour vos réseaux permis avec l'outil du pare-feu) ou mauvaise adresse (utilisez "
+              "celle que le cadre affiche) ; « certificat non signé » = normal avec un certificat auto-signé, "
+              "acceptez-le une fois ; 403 avant la page de connexion = l'adresse de l'appareil n'est pas dans les "
+              "réseaux permis ; refus après la connexion = identifiant, mot de passe ou code TOTP (vérifiez l'heure "
+              "du téléphone).")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : comment créer un compte, activer TOTP, et que faire si le téléphone est perdu ?"),
+        answer=(
+            _("Les comptes se créent sur la machine seulement, jamais depuis le navigateur : Instances -> Configuration "
+              "distante -> Comptes, ou « omega-serv admin-web account add NOM --role lecture|administration ». Un "
+              "compte lecture voit le Tableau de bord ; un compte administration peut aussi agir. Activer TOTP affiche "
+              "un QR code à scanner depuis un autre appareil, et, sans scan, le secret à saisir ou un lien à ouvrir sur "
+              "le téléphone ; le secret n'est enregistré qu'après un code juste, puis 10 codes de secours s'affichent "
+              "une seule fois. TOTP est obligatoire pour un compte administration dès que l'administration web sort de "
+              "cette machine. Téléphone perdu : un code de secours remplace le code une fois ; sinon, désactivez TOTP "
+              "dans Comptes puis réactivez-le. La colonne « Codes de secours » de Comptes montre combien il en reste, "
+              "et « Nouveaux codes de secours » en génère 10 autres sans toucher au TOTP du téléphone. Cinq échecs de connexion en dix minutes bloquent la connexion un moment ; "
+              "tout est noté dans var/log/admin-audit.log.")
+            + " " + _("Sur la page de connexion, « Administration » ne sert qu'aux comptes administration : un compte "
+                      "lecture arrive sur le Tableau de bord, avec un message qui le dit (une seule fois).")
+            + " " + _("Le rôle se choisit dans un menu déroulant : lecture ou administration.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : que montre le Tableau de bord, et pourquoi un journal n'apparaît-il pas ?"),
+        answer=(
+            _("Le Tableau de bord reprend l'écran État & Ressources du TUI (état du serveur, flux avec BACKENDS, "
+              "ressources), rafraîchi toutes les 2 secondes tant qu'une page est ouverte ; s'y ajoutent Journaux, "
+              "Sécurité (bans, RIPOSTE, incidents) et, pour les comptes administration, le journal d'audit. Les "
+              "chiffres sont calculés une seule fois pour tous les navigateurs ouverts, et plus du tout quand personne "
+              "ne regarde. Journaux : access.log, error.log et les alertes du WAF de l'instance, puis les fichiers de "
+              "sa bibliothèque (Gestion des logs), jamais un chemin tapé dans le navigateur ; un journal que le compte du service ne peut pas "
+              "lire s'affiche « illisible pour le service » (il n'y a pas de sudo depuis le web). Les lignes sont "
+              "toujours affichées comme du texte : un journal peut contenir n'importe quoi envoyé par un visiteur.")
+            + " " + _("Couleurs : les 10 thèmes omega de la TUI. Par défaut le panneau suit le thème de la TUI de "
+                      "l'instance (Instances -> Configuration distante -> Thème du panneau web pour en imposer un) ; "
+                      "chaque navigateur peut aussi choisir le sien dans la barre du haut, gardé dans ce navigateur "
+                      "seulement.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : comment marchent les alertes, et quelque chose part-il sur Internet ?"),
+        answer=(
+            _("Rien ne part : les alertes sont locales (vue Alertes du panneau web, var/log/alertes.log). Le processus "
+              "d'administration surveille le disque, la mémoire, le swap, le processeur, la température, la batterie, "
+              "le taux d'erreurs 5xx du site (sur 5 minutes), les backends hors service, les incidents Active Defense "
+              "et les certificats (30, 14, 7 et 1 jour avant l'échéance). Une alerte s'ouvre quand le seuil est "
+              "dépassé pendant un moment et se ferme quand la mesure redescend nettement, pour ne pas clignoter.")
+            + " " + _("Seuils, règles coupées et maintenance (1 h ou 24 h sans nouvelle alerte) : Instances -> "
+                      "Configuration distante -> Alertes. Il faut l'administration web active (en boucle locale "
+                      "suffit) ; les mesures de la machine demandent aussi l'Historique. Un service arrêté ne peut "
+                      "rien signaler lui-même.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : que montrent les vues Trafic, Certificats et Sessions ?"),
+        answer=(
+            _("Trafic : pages les plus demandées, pages introuvables (404), adresses IP les plus actives, statuts, "
+              "référents (nom du site seulement), navigateurs et robots, requêtes par heure ; aujourd'hui, 7 ou 30 "
+              "jours. Lu dans le journal d'accès au fil de l'eau (environ 85 000 lignes par seconde sur un PC de "
+              "bureau, rien sans visiteur), un fichier par jour dans var/lib/admin/stats/, 31 jours gardés. Pas de "
+              "pays : il faudrait une base externe. Adresses masquables (Configuration distante).")
+            + " " + _("Certificats : ceux de cette instance et leur échéance, lus par openssl (aussi dans la TUI : "
+                      "TLS -> Échéances des certificats). Sessions : navigateurs connectés ; un compte administration "
+                      "peut fermer n'importe quelle session, un compte lecture les siennes (aussi dans la TUI : "
+                      "Comptes -> Sessions).")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : que peut-on faire depuis le mode Administration ?"),
+        answer=(
+            _("Bannir et débannir une adresse IP (comme l'intervention manuelle ; les bans du WAF, de RIPOSTE et de la "
+              "récidive se lèvent là où ils ont été posés), fermer un incident Active Defense, déclencher ou lever "
+              "l'arrêt d'urgence de RIPOSTE, mettre un backend en DRAINING ou MAINTENANCE puis le rendre à "
+              "l'automatique, archiver un journal de l'instance (var/backups/logs) ou supprimer une archive, recharger "
+              "la configuration comme systemctl reload (les sessions restent ouvertes).")
+            + " " + _("Chaque bouton ouvre d'abord une page de confirmation qui dit ce qui va se passer ; rien n'est "
+                      "fait avant « Confirmer ». Réservé aux comptes administration, avec une saisie de moins de 15 "
+                      "minutes ; chaque action, réussie ou refusée, est écrite dans le journal d'audit "
+                      "(var/log/admin-audit.log).")
+            + " " + _("Jamais depuis le web : modifier la configuration ou les comptes, redémarrer ou arrêter le "
+                      "serveur. Le service n'a pas ces droits, et une erreur à distance pourrait couper l'accès.")
+            + " " + _("var/backups/logs (archives des journaux) est partagé avec le service pour que l'administration web puisse "
+                      "archiver un journal et supprimer une archive ; var/backups reste privé, seulement traversable par le "
+                      "service. Si le web affiche « Archives illisibles par le service » : Accueil -> Service -> Réparer les "
+                      "permissions.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : comment suivre et piloter plusieurs instances depuis un seul tableau de bord ?"),
+        answer=(
+            _("Choisissez une instance maître : sa page Instances (tableau de bord web) montre toutes les instances qui "
+              "l'ont acceptée, toutes les 5 secondes, et ouvre le tableau de bord de chacune. Sur chaque instance à "
+              "suivre : Configuration distante -> Maître -> « Accepter un maître (code) », avec le droit lecture ou "
+              "administration ; puis sur le maître, page Instances -> « Ajouter à la main » : adresse, port de "
+              "l'administration web et code (10 minutes, une seule fois).")
+            + " " + _("Entre deux instances de cette machine, rien à recopier : écran Instances -> « Relier au "
+                      "maître ». En commande : omega-serv admin-web master accept sur l'instance, admin-web instances "
+                      "add sur le maître.")
+            + " " + _("Une instance n'accepte qu'un maître ; ses droits sont fixés chez elle et se révoquent chez "
+                      "elle. Une action lancée depuis le maître est écrite dans les deux journaux d'audit. Pour un "
+                      "backend qui n'est pas omega-serv, « Ajouter une sonde HTTP » montre son statut et son temps de "
+                      "réponse.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Multi-instance"),
+        question=_("Administration web : le maître affiche « certificat changé », « jeton refusé » ou « injoignable » "
+                   "pour une instance, que faire ?"),
+        answer=(
+            _("Certificat changé : le maître a retenu l'empreinte du certificat de l'instance à l'appairage et refuse "
+              "d'envoyer son jeton à un autre certificat (protection contre une interception). Si le certificat a été "
+              "renouvelé volontairement, retirez l'instance sur le maître et refaites l'appairage.")
+            + " " + _("Jeton refusé : l'instance a révoqué ce maître ou en a accepté un autre. Injoignable ou "
+                      "refusé par l'instance : vérifiez que son administration web écoute sur une adresse que le "
+                      "maître peut joindre, et que l'adresse du maître est dans ses réseaux permis.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("Pourquoi les appels à /.omega-serv-admin/ n'apparaissent-ils pas dans access.log ?"),
+        answer=(
+            _("Ce sont des appels internes, faits depuis cette machine toutes les 2 secondes par l'écran État & "
+              "Ressources du TUI et par l'administration web pour lire l'état des backends : ils gonflaient le flux et "
+              "les statistiques. Un appel accepté n'est donc jamais écrit dans access.log, dans les deux moteurs. Un "
+              "appel refusé (403, adresse hors des réseaux de confiance) reste écrit : omega-jail et RIPOSTE voient "
+              "toujours qui sonde cette route depuis l'extérieur.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Authentification"),
+        question=_("Une zone protégée par mot de passe répond 429 ou 503 : pourquoi ?"),
+        answer=(
+            _("Vérifier un mot de passe coûte environ 0,3 à 0,5 s de calcul. Un succès est retenu (5 minutes "
+              "renouvelées, une heure au plus), mais chaque mauvais mot de passe coûte toujours ce calcul : après 10 "
+              "échecs d'une même adresse, ou 30 pour un même nom d'utilisateur, en 5 minutes, le serveur répond 429 "
+              "sans rien calculer jusqu'à la fin des 5 minutes (en-tête Retry-After). 503 : plus de 10 vérifications "
+              "attendent déjà, le serveur refuse au lieu de les empiler. Un visiteur déjà vérifié n'est jamais "
+              "concerné. Les récidivistes restent l'affaire de RIPOSTE. Ces seuils sont réglables : Configuration "
+              "détaillée -> Authentification -> Protection des mots de passe.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("Viewer Simple : pourquoi les colonnes Service et Durée affichent « - » ?"),
+        answer=(
+            _("Service est l'étiquette d'un syslog ou d'un journal système (sshd, nginx, kernel...) ; Durée est le "
+              "temps de traitement quand le format l'écrit en fin de ligne (Apache %D ou %T). Un access log au "
+              "format Combined, dont celui d'omega-serv, n'a ni l'un ni l'autre : « - » signifie « absent de la "
+              "ligne », jamais une valeur inventée.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Interface"),
+        question=_("L'administration web répond 421 « Nom d'hôte refusé » : pourquoi ?"),
+        answer=(
+            _("Sans TLS, l'administration web n'accepte que les adresses IP, « localhost » et les noms de cette "
+              "machine dans la barre d'adresse. Une page Internet pouvait sinon faire pointer son propre nom vers "
+              "127.0.0.1 (« DNS rebinding ») et piloter l'interface depuis le navigateur d'un utilisateur de la "
+              "machine. Ouvrez-la par son adresse (par exemple http://127.0.0.1:9643/) ou activez TLS : avec un "
+              "certificat, le navigateur vérifie déjà le nom et tout nom couvert par le certificat est accepté.")
+        ),
+    ),
+    FaqEntry(
+        category=_("WAF/Active Defense"),
+        question=_("Depuis la 3.0.0, un envoi de fichier est bloqué par le WAF alors qu'il passait avant : pourquoi ?"),
+        answer=(
+            _("Le WAF ne saute l'inspection d'un corps que si son type annoncé est explicitement binaire (image/*, "
+              "audio/*, video/*, application/pdf, application/zip, application/octet-stream...) ET que ses "
+              "premiers octets portent la signature correspondante. Un corps sans Content-Type, ou avec un type "
+              "inconnu ou mal écrit, est désormais inspecté comme du texte : PHP lisait par exemple "
+              "« application/x-www-form-urlencoded, » comme un formulaire alors que le WAF le laissait passer sans "
+              "le lire. Faites envoyer le bon type par le client, ou ajoutez une exclusion de chemin pour cette "
+              "adresse d'envoi.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Reverse proxy"),
+        question=_("Derrière nginx ou Caddy, /.omega-serv-admin/ ou /.omega-serv-load/ répond 403 : pourquoi ?"),
+        answer=(
+            _("Ces routes internes ne sont pas faites pour passer par un proxy frontal. Quand nginx ou Caddy tourne "
+              "sur la même machine, chaque visiteur d'Internet arrive par 127.0.0.1, une adresse des réseaux de "
+              "confiance : l'adresse seule ne suffit donc plus. Depuis la 3.0.0, un appel qui porte un en-tête "
+              "ajouté par un proxy (X-Forwarded-For, Forwarded, X-Real-IP, X-Forwarded-Host, X-Forwarded-Proto, "
+              "X-Forwarded-Port, CF-Connecting-IP, True-Client-IP, X-Client-IP) est refusé (403) dans les deux "
+              "moteurs, même depuis un réseau de confiance.")
+            + " " + _("La TUI, l'administration web et la sonde de charge d'une instance frontale appellent "
+                      "omega-serv directement, sans ces en-têtes : rien à changer pour elles. Un script maison doit "
+                      "faire de même : appeler l'adresse et le port d'écoute d'omega-serv (par exemple "
+                      "http://127.0.0.1:8080/.omega-serv-admin/health), jamais l'adresse publique servie par le "
+                      "proxy. L'appel refusé reste écrit dans access.log.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Reverse proxy : où voir combien de requêtes partent vers chaque backend, et leurs erreurs ?"),
+        answer=(
+            _("Dans État & Ressources : quand l'instance est un reverse proxy ou mixte (type affiché en tête du "
+            "premier cadre), le cadre FLUX montre une section BACKENDS avec, pour chaque backend, son état, ses "
+            "requêtes, celles en cours, ses erreurs 502 et 504 et son temps de réponse moyen, dans les deux "
+            "moteurs. Ce sont des mesures en direct depuis le démarrage du serveur, sans historique ; access.log "
+            "garde son format habituel. La section a besoin de trusted_proxy actif avec 127.0.0.1 dans ses réseaux "
+            "de confiance, comme « État en direct » de l'écran Reverse proxy.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Moteur HTTP et performances"),
+        question=_("Un gros envoi de fichier échoue avec 408 (délai dépassé) : pourquoi ?"),
+        answer=(
+            _("Depuis la 3.0.0, le corps d'une requête n'a plus à arriver en entier dans read_timeout_seconds : "
+              "le délai repart à chaque bloc reçu, tant que le débit moyen reste d'au moins 500 octets par seconde. "
+              "Un envoi régulier passe donc, même long. Un 408 veut dire que le client s'est arrêté plus longtemps "
+              "que read_timeout_seconds, ou qu'il envoie au compte-gouttes (sous 500 octets par seconde en moyenne) "
+              "- la protection contre les attaques par envoi lent, dans les deux moteurs. Si de vrais clients font "
+              "de longues pauses, augmentez read_timeout_seconds (Résistance et limites). Avant la 3.0.0, tout le "
+              "corps devait arriver en 10 s : un fichier de 8 Mo échouait sous 6,4 Mbit/s.")
         ),
     ),
     FaqEntry(
@@ -805,5 +1164,220 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
             "Ressources (section MOTEUR HTTP), dans le journal d'erreurs et par la commande « omega-serv "
             "engine status ». Rien n'est jamais servi à moitié par l'un et à moitié par l'autre.")
         ),
+    ),
+    FaqEntry(
+        category=_("Audit de sécurité"),
+        question=_("L'audit signale des fichiers sensibles sous le webroot : lesquels, et sont-ils dangereux ?"),
+        answer=(
+            _("Depuis la 3.0.0, chaque fichier est nommé sous le constat, avec la raison (nom connu comme .env, "
+            ".htpasswd, wp-config.php, ou extension .key, .pem, .crt, .p12) et ce qu'il contient vraiment : "
+            "l'audit lit le début du fichier au lieu de se fier à son nom. Une vraie clé privée ou un fichier "
+            "avec du contenu est critique (PERM-003) : déplacez-le hors du webroot, par exemple dans secure/. "
+            "Un fichier vide, comme un exemple posé pour afficher une icône dans le directory listing, n'expose "
+            "rien : c'est une simple information (PERM-004). Au-delà de dix fichiers, l'écran affiche « et N "
+            "autres » ; la liste complète est donnée par « omega-serv audit security --format json ». Un dossier "
+            ".git dans le webroot est signalé lui-même, car il contient tout l'historique du site.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Service système"),
+        question=_("Que se passe-t-il si je change le nom du service alors qu'il est installé et en marche ?"),
+        answer=(
+            _("Depuis la 3.0.0, le nom est verrouillé : Modifier, puis Valider. Avant, chaque touche était "
+            "enregistrée aussitôt : une faute de frappe faisait piloter une unité inexistante, l'ancienne "
+            "continuait de tourner sans que l'écran puisse l'arrêter, et Installer créait une seconde unité sur "
+            "le même port. Désormais, si une unité de cette installation existe sous l'ancien nom, une fenêtre "
+            "explique d'abord l'enchaînement : arrêter et désactiver l'ancienne, la désinstaller, installer la "
+            "nouvelle, puis la réactiver et la redémarrer si c'était le cas. Le serveur est coupé quelques "
+            "secondes. Un nom déjà utilisé par une autre installation est refusé, et un nom mal formé est "
+            "signalé sans rien changer.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Service système"),
+        question=_("Une valeur est refusée dans un formulaire : dois-je tout ressaisir ?"),
+        answer=(
+            _("Non, depuis la 3.0.0. L'explication s'affiche dans le formulaire, qui reste ouvert avec tout ce que "
+            "vous avez tapé : corrigez la valeur fautive puis Valider, ou Annuler pour abandonner. Sont refusés, "
+            "avec la raison : une valeur hors format (préfixe sans « / », nombre attendu, réseau invalide…), un "
+            "doublon (même préfixe, même réseau, même backend qu'une ligne existante, dont le numéro est donné) et "
+            "une réponse qui n'est ni oui ni non. Avant, une faute de frappe dans un champ oui/non valait non sans "
+            "rien dire.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Sauvegarde et restauration"),
+        question=_("Comment réinstaller omega-serv et retrouver mon serveur exactement comme avant ?"),
+        answer=(
+            _("Sauvegarde de configuration : cochez « Tout sauvegarder » (et, si vous les voulez aussi, « contenu "
+            "du site », « données des zones personnalisées » pour les dossiers des alias, du listing et les scripts "
+            "FastCGI, « rapports d'export »), créez la sauvegarde, puis « Exporter » vers un dossier HORS "
+            "d'omega-serv : le "
+            "dossier var/backups disparaît avec l'instance. Après la réinstallation : « Importer une sauvegarde » "
+            "(l'empreinte .sha256 doit être à côté de l'archive), puis « Restaurer ». La configuration contient "
+            "tout ce que vous avez saisi : alias, rewrites, redirections, directory listing, cache, reverse proxy et "
+            "ses zones, WAF, Active Defense, RIPOSTE ; les cases ajoutent règles et listes, zones Auth, certificats, "
+            "bases, pages d'erreur, préférences, journaux suivis, profils personnalisés. Restent à refaire : "
+            "l'unité systemd (écran Service, Installer l'unité) et les certificats placés hors du dossier "
+            "omega-serv, par exemple dans /etc/letsencrypt.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Sauvegarde et restauration"),
+        question=_("Après une restauration, une zone répond 404 ou le serveur refuse de démarrer : pourquoi ?"),
+        answer=(
+            _("Le dossier vers lequel pointe la zone n'est pas sur le disque : la sauvegarde ne contenait pas les "
+            "données des zones, ou le dossier est hors d'omega-serv (par exemple /srv/media). omega-serv le dit "
+            "juste après la restauration, dans « Vérifier la configuration » et dans error.log au démarrage. Un "
+            "alias ou un listing absent répond 404 sans gêner le reste du site ; une zone FastCGI active sans son "
+            "dossier de scripts empêche le serveur de démarrer. Remettez le dossier (copie, ou sauvegarde faite "
+            "avec « données des zones personnalisées »), ou désactivez la zone le temps de le retrouver.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Profils"),
+        question=_("Un profil personnalisé change-t-il mon port, mon TLS ou mes zones ?"),
+        answer=(
+            _("Non. Un profil personnalisé (Profils, Créer un profil personnalisé) ne fixe que la sécurité "
+            "(en-têtes, CSP, fichiers cachés, Host, méthodes) et l'état actif ou inactif des options. Adresse, port, "
+            "TLS, chemins, journaux et réglages des options (alias, zones, listes...) restent ceux de l'instance. "
+            "Les profils fournis, eux, repartent des valeurs par défaut pour tout ce qu'ils ne fixent pas : la "
+            "différence est toujours affichée avant d'appliquer. Un profil personnalisé ne se modifie pas : on en "
+            "recrée un en repartant de ses choix. Il est rangé dans config/profiles/custom/, compris dans les "
+            "sauvegardes et repris lors d'une mise à jour.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Rapport complet"),
+        question=_("Comment voir d'un coup tout ce qui est configuré et actif sur mon serveur ?"),
+        answer=(
+            _("Menu principal, Rapport complet (sous Sauvegarde de configuration). Le sommaire montre l'instance, le "
+            "profil appliqué, le service et son uptime, l'adresse et le mode (site web, reverse proxy ou les deux), "
+            "le moteur utilisé, le TLS et son expiration, les options actives ou non, le nombre d'alias, rewrites, "
+            "zones et backends, la sécurité, les contrôles de la configuration, les sauvegardes et les journaux. "
+            "Cochez le détail voulu puis exportez en HTML (5 thèmes), TXT ou JSON. Aucun secret n'est exporté. Le "
+            "bouton Quitter a quitté le menu : Échap, q ou Ctrl+Q demandent toujours confirmation.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Interface"),
+        question=_("La liste est longue : faut-il la dérouler jusqu'en bas pour revenir ou enregistrer ?"),
+        answer=(
+            _("Non. Sur les écrans à liste ou à long formulaire (zones, WAF, Active Defense, journaux, instances, "
+            "audit, guide d'aide...), la dernière rangée de boutons, Retour compris, est dans une barre fixe en bas "
+            "de l'écran, hors de la zone qui défile : elle reste visible quelle que soit la longueur. Un bouton sorti "
+            "de sa section porte un nom explicite (« Enregistrer les exclusions », « Ajouter une zone », « Bloquer "
+            "un réseau »). Sur les grands menus (Service, Instances, Audit, Sauvegarde, Rapport complet, Profils, "
+            "Guide d'aide), Retour est seul et centré, et le titre est centré au-dessus. Échap revient aussi en "
+            "arrière depuis n'importe quel écran.")
+        ),
+    ),
+    FaqEntry(
+        category=_("FastCGI / PHP-FPM"),
+        question=_("Peut-on servir deux applications PHP (/blog/ et /wiki/) sur la même instance ?"),
+        answer=(
+            _("Oui. L'écran FastCGI / PHP-FPM est une liste de zones : une zone par application, chacune avec son "
+            "préfixe, sa racine de scripts (hors du webroot), sa socket PHP-FPM, ses délais, ses fichiers d'index "
+            "et sa liste blanche. Le préfixe le plus long l'emporte : /blog/admin/ peut être une zone fermée par "
+            "liste blanche à côté de /blog/. Chaque zone a son interrupteur (Désactiver / Activer) : pendant la "
+            "maintenance des fichiers d'une application, sa zone répond 503 et les autres continuent. L'option "
+            "fastcgi du menu Options coupe toutes les zones d'un coup.")
+        ),
+    ),
+    FaqEntry(
+        category=_("FastCGI / PHP-FPM"),
+        question=_("Une zone PHP a besoin d'autres réglages PHP (mémoire, taille d'envoi) : comment faire ?"),
+        answer=(
+            _("Avec un pool PHP-FPM par zone : chaque pool a sa socket, son compte système et ses propres "
+            "réglages PHP, et la zone pointe vers la socket de son pool (champ « Socket PHP-FPM »). omega-serv ne "
+            "transmet jamais de valeur PHP par requête (PHP_VALUE) : sur un pool partagé, cette valeur reste dans "
+            "le processus PHP et déborde sur les requêtes suivantes des autres zones.")
+            + " " + _("omega-serv n'installe, n'écrit ni ne vérifie la configuration de PHP-FPM : son édition reste "
+            "de la responsabilité de l'administrateur. Pour que la zone fonctionne, le fichier de chaque pool doit "
+            "au minimum contenir :")
+            + "\n" + _("- listen : le chemin complet de la socket, le même que le champ « Socket PHP-FPM » de la "
+            "zone ;")
+            + "\n" + _("- listen.owner, listen.group et listen.mode (0660, par exemple) : le compte qui fait tourner "
+            "omega-serv (omega-serv pour le service systemd) doit pouvoir se connecter à la socket, sinon la zone "
+            "répond 503 ;")
+            + "\n" + _("- user et group : un compte qui peut lire la racine des scripts de la zone.")
+            + "\n" + _("Conseillé pour isoler les zones entre elles : un compte différent par pool et la valeur "
+            "open_basedir limitée à la racine des scripts de la zone (réglée par php_admin_value dans le pool). "
+            "L'écran Capacités indique si la socket de chaque zone active répond.")
+            + " " + _("Chaque zone peut aussi fixer sa propre taille maximale de requête (vide = celle de l'écran "
+            "Limites) : un envoi plus gros est refusé avant d'atteindre PHP ; réglez upload_max_filesize et "
+            "post_max_size du pool en conséquence.")
+        ),
+    ),
+    FaqEntry(
+        category=_("Reverse proxy"),
+        question=_("Quelle est la différence entre le \"reverse proxy sortant\" et `server.tls.mode = \"behind_proxy\"` ? "
+                   "Les deux parlent de proxy..."),
+        answer=_("Ce sont deux mécanismes INVERSES, qui ne s'activent jamais ensemble pour le même usage. "
+                 "`behind_proxy` : Omega-serv est DERRIÈRE un reverse proxy tiers (nginx, Caddy...) qui le protège — "
+                 "il fait confiance aux en-têtes `X-Forwarded-*` envoyés par ce proxy amont. Reverse proxy sortant : "
+                 "Omega-serv agit lui-même comme proxy DEVANT un ou plusieurs backends HTTP/HTTPS qu'il relaie. "
+                 "Confondre les deux revient à faire confiance à des en-têtes `X-Forwarded-*` qui n'existent pas, ou à"
+                 " l'inverse écraser ceux d'un vrai proxy amont."),
+    ),
+    FaqEntry(
+        category=_("Reverse proxy"),
+        question=_("Un de mes upstreams de reverse proxy bascule DOWN puis UP sans arrêt (flapping) — pourquoi ?"),
+        answer=_("La santé passive utilise des seuils de bascule DOWN et UP distincts, justement pour limiter ce "
+                 "comportement — un upstream instable qui échoue puis réussit immédiatement en alternance peut tout de"
+                 " même dépasser les deux seuils en boucle sur un backend réellement capricieux. Augmentez les seuils "
+                 "(nombre d'échecs/succès consécutifs requis) depuis l'écran Reverse Proxy, ou activez la santé active"
+                 " (sonde périodique indépendante du trafic réel) qui donne une mesure plus stable que les échecs du "
+                 "trafic live."),
+    ),
+    FaqEntry(
+        category=_("Reverse proxy"),
+        question=_("Le cache du reverse proxy ne sert jamais mes réponses, même en rechargeant plusieurs fois la même "
+                   "page — pourquoi ?"),
+        answer=_("Plusieurs causes possibles, toutes volontaires : seules les méthodes GET/HEAD sont mises en cache "
+                 "(jamais POST/PUT/DELETE), une réponse d'erreur n'est JAMAIS mise en cache, une réponse avec "
+                 "`Set-Cookie` ne l'est pas non plus sauf opt-in explicite par zone, et le cache respecte l'en-tête "
+                 "`Cache-Control` envoyé par votre backend lui-même (un backend qui renvoie `no-store` ou `private` "
+                 "empêche la mise en cache, par construction). Vérifiez l'en-tête `X-Omega-Cache` sur la réponse "
+                 "(HIT/MISS/BYPASS) pour diagnostiquer précisément quel cas s'applique, et l'écran dédié Cache du "
+                 "reverse proxy pour la supervision."),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("Je vois \"vide\" sur un log dans un viewer ou dans lnav — le serveur a-t-il un problème ?"),
+        answer=_("Pas forcément un bug : un viewer qui affiche \"vide\" reflète fidèlement un fichier réellement vide "
+                 "sur le disque (0 octet) — par exemple `access.log` avant toute requête réelle reçue par le serveur, "
+                 "ou un log natif dont le module correspondant n'a jamais été activé. Vérifiez la colonne \"Taille\" "
+                 "dans la Bibliothèque : si elle affiche 0, le comportement est normal, pas un défaut du viewer."),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("lnav reste sur un écran noir qui semble figé pendant plusieurs secondes sur un gros fichier — "
+                   "l'application a-t-elle planté ?"),
+        answer=_("Non, pas un plantage : lnav indexe le fichier avant d'afficher quoi que ce soit, et rien côté "
+                 "Omega-Serv n'affiche d'indicateur de chargement pendant cette phase — l'écran noir est simplement "
+                 "l'attente de la première image envoyée par lnav. Plus le fichier est gros (des centaines de milliers"
+                 " de lignes, par exemple un log centralisé via une Source distante SSH), plus cette attente est "
+                 "longue. Patientez quelques secondes ; si l'écran ne revient vraiment jamais, c'est `Ctrl-Q` qui "
+                 "reste la sortie normale de lnav lui-même."),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("Comment sont gérés le mot de passe ou la clé privée pour une Source distante (SSH) ?"),
+        answer=_("Ils ne sont jamais gérés par Omega-Serv : aucun mot de passe n'est jamais demandé ni stocké, et une "
+                 "clé privée n'est référencée que par son CHEMIN sur le disque — jamais lue ni copiée dans la "
+                 "configuration. L'authentification reste entièrement déléguée à votre propre `ssh`/`scp` système et à"
+                 " sa configuration habituelle (agent SSH, `~/.ssh/config`), exactement comme si vous tapiez la "
+                 "commande vous-même dans un terminal."),
+    ),
+    FaqEntry(
+        category=_("Gestion des logs"),
+        question=_("Pourquoi les Sources distantes ne proposent que SSH, et pas Samba ?"),
+        answer=_("Choix délibéré documenté dans l'étude de faisabilité dédiée : SSH est quasi toujours déjà présent "
+                 "sur un backend Linux déjà administré, avec un modèle d'authentification déjà éprouvé (clé publique) "
+                 "ne demandant à Omega-Serv aucune nouvelle responsabilité de gestion de secrets. Samba exigerait un "
+                 "service CIFS dédié en plus côté backend, et reste documenté comme option de repli — à n'introduire "
+                 "que si un besoin réel et concret se présente (parc mixte Windows, Samba déjà en place), jamais par "
+                 "anticipation."),
     ),
 )

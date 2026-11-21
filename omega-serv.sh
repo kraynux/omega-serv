@@ -45,7 +45,9 @@ if [ ! -d "$VENV_DIR" ]; then
     exit 1
 fi
 
-if ! "$VENV_DIR/bin/python" -c "import omega_serv" 2>/dev/null; then
+# Scan de securite n° 2 (2026-11-20, F33) : -I - sans lui, `python -c` met le dossier COURANT en tete du chemin
+# d'import, et un paquet omega_serv pose la s'executait sous l'utilisateur (ou root avec sudo).
+if ! "$VENV_DIR/bin/python" -I -c "import omega_serv" 2>/dev/null; then
     # Jamais de `pip install` en root (2026-11-10, comme omega-jail.sh) : omega-connect lance certaines
     # commandes avec sudo, et pip ecrirait alors en root dans le dossier de l'utilisateur.
     if [ "$(id -u)" -eq 0 ]; then

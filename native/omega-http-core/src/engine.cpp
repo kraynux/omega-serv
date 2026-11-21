@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
+#include <cctype>
 #include <cerrno>
 #include <chrono>
 #include <cmath>
@@ -31,6 +33,20 @@ void ResponseHeaders::set(std::string_view name, std::string value) {
         }
     }
     items_.emplace_back(std::string(name), std::move(value));
+}
+
+void ResponseHeaders::replace(std::string_view name, std::string value) {
+    items_.erase(std::remove_if(items_.begin(), items_.end(),
+                                [&](const auto& item) {
+                                    if (item.first == name || item.first.size() != name.size()) return false;
+                                    for (std::size_t i = 0; i < name.size(); ++i) {
+                                        auto lower = [](char ch) { return ch >= 'A' && ch <= 'Z' ? static_cast<char>(ch + 32) : ch; };
+                                        if (lower(item.first[i]) != lower(name[i])) return false;
+                                    }
+                                    return true;
+                                }),
+                 items_.end());
+    set(name, std::move(value));
 }
 
 void ResponseHeaders::set_default(std::string_view name, std::string value) {
@@ -98,7 +114,10 @@ int zone_index(std::string_view path, const std::vector<std::string>& prefixes) 
 // access_rule.py : regles candidates (extensions) puis plus long prefixe ; nullptr = aucune.
 const AccessRule* matching_access_rule(std::string_view path, const std::vector<AccessRule>& rules) {
     if (rules.empty()) return nullptr;
-    const std::string lower_path = py_lower(path);
+    // Scan de securite n° 2 (2026-11-20, F7) : extension lue sans le « / » final, comme access_rule.py - « /x.db/ »
+    // echappait a une regle « .db » alors que le service statique servait « x.db ».
+    std::string lower_path = py_lower(path);
+    while (!lower_path.empty() && lower_path.back() == '/') lower_path.pop_back();
     std::vector<const AccessRule*> applicable;
     std::vector<std::string> prefixes;
     for (const AccessRule& rule : rules) {
@@ -264,7 +283,8 @@ Response serve_static_file(const Snapshot& snapshot, const Request& request, std
             }
         }
         if (!found) {
-            if (zone_index(display_path, snapshot.dirlisting_zones) >= 0) {
+            const std::optional<std::string> listing_path = canonical_path_utf8(display_path);  // scan n° 1
+            if (listing_path && zone_index(*listing_path, snapshot.dirlisting_zones) >= 0) {
                 Response response;
                 response.needs_python = true;  // listing de repertoire : lot 5
                 return response;
@@ -411,6 +431,9 @@ void fill_request_target(Request& request) {
     const std::string_view effective = absolute.kind == AbsoluteForm::valid ? std::string_view(absolute.origin) : std::string_view(target);
     const std::size_t question = effective.find('?');
     request.path_text = latin1_to_utf8(effective.substr(0, question));
+    std::optional<std::string> canonical = canonical_path_utf8(request.path_text);
+    request.match_path_invalid = !canonical;
+    request.match_path = canonical ? std::move(*canonical) : request.path_text;
     request.query_text = question == std::string_view::npos ? std::string() : latin1_to_utf8(effective.substr(question + 1));
     request.target_text = latin1_to_utf8(target);
 }
@@ -461,6 +484,13 @@ std::optional<EarlyOutcome> check_before_body(const Snapshot& snapshot, const Re
         outcome.error_log_message = "cible de requête absolue invalide";
         return outcome;
     }
+    if (request.match_path_invalid) {  // scan de securite n° 1 (cause A) : comme le moteur Python
+        EarlyOutcome outcome;
+        outcome.response = error_response(400);
+        outcome.is_error_response = true;
+        outcome.error_log_message = "chemin de requête non normalisable";
+        return outcome;
+    }
     if (std::find(snapshot.allowed_methods.begin(), snapshot.allowed_methods.end(), latin1_to_utf8(head.method)) ==
         snapshot.allowed_methods.end()) {
         EarlyOutcome outcome;
@@ -468,7 +498,7 @@ std::optional<EarlyOutcome> check_before_body(const Snapshot& snapshot, const Re
         return outcome;
     }
     if (snapshot.access_rules) {
-        const AccessRule* rule = matching_access_rule(request.path_text, *snapshot.access_rules);
+        const AccessRule* rule = matching_access_rule(request.match_path, *snapshot.access_rules);
         if (rule != nullptr && !rule->allow) {
             EarlyOutcome outcome;
             outcome.response = empty_response(403);
@@ -483,8 +513,12 @@ bool wants_handoff(const Snapshot& snapshot, const Request& request) {
     if (!snapshot.inspect) return false;
     const InspectSettings& settings = *snapshot.inspect;
     if (settings.handoff_any.empty() && settings.handoff_post.empty()) return false;
-    std::vector<std::string> paths{request.path_text};
-    if (snapshot.rewrites) paths.push_back(apply_rewrites(request.path_text, *snapshot.rewrites).path);
+    std::vector<std::string> paths{request.path_text, request.match_path};
+    if (snapshot.rewrites) {
+        std::string rewritten = apply_rewrites(request.path_text, *snapshot.rewrites).path;
+        if (auto canonical = canonical_path_utf8(rewritten)) paths.push_back(std::move(*canonical));
+        paths.push_back(std::move(rewritten));
+    }
     const bool is_post = request.head->method == "POST";
     for (const std::string& path : paths) {
         for (const std::string& prefix : settings.handoff_any) {
@@ -497,6 +531,66 @@ bool wants_handoff(const Snapshot& snapshot, const Request& request) {
         }
     }
     return false;
+}
+
+int native_proxy_zone(const Snapshot& snapshot, const Request& request, std::string* effective_path) {
+    // Plan proxy natif v2, lot 4 (C3) : meme ordre que route_request Python - routes internes, /load, /admin,
+    // redirections, reecritures, alias, puis la zone (plus long prefixe, sur le chemin apres reecritures). Envoi de
+    // fichiers et FastCGI : connexion deja confiee a Python (wants_handoff) avant d'arriver ici.
+    if (!snapshot.proxy || snapshot.proxy->zones.empty()) return -1;
+    const std::string& path = request.path_text;
+    const InternalAssets& internal = snapshot.internal;
+    if (path == "/healthz" || starts_with(path, internal.icon_prefix) || starts_with(path, internal.dirlisting_css_prefix) ||
+        starts_with(path, internal.error_css_prefix) || starts_with(path, internal.load_prefix) ||
+        starts_with(path, internal.admin_prefix))
+        return -1;
+    if (snapshot.redirects) {
+        std::vector<std::string> prefixes;
+        for (const RedirectRule& rule : *snapshot.redirects) prefixes.push_back(rule.prefix);
+        if (zone_index(path, prefixes) >= 0) return -1;
+    }
+    std::string effective = path;
+    if (snapshot.rewrites) {
+        const RewriteOutcome outcome = apply_rewrites(effective, *snapshot.rewrites);
+        if (outcome.loop) return -1;  // 500 par route_request
+        effective = outcome.path;
+    }
+    // Scan de securite n° 1 (cause A) : zones choisies sur le chemin canonique, comme route_request Python ; le
+    // chemin transmis au backend reste celui recu (apres reecritures).
+    const std::optional<std::string> match = canonical_path_utf8(effective);
+    if (!match) return -1;  // route_request : 400
+    if (snapshot.aliases) {
+        std::vector<std::string> prefixes;
+        for (const AliasRule& rule : *snapshot.aliases) prefixes.push_back(rule.prefix);
+        if (zone_index(*match, prefixes) >= 0) return -1;
+    }
+    std::vector<std::string> prefixes;
+    for (const ProxyZoneSettings& zone : snapshot.proxy->zones) prefixes.push_back(zone.prefix);
+    const int index = zone_index(*match, prefixes);
+    if (index < 0 || !snapshot.proxy->zones[static_cast<std::size_t>(index)].native) return -1;
+    if (effective_path != nullptr) *effective_path = std::move(effective);
+    return index;
+}
+
+int websocket_proxy_zone(const Snapshot& snapshot, const Request& request, std::string* effective_path) {
+    if (!snapshot.proxy || snapshot.proxy->zones.empty()) return -1;
+    std::string effective = request.path_text;
+    if (snapshot.rewrites) {
+        const RewriteOutcome outcome = apply_rewrites(effective, *snapshot.rewrites);
+        if (outcome.loop) return -1;  // effective_request_path : None -> route_request (500)
+        effective = outcome.path;
+    }
+    std::vector<std::string> prefixes;
+    std::vector<int> indexes;
+    for (std::size_t i = 0; i < snapshot.proxy->zones.size(); ++i) {
+        if (!snapshot.proxy->zones[i].websocket) continue;
+        prefixes.push_back(snapshot.proxy->zones[i].prefix);
+        indexes.push_back(static_cast<int>(i));
+    }
+    const int found = zone_index(effective, prefixes);
+    if (found < 0) return -1;
+    if (effective_path != nullptr) *effective_path = std::move(effective);
+    return indexes[static_cast<std::size_t>(found)];
 }
 
 Response route_request(const Snapshot& snapshot, const Request& request) {
@@ -535,7 +629,19 @@ Response route_request(const Snapshot& snapshot, const Request& request) {
         return fixed_asset(method, "text/css; charset=utf-8", internal.error_css);
     }
     if (starts_with(path, internal.load_prefix) || starts_with(path, internal.admin_prefix)) {
-        if (!is_trusted_proxy(request.peer_ip, snapshot.trusted_networks_for_internal)) return empty_response(403);
+        // Scan de securite n° 1 (F20/F25/F30) : pair de confiance ET aucun en-tete de relais - derriere un proxy de la
+        // meme machine, une requete venue d'Internet arrive de 127.0.0.1 mais porte ses en-tetes
+        // (trusted_proxy.py::INTERNAL_ROUTE_FORWARDING_HEADERS).
+        static constexpr std::array<std::string_view, 9> kForwarding = {
+            "x-forwarded-for", "forwarded", "x-real-ip", "x-forwarded-host", "x-forwarded-proto", "x-forwarded-port",
+            "cf-connecting-ip", "true-client-ip", "x-client-ip"};
+        const bool relayed = std::any_of(request.head->headers.begin(), request.head->headers.end(), [](const auto& h) {
+            std::string lowered(h.first);
+            for (char& ch : lowered) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+            return std::find(kForwarding.begin(), kForwarding.end(), lowered) != kForwarding.end();
+        });
+        if (relayed || !is_trusted_proxy(request.peer_ip, snapshot.trusted_networks_for_internal))
+            return empty_response(403);
         Response response;
         response.needs_python = true;
         return response;
@@ -557,21 +663,31 @@ Response route_request(const Snapshot& snapshot, const Request& request) {
         if (outcome.loop) return empty_response(500);
         effective_path = outcome.path;
     }
+    // Scan de securite n° 1 (cause A) : alias et regle « allow » choisis sur le chemin canonique (route_request.py).
+    const std::optional<std::string> match_path = canonical_path_utf8(effective_path);
+    if (!match_path) {
+        const PathDecision decision = normalize_uri_path_utf8(effective_path);
+        return empty_response(decision.status != 0 ? decision.status : 400);
+    }
     if (snapshot.aliases) {
         std::vector<std::string> prefixes;
         for (const AliasRule& rule : *snapshot.aliases) prefixes.push_back(rule.prefix);
-        const int index = zone_index(effective_path, prefixes);
+        const int index = zone_index(*match_path, prefixes);
         if (index >= 0) {
             const AliasRule& rule = (*snapshot.aliases)[static_cast<std::size_t>(index)];
-            std::string_view remaining = utf8_skip(effective_path, utf8_length(rule.prefix));
+            std::string prefix = rule.prefix;
+            while (!prefix.empty() && prefix.back() == '/') prefix.pop_back();
+            std::string_view remaining = utf8_skip(*match_path, utf8_length(prefix));
             while (!remaining.empty() && remaining.front() == '/') remaining.remove_prefix(1);
-            const std::string alias_path = "/" + std::string(remaining);
+            // Le service decode encore deux fois : chaque « % » du reste canonique est rendu encode deux fois.
+            std::string alias_path = "/";
+            for (const char ch : remaining) alias_path += ch == '%' ? std::string("%2525") : std::string(1, ch);
             return serve_static_file(snapshot, request, alias_path, real_path(rule.root),
-                                     explicit_allow(snapshot, effective_path), effective_path);
+                                     explicit_allow(snapshot, *match_path), effective_path);
         }
     }
     return serve_static_file(snapshot, request, effective_path, snapshot.server.webroot,
-                             explicit_allow(snapshot, effective_path), effective_path);
+                             explicit_allow(snapshot, *match_path), effective_path);
 }
 
 void apply_security_headers(Response& response, const Snapshot& snapshot, std::string_view path_text) {
@@ -580,9 +696,9 @@ void apply_security_headers(Response& response, const Snapshot& snapshot, std::s
     for (const auto& [name, value] : headers.ordered) {
         if (name == headers.csp_header && !headers.csp_zone_prefixes.empty()) {
             const int index = zone_index(path_text, headers.csp_zone_prefixes);
-            response.headers.set(name, index >= 0 ? headers.csp_zone_policies[static_cast<std::size_t>(index)] : value);
+            response.headers.replace(name, index >= 0 ? headers.csp_zone_policies[static_cast<std::size_t>(index)] : value);
         } else {
-            response.headers.set(name, value);
+            response.headers.replace(name, value);
         }
     }
 }
@@ -607,7 +723,7 @@ std::string error_page_body(const Snapshot& snapshot, int status) {
 }  // namespace
 
 std::optional<std::string> finalize_response(const Snapshot& snapshot, Response& response, bool keep_alive) {
-    if (response.body.empty() && response.status >= 400) {
+    if (response.stream == Response::Stream::none && response.body.empty() && response.status >= 400) {
         response.body = error_page_body(snapshot, response.status);
         response.headers.set_default("Content-Type", "text/html; charset=utf-8");
         for (const char* csp_name : {"Content-Security-Policy", "Content-Security-Policy-Report-Only"}) {
@@ -617,9 +733,14 @@ std::optional<std::string> finalize_response(const Snapshot& snapshot, Response&
         }
     }
     response.headers.set_default("Connection", keep_alive ? "keep-alive" : "close");
-    if (response.status == 304) {
+    if (response.status == 304 || response.status == 204) {  // lot 1 (Python) : 204 ni corps ni Content-Length
         response.headers.erase("Content-Length");
         response.body.clear();
+    } else if (response.stream == Response::Stream::chunked) {  // lot 5 : decoupage du serveur, jamais celui du backend
+        response.headers.erase("Content-Length");
+        response.headers.set("Transfer-Encoding", "chunked");
+    } else if (response.stream == Response::Stream::close) {  // lot 5 : client HTTP/1.0, fin par la fermeture
+        response.headers.erase("Content-Length");
     } else {
         response.headers.set_default("Content-Length", std::to_string(response.content_length()));
     }
@@ -627,6 +748,7 @@ std::optional<std::string> finalize_response(const Snapshot& snapshot, Response&
     std::string head = "HTTP/1.1 " + std::to_string(response.status) + " " +
                        (reason == snapshot.reason_phrases.end() ? std::string() : reason->second) + "\r\n";
     for (const auto& [name, value] : response.headers.items()) head += name + ": " + value + "\r\n";
+    for (const auto& [name, value] : response.headers.repeated()) head += name + ": " + value + "\r\n";
     head += "\r\n";
     return utf8_to_latin1(head);
 }
@@ -661,12 +783,13 @@ std::string quoted_field(std::string value) {
 }
 }  // namespace
 
-std::string format_access_line(const Request& request, const Response& response, std::int64_t unix_seconds) {
+std::string format_access_line(const Request& request, const Response& response, std::int64_t unix_seconds,
+                               std::optional<std::uint64_t> size_override) {
     const std::string request_line = request.unparsed ? request.raw_request_line_text
                                                       : latin1_to_utf8(request.head->method) + " " + request.target_text + " HTTP/1.1";
     const std::string* referer = request.header("referer");
     const std::string* user_agent = request.header("user-agent");
-    const std::uint64_t size = response.content_length();
+    const std::uint64_t size = size_override.value_or(response.content_length());
     std::string line;
     line += sanitize_log_field(request.remote_ip, 64);
     line += " - - [" + apache_timestamp(unix_seconds) + "] \"";

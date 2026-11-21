@@ -15,6 +15,7 @@
 #include "text.hpp"
 #include "ip.hpp"
 #include "static_rules.hpp"
+#include "waf_alert.hpp"
 
 namespace {
 
@@ -197,6 +198,29 @@ TEST_CASE("vecteurs Python : regles pures du statique") {
             want = f[2];
             omega::ipc::Frame decoded;
             got = omega::ipc::decode(unhex(f[1]), decoded, nullptr) ? "ok" : "refuse";
+        } else if (kind == "wafalert") {  // lot 1N (D36) : ligne waf-alerts ecrite par le natif
+            omega::WafAlert alert;
+            omega::WafAlertSettings settings;
+            alert.unix_us = std::stoll(unhex(f[1]));
+            alert.request_id = unhex(f[2]);
+            alert.remote_ip = unhex(f[3]);
+            alert.method = unhex(f[4]);
+            alert.path = unhex(f[5]);
+            const std::string user_agent = unhex(f[6]);
+            if (user_agent != std::string(1, '\0')) alert.user_agent = user_agent;
+            alert.action = unhex(f[7]);
+            alert.stage = unhex(f[8]);
+            alert.status_code = std::stoi(unhex(f[9]));
+            alert.duration_ms = std::stod(unhex(f[10]));
+            const std::string body = unhex(f[11]);
+            if (body != "-") alert.body = unhex(body);
+            settings.max_path_chars = std::stoul(unhex(f[12]));
+            settings.max_user_agent_chars = std::stoul(unhex(f[13]));
+            settings.include_body_excerpt = unhex(f[14]) == "1";
+            settings.body_excerpt_max_bytes = std::stoul(unhex(f[15]));
+            input = body;
+            want = unhex(f[16]);
+            got = omega::format_waf_alert_line(alert, settings);
         } else {
             FAIL("type de vecteur inconnu : " << kind);
         }

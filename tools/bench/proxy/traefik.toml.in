@@ -1,0 +1,12 @@
+[global]
+  checkNewVersion = false
+  sendAnonymousUsage = false
+[entryPoints.web]
+  address = "127.0.0.1:PORT"
+[providers.file]
+  filename = "@W@/traefik-dyn.run.toml"
+[accessLog]
+  filePath = "@W@/logs/traefik-access.log"
+[log]
+  filePath = "@W@/logs/traefik.log"
+  level = "ERROR"

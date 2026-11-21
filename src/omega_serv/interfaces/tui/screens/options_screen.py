@@ -96,6 +96,8 @@ class OptionsScreen(OmegaScreen):
         # Le processus RIPOSTE est lance (ou non) au demarrage de `serve` : un rechargement ne le
         # demarre ni ne l'arrete (OMEGA-SERV_PLAN-DETAILLE_RIPOSTE.md §3.1).
         riposte_always_needs_restart = self._selected_name == "riposte"
+        # Tableau de bord web, lot 2 : meme regle que RIPOSTE, le processus d'administration est lance au demarrage.
+        admin_web_always_needs_restart = self._selected_name == "admin_web"
 
         result = set_option_enabled(
             load_result.config, self._selected_name, enabled,
@@ -121,6 +123,11 @@ class OptionsScreen(OmegaScreen):
                 notify_restart_required(
                     self, self._container,
                     _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (le processus RIPOSTE est lancé ou arrêté au démarrage du serveur).").format(message=result.message),
+                )
+            elif admin_web_always_needs_restart:
+                notify_restart_required(
+                    self, self._container,
+                    _("{message} Nécessite un REDÉMARRAGE COMPLET pour prendre effet (le processus d'administration web est lancé ou arrêté au démarrage du serveur).").format(message=result.message),
                 )
             else:
                 notify_reload_required(self, self._container, result.message)

@@ -14,6 +14,7 @@ from textual.widgets import Button, Footer, Header, Static
 from omega_serv.core.i18n import _
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.ca_wizard_screen import CaWizardScreen
+from omega_serv.interfaces.tui.screens.certificate_expiry_screen import CertificateExpiryScreen
 from omega_serv.interfaces.tui.screens.generate_self_signed_screen import GenerateSelfSignedScreen
 from omega_serv.interfaces.tui.screens.lets_encrypt_screen import LetsEncryptScreen
 from omega_serv.interfaces.tui.screens.renewal_schedule_screen import RenewalScheduleScreen
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
 
 _MENU_ITEMS: tuple[tuple[str, str], ...] = (
     ("status", _("Statut TLS")),
+    ("expiry", _("Échéances des certificats")),
     ("self-signed", _("Générer un certificat auto-signé")),
     ("ca-wizard", _("Assistant CA locale")),
     ("lets-encrypt", _("Assistant Let's Encrypt (Certbot)")),
@@ -64,7 +66,7 @@ class TlsMenuScreen(OmegaScreen):
 
     def _screen_for(self, item_id: str | None) -> Screen[None] | None:
         mapping = {
-            "status": TlsStatusScreen, "self-signed": GenerateSelfSignedScreen,
+            "status": TlsStatusScreen, "expiry": CertificateExpiryScreen, "self-signed": GenerateSelfSignedScreen,
             "ca-wizard": CaWizardScreen, "lets-encrypt": LetsEncryptScreen,
             "renewal-schedule": RenewalScheduleScreen,
             "revoke": RevokeCertificateScreen, "toggle": TlsToggleScreen,

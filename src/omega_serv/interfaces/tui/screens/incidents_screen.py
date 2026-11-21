@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
@@ -38,6 +39,18 @@ if TYPE_CHECKING:
     from omega_serv.domain.security.active_defense.entities import ExportResult, Incident
 
 
+_IOC_FORMATS = ("json", "csv", "stix", "misp")
+
+
+def _ioc_format_error(values: dict[str, str]) -> str | None:
+    """Lot V (2026-11-15) : format refuse dans le formulaire, saisie gardee."""
+    export_format = values["format"].strip().lower() or "json"
+    if export_format not in _IOC_FORMATS:
+        return _("Format d'export inconnu : {export_format!r} (json, csv, stix ou misp).").format(
+            export_format=export_format)
+    return None
+
+
 class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
@@ -64,15 +77,17 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
                     yield Button(_("Purger maintenant"), id="purge-now")
             yield DataTable(id="incidents-table")
             yield Static("", id="incident-detail", classes="omega-hint")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Fermer l'incident"), id="close-incident", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Exporter IoC"), id="export-ioc", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Générer rapport"), id="generate-report", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Fermer l'incident"), id="close-incident", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Exporter IoC"), id="export-ioc", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Générer rapport"), id="generate-report", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -109,7 +124,7 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             if self._status_filter is not None and incident.status != self._status_filter:
                 continue
             table.add_row(
-                incident.incident_id, incident.subject_id, incident.status,
+                incident.incident_id, Text(incident.subject_id), incident.status,  # F44 : jamais du balisage
                 incident.opened_at.isoformat(), incident.closed_at.isoformat() if incident.closed_at else "-",
                 key=incident.incident_id,
             )
@@ -162,7 +177,8 @@ class IncidentsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             return
         if button_id == "export-ioc" and self._selected_incident_id is not None:
             self.app.push_screen(
-                DynamicFormScreen(title=_("EXPORTER LES IOC"), fields=[("format", _("Format (json/csv/stix/misp)"), "json")]),
+                DynamicFormScreen(title=_("EXPORTER LES IOC"), fields=[("format", _("Format (json/csv/stix/misp)"), "json")],
+                                  validate=_ioc_format_error),
                 self._export_ioc,
             )
             return

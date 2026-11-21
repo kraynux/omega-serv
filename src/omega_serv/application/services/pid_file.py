@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from omega_serv.ports.filesystem_port import FilesystemPort
+TYPE_CHECKING = False  # superviseur reduit du natif (lot 5) : ni typing ni dataclasses
+if TYPE_CHECKING:
+    from omega_serv.ports.filesystem_port import FilesystemPort
 
 _SHARED_RUN_DIR_MODE = 0o2770
 """Setgid ajoute le 2026-11-10 : le `chmod 0770` a chaque demarrage effacait le bit setgid pose par

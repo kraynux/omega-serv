@@ -43,12 +43,12 @@ from omega_serv.infrastructure.declaration.json_declaration_store import (
     DECLARATION_DIR,
     JsonDeclarationStore,
 )
-from omega_serv.interfaces.cli.declaration_commands import (
+from omega_serv.interfaces.cli.child_supervisor import ServeCompanions
+from omega_serv.interfaces.cli.declaration_commands import cmd_declaration_declare
+from omega_serv.interfaces.cli.declaration_scheduler import (
     CHECK_EVERY_SECONDS,
     FIRST_CHECK_SECONDS,
     DeclarationScheduler,
-    ServeCompanions,
-    cmd_declaration_declare,
 )
 from omega_serv.ports.declaration_port import SendOutcome, ServiceSendLog, StoredDeclaration
 

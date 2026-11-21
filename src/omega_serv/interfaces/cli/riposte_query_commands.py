@@ -6,41 +6,19 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
-from omega_serv.application.config.load_config import load_config
-from omega_serv.application.riposte.console import (
-    journal_paths,
-    simulate_situation,
-    single_policy_config,
-)
-from omega_serv.application.riposte.measure import measure
-from omega_serv.application.riposte.safety import riposte_exempt_networks
-from omega_serv.application.services.resolve_current_service_name import (
-    resolve_current_service_name,
-)
-from omega_serv.bootstrap.container import DependencyContainer
-from omega_serv.core.i18n import _
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.security.riposte.config import (
-    RiposteConfig,
-    parse_riposte_config,
-)
-from omega_serv.domain.security.riposte.scenarios import SCENARIOS, find_scenario
-from omega_serv.infrastructure.persistence.sqlite_riposte_connection import open_riposte_connection
-from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
-from omega_serv.infrastructure.riposte.journal_events import read_journal_events
-from omega_serv.interfaces.cli.command_tree import add_command, add_group
-from omega_serv.interfaces.cli.riposte_action_commands import register as register_actions
-from omega_serv.interfaces.cli.riposte_text import (
-    action_label,
-    format_decision,
-    format_measure,
-    policy_lines,
-    status_label,
-)
+if TYPE_CHECKING:
+    from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.riposte.config import RiposteConfig
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
 
 
 def _load(args: argparse.Namespace, container: DependencyContainer) -> tuple[OmegaServConfig, RiposteConfig] | None:
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.riposte.config import parse_riposte_config
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
         print(_("Configuration illisible : ") + "; ".join(result.errors), file=sys.stderr)
@@ -50,12 +28,17 @@ def _load(args: argparse.Namespace, container: DependencyContainer) -> tuple[Ome
 
 
 def cmd_riposte_scenarios_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.security.riposte.scenarios import SCENARIOS
     for scenario in SCENARIOS:
         print(scenario.id.ljust(22) + " " + scenario.name)
     return 0
 
 
 def cmd_riposte_scenarios_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.riposte.config import RiposteConfig
+    from omega_serv.domain.security.riposte.scenarios import find_scenario
+    from omega_serv.interfaces.cli.riposte_text import policy_lines
     scenario = find_scenario(args.id)
     if scenario is None:
         print(_("Scénario inconnu : {id}").format(id=args.id), file=sys.stderr)
@@ -70,6 +53,8 @@ def cmd_riposte_scenarios_show(args: argparse.Namespace, container: DependencyCo
 
 
 def cmd_riposte_policies_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import action_label
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -83,6 +68,11 @@ def cmd_riposte_policies_list(args: argparse.Namespace, container: DependencyCon
 
 
 def cmd_riposte_policies_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.resolve_current_service_name import (
+        resolve_current_service_name,
+    )
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import policy_lines
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -100,6 +90,9 @@ def cmd_riposte_policies_show(args: argparse.Namespace, container: DependencyCon
 
 def cmd_riposte_simulate(args: argparse.Namespace, container: DependencyContainer) -> int:
     """Decision expliquee pour une situation saisie, avec la configuration reelle - rien n'est applique."""
+    from omega_serv.application.riposte.console import simulate_situation
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import format_decision
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -114,6 +107,13 @@ def cmd_riposte_simulate(args: argparse.Namespace, container: DependencyContaine
 
 def cmd_riposte_measure(args: argparse.Namespace, container: DependencyContainer) -> int:
     """`<id>` = une politique de la configuration, ou `scenario:<id>` pour mesurer un scenario avant de l'ajouter."""
+    from omega_serv.application.riposte.console import journal_paths, single_policy_config
+    from omega_serv.application.riposte.measure import measure
+    from omega_serv.application.riposte.safety import riposte_exempt_networks
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.security.riposte.scenarios import find_scenario
+    from omega_serv.infrastructure.riposte.journal_events import read_journal_events
+    from omega_serv.interfaces.cli.riposte_text import format_measure
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -136,6 +136,11 @@ def cmd_riposte_measure(args: argparse.Namespace, container: DependencyContainer
 
 
 def _open_store(args: argparse.Namespace, container: DependencyContainer, riposte: RiposteConfig) -> SqliteRiposteStore | None:
+    from omega_serv.core.i18n import _
+    from omega_serv.infrastructure.persistence.sqlite_riposte_connection import (
+        open_riposte_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_riposte_store import SqliteRiposteStore
     try:
         return SqliteRiposteStore(open_riposte_connection(container.project_root / riposte.database, read_only=True))
     except FileNotFoundError:
@@ -146,6 +151,7 @@ def _open_store(args: argparse.Namespace, container: DependencyContainer, ripost
 
 
 def cmd_riposte_sources_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -163,6 +169,7 @@ def cmd_riposte_sources_list(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_riposte_sources_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -190,6 +197,8 @@ def cmd_riposte_sources_show(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_riposte_decisions_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.riposte_text import format_decision, status_label
     loaded = _load(args, container)
     if loaded is None:
         return 1
@@ -211,6 +220,9 @@ def cmd_riposte_decisions_list(args: argparse.Namespace, container: DependencyCo
 
 
 def register(riposte_sub: argparse._SubParsersAction) -> None:
+    from omega_serv.core.i18n import _
+    from omega_serv.interfaces.cli.command_tree import add_command, add_group
+    from omega_serv.interfaces.cli.riposte_action_commands import register as register_actions
     limit_help = _("Nombre maximal de lignes (défaut : 50).")
     scenarios = add_group(riposte_sub, "scenarios", _("Scénarios prêts à l'emploi."), "riposte_scenarios_command")
     add_command(scenarios, "list", _("Liste les scénarios.")).set_defaults(func=cmd_riposte_scenarios_list)

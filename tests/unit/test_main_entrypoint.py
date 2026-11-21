@@ -8,6 +8,7 @@ non plus."""
 import unittest
 from pathlib import Path
 
+import omega_serv
 from omega_serv.__main__ import _build_execv_invocation
 
 
@@ -16,7 +17,13 @@ class TestBuildExecvInvocation(unittest.TestCase):
         python_executable = Path("/home/user/DEV/SERV/omega-serv-test/.venv/bin/python")
         path, argv = _build_execv_invocation(python_executable)
         self.assertEqual(path, str(python_executable))
-        self.assertEqual(argv, [str(python_executable), "-m", "omega_serv"])
+        self.assertEqual(argv[:3], [str(python_executable), "-I", "-c"])  # isole : ni dossier courant ni PYTHONPATH
+        self.assertEqual(argv[4:], [str(Path(omega_serv.__file__).resolve().parents[1]), "omega_serv"])
+
+    def test_switch_runs_the_target_instance_code(self):
+        python_executable = Path("/home/user/DEV/SERV/omega-serv-test/.venv/bin/python")
+        _path, argv = _build_execv_invocation(python_executable, python_executable.parents[2] / "src")
+        self.assertEqual(argv[4:], ["/home/user/DEV/SERV/omega-serv-test/src", "omega_serv"])
 
     def test_argv_first_element_matches_path(self):
         python_executable = Path("/tmp/instance/.venv/bin/python")

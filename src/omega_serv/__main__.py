@@ -40,11 +40,14 @@ if TYPE_CHECKING:
     from omega_serv.domain.security.audit.entities import AuditResult
     from omega_serv.domain.security.riposte.events import ObservedEvent
     from omega_serv.domain.security.waf.config import MagnetConfig
+    from omega_serv.ports.admin_web_setup_port import AdminWebSetupPort
     from omega_serv.ports.blocklist_port import BlocklistPort
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
+    from omega_serv.ports.clipboard_port import ClipboardPort
     from omega_serv.ports.clock_port import ClockPort
     from omega_serv.ports.declaration_port import DeclarationSenderPort
     from omega_serv.ports.filesystem_port import FilesystemPort
+    from omega_serv.ports.instance_command_port import InstanceCommandPort
     from omega_serv.ports.instance_registry_port import InstanceRegistryPort
     from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
     from omega_serv.ports.release_source_port import ReleaseSourcePort
@@ -127,13 +130,19 @@ async def _run_waf_test(
     project_root: Path,
     clock: ClockPort,
 ) -> WafSimulationReport | None:
+    import tempfile
+    from pathlib import Path as _Path
+
     from omega_serv.application.security.simulate_waf_request import simulate_waf_request
     from omega_serv.application.server.start_server import build_waf_collaborators
 
-    waf = build_waf_collaborators(config, project_root, filesystem, clock, force=True)
-    if waf is None:
-        return None
-    return await simulate_waf_request(method, path, query, body, remote_ip, waf)
+    # Scan de securite n° 2 (F19) : etat Lua du script Magnet dans un dossier prive, jamais celui de var/.
+    with tempfile.TemporaryDirectory(prefix="omega-serv-waf-test-") as private_dir:
+        waf = build_waf_collaborators(config, project_root, filesystem, clock, force=True,
+                                      isolated_magnet_dir=_Path(private_dir))
+        if waf is None:
+            return None
+        return await simulate_waf_request(method, path, query, body, remote_ip, waf)
 
 
 def _service_runs_older_code(service_name: str) -> bool:
@@ -244,6 +253,26 @@ def _build_acme_client() -> ProcessRunnerPort:
     return SubprocessRunner()
 
 
+def _build_clipboard() -> ClipboardPort:
+    from omega_serv.infrastructure.clipboard.system import SystemClipboard
+
+    return SystemClipboard()
+
+
+def _build_admin_web_setup() -> AdminWebSetupPort:
+    from omega_serv.infrastructure.admin_web.setup import SystemAdminWebSetup
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+
+    return SystemAdminWebSetup(SubprocessRunner())
+
+
+def _build_instance_commands() -> InstanceCommandPort:
+    from omega_serv.infrastructure.instances.instance_command_runner import InstanceCommandRunner
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+
+    return InstanceCommandRunner(SubprocessRunner())
+
+
 def _build_remote_log_fetch_runner() -> ProcessRunnerPort:
     from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
 
@@ -329,16 +358,19 @@ def _run_create_instance(
     )
 
 
-def _build_execv_invocation(python_executable: Path) -> tuple[str, list[str]]:
+def _build_execv_invocation(python_executable: Path, source_root: Path | None = None) -> tuple[str, list[str]]:
     """Isole dans une fonction pure/testable ce qui SERAIT passe a
     os.execv() (OMEGA-SERV_PLAN-DETAILLE_MULTI_INSTANCE.md §9 Phase D) -
     l'appel reel lui-meme (dans main() ci-dessous) ne peut jamais etre
     exerce par un test automatise : il remplacerait le processus de
     test en cours, aucun moyen sur de l'observer de l'exterieur (meme
     limite que le `exec` final d'omega-serv.sh, jamais unit-teste non
-    plus)."""
+    plus). Bascule vers une autre instance : `source_root` = son src/ (son venv est <racine>/.venv/bin/python) ;
+    relance de langue : le code en cours (scan de securite n° 2, F35 : mode isole `-I`)."""
+    from omega_serv.domain.services.python_command import python_module_argv
+
     path = str(python_executable)
-    return path, [path, "-m", "omega_serv"]
+    return path, python_module_argv(path, "omega_serv", source_root=str(source_root) if source_root else None)
 
 
 def _prepare_language_restart_environment(environ: MutableMapping[str, str], language_code: str) -> None:
@@ -396,6 +428,19 @@ def _export_payload(kind: str, payload: dict, theme_name: str) -> str | None:
         from omega_serv.application.logs.health_presentation import render_text
 
         return render_text(payload)
+    if kind == "full-report":
+        from omega_serv.application.report.full_report_presentation import (
+            html_arguments as report_arguments,
+        )
+        from omega_serv.infrastructure.exporters.html_exporter import export_full_report_html
+
+        return export_full_report_html(theme_name=theme_name, **report_arguments(payload))
+    if kind == "full-report-txt":
+        from omega_serv.application.report.full_report_presentation import (
+            render_text as report_text,
+        )
+
+        return report_text(payload)
     return None
 
 
@@ -413,11 +458,12 @@ EXPORT_CHILD_INCIDENT_NOT_FOUND = 3
 
 def _run_export_in_language(command: list[str], language_code: str) -> ProcessResult:
     from omega_serv.bootstrap.early_language import EXPORT_CHILD_ENV_VAR
+    from omega_serv.domain.services.python_command import python_module_argv
     from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
 
     return SubprocessRunner().run(
         ["env", f"OMEGA_SERV_LANG={language_code}", f"{EXPORT_CHILD_ENV_VAR}=1",
-         sys.executable, "-m", "omega_serv", *command],
+         *python_module_argv(sys.executable, "omega_serv", *command)],
         timeout=180,
     )
 
@@ -462,11 +508,11 @@ def _render_html_export_here(kind: str, theme_name: str) -> str | None:
             sys.stderr.write("; ".join(load_result.errors))
             return None
         config = load_result.config
-        fastcgi_socket = None
+        from omega_serv.domain.routing.fastcgi_zone import active_socket_paths
         fastcgi_option = config.options.get("fastcgi")
-        if fastcgi_option is not None and fastcgi_option.enabled:
-            fastcgi_socket = container.project_root / fastcgi_option.settings.get("socket_path", "var/run/php-fpm.sock")
-        scanner = container.build_capability_scanner(config.server.port, fastcgi_socket)
+        fastcgi_sockets = tuple(container.project_root / path for path in active_socket_paths(fastcgi_option.settings)) \
+            if fastcgi_option is not None and fastcgi_option.enabled else ()
+        scanner = container.build_capability_scanner(config.server.port, fastcgi_sockets)
         return _export_capabilities_html(CapabilityRegistry(scanner.scan()).list_all(), theme_name)
     return None
 
@@ -492,7 +538,7 @@ def _write_report_here(incident_id: str) -> Path | None:
 def _run_export_child_command(argv: list[str]) -> int:
     """`_export-html <guide|capabilities|log-archives|bans> <theme>` : HTML sur stdout.
     `_export-report <incident_id>` : chemin du rapport ecrit sur stdout.
-    `_export-payload <log-stats|log-health|log-health-txt> <theme> <fichier.json>` : rapport sur stdout. Commandes internes,
+    `_export-payload <log-stats|log-health|log-health-txt|full-report|full-report-txt> <theme> <fichier.json>` : rapport sur stdout. Commandes internes,
     lancees uniquement par `_run_export_in_language` (absentes de --help)."""
     if argv[0] == EXPORT_HTML_CHILD_COMMAND and len(argv) == 3:
         content = _render_html_export_here(argv[1], argv[2])
@@ -568,6 +614,7 @@ def main(argv: list[str] | None = None) -> int:
     from omega_serv.bootstrap.early_language import (
         install_language_early,
         install_page_language_early,
+        is_admin_web_process,
         is_server_process,
     )
 
@@ -575,16 +622,24 @@ def main(argv: list[str] | None = None) -> int:
     # traduite au chargement d'un module est ainsi deja dans la bonne langue. Jamais pour
     # `serve` (D18b : journalctl reste en francais).
     if not is_server_process(effective_argv):
-        install_language_early(os.environ)
+        install_language_early(os.environ, console_fallback=not is_admin_web_process(effective_argv))
     install_page_language_early(os.environ)  # pages visiteurs (D19), y compris pour `serve`
 
     # Hindi (plan i18n, lots 10-11) : Rich compte les voyelles devanagari espacantes pour 0
     # colonne, le terminal pour 1 - aligne avant tout rendu, sans effet sur les autres langues.
-    from omega_lib.i18n.terminal_cell_widths import (
-        align_spacing_marks_with_terminal,
-    )
+    # Pas pour les processus serveur (D18b : ni langue ni rendu Rich) : Rich y coutait 0,7 Mo (2026-11-19).
+    if not is_server_process(effective_argv):
+        from omega_lib.i18n.terminal_cell_widths import (
+            align_spacing_marks_with_terminal,
+        )
 
-    align_spacing_marks_with_terminal()
+        align_spacing_marks_with_terminal()
+
+    # Memoire (2026-11-19, etude §11) : asyncio sans `ssl` tant que le serveur n'en a pas besoin (1,6 Mo).
+    if is_server_process(effective_argv):
+        from omega_serv.infrastructure.process.lazy_ssl import defer_ssl_import
+
+        defer_ssl_import()
 
     if effective_argv and effective_argv[0] in (
         EXPORT_HTML_CHILD_COMMAND, EXPORT_REPORT_CHILD_COMMAND, EXPORT_PAYLOAD_CHILD_COMMAND,
@@ -634,6 +689,9 @@ def main(argv: list[str] | None = None) -> int:
             certificate_tool_factory=_build_certificate_tool,
             acme_client_factory=_build_acme_client,
             remote_log_fetch_runner_factory=_build_remote_log_fetch_runner,
+            instance_commands=_build_instance_commands(),
+            clipboard=_build_clipboard(),
+            admin_web_setup=_build_admin_web_setup(),
             database_snapshot_fn=_snapshot_database,
             lnav_runner=_run_lnav,
             create_instance_runner=_run_create_instance,
@@ -662,7 +720,10 @@ def main(argv: list[str] | None = None) -> int:
         shutdown_stats_pool()  # jamais de processus du pool laisses derriere un os.execv
         if app.pending_switch is not None:
             os.environ["OMEGA_SERV_SWITCHED_FROM"] = app.pending_switch.source_name
-            path, exec_argv = _build_execv_invocation(app.pending_switch.python_executable)
+            if app.pending_switch.open_after:  # tableau de bord web, lot 2 : configuration distante apres la bascule
+                os.environ["OMEGA_SERV_OPEN_AFTER_SWITCH"] = app.pending_switch.open_after
+            path, exec_argv = _build_execv_invocation(app.pending_switch.python_executable,
+                                                      app.pending_switch.python_executable.parents[2] / "src")
             os.execv(path, exec_argv)  # pragma: no cover - remplace le processus, jamais testable pour de vrai
         if app.pending_restart is not None:
             # Meme Python, meme installation : seule l'interface redemarre, jamais le service.

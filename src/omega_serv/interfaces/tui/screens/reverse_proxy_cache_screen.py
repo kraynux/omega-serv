@@ -47,6 +47,7 @@ _DEFAULT_CACHE_MAX_SIZE_MB = 100
 
 
 class ReverseProxyCacheScreen(OmegaScreen):
+    form_error_target = "#cache-error"
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
         self._container = container
@@ -139,7 +140,7 @@ class ReverseProxyCacheScreen(OmegaScreen):
             await self._refresh()
             return
         if event.button.id == "edit-max-size":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("PLAFOND DE TAILLE DU CACHE"),
                     fields=[("cache_max_size_mb", _("Taille maximale (Mo, entier >= 1)"), str(self._max_size_mb()))],
@@ -149,7 +150,9 @@ class ReverseProxyCacheScreen(OmegaScreen):
             return
         if event.button.id == "purge-zone":
             self.app.push_screen(
-                DynamicFormScreen(title=_("PURGER UNE ZONE"), fields=[("zone_prefix", _("Préfixe de la zone (ex: /api/)"), "")]),
+                DynamicFormScreen(title=_("PURGER UNE ZONE"), fields=[("zone_prefix", _("Préfixe de la zone (ex: /api/)"), "")],
+                                  validate=lambda values: None if values["zone_prefix"].strip()
+                                  else _("Préfixe de zone requis.")),
                 self._confirm_purge_zone,
             )
             return
@@ -168,14 +171,14 @@ class ReverseProxyCacheScreen(OmegaScreen):
         try:
             max_size_mb = int(values["cache_max_size_mb"].strip())
         except ValueError:
-            self.query_one("#cache-error", Static).update(_("Plafond invalide (nombre entier attendu)."))
+            self.report_form_error(_("Plafond invalide (nombre entier attendu)."))
             return
         if max_size_mb < 1:
-            self.query_one("#cache-error", Static).update(_("Plafond invalide (doit être >= 1)."))
+            self.report_form_error(_("Plafond invalide (doit être >= 1)."))
             return
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#cache-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("reverse_proxy")
         enabled = existing.enabled if existing is not None else False
@@ -193,7 +196,7 @@ class ReverseProxyCacheScreen(OmegaScreen):
             return
         zone_prefix = values["zone_prefix"].strip()
         if not zone_prefix:
-            self.query_one("#cache-error", Static).update(_("Préfixe de zone requis."))
+            self.report_form_error(_("Préfixe de zone requis."))
             return
         self.app.push_screen(
             ConfirmScreen(title=_("PURGER CETTE ZONE"), message=_("Purger le cache de la zone {zone_prefix!r} ?").format(zone_prefix=zone_prefix)),

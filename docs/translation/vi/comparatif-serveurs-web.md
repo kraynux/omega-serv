@@ -2,7 +2,7 @@
 
 # omega-serv so với các máy chủ web trên thị trường
 
-**So sánh dựa trên phép đo: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5**
+**So sánh dựa trên phép đo: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5 và 3.0.0**
 
 🌐 [Français](../../comparatif-serveurs-web.md) · [English](../en/comparatif-serveurs-web.md) · [Español](../es/comparatif-serveurs-web.md) · [Português (Brasil)](../pt-BR/comparatif-serveurs-web.md) · [Italiano](../it/comparatif-serveurs-web.md) · [Deutsch](../de/comparatif-serveurs-web.md) · [Nederlands](../nl/comparatif-serveurs-web.md) · [Polski](../pl/comparatif-serveurs-web.md) · [Русский](../ru/comparatif-serveurs-web.md) · [中文](../zh-CN/comparatif-serveurs-web.md) · **Tiếng Việt** · [ไทย](../th/comparatif-serveurs-web.md) · [Bahasa Indonesia](../id/comparatif-serveurs-web.md) · [日本語](../ja/comparatif-serveurs-web.md) · [한국어](../ko/comparatif-serveurs-web.md) · [हिन्दी](../hi/comparatif-serveurs-web.md) · [العربية](../ar/comparatif-serveurs-web.md)
 
@@ -12,7 +12,7 @@ Tài liệu này xác định vị trí của omega-serv giữa các máy chủ 
 2. **so sánh tính năng**, mỗi mục đều được kiểm chứng theo tài liệu chính thức của máy chủ tương ứng (liên kết ở cuối tài liệu), có phân biệt giữa tính năng tích hợp sẵn và tính năng cần mô-đun hoặc plugin;
 3. những gì omega-serv **thực sự mang lại thêm**, và những gì các máy chủ khác **làm tốt hơn nó**.
 
-Tất cả các phép đo hiệu năng được thực hiện vào ngày 3 và 4 tháng 11 năm 2026. Không có con số nào được lấy từ trang web khác hay ước tính. Dữ liệu thô được công bố cùng tài liệu này.
+Các phép đo máy chủ tệp được thực hiện vào ngày 3 và 4 tháng 11 năm 2026 (omega-serv 2.5), các phép đo reverse proxy vào ngày 14 tháng 11 năm 2026 (omega-serv 3.0.0, đang chuẩn bị). Bộ nhớ của omega-serv 3.0.0, đã giảm đáng kể kể từ đó, được đo lại vào ngày 19 tháng 11 năm 2026 trên cả ba máy, cùng quy trình (§4, §5 và §6). Không có con số nào được lấy từ trang web khác hay ước tính. Dữ liệu thô được công bố cùng tài liệu này.
 
 ---
 
@@ -22,14 +22,15 @@ Tất cả các phép đo hiệu năng được thực hiện vào ngày 3 và 4
 2. [Cách đọc bản so sánh này](#2-cách-đọc-bản-so-sánh-này)
 3. [Phương pháp đo](#3-phương-pháp-đo)
 4. [Hiệu năng: omega-serv so với nginx, lighttpd, Apache và Caddy](#4-hiệu-năng-omega-serv-so-với-nginx-lighttpd-apache-và-caddy)
-5. [Các phiên bản omega-serv: 1.0 → 2.0 → 2.5](#5-các-phiên-bản-omega-serv-10--20--25)
-6. [So sánh tính năng](#6-so-sánh-tính-năng)
-7. [Quản trị và sự tiện lợi](#7-quản-trị-và-sự-tiện-lợi)
-8. [Những gì omega-serv mang lại thêm](#8-những-gì-omega-serv-mang-lại-thêm)
-9. [Những gì các máy chủ khác làm tốt hơn](#9-những-gì-các-máy-chủ-khác-làm-tốt-hơn)
-10. [Máy chủ nào cho nhu cầu nào](#10-máy-chủ-nào-cho-nhu-cầu-nào)
-11. [Tái lập các phép đo](#11-tái-lập-các-phép-đo)
-12. [Nguồn](#12-nguồn)
+5. [Hiệu năng reverse proxy: omega-serv so với nginx, lighttpd, Apache, Caddy và Traefik](#5-hiệu-năng-reverse-proxy-omega-serv-so-với-nginx-lighttpd-apache-caddy-và-traefik)
+6. [Các phiên bản omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0](#6-các-phiên-bản-omega-serv-10--20--25--300)
+7. [So sánh tính năng](#7-so-sánh-tính-năng)
+8. [Quản trị và sự tiện lợi](#8-quản-trị-và-sự-tiện-lợi)
+9. [Những gì omega-serv mang lại thêm](#9-những-gì-omega-serv-mang-lại-thêm)
+10. [Những gì các máy chủ khác làm tốt hơn](#10-những-gì-các-máy-chủ-khác-làm-tốt-hơn)
+11. [Máy chủ nào cho nhu cầu nào](#11-máy-chủ-nào-cho-nhu-cầu-nào)
+12. [Tái lập các phép đo](#12-tái-lập-các-phép-đo)
+13. [Nguồn](#13-nguồn)
 
 ---
 
@@ -41,7 +42,8 @@ Tất cả các phép đo hiệu năng được thực hiện vào ngày 3 và 4
 - **Khi bật WAF**, omega-serv kiểm tra mọi yêu cầu, điều mà các máy chủ khác được đo không làm. Với bộ máy native, nó khi đó đạt **0,53–0,56** tốc độ của nginx (không WAF) trên máy A và B, và 1,07 trên máy C (4 lõi so với 2): WAF chỉ làm nó mất 5–22 % thông lượng. Nó vẫn đứng trước Apache và Caddy, vốn được đo không có WAF.
 - **Tệp trung bình (100 KB)**: đây là điểm yếu hiện tại của bộ máy native, **0,3–0,6** so với nginx, sau Apache.
 - **Tệp lớn (5 MB)**: nginx, lighttpd, Apache và omega-serv native đạt thông lượng cùng cỡ. Caddy chậm hơn rõ rệt trên máy nhanh nhất.
-- **Bộ nhớ**: lighttpd (1 MB), nginx (4–5 MB) và Apache (4–9 MB) rất tiết kiệm. omega-serv dùng **30–65 MB** tùy chế độ, Caddy **50–67 MB**.
+- **Ở vai trò reverse proxy (3.0.0)**, bộ máy native chuyển tiếp các phản hồi nhỏ ở mức **0,82–0,91 so với nginx**, và các phản hồi 100 KB **nhanh bằng hoặc nhanh hơn nginx** (0,97–1,43). Nó **đứng thứ hai sau nginx**, trước lighttpd, Apache, Traefik và Caddy. Với HTTPS, nó vẫn đứng thứ hai với phản hồi nhỏ trên máy A và B; trên máy C, lighttpd ngang bằng nó.
+- **Bộ nhớ**: lighttpd (1 MB), nginx (4–5 MB) và Apache (4–9 MB) rất tiết kiệm. omega-serv 3.0.0 dùng **10–16 MB** với bộ máy native, **20–33 MB** với bộ máy Python hoặc WAF, và 35–55 MB với 2 tiến trình; Caddy **50–67 MB**. Bản 2.5 dùng 28–57 MB.
 - **Những gì omega-serv có thêm**: quản trị toàn bộ trong giao diện terminal, bằng 17 ngôn ngữ; WAF và phòng thủ chủ động tích hợp sẵn; giới hạn bảo mật chính xác khi chạy nhiều tiến trình; nhập script mod_magnet của lighttpd; quản lý nhiều instance.
 - **Những gì nó không có**: HTTP/2 và HTTP/3, nén trực tiếp, khám phá dịch vụ Docker/Kubernetes, trình khách ACME tích hợp (nó dùng Certbot), hệ sinh thái mô-đun.
 
@@ -85,10 +87,10 @@ Máy A là một laptop cũ, máy B là một mini PC tiết kiệm điện, má
 | lighttpd | 1.4.85 |
 | Apache HTTP Server | 2.4.69, MPM `event` |
 | Caddy | 2.11.4 (A, B), 2.11.7 (C) |
-| omega-serv | 1.0.0 và 2.0.0 (các gói lưu trữ đã phát hành) và 2.5, trên Python 3.14 |
+| omega-serv | 1.0.0 và 2.0.0 (các gói lưu trữ đã phát hành), 2.5 và 3.0.0, trên Python 3.14 |
 | Trình khách tạo tải | [oha](https://github.com/hatoo/oha) 1.16.0 (viết bằng Rust) |
 
-Traefik không được đo: nó không phải máy chủ tệp (xem §6). Nó chỉ xuất hiện trong phần so sánh tính năng.
+Traefik không được đo ở vai trò máy chủ tệp: nó không phải máy chủ tệp (xem §7). Nó được đo ở vai trò reverse proxy, đúng vai trò của nó, tại §5.
 
 ### Quy trình
 
@@ -98,7 +100,7 @@ Traefik không được đo: nó không phải máy chủ tệp (xem §6). Nó c
 - **HTTP/1.1 không mã hóa, kết nối bền (keep-alive)**. Độ đồng thời là 32 kết nối cho tệp 1 KB và 100 KB, và 8 cho tệp 5 MB.
 - **Thời lượng**: 10 giây cho mỗi tệp và mỗi cấu hình.
 - **Lặp lại**: 3 lượt đầy đủ xen kẽ (tất cả cấu hình ở lượt 1, rồi tất cả ở lượt 2, v.v.). Các bảng đưa ra **trung vị** của ba lượt. Từ lượt này sang lượt khác, chênh lệch phần lớn dưới 5 %.
-- **Bộ nhớ**: PSS của tất cả tiến trình máy chủ, ghi lúc nghỉ rồi sau khi tải.
+- **Bộ nhớ**: PSS của tất cả tiến trình máy chủ, ghi lúc nghỉ rồi sau khi tải. Bộ nhớ của omega-serv 3.0.0 được đo lại vào ngày 19 tháng 11 năm 2026, với nginx làm tham chiếu trong cùng đợt: thông lượng của nginx với tệp nhỏ chênh không quá 3 % so với ngày 4 tháng 11, và bộ nhớ chênh không quá 1 MB.
 - **Cấu hình**:
   - nginx, lighttpd, Apache và Caddy ở cấu hình cơ bản: tệp tĩnh và nhật ký truy cập;
   - omega-serv với hồ sơ `standard`, tắt WAF, rồi bật với tất cả quy tắc đi kèm (không giới hạn tốc độ).
@@ -109,11 +111,11 @@ Traefik không được đo: nó không phải máy chủ tệp (xem §6). Nó c
 
 - **Chúng tôi so sánh tỷ lệ.** Giá trị tuyệt đối trên phần cứng của bạn hoặc trên một máy chủ chuyên dụng sẽ khác.
 - **Giao diện loopback (127.0.0.1)**: phép đo không đi qua mạng thật. Trên mạng thật, thông lượng tệp lớn hầu như luôn bị giới hạn bởi đường truyền chứ không phải máy chủ. Thông lượng vài chục GB/s trên máy C chỉ có thể có trên loopback.
-- **Không có TLS** trong các phép đo này.
+- **Không có TLS** trong các phép đo máy chủ tệp (§4 và §6). Reverse proxy (§5) được đo với HTTP và HTTPS.
 - **Máy A**: dịch vụ omega-serv đang vận hành của máy này chạy nền, không nhận lưu lượng.
 - **Máy C**: bộ xử lý lai (lõi Zen 5 và Zen 5c). Máy chủ nhận 4 lõi nhanh, trình khách nhận 6 lõi còn lại.
 - **Cấu hình cơ bản**: không máy chủ nào được tối ưu. Một quản trị viên giàu kinh nghiệm chắc chắn sẽ khai thác được nhiều hơn từ mỗi máy chủ, kể cả omega-serv.
-- **Dữ liệu thô**: [`docs/benchmarks/`](../../benchmarks/) (mỗi máy một tệp).
+- **Dữ liệu thô**: [`docs/benchmarks/`](../../benchmarks/) (mỗi máy và mỗi đợt một tệp; đo lại bản 3.0.0: `2026-11-19-*-memoire-3.0.0-brut.txt`).
 
 ---
 
@@ -183,30 +185,34 @@ Với 1 tiến trình, nginx đạt 0,52–0,73, lighttpd 0,81–1,43, Apache 0,
 
 ### Bộ nhớ (PSS, tất cả tiến trình máy chủ): lúc nghỉ → sau tải
 
+omega-serv: phiên bản 3.0.0, đo lại ngày 19 tháng 11 năm 2026 (giá trị của 2.5 ở §6). Các máy chủ khác: đợt ngày 4 tháng 11.
+
 | Máy chủ | Máy A | Máy B | Máy C |
 |---|---:|---:|---:|
 | lighttpd | 1 → 1 MB | 1 → 1 MB | 1 → 1 MB |
 | nginx | 4 → 5 MB | 5 → 5 MB | 4 → 4 MB |
 | Apache | 4 → 7 MB | 4 → 7 MB | 4 → 7 MB |
-| omega-serv, bộ máy Python | 28 → 32 MB | 29 → 33 MB | 30 → 34 MB |
-| **omega-serv, bộ máy native** | **33 → 34 MB** | **34 → 35 MB** | **35 → 39 MB** |
-| omega-serv, native + WAF † | 45 → 47 MB | 43 → 44 MB | 44 → 48 MB |
-| omega-serv, bộ máy Python, 2 tiến trình | 40 → 50 MB | 43 → 51 MB | 42 → 51 MB |
-| omega-serv, native + WAF, 2 tiến trình bảo mật † | 45 → 47 MB | 43 → 44 MB | 55 → 57 MB |
+| **omega-serv, bộ máy native** | **10 → 10 MB** | **10 → 12 MB** | **12 → 16 MB** |
+| omega-serv, bộ máy Python | 20 → 23 MB | 21 → 24 MB | 22 → 28 MB |
+| omega-serv, native + WAF | 28 → 30 MB | 29 → 32 MB | 30 → 33 MB |
+| omega-serv, bộ máy Python, 2 tiến trình | 35 → 46 MB | 36 → 46 MB | 38 → 48 MB |
+| omega-serv, native + WAF, 2 tiến trình bảo mật ‡ | 28 → 28 MB | 29 → 31 MB | 51 → 55 MB |
 | Caddy, 2 tiến trình | 50 → 57 MB | 46 → 54 MB | 48 → 62 MB |
+
+‡ Trên máy A và B, máy chủ chỉ có 2 lõi: omega-serv chỉ chạy một tiến trình bảo mật ở đó (nó chạy 2 tiến trình từ 4 lõi trở lên). Trên máy C, với 2 tiến trình bảo mật, tiến trình giám sát Python giữ dạng đầy đủ, cần cho các bộ đếm mà chúng dùng chung: 51 MB thay vì 30.
 
 ### Cùng số lõi: máy C với 4 tiến trình
 
-Một đợt riêng ngày 3 tháng 11, cùng quy trình, trên máy C: mỗi máy chủ nhận 4 tiến trình (hoặc 4 lõi với Caddy và bộ máy native). Tham chiếu: nginx với 4 tiến trình. Bộ máy native với WAF không còn xuất hiện ở đây: nó được đo trước khi tối ưu WAF và chưa được đo lại với 4 tiến trình.
+Một đợt riêng ngày 3 tháng 11, cùng quy trình, trên máy C: mỗi máy chủ nhận 4 tiến trình (hoặc 4 lõi với Caddy và bộ máy native). Tham chiếu: nginx với 4 tiến trình. Bộ máy native với WAF không còn xuất hiện ở đây: nó được đo trước khi tối ưu WAF và chưa được đo lại với 4 tiến trình. Bộ nhớ của omega-serv: bản 3.0.0, đo lại ngày 19 tháng 11 (thông lượng: bản 2.5, ngày 3 tháng 11).
 
 | Máy chủ | 1 KB | 100 KB | 5 MB | Bộ nhớ |
 |---|---:|---:|---:|---:|
 | lighttpd, 4 tiến trình | 638 907 (**1,46**) | 312 402 (**1,21**) | 41 982 MB/s (0,93) | 1 → 2 MB |
 | nginx, 4 tiến trình | 438 496 (1,00) | 258 242 (1,00) | 45 162 MB/s (1,00) | 5 → 5 MB |
-| **omega-serv, bộ máy native** | **294 083–310 972 (0,67–0,71)** | **108 991–109 955 (0,42)** | **40 137–40 463 MB/s (0,89–0,90)** | **35 → 38 MB** |
+| **omega-serv, bộ máy native** | **294 083–310 972 (0,67–0,71)** | **108 991–109 955 (0,42)** | **40 137–40 463 MB/s (0,89–0,90)** | **12 → 16–18 MB** |
 | Apache, 4 tiến trình | 200 592 (0,46) | 162 607 (0,63) | 39 664 MB/s (0,88) | 6 → 9 MB |
 | Caddy, 4 lõi | 97 085 (0,22) | 35 900 (0,14) | 5 998 MB/s (0,13) | 52 → 67 MB |
-| omega-serv, bộ máy Python, 4 tiến trình | 37 697 (0,09) | 35 064 (0,14) | 37 123 MB/s (0,82) | 48 → 66 MB |
+| omega-serv, bộ máy Python, 4 tiến trình | 37 697 (0,09) | 35 064 (0,14) | 37 123 MB/s (0,82) | 45 → 60 MB |
 
 ### Kết luận
 
@@ -224,14 +230,131 @@ Một đợt riêng ngày 3 tháng 11, cùng quy trình, trên máy C: mỗi má
   - nginx, lighttpd, Apache và Caddy được đo **không có** WAF. Một WAF thêm vào các máy chủ này (ModSecurity, Coraza) cũng có chi phí riêng, mà chúng tôi không đo. Vì vậy phép so sánh “có WAF” không ngang hàng, và chúng tôi không khẳng định omega-serv sẽ nhanh hơn một máy chủ khác có WAF.
 - **Nhiều tiến trình bảo mật không còn giúp ích cho lưu lượng bình thường**: lưu lượng đó không còn đi qua chúng, và thông lượng với 2 tiến trình vẫn như cũ (−2 đến −4 %, nằm trong nhiễu đo). Chúng chỉ hữu ích khi có nhiều yêu cầu đi qua Python (bật magnet, bị tấn công): theo các phép đo trước khi tối ưu, khi mọi yêu cầu đều đi qua chúng, 2 tiến trình bảo mật nhân thông lượng có WAF lên 1,5–1,7 lần trên 4 lõi, nhưng chỉ thêm 5–12 % trên 2 lõi.
 - **Bộ máy Python mở rộng theo số tiến trình** (×1,6–×2 với 2 tiến trình, khoảng ×3,5 với 4), nhưng vẫn ở mức 5–11 % so với nginx.
-- **Bộ nhớ**: omega-serv dùng nhiều hơn nginx, lighttpd hay Apache vài chục MB, chủ yếu do Python, và tương đương Caddy. Với bộ máy native không WAF, bộ nhớ gần như không đổi trong lúc tải.
+- **Bộ nhớ**: với bộ máy native không WAF, omega-serv 3.0.0 dùng 10–16 MB, gấp hai đến bốn lần nginx hay Apache và ít hơn Caddy từ ba đến sáu lần. Với WAF hoặc bộ máy Python, cần khoảng 20–33 MB, chủ yếu cho Python: một tiến trình Python với asyncio tốn ít nhất 10 MB. Với một tiến trình, mức này thấp hơn 30–70 % so với bản 2.5 (§6).
 - **Để hình dung các con số này**: ngay cả trường hợp chậm nhất, bộ máy Python có WAF trên máy B (564 req/s), cũng gần 50 triệu yêu cầu mỗi ngày. Con số này vượt xa nhu cầu của một trang cá nhân, một dịch vụ nội bộ hay một phòng thí nghiệm. Tốc độ chỉ thực sự quyết định với một trang có lưu lượng lớn.
 
 ---
 
-## 5. Các phiên bản omega-serv: 1.0 → 2.0 → 2.5
+## 5. Hiệu năng reverse proxy: omega-serv so với nginx, lighttpd, Apache, Caddy và Traefik
 
-Ba phiên bản được đo trong cùng đợt với §4, trên cả ba máy, cùng quy trình. Trong ngoặc: tỷ lệ so với nginx (2 tiến trình) của cùng đợt. †: đợt ngày 4 tháng 11 sau khi tối ưu WAF (xem §4).
+Ở đây, mỗi máy chủ không phục vụ tệp: nó **chuyển tiếp** các yêu cầu tới một máy chủ ứng dụng (*backend*) và gửi lại phản hồi của máy chủ đó. Đo ngày 14 tháng 11 năm 2026, với omega-serv 3.0.0 (đang chuẩn bị), trong đó bộ máy native tự chuyển tiếp reverse proxy.
+
+### Quy trình riêng của các phép đo này
+
+- **Cùng một backend cho tất cả**: một nginx tĩnh với 2 tiến trình, phục vụ `small.html` (1 KB) và `medium.png` (100 KB). Mỗi phép đo đều kiểm tra rằng phản hồi thực sự đến từ backend (qua một tiêu đề do backend thêm vào): proxy chỉ chuyển tiếp, không bao giờ tự phục vụ tệp.
+- **Lõi**: máy A, proxy trên một lõi vật lý (luồng 0 và 2), trình khách và backend trên lõi còn lại (1 và 3); máy B, proxy trên lõi 0 và 1, trình khách và backend trên 2 và 3; máy C, proxy trên 4 lõi Zen 5 (0–3), backend trên 2 lõi Zen 5c (4 và 5), trình khách trên 4 lõi còn lại (6–9).
+- **Tiến trình**: 2 trên máy A và B, **4 trên máy C**, để mỗi máy chủ dùng hết các lõi cấp cho proxy. Bộ máy native của omega-serv luôn dùng tất cả các lõi này, kèm một tiến trình bảo mật Python.
+- **HTTP và HTTPS** phía trình khách (chứng chỉ ECDSA P-256 tự ký); backend luôn được kết nối bằng HTTP.
+- **Cấu hình**:
+  - nginx: `proxy_pass` tới một nhóm `upstream` giữ các kết nối tới backend (`keepalive 64`); không có thiết lập này, vốn không có trong cấu hình cơ bản của nó, nginx mở một kết nối cho mỗi yêu cầu;
+  - lighttpd: `mod_proxy`, cấu hình cơ bản;
+  - Apache: `mod_proxy` và `mod_proxy_http`, MPM `event`, một dòng `ProxyPass`;
+  - Caddy: `reverse_proxy`, cấu hình cơ bản;
+  - Traefik 3.7: một router và một service, cấu hình cơ bản;
+  - omega-serv: một vùng reverse proxy trên `/`, hồ sơ `standard`, bộ máy native không WAF rồi có WAF (tất cả quy tắc đi kèm, không giới hạn tốc độ), và bộ máy Python với 2 tiến trình.
+- **Phần còn lại không đổi** (§3): nhật ký truy cập bật ở mọi nơi, oha, 32 kết nối bền, 10 giây, 3 lượt xen kẽ, trung vị. **Không có lỗi nào**: mọi phản hồi đều là 200.
+
+Trong ngoặc: tỷ lệ so với nginx có cùng số tiến trình, đo trong cùng đợt (= 1,00).
+
+### Phản hồi nhỏ (1 KB): yêu cầu mỗi giây
+
+| Máy chủ | Máy A (2 tiến trình) | Máy B (2 tiến trình) | Máy C (4 tiến trình) |
+|---|---:|---:|---:|
+| nginx | 11 151 (1,00) | 11 049 (1,00) | 246 595 (1,00) |
+| **omega-serv, bộ máy native** | **9 507 (0,85)** | **10 098 (0,91)** | **203 021 (0,82)** |
+| omega-serv, native + WAF | 9 078 (0,81) | 9 857 (0,89) | 190 201 (0,77) |
+| lighttpd | 6 752 (0,61) | 6 242 (0,56) | 129 827 (0,53) |
+| Apache | 6 616 (0,59) | 5 872 (0,53) | 124 458 (0,50) |
+| Traefik | 3 940 (0,35) | 3 890 (0,35) | 70 465 (0,29) |
+| Caddy | 3 578 (0,32) | 3 117 (0,28) | 55 910 (0,23) |
+| omega-serv, bộ máy Python | 1 039 (0,09) | 859 (0,08) | — \* |
+
+\* Bộ máy Python chỉ được đo với 2 tiến trình trên máy C: 11 530 req/s, tức 0,07 so với nginx với 2 tiến trình (171 075 req/s).
+
+### Phản hồi trung bình (100 KB): yêu cầu mỗi giây
+
+| Máy chủ | Máy A | Máy B | Máy C |
+|---|---:|---:|---:|
+| **omega-serv, bộ máy native** | **4 281 (1,11)** | **3 497 (0,97)** | **80 361 (1,43)** |
+| omega-serv, native + WAF | 4 236 (1,10) | 3 335 (0,93) | 73 025 (1,30) |
+| nginx | 3 855 (1,00) | 3 605 (1,00) | 56 011 (1,00) |
+| lighttpd | 2 834 (0,74) | 2 252 (0,62) | 53 523 (0,96) |
+| Apache | 2 404 (0,62) | 2 357 (0,65) | 39 807 (0,71) |
+| Traefik | 2 477 (0,64) | 2 181 (0,60) | 39 419 (0,70) |
+| Caddy | 2 294 (0,60) | 1 956 (0,54) | 33 120 (0,59) |
+| omega-serv, bộ máy Python | 821 (0,21) | 669 (0,19) | — |
+
+### HTTPS: yêu cầu mỗi giây
+
+| Máy chủ | 1 KB: A | 1 KB: B | 1 KB: C | 100 KB: A | 100 KB: B | 100 KB: C |
+|---|---:|---:|---:|---:|---:|---:|
+| nginx | 9 203 (1,00) | 9 305 (1,00) | 202 095 (1,00) | 780 (1,00) | 2 338 (1,00) | 47 609 (1,00) |
+| **omega-serv, bộ máy native** | **6 840 (0,74)** | **7 976 (0,86)** | **130 337 (0,64) †** | **690 (0,88)** | **1 917 (0,82)** | **42 507 (0,89)** |
+| omega-serv, native + WAF | 6 372 (0,69) | 7 456 (0,80) | 146 590 (0,73) † | 683 (0,88) | 1 882 (0,80) | 39 400 (0,83) |
+| lighttpd | 5 188 (0,56) | 5 513 (0,59) | 130 572 (0,65) | 638 (0,82) | 1 381 (0,59) | 45 566 (0,96) |
+| Apache | 5 038 (0,55) | 4 193 (0,45) | 114 898 (0,57) | 588 (0,75) | 1 368 (0,59) | 29 948 (0,63) |
+| Traefik | 3 389 (0,37) | 3 195 (0,34) | 62 251 (0,31) | 889 (**1,14**) | 1 548 (0,66) | 28 513 (0,60) |
+| Caddy | 3 263 (0,35) | 2 733 (0,29) | 54 279 (0,27) | 1 135 (**1,46**) | 1 424 (0,61) | 26 452 (0,56) |
+| omega-serv, bộ máy Python | 922 (0,10) | 759 (0,08) | — | 423 (0,54) | 549 (0,23) | — |
+
+† Trên máy C, với HTTPS, bộ máy native dao động nhiều từ lượt này sang lượt khác: 130 000–185 000 req/s không WAF, 138 000–150 000 có WAF. Vì vậy chênh lệch giữa hai dòng nằm trong nhiễu của phép đo này.
+
+### Độ trễ p99 với phản hồi nhỏ (HTTP)
+
+| Máy chủ | Máy A | Máy B | Máy C |
+|---|---:|---:|---:|
+| nginx | 7,7 ms | 7,8 ms | 0,4 ms |
+| **omega-serv, bộ máy native** | **10,5 ms** | **9,7 ms** | **0,6 ms** |
+| omega-serv, native + WAF | 9,6 ms | 11,0 ms | 0,8 ms |
+| lighttpd | 11,9 ms | 14,0 ms | 0,9 ms |
+| Apache | 14,7 ms | 21,3 ms | 2,0 ms |
+| Traefik | 25,9 ms | 26,5 ms | 2,1 ms |
+| Caddy | 23,9 ms | 27,2 ms | 2,5 ms |
+| omega-serv, bộ máy Python | 41,0 ms | 47,6 ms | — |
+
+### Bộ nhớ của proxy (PSS): lúc nghỉ → sau tải, với HTTP
+
+omega-serv: phiên bản 3.0.0, đo lại ngày 19 tháng 11 năm 2026; thông lượng ở trên là của ngày 14 tháng 11.
+
+| Máy chủ | Máy A | Máy B | Máy C |
+|---|---:|---:|---:|
+| lighttpd | 3 → 4 MB | 3 → 4 MB | 3 → 4 MB |
+| nginx | 7 → 8 MB | 7 → 8 MB | 10 → 11 MB |
+| Apache | 6 → 12 MB | 6 → 12 MB | 8 → 15 MB |
+| **omega-serv, bộ máy native** | **27 → 28 MB** | **27 → 28 MB** | **29 → 33 MB** |
+| omega-serv, native + WAF | 29 → 30 MB | 29 → 31 MB | 31 → 36 MB |
+| Caddy | 48 → 57 MB | 48 → 59 MB | 50 → 60 MB |
+| omega-serv, bộ máy Python | 42 → 50 MB | 43 → 51 MB | — |
+| Traefik | 93 → 117 MB | 107 → 131 MB | 100 → 123 MB |
+
+Với HTTPS, bộ nhớ sau tải tăng 0–5 MB với phần lớn máy chủ, nhiều hơn với Apache (tới 66 MB trên máy C) và bộ máy Python (tới 72 MB): xem dữ liệu thô.
+
+### Kết luận
+
+- **Ở vai trò reverse proxy, omega-serv với bộ máy native đứng thứ hai sau nginx**, trên cả ba máy.
+  - Với phản hồi nhỏ, nó chuyển tiếp được 0,82–0,91 so với nginx. Tức là 1,4–1,7 lần lighttpd và Apache, và 2,4–3,6 lần Traefik và Caddy.
+  - Độ trễ p99 của nó thấp nhất sau nginx.
+- **Với phản hồi 100 KB, nó ngang bằng hoặc vượt nginx** (0,97–1,43). Bộ máy native chuyển tiếp phản hồi theo dòng, với một bộ đệm có giới hạn. Ở cấu hình cơ bản, nginx chỉ giữ trong bộ nhớ vài chục KB cho mỗi phản hồi được chuyển tiếp (`proxy_buffers`) và có thể ghi phần còn lại vào một tệp tạm. Chúng tôi không chỉnh điểm này.
+- **Với HTTPS**, bộ máy native vẫn đứng thứ hai với phản hồi nhỏ trên máy A và B. Trên máy C, lighttpd và nó ở cùng mức.
+  - Với phản hồi 100 KB, lighttpd vượt nó trên máy C.
+  - Trên máy A, Caddy và Traefik vượt tất cả, kể cả nginx. Chúng được viết bằng Go, với thư viện TLS riêng, có vẻ hiệu quả hơn trên bộ xử lý năm 2010 này. Chúng tôi không tìm hiểu thêm.
+- **WAF tốn ít khi làm reverse proxy**: 1–9 % thông lượng với HTTP, khi bật tất cả quy tắc. Các máy chủ khác được đo không có WAF: phép so sánh “có WAF” không ngang hàng (xem §4).
+- **Bộ nhớ**: với bộ máy native, omega-serv 3.0.0 dùng khoảng 30 MB (27–36 MB). Tổng này gồm tiến trình giám sát Python, tiến trình bảo mật và bộ máy native. Mức này gấp nhiều lần nginx, lighttpd hay Apache, nhưng ít hơn Caddy và chỉ bằng một phần ba đến một phần tư Traefik. Ở lần đo ngày 14 tháng 11 (3.0.0 đang chuẩn bị), nó dùng khoảng 50 MB.
+- **Bộ máy Python** chuyển tiếp ở mức 0,08–0,10 so với nginx với phản hồi nhỏ: nó vẫn là bộ máy dự phòng. Các vùng reverse proxy có cache luôn được giao cho nó, nên giữ thông lượng của nó.
+- **Một sửa đổi được thực hiện trước các phép đo này.** Lượt đo đầu tiên, cùng ngày và cùng quy trình, đặt bộ máy native ở mức 0,32–0,69 so với nginx với phản hồi nhỏ. Nó chững lại quanh 78 000 req/s trên máy C, bất kể số lõi. Kho kết nối tới backend của nó quá nhỏ: nó mở một kết nối mới sau mỗi năm yêu cầu. Kho này đã được nới rộng và việc chuyển tiếp được làm nhẹ đi trước lượt đo công bố ở đây. Các con số của lượt đầu cũng được công bố.
+
+### Giới hạn riêng của các phép đo này
+
+- **nginx được chỉnh có lợi cho nó**: nó giữ các kết nối tới backend, điều nó không làm ở cấu hình cơ bản. Các máy chủ khác ở cấu hình cơ bản.
+- **Backend chạy trên cùng máy**, qua loopback. Trên máy A và B, nó dùng chung lõi với trình khách. Vì vậy chỉ các tỷ lệ giữa các máy chủ, đo trong cùng điều kiện, là có ý nghĩa. Chạy một mình, backend này phục vụ khoảng 345 000 req/s trên máy C: nó không giới hạn proxy nào ở đó.
+- **Chỉ HTTP/1.1**, cả phía trình khách lẫn phía backend: omega-serv không hỗ trợ HTTP/2.
+- **Dữ liệu thô**: [`docs/benchmarks/`](../../benchmarks/), các tệp `2026-11-14-*-reverse-proxy-brut.txt`, trong đó có lượt đầu (`2026-11-14-reverse-proxy-avant-correctif-brut.txt`).
+
+---
+
+## 6. Các phiên bản omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0
+
+Ba phiên bản được đo trong cùng đợt với §4, trên cả ba máy, cùng quy trình. Trong ngoặc: tỷ lệ so với nginx (2 tiến trình) của cùng đợt. †: đợt ngày 4 tháng 11 sau khi tối ưu WAF (xem §4). Bản 3.0.0 được đo ngày 19 tháng 11, cùng quy trình; các tỷ lệ của nó được tính với nginx (2 tiến trình) đo lại trong đợt này, chênh không quá 3 % so với giá trị ngày 4 tháng 11.
 
 ### Tệp nhỏ (1 KB): yêu cầu mỗi giây
 
@@ -250,6 +373,13 @@ Ba phiên bản được đo trong cùng đợt với §4, trên cả ba máy, c
 | **2.5, bộ máy native** | **15 222 (0,70)** | **16 542 (0,67)** | **285 213 (1,15)** |
 | **2.5, bộ máy native + WAF †** | **11 990 (0,56)** | **12 998 (0,53)** | **264 484 (1,07)** |
 | **2.5, bộ máy native + WAF, 2 tiến trình bảo mật †** | **11 746 (0,55)** | **12 718 (0,52)** | **253 527 (1,02)** |
+| 3.0.0, bộ máy Python | 1 309 (0,06) | 752 (0,03) | 9 482 (0,04) |
+| 3.0.0, bộ máy Python + WAF | 1 168 (0,05) | 653 (0,03) | 8 788 (0,04) |
+| 3.0.0, bộ máy Python, 2 tiến trình | 1 733 (0,08) | 1 154 (0,05) | 17 234 (0,07) |
+| 3.0.0, bộ máy Python + WAF, 2 tiến trình | 1 605 (0,07) | 994 (0,04) | 14 873 (0,06) |
+| **3.0.0, bộ máy native** | **14 503 (0,68)** | **15 075 (0,63)** | **276 938 (1,15)** |
+| **3.0.0, bộ máy native + WAF** | **12 762 (0,60)** | **11 618 (0,48)** | **257 741 (1,07)** |
+| **3.0.0, bộ máy native + WAF, 2 tiến trình bảo mật** | **12 974 (0,61)** | **11 957 (0,50)** | **253 993 (1,06)** |
 
 ### Tệp trung bình, tệp lớn và bộ nhớ (1 tiến trình, không WAF)
 
@@ -259,6 +389,8 @@ Ba phiên bản được đo trong cùng đợt với §4, trên cả ba máy, c
 | 2.0.0 | 1 570 / 603 / 9 469 | 1 665 / 1 470 / 14 058 | 26 → 30 / 27 → 31 / 28 → 32 MB |
 | 2.5, bộ máy Python | 1 329 / 611 / 9 805 | 1 686 / 1 472 / 14 227 | 28 → 32 / 29 → 33 / 30 → 34 MB |
 | **2.5, bộ máy native** | **4 738 / 3 115 / 96 277** | **2 294 / 1 936 / 37 918** | **33 → 34 / 34 → 35 / 35 → 39 MB** |
+| 3.0.0, bộ máy Python | 1 185 / 606 / 8 655 | 1 765 / 1 318 / 13 028 | 20 → 23 / 21 → 24 / 22 → 28 MB |
+| **3.0.0, bộ máy native** | **4 665 / 3 026 / 100 513** | **2 399 / 1 932 / 40 755** | **10 → 10 / 10 → 12 / 12 → 16 MB** |
 
 ### Tải xuống lớn đồng thời
 
@@ -270,6 +402,8 @@ Thử nghiệm: 3 lượt tải đồng thời một tệp 300 MB, trong khi m�
 | 2.0.0 | 39–42 MB | 3 ms / 4–6 ms / 1 ms |
 | 2.5, bộ máy Python | 41–44 MB | 2 ms / 4 ms / 1 ms |
 | 2.5, bộ máy native | 49–55 MB | 1–2 ms / 2–4 ms / dưới 1 ms |
+| 3.0.0, bộ máy Python | 39 MB | 3 ms / 5–8 ms / 1 ms |
+| 3.0.0, bộ máy native | 23–26 MB | 1 ms / 2–3 ms / dưới 1 ms |
 
 ### Chi phí của phòng thủ chủ động (1.0 → 2.0)
 
@@ -292,20 +426,28 @@ Trung vị giảm 12 lần. Ngược lại, giá trị tối đa ở 2.0 cao hơ
   - 2.0 bổ sung nhiều tiến trình, giúp tăng thông lượng trang nhỏ từ 25 % đến gần 100 % tùy máy.
   1.0 nạp toàn bộ mỗi tệp vào bộ nhớ trước khi gửi. 2.0 gửi theo từng khối hoặc giao cho nhân hệ điều hành.
 - **Từ 2.0 lên 2.5, bộ máy Python không đổi tốc độ**: chênh lệch dưới 4 % trên máy B và C, và nằm trong nhiễu đo trên máy A (−13 % đến +9 %), máy nhạy nhất với tải nền. Toàn bộ lợi ích của 2.5 đến từ **bộ máy native**: khoảng ×10–×27 với tệp nhỏ so với bộ máy Python, và độ trễ giảm 5 đến 15 lần.
-- **Bộ máy native dùng nhiều hơn bộ máy Python khoảng 5 MB lúc nghỉ** (PSS): đó là cái giá của chương trình thứ hai. Có WAF, nó dùng thêm khoảng 8 MB nữa: đó là các quy tắc được nạp vào bộ máy native.
+- **Ở bản 2.5, bộ máy native dùng nhiều hơn bộ máy Python khoảng 5 MB lúc nghỉ** (PSS): cái giá của chương trình thứ hai. Có WAF, thêm khoảng 8 MB nữa: các quy tắc được nạp vào bộ máy native.
+- **Từ 2.5 lên 3.0.0, bộ nhớ giảm 30–70 %** với một tiến trình:
+  - bộ máy native: 33–35 → 10–12 MB lúc nghỉ. Khi không có gì khác đòi hỏi, tiến trình giám sát Python thu gọn thành một chương trình giám sát nhỏ, không giữ trong bộ nhớ cả cấu hình lẫn máy chủ Python;
+  - bộ máy Python: 28–30 → 20–22 MB. Mã của một tùy chọn chỉ được nạp khi tùy chọn đó được bật, và thư viện TLS chỉ được nạp khi cần dùng;
+  - native + WAF: 43–45 → 28–30 MB. Tiến trình bảo mật được tạo ra từ tiến trình giám sát đã thu gọn và dùng chung các trang bộ nhớ với nó;
+  - bộ máy Python với 2 tiến trình: 40–43 → 35–38 MB;
+  - trong lúc tải tệp lớn: 39 MB (Python) và 23–26 MB (native), so với 41–55 MB trước đây;
+  - bộ máy native giờ chỉ dùng một nửa bộ nhớ so với bộ máy Python.
+- **Việc tối ưu bộ nhớ không làm thay đổi thông lượng**: một thử nghiệm xen kẽ trên máy B và C, với mã 3.0.0 trước và sau công việc này, cho chênh lệch 1–4 %. So với bản 2.5, bộ máy Python với 2 tiến trình phục vụ ít hơn 12–13 % trên máy B và C (26 % trên máy A, máy nhạy nhất với tải nền); mã 3.0.0 trước công việc này cũng cho thấy mức giảm tương tự, nên nó đến từ những thay đổi khác của 3.0.0 và còn cần nghiên cứu. Các chênh lệch khác so với 2.5 nằm trong khoảng −13 % đến +13 %, theo cả hai chiều.
 
 ### Điều cần biết về bộ máy native
 
 - Nó là **tùy chọn**: bộ máy Python vẫn là bộ máy mặc định và dự phòng.
 - Nó tự phục vụ nội dung tĩnh, chuyển hướng, viết lại, bí danh, bộ nhớ đệm, trang lỗi, tiêu đề bảo mật và TLS.
 - Nó tự kiểm tra các quy tắc WAF và tự phục vụ yêu cầu không khớp quy tắc nào. Mọi yêu cầu khác (WAF khớp hoặc nghi ngờ, Active Defense, xác thực) do Python quyết định, với chính xác cùng các kiểm tra và cùng nhật ký. Một cơ chế kiểm soát có thể cấu hình vẫn chuyển cho Python một yêu cầu sạch trong N yêu cầu, để xác minh cả hai đưa ra cùng phán quyết.
-- Danh sách thư mục và các trang nội bộ được yêu cầu từ Python; reverse proxy, FastCGI, tải tệp lên và WebSocket được giao cho Python trong suốt kết nối. Vì vậy các tính năng này giữ tốc độ của bộ máy Python.
-- Với TLS trực tiếp, reverse proxy, FastCGI và tải tệp lên không được bộ máy native hỗ trợ: khi đó bộ máy Python phục vụ, và giao diện hiển thị điều này.
+- Nó tự chuyển tiếp reverse proxy, kể cả WebSocket (từ bản 3.0.0). Danh sách thư mục và các trang nội bộ được yêu cầu từ Python; FastCGI, tải tệp lên và các vùng reverse proxy có cache được giao cho Python trong suốt kết nối. Vì vậy chính các tính năng đó giữ tốc độ của bộ máy Python.
+- Với TLS trực tiếp, FastCGI, tải tệp lên và các vùng reverse proxy có cache không được bộ máy native hỗ trợ: khi đó bộ máy Python phục vụ, và giao diện hiển thị điều này.
 - Nó cần glibc 2.38 trở lên và OpenSSL 3. Nếu nó không khởi động được, trình cài đặt sẽ biên dịch lại tại chỗ, và nếu không thể, omega-serv tiếp tục dùng bộ máy Python.
 
 ---
 
-## 6. So sánh tính năng
+## 7. So sánh tính năng
 
 Chú giải:
 - ✅ tích hợp sẵn;
@@ -372,7 +514,7 @@ Lệnh cấm tăng dần: lệnh cấm ngày càng dài đối với các địa
 
 ---
 
-## 7. Quản trị và sự tiện lợi
+## 8. Quản trị và sự tiện lợi
 
 | Máy chủ | Cách quản trị chính | Giao diện | Nạp lại không gián đoạn |
 |---|---|---|---|
@@ -389,7 +531,7 @@ Ngược lại, cách tiếp cận “tệp cấu hình” của nginx, Apache v
 
 ---
 
-## 8. Những gì omega-serv mang lại thêm
+## 9. Những gì omega-serv mang lại thêm
 
 Phần này chỉ gồm những gì không máy chủ nào được so sánh cung cấp dưới dạng này, mà không cần mô-đun bên thứ ba hay công cụ bên ngoài.
 
@@ -427,11 +569,15 @@ Phần này chỉ gồm những gì không máy chủ nào được so sánh cun
 
 ---
 
-## 9. Những gì các máy chủ khác làm tốt hơn
+## 10. Những gì các máy chủ khác làm tốt hơn
 
 - **Thông lượng**: lighttpd và nginx vẫn nhanh nhất với tệp nhỏ và trung bình, trên cả ba máy. Ngay cả với bộ máy native, omega-serv đạt khoảng 0,7 so với nginx và 0,5 so với lighttpd với tệp nhỏ, và 0,3–0,6 so với nginx với tệp 100 KB. Với trang có lưu lượng lớn, API công khai hay CDN, nên chọn chúng.
 - **Tệp trung bình**: Apache phục vụ tệp 100 KB nhanh hơn bộ máy native của omega-serv, trên cả ba máy.
-- **Bộ nhớ**: lighttpd (1 MB), nginx (4–5 MB) và Apache (4–9 MB) phù hợp với các máy rất hạn chế (hệ thống nhúng, container nhỏ). omega-serv cần 30–65.
+- **Reverse proxy**:
+  - nginx chuyển tiếp phản hồi nhỏ nhanh hơn bộ máy native 10–22 %, và nhanh hơn tới 1,6 lần với HTTPS trên máy C;
+  - với HTTPS, ở phản hồi 100 KB, lighttpd vượt nó trên máy C, còn Caddy và Traefik vượt nó trên máy A;
+  - nginx, lighttpd và Apache chuyển tiếp với 4–15 MB bộ nhớ, omega-serv với khoảng 30 MB.
+- **Bộ nhớ**: lighttpd (1 MB), nginx (4–5 MB) và Apache (4–9 MB) phù hợp với các máy rất hạn chế (hệ thống nhúng, container nhỏ). omega-serv 3.0.0 cần 10–55 tùy chế độ.
 - **Cái giá của bảo mật**: WAF vẫn có cái giá của nó. Với bộ máy native, nó làm mất 5–22 % thông lượng với tệp nhỏ, kể cả giới hạn tốc độ: omega-serv có WAF đạt 0,53–0,56 so với nginx không WAF trên máy A và B. Một yêu cầu đáng ngờ hoặc còn nghi vấn (khớp quy tắc, văn bản không phải ASCII, nguồn đang bị Active Defense theo dõi) luôn đi qua Python và được phục vụ với tốc độ của bộ máy Python. Khi bật magnet, mọi yêu cầu đều đi qua Python, và WAF khi đó chia thông lượng của bộ máy native cho 4 đến 7, như trước khi tối ưu.
 - **Giao thức**: HTTP/2 ở mọi máy chủ khác, HTTP/3 ở nginx, Caddy và Traefik. omega-serv chỉ hỗ trợ HTTP/1.1.
 - **HTTPS tự động**: Caddy và Traefik bật mặc định, nginx (`ngx_http_acme_module`) và Apache (`mod_md`) với một mô-đun chính thức. omega-serv giao việc này cho Certbot, có trình hướng dẫn và gia hạn theo lịch.
@@ -441,18 +587,19 @@ Phần này chỉ gồm những gì không máy chủ nào được so sánh cun
 
 ---
 
-## 10. Máy chủ nào cho nhu cầu nào
+## 11. Máy chủ nào cho nhu cầu nào
 
 | Nhu cầu | Lựa chọn khuyến nghị |
 |---|---|
 | Trang có lưu lượng lớn, API công khai, CDN, thông lượng tối đa | **nginx** hoặc **lighttpd** |
+| Reverse proxy với thông lượng tối đa, HTTP/2 hoặc HTTP/3 tới trình khách | **nginx** |
 | Máy rất hạn chế, hệ thống nhúng, tệp tĩnh | **lighttpd** |
 | Bắt đầu nhanh với HTTPS tự động, cấu hình ngắn gọn | **Caddy** |
 | Ứng dụng PHP cũ, `.htaccess`, hosting dùng chung | **Apache** |
 | Docker, Kubernetes, microservice | **Traefik** |
 | Trang nhỏ hoặc vừa, dịch vụ nội bộ, phòng thí nghiệm, VPN, quản trị không cần sửa tệp | **omega-serv** (bộ máy native nếu có thể) |
 | Máy chủ hướng ra Internet mà bạn muốn xem và kiểm soát bảo mật (WAF, lệnh cấm tăng dần, mồi nhử) từ một giao diện | **omega-serv** |
-| Reverse proxy nội bộ có cân bằng tải, kiểm tra và bộ nhớ đệm, quản lý qua giao diện | **omega-serv** |
+| Reverse proxy có cân bằng tải, kiểm tra sức khỏe, bộ nhớ đệm và WAF, quản lý qua giao diện | **omega-serv** (bộ máy native: thứ hai sau nginx về thông lượng) |
 | Học về gia cố HTTP và phòng thủ chủ động | **omega-serv** |
 
 Các công cụ này cũng có thể kết hợp với nhau. Ví dụ:
@@ -461,9 +608,9 @@ Các công cụ này cũng có thể kết hợp với nhau. Ví dụ:
 
 ---
 
-## 11. Tái lập các phép đo
+## 12. Tái lập các phép đo
 
-Các công cụ được cung cấp trong kho mã, trong `tools/bench/`. Cần cài nginx, lighttpd, Apache, Caddy và oha, môi trường phát triển của omega-serv (`.venv`) và, với bộ máy native, tệp nhị phân đã biên dịch trong `native/omega-http-core/build-release`.
+Các công cụ được cung cấp trong kho mã, trong `tools/bench/`. Cần cài nginx, lighttpd, Apache, Caddy và oha (và Traefik cho reverse proxy), môi trường phát triển của omega-serv (`.venv`) và, với bộ máy native, tệp nhị phân đã biên dịch trong `native/omega-http-core/build-release`.
 
 ```sh
 # 1. chuẩn bị thư mục đo (tệp thử, cấu hình, omega-serv 1.0, 2.0 và phiên bản hiện tại)
@@ -487,6 +634,15 @@ BENCH_SRC=/duong/dan/do/v1-archive/omega-serv/src \
 BENCH_EXTRA_PATH=/duong/dan/do/v1-archive/omega-serv/vendor/omega-lib/src \
   .venv/bin/python tools/bench/bigfile.py
 
+# reverse proxy (§5): backend, chứng chỉ, cấu hình của 6 proxy, rồi 3 lượt lặp xen kẽ
+#    máy C: SRV_CPUS=0-3 BACK_CPUS=4,5 CLI_CPUS=6-9 và CONFIGS="nginx-4 lighttpd-4 apache-4 caddy-4 traefik-4 omega-nat-1-0 omega-nat-1-1"
+tools/bench/proxy/setup.sh /duong/dan/proxy /duong/dan/toi/traefik
+SRV_CPUS=0,1 CLI_CPUS=2,3 tools/bench/proxy/campaign.sh /duong/dan/proxy > proxy.txt
+python3 tools/bench/proxy/summarize.py proxy.txt
+
+# đo lại riêng omega-serv (bộ nhớ của 3.0.0): tệp, tải tệp lớn và reverse proxy, với nginx làm tham chiếu
+MACHINE=a SRV_CPUS=0,2 CLI_CPUS=1,3 tools/bench/memoire-3.0.0.sh /duong/dan/do > bo-nho.txt
+
 # đo bất kỳ máy chủ nào khác đang chạy, không cần oha
 python3 tools/bench/bench_any.py --make-files /srv/webroot-thu
 python3 tools/bench/bench_any.py --port 8080
@@ -494,11 +650,13 @@ python3 tools/bench/bench_any.py --port 8080
 
 Tên cấu hình: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N` (N tiến trình, hoặc N lõi với Caddy); `omega-vX-N-W` cho omega-serv (phiên bản `v1`, `v20` hoặc `v2` cho phiên bản hiện tại, N tiến trình, W = 0 không WAF hoặc 1 có WAF), với hậu tố `-native` cho bộ máy native.
 
+Với reverse proxy: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N`, `traefik-N`, `omega-py-N-W` (bộ máy Python) và `omega-nat-N-W` (bộ máy native, N tiến trình bảo mật), với hậu tố `-tls` cho HTTPS phía trình khách.
+
 Để công bố kết quả của riêng bạn, hãy ghi rõ máy, phiên bản, cách phân bổ lõi và ba lượt lặp.
 
 ---
 
-## 12. Nguồn
+## 13. Nguồn
 
 Tính năng của các máy chủ khác theo tài liệu chính thức của chúng (tra cứu ngày 26 tháng 10 năm 2026).
 
@@ -548,4 +706,4 @@ Tính năng của các máy chủ khác theo tài liệu chính thức của ch�
 
 ---
 
-*Bản so sánh do kraynux thực hiện cho omega-serv 2.5: đo ngày 3 và 4 tháng 11 năm 2026 trên ba máy (phòng thủ chủ động: ngày 26 tháng 10 năm 2026). Với mọi quyết định về năng lực, hãy đo trên phần cứng của chính bạn bằng các công cụ đi kèm.*
+*Bản so sánh do kraynux thực hiện cho omega-serv 2.5 và 3.0.0: đo ngày 3 và 4 tháng 11 năm 2026 trên ba máy (reverse proxy: ngày 14 tháng 11 năm 2026; bộ nhớ của omega-serv 3.0.0: ngày 19 tháng 11 năm 2026; phòng thủ chủ động: ngày 26 tháng 10 năm 2026). Với mọi quyết định về năng lực, hãy đo trên phần cứng của chính bạn bằng các công cụ đi kèm.*

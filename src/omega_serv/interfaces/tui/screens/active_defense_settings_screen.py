@@ -172,11 +172,13 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
             yield Static(_("Fichier de journal enrichi (log_path)"))
             yield Input(id="logging-log-path-input")
 
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Enregistrer"), id="save", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Enregistrer"), id="save", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -492,6 +494,10 @@ class ActiveDefenseSettingsScreen(OmegaScreen):
 
     def _save(self) -> None:
         error_widget = self.query_one("#form-error", Static)
+        invalid = self.yes_no_inputs_error("#war-enabled-input", "#slowdown-enabled-input", "#deception-enabled-input", "#ioc-enabled-input", "#ioc-auto-export-input", "#logging-enhanced-input", "#logging-capture-body-input")
+        if invalid is not None:
+            self.query_one("#form-error", Static).update(invalid)
+            return
         try:
             new_fields = self._collect_general_fields()
         except ValueError as exc:

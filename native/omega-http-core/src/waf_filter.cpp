@@ -341,7 +341,12 @@ std::optional<WafScopeTexts> WafFilter::prepare(const Request& request, bool bod
     WafScopeTexts texts;
     auto used = [this](WafScope scope) { return used_[static_cast<std::size_t>(scope)]; };
     if (inspect_path_ && used(WafScope::path)) {
-        auto text = decode_ascii_for_inspection(request.path_text, decode_depth_);
+        // Scan de securite n° 2 (2026-11-20, F8) : signatures de chemin sur le chemin canonique (« \\ », « %5c »,
+        // « // » ramenes a la forme servie), comme python_waf_engine.py ; non canonique -> Python tranche.
+        // Sans forme canonique (requete refusee en 400 avant le WAF par le serveur) : chemin brut, comme
+        // `canonical_path or path` cote Python - les deux moteurs restent identiques sur les vecteurs.
+        const std::string& path = request.match_path_invalid ? request.path_text : request.match_path;
+        auto text = decode_ascii_for_inspection(path, decode_depth_);
         if (!text) return std::nullopt;
         texts[static_cast<std::size_t>(WafScope::path)] = std::move(text);
     }

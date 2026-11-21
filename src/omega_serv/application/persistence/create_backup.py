@@ -9,11 +9,14 @@ silencieusement ignorees par `ArchiveStore.create_archive`, jamais une
 erreur bloquante."""
 from __future__ import annotations
 
+import json
 import shutil
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from omega_serv.application.persistence.backup_manifest import MANIFEST_NAME
+from omega_serv.application.persistence.zone_data import zone_data_paths
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.logs.exceptions import ArchiveStoreError
@@ -59,7 +62,8 @@ class _Collected:
         (self.databases if database else self.files).append(resolved)
 
 
-def _collect_sources(request: BackupRequest, config: OmegaServConfig, project_root: Path, config_file: Path) -> _Collected:
+def _collect_sources(request: BackupRequest, config: OmegaServConfig, project_root: Path, config_file: Path,
+                     exports_dir: Path | None = None) -> _Collected:
     collected = _Collected()
     if request.include_config and config_file.exists():
         # Toujours sauvegarde, meme hors du dossier (lancement avec --config ailleurs) : archive alors sous
@@ -111,7 +115,30 @@ def _collect_sources(request: BackupRequest, config: OmegaServConfig, project_ro
         riposte_option = config.options.get("riposte")
         riposte_config = parse_riposte_config(riposte_option.settings if riposte_option is not None else {})
         collected.add(Path(riposte_config.database), project_root, _("base RIPOSTE"), database=True)
+    if request.include_config:
+        # Profils personnalises (projets 3.0.0 §7.4, constat A.1) : etat utilisateur, jamais livre par l'archive.
+        collected.add(Path("config") / "profiles" / "custom", project_root, _("profils personnalisés"))
+    if request.include_site_content:
+        collected.add(Path(config.paths.webroot), project_root, _("contenu du site"))
+    if request.include_zone_data:
+        for path, label in zone_data_paths(config):
+            collected.add(path, project_root, label)
+    if request.include_exports:
+        collected.add(exports_dir if exports_dir is not None else Path("var") / "exports", project_root,
+                      _("rapports d'export"))
+    collected.files = _without_nested(collected.files)
     return collected
+
+
+def _without_nested(paths: list[Path]) -> list[Path]:
+    """Un dossier deja archive couvre tout ce qu'il contient (zone sous le webroot avec le contenu du site, exports
+    sous var/...) : jamais deux fois le meme fichier dans l'archive."""
+    kept: list[Path] = []
+    for path in sorted(dict.fromkeys(paths), key=lambda item: len(item.parts)):
+        if not any(path != parent and path.is_relative_to(parent) for parent in kept if parent.is_dir()):
+            kept.append(path)
+    order = {path: index for index, path in enumerate(paths)}
+    return sorted(kept, key=lambda item: order[item])
 
 
 def _describe_scope(request: BackupRequest) -> str:
@@ -120,6 +147,8 @@ def _describe_scope(request: BackupRequest) -> str:
         (request.include_certificates, "certificates"), (request.include_active_defense, "active_defense"),
         (request.include_error_pages, "error_pages"), (request.include_preferences, "preferences"),
         (request.include_logs_library, "logs_library"), (request.include_riposte, "riposte"),
+        (request.include_site_content, "site_content"), (request.include_zone_data, "zone_data"),
+        (request.include_exports, "exports"),
     )
     return "+".join(name for included, name in flags if included)
 
@@ -133,11 +162,13 @@ def create_backup(
     metadata_store: BackupMetadataStore,
     clock: ClockPort,
     snapshot: Callable[[Path, Path], None] | None = None,
+    manifest: dict[str, object] | None = None,
+    exports_dir: Path | None = None,
 ) -> BackupResult:
     """`snapshot(base, copie)` : copie coherente d'une base en service (infrastructure/persistence/
     sqlite_snapshot.py, injectee - bootstrap ne doit jamais atteindre sqlite3). Sans elle, la base est
     archivee AVEC ses fichiers -wal et -shm (jamais le fichier principal seul)."""
-    collected = _collect_sources(request, config, project_root, config_file)
+    collected = _collect_sources(request, config, project_root, config_file, exports_dir)
     if not collected.files and not collected.databases:
         return BackupResult(False, _("Aucun composant sélectionné pour la sauvegarde."), skipped=tuple(collected.skipped))
 
@@ -161,6 +192,15 @@ def create_backup(
                     sibling for sibling in (database.with_name(database.name + "-wal"), database.with_name(database.name + "-shm"))
                     if sibling.exists()
                 )
+        if manifest is not None:
+            # Fiche de l'archive (2026-11-15) : version d'omega-serv, adresse et port, nom du service - lue a
+            # l'import et a la restauration (version differente, conflit de port), jamais restauree.
+            staging.mkdir(parents=True, exist_ok=True)
+            manifest_file = staging / MANIFEST_NAME
+            manifest_file.write_text(json.dumps({**manifest, "created_at": now.isoformat(),
+                                                 "scope": _describe_scope(request)}, indent=2, ensure_ascii=False),
+                                     encoding="utf-8")
+            extra.append((manifest_file, MANIFEST_NAME))
         archive_path = archive_store.create_archive(
             archive_name, collected.files, base_path=project_root, extra_files=extra,
         )
@@ -177,6 +217,7 @@ def create_backup(
         status=SnapshotStatus.COMPLETED,
         file_path=str(archive_path),
         file_size_bytes=archive_path.stat().st_size,
+        app_version=str(manifest.get("app_version")) if manifest and manifest.get("app_version") else None,
     )
     metadata_store.save(metadata)
     return BackupResult(

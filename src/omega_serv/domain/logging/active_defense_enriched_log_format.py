@@ -27,8 +27,8 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 
-from omega_serv.domain.logging.access_log_format import sanitize_log_field
 from omega_serv.domain.logging.body_redaction import redact_form_urlencoded_body
+from omega_serv.domain.logging.error_log_line import sanitize_log_field
 from omega_serv.domain.security.active_defense.config import ActiveDefenseLoggingConfig
 from omega_serv.domain.security.active_defense.policies import hash_payload, redact_fields
 from omega_serv.domain.security.active_defense.value_objects import AttackClass, ThreatLevel

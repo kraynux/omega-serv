@@ -82,14 +82,16 @@ class WafMagnetScreen(OmegaScreen):
             yield Input(placeholder="blocklist_log", id="path-blocklist-log-input")
             yield Input(placeholder="rate_store_file", id="path-rate-store-file-input")
 
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Vérifier la compatibilité"), id="check-compat")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Enregistrer"), id="save", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
             yield Static("", id="compat-result", classes="omega-hint")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Vérifier la compatibilité"), id="check-compat")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Enregistrer"), id="save", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -153,6 +155,10 @@ class WafMagnetScreen(OmegaScreen):
 
     def _save(self) -> None:
         error_widget = self.query_one("#form-error", Static)
+        invalid = self.yes_no_inputs_error("#enabled-input")
+        if invalid is not None:
+            self.query_one("#form-error", Static).update(invalid)
+            return
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
             error_widget.update(_("Erreur de configuration - impossible d'enregistrer."))

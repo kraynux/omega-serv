@@ -162,5 +162,140 @@ class TestFastCgiServerIntegration(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(status, 200)
 
 
+class TestFastCgiZonesIntegration(unittest.IsolatedAsyncioTestCase):
+    """Projets 3.0.0 §8.1 : plusieurs zones, chacune avec sa racine et sa socket (un pool PHP-FPM par zone), le plus
+    long prefixe l'emporte, et une zone desactivee repond 503 meme si son PHP-FPM tourne."""
+
+    async def asyncSetUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "webroot" / "blog").mkdir(parents=True)
+        (self.root / "webroot" / "blog" / "index.php").write_text("never served as a file")
+        for name in ("blog-app", "admin-app", "wiki-app"):
+            (self.root / name).mkdir()
+            (self.root / name / "index.php").write_text("<?php ?>")
+        (self.root / "run").mkdir()
+        zone = {"connect_timeout_seconds": 3, "read_timeout_seconds": 3}
+        self.config = OmegaServConfig.from_dict({
+            "server": {"bind": "127.0.0.1", "port": 0},
+            "options": {"fastcgi": {"enabled": True, "zones": [
+                {**zone, "url_prefix": "/blog/", "script_root": "blog-app", "socket_path": "run/blog.sock"},
+                {**zone, "url_prefix": "/blog/admin/", "script_root": "admin-app", "socket_path": "run/admin.sock"},
+                {**zone, "url_prefix": "/wiki/", "script_root": "wiki-app", "socket_path": "run/wiki.sock",
+                 "enabled": False},
+            ]}},
+        })
+        self.server = build_server(self.config, self.root, LocalFilesystem(), FileLineLogger())
+        await self.server.start()
+        self.port = self.server.sockets[0].getsockname()[1]
+        for name in ("blog", "admin", "wiki"):
+            task = asyncio.create_task(_fake_php_fpm(self.root / "run" / f"{name}.sock",
+                                                     b"Content-Type: text/plain\r\n\r\n" + name.encode()))
+            self.addAsyncCleanup(self._stop, task)
+        await asyncio.sleep(0.05)
+
+    async def asyncTearDown(self):
+        await self.server.close()
+        self._tmp.cleanup()
+
+    async def _stop(self, task):
+        task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001, S110
+            pass
+
+    def _get_sync(self, path):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=3)
+        try:
+            conn.request("GET", path)
+            resp = conn.getresponse()
+            return resp.status, resp.read()
+        finally:
+            conn.close()
+
+    async def _get(self, path):
+        return await asyncio.to_thread(self._get_sync, path)
+
+    async def test_each_zone_reaches_its_own_pool(self):
+        self.assertEqual(await self._get("/blog/index.php"), (200, b"blog"))
+        self.assertEqual(await self._get("/blog/admin/index.php"), (200, b"admin"))
+
+    async def test_disabled_zone_answers_503_while_others_keep_running(self):
+        status, _ = await self._get("/wiki/index.php")
+        self.assertEqual(status, 503)
+        self.assertEqual(await self._get("/blog/"), (200, b"blog"))
+
+
+class TestFastCgiZoneRequestSize(unittest.IsolatedAsyncioTestCase):
+    """Projets 3.0.0 §9 (decision de l'auteur du 2026-11-16) : une zone FastCGI fixe sa propre taille maximale de
+    requete, plus grande ou plus petite que la taille globale ; sans valeur, la taille globale s'applique."""
+
+    async def asyncSetUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "webroot").mkdir()
+        for name in ("admin-app", "public-app", "plain-app"):
+            (self.root / name).mkdir()
+            (self.root / name / "index.php").write_text("<?php ?>")
+        (self.root / "run").mkdir()
+        zone = {"connect_timeout_seconds": 3, "read_timeout_seconds": 3}
+        self.config = OmegaServConfig.from_dict({
+            "server": {"bind": "127.0.0.1", "port": 0, "max_request_size": 1000},
+            "security": {"allowed_methods": ["GET", "HEAD", "POST"]},
+            "options": {"fastcgi": {"enabled": True, "zones": [
+                {**zone, "url_prefix": "/admin/", "script_root": "admin-app", "socket_path": "run/admin.sock",
+                 "max_request_size": 5000},
+                {**zone, "url_prefix": "/public/", "script_root": "public-app", "socket_path": "run/public.sock",
+                 "max_request_size": 100},
+                {**zone, "url_prefix": "/plain/", "script_root": "plain-app", "socket_path": "run/plain.sock"},
+            ]}},
+        })
+        self.server = build_server(self.config, self.root, LocalFilesystem(), FileLineLogger())
+        await self.server.start()
+        self.port = self.server.sockets[0].getsockname()[1]
+        for name in ("admin", "public", "plain"):
+            task = asyncio.create_task(_fake_php_fpm(self.root / "run" / f"{name}.sock",
+                                                     b"Content-Type: text/plain\r\n\r\n" + name.encode()))
+            self.addAsyncCleanup(self._stop, task)
+        await asyncio.sleep(0.05)
+
+    async def asyncTearDown(self):
+        await self.server.close()
+        self._tmp.cleanup()
+
+    async def _stop(self, task):
+        task.cancel()
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001, S110
+            pass
+
+    def _post_sync(self, path, size):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=3)
+        try:
+            conn.request("POST", path, body=b"x" * size, headers={"Content-Type": "application/octet-stream"})
+            resp = conn.getresponse()
+            resp.read()
+            return resp.status
+        finally:
+            conn.close()
+
+    async def _post(self, path, size):
+        return await asyncio.to_thread(self._post_sync, path, size)
+
+    async def test_larger_zone_accepts_what_the_global_size_refuses(self):
+        self.assertEqual(await self._post("/admin/index.php", 3000), 200)
+        self.assertEqual(await self._post("/admin/index.php", 6000), 413)
+
+    async def test_smaller_zone_refuses_under_the_global_size(self):
+        self.assertEqual(await self._post("/public/index.php", 50), 200)
+        self.assertEqual(await self._post("/public/index.php", 500), 413)
+
+    async def test_zone_without_its_own_size_keeps_the_global_one(self):
+        self.assertEqual(await self._post("/plain/index.php", 900), 200)
+        self.assertEqual(await self._post("/plain/index.php", 3000), 413)
+
+
 if __name__ == "__main__":
     unittest.main()

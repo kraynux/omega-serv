@@ -13,20 +13,10 @@ en Phase 3, une fois le profil/option engine lui-meme existant.
 """
 from __future__ import annotations
 
-from omega_serv.core.i18n import _
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
-from omega_serv.domain.routing.access_rule import parse_access_rules, validate_access_rule
-from omega_serv.domain.routing.alias import parse_alias_rules, validate_alias_rule
-from omega_serv.domain.routing.proxy_zone import parse_proxy_zones, validate_proxy_zone
-from omega_serv.domain.routing.redirect import parse_redirect_rules, validate_redirect_rule
-from omega_serv.domain.routing.upload_zone import parse_upload_zone_rules, validate_upload_zone_rule
-from omega_serv.domain.security.active_defense.config import (
-    parse_active_defense_config,
-    validate_active_defense_config,
-)
-from omega_serv.domain.security.riposte.config import parse_riposte_config, validate_riposte_config
-from omega_serv.domain.security.tls.validation import validate_tls_config_structure
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from omega_serv.domain.config.entities import OmegaServConfig
 
 SUPPORTED_CONFIG_VERSIONS = frozenset({1})
 
@@ -67,6 +57,32 @@ def validate_config(config: OmegaServConfig) -> list[str]:
     Returns:
         Liste des erreurs (vide si la configuration est valide).
     """
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.admin_web.settings import OPTION_NAME as ADMIN_WEB_OPTION
+    from omega_serv.domain.admin_web.settings import AdminWebSettings, validate_admin_web
+    from omega_serv.domain.config.option import KNOWN_OPTION_NAMES
+    from omega_serv.domain.routing.access_rule import parse_access_rules, validate_access_rule
+    from omega_serv.domain.routing.alias import parse_alias_rules, validate_alias_rule
+    from omega_serv.domain.routing.proxy_engine import validate_proxy_engine_settings
+    from omega_serv.domain.routing.proxy_zone import (
+        parse_proxy_zones,
+        upstream_targets_this_server,
+        validate_proxy_zone,
+    )
+    from omega_serv.domain.routing.redirect import parse_redirect_rules, validate_redirect_rule
+    from omega_serv.domain.routing.upload_zone import (
+        parse_upload_zone_rules,
+        validate_upload_zone_rule,
+    )
+    from omega_serv.domain.security.active_defense.config import (
+        parse_active_defense_config,
+        validate_active_defense_config,
+    )
+    from omega_serv.domain.security.riposte.config import (
+        parse_riposte_config,
+        validate_riposte_config,
+    )
+    from omega_serv.domain.security.tls.validation import validate_tls_config_structure
     errors: list[str] = []
 
     if config.version not in SUPPORTED_CONFIG_VERSIONS:
@@ -180,9 +196,20 @@ def validate_config(config: OmegaServConfig) -> list[str]:
             if reason is not None:
                 errors.append(_("options.access_control : {reason}").format(reason=reason))
 
+    admin_web_option = config.options.get(ADMIN_WEB_OPTION)
+    if admin_web_option is not None and admin_web_option.enabled:
+        errors.extend(validate_admin_web(AdminWebSettings.from_settings(admin_web_option.settings),
+                                         server_bind=config.server.bind, server_port=config.server.port))
+
     production_upstreams: set[tuple[str, int]] = set()
     reverse_proxy_option = config.options.get("reverse_proxy")
     if reverse_proxy_option is not None and reverse_proxy_option.enabled:
+        max_body = reverse_proxy_option.settings.get("max_response_body_mb", 256)
+        if not isinstance(max_body, int) or isinstance(max_body, bool) or max_body < 1:
+            # Lot 1 (D23) : plafond du corps de reponse lu par le proxy (Mo, entier >= 1).
+            errors.append(_("options.reverse_proxy.max_response_body_mb doit être un entier supérieur ou égal à 1"))
+        # Plan proxy natif v2, lot 3 : moteur des zones (P8) et budgets du relais natif (C2).
+        errors.extend(validate_proxy_engine_settings(reverse_proxy_option.settings, config.server.max_request_size))
         for proxy_zone in parse_proxy_zones(reverse_proxy_option.settings.get("zones", [])):
             reason = validate_proxy_zone(proxy_zone)
             if reason is not None:
@@ -190,7 +217,7 @@ def validate_config(config: OmegaServConfig) -> list[str]:
                 continue
             for upstream in proxy_zone.upstreams:
                 production_upstreams.add((upstream.host, upstream.port))
-                if upstream.host in ("127.0.0.1", "localhost", config.server.bind) and upstream.port == config.server.port:
+                if upstream_targets_this_server(upstream.host, upstream.port, config.server.bind, config.server.port):
                     errors.append(
                         _("options.reverse_proxy zone {url_prefix!r} : l'upstream ({host}:{port}) pointe vers ce serveur lui-même - boucle de proxy").format(url_prefix=proxy_zone.url_prefix, host=upstream.host, port=upstream.port)
                     )
@@ -201,6 +228,11 @@ def validate_config(config: OmegaServConfig) -> list[str]:
         errors.extend(_("options.active_defense : {e}").format(e=e) for e in validate_active_defense_config(active_defense_config))
         for zone_name, decoy_zone in active_defense_config.deception.decoy_zones.items():
             for upstream in decoy_zone.upstreams:
+                if upstream_targets_this_server(upstream.host, upstream.port, config.server.bind, config.server.port):
+                    # Lot 1 (D17+) : un leurre qui pointe vers ce serveur boucle comme une zone de production.
+                    errors.append(
+                        _("options.active_defense.deception.decoy_zones.{zone_name} : l'upstream ({host}:{port}) pointe vers ce serveur lui-même - boucle de proxy").format(zone_name=zone_name, host=upstream.host, port=upstream.port)
+                    )
                 if (upstream.host, upstream.port) in production_upstreams:
                     errors.append(
                         _("options.active_defense.deception.decoy_zones.{zone_name} : l'upstream ({host}:{port}) est déjà utilisé par une zone options.reverse_proxy de production - un leurre ne doit jamais partager son backend avec la production (plan §\"Routage vers les leurres\")").format(zone_name=zone_name, host=upstream.host, port=upstream.port)

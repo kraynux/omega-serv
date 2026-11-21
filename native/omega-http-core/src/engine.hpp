@@ -25,12 +25,19 @@ class ResponseHeaders {
 public:
     void set(std::string_view name, std::string value);
     void set_default(std::string_view name, std::string value);
+    // HttpResponse.set_header / force_security_header (lot 1, D27) : une variante de casse deja posee est retiree,
+    // jamais gardee a cote ; la meme casse garde sa position.
+    void replace(std::string_view name, std::string value);
+    // HttpResponse.add_header (lot 1, D6) : en-tete repete (Set-Cookie), ecrit apres les autres, dans l'ordre d'ajout.
+    void add(std::string_view name, std::string value) { repeated_.emplace_back(std::string(name), std::move(value)); }
     [[nodiscard]] const std::string* find(std::string_view name) const;
     void erase(std::string_view name);
     [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& items() const { return items_; }
+    [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& repeated() const { return repeated_; }
 
 private:
     std::vector<std::pair<std::string, std::string>> items_;
+    std::vector<std::pair<std::string, std::string>> repeated_;
 };
 
 struct Response {
@@ -43,8 +50,16 @@ struct Response {
     std::uint64_t body_file_length = 0;
     bool needs_python = false;  // route applicative / non portee : confiee a Python (lot 3+)
     bool abort_connection = false;  // exception non rattrapee cote Python : fermeture sans reponse ni journal
+    // Plan proxy natif v2, lot 5 (C12) : corps relaye en flux depuis le backend, jamais garde en memoire - longueur
+    // annoncee (Content-Length du serveur), chunked (Q4), ou fin par la fermeture (client HTTP/1.0). Jamais de page
+    // d'erreur substituee : la decision est prise avant l'envoi de la tete (C7), le corps existe.
+    enum class Stream { none, length, chunked, close } stream = Stream::none;
+    std::uint64_t stream_length = 0;
 
-    [[nodiscard]] std::uint64_t content_length() const { return body_file.empty() ? body.size() : body_file_length; }
+    [[nodiscard]] std::uint64_t content_length() const {
+        if (stream == Stream::length) return stream_length;
+        return body_file.empty() ? body.size() : body_file_length;
+    }
 };
 
 struct Request {
@@ -53,6 +68,10 @@ struct Request {
     std::string peer_ip;
     const RequestHead* head = nullptr;
     std::string path_text;   // chemin (avant « ? »), texte UTF-8 de la cible latin-1
+    // Scan de securite n° 1 (2026-11-20, cause A) : canonical_path_utf8(path_text), le chemin de TOUTES les
+    // decisions de securite (regles d'acces, zones d'authentification). `match_path_invalid` : aucun -> 400.
+    std::string match_path;
+    bool match_path_invalid = false;
     std::string query_text;
     std::string target_text; // cible complete, texte UTF-8 (journal d'acces)
     bool absolute_target_invalid = false;  // forme absolue inutilisable -> 400 (check_before_body)
@@ -96,6 +115,13 @@ bool wants_handoff(const Snapshot& snapshot, const Request& request);
 
 // Etape 11-12 : routage + en-tetes de securite.
 Response route_request(const Snapshot& snapshot, const Request& request);
+// Plan proxy natif v2, lot 4 : zone du reverse proxy relayee par le natif pour cette requete (index dans
+// snapshot.proxy->zones, -1 sinon), et chemin apres reecritures a envoyer au backend.
+int native_proxy_zone(const Snapshot& snapshot, const Request& request, std::string* effective_path);
+// Plan proxy natif v2, lot 10 : zone d'une mise a niveau WebSocket, comme asyncio_server (_match_websocket_proxy_zone) -
+// plus long prefixe parmi les zones `websocket` seulement, sur le chemin apres reecritures (D14) ; -1 si aucune ou
+// boucle de reecriture. Native ou confiee : l'appelant decide (confiee -> connexion rendue a Python).
+int websocket_proxy_zone(const Snapshot& snapshot, const Request& request, std::string* effective_path);
 void apply_security_headers(Response& response, const Snapshot& snapshot, std::string_view path_text);
 
 // _write_response : page d'erreur, empreinte CSP, Connection, Content-Length, 304 sans corps.
@@ -106,7 +132,9 @@ std::optional<std::string> finalize_response(const Snapshot& snapshot, Response&
 Response error_response(int status);
 
 // Journaux (une ligne, sans saut de ligne final).
-std::string format_access_line(const Request& request, const Response& response, std::int64_t unix_seconds);
+// `size` : taille journalisee si differente du corps (lot 1N : octets du corps acquittes avant un envoi interrompu).
+std::string format_access_line(const Request& request, const Response& response, std::int64_t unix_seconds,
+                               std::optional<std::uint64_t> size = std::nullopt);
 std::string format_error_line(std::string_view message, std::string_view request_id, std::int64_t unix_seconds);
 
 // csp.py::allow_inline_styles_by_hash

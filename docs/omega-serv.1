@@ -2,7 +2,7 @@
 .\" Genere par tools/cli_reference.py depuis le code : ne pas modifier a la main.
 .nr HY 0
 .ds AD l
-.TH OMEGA\-SERV 1 "" "omega\-serv 2.6.2" "Commandes utilisateur"
+.TH OMEGA\-SERV 1 "" "omega\-serv 3.0.0" "Commandes utilisateur"
 .nh
 .ad l
 .SH NOM
@@ -48,6 +48,10 @@ config                  Fichier de configuration : création,
   backup                Crée une sauvegarde : la configuration toujours,
                         le reste selon les options \-\-include\-*.
   restore               Restaure une sauvegarde.
+  export\-backup         Copie une sauvegarde hors du dossier omega\-serv,
+                        avec son empreinte .sha256.
+  import\-backup         Ajoute à la liste une sauvegarde exportée, après
+                        vérification (empreinte, contenu).
   list\-backups          Liste les sauvegardes.
 profile                 Profils de configuration prêts à l'emploi.
   list                  Liste les profils disponibles.
@@ -127,6 +131,51 @@ riposte                 RIPOSTE : bans de plus en plus longs pour les
                         même après un redémarrage, jusqu'à riposte
                         resume.
   resume                Lève l'arrêt d'urgence.
+admin\-web               Administration web : tableau de bord dans le
+                        navigateur, sur son propre port.
+  run                   Lance le processus d'administration web au
+                        premier plan (normalement lancé par serve ;
+                        utile au diagnostic).
+  account               Comptes de l'administration web (créés ici ou
+                        dans le TUI, jamais depuis le web).
+    list                Liste les comptes, leur rôle et leur TOTP.
+    add                 Crée un compte (mot de passe demandé deux fois).
+    remove              Supprime un compte (ses sessions ouvertes sont
+                        fermées).
+    password            Change le mot de passe (demandé deux fois).
+    totp\-enable         Active TOTP : QR code, secret et lien, puis
+                        vérification d'un code ; affiche les codes de
+                        secours.
+    totp\-disable        Désactive TOTP pour ce compte.
+    backup\-codes        Génère 10 nouveaux codes de secours (les anciens
+                        ne marchent plus, le TOTP du téléphone ne change
+                        pas).
+    role                Change le rôle d'un compte.
+  master                Maître accepté par cette instance (un seul) : la
+                        suivre et la piloter depuis une autre instance.
+    show                Montre le maître accepté, ses droits et la
+                        fenêtre d'appairage.
+    accept              Accepte un maître (utilisé par « Relier au
+                        maître » du TUI) : affiche en JSON le jeton et
+                        l'empreinte du certificat, à déposer chez le
+                        maître.
+    pairing\-code        Ouvre une fenêtre d'appairage de 10 minutes et
+                        affiche le code à saisir sur le maître.
+    revoke              Révoque le maître accepté : ses appels sont
+                        refusés aussitôt.
+  instances             Instances suivies par ce maître (page Instances
+                        du tableau de bord web).
+    identity            Affiche en JSON l'identifiant et le nom de ce
+                        maître.
+    list                Liste les instances suivies et les sondes.
+    add                 Ajoute une instance avec le jeton et l'empreinte
+                        rendus par « admin\-web master accept » (« Relier
+                        au maître » du TUI).
+    pair                Relie une instance avec son code d'appairage.
+    add\-probe           Ajoute une sonde HTTP (backend qui n'est pas
+                        omega\-serv).
+    remove              Retire une instance suivie ou une sonde
+                        (identifiant de « list »).
 threats                 Menaces suivies par Active Defense.
   list                  Liste les sources suivies avec leur score et
                         leur niveau.
@@ -307,6 +356,15 @@ Ajoute la bibliothèque des journaux.
 \fB\-\-include\-riposte\fR
 Ajoute la base RIPOSTE.
 .TP
+\fB\-\-include\-site\-content\fR
+Ajoute le contenu du site (webroot) ; jamais compris dans \-\-all, peut être long.
+.TP
+\fB\-\-include\-zone\-data\fR
+Ajoute les données des zones personnalisées (cible des alias, dossiers du listing, scripts FastCGI) ; jamais compris dans \-\-all.
+.TP
+\fB\-\-include\-exports\fR
+Ajoute les rapports d'export (dossier des exports) ; jamais compris dans \-\-all.
+.TP
 \fB\-\-all\fR
 Tout sauvegarder : toutes les options \-\-include\-* (secrets compris : demande \-\-confirm\-secrets).
 .TP
@@ -326,6 +384,28 @@ Identifiant de la sauvegarde (voir config list\-backups). (obligatoire)
 .TP
 \fB\-\-stop\-and\-restart\fR
 Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne).
+.TP
+\fB\-\-keep\-current\-port\fR
+En cas de conflit de port avec une autre instance : garder l'adresse, le port et le nom de service actuels.
+.RE
+.TP
+\fBconfig export\-backup\fR
+Copie une sauvegarde hors du dossier omega\-serv, avec son empreinte .sha256.
+.RS
+.TP
+\fB\-\-snapshot\-id\fR \fIID\fR
+Identifiant de la sauvegarde (voir config list\-backups). (obligatoire)
+.TP
+\fBDOSSIER\fR
+Dossier de destination.
+.RE
+.TP
+\fBconfig import\-backup\fR
+Ajoute à la liste une sauvegarde exportée, après vérification (empreinte, contenu).
+.RS
+.TP
+\fBFICHIER\fR
+Archive .tar.gz, son .sha256 à côté.
 .RE
 .TP
 \fBconfig list\-backups\fR
@@ -471,9 +551,6 @@ Adresse de la source simulée. (obligatoire)
 .TP
 \fB\-\-path\fR \fICHEMIN\fR
 Chemin observé (défaut : /).
-.TP
-\fB\-\-user\-agent\fR \fITEXTE\fR
-User\-Agent de la source.
 .TP
 \fB\-\-attack\-class\fR \fICLASSE\fR
 Classe d'attaque (défaut : scan ; liste affichée si inconnue).
@@ -700,6 +777,181 @@ Lève aussi toutes les actions en cours.
 .TP
 \fBriposte resume\fR
 Lève l'arrêt d'urgence.
+.SS admin\-web
+Administration web : tableau de bord dans le navigateur, sur son propre port.
+.TP
+\fBadmin\-web run\fR
+Lance le processus d'administration web au premier plan (normalement lancé par serve ; utile au diagnostic).
+.TP
+\fBadmin\-web account\fR
+Comptes de l'administration web (créés ici ou dans le TUI, jamais depuis le web).
+.TP
+\fBadmin\-web account list\fR
+Liste les comptes, leur rôle et leur TOTP.
+.TP
+\fBadmin\-web account add\fR
+Crée un compte (mot de passe demandé deux fois).
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.TP
+\fB\-\-role\fR \fI{lecture,administration}\fR
+lecture : Tableau de bord seulement ; administration : Tableau de bord et Administration.
+.RE
+.TP
+\fBadmin\-web account remove\fR
+Supprime un compte (ses sessions ouvertes sont fermées).
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.RE
+.TP
+\fBadmin\-web account password\fR
+Change le mot de passe (demandé deux fois).
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.RE
+.TP
+\fBadmin\-web account totp\-enable\fR
+Active TOTP : QR code, secret et lien, puis vérification d'un code ; affiche les codes de secours.
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.RE
+.TP
+\fBadmin\-web account totp\-disable\fR
+Désactive TOTP pour ce compte.
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.RE
+.TP
+\fBadmin\-web account backup\-codes\fR
+Génère 10 nouveaux codes de secours (les anciens ne marchent plus, le TOTP du téléphone ne change pas).
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.RE
+.TP
+\fBadmin\-web account role\fR
+Change le rôle d'un compte.
+.RS
+.TP
+\fBUSERNAME\fR
+Identifiant.
+.TP
+\fB{lecture,administration}\fR
+lecture ou administration.
+.RE
+.TP
+\fBadmin\-web master\fR
+Maître accepté par cette instance (un seul) : la suivre et la piloter depuis une autre instance.
+.TP
+\fBadmin\-web master show\fR
+Montre le maître accepté, ses droits et la fenêtre d'appairage.
+.TP
+\fBadmin\-web master accept\fR
+Accepte un maître (utilisé par « Relier au maître » du TUI) : affiche en JSON le jeton et l'empreinte du certificat, à déposer chez le maître.
+.RS
+.TP
+\fB\-\-master\-id\fR \fIMASTER\-ID\fR
+Identifiant du maître (admin\-web instances identity). (obligatoire)
+.TP
+\fB\-\-master\-name\fR \fIMASTER\-NAME\fR
+Nom du maître, affiché ici.
+.TP
+\fB\-\-rights\fR \fI{lecture,administration}\fR
+lecture : voir seulement ; administration : voir et agir.
+.TP
+\fB\-\-replace\fR
+Remplace le maître déjà accepté (révoqué aussitôt).
+.RE
+.TP
+\fBadmin\-web master pairing\-code\fR
+Ouvre une fenêtre d'appairage de 10 minutes et affiche le code à saisir sur le maître.
+.RS
+.TP
+\fB\-\-rights\fR \fI{lecture,administration}\fR
+lecture : voir seulement ; administration : voir et agir.
+.TP
+\fB\-\-replace\fR
+Remplace le maître déjà accepté (révoqué aussitôt).
+.RE
+.TP
+\fBadmin\-web master revoke\fR
+Révoque le maître accepté : ses appels sont refusés aussitôt.
+.TP
+\fBadmin\-web instances\fR
+Instances suivies par ce maître (page Instances du tableau de bord web).
+.TP
+\fBadmin\-web instances identity\fR
+Affiche en JSON l'identifiant et le nom de ce maître.
+.TP
+\fBadmin\-web instances list\fR
+Liste les instances suivies et les sondes.
+.TP
+\fBadmin\-web instances add\fR
+Ajoute une instance avec le jeton et l'empreinte rendus par « admin\-web master accept » (« Relier au maître » du TUI).
+.RS
+.TP
+\fBADDRESS\fR
+Adresse IP de l'instance.
+.TP
+\fBPORT\fR
+Port de son administration web.
+.TP
+\fB\-\-fingerprint\fR \fIFINGERPRINT\fR
+Empreinte SHA\-256 de son certificat (vide : HTTP en boucle locale seulement). (obligatoire)
+.TP
+\fB\-\-token\fR \fITOKEN\fR
+Jeton ; sans cette option, il est lu sur l'entrée standard (jamais dans l'historique du shell).
+.TP
+\fB\-\-name\fR \fINAME\fR
+Nom affiché.
+.RE
+.TP
+\fBadmin\-web instances pair\fR
+Relie une instance avec son code d'appairage.
+.RS
+.TP
+\fBADDRESS\fR
+Adresse IP de l'instance.
+.TP
+\fBPORT\fR
+Port de son administration web.
+.TP
+\fBCODE\fR
+Code affiché par l'instance (comme K7QF\-3M9X).
+.TP
+\fB\-\-name\fR \fINAME\fR
+Nom affiché.
+.RE
+.TP
+\fBadmin\-web instances add\-probe\fR
+Ajoute une sonde HTTP (backend qui n'est pas omega\-serv).
+.RS
+.TP
+\fBURL\fR
+URL sondée (http://... ou https://...).
+.TP
+\fB\-\-name\fR \fINAME\fR
+Nom affiché.
+.RE
+.TP
+\fBadmin\-web instances remove\fR
+Retire une instance suivie ou une sonde (identifiant de « list »).
+.RS
+.TP
+\fBINSTANCE\-ID\fR
+Identifiant à 12 caractères.
+.RE
 .SS threats
 Menaces suivies par Active Defense.
 .TP

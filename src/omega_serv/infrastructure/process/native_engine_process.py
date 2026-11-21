@@ -13,11 +13,10 @@ import time
 from collections.abc import Sequence
 from pathlib import Path
 
-from omega_serv.application.server.engine_selection import BINARY_MISSING, BINARY_NOT_EXECUTABLE
-
 
 def native_binary_problem(binary: Path) -> str | None:
     """None si le binaire est utilisable, sinon le code de raison (engine_selection)."""
+    from omega_serv.application.server.engine_selection import BINARY_MISSING, BINARY_NOT_EXECUTABLE
     if not binary.is_file():
         return BINARY_MISSING
     if not os.access(binary, os.X_OK):

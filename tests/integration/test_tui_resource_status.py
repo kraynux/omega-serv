@@ -283,7 +283,10 @@ class TestTuiResourceStatus(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, HomeScreen)
             pilot.app.screen.query_one("#service", Button).press()
             await pilot.pause()
+            pilot.app.screen.query_one("#edit-name", Button).press()  # nom verrouille depuis 2026-11-15
+            await pilot.pause()
             pilot.app.screen.query_one("#service-name", Input).value = "mon-service-renomme"
+            pilot.app.screen.query_one("#edit-name", Button).press()
             await pilot.pause()
             pilot.app.screen.query_one("#back", Button).press()
             await pilot.pause()
@@ -388,3 +391,97 @@ if __name__ == "__main__":
             system = screen.query_one("#box-system", Static).render().plain
             self.assertIn("/s", system.split("Débit", 1)[1].split("\n", 1)[0])
 
+
+
+class TestTuiDashboardByInstanceKind(unittest.IsolatedAsyncioTestCase):
+    """Projets 3.0.0 §9, chantier 3 (decision de l'auteur du 2026-11-16) : type d'instance en tete du premier cadre,
+    section BACKENDS (lue par l'administration) avant les chemins les plus demandes pour un reverse proxy ou une
+    instance mixte ; rien ne change pour un site."""
+
+    setUp = TestTuiResourceStatus.setUp
+    tearDown = TestTuiResourceStatus.tearDown
+    _container = TestTuiResourceStatus._container
+    _generate_config = TestTuiResourceStatus._generate_config
+    _open_resource_status = TestTuiResourceStatus._open_resource_status
+
+    def _with_options(self, container: DependencyContainer, **options: dict) -> None:
+        self._generate_config(container)
+        result = load_config(container.configuration, container.config_file)
+        assert result.config is not None
+        merged = dict(result.config.options)
+        for name, settings in options.items():
+            merged[name] = Option(name=name, enabled=True, settings=settings)
+        container.configuration.save(container.config_file, replace(result.config, options=merged))
+
+    async def _texts(self, container: DependencyContainer, size=(160, 60)) -> tuple[str, str]:
+        app = OmegaServApp(container)
+        async with app.run_test(size=size) as pilot:
+            await self._open_resource_status(pilot)
+            await pilot.app.workers.wait_for_complete()
+            pilot.app.screen.query_one("#refresh", Button).press()  # mesures lues : cadre FLUX redessine
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            screen = pilot.app.screen
+            return (screen.query_one("#box-server-state", Static).render().plain,
+                    screen.query_one("#box-traffic", Static).render().plain)
+
+    async def test_site_shows_its_kind_and_no_backends(self):
+        calls: list[str] = []
+
+        async def runner(port, method, path):
+            calls.append(path)
+            return 200, {"backends": []}
+
+        container = self._container(admin_request_runner=runner)
+        self._generate_config(container)
+        state, traffic = await self._texts(container)
+        self.assertRegex(state, r"Type d'instance\s+: Site")
+        self.assertLess(state.index("Type d'instance"), state.index("PROCESSUS"))
+        self.assertNotIn("BACKENDS", traffic)
+        self.assertEqual(calls, [])  # un site n'interroge jamais l'administration
+
+    async def test_reverse_proxy_lists_backends_before_top_paths(self):
+        async def runner(port, method, path):
+            self.assertEqual((method, path), ("GET", "/.omega-serv-admin/backends"))
+            return 200, {"backends": [
+                {"zone": "/", "name": "10.0.0.5:8080", "address": "10.0.0.5:8080", "engine": "natif",
+                 "status": "up", "requests": 1234, "errors_502": 0, "errors_504": 0, "avg_ms": 12.4, "active": 3},
+                {"zone": "/", "name": "10.0.0.6:8080", "address": "10.0.0.6:8080", "engine": "natif",
+                 "status": "down", "requests": 7, "errors_502": 5, "errors_504": 2, "avg_ms": 1500.0, "active": 0}]}
+
+        container = self._container(admin_request_runner=runner)
+        self._with_options(container, reverse_proxy={"zones": [
+            {"url_prefix": "/", "upstreams": [{"host": "10.0.0.5", "port": 8080}, {"host": "10.0.0.6", "port": 8080}]}]})
+        state, traffic = await self._texts(container)
+        self.assertRegex(state, r"Type d'instance\s+: Reverse proxy")
+        self.assertIn("BACKENDS", traffic)
+        self.assertLess(traffic.index("CLIENTS"), traffic.index("BACKENDS"))
+        self.assertLess(traffic.index("BACKENDS"), traffic.index("CHEMINS LES PLUS DEMANDÉS"))
+        self.assertIn("/ · natif", traffic)
+        self.assertRegex(traffic, r"Requêtes\s+: 1234\n\s+En cours\s+: 3")
+        self.assertRegex(traffic, r"502 / 504\s+: 5 / 2")
+        self.assertRegex(traffic, r"Temps moyen\s+: 12 ms")
+        self.assertRegex(traffic, r"Temps moyen\s+: 1.50 s")
+        self.assertIn("hors service", traffic)
+
+    async def test_refused_administration_says_what_to_fix(self):
+        async def runner(port, method, path):
+            return 403, None
+
+        container = self._container(admin_request_runner=runner)
+        self._with_options(container, reverse_proxy={"zones": [
+            {"url_prefix": "/api/", "upstreams": [{"host": "10.0.0.5", "port": 8080}]}]})
+        state, traffic = await self._texts(container)
+        self.assertRegex(state, r"Type d'instance\s+: Mixte")
+        self.assertIn("trusted_proxy", traffic)
+
+    async def test_stopped_server_and_small_terminal(self):
+        async def runner(port, method, path):
+            return None
+
+        container = self._container(admin_request_runner=runner)
+        self._with_options(container, reverse_proxy={"zones": [
+            {"url_prefix": "/", "upstreams": [{"host": "10.0.0.5", "port": 8080}]}]})
+        state, traffic = await self._texts(container, size=(80, 24))
+        self.assertIn("Serveur arrêté ou injoignable.", traffic.replace("\n", " ").replace("  ", " "))
+        self.assertIn("Type d'instance", state)

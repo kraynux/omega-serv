@@ -227,7 +227,9 @@ class TestTuiInstances(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, InstancesScreen)
             table = pilot.app.screen.query_one("#instances-table", DataTable)
-            self.assertEqual(table.row_count, 1)
+            self.assertEqual(table.row_count, 2)  # instance courante (hors registre) en tete + la nouvelle
+            self.assertIn("(courante)", table.get_row_at(0)[0])
+            self.assertEqual(table.get_row_at(1)[0], "test-instance")
         self.assertEqual(created["args"][0], "test-instance")
 
     async def test_create_instance_failure_shows_error_without_registering(self):
@@ -267,6 +269,10 @@ class TestTuiInstances(unittest.IsolatedAsyncioTestCase):
             await pilot.pause()
             pilot.app.screen.query_one("#df-name", Input).value = ""
             pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            # Lot V (2026-11-15) : refuse dans le formulaire, qui reste ouvert ; aucun ecran de progression.
+            self.assertIn("vide", str(pilot.app.screen.query_one("#df-error").content))
+            pilot.app.screen.query_one("#cancel", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, InstancesScreen)
 

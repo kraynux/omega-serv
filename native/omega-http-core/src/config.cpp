@@ -2,9 +2,12 @@
 #include "config.hpp"
 
 #include <cmath>
+#include <initializer_list>
 #include <stdexcept>
+#include <string_view>
 
 #include "util.hpp"
+#include "waf_alert.hpp"
 #include "waf_filter.hpp"
 
 namespace omega {
@@ -109,6 +112,123 @@ std::map<int, std::string> status_map(const Json& object, std::string_view key) 
 
 std::vector<IpNetwork> networks(const std::vector<std::string>& texts) { return parse_trusted_networks(texts); }
 
+bool one_of(const std::string& value, std::initializer_list<std::string_view> allowed) {
+    for (std::string_view candidate : allowed) {
+        if (value == candidate) return true;
+    }
+    return false;
+}
+
+// Plan proxy natif v2, lot 3 : section `proxy` (native_snapshot.proxy_section). Controle de structure et de
+// coherence ; les valeurs ont deja ete validees par Python.
+ProxySettings parse_proxy(const Json& proxy) {
+    ProxySettings out;
+    out.engine = need_string(proxy, "engine");
+    if (!one_of(out.engine, {"auto", "native", "python"})) throw SnapshotError("proxy.engine inconnu : " + out.engine);
+    const Json& budgets = need(proxy, "budgets");
+    out.budgets.pending_body_bytes =
+        static_cast<std::uint64_t>(need_integer(budgets, "pending_body_bytes", 1, INT64_C(1) << 50));
+    out.budgets.inspections = static_cast<std::size_t>(need_integer(budgets, "inspections", 1, 100000));
+    out.budgets.upstream_connections = static_cast<std::size_t>(need_integer(budgets, "upstream_connections", 1, 1000000));
+    out.max_response_body_bytes =
+        static_cast<std::uint64_t>(need_integer(proxy, "max_response_body_bytes", 1, INT64_C(1) << 50));
+    for (const Json& item : need_array(proxy, "zones")) {
+        ProxyZoneSettings zone;
+        zone.prefix = need_string(item, "prefix");
+        if (zone.prefix.empty() || zone.prefix[0] != '/') throw SnapshotError("proxy : prefixe de zone invalide");
+        const std::string& engine = need_string(item, "engine");
+        if (!one_of(engine, {"native", "python"})) throw SnapshotError("proxy : moteur de zone inconnu : " + engine);
+        zone.native = engine == "native";
+        zone.reasons = string_list(item, "reasons");
+        if (zone.native != zone.reasons.empty()) {
+            throw SnapshotError("proxy : zone " + zone.prefix + " - raisons incoherentes avec son moteur");
+        }
+        const std::string& inspect = need_string(item, "inspect");
+        if (inspect == "never") {
+            zone.inspect = ZoneInspect::never;
+        } else if (inspect == "filter") {
+            zone.inspect = ZoneInspect::filter;
+        } else if (inspect == "always") {
+            zone.inspect = ZoneInspect::always;
+        } else {
+            throw SnapshotError("proxy : inspect inconnu : " + inspect);
+        }
+        zone.connect_timeout_ms = need_integer(item, "connect_timeout_ms", 0, INT64_C(86400000));
+        zone.read_timeout_ms = need_integer(item, "read_timeout_ms", 0, INT64_C(86400000));
+        zone.preserve_host = need_bool(item, "preserve_host");
+        zone.verify_tls = need_bool(item, "verify_tls");
+        zone.websocket = need_bool(item, "websocket");
+        zone.websocket_idle_timeout_ms = need_integer(item, "websocket_idle_timeout_ms", 0, INT64_C(31536000000));
+        zone.load_balancing = need_string(item, "load_balancing");
+        if (!one_of(zone.load_balancing, {"round_robin", "weighted_round_robin", "least_connections",
+                                          "weighted_least_connections", "ip_hash", "least_response_time", "real_load"})) {
+            throw SnapshotError("proxy : strategie inconnue : " + zone.load_balancing);
+        }
+        if (const Json* sticky = optional_value(item, "sticky")) {
+            zone.sticky = ProxySticky{need_string(*sticky, "cookie_name"),
+                                      need_integer(*sticky, "max_age_seconds", 0, INT64_C(1) << 40)};
+        }
+        zone.unhealthy_after = static_cast<int>(need_integer(item, "unhealthy_after", 1, 1000000));
+        zone.healthy_after = static_cast<int>(need_integer(item, "healthy_after", 1, 1000000));
+        zone.load_sample_max_age_ms = need_integer(item, "load_sample_max_age_ms", 0, INT64_C(1) << 40);
+        for (const Json& raw : need_array(item, "upstreams")) {
+            ProxyUpstream upstream;
+            upstream.key = need_string(raw, "key");
+            upstream.host = need_string(raw, "host");
+            upstream.port = static_cast<int>(need_integer(raw, "port", 1, 65535));
+            upstream.host_header = need_string(raw, "host_header");
+            if (const Json* address = optional_value(raw, "address")) {
+                if (!address->is_string()) throw SnapshotError("proxy : adresse de backend : texte attendu");
+                upstream.address = address->as_string();
+            }
+            upstream.tls = need_bool(raw, "tls");
+            upstream.weight = static_cast<int>(need_integer(raw, "weight", 1, 1000000));
+            if (optional_value(raw, "max_concurrent") != nullptr) {
+                upstream.max_concurrent = need_integer(raw, "max_concurrent", 0, INT64_C(1) << 40);
+            }
+            upstream.load_source = need_string(raw, "load_source");
+            if (!one_of(upstream.load_source, {"none", "native", "declarative"})) {
+                throw SnapshotError("proxy : load_source inconnu : " + upstream.load_source);
+            }
+            upstream.name = need_string(raw, "name");
+            upstream.cookie = need_string(raw, "cookie");
+            upstream.active_check = need_bool(raw, "active_check");
+            if (const Json* unusable = optional_value(raw, "unusable")) {
+                if (!unusable->is_string() || !one_of(unusable->as_string(), {"dns", "boucle"}))
+                    throw SnapshotError("proxy : unusable inconnu");
+                upstream.unusable = unusable->as_string();
+            }
+            if (!upstream.unusable && !upstream.address && zone.native)
+                throw SnapshotError("proxy : backend sans adresse dans une zone native : " + upstream.key);
+            for (const ProxyUpstream& other : zone.upstreams) {
+                if (other.key == upstream.key) throw SnapshotError("proxy : backend en double : " + upstream.key);
+            }
+            zone.upstreams.push_back(std::move(upstream));
+        }
+        if (zone.upstreams.empty()) throw SnapshotError("proxy : zone " + zone.prefix + " sans backend");
+        for (const Json& raw : need_array(item, "routing_rules")) {
+            ProxyRoutingRule rule{need_string(raw, "header"), need_string(raw, "pattern"), need_string(raw, "upstream")};
+            bool known = false;
+            for (const ProxyUpstream& upstream : zone.upstreams) known = known || upstream.name == rule.upstream;
+            if (!known) throw SnapshotError("proxy : regle vers un backend absent de la zone : " + rule.upstream);
+            zone.routing_rules.push_back(std::move(rule));
+        }
+        out.zones.push_back(std::move(zone));
+    }
+    return out;
+}
+
+void append_json_string(std::string& out, const std::string& text) { out += json_string(text); }
+
+const char* inspect_name(ZoneInspect inspect) {
+    switch (inspect) {
+        case ZoneInspect::never: return "never";
+        case ZoneInspect::filter: return "filter";
+        case ZoneInspect::always: return "always";
+    }
+    return "always";
+}
+
 void parse_server(const Json& root, Snapshot& s) {
     const Json& server = need(root, "server");
     ServerSettings& out = s.server;
@@ -121,6 +241,7 @@ void parse_server(const Json& root, Snapshot& s) {
     out.max_request_line_size = static_cast<std::size_t>(need_integer(server, "max_request_line_size", 1, 1 << 24));
     out.read_timeout_seconds = need_number(server, "read_timeout_seconds");
     out.keepalive_timeout_seconds = need_number(server, "keepalive_timeout_seconds");
+    out.write_timeout_seconds = need_number(server, "write_timeout_seconds");
     out.max_keepalive_requests = static_cast<int>(need_integer(server, "max_keepalive_requests", 0, 1000000));
     out.shutdown_grace_period_seconds = need_number(server, "shutdown_grace_period_seconds");
     out.index_files = string_list(server, "index_files");
@@ -267,8 +388,28 @@ std::shared_ptr<const Snapshot> parse_snapshot(std::string_view json_text, std::
                     throw SnapshotError("inspect.blocklist : chemin absolu attendu");
                 settings.blocklist_path = blocklist->as_string();
             }
+            if (const Json* reject = inspect->get("body_reject_over"); reject != nullptr && !reject->is_null()) {
+                settings.body_reject_over =
+                    static_cast<std::uint64_t>(need_integer(*inspect, "body_reject_over", 0, INT64_C(1) << 40));
+            }
+            if (const Json* alerts = inspect->get("waf_alerts"); alerts != nullptr && !alerts->is_null()) {
+                WafAlertSettings out;
+                out.path = need_string(*alerts, "path");
+                if (out.path.empty() || out.path[0] != '/') throw SnapshotError("inspect.waf_alerts.path : chemin absolu attendu");
+                out.max_path_chars = static_cast<std::size_t>(need_integer(*alerts, "max_path_chars", 0, INT64_C(1) << 31));
+                out.max_user_agent_chars =
+                    static_cast<std::size_t>(need_integer(*alerts, "max_user_agent_chars", 0, INT64_C(1) << 31));
+                out.include_body_excerpt = need_bool(*alerts, "include_body_excerpt");
+                out.body_excerpt_max_bytes =
+                    static_cast<std::size_t>(need_integer(*alerts, "body_excerpt_max_bytes", 0, INT64_C(1) << 31));
+                settings.waf_alerts = std::move(out);
+            }
             settings.handoff_any = string_list(*inspect, "handoff_any");
             settings.handoff_post = string_list(*inspect, "handoff_post");
+            if (inspect->get("security_processes") != nullptr) {  // lot 3 (P6) ; absent : un seul processus
+                settings.security_processes =
+                    static_cast<std::size_t>(need_integer(*inspect, "security_processes", 1, 1024));
+            }
             snapshot->inspect = std::move(settings);
         }
         // Plan WAF natif (lot 1) : absent ou null = aucun filtre (toute requete inspectee par Python, comme avant).
@@ -280,6 +421,10 @@ std::shared_ptr<const Snapshot> parse_snapshot(std::string_view json_text, std::
             } catch (const std::runtime_error& e) {
                 throw SnapshotError(e.what());
             }
+        }
+        // Plan proxy natif v2, lot 3 : absent (instantane d'avant le lot 3) ou null = reverse proxy inactif.
+        if (const Json* proxy = root->get("proxy"); proxy != nullptr && !proxy->is_null()) {
+            snapshot->proxy = parse_proxy(*proxy);
         }
         if (const Json* tls = optional_value(*root, "tls")) {
             TlsSettings settings;
@@ -302,6 +447,106 @@ std::shared_ptr<const Snapshot> parse_snapshot(std::string_view json_text, std::
         if (error) *error = e.what();
         return nullptr;
     }
+}
+
+std::optional<ProxySettings> parse_proxy_section(const Json& proxy, std::string* error) {
+    try {
+        return parse_proxy(proxy);
+    } catch (const SnapshotError& e) {
+        if (error) *error = e.what();
+        return std::nullopt;
+    }
+}
+
+std::string dump_proxy_json(const ProxySettings& proxy) {
+    std::string out = "{\"engine\": ";
+    append_json_string(out, proxy.engine);
+    out += ", \"budgets\": {\"pending_body_bytes\": " + std::to_string(proxy.budgets.pending_body_bytes);
+    out += ", \"inspections\": " + std::to_string(proxy.budgets.inspections);
+    out += ", \"upstream_connections\": " + std::to_string(proxy.budgets.upstream_connections) + "}";
+    out += ", \"max_response_body_bytes\": " + std::to_string(proxy.max_response_body_bytes);
+    out += ", \"zones\": [";
+    for (std::size_t z = 0; z < proxy.zones.size(); ++z) {
+        const ProxyZoneSettings& zone = proxy.zones[z];
+        if (z > 0) out += ", ";
+        out += "{\"prefix\": ";
+        append_json_string(out, zone.prefix);
+        out += std::string(", \"engine\": \"") + (zone.native ? "native" : "python") + "\", \"reasons\": [";
+        for (std::size_t r = 0; r < zone.reasons.size(); ++r) {
+            if (r > 0) out += ", ";
+            append_json_string(out, zone.reasons[r]);
+        }
+        out += std::string("], \"inspect\": \"") + inspect_name(zone.inspect) + "\"";
+        out += ", \"connect_timeout_ms\": " + std::to_string(zone.connect_timeout_ms);
+        out += ", \"read_timeout_ms\": " + std::to_string(zone.read_timeout_ms);
+        out += std::string(", \"preserve_host\": ") + (zone.preserve_host ? "true" : "false");
+        out += std::string(", \"verify_tls\": ") + (zone.verify_tls ? "true" : "false");
+        out += std::string(", \"websocket\": ") + (zone.websocket ? "true" : "false");
+        out += ", \"websocket_idle_timeout_ms\": " + std::to_string(zone.websocket_idle_timeout_ms);
+        out += ", \"load_balancing\": ";
+        append_json_string(out, zone.load_balancing);
+        out += ", \"sticky\": ";
+        if (zone.sticky) {
+            out += "{\"cookie_name\": ";
+            append_json_string(out, zone.sticky->cookie_name);
+            out += ", \"max_age_seconds\": " + std::to_string(zone.sticky->max_age_seconds) + "}";
+        } else {
+            out += "null";
+        }
+        out += ", \"routing_rules\": [";
+        for (std::size_t r = 0; r < zone.routing_rules.size(); ++r) {
+            const ProxyRoutingRule& rule = zone.routing_rules[r];
+            if (r > 0) out += ", ";
+            out += "{\"header\": ";
+            append_json_string(out, rule.header);
+            out += ", \"pattern\": ";
+            append_json_string(out, rule.pattern);
+            out += ", \"upstream\": ";
+            append_json_string(out, rule.upstream);
+            out += "}";
+        }
+        out += "], \"unhealthy_after\": " + std::to_string(zone.unhealthy_after);
+        out += ", \"healthy_after\": " + std::to_string(zone.healthy_after);
+        out += ", \"load_sample_max_age_ms\": " + std::to_string(zone.load_sample_max_age_ms);
+        out += ", \"upstreams\": [";
+        for (std::size_t u = 0; u < zone.upstreams.size(); ++u) {
+            const ProxyUpstream& upstream = zone.upstreams[u];
+            if (u > 0) out += ", ";
+            out += "{\"key\": ";
+            append_json_string(out, upstream.key);
+            out += ", \"host\": ";
+            append_json_string(out, upstream.host);
+            out += ", \"port\": " + std::to_string(upstream.port);
+            out += ", \"host_header\": ";
+            append_json_string(out, upstream.host_header);
+            out += ", \"address\": ";
+            if (upstream.address) {
+                append_json_string(out, *upstream.address);
+            } else {
+                out += "null";
+            }
+            out += std::string(", \"tls\": ") + (upstream.tls ? "true" : "false");
+            out += ", \"weight\": " + std::to_string(upstream.weight);
+            out += ", \"max_concurrent\": " + (upstream.max_concurrent ? std::to_string(*upstream.max_concurrent) : "null");
+            out += ", \"load_source\": ";
+            append_json_string(out, upstream.load_source);
+            out += std::string(", \"active_check\": ") + (upstream.active_check ? "true" : "false");
+            out += ", \"name\": ";
+            append_json_string(out, upstream.name);
+            out += ", \"cookie\": ";
+            append_json_string(out, upstream.cookie);
+            out += ", \"unusable\": ";
+            if (upstream.unusable) {
+                append_json_string(out, *upstream.unusable);
+            } else {
+                out += "null";
+            }
+            out += "}";
+        }
+        out += "]}";
+    }
+    out += "]}";
+    return out;
 }
 
 }  // namespace omega

@@ -26,6 +26,7 @@ from omega_serv.domain.security.tls.renewal_schedule import (
     renewal_unit_base_name,
     replace_marked_cron_line,
 )
+from omega_serv.domain.services.service_name import is_safe_service_name
 
 if TYPE_CHECKING:
     from omega_serv.ports.process_runner_port import ProcessRunnerPort
@@ -97,6 +98,11 @@ def schedule_certbot_renewal(
     process_runner: ProcessRunnerPort,
     installing_user: str,
 ) -> ScheduleRenewalResult:
+    # Scan de securite n° 2 (2026-11-20, F20) : le nom finit dans un chemin ecrit par root (sudo tee) et vient
+    # souvent de var/settings.json, ecrit par le compte du service - jamais un nom d'unite douteux.
+    if not is_safe_service_name(service_name):
+        return ScheduleRenewalResult("error", False, _("Nom de service refusé : {service!r}.").format(
+            service=service_name))
     config_dir = str(letsencrypt_dir / "config")
     work_dir = str(letsencrypt_dir / "work")
     logs_dir = str(letsencrypt_dir / "logs")

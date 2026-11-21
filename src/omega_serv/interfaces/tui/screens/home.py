@@ -62,6 +62,7 @@ from omega_serv.interfaces.tui.screens.active_defense_menu_screen import ActiveD
 from omega_serv.interfaces.tui.screens.audit_screen import AuditScreen
 from omega_serv.interfaces.tui.screens.backup_screen import BackupScreen
 from omega_serv.interfaces.tui.screens.capabilities_screen import CapabilitiesScreen
+from omega_serv.interfaces.tui.screens.full_report_screen import FullReportScreen
 from omega_serv.interfaces.tui.screens.guide_menu_screen import GuideMenuScreen
 from omega_serv.interfaces.tui.screens.instances_screen import InstancesScreen
 from omega_serv.interfaces.tui.screens.logs_menu_screen import LogsMenuScreen
@@ -87,11 +88,13 @@ _MENU_ITEMS: tuple[tuple[str, str], ...] = (
     ("server-config", _("Configuration détaillée")),
     ("backup", _("Sauvegarde de configuration")),
     ("active-defense", _("Active Sécurité")),
-    ("help", _("Aide")),
+    # Rapport complet juste sous « Sauvegarde de configuration » ; Aide et Options descendent d'un cran, « Quitter »
+    # est retire (q, Ctrl+Q et Echap demandent toujours confirmation) - choix 1 de l'auteur, 2026-11-15.
+    ("report", _("Rapport complet")),
     ("resource-status", _("État & Ressources")),
-    ("options", _("Options")),
+    ("help", _("Aide")),
     ("logs", _("Gestion des logs")),
-    ("quit", _("Quitter")),
+    ("options", _("Options")),
 )
 
 
@@ -184,4 +187,6 @@ class HomeScreen(Screen[None]):
             return GuideMenuScreen(container=self._container)
         if item_id == "options":
             return SettingsScreen(container=self._container)
+        if item_id == "report":
+            return FullReportScreen(container=self._container)
         return None

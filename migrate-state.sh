@@ -97,6 +97,8 @@ _copy_dir_contents() {
 # l'etat utilisateur - seuls blocklist/allowlist/rules/custom.json le
 # sont (meme distinction que build-release.sh).
 _copy "config/omega-serve.json"
+# Profils personnalises (omega-serv 3.0.0, 2026-11-15) : etat de l'utilisateur, jamais livre par la release.
+_copy_dir_contents "config/profiles/custom"
 _copy_dir_contents "secure/auth"
 _copy_dir_contents "secure/certificates"
 _copy_dir_contents "secure/secrets"

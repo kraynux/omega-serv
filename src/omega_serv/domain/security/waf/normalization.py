@@ -20,8 +20,26 @@ variantes vers leur equivalent ASCII canonique AVANT le decodage URL
 decodage URL peut lui-meme reveler des caracteres non normalises)."""
 from __future__ import annotations
 
+import re
 import unicodedata
-import urllib.parse
+
+_PERCENT_RUN = re.compile(r"(?:%[0-9A-Fa-f]{2})+")
+
+
+def _decode_percent_run(match: re.Match[str]) -> str:
+    return bytes.fromhex(match.group().replace("%", "")).decode("utf-8", errors="replace")
+
+
+def unquote_replace(text: str) -> str:
+    """Meme resultat que `urllib.parse.unquote(text, errors="replace")`, verifie par vecteurs (plan proxy natif v2,
+    lot 2, B). `unquote` decode chaque suite ASCII a part : sur un texte non ASCII qui contient des `%` (corps
+    binaire), des centaines de milliers d'appels - 3 s de CPU par Mo, mesure du lot 2. Ici, une seule expression
+    reguliere ne touche qu'aux suites `%XX`. Equivalent : un octet ASCII, ecrit tel quel, termine toute sequence
+    UTF-8 en cours exactement comme la fin des octets (un U+FFFD pour la sous-partie maximale), donc decoder chaque
+    suite `%XX` a part donne le meme texte que decoder toute la suite ASCII d'un bloc."""
+    if "%" not in text:
+        return text
+    return _PERCENT_RUN.sub(_decode_percent_run, text)
 
 
 def decode_bounded_for_inspection(raw: str, max_passes: int) -> str:
@@ -38,8 +56,12 @@ def decode_bounded_for_inspection(raw: str, max_passes: int) -> str:
         return raw
     current = unicodedata.normalize("NFKC", raw)
     for _ in range(max(1, max_passes)):
-        decoded = urllib.parse.unquote(current, errors="replace")
-        decoded = unicodedata.normalize("NFKC", decoded)
+        unquoted = unquote_replace(current)
+        if unquoted == current:
+            # Lot 2 : rien a decoder - `current` sort deja de NFKC (idempotente), la passe suivante le rendrait tel
+            # quel. Meme resultat, sans une normalisation de plus (178 ms par Mo de corps binaire).
+            break
+        decoded = unicodedata.normalize("NFKC", unquoted)
         if decoded == current:
             break
         current = decoded

@@ -14,91 +14,64 @@ from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from omega_serv.application.security.blocklist_location import prepare_blocklist_location
-from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
-from omega_serv.domain.routing.proxy_health import ProxyHealthState
-from omega_serv.domain.routing.proxy_zone import ProxyLoadBalancerState
-from omega_serv.domain.routing.zone_resolver import Zone
-from omega_serv.domain.security.active_defense.config import (
-    ActiveDefenseConfig,
-    parse_active_defense_config,
-)
-from omega_serv.domain.security.active_defense.entities import Incident
-from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
-from omega_serv.domain.security.waf.config import (
-    DEFAULT_BLOCKLIST_PATH,
-    DEFAULT_MAGNET_BLOCKLIST_FILE,
-    LEGACY_BLOCKLIST_PATH,
-    LEGACY_MAGNET_BLOCKLIST_FILE,
-    MagnetPathsConfig,
-    WafConfig,
-    parse_waf_config,
-)
-from omega_serv.domain.security.waf.rate_limit_policy import effective_source_policies
-from omega_serv.domain.security.waf.reputation import effective_never_auto_block
-from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import AsyncioDelayScheduler
-from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
-from omega_serv.infrastructure.auth.users_repository import JsonUsersRepository
-from omega_serv.infrastructure.clock.system_clock import SystemClock
-from omega_serv.infrastructure.decoys.in_process_fixture_dispatcher import (
-    InProcessFixtureDispatcher,
-)
-from omega_serv.infrastructure.fastcgi.asyncio_fastcgi_client import AsyncioFastCgiClient
-from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
-from omega_serv.infrastructure.persistence.active_defense_write_behind import (
-    READER_LOCK_TIMEOUT_SECONDS,
-    SqliteActiveDefenseWriter,
-    WriteBehindDeceptionAssignmentRepository,
-    WriteBehindThreatStateRepository,
-    purge_interval_for,
-)
-from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
-    open_active_defense_connection,
-)
-from omega_serv.infrastructure.persistence.sqlite_deception_assignment_repository import (
-    SqliteDeceptionAssignmentRepository,
-)
-from omega_serv.infrastructure.persistence.sqlite_incident_repository import (
-    SqliteIncidentRepository,
-)
-from omega_serv.infrastructure.persistence.sqlite_threat_state_repository import (
-    SqliteThreatStateRepository,
-)
-from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
-from omega_serv.infrastructure.proxy_cache.filesystem_proxy_cache_store import (
-    FilesystemProxyCacheStore,
-)
-from omega_serv.infrastructure.server.asyncio_server import AsyncioHttpServer
-from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
-from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
-from omega_serv.infrastructure.waf.lua_waf_adapter import load_lua_waf_adapter
-from omega_serv.infrastructure.waf.python_waf_engine import PythonWafEngine
-from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStore
-from omega_serv.infrastructure.waf.reputation_tracker import InMemoryReputationTracker
-from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
-from omega_serv.infrastructure.waf.shared_counters import SharedCounters
-from omega_serv.ports.active_defense_writer_port import (
-    ActiveDefenseRepositories,
-    ActiveDefenseWriterPort,
-)
-from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
-from omega_serv.ports.blocklist_port import BlocklistPort
-from omega_serv.ports.clock_port import ClockPort
-from omega_serv.ports.deception_assignment_repository_port import DeceptionAssignmentRepositoryPort
-from omega_serv.ports.decoy_dispatch_port import DecoyDispatchPort
-from omega_serv.ports.delay_scheduler_port import DelaySchedulerPort
-from omega_serv.ports.filesystem_port import FilesystemPort
-from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
-from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
-from omega_serv.ports.logger_port import LoggerPort
-from omega_serv.ports.rate_limit_port import RateLimitPort
-from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
-from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
-from omega_serv.ports.users_repository_port import UsersRepositoryPort
-from omega_serv.ports.waf_port import WafPort
+if TYPE_CHECKING:
+    import ssl
+
+    from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
+    from omega_serv.domain.routing.proxy_health import ProxyHealthState
+    from omega_serv.domain.routing.proxy_zone import ProxyLoadBalancerState
+    from omega_serv.domain.routing.zone_resolver import Zone
+    from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
+    from omega_serv.domain.security.active_defense.entities import Incident
+    from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
+    from omega_serv.domain.security.waf.config import MagnetPathsConfig, WafConfig
+    from omega_serv.infrastructure.persistence.active_defense_write_behind import (
+        SqliteActiveDefenseWriter,
+    )
+    from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
+    from omega_serv.infrastructure.proxy_cache.filesystem_proxy_cache_store import (
+        FilesystemProxyCacheStore,
+    )
+    from omega_serv.infrastructure.server.asyncio_server import AsyncioHttpServer
+    from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+    from omega_serv.ports.active_defense_writer_port import (
+        ActiveDefenseRepositories,
+        ActiveDefenseWriterPort,
+    )
+    from omega_serv.ports.auth_zones_repository_port import AuthZonesRepositoryPort
+    from omega_serv.ports.blocklist_port import BlocklistPort
+    from omega_serv.ports.clock_port import ClockPort
+    from omega_serv.ports.deception_assignment_repository_port import (
+        DeceptionAssignmentRepositoryPort,
+    )
+    from omega_serv.ports.decoy_dispatch_port import DecoyDispatchPort
+    from omega_serv.ports.delay_scheduler_port import DelaySchedulerPort
+    from omega_serv.ports.filesystem_port import FilesystemPort
+    from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
+    from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
+    from omega_serv.ports.logger_port import LoggerPort
+    from omega_serv.ports.rate_limit_port import RateLimitPort
+    from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
+    from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
+    from omega_serv.ports.users_repository_port import UsersRepositoryPort
+    from omega_serv.ports.waf_port import WafPort
+
+
+LARGE_BLOCK_OPTIONS = ("auth", "reverse_proxy", "upload", "fastcgi")
+"""Options qui manipulent de grands blocs memoire : scrypt de 16 Mio (auth), corps de reponse ou de requete entiers
+(proxy, envoi de fichiers, FastCGI). Avec l'une d'elles, l'allocateur C est regle pour rendre ces blocs au systeme
+(infrastructure/process/memory_tuning.py) ; sans elles, rien n'est charge (ctypes : 0,3 a 0,8 Mo, 2026-11-19)."""
+
+
+def tune_allocator_for(config: OmegaServConfig) -> None:
+    """Au demarrage et a chaque rechargement (une option activee a chaud compte). Sans effet hors glibc."""
+    if any(config.option_enabled(name) for name in LARGE_BLOCK_OPTIONS):
+        from omega_serv.infrastructure.process.memory_tuning import keep_large_blocks_out_of_heap
+        keep_large_blocks_out_of_heap()
 
 
 @dataclass(frozen=True)
@@ -137,6 +110,16 @@ def resolve_magnet_paths(project_root: Path, paths: MagnetPathsConfig) -> dict[s
     }
 
 
+def isolate_magnet_paths(resolved: dict[str, str], private_dir: Path) -> dict[str, str]:
+    """Scan de securite n° 2 (2026-11-20, F19) : diagnostics lances par l'administrateur (`waf test`, « Verifier la
+    compatibilite » de l'ecran Magnet). Les fichiers d'etat du script (blocklist, journaux, magasin de debit - ce
+    dernier relu par `load()` dans le script de reference) sont dans var/, que le compte du service peut ecrire :
+    les executer sous le compte de l'administrateur revenait a lui faire executer du code du service. Ils sont
+    rediriges vers un dossier prive et vide ; seules les regles (secure/) restent celles de l'installation."""
+    return {name: value if name == "rules_dir" else str(private_dir / Path(value).name)
+            for name, value in resolved.items()}
+
+
 def _ensure_magnet_directories(filesystem: FilesystemPort, resolved_paths: dict[str, str]) -> None:
     """Cree les dossiers parents manquants pour les chemins magnet - un
     `io.open(path, "a")` Lua echoue silencieusement, capture par le
@@ -154,6 +137,13 @@ def _ensure_magnet_directories(filesystem: FilesystemPort, resolved_paths: dict[
 def _prepare_blocklists(filesystem: FilesystemPort, project_root: Path, waf_config: WafConfig) -> None:
     """Blocklists sous var/lib/waf/ (dossier partage 2770) et reprise unique des
     anciens fichiers de secure/waf/ - voir application/security/blocklist_location.py."""
+    from omega_serv.application.security.blocklist_location import prepare_blocklist_location
+    from omega_serv.domain.security.waf.config import (
+        DEFAULT_BLOCKLIST_PATH,
+        DEFAULT_MAGNET_BLOCKLIST_FILE,
+        LEGACY_BLOCKLIST_PATH,
+        LEGACY_MAGNET_BLOCKLIST_FILE,
+    )
     prepare_blocklist_location(
         filesystem, project_root, waf_config.blocklist.path, DEFAULT_BLOCKLIST_PATH, LEGACY_BLOCKLIST_PATH,
     )
@@ -171,8 +161,11 @@ def build_waf_collaborators(
     clock: ClockPort,
     force: bool = False,
     shared_counters: SharedCounters | None = None,
+    isolated_magnet_dir: Path | None = None,
 ) -> WafCollaborators | None:
-    """`force=True` construit les collaborateurs meme si l'option "waf"
+    """`isolated_magnet_dir` : voir isolate_magnet_paths (diagnostics de l'administrateur, F19).
+
+    `force=True` construit les collaborateurs meme si l'option "waf"
     est desactivee - utilise par `omega-serv waf test` (doc WAF,
     "Tests WAF" : le simulateur doit permettre de tester des regles
     AVANT de les activer en production, pas seulement une fois actives)."""
@@ -180,6 +173,15 @@ def build_waf_collaborators(
         return None
     if "waf" not in config.options:
         return None
+    from omega_serv.domain.security.waf.config import parse_waf_config
+    from omega_serv.domain.security.waf.rate_limit_policy import effective_source_policies
+    from omega_serv.domain.security.waf.reputation import effective_never_auto_block
+    from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
+    from omega_serv.infrastructure.waf.keyword_list_loader import load_keyword_lists
+    from omega_serv.infrastructure.waf.python_waf_engine import PythonWafEngine
+    from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStore
+    from omega_serv.infrastructure.waf.reputation_tracker import InMemoryReputationTracker
+    from omega_serv.infrastructure.waf.rule_pack_loader import load_rule_packs
     waf_config = parse_waf_config(config.options["waf"].settings)
     # Garde-fou OMEGA-SERV_PLAN-DETAILLE_SENSITIVE_PATHS.md §3.14-a : sans
     # proxy de confiance, l'exemption d'auto-ban du loopback est retiree
@@ -207,8 +209,12 @@ def build_waf_collaborators(
     magnet_port: WafPort | None = None
     magnet_executor: ThreadPoolExecutor | None = None
     if waf_config.magnet.enabled:
+        from omega_serv.infrastructure.waf.lua_waf_adapter import load_lua_waf_adapter
+
         script_path = project_root / (waf_config.magnet.script or config.paths.waf_script)
         resolved_paths = resolve_magnet_paths(project_root, waf_config.magnet.paths)
+        if isolated_magnet_dir is not None:
+            resolved_paths = isolate_magnet_paths(resolved_paths, isolated_magnet_dir)
         _ensure_magnet_directories(filesystem, resolved_paths)
         magnet_port = load_lua_waf_adapter(filesystem, script_path, waf_config, resolved_paths)
         magnet_executor = ThreadPoolExecutor(max_workers=_MAGNET_THREAD_POOL_SIZE, thread_name_prefix="waf-magnet")
@@ -308,6 +314,34 @@ def build_active_defense_collaborators(
         return None
     if "active_defense" not in config.options:
         return None
+    from omega_serv.domain.security.active_defense.config import parse_active_defense_config
+    from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import (
+        AsyncioDelayScheduler,
+    )
+    from omega_serv.infrastructure.clock.system_clock import SystemClock
+    from omega_serv.infrastructure.decoys.in_process_fixture_dispatcher import (
+        InProcessFixtureDispatcher,
+    )
+    from omega_serv.infrastructure.persistence.active_defense_write_behind import (
+        READER_LOCK_TIMEOUT_SECONDS,
+        SqliteActiveDefenseWriter,
+        WriteBehindDeceptionAssignmentRepository,
+        WriteBehindThreatStateRepository,
+        purge_interval_for,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_active_defense_connection import (
+        open_active_defense_connection,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_deception_assignment_repository import (
+        SqliteDeceptionAssignmentRepository,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_incident_repository import (
+        SqliteIncidentRepository,
+    )
+    from omega_serv.infrastructure.persistence.sqlite_threat_state_repository import (
+        SqliteThreatStateRepository,
+    )
+    from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
     active_defense_config = parse_active_defense_config(config.options["active_defense"].settings)
     database = project_root / active_defense_config.storage.database
     if not write_behind:
@@ -352,6 +386,8 @@ def build_blocklist_port(
     """Construit un BlocklistPort utilisable meme si l'option "waf" est
     desactivee - la blocklist est un etat independant, gerable en CLI
     (menu "Gestion blocklist") avant meme d'activer le WAF."""
+    from omega_serv.domain.security.waf.config import parse_waf_config
+    from omega_serv.infrastructure.waf.blocklist_store import JsonBlocklistStore
     settings = config.options["waf"].settings if "waf" in config.options else {}
     waf_config = parse_waf_config(settings)
     _prepare_blocklists(filesystem, project_root, waf_config)
@@ -365,10 +401,12 @@ class AuthCollaborators:
 
 
 def build_users_repository(config: OmegaServConfig, project_root: Path, filesystem: FilesystemPort) -> UsersRepositoryPort:
+    from omega_serv.infrastructure.auth.users_repository import JsonUsersRepository
     return JsonUsersRepository(filesystem, project_root / config.paths.auth_file)
 
 
 def build_auth_zones_repository(config: OmegaServConfig, project_root: Path, filesystem: FilesystemPort) -> AuthZonesRepositoryPort:
+    from omega_serv.infrastructure.auth.auth_zones_repository import JsonAuthZonesRepository
     return JsonAuthZonesRepository(filesystem, project_root / config.paths.auth_zones)
 
 
@@ -379,11 +417,81 @@ def build_auth_collaborators(
 ) -> AuthCollaborators | None:
     if not config.option_enabled("auth"):
         return None
+    from omega_serv.domain.routing.zone_resolver import Zone
     zones = build_auth_zones_repository(config, project_root, filesystem).load()
     users = build_users_repository(config, project_root, filesystem).load()
     return AuthCollaborators(
         zones=tuple(Zone(z.path_prefix, z) for z in zones),
         users_by_name={u.username: u for u in users},
+    )
+
+
+@dataclass(frozen=True)
+class ProxyCollaborators:
+    """Client du reverse proxy et son etat (pool, repartition, sante, contextes TLS, cache)."""
+    client: AsyncioHttpProxyClient
+    load_balancer: ProxyLoadBalancerState
+    health_state: ProxyHealthState
+    ssl_context_verified: ssl.SSLContext | None
+    ssl_context_unverified: ssl.SSLContext | None
+    """None sans backend HTTPS (memoire, 2026-11-19, etude §11 : `ssl` et le magasin de certificats du systeme
+    seulement s'ils servent) ; crees au rechargement qui ajoute un backend HTTPS (`provide_proxy_tls`)."""
+    cache_store: FilesystemProxyCacheStore
+    cache_locks: ProxyCacheLocks
+    cache_metrics: ProxyCacheMetrics
+
+
+def proxy_uses_upstream_tls(config: OmegaServConfig) -> bool:
+    """Un backend du reverse proxy en HTTPS (`use_tls`) ?"""
+    if not config.option_enabled("reverse_proxy"):
+        return False
+    from omega_serv.domain.routing.proxy_zone import parse_proxy_zones
+    zones = parse_proxy_zones(config.options["reverse_proxy"].settings.get("zones", []))
+    return any(upstream.use_tls for zone in zones for upstream in zone.upstreams)
+
+
+def _client_context(verify: bool) -> ssl.SSLContext:
+    from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
+    return build_client_ssl_context(verify_upstream_tls=verify)
+
+
+def proxy_client_tls_contexts(config: OmegaServConfig) -> tuple[ssl.SSLContext | None, ssl.SSLContext | None]:
+    """Contextes TLS client (backend verifie, non verifie), seulement si un backend est en HTTPS."""
+    if not proxy_uses_upstream_tls(config):
+        return None, None
+    from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
+    return build_client_ssl_context(verify_upstream_tls=True), build_client_ssl_context(verify_upstream_tls=False)
+
+
+def build_proxy_collaborators(config: OmegaServConfig, project_root: Path) -> ProxyCollaborators | None:
+    """None si `options.reverse_proxy` est coupee. Utilisee au demarrage et, depuis le plan proxy natif v2 lot A
+    (D15), au rechargement qui active l'option : avant, rien n'etait construit et la zone restait sans effet."""
+    if not config.option_enabled("reverse_proxy"):
+        return None
+    from omega_serv.domain.routing.proxy_zone import set_sticky_cookie_key
+    from omega_serv.infrastructure.proxy.sticky_cookie_key import load_or_create_sticky_cookie_key
+    set_sticky_cookie_key(load_or_create_sticky_cookie_key(project_root))  # scan de securite n° 1 (F41/F42)
+    from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
+    from omega_serv.domain.routing.proxy_cache_metrics import ProxyCacheMetrics
+    from omega_serv.domain.routing.proxy_health import ProxyHealthState
+    from omega_serv.domain.routing.proxy_zone import ProxyLoadBalancerState
+    from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
+    from omega_serv.infrastructure.proxy_cache.filesystem_proxy_cache_store import (
+        FilesystemProxyCacheStore,
+    )
+    settings = config.options["reverse_proxy"].settings
+    verified, unverified = proxy_client_tls_contexts(config)
+    return ProxyCollaborators(
+        client=AsyncioHttpProxyClient(),
+        load_balancer=ProxyLoadBalancerState(),
+        health_state=ProxyHealthState(),
+        ssl_context_verified=verified,
+        ssl_context_unverified=unverified,
+        cache_store=FilesystemProxyCacheStore(
+            project_root / "var" / "cache" / "reverse_proxy", max_size_mb=int(settings.get("cache_max_size_mb", 100)),
+        ),
+        cache_locks=ProxyCacheLocks(),
+        cache_metrics=ProxyCacheMetrics(),
     )
 
 
@@ -395,7 +503,11 @@ def build_server(
     clock: ClockPort | None = None,
     shared_counters: SharedCounters | None = None,
 ) -> AsyncioHttpServer:
+    from omega_serv.infrastructure.clock.system_clock import SystemClock
+    from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
+    from omega_serv.infrastructure.server.asyncio_server import AsyncioHttpServer
     clock = clock or SystemClock()
+    tune_allocator_for(config)
     webroot = project_root / config.paths.webroot
     path_resolver = SafePathResolver(filesystem, webroot)
 
@@ -408,29 +520,14 @@ def build_server(
 
     auth = build_auth_collaborators(config, project_root, filesystem)
     active_defense = build_active_defense_collaborators(config, project_root, clock, write_behind=True)
+    from omega_serv.application.server.client_tls import set_client_context_factory
+    set_client_context_factory(_client_context)  # F36 : contexte TLS de secours (leurre HTTPS hors reverse proxy)
 
-    fastcgi_client = AsyncioFastCgiClient() if config.option_enabled("fastcgi") else None
-    proxy_client = AsyncioHttpProxyClient() if config.option_enabled("reverse_proxy") else None
-    proxy_load_balancer = ProxyLoadBalancerState() if proxy_client is not None else None
-    proxy_health_state = ProxyHealthState() if proxy_client is not None else None
-    proxy_client_ssl_context_verified = None
-    proxy_client_ssl_context_unverified = None
-    if proxy_client is not None:
-        from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
-        proxy_client_ssl_context_verified = build_client_ssl_context(verify_upstream_tls=True)
-        proxy_client_ssl_context_unverified = build_client_ssl_context(verify_upstream_tls=False)
-
-    proxy_cache_store = None
-    proxy_cache_locks = None
-    proxy_cache_metrics = None
-    if proxy_client is not None:
-        reverse_proxy_settings = config.options["reverse_proxy"].settings
-        cache_max_size_mb = int(reverse_proxy_settings.get("cache_max_size_mb", 100))
-        proxy_cache_store = FilesystemProxyCacheStore(
-            project_root / "var" / "cache" / "reverse_proxy", max_size_mb=cache_max_size_mb,
-        )
-        proxy_cache_locks = ProxyCacheLocks()
-        proxy_cache_metrics = ProxyCacheMetrics()
+    fastcgi_client = None
+    if config.option_enabled("fastcgi"):
+        from omega_serv.infrastructure.fastcgi.asyncio_fastcgi_client import AsyncioFastCgiClient
+        fastcgi_client = AsyncioFastCgiClient()
+    proxy = build_proxy_collaborators(config, project_root)
 
     server = AsyncioHttpServer(
         config=config,
@@ -452,14 +549,14 @@ def build_server(
         auth_zones=auth.zones if auth else (),
         users_by_name=auth.users_by_name if auth else None,
         fastcgi_client=fastcgi_client,
-        proxy_client=proxy_client,
-        proxy_load_balancer=proxy_load_balancer,
-        proxy_health_state=proxy_health_state,
-        proxy_client_ssl_context_verified=proxy_client_ssl_context_verified,
-        proxy_client_ssl_context_unverified=proxy_client_ssl_context_unverified,
-        proxy_cache_store=proxy_cache_store,
-        proxy_cache_locks=proxy_cache_locks,
-        proxy_cache_metrics=proxy_cache_metrics,
+        proxy_client=proxy.client if proxy else None,
+        proxy_load_balancer=proxy.load_balancer if proxy else None,
+        proxy_health_state=proxy.health_state if proxy else None,
+        proxy_client_ssl_context_verified=proxy.ssl_context_verified if proxy else None,
+        proxy_client_ssl_context_unverified=proxy.ssl_context_unverified if proxy else None,
+        proxy_cache_store=proxy.cache_store if proxy else None,
+        proxy_cache_locks=proxy.cache_locks if proxy else None,
+        proxy_cache_metrics=proxy.cache_metrics if proxy else None,
         active_defense_config=active_defense.config if active_defense else None,
         threat_state_repository=active_defense.threat_state_repository if active_defense else None,
         incident_repository=active_defense.incident_repository if active_defense else None,
@@ -498,9 +595,24 @@ def reload_server(
     integration, pas un oubli) : un changement de `options.active_defense`
     necessite un restart complet pour l'instant, `reload_scoped()` ne
     touche jamais `_active_defense_config`/`_threat_state_repository`."""
+    from omega_serv.infrastructure.clock.system_clock import SystemClock
     clock = clock or SystemClock()
+    tune_allocator_for(config)
     waf = build_waf_collaborators(config, project_root, filesystem, clock, shared_counters=server.shared_counters)
     auth = build_auth_collaborators(config, project_root, filesystem)
+    # Plan proxy natif v2, lot A (D15) : reverse proxy active par ce rechargement -> client construit ici, AVANT
+    # toute modification du serveur (une erreur laisse le serveur inchange, voir try_reload_server). Deja actif :
+    # client, pool et etat de sante gardes (jamais remis a zero par un SIGHUP). Coupe : les tables de routage
+    # ignorent l'option, le client reste en place sans servir.
+    proxy = build_proxy_collaborators(config, project_root) if not server.has_proxy_client else None
+    if proxy is not None:
+        server.enable_reverse_proxy(
+            client=proxy.client, load_balancer=proxy.load_balancer, health_state=proxy.health_state,
+            ssl_context_verified=proxy.ssl_context_verified, ssl_context_unverified=proxy.ssl_context_unverified,
+            cache_store=proxy.cache_store, cache_locks=proxy.cache_locks, cache_metrics=proxy.cache_metrics,
+        )
+    elif server.has_proxy_client and not server.has_proxy_tls and proxy_uses_upstream_tls(config):
+        server.provide_proxy_tls(*proxy_client_tls_contexts(config))  # premier backend HTTPS ajoute a chaud
 
     server.reload_scoped(
         config=config,

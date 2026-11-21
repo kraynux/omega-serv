@@ -5,6 +5,7 @@ best-effort, shutil.which, shutil.disk_usage, resource.getrlimit),
 detail, export JSON/HTML, rafraichissement."""
 from __future__ import annotations
 
+import asyncio
 import json
 import shutil
 import tempfile
@@ -169,10 +170,36 @@ class TestTuiCapabilities(unittest.IsolatedAsyncioTestCase):
 
     async def test_python_version_probe_is_available(self):
         container = self._container()
-        scanner = container.build_capability_scanner(8080, None)
+        scanner = container.build_capability_scanner(8080)
         capabilities = scanner.scan()
         python_cap = next(c for c in capabilities if c.id == "python-version")
         self.assertEqual(python_cap.status, CapabilityStatus.AVAILABLE)
+
+    async def test_action_bar_fixed_at_the_bottom_and_table_visible_in_80x24(self):
+        """Barre d'actions hors du panneau, Retour seul en bas (2026-11-17) ; le tableau garde plusieurs lignes."""
+        container = self._container()
+        self._generate_config(container)
+        async with OmegaServApp(container).run_test(size=(80, 24)) as pilot:
+            await self._open_capabilities(pilot)
+            screen = pilot.app.screen
+            table = screen.query_one("#capabilities-table", CapabilitiesTable)
+            for _ in range(100):  # analyse dans un fil : attendre le tableau rempli
+                await pilot.pause()
+                if table.row_count:
+                    break
+                await asyncio.sleep(0.05)
+            await pilot.pause()
+            screen_region = screen.region
+            buttons = {name: screen.query_one(f"#{name}", Button).region
+                       for name in ("refresh", "export-json", "export-html", "back")}
+            for name, region in buttons.items():
+                self.assertTrue(screen_region.contains_region(region) and region.width > 0, name)
+            self.assertGreater(buttons["back"].y, buttons["refresh"].y)  # Retour sur sa propre ligne, dessous
+            self.assertGreaterEqual(table.region.height, 4)
+            theme = screen.query_one("#export-theme-select").region
+            self.assertTrue(screen_region.contains_region(theme))  # plus pousse hors de l'ecran par le tableau
+            self.assertLessEqual(table.region.bottom, theme.y)
+            self.assertLessEqual(theme.bottom, buttons["refresh"].y)
 
 
 if __name__ == "__main__":

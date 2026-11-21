@@ -1,0 +1,126 @@
+OMEGA-SERV 3.0.0 - Ce qui change pour vous
+==========================================
+
+Une version majeure : un panneau d'administration web pour suivre et piloter le serveur
+depuis un téléphone ou un portable, le reverse proxy relayé par le moteur natif, une
+mémoire nettement plus basse, et deux audits de sécurité complets (87 failles
+corrigées). Mise à jour conseillée à tous. Redémarrez le service après la mise à jour
+(un rechargement ne suffit pas pour une nouvelle version).
+Le détail technique complet reste dans le CHANGELOG.
+
+
+SÉCURITÉ
+--------
+- Deux audits de sécurité complets du code, 87 failles corrigées dans les deux moteurs.
+  Les plus importantes :
+  - une adresse écrite autrement (« //zone/x », « %7Aone/x », « GET private/x » sans
+    « / », « ..; ») ne contourne plus une zone protégée, le WAF, les règles d'accès ni
+    les limites de débit ;
+  - le compte du service ne peut plus faire agir root sur un fichier système (liens
+    symboliques, nom de service piégé, restauration, purge, rotation des journaux) ;
+  - regex du WAF bornées, phrases de passe jamais visibles dans la liste des processus,
+    en-têtes secrets masqués dans le journal enrichi, exports CSV neutralisés.
+- Zones protégées par mot de passe, calcul du mot de passe sécurisé :
+  - cache des succès : un visiteur déjà vérifié n'est pas recalculé à chaque page
+    (5 minutes renouvelées à chaque visite, une heure au plus, 4096 entrées), retenu
+    sous une empreinte HMAC, jamais le mot de passe en clair ; vidé à chaque
+    modification d'un compte ou d'une zone ;
+  - mots de passe faux répétés (10 par adresse, 30 par utilisateur, en 5 minutes) :
+    réponse 429 immédiate, sans aucun calcul ; un visiteur déjà vérifié n'est jamais
+    bloqué ;
+  - trop de vérifications en attente : réponse 503 immédiate, le serveur reste fluide
+    (le calcul ne bloque jamais le reste des requêtes) ;
+  - utilisateur inconnu : même temps de réponse qu'un mot de passe faux ;
+  - tout se règle dans Configuration détaillée -> Authentification -> Protection des
+    mots de passe.
+- Cache du reverse proxy sécurisé : une page privée d'un visiteur connecté n'est plus
+  mise en cache (elle pouvait être servie à un autre visiteur), sauf si le backend la
+  déclare publique ; requêtes partielles et « Vary: * » jamais mises en cache.
+- Active Defense suit une source par son adresse IP seule : changer de User-Agent ne
+  fait plus sortir de la quarantaine. Le champ User-Agent du simulateur est retiré.
+- Le WAF inspecte un corps de requête sans type déclaré ou d'un type inconnu ; seuls les
+  vrais fichiers binaires (type annoncé ET signature) échappent à l'inspection. Un gros
+  corps de requête ne gèle plus le contrôle de sécurité.
+- Connexions lentes ou clients qui ne lisent pas leur réponse : comptés et libérés,
+  mémoire des limites de débit plafonnée face à des adresses changeantes.
+
+
+NOUVEAU : PANNEAU D'ADMINISTRATION WEB
+--------------------------------------
+Suivre et piloter le serveur dans un navigateur, depuis un autre appareil. Option
+admin_web, désactivée par défaut, sur son propre port (9643), jamais celui du site.
+- Sécurité : TLS et TOTP obligatoires depuis un autre appareil (QR code, 10 codes de
+  secours), réseaux permis seulement (machine, Tailscale, réseau local), attente après
+  cinq échecs, nouvelle saisie après 15 minutes en mode Administration, chaque action
+  écrite dans le journal d'audit. Un problème du panneau n'empêche jamais le site de
+  démarrer.
+- Deux rôles : « lecture » (Tableau de bord) et « administration » (Tableau de bord et
+  actions). Les comptes se créent seulement dans la TUI.
+- Vues :
+  - État & Ressources (comme dans la TUI, BACKENDS compris), Journaux (instantané ou
+    direct, filtre), Sécurité (bans, RIPOSTE, incidents), Journal d'audit ;
+  - Historique jusqu'à 30 jours : processeur, mémoire, swap, charge, réseau,
+    requêtes/s, connexions, disque, température, batterie, téléchargements et
+    téléversement des sites ;
+  - Trafic (pages, 404, adresses, statuts, référents, navigateurs et robots, heures) ;
+  - Certificats et leur échéance ;
+  - Alertes locales (disque, mémoire, processeur, température, erreurs 5xx, backend
+    hors service, incident, certificat bientôt expiré), rien n'est envoyé dehors ;
+  - Sessions ouvertes, que l'on peut fermer ;
+  - 10 thèmes omega, comme la TUI.
+- Actions (comptes administration, avec confirmation) : bannir et débannir une
+  adresse, fermer un incident, arrêt d'urgence et reprise de RIPOSTE, passer un backend
+  en DRAINING ou MAINTENANCE, archiver un journal, recharger la configuration.
+- Instance maître : une page suit plusieurs omega-serv à la fois, avec actions à
+  distance (ajout par code d'appairage, empreinte du certificat épinglée).
+- Tout le parcours dans la TUI : Instances -> Configuration distante. Un cadre « prêt /
+  ce qui manque » propose un bouton par manque (Activer, Générer le certificat,
+  Comptes, Redémarrer, Ouvrir le port avec omega-fire).
+
+
+NOUVEAU : AUTRES FONCTIONS
+--------------------------
+- Reverse proxy relayé par le moteur natif (server.engine = native) : flux, pool de
+  connexions, équilibrage, santé des backends, TLS vers le backend, TLS direct et
+  WebSocket. Retour au relais Python sans recompiler : options.reverse_proxy.engine.
+- Sauvegarde exportée et importée : désinstaller, réinstaller et retrouver son serveur.
+  La restauration annonce la version et un conflit de port avant d'agir.
+- Profils personnalisés : créer son propre profil à partir de sa configuration.
+- Rapport complet : tout ce qui est configuré et actif en une fois, exportable en HTML,
+  TXT ou JSON, sans aucun secret.
+- FastCGI avec plusieurs zones (une par application PHP), interrupteur par zone, taille
+  de requête par zone.
+- État & Ressources adapté au type d'instance (site, PHP, reverse proxy, mixte), avec
+  une section BACKENDS pour le reverse proxy.
+- Échéances des certificats dans la TUI (TLS -> Échéances des certificats).
+- Activer TOTP : boutons « Copier le secret » et « Copier le lien ».
+
+
+AMÉLIORÉ
+--------
+- Mémoire : chaque processus du serveur utilise nettement moins de mémoire qu'en 2.6.2
+  (chiffres mesurés dans le comparatif des serveurs web).
+- Envoi lent accepté tant qu'il progresse ; images et archives envoyées derrière le WAF
+  ne sont plus refusées par erreur.
+- Gestion des logs, viewer Simple : ligne entière (User-Agent visible), couleurs du
+  thème par information, colonne Service corrigée, colonne « Durée ».
+- Audit de sécurité plus précis (chaque fichier sensible nommé, avec la raison).
+- Menu Service en formulaire, nom du service protégé contre les fautes de frappe.
+- Une saisie refusée ne fait plus tout recommencer ; barres d'actions fixes en bas des
+  écrans ; FAQ de la TUI repliable par thème.
+- Authentification : bouton « Modifier » pour les zones protégées.
+
+
+À SAVOIR
+--------
+- Moteur natif : le reverse proxy est relayé par le natif par défaut
+  (options.reverse_proxy.engine = auto). Une zone avec cache reste confiée à Python.
+- access.log : 499 pour un client parti avant la réponse, 504 pour un backend trop lent,
+  une ligne 101 par tunnel WebSocket ; les appels internes acceptés de la TUI et du
+  panneau web n'y sont plus écrits.
+- Un tunnel WebSocket inactif est fermé après une heure (réglable par zone).
+- Nouvelles réponses possibles : 400 pour une adresse sans forme normale ou sans « / »
+  initial, 421 pour le panneau web ouvert par un autre nom sans TLS, 429 ou 503 pour
+  une zone protégée face à des mots de passe faux répétés.
+- « Réparer les permissions » (Accueil -> Service) partage maintenant les archives des
+  journaux avec le service ; relancez-le une fois après la mise à jour.

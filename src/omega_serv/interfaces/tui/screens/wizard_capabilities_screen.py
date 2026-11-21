@@ -48,7 +48,7 @@ class WizardCapabilitiesScreen(OmegaScreen):
         self.run_worker(lambda: self._scan_in_thread(port), thread=True, exclusive=True)
 
     def _scan_in_thread(self, port: int) -> None:
-        scanner = self._container.build_capability_scanner(port, None)
+        scanner = self._container.build_capability_scanner(port)
         registry = CapabilityRegistry(scanner.scan())
         self.app.call_from_thread(self._finish_scan, registry)
 

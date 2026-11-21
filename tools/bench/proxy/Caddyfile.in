@@ -1,0 +1,12 @@
+{
+	admin off
+	auto_https off
+	storage file_system @W@/caddy-data
+}
+SITE {
+	TLSLINE
+	reverse_proxy 127.0.0.1:18960
+	log {
+		output file @W@/logs/caddy-access.log
+	}
+}

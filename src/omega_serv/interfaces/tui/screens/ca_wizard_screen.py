@@ -39,6 +39,31 @@ if TYPE_CHECKING:
     from omega_serv.ports.certificate_tool_port import CertificateToolPort
 
 
+def _key_type_error(values: dict[str, str]) -> str | None:
+    key_type_text = values["key_type"].strip()
+    if key_type_text not in VALID_KEY_TYPES:
+        return _("Erreur : type de clé invalide : {key_type_text!r}").format(key_type_text=key_type_text)
+    return None
+
+
+def _days_error(values: dict[str, str]) -> str | None:
+    try:
+        if int(values["days"]) >= 1:
+            return None
+    except ValueError:
+        pass
+    return _("Erreur : validité invalide : {days!r}").format(days=values["days"])
+
+
+def _ca_form_error(values: dict[str, str]) -> str | None:
+    """Lot V (2026-11-15) : les erreurs restent dans le formulaire (avant : formulaire ferme, passphrase a retaper)."""
+    if values["password"] != values["password_confirm"]:
+        return _("Erreur : les deux saisies de passphrase ne correspondent pas.")
+    if not values["password"]:
+        return _("Erreur : la passphrase de la clé CA est obligatoire.")
+    return _key_type_error(values) or _days_error(values)
+
+
 class CaWizardScreen(OmegaScreen):
     def __init__(self, *, container: DependencyContainer) -> None:
         super().__init__()
@@ -95,6 +120,7 @@ class CaWizardScreen(OmegaScreen):
                         ("password_confirm", _("Confirmer la passphrase"), ""),
                     ],
                     password_fields=frozenset({"password", "password_confirm"}),
+                    validate=_ca_form_error,
                 ),
                 self._do_generate_ca,
             )
@@ -114,6 +140,7 @@ class CaWizardScreen(OmegaScreen):
                         ("country", _("Pays"), ""),
                         ("key_type", _("Type de clé ({value})").format(value='/'.join(sorted(VALID_KEY_TYPES))), "rsa2048"),
                     ],
+                    validate=_key_type_error,
                 ),
                 self._do_generate_csr,
             )
@@ -128,6 +155,7 @@ class CaWizardScreen(OmegaScreen):
                         ("days", _("Validité du certificat signé en jours"), "365"),
                     ],
                     password_fields=frozenset({"password"}),
+                    validate=_days_error,
                 ),
                 self._do_sign_csr,
             )

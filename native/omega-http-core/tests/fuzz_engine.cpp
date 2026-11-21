@@ -42,7 +42,7 @@ std::shared_ptr<const omega::Snapshot> snapshot() {
         const std::string root = make_webroot();
         const std::string json = R"({"format":1,"generation":1,
 "server":{"bind":"127.0.0.1","port":1,"listen_backlog":8,"max_connections":8,"max_request_size":1000,
- "max_header_size":4096,"max_request_line_size":2048,"read_timeout_seconds":1,"keepalive_timeout_seconds":1,
+ "max_header_size":4096,"max_request_line_size":2048,"read_timeout_seconds":1,"keepalive_timeout_seconds":1,"write_timeout_seconds":1,
  "max_keepalive_requests":3,"shutdown_grace_period_seconds":1,"index_files":["index.html"],"webroot":")" + root + R"(/web"},
 "security":{"require_valid_host":true,"allowed_methods":["GET","HEAD","POST"],"deny_hidden_files":true,
  "deny_sensitive_extensions":[".bak"],"deny_patterns":["~"],

@@ -14,6 +14,10 @@ ACTIVE_DEFENSE_MENU_SCREEN = ScreenGuide(
           "Active Defense (détecter : menaces, incidents, leurres, pendant la requête) et RIPOSTE (riposter dans la "
           "durée : bans de plus en plus longs pour les sources qui reviennent). En dessous, INTERVENTION MANUELLE : "
           "bannir ou débannir une adresse IP à la main, sans condition, et voir le statut de tous les bans.")
+        + " "
+        + _("Les trois colonnes suivent le même ordre : État, puis l'essai (Tester ou Simuler), puis les réglages "
+            "(Modules ou Réglages), puis les écrans propres au bloc (WAF : Limitations, Custom, Magnet ; Active "
+            "Defense : Menaces, Incidents, Deception ; RIPOSTE : Politiques, Actions, Récidives).")
     ),
     fields=(),
     consequences=_("Aucune - purement navigation."),
@@ -51,7 +55,7 @@ ACTIVE_DEFENSE_STATUS_SCREEN = ScreenGuide(
         (
             _("Une fois `war_mode.enabled=true`, tout devient automatique et déterministe, sans "
             "aucune intervention manuelle : chaque décision WAF déjà calculée alimente un score "
-            "cumulé par source (IP + User-Agent hache, avec décroissance dans le temps), qui "
+            "cumulé par source (adresse IP, avec décroissance dans le temps), qui "
             "franchit des seuils configurables (normal/suspicious/hostile/contained) déclenchant "
             "des actions automatiques (redirection vers un leurre, journalisation enrichie, "
             "ralentissement, création d'incident).")
@@ -280,7 +284,8 @@ ACTIVE_DEFENSE_SIMULATE_SCREEN = ScreenGuide(
     fields=(
         FieldGuide(
             label=_("IP simulée"),
-            definition=_("Adresse IP source utilisée pour la simulation."),
+            definition=_("Adresse IP source utilisée pour la simulation. Depuis la 3.0.0, une source est "
+                         "identifiée par son adresse seule : le User-Agent, choisi par le client, n'y entre plus."),
             utilisation=_("Une IP quelconque. Valeur par défaut : 203.0.113.42."),
             action=_("Utilisée au clic sur Simuler."),
             reaction=_("Aucun effet réel - aucune écriture, aucun impact réseau."),
@@ -289,13 +294,6 @@ ACTIVE_DEFENSE_SIMULATE_SCREEN = ScreenGuide(
             label=_("Chemin simulé"),
             definition=_("Chemin de la requête simulée."),
             utilisation=_("Chaîne libre. Valeur par défaut : /wp-login.php."),
-            action=_("Utilisée au clic sur Simuler."),
-            reaction=_("Aucun effet réel."),
-        ),
-        FieldGuide(
-            label=_("User-Agent"),
-            definition=_("User-Agent simulé (participe au calcul de l'identifiant de source simulé)."),
-            utilisation=_("Chaîne libre, optionnelle."),
             action=_("Utilisée au clic sur Simuler."),
             reaction=_("Aucun effet réel."),
         ),
@@ -340,7 +338,7 @@ WAF_MODULES_SCREEN = ScreenGuide(
     screen_class_name="WafModulesScreen",
     title=_("WAF - Modules"),
     acces=_("Accueil -> Active Sécurité -> Modules (bloc WAF)"),
-    definition=_("Trois sections : mode/comportement d'erreur, gestion des packs de règles actifs, gestion de la liste de blocage."),
+    definition=_("Trois sections : mode/comportement d'erreur et inspection du corps, gestion des packs de règles actifs, gestion de la liste de blocage."),
     fields=(
         FieldGuide(
             label=_("Mode"),
@@ -374,6 +372,41 @@ WAF_MODULES_SCREEN = ScreenGuide(
             ),
         ),
         FieldGuide(
+            label=_("Taille du corps de requête inspectée (body_max_inspect_bytes)"),
+            definition=(
+                _("Le WAF n'inspecte que le début du corps d'une requête, sur toutes les routes (statique, "
+                  "reverse proxy, FastCGI, envoi de fichiers). Le corps entier part toujours vers la route.")
+            ),
+            utilisation=_("Nombre d'octets, 65536 par défaut. Plus grand = plus de CPU par requête."),
+            action=_("Enregistre dans options.waf.inspect, avec le mode."),
+            reaction=_("Rechargement automatique."),
+        ),
+        FieldGuide(
+            label=_("Corps plus grand que cette taille (body_over_limit)"),
+            definition=_("Ce que devient la partie du corps que le WAF n'a pas inspectée."),
+            utilisation=(
+                _("pass (par défaut) : la suite part sans inspection ; reject : la requête est refusée (413), en "
+                  "mode block seulement.")
+            ),
+            action=_("Enregistre dans options.waf.inspect, avec le mode."),
+            reaction=_("Rechargement automatique."),
+        ),
+        FieldGuide(
+            label=_("Fichiers binaires non inspectés (binary_formats)"),
+            definition=(
+                _("Formats de fichiers que le WAF ne lit pas comme du texte : une image ou une archive contient "
+                  "forcément des suites d'octets qui ressemblent à une attaque, et serait refusée à tort.")
+            ),
+            utilisation=(
+                _("Le format est reconnu au contenu réel (signature des premiers octets), jamais à l'extension ni au "
+                  "seul type annoncé. Un formulaire, du JSON, du XML ou du texte est toujours inspecté ; dans un "
+                  "formulaire avec fichiers, seuls les fichiers reconnus sont retirés. Par défaut, tous les formats "
+                  "connus ; vide = tout inspecter, comme avant la 3.0.0.")
+            ),
+            action=_("Enregistre dans options.waf.inspect, avec le mode ; un format inconnu est refusé."),
+            reaction=_("Rechargement automatique."),
+        ),
+        FieldGuide(
             label=_("Packs de règles (rule_paths)"),
             definition=_("Fichiers de règles réellement charges par le WAF - sans au moins un pack, rien n'est détecté."),
             utilisation=_("Ajouter ouvre un sélecteur des packs présents sous secure/waf/rules/ non déjà référencés."),
@@ -389,7 +422,8 @@ WAF_MODULES_SCREEN = ScreenGuide(
                 "démarrage et laissé en place comme sauvegarde.")
             ),
             utilisation=_("Réseau (CIDR), motif, durée en secondes (vide = permanent, confirmation requise dans ce cas)."),
-            action=_("Ajoute/retire une entrée."),
+            action=_("« Bloquer un réseau » ajoute une entrée, « Débloquer » retire celle qui est sélectionnée "
+                     "(boutons de la barre du bas, toujours visibles)."),
             reaction=(
                 _("EFFET IMMÉDIAT, sans rechargement nécessaire - la blocklist est relue depuis "
                 "le disque à CHAQUE requête, jamais mise en cache en mémoire (contrairement au "
@@ -460,7 +494,7 @@ WAF_RATE_LIMIT_SCREEN = ScreenGuide(
             label=_("Exclusions d'inspection"),
             definition=_("Dossiers et extensions jamais inspectés par le WAF natif ni par magnet, et dossiers dont seul le corps n'est pas inspecté."),
             utilisation=_("Valeurs séparées par des virgules ; un dossier commence par « / »."),
-            action=_("Enregistre au clic sur Enregistrer."),
+            action=_("Enregistre au clic sur « Enregistrer les exclusions » (barre du bas, toujours visible)."),
             reaction=_("Le rate limit s'applique toujours à ces chemins : une exclusion ne règle jamais un 429."),
         ),
     ),

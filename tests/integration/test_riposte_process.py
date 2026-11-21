@@ -156,6 +156,8 @@ class TestRiposteWithSimpleServe(_RiposteServeTestCase):
 
         def decisions():
             database = self.root / "var" / "lib" / "riposte.sqlite3"
+            if not database.exists():  # cree par RIPOSTE a sa premiere ecriture : pas encore la (machine chargee)
+                return []
             connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
             try:
                 return connection.execute("SELECT status, policy_id, applied FROM decisions").fetchall()

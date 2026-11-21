@@ -1,0 +1,11 @@
+[http.routers.all]
+  rule = "PathPrefix(`/`)"
+  entryPoints = ["web"]
+  service = "backend"
+  TLSBLOCK
+[http.services.backend.loadBalancer]
+  [[http.services.backend.loadBalancer.servers]]
+    url = "http://127.0.0.1:18960"
+[[tls.certificates]]
+  certFile = "@W@/tls/cert.pem"
+  keyFile = "@W@/tls/key.pem"

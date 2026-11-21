@@ -9,11 +9,15 @@ module applique deja les limites de base deja configurees (spec Phase 1 :
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
+import math
+import os
 import random
 import socket
+import sys
 import time
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from concurrent.futures import Executor
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
@@ -23,13 +27,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import ssl
 
-from omega_serv.application.active_defense.manage_deception import (
-    assign_deception,
-    resolve_routing_decision,
-)
-from omega_serv.application.active_defense.manage_incidents import create_or_update_incident
-from omega_serv.application.active_defense.observe_threat import observe_threat
-from omega_serv.application.security.evaluate_waf_request import evaluate_waf_request
+from omega_serv.application.server.option_code import load_option_code
 from omega_serv.application.server.poll_upstream_load import (
     poll_upstream_load_forever,
     stop_pollers,
@@ -37,8 +35,12 @@ from omega_serv.application.server.poll_upstream_load import (
 from omega_serv.application.server.proxy_cache_locks import ProxyCacheLocks
 from omega_serv.application.server.resolve_error_page import resolve_error_page_body
 from omega_serv.application.server.route_request import route_request
-from omega_serv.application.server.serve_proxy import serve_proxy
-from omega_serv.application.server.serve_websocket_proxy import serve_websocket_proxy
+from omega_serv.application.server.routing_tables import (
+    effective_request_path,
+    request_size_limit,
+    requires_full_body,
+)
+from omega_serv.application.server.serve_proxy_admin import ADMIN_URL_PREFIX
 from omega_serv.domain.config.entities import OmegaServConfig
 from omega_serv.domain.http.headers import HttpHeaders
 from omega_serv.domain.http.request import (
@@ -53,18 +55,8 @@ from omega_serv.domain.http.websocket import is_websocket_upgrade_request
 from omega_serv.domain.logging.access_log_format import (
     AccessLogEntry,
     format_combined_log_line,
-    format_error_log_line,
 )
-from omega_serv.domain.logging.active_defense_enriched_log_format import (
-    EnrichedLogEntry,
-    format_enriched_log_line,
-)
-from omega_serv.domain.logging.security_event_format import (
-    SecurityEvent,
-    SecurityEventType,
-    format_security_event_line,
-)
-from omega_serv.domain.logging.waf_alert_format import WafAlertEntry, format_waf_alert_line
+from omega_serv.domain.logging.error_log_line import format_error_log_line
 from omega_serv.domain.routing.access_rule import (
     AccessRule,
     parse_access_rules,
@@ -81,30 +73,9 @@ from omega_serv.domain.routing.proxy_zone import (
 )
 from omega_serv.domain.routing.zone_resolver import Zone
 from omega_serv.domain.security.access_policy import is_method_allowed, validate_host_header
-from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
-from omega_serv.domain.security.active_defense.entities import (
-    DefensePlaybook,
-    RoutingDecision,
-    ThreatState,
-)
-from omega_serv.domain.security.active_defense.policies import (
-    build_playbook,
-    compute_slowdown_delay_ms,
-    is_assignment_active,
-    is_source_marked,
-    user_agent_fingerprint,
-    validate_playbook_action,
-)
-from omega_serv.domain.security.active_defense.value_objects import AttackClass
-from omega_serv.domain.security.auth.authorize import authorize_request
-from omega_serv.domain.security.auth.basic_auth import build_www_authenticate_header
-from omega_serv.domain.security.auth.entities import AuthZone, UserAccount
 from omega_serv.domain.security.csp import allow_inline_styles_by_hash, csp_header_name
 from omega_serv.domain.security.security_headers import apply_security_headers
 from omega_serv.domain.security.trusted_proxy import normalize_ip, resolve_client_ip
-from omega_serv.domain.security.waf.config import WafConfig
-from omega_serv.domain.security.waf.entities import WafDecision
-from omega_serv.infrastructure.clock.system_clock import SystemClock
 from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
 from omega_serv.infrastructure.server.http_parser import (
     RAW_LINE_BUFFER_LIMIT,
@@ -114,28 +85,75 @@ from omega_serv.infrastructure.server.http_parser import (
     read_and_discard_body,
     read_request_head,
 )
-from omega_serv.ports.active_defense_writer_port import (
-    ActiveDefenseRepositories,
-    ActiveDefenseWriterPort,
-)
-from omega_serv.ports.blocklist_port import BlocklistPort
-from omega_serv.ports.clock_port import ClockPort
-from omega_serv.ports.deception_assignment_repository_port import DeceptionAssignmentRepositoryPort
-from omega_serv.ports.decoy_dispatch_port import DecoyDispatchPort
-from omega_serv.ports.delay_scheduler_port import DelaySchedulerPort
-from omega_serv.ports.fastcgi_client_port import FastCgiClientPort
-from omega_serv.ports.filesystem_port import FilesystemPort
-from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
-from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
-from omega_serv.ports.logger_port import LoggerPort
-from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
-from omega_serv.ports.rate_limit_port import RateLimitPort
-from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
-from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
-from omega_serv.ports.waf_port import WafPort
+from omega_serv.infrastructure.server.traffic_meter import SAMPLE_SECONDS, TrafficFile, TrafficMeter
+
+if TYPE_CHECKING:
+    from omega_serv.domain.logging.security_event_format import SecurityEventType
+    from omega_serv.domain.security.active_defense.config import ActiveDefenseConfig
+    from omega_serv.domain.security.active_defense.entities import (
+        DefensePlaybook,
+        RoutingDecision,
+        ThreatState,
+    )
+    from omega_serv.domain.security.active_defense.value_objects import AttackClass
+    from omega_serv.domain.security.auth.entities import AuthDecision, AuthZone, UserAccount
+    from omega_serv.domain.security.auth.failure_limit import AuthFailureLimiter
+    from omega_serv.domain.security.auth.password_protection import PasswordProtection
+    from omega_serv.domain.security.waf.config import WafConfig
+    from omega_serv.domain.security.waf.entities import WafDecision
+    from omega_serv.ports.active_defense_writer_port import (
+        ActiveDefenseRepositories,
+        ActiveDefenseWriterPort,
+    )
+    from omega_serv.ports.blocklist_port import BlocklistPort
+    from omega_serv.ports.clock_port import ClockPort
+    from omega_serv.ports.deception_assignment_repository_port import (
+        DeceptionAssignmentRepositoryPort,
+    )
+    from omega_serv.ports.decoy_dispatch_port import DecoyDispatchPort
+    from omega_serv.ports.delay_scheduler_port import DelaySchedulerPort
+    from omega_serv.ports.fastcgi_client_port import FastCgiClientPort
+    from omega_serv.ports.filesystem_port import FilesystemPort
+    from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
+    from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
+    from omega_serv.ports.logger_port import LoggerPort
+    from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
+    from omega_serv.ports.rate_limit_port import RateLimitPort
+    from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
+    from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
+    from omega_serv.ports.waf_port import WafPort
 
 ACTIVE_DEFENSE_STOP_TIMEOUT_SECONDS = 2.0
+PASSWORD_WORKERS = 2
+"""Verifications scrypt simultanees au plus (32 Mio)."""
+PASSWORD_QUEUE_MAX = 8
+"""Verifications en attente au plus par defaut (reglable : pending_checks_max = calculs + attente) ; au-dela, 503
+sans hachage plutot qu'un empilement (2026-11-20)."""
 """A l'arret, temps maximal laisse au fil d'ecriture d'Active Defense pour vider sa file."""
+
+CLIENT_CLOSED_REQUEST = 499
+"""Plan proxy natif v2, lot 1 (P3, regle nginx) : client parti avant la reponse - journalise, jamais envoye."""
+_CLIENT_GONE_POLL_SECONDS = 0.25  # meme pas que la verification des delais du natif
+
+
+def _start_eagerly(operation: Awaitable[HttpResponse]) -> asyncio.Future[HttpResponse]:
+    """Python >= 3.12 : la tache demarre tout de suite et s'execute jusqu'a sa premiere vraie attente - une route
+    qui n'attend rien (fichier statique) est deja finie au retour, sans passage par la boucle (2026-11-19,
+    ETUDE_PROXY_ET_MEMOIRE §12 : la tache par requete coutait ~4 % de debit). Avant 3.12 : comportement d'origine."""
+    if sys.version_info >= (3, 12) and asyncio.iscoroutine(operation):
+        return asyncio.Task(operation, eager_start=True)  # type: ignore[call-arg] # 3.12+
+    return asyncio.ensure_future(operation)
+_TUNNEL_CLOSE_SECONDS = 3.0  # lot 10 : fermeture des tunnels WebSocket annules a l'arret (trame 1001 : 2 s au plus)
+
+GiveBack = Callable[[int, bytes, int], bool]
+"""Plan proxy natif v2, lot 4 (D12) : (copie du descripteur, octets deja lus, requetes servies) -> envoye au natif ?
+Le descripteur est toujours ferme par la fonction, envoye ou non."""
+_GIVE_BACK_MAX_PENDING = 64 * 1024
+"""Octets deja lus au-dela desquels la connexion reste chez Python (la trame HANDOFF_DONE doit tenir dans le canal)."""
+
+_TCP_INFO_BYTES_ACKED = slice(120, 128)
+"""Lot A (D31) : `tcpi_bytes_acked` de `struct tcp_info` (Linux >= 4.1) - octets dont le client a accuse reception,
+la mesure du progres d'un envoi, en memoire, par `sendfile` ou a travers TLS."""
 
 
 @dataclass(frozen=True)
@@ -146,6 +164,14 @@ class SecurityOutcome:
     # Leurre, decision WAF autre que « autoriser » (journal seul compris) ou refus Auth : la requete n'etait pas
     # propre (controle 1/N du moteur natif, plan WAF natif lot 4).
     notable: bool = False
+
+
+def is_internal_admin_call(path: str, status: int) -> bool:
+    """Decision de l'auteur du 2026-11-16 (choix a) : un appel accepte a `/.omega-serv-admin/` vient de cette machine
+    (TUI, processus d'administration web, toutes les 2 s) et n'est jamais ecrit dans access.log - il gonflait le flux et
+    les statistiques. Un appel refuse (403 : hors des reseaux de confiance) reste ecrit : omega-jail et RIPOSTE voient
+    toujours qui sonde cette route. Meme regle dans le moteur natif (server.cpp, write_access_line)."""
+    return path.startswith(ADMIN_URL_PREFIX) and status != 403
 
 
 class AsyncioHttpServer:
@@ -190,6 +216,7 @@ class AsyncioHttpServer:
         clock: ClockPort | None = None,
         active_defense_writer: ActiveDefenseWriterPort | None = None,
     ):
+        from omega_serv.infrastructure.clock.system_clock import SystemClock
         self._config = config
         self._path_resolver = path_resolver
         self._filesystem = filesystem
@@ -201,17 +228,27 @@ class AsyncioHttpServer:
         self._waf_port = waf_port
         self._magnet_port = magnet_port
         self._magnet_executor = magnet_executor
+        self._password_pool: concurrent.futures.ThreadPoolExecutor | None = None
         self._blocklist_port = blocklist_port
         self._rate_limit_port = rate_limit_port
         self._reputation_tracker = reputation_tracker
         self._waf_alert_log_path = waf_alert_log_path
         self._ssl_context = ssl_context
+        self._tls_in_handler = ssl_context is not None and sys.version_info >= (3, 11)
         self._auth_zones = auth_zones
         self._users_by_name = users_by_name or {}
+        self._auth_failures: AuthFailureLimiter | None = None
+        self._password_jobs = 0
+        self._pending_checks_max = PASSWORD_WORKERS + PASSWORD_QUEUE_MAX
+        self._password_protection: PasswordProtection
+        self._apply_password_protection(config)
         self._fastcgi_client = fastcgi_client
         self._proxy_client = proxy_client
         self._proxy_load_balancer = proxy_load_balancer or ProxyLoadBalancerState()
         self._proxy_health_state = proxy_health_state or ProxyHealthState()
+        # Plan proxy natif v2, lot 6 (P6) : zones a sonder par CE processus (None : toutes) - un processus de securite
+        # autre que le n° 0 ne sonde pas les zones relayees par le natif.
+        self.probe_filter: Callable[[str], bool] | None = None
         self._proxy_client_ssl_context_verified = proxy_client_ssl_context_verified
         self._proxy_client_ssl_context_unverified = proxy_client_ssl_context_unverified
         self._proxy_cache_store = proxy_cache_store
@@ -230,9 +267,10 @@ class AsyncioHttpServer:
         self._active_defense_guard_failing = False
         self._decoy_load_balancer = ProxyLoadBalancerState()
         self._decoy_health_state = ProxyHealthState()
-        self._active_defense_playbook: DefensePlaybook | None = (
-            build_playbook(active_defense_config.war_mode) if active_defense_config is not None else None
-        )
+        self._active_defense_playbook: DefensePlaybook | None = None
+        if active_defense_config is not None:
+            from omega_serv.domain.security.active_defense.policies import build_playbook
+            self._active_defense_playbook = build_playbook(active_defense_config.war_mode)
         self._clock = clock or SystemClock()
         self._server: asyncio.Server | None = None
         self._stopped = asyncio.Event()
@@ -242,9 +280,25 @@ class AsyncioHttpServer:
         # toujours envoyer ici - pose par le processus de securite ; None avec le moteur Python.
         self.watch_sink: Callable[[str, float], None] | None = None
         self._active_connections: set[asyncio.Task] = set()
+        # Plan proxy natif v2, lot 7 (decision de l'auteur du 2026-11-13, comme nginx) : a l'arret, une connexion qui
+        # attend sa prochaine requete (rien recu) est fermee tout de suite ; seules les requetes en cours ont le delai
+        # de grace. Avant, une connexion keep-alive inactive retenait l'arret jusqu'au bout du delai (« arret force »).
+        self._stopping = False
+        self._waiting_for_request: dict[asyncio.StreamWriter, asyncio.StreamReader] = {}
         self._access_control_rules_cache: list[AccessRule] = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache: list[ProxyZone] = self._parse_websocket_proxy_zones()
         self._proxy_load_poll_tasks: list[asyncio.Task] = []
+        # Plan tableau de bord web §9.5, lot 9b : octets recus des visiteurs et envoyes, publies pour l'historique.
+        self._traffic = TrafficMeter()
+        self._traffic_file = TrafficFile(project_root)
+        self._traffic_task: asyncio.Task | None = None
+        self._load_option_code()
+
+    def _load_option_code(self) -> None:
+        """Code des options actives charge maintenant, jamais pendant une requete (application/server/option_code.py)."""
+        active = (("waf", self._waf_config is not None), ("active_defense", self._active_defense_config is not None),
+                  ("auth", bool(self._auth_zones)), ("reverse_proxy", self._proxy_client is not None))
+        load_option_code(self._config, [name for name, enabled in active if enabled])
 
     @property
     def sockets(self) -> tuple:
@@ -262,18 +316,21 @@ class AsyncioHttpServer:
     async def start(self, listen_socket: socket.socket | None = None) -> None:
         """`listen_socket` : port deja ouvert par le processus principal du mode « boost »,
         partage par tous les workers (le noyau repartit les connexions entre eux)."""
-        if self._active_defense_writer is not None:
-            # Fil d'ecriture demarre ICI (dans le worker, apres le fork du mode boost : un fil
-            # ne survit jamais a un fork) - OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6.
-            self._active_defense_writer.set_error_reporter(lambda message: self._log_error(message, request_id=None))
-            self._active_defense_writer.start()
+        self._start_active_defense_writer()
         server_config = self._config.server
+        # Lot A (D30) : poignee de main TLS faite dans `_handle_connection_tracked`, une fois la connexion comptee
+        # dans max_connections (avant : comptee seulement apres, par asyncio -> 300 poignees muettes tenues avec
+        # max_connections = 5). Python 3.10 (fin de vie) n'a pas `StreamWriter.start_tls` : poignee faite par
+        # asyncio comme avant, mais bornee par read_timeout_seconds au lieu de 60 s.
+        tls: dict[str, Any] = {}
+        if self._ssl_context is not None and not self._tls_in_handler:
+            tls = {"ssl": self._ssl_context, "ssl_handshake_timeout": server_config.read_timeout_seconds}
         if listen_socket is not None:
             self._server = await asyncio.start_server(
                 self._handle_connection_tracked,
                 sock=listen_socket,
                 limit=RAW_LINE_BUFFER_LIMIT,
-                ssl=self._ssl_context,
+                **tls,
             )
         else:
             self._server = await asyncio.start_server(
@@ -282,9 +339,47 @@ class AsyncioHttpServer:
                 port=server_config.port,
                 backlog=server_config.listen_backlog,
                 limit=RAW_LINE_BUFFER_LIMIT,
-                ssl=self._ssl_context,
+                **tls,
             )
         self._start_proxy_load_pollers()
+        self._start_traffic_sampler()
+
+    def start_background_tasks(self) -> None:
+        """Plan proxy natif v2, lot A (D10) : les taches de fond de `start()`, sans ouvrir de port. Appelee par le
+        processus de securite du moteur natif, qui sert ce meme objet sans ecouter : avant, `start()` n'y etait
+        jamais appele, donc ni sondes de sante ou de charge des backends, ni ecriture differee d'Active Defense.
+        Chaque processus de securite a son propre etat de sante, comme chaque worker du mode boost : il sonde donc
+        lui-meme (un seul processus sondeur viendra avec la sante partagee du natif, lot 6, P6)."""
+        self._start_active_defense_writer()
+        self._start_proxy_load_pollers()
+        self._start_traffic_sampler()
+
+    def _start_traffic_sampler(self) -> None:
+        """Lot 9b : releve des connexions ouvertes toutes les 2 s, fichier du processus toutes les 5 s."""
+        if self._traffic_task is not None:
+            return
+
+        async def sample() -> None:
+            while True:
+                await asyncio.sleep(SAMPLE_SECONDS)
+                self._traffic.sample_all()
+                if self._traffic.measured:
+                    self._traffic_file.publish(self._traffic.received, self._traffic.sent)
+
+        self._traffic_task = asyncio.ensure_future(sample())
+
+    def _stop_traffic_sampler(self) -> None:
+        if self._traffic_task is not None:
+            self._traffic_task.cancel()
+            self._traffic_task = None
+        self._traffic_file.remove()
+
+    def _start_active_defense_writer(self) -> None:
+        if self._active_defense_writer is not None:
+            # Fil d'ecriture demarre ICI (dans le worker, apres le fork du mode boost ou du superviseur natif : un fil
+            # ne survit jamais a un fork) - OMEGA-SERV_ETUDE_ACTIVE_DEFENSE_STIX_MISP_CHARGE.md §3.6.
+            self._active_defense_writer.set_error_reporter(lambda message: self._log_error(message, request_id=None))
+            self._active_defense_writer.start()
 
     async def serve_forever(self) -> None:
         """Attend l'arret (shutdown()/close()). N'utilise jamais
@@ -311,6 +406,52 @@ class AsyncioHttpServer:
             # - voir evaluate_waf_request.py::_inspect_with_magnet) ne
             # doit jamais empecher l'arret du serveur.
             self._magnet_executor.shutdown(wait=False, cancel_futures=True)
+        if self._password_pool is not None:
+            self._password_pool.shutdown(wait=False, cancel_futures=True)
+
+    @property
+    def grace_period_seconds(self) -> int:
+        """Lot 1 (D11) : delai de grace de la configuration en cours (processus de securite du natif)."""
+        return self._config.server.shutdown_grace_period_seconds
+
+    @property
+    def has_proxy_client(self) -> bool:
+        return self._proxy_client is not None
+
+    @property
+    def has_proxy_tls(self) -> bool:
+        return self._proxy_client_ssl_context_verified is not None
+
+    def provide_proxy_tls(self, verified: ssl.SSLContext | None, unverified: ssl.SSLContext | None) -> None:
+        """Memoire (2026-11-19, etude §11) : contextes TLS client crees au premier backend HTTPS, au demarrage ou au
+        rechargement qui l'ajoute - jamais pour un proxy dont tous les backends sont en HTTP."""
+        self._proxy_client_ssl_context_verified = verified
+        self._proxy_client_ssl_context_unverified = unverified
+
+    def enable_reverse_proxy(
+        self,
+        *,
+        client: HttpProxyClientPort,
+        load_balancer: ProxyLoadBalancerState,
+        health_state: ProxyHealthState,
+        ssl_context_verified: ssl.SSLContext | None,
+        ssl_context_unverified: ssl.SSLContext | None,
+        cache_store: ProxyCacheStorePort,
+        cache_locks: ProxyCacheLocks,
+        cache_metrics: ProxyCacheMetrics,
+    ) -> None:
+        """Plan proxy natif v2, lot A (D15) : `options.reverse_proxy` activee par un rechargement (SIGHUP). Les
+        memes collaborateurs qu'au demarrage ; appelee par `reload_server` juste avant `reload_scoped`, qui relance
+        les sondes avec la nouvelle configuration. Jamais appelee si un client existe deja (etat garde)."""
+        self._proxy_client = client
+        self._proxy_load_balancer = load_balancer
+        self._proxy_health_state = health_state
+        self._proxy_client_ssl_context_verified = ssl_context_verified
+        self._proxy_client_ssl_context_unverified = ssl_context_unverified
+        self._proxy_cache_store = cache_store
+        self._proxy_cache_locks = cache_locks
+        self._proxy_cache_metrics = cache_metrics
+        self._load_option_code()
 
     def reload_scoped(
         self,
@@ -352,8 +493,11 @@ class AsyncioHttpServer:
         self._waf_alert_log_path = waf_alert_log_path
         self._auth_zones = auth_zones
         self._users_by_name = users_by_name or {}
+        # Comptes, zones ou reglages peut-etre modifies : tout succes retenu est oublie, compteurs repartis de zero.
+        self._apply_password_protection(config)
         self._access_control_rules_cache = self._parse_access_control_rules()
         self._websocket_proxy_zones_cache = self._parse_websocket_proxy_zones()
+        self._load_option_code()
         self._restart_proxy_load_pollers()
 
     async def shutdown(self, grace_period_seconds: float) -> int:
@@ -377,14 +521,26 @@ class AsyncioHttpServer:
         await self._stop_proxy_load_pollers()
         if self._server is not None:
             self._server.close()
+        self._stopping = True
+        for writer, reader in list(self._waiting_for_request.items()):
+            # Rien recu de la requete suivante : fermeture propre. Une ligne de requete deja lue a retire la
+            # connexion de la liste (on_request_line) ; une ligne pas encore complete est encore dans le tampon.
+            if not getattr(reader, "_buffer", b""):
+                writer.close()
 
         if not self._active_connections:
+            self._stop_traffic_sampler()
             self._stopped.set()
             return 0
 
         _, pending = await asyncio.wait(self._active_connections, timeout=grace_period_seconds)
         for task in pending:
             task.cancel()
+        if pending:
+            # Lot 10 (C14) : laisse aux tunnels WebSocket annules le temps d'envoyer leur trame 1001 et leur ligne
+            # d'acces (borne, comme leur propre envoi).
+            await asyncio.wait(pending, timeout=_TUNNEL_CLOSE_SECONDS)
+        self._stop_traffic_sampler()
         self._stopped.set()
         if pending:
             self._log_error(
@@ -395,6 +551,11 @@ class AsyncioHttpServer:
 
     async def _handle_connection_tracked(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         if len(self._active_connections) >= self._config.server.max_connections:
+            if self._tls_in_handler:
+                # Lot A (D30) : rien ne peut partir en clair sur une connexion TLS, et faire la poignee de main pour
+                # repondre 503 couterait justement ce que la capacite protege -> fermeture immediate (le natif aussi).
+                writer.transport.abort()
+                return
             await self._write_error_response(writer, HttpStatus.SERVICE_UNAVAILABLE)
             writer.close()
             try:
@@ -405,32 +566,57 @@ class AsyncioHttpServer:
         task = asyncio.current_task()
         assert task is not None
         self._active_connections.add(task)
+        self._traffic.open(task, writer.get_extra_info("socket"))
         try:
+            if self._tls_in_handler:
+                assert self._ssl_context is not None
+                try:
+                    await writer.start_tls(  # type: ignore[attr-defined] # Python >= 3.11 (_tls_in_handler)
+                        self._ssl_context, ssl_handshake_timeout=self._config.server.read_timeout_seconds)
+                except (OSError, TimeoutError):  # ssl.SSLError, delai depasse, client parti : comme asyncio, sans journal
+                    writer.transport.abort()
+                    return
             await self._handle_connection(reader, writer)
         finally:
+            self._traffic.close(task)  # deja fait avant la fermeture dans _handle_connection ; ici : sorties precoces
             self._active_connections.discard(task)
 
     async def _handle_connection(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, requests_served: int = 0,
+        native_rate_limit: int | None = None, give_back: GiveBack | None = None,
     ) -> None:
         """`requests_served` : requetes deja servies sur cette connexion par le moteur natif avant qu'il la confie
-        (plan moteur C++ lot 6) - la limite keep-alive reste celle de la connexion entiere."""
+        (plan moteur C++ lot 6) - la limite keep-alive reste celle de la connexion entiere.
+
+        Plan proxy natif v2, lot 4 (D12) : connexion confiee par le natif - `native_rate_limit` = limite de debit deja
+        comptee par lui pour la premiere requete ; `give_back` = rendre la connexion au natif apres la reponse
+        (HANDOFF_DONE), pour que chaque requete suivante repasse par lui (une seule autorite de la limite)."""
         peername = writer.get_extra_info("peername")
         peer_ip = peername[0] if peername else "unknown"
         server_config = self._config.server
+        first_served = requests_served
 
         try:
-            while requests_served < server_config.max_keepalive_requests:
+            while requests_served < server_config.max_keepalive_requests and not self._stopping:
+                if give_back is not None and requests_served > first_served and \
+                        self._give_back_connection(reader, writer, requests_served, give_back):
+                    return
                 timeout = (
                     server_config.read_timeout_seconds
                     if requests_served == 0
                     else server_config.keepalive_timeout_seconds
                 )
+                self._waiting_for_request[writer] = reader  # lot 7 : fermee tout de suite a l'arret si rien n'arrive
                 try:
-                    head = await asyncio.wait_for(
-                        read_request_head(reader, server_config.max_request_line_size, server_config.max_header_size),
-                        timeout=timeout,
-                    )
+                    try:
+                        head = await asyncio.wait_for(
+                            read_request_head(reader, server_config.max_request_line_size,
+                                              server_config.max_header_size,
+                                              on_request_line=lambda: self._waiting_for_request.pop(writer, None)),
+                            timeout=timeout,
+                        )
+                    finally:
+                        self._waiting_for_request.pop(writer, None)
                 except asyncio.TimeoutError:
                     break
                 except ConnectionClosedCleanly:
@@ -461,6 +647,14 @@ class AsyncioHttpServer:
                     self._log_access(request, response, start_time)
                     break
 
+                if request.canonical_path is None:
+                    # Scan de securite n° 1 (2026-11-20, cause A) : chemin sans forme canonique (encodage invalide,
+                    # NUL, caractere de controle) - aucune decision de securite n'est prise sur le chemin brut.
+                    response = await self._write_error_response(writer, HttpStatus.BAD_REQUEST)
+                    self._log_error("chemin de requête non normalisable", request_id=request_id)
+                    self._log_access(request, response, start_time)
+                    break
+
                 if not is_method_allowed(head.method, self._config.security):
                     response = HttpResponse.empty(HttpStatus.METHOD_NOT_ALLOWED)
                     response.set_header("Allow", ", ".join(self._config.security.allowed_methods))
@@ -468,7 +662,7 @@ class AsyncioHttpServer:
                     self._log_access(request, response, start_time)
                     break
 
-                if resolve_access_verdict(request.path, self._access_control_rules()) == "deny":
+                if resolve_access_verdict(request.canonical_path, self._access_control_rules()) == "deny":
                     response = HttpResponse.empty(HttpStatus.FORBIDDEN)
                     apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
                     await self._write_response(writer, response, keep_alive=False)
@@ -478,17 +672,16 @@ class AsyncioHttpServer:
                 capture_max_bytes = 0
                 if self._waf_config is not None and head.method in self._waf_config.inspect.body_methods:
                     capture_max_bytes = self._waf_config.inspect.body_max_inspect_bytes
-                if (
-                    self._fastcgi_client is not None
-                    or self._config.option_enabled("upload")
-                    or self._proxy_client is not None
-                ):
-                    capture_max_bytes = max(capture_max_bytes, server_config.max_request_size)
+                # Projets 3.0.0 §9 : une zone FastCGI peut fixer sa propre taille (sinon celle de l'ecran Limites).
+                size_limit = request_size_limit(self._config, request.canonical_path)
+                if requires_full_body(self._config, request.canonical_path):  # lot 1 (D34, P9) : seulement ces routes
+                    capture_max_bytes = max(capture_max_bytes, size_limit)
 
                 try:
-                    _, captured_body = await asyncio.wait_for(
-                        read_and_discard_body(reader, head, server_config.max_request_size, capture_max_bytes),
-                        timeout=timeout,
+                    # Lot 11 (F1) : delai relance a chaque bloc recu, debit moyen minimal - plus un plafond total.
+                    _, captured_body = await read_and_discard_body(
+                        reader, head, size_limit, capture_max_bytes,
+                        self._body_reject_over(head.method), timeout=timeout,
                     )
                 except asyncio.TimeoutError:
                     response = await self._write_error_response(writer, HttpStatus.REQUEST_TIMEOUT)
@@ -506,7 +699,8 @@ class AsyncioHttpServer:
 
                 # Leurre, WAF, Active Defense, mode guerre, Auth : la MEME etape que le processus de securite du
                 # moteur natif (plan moteur C++ lot 4) - une seule implementation pour les deux moteurs.
-                outcome = await self.security_stage(request)
+                outcome = await self.security_stage(
+                    request, native_rate_limit=native_rate_limit if requests_served == first_served else None)
                 if outcome.response is not None:
                     apply_security_headers(outcome.response, self._config.security, self._config.tls.enabled, request.path)
                     if outcome.keep_alive_allowed:  # leurre : la connexion continue comme pour une requete servie
@@ -515,6 +709,7 @@ class AsyncioHttpServer:
                             requests_served < server_config.max_keepalive_requests
                             and head.http_version == "HTTP/1.1"
                             and (head.header("connection") or "").lower() != "close"
+                            and not self._stopping  # lot 7 : arret en cours, Connection: close
                         )
                         await self._write_response(writer, outcome.response, keep_alive)
                         self._log_access(request, outcome.response, start_time)
@@ -526,17 +721,42 @@ class AsyncioHttpServer:
                     break
 
                 if self._proxy_client is not None and is_websocket_upgrade_request(request):
-                    proxy_zone = self._match_websocket_proxy_zone(request.path)
+                    # Lot 1 (D14) : zone choisie sur le chemin apres reecritures, comme le routage HTTP.
+                    websocket_path = effective_request_path(self._config, request.path)
+                    proxy_zone = None if websocket_path is None else self._match_websocket_proxy_zone(websocket_path)
                     if proxy_zone is not None:
-                        ws_status = await serve_websocket_proxy(
-                            request, proxy_zone, self._proxy_client, self._proxy_load_balancer,
-                            self._proxy_health_state, reader, writer,
-                            self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,
+                        assert websocket_path is not None
+                        from omega_serv.application.server.serve_proxy import ForwardingContext
+                        from omega_serv.application.server.serve_websocket_proxy import (
+                            TunnelStats,
+                            serve_websocket_proxy,
                         )
-                        self._log_access(request, HttpResponse.empty(ws_status), start_time)
+                        # Lot 10 : ligne ecrite a la fermeture du tube, avec les octets envoyes au client (decision de
+                        # l'auteur du 2026-11-14) - y compris a la fin du delai de grace de l'arret (annulation).
+                        tunnel = TunnelStats()
+                        try:
+                            ws_status = await serve_websocket_proxy(
+                                replace(request, path=websocket_path), proxy_zone, self._proxy_client,
+                                self._proxy_load_balancer, self._proxy_health_state, reader, writer,
+                                self._proxy_client_ssl_context_verified, self._proxy_client_ssl_context_unverified,
+                                forwarding=ForwardingContext(server_config.port, self._trusted_networks()),
+                                stats=tunnel,
+                            )
+                        except asyncio.CancelledError:
+                            if tunnel.status is not None:
+                                self._log_access(request, HttpResponse.empty(tunnel.status), start_time,
+                                                 size=tunnel.bytes_to_client)
+                            raise
+                        self._log_access(request, HttpResponse.empty(ws_status), start_time,
+                                         size=tunnel.bytes_to_client)
                         break
 
-                response = await self.route(request)
+                routed, client_left = await self._unless_client_leaves(reader, self.route(request))
+                if client_left:
+                    self._log_access(request, HttpResponse.empty(CLIENT_CLOSED_REQUEST), start_time)
+                    break
+                assert routed is not None
+                response = routed
                 apply_security_headers(response, self._config.security, self._config.tls.enabled, request.path)
 
                 requests_served += 1
@@ -544,9 +764,15 @@ class AsyncioHttpServer:
                     requests_served < server_config.max_keepalive_requests
                     and head.http_version == "HTTP/1.1"
                     and (head.header("connection") or "").lower() != "close"
+                    and not self._stopping  # lot 7 : arret en cours, Connection: close
                 )
 
-                await self._write_response(writer, response, keep_alive)
+                try:
+                    await self._write_response(writer, response, keep_alive)
+                except (ConnectionResetError, BrokenPipeError) as error:
+                    # Lot 1 (P3) : statut reellement envoye, avec les octets du corps recus par le client.
+                    self._log_access(request, response, start_time, size=getattr(error, "body_bytes_sent", 0))
+                    break
                 self._log_access(request, response, start_time)
 
                 if not keep_alive:
@@ -554,6 +780,8 @@ class AsyncioHttpServer:
         except (ConnectionResetError, BrokenPipeError):
             pass
         finally:
+            # Lot 9b : compteurs lus tant que la socket est ouverte ; ce qui reste dans le tampon partira ensuite
+            self._traffic.close(asyncio.current_task(), writer.transport.get_write_buffer_size())
             writer.close()
             try:
                 await writer.wait_closed()
@@ -603,6 +831,25 @@ class AsyncioHttpServer:
         request, _valid = self._build_request(head, peer_ip, request_id, remote_ip)
         return replace(request, body=body) if body else request
 
+    def _body_reject_over(self, method: str) -> int | None:
+        """Lot 2 : taille au-dela de laquelle un corps est refuse (413) - WAF en mode "block" avec
+        `inspect.body_over_limit = reject`, pour les methodes dont le corps est inspecte ; None sinon."""
+        waf = self._waf_config
+        if waf is None or waf.mode != "block" or waf.inspect.body_over_limit != "reject":
+            return None
+        return waf.inspect.body_max_inspect_bytes if method in waf.inspect.body_methods else None
+
+    def _inspected_part(self, request: HttpRequest) -> HttpRequest:
+        """Plan proxy natif v2, lot 2 (Q3 revisee, decision de l'auteur du 2026-11-12) : le WAF, son alerte et Active
+        Defense ne voient que les `body_max_inspect_bytes` premiers octets, sur toutes les routes ; la route recoit
+        toujours le corps entier. Avant, le corps entier etait inspecte sur les routes proxy, FastCGI et envoi de
+        fichiers : un POST binaire de 2 Mo gelait le processus 6 s (deni de service, mesure du lot 2)."""
+        assert self._waf_config is not None
+        limit = self._waf_config.inspect.body_max_inspect_bytes
+        if request.body is None or len(request.body) <= limit:
+            return request
+        return replace(request, body=request.body[:limit])
+
     async def security_stage(self, request: HttpRequest, blocklist_known_clear: bool = False,
                              native_rate_limit: int | None = None) -> SecurityOutcome:
         """Leurre, WAF (alerte, Active Defense, mode guerre), Auth - dans cet ordre, comme toujours. Rend la
@@ -619,9 +866,11 @@ class AsyncioHttpServer:
             assert self._blocklist_port is not None
             assert self._rate_limit_port is not None
             assert self._reputation_tracker is not None
+            from omega_serv.application.security.evaluate_waf_request import evaluate_waf_request
             waf_start = time.monotonic()
+            inspected = self._inspected_part(request)
             decision = await evaluate_waf_request(
-                request,
+                inspected,
                 self._waf_config,
                 self._waf_port,
                 self._blocklist_port,
@@ -635,8 +884,8 @@ class AsyncioHttpServer:
             if decision.action != "allow":
                 waf_notable = True
                 self._watch_source(request.remote_ip)
-                self._log_waf_alert(request, decision, (time.monotonic() - waf_start) * 1000)
-                state = self._observe_active_defense_threat(request, decision)
+                self._log_waf_alert(inspected, decision, (time.monotonic() - waf_start) * 1000)
+                state = self._observe_active_defense_threat(inspected, decision)
                 if state is not None:
                     war_mode_response = await self._apply_active_defense_war_mode_actions(request, state)
                     if war_mode_response is not None:
@@ -648,19 +897,125 @@ class AsyncioHttpServer:
                 return SecurityOutcome(response, notable=True)
 
         if self._auth_zones:
-            auth_decision = authorize_request(
-                request.path, request.method, request.header("authorization"),
-                self._auth_zones, self._users_by_name,
-            )
+            from omega_serv.domain.security.auth.authorize import authorize_request
+            # Scan de securite n° 1 (2026-11-20, cause A) : zones comparees au chemin canonique, celui du fichier
+            # servi - plus jamais au chemin brut (`//zone/x`, `/%7Aone/x`...). Sans forme canonique : 400.
+            if request.canonical_path is None:
+                return SecurityOutcome(HttpResponse.empty(HttpStatus.BAD_REQUEST), notable=True)
+            from omega_serv.domain.security.auth.authorize import password_check_is_costly
+            auth_args = (request.canonical_path, request.method, request.header("authorization"),
+                         self._auth_zones, self._users_by_name)
+            if password_check_is_costly(request.canonical_path, request.header("authorization"),
+                                        self._auth_zones, self._users_by_name):
+                refused, auth_decision = await self._costly_authorization(request, auth_args)
+                if refused is not None:
+                    return SecurityOutcome(refused, notable=True)
+            else:
+                auth_decision = authorize_request(*auth_args)
             if auth_decision.outcome in ("unauthenticated", "forbidden"):
                 status = HttpStatus.UNAUTHORIZED if auth_decision.outcome == "unauthenticated" else HttpStatus.FORBIDDEN
                 response = HttpResponse.empty(status)
                 if auth_decision.outcome == "unauthenticated":
+                    from omega_serv.domain.security.auth.basic_auth import (
+                        build_www_authenticate_header,
+                    )
                     response.set_header("WWW-Authenticate", build_www_authenticate_header(auth_decision.realm or "Zone protégée"))
                 return SecurityOutcome(response, notable=True)
         return SecurityOutcome(None, notable=waf_notable)
 
-    async def serve_handed_off(self, sock: socket.socket, pending: bytes, requests_served: int) -> None:
+    async def _costly_authorization(
+        self, request: HttpRequest, auth_args: tuple[str, str, str | None, tuple[Zone[AuthZone], ...],
+                                                     Mapping[str, UserAccount]],
+    ) -> tuple[HttpResponse | None, AuthDecision]:
+        """Verification qui va lancer un scrypt (retour utilisateur 2026-11-20) : trop d'echecs recents pour cette
+        adresse ou ce nom -> 429 SANS hachage ; file des verifications pleine -> 503 SANS hachage (jamais
+        d'empilement) ; sinon scrypt hors de la boucle (scan n° 1, F21/F33), deux a la fois au plus."""
+        from omega_serv.domain.security.auth.authorize import authorize_request
+        from omega_serv.domain.security.auth.basic_auth import parse_basic_auth_header
+        from omega_serv.domain.security.auth.entities import AuthDecision
+
+        if self._auth_failures is None:
+            self._auth_failures = self._new_failure_limiter()
+        credentials = parse_basic_auth_header(auth_args[2])
+        username = credentials[0] if credentials is not None else None
+        now = time.monotonic()
+        wait = self._auth_failures.retry_after(request.remote_ip, username, now)
+        if wait > 0:
+            response = HttpResponse.empty(HttpStatus.TOO_MANY_REQUESTS)
+            response.set_header("Retry-After", str(max(1, math.ceil(wait))))
+            return response, AuthDecision(outcome="unauthenticated")
+        if self._password_jobs >= self._pending_checks_max:
+            response = HttpResponse.empty(HttpStatus.SERVICE_UNAVAILABLE)
+            response.set_header("Retry-After", "1")
+            return response, AuthDecision(outcome="unauthenticated")
+        self._password_jobs += 1
+        try:
+            decision = await asyncio.get_running_loop().run_in_executor(
+                self._password_executor(), authorize_request, *auth_args)
+        finally:
+            self._password_jobs -= 1
+        if decision.outcome == "unauthenticated":
+            self._auth_failures.record_failure(request.remote_ip, username, time.monotonic())
+        elif decision.username:  # mot de passe juste (autorise, ou compte non admis dans cette zone)
+            self._auth_failures.record_success(request.remote_ip)
+        return None, decision
+
+    def _apply_password_protection(self, config: OmegaServConfig) -> None:
+        """Reglages du menu Authentification (2026-11-21) ; au demarrage et a chaque rechargement."""
+        from omega_serv.domain.security.auth.authorize import configure_success_cache
+        from omega_serv.domain.security.auth.password_protection import protection_from_settings
+
+        auth_option = config.options.get("auth")
+        protection = protection_from_settings(auth_option.settings if auth_option is not None else None)
+        self._password_protection = protection
+        configure_success_cache(protection.success_ttl_seconds, protection.success_max_age_seconds,
+                                protection.success_entries)
+        self._pending_checks_max = protection.pending_checks_max
+        self._auth_failures = None  # recree au premier besoin avec les nouveaux seuils
+
+    def _new_failure_limiter(self) -> AuthFailureLimiter:
+        from omega_serv.domain.security.auth.failure_limit import AuthFailureLimiter
+
+        protection = self._password_protection
+        return AuthFailureLimiter(window=protection.failure_window_seconds, ip_max=protection.failures_per_ip,
+                                  user_max=protection.failures_per_user)
+
+    def _password_executor(self) -> concurrent.futures.ThreadPoolExecutor:
+        """Fils des verifications scrypt (scan de securite n° 1, F21/F33), crees au premier besoin."""
+        if self._password_pool is None:
+            self._password_pool = concurrent.futures.ThreadPoolExecutor(max_workers=PASSWORD_WORKERS,
+                                                                        thread_name_prefix="omega-auth")
+        return self._password_pool
+
+    def _give_back_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, requests_served: int,
+                              give_back: GiveBack) -> bool:
+        """Plan proxy natif v2, lot 4 (D12) : rend la connexion au natif entre deux requetes - copie du descripteur et
+        octets deja lus (requete suivante eventuelle) envoyes, puis transport Python ferme SANS fin de flux (abort :
+        aucun shutdown, la connexion vit dans la copie du natif). False : la connexion reste ici (client parti,
+        envoi en cours, canal perdu...), servie comme avant."""
+        transport = writer.transport
+        sock = transport.get_extra_info("socket")
+        if sock is None or transport.is_closing() or transport.get_write_buffer_size() > 0:
+            return False
+        if reader.exception() is not None or reader.at_eof():
+            return False
+        pending = bytes(getattr(reader, "_buffer", b""))
+        if len(pending) > _GIVE_BACK_MAX_PENDING:
+            return False
+        try:
+            fd = os.dup(sock.fileno())
+        except OSError:
+            return False
+        task = asyncio.current_task()
+        self._traffic.close(task)  # lot 9b : la suite est comptee par le natif, a partir de ce que la socket a vu
+        if not give_back(fd, pending, requests_served):  # descripteur ferme par give_back, envoye ou non
+            self._traffic.open(task, sock, from_start=False)  # la connexion reste ici : comptee de nouveau
+            return False
+        transport.abort()
+        return True
+
+    async def serve_handed_off(self, sock: socket.socket, pending: bytes, requests_served: int,
+                               native_rate_limit: int | None = None, give_back: GiveBack | None = None) -> None:
         """Lot 6 : connexion confiee par le moteur natif (reverse proxy, FastCGI, envoi de fichiers, WebSocket).
         Les octets deja lus par le natif (tete de la requete en cours comprise) sont rejoues d'abord ; la suite
         est le MEME `_handle_connection` que le moteur Python, jusqu'a la fin de la connexion (journal d'acces
@@ -671,7 +1026,21 @@ class AsyncioHttpServer:
         protocol = asyncio.StreamReaderProtocol(reader, loop=loop)
         transport, _ = await loop.connect_accepted_socket(lambda: protocol, sock=sock)
         writer = asyncio.StreamWriter(transport, protocol, reader, loop)
-        await self._handle_connection(reader, writer, requests_served)
+        # Plan proxy natif v2, lot 1 (D9) : une connexion confiee compte dans max_connections, comme une connexion
+        # acceptee ici - avant, aucune limite ; et elle est drainee par shutdown() comme les autres (D11).
+        if len(self._active_connections) >= self._config.server.max_connections:
+            await self._write_error_response(writer, HttpStatus.SERVICE_UNAVAILABLE)
+            writer.transport.abort()
+            return
+        task = asyncio.current_task()
+        assert task is not None
+        self._active_connections.add(task)
+        self._traffic.open(task, sock, from_start=False)  # lot 9b : le debut a ete compte par le natif
+        try:
+            await self._handle_connection(reader, writer, requests_served, native_rate_limit, give_back)
+        finally:
+            self._traffic.close(task)
+            self._active_connections.discard(task)
 
     async def route(self, request: HttpRequest) -> HttpResponse:
         """Routage complet (avant en-tetes de securite) : moteur Python, et routes deleguees par le natif (listing
@@ -693,6 +1062,12 @@ class AsyncioHttpServer:
             self._proxy_cache_locks,
             self._proxy_cache_metrics,
         )
+
+    def _trusted_networks(self) -> tuple[str, ...]:
+        settings = self._config.options.get("trusted_proxy")
+        if settings is None or not settings.enabled:
+            return ()
+        return tuple(settings.settings.get("trusted_networks", []))
 
     def _resolve_remote_ip(self, peer_ip: str, headers: HttpHeaders) -> str:
         settings = self._config.options.get("trusted_proxy")
@@ -719,24 +1094,87 @@ class AsyncioHttpServer:
 
         headers = dict(response.headers)
         headers.setdefault("Connection", "keep-alive" if keep_alive else "close")
-        if int(response.status) == HttpStatus.NOT_MODIFIED:
+        if int(response.status) in (HttpStatus.NOT_MODIFIED, 204):
             # 304 : jamais de corps ; un Content-Length annoncerait a tort une
-            # representation de 0 octet (RFC 9110 §15.4.5).
+            # representation de 0 octet (RFC 9110 §15.4.5). 204 (lot 1, reverse proxy) : jamais de corps ni de
+            # Content-Length (RFC 9110 §8.6).
             headers.pop("Content-Length", None)
             response.body = b""
         else:
             headers.setdefault("Content-Length", str(response.content_length))
 
         status_line = f"HTTP/1.1 {int(response.status)} {reason_phrase_for(response.status)}\r\n"
-        header_lines = "".join(f"{name}: {value}\r\n" for name, value in headers.items())
+        header_lines = "".join(f"{name}: {value}\r\n" for name, value in [*headers.items(), *response.repeated_headers])
         head = (status_line + header_lines + "\r\n").encode("latin-1")
-        if response.body_file is None:
-            writer.write(head + response.body)
-            await writer.drain()
+        mark = self._tcp_bytes_acked(writer)
+        try:
+            if response.body_file is None:
+                writer.write(head + response.body)
+                await self._guard_write(writer, writer.drain(), buffered=True)
+                return
+            writer.write(head)
+            await self._guard_write(writer, writer.drain(), buffered=True)
+            await self._send_file_body(writer, response)
+        except (ConnectionResetError, BrokenPipeError) as error:
+            # Lot 1 (P3) : octets du corps acquittes par le client avant l'echec (TCP_INFO), 0 si inconnu.
+            acked = getattr(error, "acked", None)
+            if acked is None:
+                acked = self._tcp_bytes_acked(writer)
+            sent = 0 if mark is None or acked is None else acked - mark - len(head)
+            error.body_bytes_sent = max(0, min(sent, response.content_length))  # type: ignore[union-attr]
+            raise
+
+    async def _guard_write(self, writer: asyncio.StreamWriter, operation: Awaitable[Any], buffered: bool) -> None:
+        """Plan proxy natif v2, lot A (D31) : `server.write_timeout_seconds` enfin applique (avant : lu, valide,
+        affiche, mais jamais utilise). Delai SANS PROGRES, comme `send_timeout` de nginx et le natif : un client lent
+        qui lit reste servi, quel que soit son debit ; un client qui ne lit plus rien pendant tout le delai est coupe
+        net (`abort` : `close()` attendrait que le tampon se vide, donc jamais) - il gardait sinon sa place
+        indefiniment. Progres = octets acquittes par le client (TCP_INFO) ; sans TCP_INFO, le tampon du transport
+        pour une ecriture en memoire (`buffered`), sinon aucun delai, comme avant."""
+        if buffered and writer.transport.get_write_buffer_size() == 0:
+            # Tout est deja confie au noyau : `drain` revient aussitot, rien ne peut caler. Chemin direct, sans tache
+            # ni tour de boucle de plus (sinon la ligne du journal d'acces arrivait apres la fermeture du client).
+            await operation
             return
-        writer.write(head)
-        await writer.drain()
-        await self._send_file_body(writer, response)
+        timeout = self._config.server.write_timeout_seconds
+        task = asyncio.ensure_future(operation)
+        mark = self._write_progress(writer, buffered)
+        try:
+            while True:
+                done, _ = await asyncio.wait({task}, timeout=timeout)
+                if done:
+                    task.result()
+                    return
+                now_mark = self._write_progress(writer, buffered)
+                if now_mark is not None and now_mark == mark:
+                    stalled = ConnectionResetError(f"delai d'ecriture depasse ({timeout} s sans progres)")
+                    stalled.acked = self._tcp_bytes_acked(writer)  # type: ignore[attr-defined] # mesure avant abort
+                    writer.transport.abort()
+                    raise stalled
+                mark = now_mark
+        finally:
+            task.cancel()
+
+    @staticmethod
+    def _tcp_bytes_acked(writer: asyncio.StreamWriter) -> int | None:
+        """`tcpi_bytes_acked` du noyau (Linux >= 4.1) : octets dont le client a accuse reception ; None si inconnu."""
+        sock = writer.get_extra_info("socket")
+        if sock is None:
+            return None
+        try:
+            info = sock.getsockopt(socket.IPPROTO_TCP, socket.TCP_INFO, 256)
+        except (OSError, AttributeError):
+            return None
+        if len(info) < _TCP_INFO_BYTES_ACKED.stop:
+            return None
+        return int.from_bytes(info[_TCP_INFO_BYTES_ACKED], sys.byteorder)
+
+    @classmethod
+    def _write_progress(cls, writer: asyncio.StreamWriter, buffered: bool) -> int | None:
+        acked = cls._tcp_bytes_acked(writer)
+        if acked is not None:
+            return acked
+        return -writer.transport.get_write_buffer_size() if buffered else None
 
     async def _send_file_body(self, writer: asyncio.StreamWriter, response: HttpResponse) -> None:
         """Copie par le noyau (`sendfile`) en HTTP ; a travers TLS, asyncio bascule
@@ -748,9 +1186,9 @@ class AsyncioHttpServer:
         assert response.body_file is not None
         try:
             with open(response.body_file, "rb") as handle:  # noqa: ASYNC230 - ouverture seule, la lecture se fait par blocs
-                await asyncio.get_running_loop().sendfile(
+                await self._guard_write(writer, asyncio.get_running_loop().sendfile(
                     writer.transport, handle, response.body_file_offset, response.body_file_length,
-                )
+                ), buffered=False)  # lot A (D31)
         except (ConnectionResetError, BrokenPipeError):
             raise
         except OSError as e:
@@ -806,10 +1244,20 @@ class AsyncioHttpServer:
             return []
         pairs: list[tuple[ProxyZone, UpstreamTarget]] = []
         for zone in parse_proxy_zones(option.settings.get("zones", [])):
+            if self.probe_filter is not None and not self.probe_filter(zone.url_prefix):
+                continue
             for upstream in zone.upstreams:
                 if upstream.load_source != "none" or upstream.active_health_check_enabled:
                     pairs.append((zone, upstream))
         return pairs
+
+    @property
+    def config(self) -> OmegaServConfig:
+        return self._config
+
+    def replace_proxy_health_state(self, state: ProxyHealthState) -> None:
+        """Plan proxy natif v2, lot 6 : processus de securite n° 0 - etat relaye vers le natif (avant toute sonde)."""
+        self._proxy_health_state = state
 
     def _start_proxy_load_pollers(self) -> None:
         """Appelee seulement depuis `start()`/`reload_scoped()` (jamais
@@ -874,7 +1322,35 @@ class AsyncioHttpServer:
         )
         self._logger.append_line(self._access_log_path, format_combined_log_line(entry))
 
-    def _log_access(self, request: HttpRequest, response: HttpResponse, start_time: float) -> None:
+    async def _unless_client_leaves(
+        self, reader: asyncio.StreamReader, operation: Awaitable[HttpResponse],
+    ) -> tuple[HttpResponse | None, bool]:
+        """Plan proxy natif v2, lot 1 (P3, decision de l'auteur : regle nginx). Une fin de flux du client avant la
+        reponse = abandon, demi-fermeture comprise (comme nginx, aucun serveur ne peut les distinguer) : la requete
+        est annulee - celle vers le backend aussi - et rien n'est envoye. Verifie seulement si le traitement dure
+        plus de `_CLIENT_GONE_POLL_SECONDS` : une requete servie aussitot l'est toujours."""
+        task = _start_eagerly(operation)
+        if task.done():
+            # 2026-11-19 (ETUDE_PROXY_ET_MEMOIRE §12) : traitement fini sans jamais attendre (fichier statique) -
+            # ni `asyncio.wait` ni minuterie, la regle ne peut de toute facon pas s'appliquer avant 0,25 s.
+            return task.result(), False
+        try:
+            while True:
+                done, _ = await asyncio.wait({task}, timeout=_CLIENT_GONE_POLL_SECONDS)
+                if done:
+                    return task.result(), False
+                if reader.exception() is not None or reader.at_eof():
+                    task.cancel()
+                    await asyncio.wait({task})
+                    return None, True
+        except asyncio.CancelledError:
+            task.cancel()
+            raise
+
+    def _log_access(self, request: HttpRequest, response: HttpResponse, start_time: float,
+                    size: int | None = None) -> None:
+        if is_internal_admin_call(request.path, int(response.status)):
+            return
         entry = AccessLogEntry(
             remote_ip=request.remote_ip,
             timestamp=datetime.now(timezone.utc),
@@ -882,7 +1358,7 @@ class AsyncioHttpServer:
             request_target=request.raw_path,
             http_version="HTTP/1.1",
             status_code=int(response.status),
-            response_size=response.content_length,
+            response_size=response.content_length if size is None else size,
             referer=request.header("referer"),
             user_agent=request.header("user-agent"),
             request_id=request.request_id,
@@ -898,6 +1374,7 @@ class AsyncioHttpServer:
         self._logger.append_line(self._error_log_path, line)
 
     def _log_waf_alert(self, request: HttpRequest, decision: WafDecision, duration_ms: float) -> None:
+        from omega_serv.domain.logging.waf_alert_format import WafAlertEntry, format_waf_alert_line
         if self._waf_alert_log_path is None or self._waf_config is None:
             return
         entry = WafAlertEntry(
@@ -931,14 +1408,28 @@ class AsyncioHttpServer:
         config = self._active_defense_config
         if config is None or not config.deception.enabled or self._deception_assignment_repository is None:
             return []
+        from omega_serv.domain.security.active_defense.policies import is_assignment_active
         now = self._clock.now()
         return [(assignment.subject_id.rpartition(":")[0], assignment.expires_at.timestamp())
                 for assignment in self._deception_assignment_repository.list_active()
                 if is_assignment_active(assignment, now) and ":" in assignment.subject_id]
 
+    def active_threat_sources(self) -> list[tuple[str, float]]:
+        """Plan proxy natif v2, lot 1 (D37, P5) : (adresse, echeance) des sources que `_watch_source` a fait
+        surveiller pour leur etat de menace et dont l'etat court encore - relues au demarrage du processus de
+        securite. Avant, seule la base des leurres etait relue : apres une relance du natif (table vide), ces
+        sources redevenaient jugees par le natif seul jusqu'a leur prochaine requete notable."""
+        config = self._active_defense_config
+        if config is None or not config.deception.enabled or self._threat_state_repository is None:
+            return []
+        now = self._clock.now()
+        return [(state.subject_id.rpartition(":")[0], state.expires_at.timestamp())
+                for state in self._threat_state_repository.list_all()
+                if state.expires_at > now and ":" in state.subject_id]
+
     def _active_defense_subject_id(self, request: HttpRequest) -> str:
-        user_agent = request.header("user-agent") or ""
-        return f"{request.remote_ip}:{user_agent_fingerprint(user_agent)}"
+        from omega_serv.domain.security.active_defense.policies import source_subject_id
+        return source_subject_id(request.remote_ip)  # F34 : l'adresse, jamais le User-Agent choisi par le client
 
     def _observe_active_defense_threat(self, request: HttpRequest, decision: WafDecision) -> ThreatState | None:
         """Appelee UNIQUEMENT quand le WAF a deja produit une decision
@@ -975,6 +1466,13 @@ class AsyncioHttpServer:
         return self._active_defense_writer.flush(timeout)
 
     def _observe_active_defense_threat_unguarded(self, request: HttpRequest, decision: WafDecision) -> ThreatState:
+        from omega_serv.application.active_defense.manage_deception import assign_deception
+        from omega_serv.application.active_defense.manage_incidents import create_or_update_incident
+        from omega_serv.application.active_defense.observe_threat import observe_threat
+        from omega_serv.domain.security.active_defense.policies import (
+            is_source_marked,
+            validate_playbook_action,
+        )
         assert self._active_defense_config is not None
         assert self._threat_state_repository is not None
         assert self._active_defense_playbook is not None
@@ -1059,6 +1557,10 @@ class AsyncioHttpServer:
         requete : FileLineLogger avale deja toute OSError (une ligne sur stderr)."""
         if self._active_defense_security_events_path is None:
             return
+        from omega_serv.domain.logging.security_event_format import (
+            SecurityEvent,
+            format_security_event_line,
+        )
         event = SecurityEvent(
             event_id=uuid.uuid4().hex, type=event_type, timestamp=occurred_at,
             subject_id=subject_id, remote_ip=remote_ip, **fields,
@@ -1068,6 +1570,10 @@ class AsyncioHttpServer:
     def _write_active_defense_enriched_log(
         self, request: HttpRequest, state: ThreatState, attack_class: AttackClass,
     ) -> None:
+        from omega_serv.domain.logging.active_defense_enriched_log_format import (
+            EnrichedLogEntry,
+            format_enriched_log_line,
+        )
         assert self._active_defense_config is not None
         assert self._active_defense_enriched_log_path is not None
         entry = EnrichedLogEntry(
@@ -1097,6 +1603,11 @@ class AsyncioHttpServer:
         None apres avoir eventuellement attendu le delai de
         ralentissement (jamais un blocage de la boucle asyncio, voir
         AsyncioDelayScheduler)."""
+        from omega_serv.domain.security.active_defense.policies import (
+            compute_slowdown_delay_ms,
+            is_source_marked,
+            validate_playbook_action,
+        )
         assert self._active_defense_config is not None
         assert self._active_defense_playbook is not None
         war_mode = self._active_defense_config.war_mode
@@ -1143,6 +1654,7 @@ class AsyncioHttpServer:
         appel synchrone au dispatcher de fixtures)."""
         if self._active_defense_config is None or not self._active_defense_config.deception.enabled:
             return None
+        from omega_serv.application.active_defense.manage_deception import resolve_routing_decision
         assert self._deception_assignment_repository is not None
         subject_id = self._active_defense_subject_id(request)
         routing_decision = resolve_routing_decision(
@@ -1176,6 +1688,7 @@ class AsyncioHttpServer:
         (config editee/rechargee entre l'affectation et cette requete -
         meme garde de robustesse que `resolve_routing_decision` cote
         profil) - jamais une exception non attrapee."""
+        from omega_serv.application.server.serve_proxy import serve_proxy
         assert self._active_defense_config is not None
         assert routing_decision.reverse_proxy_zone_name is not None
         zone = self._active_defense_config.deception.decoy_zones.get(routing_decision.reverse_proxy_zone_name)

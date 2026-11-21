@@ -151,6 +151,10 @@ class SecurityScreen(OmegaScreen):
 
     def _save(self) -> None:
         error_widget = self.query_one("#form-error", Static)
+        invalid = self.yes_no_inputs_error("#deny-hidden-files-input", "#security-headers-input", "#hsts-enabled-input", "#hsts-subdomains-input", "#hsts-preload-input")
+        if invalid is not None:
+            self.query_one("#form-error", Static).update(invalid)
+            return
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success:
             error_widget.update(_("Erreur de configuration : ") + "; ".join(load_result.errors))

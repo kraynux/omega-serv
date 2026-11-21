@@ -20,6 +20,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Static
 
 from omega_serv.application.config.load_config import load_config
+from omega_serv.application.persistence.zone_data import missing_zone_folders
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.rules import detect_conflicts
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
@@ -84,6 +85,13 @@ class ConfigCheckScreen(OmegaScreen):
         conflicts = detect_conflicts(load_result.config)
         conflict_errors = [c.message for c in conflicts if c.severity == "error"]
         conflict_warnings = [c.message for c in conflicts if c.severity == "warning"]
+        # Projets 3.0.0 §8.2, P1 : cible d'alias ou dossier de listing absent = avertissement (404 tant qu'il manque) ;
+        # une zone FastCGI active sans dossier est deja une erreur d'environnement (plus haut).
+        conflict_warnings += [m.message() for m in missing_zone_folders(load_result.config, self._container.project_root)
+                              if not m.blocking]
+        # Tableau de bord web, lot 2 : certificat absent ou port deja pris = l'administration web ne demarre pas
+        # (le site, lui, demarre).
+        conflict_warnings += self._container.admin_web_warnings(load_result.config)
         if conflict_errors:
             result_widget.update(_("Erreur de conflit de configuration :\n") + "\n".join(f"  - {e}" for e in conflict_errors))
             if notify:

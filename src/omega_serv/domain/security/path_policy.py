@@ -101,3 +101,40 @@ def normalize_uri_path(raw_path: str) -> PathDecision:
         normalized.append(segment)
 
     return PathDecision(ok=True, segments=tuple(normalized))
+
+
+def canonical_path(path: str) -> str | None:
+    """Chemin sur lequel se prennent TOUTES les decisions de securite (zones d'authentification, regles d'acces,
+    listage, FastCGI, envoi de fichiers, zones proxy) - scan de securite n° 1 du 2026-11-20, cause A.
+
+    Avant, ces decisions comparaient le chemin brut de la requete alors que le fichier servi venait du chemin
+    decode : `//private/x`, `/%70rivate/x`, `/private%2fx` ou `/private\\x` echappaient a la zone `/private` et
+    servaient `webroot/private/x`. Ici : meme decodage que normalize_uri_path (deux passes au plus), `\\` -> `/`,
+    segments vides et `.` retires, `/` final garde. None = chemin inutilisable (encodage invalide, NUL, caractere
+    de controle, segment `..`) : l'appelant refuse la requete (400), jamais de decision prise sur le chemin brut.
+    Une cible `*` (OPTIONS) reste telle quelle. Scan de securite n° 2 (2026-11-20, F1-F3) : tout autre chemin sans
+    `/` initial n'a pas de forme canonique (None -> 400) ; il etait rendu tel quel et echappait aux prefixes."""
+    if not path.startswith("/"):
+        return path if path == "*" else None
+    # Raccourci a resultat identique (chemin deja canonique, le cas courant) : ni encodage, ni `\\`, ni segment
+    # vide ou `.` - le parseur refuse deja les segments `.`/`..` ecrits tels quels.
+    if "%" not in path and "\\" not in path and "//" not in path and "/." not in path:
+        return path
+    try:
+        decoded = _percent_decode_bounded(path)
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if any(ch in _CONTROL_CHARS for ch in decoded):
+        return None
+    decoded = decoded.replace("\\", "/")
+    segments: list[str] = []
+    for segment in decoded.split("/"):
+        if segment in ("", "."):
+            continue
+        if segment == "..":
+            return None
+        segments.append(segment)
+    if not segments:
+        return "/"
+    canonical = "/" + "/".join(segments)
+    return canonical + "/" if decoded.endswith("/") else canonical

@@ -18,7 +18,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from omega_serv.application.server.engine_selection import APPLICATION_OPTIONS, decide_engine
+from omega_serv.application.server.engine_selection import (
+    APPLICATION_OPTIONS,
+    ZONE_CACHE,
+    decide_engine,
+    decide_proxy_zones,
+)
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.entities import OmegaServConfig
 
@@ -53,6 +58,15 @@ def native_blockers(config: OmegaServConfig, binary_problem: str | None) -> tupl
     return decide_engine(probe, binary_problem).reasons
 
 
+_ZONE_INDENT = "  "
+_ZONE_LABEL_MAX = 16
+"""Colonne etroite de l'ecran Etat : un prefixe plus long est coupe (le libelle le plus long fixe l'alignement)."""
+
+
+def _short_prefix(prefix: str) -> str:
+    return prefix if len(prefix) <= _ZONE_LABEL_MAX else prefix[:_ZONE_LABEL_MAX - 1] + "…"
+
+
 def engine_connectors(config: OmegaServConfig) -> list[tuple[str, str]]:
     """(fonction, mode) pour les fonctions ACTIVES de `config`, avec le moteur natif. Libelles et modes courts :
     bloc aligne dans une colonne etroite de l'ecran Etat."""
@@ -71,9 +85,40 @@ def engine_connectors(config: OmegaServConfig) -> list[tuple[str, str]]:
         rows.append((_("/load, /admin"), PYTHON_ROUTE))
     labels = {"reverse_proxy": _("Reverse proxy"), "fastcgi": _("FastCGI"), "upload": _("Upload")}
     for option in APPLICATION_OPTIONS:
-        if config.option_enabled(option):
-            rows.append((labels[option], UNSUPPORTED if direct_tls else PYTHON_CONNECTION))
+        if not config.option_enabled(option):
+            continue
+        if option == "reverse_proxy":
+            # Plan proxy natif v2 (lots 4 a 11) : zones relayees par le natif, TLS direct compris (lot 9). Lot 11 :
+            # detail par zone - si certaines zones seulement sont confiees (cache), une ligne par zone confiee sous
+            # « natif ». Avec TLS direct, une zone confiee fait tout demarrer en Python (P7) : ligne unique.
+            zones = decide_proxy_zones(config)
+            delegated = [zone.url_prefix for zone in zones if zone.engine == "python"]
+            if zones and not (direct_tls and delegated) and len(delegated) < len(zones):
+                rows.append((labels[option], NATIVE))
+                rows.extend((_ZONE_INDENT + _short_prefix(prefix), PYTHON_CONNECTION) for prefix in delegated)
+                continue
+        rows.append((labels[option], UNSUPPORTED if direct_tls else PYTHON_CONNECTION))
     return rows
+
+
+def zone_engine_labels(config: OmegaServConfig) -> dict[str, str]:
+    """Lot 11 (retour de l'auteur du 2026-11-14) : colonne « Moteur » de l'ecran Reverse proxy, par prefixe - le
+    moteur prevu par la configuration (le binaire n'est pas verifie ici ; l'ecran Etat montre ce qui tourne). Une
+    zone absente du resultat : option desactivee."""
+    zones = decide_proxy_zones(config)
+    if config.server.engine != "native":
+        return {zone.url_prefix: _("Python") for zone in zones}
+    if decide_engine(config, None).fallback:  # repli complet (P7, option non prise en charge) : tout en Python
+        return {zone.url_prefix: _("Python (repli)") for zone in zones}
+    labels = {}
+    for zone in zones:
+        if zone.engine == "native":
+            labels[zone.url_prefix] = _("natif")
+        elif ZONE_CACHE in zone.reasons:
+            labels[zone.url_prefix] = _("Python (cache)")
+        else:
+            labels[zone.url_prefix] = _("Python (réglage)")
+    return labels
 
 
 def describe_connector(mode: str) -> str:

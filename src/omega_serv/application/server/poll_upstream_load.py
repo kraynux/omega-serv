@@ -40,8 +40,10 @@ if TYPE_CHECKING:
     import ssl
 
 from omega_serv.domain.routing.proxy_health import ProxyHealthState, parse_load_score
-from omega_serv.domain.routing.proxy_zone import ProxyZone, UpstreamTarget
+from omega_serv.domain.routing.proxy_zone import ProxyZone, UpstreamTarget, host_header_value
 from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort, HttpProxyConnectionError
+
+_PROBE_MAX_BODY_BYTES = 1024 * 1024  # lot 1 (D23) : une sonde n'a jamais besoin d'un gros corps
 
 NATIVE_LOAD_PATH = "/.omega-serv-load/"
 
@@ -62,17 +64,21 @@ async def poll_upstream_load_forever(
     else:
         # §18.2 : upstream sans load_source, sonde de sante active seule - jamais de score.
         path = upstream.active_health_check_path
-    ssl_context = None
-    if upstream.use_tls:
-        ssl_context = client_ssl_context_verified if zone.verify_upstream_tls else client_ssl_context_unverified
+    from omega_serv.application.server.serve_proxy import (
+        upstream_ssl_context,  # charge avec le proxy seulement
+    )
+    ssl_context = upstream_ssl_context(upstream, zone, client_ssl_context_verified, client_ssl_context_unverified)
 
     while True:
         await asyncio.sleep(zone.load_poll_interval_seconds)
         try:
             result = await asyncio.wait_for(
                 proxy_client.forward_request(
-                    upstream.host, upstream.port, "GET", path, (), b"",
+                    # Lot 1 (D8) : avec `Host` (un backend a hotes virtuels repondait 400/404 a la sonde), corps borne.
+                    upstream.host, upstream.port, "GET", path,
+                    (("Host", host_header_value(upstream.host, upstream.port)),), b"",
                     zone.load_poll_timeout_seconds, zone.load_poll_timeout_seconds, ssl_context,
+                    _PROBE_MAX_BODY_BYTES,
                 ),
                 timeout=zone.load_poll_timeout_seconds + 1.0,
             )

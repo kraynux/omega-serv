@@ -6,12 +6,13 @@ SQLite (`Connection.backup`) produit une copie complete et coherente pendant que
 ce qui permet de sauvegarder sans jamais arreter le service. La base source est ouverte en LECTURE SEULE."""
 from __future__ import annotations
 
-import sqlite3
 from pathlib import Path
 
 
 def snapshot_database(source: Path, destination: Path) -> None:
     """Leve OSError (jamais sqlite3.Error : contrat import-linter, sqlite3 reste confine ici)."""
+    import sqlite3  # a la sauvegarde seulement : `serve` cree ce conteneur sans jamais sauvegarder (2026-11-18)
+
     destination.parent.mkdir(parents=True, exist_ok=True)
     try:
         with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as source_connection:

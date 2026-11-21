@@ -2,7 +2,7 @@
 
 # omega-serv frente aos servidores web do mercado
 
-**Comparativo medido: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5**
+**Comparativo medido: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5 e 3.0.0**
 
 🌐 [Français](../../comparatif-serveurs-web.md) · [English](../en/comparatif-serveurs-web.md) · [Español](../es/comparatif-serveurs-web.md) · **Português (Brasil)** · [Italiano](../it/comparatif-serveurs-web.md) · [Deutsch](../de/comparatif-serveurs-web.md) · [Nederlands](../nl/comparatif-serveurs-web.md) · [Polski](../pl/comparatif-serveurs-web.md) · [Русский](../ru/comparatif-serveurs-web.md) · [中文](../zh-CN/comparatif-serveurs-web.md) · [Tiếng Việt](../vi/comparatif-serveurs-web.md) · [ไทย](../th/comparatif-serveurs-web.md) · [Bahasa Indonesia](../id/comparatif-serveurs-web.md) · [日本語](../ja/comparatif-serveurs-web.md) · [한국어](../ko/comparatif-serveurs-web.md) · [हिन्दी](../hi/comparatif-serveurs-web.md) · [العربية](../ar/comparatif-serveurs-web.md)
 
@@ -12,7 +12,7 @@ Este documento situa o omega-serv entre os servidores web mais difundidos. Ele n
 2. um **comparativo de funções**, cada uma verificada na documentação oficial de cada servidor (links no fim do documento), distinguindo o que é integrado do que exige um módulo ou plugin;
 3. o que o omega-serv **traz realmente a mais**, e o que os outros fazem **melhor do que ele**.
 
-Todas as medições de desempenho foram feitas em 3 e 4 de novembro de 2026. Nenhum número foi tirado de outro site ou estimado. Os números brutos são publicados com este documento.
+As medições como servidor de arquivos foram feitas em 3 e 4 de novembro de 2026 (omega-serv 2.5), as do proxy reverso em 14 de novembro de 2026 (omega-serv 3.0.0, em preparação). A memória do omega-serv 3.0.0, bem reduzida desde então, foi medida de novo em 19 de novembro de 2026 nas três máquinas, com o mesmo protocolo (§4, §5 e §6). Nenhum número foi tirado de outro site ou estimado. Os números brutos são publicados com este documento.
 
 ---
 
@@ -22,14 +22,15 @@ Todas as medições de desempenho foram feitas em 3 e 4 de novembro de 2026. Nen
 2. [Como ler este comparativo](#2-como-ler-este-comparativo)
 3. [Método de medição](#3-método-de-medição)
 4. [Desempenho: omega-serv frente ao nginx, lighttpd, Apache e Caddy](#4-desempenho-omega-serv-frente-ao-nginx-lighttpd-apache-e-caddy)
-5. [As versões do omega-serv: 1.0 → 2.0 → 2.5](#5-as-versões-do-omega-serv-10--20--25)
-6. [Comparativo de funções](#6-comparativo-de-funções)
-7. [Administração e ergonomia](#7-administração-e-ergonomia)
-8. [O que o omega-serv traz a mais](#8-o-que-o-omega-serv-traz-a-mais)
-9. [O que os outros fazem melhor](#9-o-que-os-outros-fazem-melhor)
-10. [Qual servidor para qual uso](#10-qual-servidor-para-qual-uso)
-11. [Reproduzir as medições](#11-reproduzir-as-medições)
-12. [Fontes](#12-fontes)
+5. [Desempenho como proxy reverso: omega-serv frente ao nginx, lighttpd, Apache, Caddy e Traefik](#5-desempenho-como-proxy-reverso-omega-serv-frente-ao-nginx-lighttpd-apache-caddy-e-traefik)
+6. [As versões do omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0](#6-as-versões-do-omega-serv-10--20--25--300)
+7. [Comparativo de funções](#7-comparativo-de-funções)
+8. [Administração e ergonomia](#8-administração-e-ergonomia)
+9. [O que o omega-serv traz a mais](#9-o-que-o-omega-serv-traz-a-mais)
+10. [O que os outros fazem melhor](#10-o-que-os-outros-fazem-melhor)
+11. [Qual servidor para qual uso](#11-qual-servidor-para-qual-uso)
+12. [Reproduzir as medições](#12-reproduzir-as-medições)
+13. [Fontes](#13-fontes)
 
 ---
 
@@ -41,7 +42,8 @@ Todas as medições de desempenho foram feitas em 3 e 4 de novembro de 2026. Nen
 - **Com o WAF ativo**, o omega-serv inspeciona cada requisição, o que os outros servidores medidos não fazem. Com o motor nativo, ele serve então **de 0,53 a 0,56 vez** a velocidade do nginx (sem WAF) nas máquinas A e B, e 1,07 vez na máquina C (4 núcleos contra 2): o WAF tira dele só de 5 a 22 % da vazão. Ele continua à frente do Apache e do Caddy medidos sem WAF.
 - **Arquivos médios (100 KB)**: é o ponto fraco atual do motor nativo, com **de 0,3 a 0,6 vez** o nginx, atrás do Apache.
 - **Arquivos grandes (5 MB)**: nginx, lighttpd, Apache e omega-serv nativo alcançam a mesma ordem de vazão. O Caddy é nitidamente mais lento na máquina mais rápida.
-- **Memória**: lighttpd (1 MB), nginx (4 a 5 MB) e Apache (4 a 9 MB) são muito econômicos. O omega-serv ocupa **de 30 a 65 MB** conforme o modo, o Caddy **de 50 a 67 MB**.
+- **Como proxy reverso (3.0.0)**, o motor nativo repassa as respostas pequenas a **0,82 a 0,91 vez o nginx**, e as respostas de 100 KB **tão rápido quanto ele ou mais** (0,97 a 1,43). Ele fica **em segundo, atrás do nginx**, à frente do lighttpd, do Apache, do Traefik e do Caddy. Em HTTPS, continua em segundo nas respostas pequenas das máquinas A e B; o lighttpd o iguala na máquina C.
+- **Memória**: lighttpd (1 MB), nginx (4 a 5 MB) e Apache (4 a 9 MB) são muito econômicos. O omega-serv 3.0.0 ocupa **de 10 a 16 MB** com o motor nativo, **de 20 a 33 MB** com o motor Python ou o WAF, e de 35 a 55 MB com 2 processos; o Caddy, **de 50 a 67 MB**. A 2.5 ocupava de 28 a 57 MB.
 - **O que o omega-serv tem a mais**: uma administração completa em interface de terminal, em 17 idiomas; um WAF e uma defesa ativa integrados; limites de segurança exatos com vários processos; a importação de scripts mod_magnet do lighttpd; a gestão de várias instâncias.
 - **O que ele não tem**: HTTP/2 e HTTP/3, a compressão em tempo real, a descoberta de serviços Docker/Kubernetes, um cliente ACME integrado (ele passa pelo Certbot), um ecossistema de módulos.
 
@@ -85,10 +87,10 @@ A máquina A é um notebook antigo, a máquina B um mini PC de baixo consumo, a 
 | lighttpd | 1.4.85 |
 | Apache HTTP Server | 2.4.69, MPM `event` |
 | Caddy | 2.11.4 (A, B), 2.11.7 (C) |
-| omega-serv | 1.0.0 e 2.0.0 (arquivos publicados) e 2.5, com Python 3.14 |
+| omega-serv | 1.0.0 e 2.0.0 (arquivos publicados), 2.5 e 3.0.0, com Python 3.14 |
 | Cliente de carga | [oha](https://github.com/hatoo/oha) 1.16.0 (escrito em Rust) |
 
-O Traefik não foi medido: ele não é um servidor de arquivos (ver §6). Ele só aparece no comparativo de funções.
+O Traefik não foi medido como servidor de arquivos: ele não é um (ver §7). Ele é medido como proxy reverso, seu papel, no §5.
 
 ### Protocolo
 
@@ -98,7 +100,7 @@ O Traefik não foi medido: ele não é um servidor de arquivos (ver §6). Ele s�
 - **HTTP/1.1 em claro, conexões persistentes (keep-alive)**. A concorrência é de 32 conexões para os arquivos de 1 KB e 100 KB, e de 8 para o arquivo de 5 MB.
 - **Duração**: 10 segundos por arquivo e por configuração.
 - **Repetições**: 3 rodadas completas, intercaladas (todas as configurações na rodada 1, depois todas na rodada 2 etc.). As tabelas dão a **mediana** das três rodadas. De uma rodada para outra, a diferença fica quase sempre abaixo de 5 %.
-- **Memória**: PSS de todos os processos do servidor, medida em repouso e depois da carga.
+- **Memória**: PSS de todos os processos do servidor, medida em repouso e depois da carga. A do omega-serv 3.0.0 foi medida de novo em 19 de novembro de 2026, com o nginx como referência na mesma sessão: ele fica a menos de 3 % da sua vazão de 4 de novembro nos arquivos pequenos, e a menos de 1 MB da sua memória.
 - **Configurações**:
   - nginx, lighttpd, Apache e Caddy na configuração básica: arquivos estáticos e log de acesso;
   - omega-serv com o perfil `standard`, o WAF desativado e depois ativado com todas as regras fornecidas (sem limite de taxa).
@@ -109,11 +111,11 @@ O Traefik não foi medido: ele não é um servidor de arquivos (ver §6). Ele s�
 
 - **O que comparamos são as relações.** Os valores absolutos seriam diferentes no seu hardware, ou num servidor dedicado.
 - **Loopback (127.0.0.1)**: a medição não passa por uma rede real. Numa rede real, a vazão dos arquivos grandes é quase sempre limitada pela banda, não pelo servidor. As vazões de várias dezenas de GB/s da máquina C só são possíveis em loopback.
-- **Sem TLS** nestas medições.
+- **Sem TLS** nas medições como servidor de arquivos (§4 e §6). O proxy reverso (§5) é medido em HTTP e em HTTPS.
 - **Máquina A**: o serviço omega-serv de produção desta máquina rodava em segundo plano, sem receber tráfego.
 - **Máquina C**: processador híbrido (núcleos Zen 5 e Zen 5c). O servidor recebeu os 4 núcleos rápidos, o cliente os outros 6.
 - **Configurações básicas**: nenhum servidor foi otimizado. Um administrador experiente sem dúvida tiraria mais de cada um, omega-serv incluído.
-- **Números brutos**: [`docs/benchmarks/`](../../benchmarks/) (um arquivo por máquina).
+- **Números brutos**: [`docs/benchmarks/`](../../benchmarks/) (um arquivo por máquina e por campanha; nova medição da 3.0.0: `2026-11-19-*-memoire-3.0.0-brut.txt`).
 
 ---
 
@@ -183,30 +185,34 @@ Com um só processo, o nginx faz de 0,52 a 0,73, o lighttpd de 0,81 a 1,43, o Ap
 
 ### Memória (PSS, todos os processos do servidor): em repouso → após a carga
 
+omega-serv: versão 3.0.0, medida de novo em 19 de novembro de 2026 (os valores da 2.5 estão no §6). Outros servidores: campanha de 4 de novembro.
+
 | Servidor | Máquina A | Máquina B | Máquina C |
 |---|---:|---:|---:|
 | lighttpd | 1 → 1 MB | 1 → 1 MB | 1 → 1 MB |
 | nginx | 4 → 5 MB | 5 → 5 MB | 4 → 4 MB |
 | Apache | 4 → 7 MB | 4 → 7 MB | 4 → 7 MB |
-| omega-serv, motor Python | 28 → 32 MB | 29 → 33 MB | 30 → 34 MB |
-| **omega-serv, motor nativo** | **33 → 34 MB** | **34 → 35 MB** | **35 → 39 MB** |
-| omega-serv, nativo + WAF † | 45 → 47 MB | 43 → 44 MB | 44 → 48 MB |
-| omega-serv, motor Python, 2 processos | 40 → 50 MB | 43 → 51 MB | 42 → 51 MB |
-| omega-serv, nativo + WAF, 2 processos de segurança † | 45 → 47 MB | 43 → 44 MB | 55 → 57 MB |
+| **omega-serv, motor nativo** | **10 → 10 MB** | **10 → 12 MB** | **12 → 16 MB** |
+| omega-serv, motor Python | 20 → 23 MB | 21 → 24 MB | 22 → 28 MB |
+| omega-serv, nativo + WAF | 28 → 30 MB | 29 → 32 MB | 30 → 33 MB |
+| omega-serv, motor Python, 2 processos | 35 → 46 MB | 36 → 46 MB | 38 → 48 MB |
+| omega-serv, nativo + WAF, 2 processos de segurança ‡ | 28 → 28 MB | 29 → 31 MB | 51 → 55 MB |
 | Caddy, 2 processos | 50 → 57 MB | 46 → 54 MB | 48 → 62 MB |
+
+‡ Nas máquinas A e B, o servidor só dispõe de 2 núcleos: o omega-serv só inicia ali um processo de segurança (ele inicia 2 a partir de 4 núcleos). Na máquina C, com 2 processos de segurança, o supervisor Python mantém sua forma completa, necessária aos contadores que eles compartilham: 51 MB em vez de 30.
 
 ### Com o mesmo número de núcleos: máquina C com 4 processos
 
-Campanha separada de 3 de novembro, mesmo protocolo, na máquina C: cada servidor recebe 4 processos (ou 4 núcleos para o Caddy e o motor nativo). Referência: nginx com 4 processos. O motor nativo com WAF não aparece mais aqui: medido antes da otimização do WAF, ele ainda não foi medido de novo com 4 processos.
+Campanha separada de 3 de novembro, mesmo protocolo, na máquina C: cada servidor recebe 4 processos (ou 4 núcleos para o Caddy e o motor nativo). Referência: nginx com 4 processos. O motor nativo com WAF não aparece mais aqui: medido antes da otimização do WAF, ele ainda não foi medido de novo com 4 processos. Memória do omega-serv: 3.0.0, medida de novo em 19 de novembro (vazões: 2.5, 3 de novembro).
 
 | Servidor | 1 KB | 100 KB | 5 MB | Memória |
 |---|---:|---:|---:|---:|
 | lighttpd, 4 processos | 638.907 (**1,46**) | 312.402 (**1,21**) | 41.982 MB/s (0,93) | 1 → 2 MB |
 | nginx, 4 processos | 438.496 (1,00) | 258.242 (1,00) | 45.162 MB/s (1,00) | 5 → 5 MB |
-| **omega-serv, motor nativo** | **294.083 a 310.972 (0,67 a 0,71)** | **108.991 a 109.955 (0,42)** | **40.137 a 40.463 MB/s (0,89 a 0,90)** | **35 → 38 MB** |
+| **omega-serv, motor nativo** | **294.083 a 310.972 (0,67 a 0,71)** | **108.991 a 109.955 (0,42)** | **40.137 a 40.463 MB/s (0,89 a 0,90)** | **12 → 16 a 18 MB** |
 | Apache, 4 processos | 200.592 (0,46) | 162.607 (0,63) | 39.664 MB/s (0,88) | 6 → 9 MB |
 | Caddy, 4 núcleos | 97.085 (0,22) | 35.900 (0,14) | 5.998 MB/s (0,13) | 52 → 67 MB |
-| omega-serv, motor Python, 4 processos | 37.697 (0,09) | 35.064 (0,14) | 37.123 MB/s (0,82) | 48 → 66 MB |
+| omega-serv, motor Python, 4 processos | 37.697 (0,09) | 35.064 (0,14) | 37.123 MB/s (0,82) | 45 → 60 MB |
 
 ### Leitura
 
@@ -224,14 +230,131 @@ Campanha separada de 3 de novembro, mesmo protocolo, na máquina C: cada servido
   - nginx, lighttpd, Apache e Caddy foram medidos **sem** WAF. Um WAF acrescentado a esses servidores (ModSecurity, Coraza) também tem um custo, que não medimos. A comparação “com WAF” não é feita portanto em pé de igualdade, e não afirmamos que o omega-serv seria mais rápido do que outro servidor equipado com um WAF.
 - **Vários processos de segurança não ajudam mais o tráfego comum**: ele não passa mais por eles, e a vazão continua a mesma com 2 processos (−2 a −4 %, dentro do ruído de medição). Eles só servem quando muitas requisições passam pelo Python (magnet ativo, ataque): medido antes da otimização, quando todas as requisições passavam por ali, 2 processos de segurança multiplicavam a vazão com WAF por 1,5 a 1,7 em 4 núcleos, mas só traziam de 5 a 12 % em 2 núcleos.
 - **O motor Python progride com os processos** (×1,6 a ×2 com 2 processos, cerca de ×3,5 com 4), mas fica em 5-11 % do nginx.
-- **Memória**: o omega-serv ocupa várias dezenas de MB a mais que o nginx, o lighttpd ou o Apache, sobretudo por causa do Python, e tanto quanto o Caddy. Com o motor nativo sem WAF, a memória fica quase estável durante a carga.
+- **Memória**: com o motor nativo sem WAF, o omega-serv 3.0.0 ocupa de 10 a 16 MB, de duas a quatro vezes o nginx ou o Apache e de três a seis vezes menos que o Caddy. Com o WAF ou o motor Python, é preciso contar de 20 a 33 MB, sobretudo por causa do Python: um processo Python com asyncio custa pelo menos 10 MB. Com um processo, são de 30 a 70 % a menos que na 2.5 (§6).
 - **Para situar esses números**: mesmo o caso mais lento, o motor Python com WAF na máquina B (564 req/s), representa quase 50 milhões de requisições por dia. É muito além das necessidades de um site pessoal, de um serviço interno ou de um laboratório. A velocidade só é realmente decisiva para um site de tráfego alto.
 
 ---
 
-## 5. As versões do omega-serv: 1.0 → 2.0 → 2.5
+## 5. Desempenho como proxy reverso: omega-serv frente ao nginx, lighttpd, Apache, Caddy e Traefik
 
-As três versões foram medidas na mesma sessão do §4, nas três máquinas, com o mesmo protocolo. Entre parênteses: a relação com o nginx (2 processos) da mesma sessão. †: campanha de 4 de novembro após a otimização do WAF (ver §4).
+Aqui, os servidores não servem arquivos: cada um **repassa** as requisições a um servidor de aplicação (o *backend*) e devolve a resposta dele. Medições de 14 de novembro de 2026, com o omega-serv 3.0.0 (em preparação), cujo motor nativo repassa ele mesmo o proxy reverso.
+
+### Protocolo próprio destas medições
+
+- **Mesmo backend para todos**: um nginx estático com 2 processos, que serve `small.html` (1 KB) e `medium.png` (100 KB). Cada medição verifica que a resposta vem mesmo do backend (cabeçalho acrescentado por ele): o proxy repassa, nunca serve o arquivo ele mesmo.
+- **Núcleos**: máquina A, o proxy num núcleo físico (threads 0 e 2), o cliente e o backend no outro (1 e 3); máquina B, o proxy nos núcleos 0 e 1, o cliente e o backend nos 2 e 3; máquina C, o proxy nos 4 núcleos Zen 5 (0 a 3), o backend em 2 núcleos Zen 5c (4 e 5), o cliente nos outros 4 (6 a 9).
+- **Processos**: 2 nas máquinas A e B, **4 na máquina C**, para que cada servidor use todos os núcleos dados ao proxy. O motor nativo do omega-serv usa sempre todos esses núcleos, com um processo Python de segurança.
+- **HTTP e HTTPS** do lado do cliente (certificado ECDSA P-256 autoassinado); o backend é sempre acessado em HTTP.
+- **Configurações**:
+  - nginx: `proxy_pass` para um grupo `upstream` que mantém suas conexões com o backend (`keepalive 64`); sem esse ajuste, ausente da configuração básica, o nginx abre uma conexão por requisição;
+  - lighttpd: `mod_proxy`, configuração básica;
+  - Apache: `mod_proxy` e `mod_proxy_http`, MPM `event`, uma linha `ProxyPass`;
+  - Caddy: `reverse_proxy`, configuração básica;
+  - Traefik 3.7: um roteador e um serviço, configuração básica;
+  - omega-serv: uma zona de proxy reverso em `/`, perfil `standard`, motor nativo sem e depois com o WAF (todas as regras fornecidas, sem limite de taxa), e motor Python com 2 processos.
+- **O resto não muda** (§3): log de acesso ativo em todos, oha, 32 conexões persistentes, 10 segundos, 3 rodadas intercaladas, mediana. **Nenhum erro**: todas as respostas são 200.
+
+Entre parênteses: a relação com o nginx com o mesmo número de processos, medido na mesma sessão (= 1,00).
+
+### Respostas pequenas (1 KB): requisições por segundo
+
+| Servidor | Máquina A (2 processos) | Máquina B (2 processos) | Máquina C (4 processos) |
+|---|---:|---:|---:|
+| nginx | 11.151 (1,00) | 11.049 (1,00) | 246.595 (1,00) |
+| **omega-serv, motor nativo** | **9.507 (0,85)** | **10.098 (0,91)** | **203.021 (0,82)** |
+| omega-serv, nativo + WAF | 9.078 (0,81) | 9.857 (0,89) | 190.201 (0,77) |
+| lighttpd | 6.752 (0,61) | 6.242 (0,56) | 129.827 (0,53) |
+| Apache | 6.616 (0,59) | 5.872 (0,53) | 124.458 (0,50) |
+| Traefik | 3.940 (0,35) | 3.890 (0,35) | 70.465 (0,29) |
+| Caddy | 3.578 (0,32) | 3.117 (0,28) | 55.910 (0,23) |
+| omega-serv, motor Python | 1.039 (0,09) | 859 (0,08) | — \* |
+
+\* O motor Python só foi medido com 2 processos na máquina C: 11.530 req/s, ou seja, 0,07 vez o nginx com 2 processos (171.075 req/s).
+
+### Respostas médias (100 KB): requisições por segundo
+
+| Servidor | Máquina A | Máquina B | Máquina C |
+|---|---:|---:|---:|
+| **omega-serv, motor nativo** | **4.281 (1,11)** | **3.497 (0,97)** | **80.361 (1,43)** |
+| omega-serv, nativo + WAF | 4.236 (1,10) | 3.335 (0,93) | 73.025 (1,30) |
+| nginx | 3.855 (1,00) | 3.605 (1,00) | 56.011 (1,00) |
+| lighttpd | 2.834 (0,74) | 2.252 (0,62) | 53.523 (0,96) |
+| Apache | 2.404 (0,62) | 2.357 (0,65) | 39.807 (0,71) |
+| Traefik | 2.477 (0,64) | 2.181 (0,60) | 39.419 (0,70) |
+| Caddy | 2.294 (0,60) | 1.956 (0,54) | 33.120 (0,59) |
+| omega-serv, motor Python | 821 (0,21) | 669 (0,19) | — |
+
+### HTTPS: requisições por segundo
+
+| Servidor | 1 KB: A | 1 KB: B | 1 KB: C | 100 KB: A | 100 KB: B | 100 KB: C |
+|---|---:|---:|---:|---:|---:|---:|
+| nginx | 9.203 (1,00) | 9.305 (1,00) | 202.095 (1,00) | 780 (1,00) | 2.338 (1,00) | 47.609 (1,00) |
+| **omega-serv, motor nativo** | **6.840 (0,74)** | **7.976 (0,86)** | **130.337 (0,64) †** | **690 (0,88)** | **1.917 (0,82)** | **42.507 (0,89)** |
+| omega-serv, nativo + WAF | 6.372 (0,69) | 7.456 (0,80) | 146.590 (0,73) † | 683 (0,88) | 1.882 (0,80) | 39.400 (0,83) |
+| lighttpd | 5.188 (0,56) | 5.513 (0,59) | 130.572 (0,65) | 638 (0,82) | 1.381 (0,59) | 45.566 (0,96) |
+| Apache | 5.038 (0,55) | 4.193 (0,45) | 114.898 (0,57) | 588 (0,75) | 1.368 (0,59) | 29.948 (0,63) |
+| Traefik | 3.389 (0,37) | 3.195 (0,34) | 62.251 (0,31) | 889 (**1,14**) | 1.548 (0,66) | 28.513 (0,60) |
+| Caddy | 3.263 (0,35) | 2.733 (0,29) | 54.279 (0,27) | 1.135 (**1,46**) | 1.424 (0,61) | 26.452 (0,56) |
+| omega-serv, motor Python | 922 (0,10) | 759 (0,08) | — | 423 (0,54) | 549 (0,23) | — |
+
+† Na máquina C, em HTTPS, o motor nativo varia muito de uma rodada para outra: de 130.000 a 185.000 req/s sem WAF, de 138.000 a 150.000 com. A diferença entre as duas linhas fica portanto dentro do ruído desta medição.
+
+### Latência p99 nas respostas pequenas (HTTP)
+
+| Servidor | Máquina A | Máquina B | Máquina C |
+|---|---:|---:|---:|
+| nginx | 7,7 ms | 7,8 ms | 0,4 ms |
+| **omega-serv, motor nativo** | **10,5 ms** | **9,7 ms** | **0,6 ms** |
+| omega-serv, nativo + WAF | 9,6 ms | 11,0 ms | 0,8 ms |
+| lighttpd | 11,9 ms | 14,0 ms | 0,9 ms |
+| Apache | 14,7 ms | 21,3 ms | 2,0 ms |
+| Traefik | 25,9 ms | 26,5 ms | 2,1 ms |
+| Caddy | 23,9 ms | 27,2 ms | 2,5 ms |
+| omega-serv, motor Python | 41,0 ms | 47,6 ms | — |
+
+### Memória do proxy (PSS): em repouso → após a carga, em HTTP
+
+omega-serv: versão 3.0.0, medida de novo em 19 de novembro de 2026; as vazões acima são de 14 de novembro.
+
+| Servidor | Máquina A | Máquina B | Máquina C |
+|---|---:|---:|---:|
+| lighttpd | 3 → 4 MB | 3 → 4 MB | 3 → 4 MB |
+| nginx | 7 → 8 MB | 7 → 8 MB | 10 → 11 MB |
+| Apache | 6 → 12 MB | 6 → 12 MB | 8 → 15 MB |
+| **omega-serv, motor nativo** | **27 → 28 MB** | **27 → 28 MB** | **29 → 33 MB** |
+| omega-serv, nativo + WAF | 29 → 30 MB | 29 → 31 MB | 31 → 36 MB |
+| Caddy | 48 → 57 MB | 48 → 59 MB | 50 → 60 MB |
+| omega-serv, motor Python | 42 → 50 MB | 43 → 51 MB | — |
+| Traefik | 93 → 117 MB | 107 → 131 MB | 100 → 123 MB |
+
+Em HTTPS, a memória após a carga aumenta de 0 a 5 MB na maioria dos servidores, mais no Apache (até 66 MB na máquina C) e no motor Python (até 72 MB): ver os números brutos.
+
+### Leitura
+
+- **Como proxy reverso, o omega-serv com o motor nativo fica em segundo, atrás do nginx**, nas três máquinas.
+  - Nas respostas pequenas, ele repassa de 0,82 a 0,91 vez o que o nginx repassa. É de 1,4 a 1,7 vez o lighttpd e o Apache, e de 2,4 a 3,6 vezes o Traefik e o Caddy.
+  - Sua latência p99 é a mais baixa depois da do nginx.
+- **Nas respostas de 100 KB, ele empata com o nginx ou o supera** (0,97 a 1,43). O motor nativo repassa a resposta à medida que ela chega, com um buffer limitado. Na configuração básica, o nginx só guarda na memória algumas dezenas de KB por resposta repassada (`proxy_buffers`) e pode gravar o resto num arquivo temporário. Não ajustamos esse ponto.
+- **Em HTTPS**, o motor nativo continua em segundo nas respostas pequenas das máquinas A e B. Na máquina C, o lighttpd e ele estão no mesmo nível.
+  - Nas respostas de 100 KB, o lighttpd passa à frente dele na máquina C.
+  - Na máquina A, o Caddy e o Traefik passam à frente de todos, nginx incluído. Eles são escritos em Go, com sua própria biblioteca TLS, aparentemente mais eficiente nesse processador de 2010. Não estudamos isso mais a fundo.
+- **O WAF custa pouco no proxy reverso**: de 1 a 9 % da vazão em HTTP, com todas as regras ativas. Os outros servidores foram medidos sem WAF: a comparação “com WAF” não é feita em pé de igualdade (ver §4).
+- **Memória**: com o motor nativo, o omega-serv 3.0.0 ocupa cerca de 30 MB (27 a 36 MB). Esse total inclui o supervisor Python, o processo de segurança e o motor nativo. São várias vezes o nginx, o lighttpd ou o Apache, mas menos que o Caddy e de três a quatro vezes menos que o Traefik. Na medição de 14 de novembro (3.0.0 em preparação), ele ocupava cerca de 50 MB.
+- **O motor Python** repassa de 0,08 a 0,10 vez o que o nginx repassa nas respostas pequenas: ele continua sendo o motor de reserva. As zonas de proxy reverso com cache ainda lhe são confiadas, e mantêm portanto a vazão dele.
+- **Uma correção feita antes destas medições.** Uma primeira passagem, no mesmo dia e com o mesmo protocolo, colocava o motor nativo a 0,32 a 0,69 vez o nginx nas respostas pequenas. Ele travava em cerca de 78.000 req/s na máquina C, qualquer que fosse o número de núcleos. Sua reserva de conexões com o backend era pequena demais: ele abria uma nova a cada cinco requisições. Essa reserva foi ampliada e o repasse foi aliviado antes da passagem publicada aqui. Os números da primeira passagem também são publicados.
+
+### Limites próprios destas medições
+
+- **O nginx está ajustado a seu favor**: ele mantém suas conexões com o backend, o que não faz na configuração básica. Os outros servidores estão na configuração básica.
+- **O backend roda na mesma máquina**, em loopback. Nas máquinas A e B, ele divide seus núcleos com o cliente. Só contam portanto as relações entre servidores, medidas nas mesmas condições. Sozinho, esse backend serve cerca de 345.000 req/s na máquina C: ali ele não limita nenhum dos proxies.
+- **Só HTTP/1.1**, tanto para o cliente quanto para o backend: o omega-serv não fala HTTP/2.
+- **Números brutos**: [`docs/benchmarks/`](../../benchmarks/), arquivos `2026-11-14-*-reverse-proxy-brut.txt`, inclusive a primeira passagem (`2026-11-14-reverse-proxy-avant-correctif-brut.txt`).
+
+---
+
+## 6. As versões do omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0
+
+As três versões foram medidas na mesma sessão do §4, nas três máquinas, com o mesmo protocolo. Entre parênteses: a relação com o nginx (2 processos) da mesma sessão. †: campanha de 4 de novembro após a otimização do WAF (ver §4). A 3.0.0 foi medida em 19 de novembro, com o mesmo protocolo; suas relações são calculadas com o nginx (2 processos) medido de novo nessa sessão, que fica a menos de 3 % do seu valor de 4 de novembro.
 
 ### Arquivos pequenos (1 KB): requisições por segundo
 
@@ -250,6 +373,13 @@ As três versões foram medidas na mesma sessão do §4, nas três máquinas, co
 | **2.5, motor nativo** | **15.222 (0,70)** | **16.542 (0,67)** | **285.213 (1,15)** |
 | **2.5, motor nativo + WAF †** | **11.990 (0,56)** | **12.998 (0,53)** | **264.484 (1,07)** |
 | **2.5, motor nativo + WAF, 2 processos de segurança †** | **11.746 (0,55)** | **12.718 (0,52)** | **253.527 (1,02)** |
+| 3.0.0, motor Python | 1.309 (0,06) | 752 (0,03) | 9.482 (0,04) |
+| 3.0.0, motor Python + WAF | 1.168 (0,05) | 653 (0,03) | 8.788 (0,04) |
+| 3.0.0, motor Python, 2 processos | 1.733 (0,08) | 1.154 (0,05) | 17.234 (0,07) |
+| 3.0.0, motor Python + WAF, 2 processos | 1.605 (0,07) | 994 (0,04) | 14.873 (0,06) |
+| **3.0.0, motor nativo** | **14.503 (0,68)** | **15.075 (0,63)** | **276.938 (1,15)** |
+| **3.0.0, motor nativo + WAF** | **12.762 (0,60)** | **11.618 (0,48)** | **257.741 (1,07)** |
+| **3.0.0, motor nativo + WAF, 2 processos de segurança** | **12.974 (0,61)** | **11.957 (0,50)** | **253.993 (1,06)** |
 
 ### Arquivos médios, arquivo grande e memória (1 processo, sem WAF)
 
@@ -259,6 +389,8 @@ As três versões foram medidas na mesma sessão do §4, nas três máquinas, co
 | 2.0.0 | 1.570 / 603 / 9.469 | 1.665 / 1.470 / 14.058 | 26 → 30 / 27 → 31 / 28 → 32 MB |
 | 2.5, motor Python | 1.329 / 611 / 9.805 | 1.686 / 1.472 / 14.227 | 28 → 32 / 29 → 33 / 30 → 34 MB |
 | **2.5, motor nativo** | **4.738 / 3.115 / 96.277** | **2.294 / 1.936 / 37.918** | **33 → 34 / 34 → 35 / 35 → 39 MB** |
+| 3.0.0, motor Python | 1.185 / 606 / 8.655 | 1.765 / 1.318 / 13.028 | 20 → 23 / 21 → 24 / 22 → 28 MB |
+| **3.0.0, motor nativo** | **4.665 / 3.026 / 100.513** | **2.399 / 1.932 / 40.755** | **10 → 10 / 10 → 12 / 12 → 16 MB** |
 
 ### Grandes downloads simultâneos
 
@@ -270,6 +402,8 @@ Teste: 3 downloads simultâneos de um arquivo de 300 MB, enquanto uma página pe
 | 2.0.0 | 39 a 42 MB | 3 ms / 4 a 6 ms / 1 ms |
 | 2.5, motor Python | 41 a 44 MB | 2 ms / 4 ms / 1 ms |
 | 2.5, motor nativo | 49 a 55 MB | 1 a 2 ms / 2 a 4 ms / menos de 1 ms |
+| 3.0.0, motor Python | 39 MB | 3 ms / 5 a 8 ms / 1 ms |
+| 3.0.0, motor nativo | 23 a 26 MB | 1 ms / 2 a 3 ms / menos de 1 ms |
 
 ### Custo da defesa ativa (1.0 → 2.0)
 
@@ -292,20 +426,28 @@ A mediana é dividida por 12. O máximo, por outro lado, é mais alto na 2.0: al
   - a 2.0 acrescenta vários processos, que aumentam de 25 % a quase 100 % a vazão das páginas pequenas conforme a máquina.
   A 1.0 carregava cada arquivo inteiro na memória antes de enviá-lo. A 2.0 o envia em blocos, ou o confia ao kernel.
 - **Da 2.0 para a 2.5, o motor Python não muda de velocidade**: as diferenças ficam abaixo de 4 % nas máquinas B e C, e dentro do ruído de medição da máquina A (−13 % a +9 %), a mais sensível à carga de fundo. Todo o ganho da 2.5 vem do **motor nativo**: cerca de ×10 a ×27 nos arquivos pequenos em relação ao motor Python, e a latência dividida por 5 a 15.
-- **O motor nativo ocupa cerca de 5 MB a mais** em repouso que o motor Python (PSS): é o preço do segundo programa. Com o WAF, ele ocupa ainda cerca de 8 MB a mais: as regras carregadas no nativo.
+- **Na 2.5, o motor nativo ocupava cerca de 5 MB a mais** em repouso que o motor Python (PSS): o preço do segundo programa. Com o WAF, ainda cerca de 8 MB a mais: as regras carregadas no nativo.
+- **Da 2.5 para a 3.0.0, a memória cai de 30 a 70 %** com um processo:
+  - motor nativo: 33-35 → 10-12 MB em repouso. Quando nada mais o exige, o supervisor Python se reduz a um pequeno programa de monitoramento, que não guarda na memória nem a configuração nem o servidor Python;
+  - motor Python: 28-30 → 20-22 MB. O código de uma opção só é carregado se ela estiver ativa, e a biblioteca TLS só se for usada;
+  - nativo + WAF: 43-45 → 28-30 MB. O processo de segurança nasce do supervisor reduzido e compartilha suas páginas com ele;
+  - motor Python com 2 processos: 40-43 → 35-38 MB;
+  - durante grandes downloads: 39 MB (Python) e 23 a 26 MB (nativo), contra 41 a 55 MB;
+  - o motor nativo agora ocupa metade da memória do motor Python.
+- **O trabalho sobre a memória não muda a vazão**: um teste intercalado nas máquinas B e C, com o código 3.0.0 antes e depois desse trabalho, dá uma diferença de 1 a 4 %. Em relação à 2.5, o motor Python com 2 processos serve de 12 a 13 % a menos nas máquinas B e C (26 % na máquina A, a mais sensível à carga de fundo); o código 3.0.0 de antes desse trabalho mostra o mesmo recuo, que vem portanto de outras mudanças da 3.0.0 e ainda precisa ser estudado. As outras diferenças em relação à 2.5 vão de −13 % a +13 %, nos dois sentidos.
 
 ### O que saber sobre o motor nativo
 
 - Ele é **opcional**: o motor Python continua sendo o motor padrão, e o motor de reserva.
 - Ele serve ele mesmo o conteúdo estático, os redirecionamentos, as reescritas, os aliases, o cache, as páginas de erro, os cabeçalhos de segurança e o TLS.
 - Ele procura ele mesmo as regras do WAF e serve sozinho uma requisição à qual nenhuma corresponde. Qualquer outra requisição (correspondência ou dúvida do WAF, Active Defense, autenticação) é decidida pelo Python, com exatamente os mesmos controles e os mesmos logs. Um controle ajustável ainda envia ao Python uma requisição limpa a cada N, para verificar que os dois dão o mesmo veredito.
-- A listagem de diretórios e as páginas internas são pedidas ao Python; o proxy reverso, o FastCGI, o envio de arquivos e o WebSocket lhe são confiados durante toda a conexão. Essas funções mantêm portanto a velocidade do motor Python.
-- Com TLS direto, o proxy reverso, o FastCGI e o envio de arquivos não são suportados pelo nativo: quem serve então é o motor Python, e a interface indica isso.
+- Ele repassa ele mesmo o proxy reverso, WebSocket incluído (desde a 3.0.0). A listagem de diretórios e as páginas internas são pedidas ao Python; o FastCGI, o envio de arquivos e as zonas de proxy reverso com cache lhe são confiados durante toda a conexão. Essas funções mantêm portanto a velocidade do motor Python.
+- Com TLS direto, o FastCGI, o envio de arquivos e as zonas de proxy reverso com cache não são suportados pelo nativo: quem serve então é o motor Python, e a interface indica isso.
 - Ele exige glibc 2.38 ou mais recente e OpenSSL 3. Se ele não iniciar, a instalação o recompila no local, e na falta disso o omega-serv fica no motor Python.
 
 ---
 
-## 6. Comparativo de funções
+## 7. Comparativo de funções
 
 Legenda:
 - ✅ integrado;
@@ -372,7 +514,7 @@ Banimentos graduais: banimentos cada vez mais longos para os endereços que volt
 
 ---
 
-## 7. Administração e ergonomia
+## 8. Administração e ergonomia
 
 | Servidor | Modo de administração principal | Interface | Recarga sem interrupção |
 |---|---|---|---|
@@ -389,7 +531,7 @@ Em contrapartida, a abordagem “arquivo de configuração” do nginx, do Apach
 
 ---
 
-## 8. O que o omega-serv traz a mais
+## 9. O que o omega-serv traz a mais
 
 Esta seção só considera o que nenhum dos servidores comparados oferece tal como está, sem módulo de terceiros nem ferramenta externa.
 
@@ -427,11 +569,15 @@ Esta seção só considera o que nenhum dos servidores comparados oferece tal co
 
 ---
 
-## 9. O que os outros fazem melhor
+## 10. O que os outros fazem melhor
 
 - **Vazão**: lighttpd e nginx continuam os mais rápidos nos arquivos pequenos e médios, nas três máquinas. Mesmo com o motor nativo, o omega-serv serve cerca de 0,7 vez o nginx e 0,5 vez o lighttpd nos arquivos pequenos, e de 0,3 a 0,6 vez o nginx nos arquivos de 100 KB. Para um site de tráfego alto, uma API pública ou uma CDN, são eles que se deve escolher.
 - **Arquivos médios**: o Apache serve os arquivos de 100 KB mais rápido que o motor nativo do omega-serv, nas três máquinas.
-- **Memória**: lighttpd (1 MB), nginx (4 a 5 MB) e Apache (4 a 9 MB) convêm a máquinas muito limitadas (embarcados, pequenos contêineres). O omega-serv precisa de 30 a 65.
+- **Proxy reverso**:
+  - o nginx repassa as respostas pequenas de 10 a 22 % mais rápido que o motor nativo, e até 1,6 vez mais rápido em HTTPS na máquina C;
+  - em HTTPS, nas respostas de 100 KB, o lighttpd o supera na máquina C, e o Caddy e o Traefik na máquina A;
+  - nginx, lighttpd e Apache repassam com 4 a 15 MB de memória, o omega-serv com cerca de 30.
+- **Memória**: lighttpd (1 MB), nginx (4 a 5 MB) e Apache (4 a 9 MB) convêm a máquinas muito limitadas (embarcados, pequenos contêineres). O omega-serv 3.0.0 precisa de 10 a 55 conforme o modo.
 - **Custo da segurança**: o WAF ainda tem um custo. Com o motor nativo, ele tira de 5 a 22 % da vazão nos arquivos pequenos, limitação de taxa incluída: o omega-serv com WAF serve de 0,53 a 0,56 vez o nginx sem WAF nas máquinas A e B. Uma requisição suspeita ou duvidosa (correspondência de uma regra, texto não ASCII, origem vigiada pelo Active Defense) sempre passa pelo Python, e é servida na velocidade do motor Python. Com o magnet ativo, todas as requisições passam pelo Python, e o WAF divide então a vazão do motor nativo por 4 a 7, como antes da otimização.
 - **Protocolos**: HTTP/2 em todos os outros, HTTP/3 no nginx, no Caddy e no Traefik. O omega-serv só fala HTTP/1.1.
 - **HTTPS automático**: Caddy e Traefik o integram por padrão, e nginx (`ngx_http_acme_module`) e Apache (`mod_md`) com um módulo oficial. O omega-serv delega ao Certbot, com um assistente e uma renovação programada.
@@ -441,18 +587,19 @@ Esta seção só considera o que nenhum dos servidores comparados oferece tal co
 
 ---
 
-## 10. Qual servidor para qual uso
+## 11. Qual servidor para qual uso
 
 | Necessidade | Escolha recomendada |
 |---|---|
 | Site de tráfego alto, API pública, CDN, vazão máxima | **nginx** ou **lighttpd** |
+| Proxy reverso com vazão máxima, HTTP/2 ou HTTP/3 para os clientes | **nginx** |
 | Máquina muito limitada, embarcado, arquivos estáticos | **lighttpd** |
 | Início rápido com HTTPS automático, configuração curta | **Caddy** |
 | Aplicação PHP histórica, `.htaccess`, hospedagem compartilhada | **Apache** |
 | Docker, Kubernetes, microsserviços | **Traefik** |
 | Site pequeno ou médio, serviço interno, laboratório, VPN, administração sem editar arquivos | **omega-serv** (motor nativo se possível) |
 | Servidor exposto em que se quer ver e controlar a segurança (WAF, banimentos graduais, iscas) a partir de uma única interface | **omega-serv** |
-| Proxy reverso interno com balanceamento, saúde e cache, gerido a partir de uma interface | **omega-serv** |
+| Proxy reverso com balanceamento, saúde, cache e WAF, gerido a partir de uma interface | **omega-serv** (motor nativo: segundo, atrás do nginx, em vazão) |
 | Aprender o endurecimento HTTP e a defesa ativa | **omega-serv** |
 
 Essas ferramentas também se combinam. Por exemplo:
@@ -461,9 +608,9 @@ Essas ferramentas também se combinam. Por exemplo:
 
 ---
 
-## 11. Reproduzir as medições
+## 12. Reproduzir as medições
 
-As ferramentas são fornecidas no repositório, em `tools/bench/`. É preciso ter nginx, lighttpd, Apache, Caddy e oha instalados, o ambiente de desenvolvimento do omega-serv (`.venv`) e, para o motor nativo, o binário compilado em `native/omega-http-core/build-release`.
+As ferramentas são fornecidas no repositório, em `tools/bench/`. É preciso ter nginx, lighttpd, Apache, Caddy e oha instalados (e o Traefik para o proxy reverso), o ambiente de desenvolvimento do omega-serv (`.venv`) e, para o motor nativo, o binário compilado em `native/omega-http-core/build-release`.
 
 ```sh
 # 1. preparar uma pasta de medição (arquivos de teste, configurações, omega-serv 1.0, 2.0 e versão atual)
@@ -487,6 +634,15 @@ BENCH_SRC=/caminho/medicao/v1-archive/omega-serv/src \
 BENCH_EXTRA_PATH=/caminho/medicao/v1-archive/omega-serv/vendor/omega-lib/src \
   .venv/bin/python tools/bench/bigfile.py
 
+# proxy reverso (§5): backend, certificado, configurações dos 6 proxies, depois 3 repetições intercaladas
+#    máquina C: SRV_CPUS=0-3 BACK_CPUS=4,5 CLI_CPUS=6-9 e CONFIGS="nginx-4 lighttpd-4 apache-4 caddy-4 traefik-4 omega-nat-1-0 omega-nat-1-1"
+tools/bench/proxy/setup.sh /caminho/proxy /caminho/para/traefik
+SRV_CPUS=0,1 CLI_CPUS=2,3 tools/bench/proxy/campaign.sh /caminho/proxy > proxy.txt
+python3 tools/bench/proxy/summarize.py proxy.txt
+
+# medir de novo só o omega-serv (memória da 3.0.0): arquivos, grandes downloads e proxy reverso, nginx como referência
+MACHINE=a SRV_CPUS=0,2 CLI_CPUS=1,3 tools/bench/memoire-3.0.0.sh /caminho/medicao > memoria.txt
+
 # medir qualquer outro servidor já em execução, sem oha
 python3 tools/bench/bench_any.py --make-files /srv/webroot-de-teste
 python3 tools/bench/bench_any.py --port 8080
@@ -494,11 +650,13 @@ python3 tools/bench/bench_any.py --port 8080
 
 Nomes das configurações: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N` (N processos, ou N núcleos para o Caddy); `omega-vX-N-W` para o omega-serv (versão `v1`, `v20` ou `v2` para a versão atual, N processos, W = 0 sem WAF ou 1 com), seguido de `-native` para o motor nativo.
 
+Para o proxy reverso: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N`, `traefik-N`, `omega-py-N-W` (motor Python) e `omega-nat-N-W` (motor nativo, N processos de segurança), seguidos de `-tls` para HTTPS do lado do cliente.
+
 Para publicar seus próprios resultados, informe a máquina, as versões, a distribuição dos núcleos e as três repetições.
 
 ---
 
-## 12. Fontes
+## 13. Fontes
 
 Funções dos outros servidores, segundo sua documentação oficial (consultada em 26 de outubro de 2026).
 
@@ -548,4 +706,4 @@ Funções dos outros servidores, segundo sua documentação oficial (consultada 
 
 ---
 
-*Comparativo feito por kraynux para o omega-serv 2.5: medições de 3 e 4 de novembro de 2026 em três máquinas (defesa ativa: 26 de outubro de 2026). Para qualquer decisão de capacidade, meça no seu próprio hardware com as ferramentas fornecidas.*
+*Comparativo feito por kraynux para o omega-serv 2.5 e 3.0.0: medições de 3 e 4 de novembro de 2026 em três máquinas (proxy reverso: 14 de novembro de 2026; memória do omega-serv 3.0.0: 19 de novembro de 2026; defesa ativa: 26 de outubro de 2026). Para qualquer decisão de capacidade, meça no seu próprio hardware com as ferramentas fornecidas.*

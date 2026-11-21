@@ -14,7 +14,9 @@ ligne de journal (lue par les failregex d'omega-jail, lnav, le parseur), meme de
   python3 tools/differential/differential.py compare python.json native.json
 
 Profil `static` (lot 2 du moteur natif) : meme projet, sans WAF, auth, upload ni listing - ce que le natif sait
-deja servir seul. Profil `static-tls` (lot 3b) : le meme en TLS direct (certificat auto-signe genere ici), le
+deja servir seul. Profil `proxy` (plan proxy natif v2, lot 0) : zone reverse proxy vers le faux backend scripte
+de tests/integration/proxy_harness.py (lance par `run`, port fixe), avec WAF, liste de blocage, limite de debit,
+authentification et regle d'acces ; corpus propre au proxy. Profil `static-tls` (lot 3b) : le meme en TLS direct (certificat auto-signe genere ici), le
 corpus passe par un client TLS, plus des cas propres a TLS (HTTP en clair sur le port TLS, versions, suites). Moteur `native` : instantane construit par infrastructure/server/native_snapshot.py dans le
 projet de test, puis binaire omega-http-core (par defaut la version ASan/UBSan du depot).
 
@@ -39,6 +41,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 PORT = 18970
+PROXY_BACKEND_PORT = PORT + 1  # profil proxy : port fixe, pour un Host vers le backend identique d'un passage a l'autre
 FIXED_MTIME = 1_700_000_000
 HOST = f"127.0.0.1:{PORT}"
 # Client simule derriere le proxy de confiance (127.0.0.1) : chaque cas a sa propre adresse, aucun etat
@@ -98,8 +101,10 @@ def prepare(folder: Path, profile: str = "full") -> None:
 
     (auth / "users.json").write_text(json.dumps(
         {"version": 1, "users": [{"username": USER, "password_hash": hash_password(PASSWORD)}]}))
-    (auth / "zones.json").write_text(json.dumps(
-        {"version": 1, "zones": [{"path_prefix": "/admin", "realm": "Admin", "allowed_users": [USER]}]}))
+    zones = [{"path_prefix": "/admin", "realm": "Admin", "allowed_users": [USER]}]
+    if profile == "proxy":
+        zones.append({"path_prefix": "/api/prive", "realm": "Prive", "allowed_users": [USER]})
+    (auth / "zones.json").write_text(json.dumps({"version": 1, "zones": zones}))
 
     waf_state = folder / "var" / "lib" / "waf"
     waf_state.mkdir(parents=True)
@@ -145,6 +150,15 @@ def prepare(folder: Path, profile: str = "full") -> None:
         config["options"]["waf"]["rate_limit"] = {"enabled": True, "path_policies": [
             {"prefix": "/limite", "requests": 3, "window_seconds": 60}]}
         config["options"]["active_defense"] = {"enabled": True}
+    if profile == "proxy":
+        for name in ("upload", "dirlisting"):
+            del config["options"][name]
+        config["options"]["waf"]["rate_limit"] = {"enabled": True, "path_policies": [
+            {"prefix": "/api/limite", "requests": 3, "window_seconds": 60}]}
+        config["options"]["access_control"]["list"].append({"path_prefix": "/api/interdit", "verdict": "deny"})
+        config["options"]["reverse_proxy"] = {"enabled": True, "zones": [{
+            "url_prefix": "/api/", "upstreams": [{"host": "127.0.0.1", "port": PROXY_BACKEND_PORT}],
+            "connect_timeout_seconds": 2, "read_timeout_seconds": 1}]}
     if profile == "static-tls":
         certs = folder / "secure" / "certificates" / "server"
         certs.mkdir(parents=True)
@@ -369,6 +383,44 @@ def tls_corpus() -> list[tuple[str, list]]:
     ]
 
 
+def proxy_corpus() -> list[tuple[str, list]]:
+    """Profil proxy : securite sur la route proxifiee, decoupage des reponses, en-tetes, erreurs - les memes cas
+    que tests/integration/test_proxy_characterization.py, compares octet pour octet entre les deux moteurs."""
+    h = f"Host: {HOST}"
+    ip = iter(f"198.51.100.{i}" for i in range(1, 250))
+    cases: list[tuple[str, list]] = []
+
+    def add(name: str, *requests: bytes | float) -> None:
+        cases.append((name, list(requests)))
+
+    for path in ("ok", "echo", "204", "304", "chunked", "close", "cookies", "lowercase", "401", "404", "slow"):
+        add(f"proxy-{path}", _req(f"GET /api/{path} HTTP/1.1", ip=next(ip)))
+    add("proxy-head", _req("HEAD /api/head HTTP/1.1", ip=next(ip)))
+    add("proxy-query", _req("GET /api/echo?a=1&b=%20 HTTP/1.1", ip=next(ip)))
+    add("proxy-forged-identity", _req("GET /api/echo HTTP/1.1", [h, "X-Real-IP: 10.0.0.1", "Forwarded: for=10.0.0.1",
+                                                                 "Connection: X-Secret", "X-Secret: saut"], ip=next(ip)))
+    body = b"nom=marie&ville=lyon"
+    add("proxy-post", _req("POST /api/echo HTTP/1.1", [h, "Content-Type: application/x-www-form-urlencoded",
+                                                       f"Content-Length: {len(body)}"], body, ip=next(ip)))
+    add("proxy-hops", _req("GET /api/ok HTTP/1.1", [h, "X-Omega-Proxy-Hops: 5"], ip=next(ip)))
+    add("proxy-control-char", _req("GET /api/ok\x01 HTTP/1.1", ip=next(ip)))
+    add("proxy-dot-segment", _req("GET /api/../interdit HTTP/1.1", ip=next(ip)))
+    add("proxy-dot-segment-encoded", _req("GET /api/%2e%2e/interdit HTTP/1.1", ip=next(ip)))
+    add("proxy-waf-attack", _req("GET /api/ok?id=1%20union%20select%20password%20from%20users HTTP/1.1", ip=next(ip)))
+    add("proxy-blocklist", _req("GET /api/ok HTTP/1.1", ip=BANNED_IP))
+    limit_ip = next(ip)
+    burst = b"".join(f"GET /api/limite?n={i} HTTP/1.1\r\n{h}\r\nX-Forwarded-For: {limit_ip}\r\n\r\n".encode()
+                     for i in range(4))
+    add("proxy-rate-limit", burst)
+    add("proxy-auth-missing", _req("GET /api/prive HTTP/1.1", ip=next(ip)))
+    add("proxy-auth-ok", _req("GET /api/prive HTTP/1.1", [h, _basic(USER, PASSWORD)], ip=next(ip)))
+    add("proxy-access-denied", _req("GET /api/interdit HTTP/1.1", ip=next(ip)))
+    keep_ip = next(ip)
+    add("proxy-keepalive-mixed", f"GET /api/ok HTTP/1.1\r\n{h}\r\nX-Forwarded-For: {keep_ip}\r\n\r\n".encode(),
+        _req("GET /page.html HTTP/1.1", ip=keep_ip))
+    return cases
+
+
 # ------------------------------------------------------------------------------------------------ execution
 def _wait_port(timeout: float = 20.0) -> None:
     deadline = time.monotonic() + timeout
@@ -449,14 +501,46 @@ _LOG_TS = re.compile(r"\[\d{2}/\w{3}/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}\]")
 _LIVE_LOAD = re.compile(rb'("(?:cpu_percent|load_average_1m|memory_percent)": )[0-9.eE+-]+')
 
 
+def _dechunk(body: bytes) -> tuple[bytes, bytes] | None:
+    """(corps chunked decode, octets d'apres - reponse suivante d'une connexion gardee) ; None si invalide."""
+    decoded, position = bytearray(), 0
+    while True:
+        end = body.find(b"\r\n", position)
+        if end < 0:
+            return None
+        try:
+            size = int(body[position:end].split(b";", 1)[0], 16)
+        except ValueError:
+            return None
+        position = end + 2
+        if size == 0:
+            trailer_end = body.find(b"\r\n\r\n", position - 2)
+            return None if trailer_end < 0 else (bytes(decoded), body[trailer_end + 4:])
+        decoded += body[position:position + size]
+        position += size + 2
+
+
 def _normalize_response(raw: bytes) -> dict:
     cleaned = _DATE.sub(b"", raw)
     head, _, body = cleaned.partition(b"\r\n\r\n")
+    framing = None
+    if b"\r\nTransfer-Encoding: chunked" in head:
+        # Plan proxy natif v2, lot 5 : le relais natif envoie en chunked (Q4) ce que Python envoie avec Content-Length
+        # (corps lu en entier). Seul ecart admis : on compare le corps decode et la longueur qu'aurait annoncee Python,
+        # a la meme place ; le decoupage reste visible dans `framing`.
+        parts = _dechunk(body)
+        if parts is not None:
+            decoded, rest = parts
+            head = head.replace(b"\r\nTransfer-Encoding: chunked", b"\r\nContent-Length: %d" % len(decoded))
+            body, framing = decoded + rest, "chunked"
     body = _LIVE_LOAD.sub(rb"\1N", body)  # /.omega-serv-load/ : mesures systeme en direct, jamais deux fois egales
     head = re.sub(r"Content-Length: \d+", "Content-Length: L", head.decode("latin-1")).encode("latin-1") \
         if body.startswith(b'{"cpu_percent"') else head
-    return {"head": head.decode("latin-1"), "body_sha256": hashlib.sha256(body).hexdigest(), "body_len": len(body),
-            "body_start": body[:160].decode("latin-1")}
+    normalized = {"head": head.decode("latin-1"), "body_sha256": hashlib.sha256(body).hexdigest(),
+                  "body_len": len(body), "body_start": body[:160].decode("latin-1")}
+    if framing is not None:
+        normalized["framing"] = framing
+    return normalized
 
 
 def _normalize_access(line: str) -> str:
@@ -529,11 +613,18 @@ def run(folder: Path, out: Path, engine: str, binary: Path = NATIVE_BINARY, thre
         command = [sys.executable, "-m", "omega_serv", "--config", "config/omega-serve.json", "serve"]
     elif engine == "native":
         command = _native_command(folder, env, binary, threads)
-    elif engine == "native-serve":
+    elif engine in ("native-serve", "native-relay", "native-handoff"):
         # Lot 4 : le natif sous son vrai superviseur (processus de securite, canaux), server.engine = native le temps
         # de ce passage ; nombre de fils = coeurs utilisables (le superviseur le fixe lui-meme).
+        # Plan proxy natif v2, lot 4 : « native-relay » = zones relayees par le natif (reverse_proxy.engine = native).
         config = json.loads(original_config)
         config.setdefault("server", {})["engine"] = "native"
+        if engine == "native-relay" and "reverse_proxy" in config.get("options", {}):
+            config["options"]["reverse_proxy"]["engine"] = "native"
+        # Lot 11 : auto relaie desormais par le natif ; « native-handoff » garde le trajet des zones confiees a Python
+        # (reverse_proxy.engine = python, sous le natif).
+        if engine == "native-handoff" and "reverse_proxy" in config.get("options", {}):
+            config["options"]["reverse_proxy"]["engine"] = "python"
         config_file.write_text(json.dumps(config, indent=2))
         (folder / "bin").mkdir(exist_ok=True)
         link = folder / "bin" / "omega-http-core"
@@ -546,6 +637,12 @@ def run(folder: Path, out: Path, engine: str, binary: Path = NATIVE_BINARY, thre
     access = folder / "var" / "log" / "access.log"
     alerts = folder / "var" / "log" / "waf-alerts.log"
     errors = folder / "var" / "log" / "error.log"
+    options = json.loads(original_config).get("options", {})
+    backend = None
+    if options.get("reverse_proxy", {}).get("enabled"):
+        sys.path.insert(0, str(REPO))
+        from tests.integration.proxy_harness import ScriptedBackend
+        backend = ScriptedBackend(port=PROXY_BACKEND_PORT)
     server = subprocess.Popen(command, cwd=folder, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         _wait_port()
@@ -555,7 +652,7 @@ def run(folder: Path, out: Path, engine: str, binary: Path = NATIVE_BINARY, thre
         errors_offset = errors.stat().st_size if errors.exists() else 0
         results = {}
         tls = json.loads((folder / "config" / "omega-serve.json").read_text()).get("tls", {}).get("enabled", False)
-        cases = corpus() + (tls_corpus() if tls else [])
+        cases = proxy_corpus() if backend is not None else corpus() + (tls_corpus() if tls else [])
         for name, requests in cases:
             raw = _exchange(requests, tls)
             time.sleep(0.15)  # journal ecrit apres la reponse
@@ -569,6 +666,8 @@ def run(folder: Path, out: Path, engine: str, binary: Path = NATIVE_BINARY, thre
                 "error_log": [_normalize_error(line) for line in error_lines],
             }
     finally:
+        if backend is not None:
+            backend.stop()
         server.terminate()
         try:
             server.wait(15)
@@ -599,9 +698,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("prepare"); p.add_argument("folder", type=Path)
-    p.add_argument("--profile", choices=("full", "static", "static-tls", "secure"), default="full")
+    p.add_argument("--profile", choices=("full", "static", "static-tls", "secure", "proxy"), default="full")
     r = sub.add_parser("run"); r.add_argument("folder", type=Path); r.add_argument("--out", type=Path, required=True)
-    r.add_argument("--engine", choices=("python", "native", "native-serve"), default="python")
+    r.add_argument("--engine", choices=("python", "native", "native-serve", "native-relay", "native-handoff"), default="python")
     r.add_argument("--native-bin", type=Path, default=NATIVE_BINARY)
     r.add_argument("--threads", type=int, default=2)
     c = sub.add_parser("compare"); c.add_argument("first", type=Path); c.add_argument("second", type=Path)

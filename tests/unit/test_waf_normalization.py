@@ -55,3 +55,46 @@ class TestDecodeBoundedForInspection(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestUnquoteReplace(unittest.TestCase):
+    """Plan proxy natif v2, lot 2 (B) : `unquote_replace` remplace `urllib.parse.unquote(errors="replace")` pour la
+    vitesse (3 s de CPU par Mo de corps binaire, mesure du lot 2) - le resultat doit etre EXACTEMENT le meme."""
+
+    def test_same_result_as_urllib_unquote(self):
+        import random
+        import urllib.parse
+
+        from omega_serv.domain.security.waf.normalization import unquote_replace
+        rng = random.Random(20261112)
+        alphabet = ["%", "%", "%", "0", "9", "a", "f", "A", "F", "g", "e", "2", "c", "8", "+", " ", "é", "中", "�",
+                    "\x00", "\x7f", "€"]
+        fixed = ["", "%", "%%", "%%41", "%4", "%41%", "%e2%82%ac", "%E2%82", "%e2%82a", "%e2é%82%ac", "%ff%fe",
+                 "%c3%a9%c3", "%f0%9f%98%80", "%ed%a0%80", "a%2", "%zz%41", "union%20select"]
+        texts = fixed + ["".join(rng.choice(alphabet) for _ in range(rng.randint(0, 30))) for _ in range(50000)]
+        for text in texts:
+            self.assertEqual(unquote_replace(text), urllib.parse.unquote(text, errors="replace"), repr(text))
+
+    def test_whole_decoding_same_result_as_before(self):
+        # decode_bounded_for_inspection garde EXACTEMENT son resultat d'avant le lot 2 (reference recopiee ici).
+        import random
+        import unicodedata
+        import urllib.parse
+
+        def reference(raw: str, max_passes: int) -> str:
+            if raw.isascii() and "%" not in raw:
+                return raw
+            current = unicodedata.normalize("NFKC", raw)
+            for _ in range(max(1, max_passes)):
+                decoded = unicodedata.normalize("NFKC", urllib.parse.unquote(current, errors="replace"))
+                if decoded == current:
+                    break
+                current = decoded
+            return current
+
+        rng = random.Random(7)
+        alphabet = ["%", "%", "2", "5", "e", "F", "c", "a", "ｓ", "＜", "ﬁ", "é", "́", "€", " ", "x", "�"]
+        for _ in range(30000):
+            text = "".join(rng.choice(alphabet) for _ in range(rng.randint(0, 25)))
+            for depth in (1, 2, 3):
+                self.assertEqual(decode_bounded_for_inspection(text, depth), reference(text, depth), repr(text))

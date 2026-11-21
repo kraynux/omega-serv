@@ -16,6 +16,7 @@ from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.cache_policy import DEFAULT_CACHE_CONTROL, DEFAULT_EXTENSION_CACHE
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -68,13 +69,15 @@ class CacheScreen(OmegaScreen):
                 classes="omega-hint",
             )
             yield DataTable(id="extensions-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Ajouter une extension"), id="add-extension", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Supprimer l'extension"), id="delete-extension", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Ajouter une extension"), id="add-extension", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Supprimer l'extension"), id="delete-extension", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -128,7 +131,7 @@ class CacheScreen(OmegaScreen):
             self._save_settings(default=self.query_one("#default-input", Input).value.strip() or DEFAULT_CACHE_CONTROL)
             return
         if button_id == "add-zone":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("AJOUTER UNE RÈGLE DE ZONE"),
                     fields=[
@@ -146,7 +149,7 @@ class CacheScreen(OmegaScreen):
             )
             return
         if button_id == "add-extension":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("AJOUTER UNE RÈGLE D'EXTENSION"),
                     fields=[
@@ -168,9 +171,14 @@ class CacheScreen(OmegaScreen):
             return
         path_prefix = values["path_prefix"].strip()
         if not path_prefix.startswith("/"):
-            self.query_one("#form-error", Static).update(_("Le préfixe doit commencer par '/' : {path_prefix!r}").format(path_prefix=path_prefix))
+            self.report_form_error(_("Le préfixe doit commencer par '/' : {path_prefix!r}").format(path_prefix=path_prefix))
             return
         zones = list(self._settings().get("zones", []))
+        duplicate = duplicate_error([z.get("path_prefix") for z in zones], path_prefix, lambda v: v,
+                                    _("le préfixe {value!r}").format(value=path_prefix))
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         zones.append({"path_prefix": path_prefix, "cache_control": values["cache_control"].strip()})
         self._save_settings(zones=zones)
 
@@ -186,7 +194,7 @@ class CacheScreen(OmegaScreen):
             return
         extension = values["extension"].strip()
         if not extension.startswith("."):
-            self.query_one("#form-error", Static).update(_("L'extension doit commencer par '.' : {extension!r}").format(extension=extension))
+            self.report_form_error(_("L'extension doit commencer par '.' : {extension!r}").format(extension=extension))
             return
         extensions = dict(self._settings().get("extensions", DEFAULT_EXTENSION_CACHE))
         extensions[extension] = values["cache_control"].strip()
@@ -202,7 +210,7 @@ class CacheScreen(OmegaScreen):
     def _save_settings(self, **updates: object) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("cache")
         enabled = existing.enabled if existing is not None else False

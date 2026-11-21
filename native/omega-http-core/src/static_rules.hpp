@@ -30,6 +30,10 @@ PathDecision normalize_uri_path(std::string_view raw_path);
 // Meme regle sur un chemin deja texte (UTF-8) : chemin reecrit ou alias, dont une partie vient de la
 // configuration et peut contenir des caracteres hors latin-1 (Python les manipule comme des str).
 PathDecision normalize_uri_path_utf8(std::string_view utf8_path);
+// Scan de securite n° 1 (2026-11-20, cause A) : path_policy.py::canonical_path - chemin des decisions de securite
+// (regles d'acces, zones d'authentification, listage, alias, zones proxy), decode comme le fichier servi.
+// nullopt : encodage invalide, NUL, controle ou segment ".." (requete refusee). Une cible sans "/" initial reste telle.
+std::optional<std::string> canonical_path_utf8(std::string_view utf8_path);
 
 // --------------------------------------------------------------------------------- conditionnels
 std::string make_etag(std::uint64_t size, std::int64_t mtime);

@@ -57,7 +57,10 @@ std::string resolve_client_ip(std::string_view peer_ip, HeaderLookup header_valu
         const std::string* value = header_value(name);
         if (value == nullptr || value->empty()) continue;
         std::vector<std::string> hops = header_hops(name, *value);
-        if (!hops.empty()) return rightmost_untrusted(hops, trusted);
+        if (!hops.empty()) {
+            std::string chosen = rightmost_untrusted(hops, trusted);
+            return chosen.empty() ? normalized_peer : chosen;  // scan n° 2 (F40/F44) : jamais un texte libre
+        }
     }
     return normalized_peer;
 }

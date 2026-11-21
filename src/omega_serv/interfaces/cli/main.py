@@ -11,7 +11,7 @@ testable via CLI non interactive").
 from __future__ import annotations
 
 import argparse
-import asyncio
+import gc
 import getpass
 import json
 import os
@@ -21,145 +21,28 @@ import sys
 from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
-from omega_lib.synchro.models import ServiceInfo
-
-from omega_serv.application.active_defense.manage_deception import release_deception
-from omega_serv.application.active_defense.manage_incidents import close_incident
-from omega_serv.application.active_defense.preview_playbook_decision import (
-    preview_playbook_decision,
-)
-from omega_serv.application.active_defense.queries import (
-    get_incident_timeline,
-    get_threat_state,
-    list_incidents,
-    list_threat_states,
-    omitted_history_notice,
-)
-from omega_serv.application.active_defense.sweep_active_defense import sweep_active_defense
-from omega_serv.application.auth.manage_users import add_user, change_password, remove_user
-from omega_serv.application.auth.manage_zones import add_zone, remove_zone
-from omega_serv.application.config.apply_profile import plan_profile_application
-from omega_serv.application.config.generate_config import generate_default_config
 from omega_serv.application.config.load_config import load_config
-from omega_serv.application.config.manage_option import set_option_enabled, waf_rule_packs_present
-from omega_serv.application.config.validate_config import validate_config_environment
-from omega_serv.application.security.manage_blocklist import (
-    add_blocklist_entry,
-    remove_blocklist_entry,
-)
-from omega_serv.application.security.run_audit import run_audit
-from omega_serv.application.security.simulate_waf_request import simulate_waf_request
-from omega_serv.application.server.engine_selection import log_reason
-from omega_serv.application.server.engine_status import engine_connector_rows, engine_status_rows
-from omega_serv.application.server.simulate_request import simulate_request
-from omega_serv.application.server.start_server import (
-    ActiveDefenseCollaborators,
-    build_active_defense_collaborators,
-    build_auth_zones_repository,
-    build_blocklist_port,
-    build_server,
-    build_users_repository,
-    build_waf_collaborators,
-    try_reload_server,
-)
-from omega_serv.application.services.install_service import (
-    install_systemd_service,
-    repair_service_permissions,
-    uninstall_systemd_service,
-)
-from omega_serv.application.services.manage_service import (
-    ManageServiceResult,
-    disable_service,
-    enable_service,
-    get_service_status,
-    reload_service,
-    restart_service,
-    start_service,
-    stop_service,
-)
-from omega_serv.application.services.pid_file import remove_pid_file, write_pid_file
-from omega_serv.application.terminal.select_language import install_interface_language
-from omega_serv.application.tls.generate_ca_certificate import generate_ca_certificate
-from omega_serv.application.tls.generate_certificate_signing_request import (
-    generate_certificate_signing_request,
-)
-from omega_serv.application.tls.generate_self_signed import generate_self_signed_certificate
-from omega_serv.application.tls.import_certificate import import_certificate
-from omega_serv.application.tls.inspect_certificate import (
-    CertificateReport,
-    inspect_certificate_report,
-)
-from omega_serv.application.tls.revoke_certificate import revoke_certificate
-from omega_serv.application.tls.sign_certificate_signing_request import (
-    sign_certificate_signing_request,
-)
-from omega_serv.application.updates.check_updates import check_for_update
-from omega_serv.bootstrap.container import DependencyContainer
+from omega_serv.application.server.start_server import build_blocklist_port
 from omega_serv.bootstrap.early_language import is_server_process
-from omega_serv.bootstrap.paths import CONFIG_FILE
 from omega_serv.core.i18n import _
-from omega_serv.core.platform_info import cpu_info, running_as_root
-from omega_serv.domain.config.entities import OmegaServConfig
-from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
-from omega_serv.domain.persistence.backup import BackupRequest
-from omega_serv.domain.security.active_defense.entities import IncidentFilters
-from omega_serv.domain.security.active_defense.policies import hash_payload, is_assignment_active
-from omega_serv.domain.security.active_defense.value_objects import (
-    KNOWN_ATTACK_CLASSES,
-    AttackClass,
-)
-from omega_serv.domain.security.audit.entities import AuditFinding, Severity, severity_at_least
-from omega_serv.domain.security.auth.entities import AuthZone
-from omega_serv.domain.security.tls.entities import CaParams, CsrParams, SelfSignedCertParams
-from omega_serv.domain.security.tls.exceptions import CertificateToolError
-from omega_serv.domain.security.waf.config import parse_waf_config
-from omega_serv.domain.security.waf.reputation import effective_never_auto_block
-from omega_serv.domain.services.entities import ServiceStatus
-from omega_serv.domain.services.exceptions import ServiceControlError
-from omega_serv.domain.services.systemd_unit import SystemdUnitParams
-from omega_serv.domain.updates.release_check import UpdateStatus
-from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
-from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
-    MarkdownIncidentReportExporter,
-)
-from omega_serv.infrastructure.fastcgi.asyncio_fastcgi_client import AsyncioFastCgiClient
-from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
-from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
-from omega_serv.infrastructure.services.detector import detect_service_manager_type
-from omega_serv.infrastructure.services.openrc_service_manager import OpenRCServiceManager
-from omega_serv.infrastructure.services.runit_service_manager import RunitServiceManager
-from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
-from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
-from omega_serv.infrastructure.waf.shared_counters import SharedCounters
-from omega_serv.interfaces.cli.command_tree import add_command, add_group, cmd_help
-from omega_serv.interfaces.cli.declaration_commands import (
-    ServeCompanions,
-    add_declaration_parser,
-    build_declaration_scheduler,
-)
-from omega_serv.interfaces.cli.riposte_commands import (
-    build_riposte_supervisor,
-    cmd_riposte_run,
-    cmd_riposte_status,
-)
-from omega_serv.interfaces.cli.riposte_query_commands import register as register_riposte_queries
-from omega_serv.interfaces.cli.serve_native import (
-    NativeSupervisor,
-    current_decision,
-    log_error_line,
-    python_fallback_decision,
-    write_python_engine_state,
-)
-from omega_serv.interfaces.cli.serve_workers import (
-    RiposteChildPort,
-    WorkerContext,
-    effective_worker_count,
-    open_listen_socket,
-    run_workers,
-)
-from omega_serv.ports.service_manager_port import ServiceManagerPort
+from omega_serv.core.platform_info import running_as_root
+from omega_serv.domain.security.audit.entities import Severity
+from omega_serv.interfaces.cli.command_tree import lazy_command
+
+if TYPE_CHECKING:
+    from omega_lib.synchro.models import ServiceInfo
+
+    from omega_serv.application.server.start_server import ActiveDefenseCollaborators
+    from omega_serv.application.services.manage_service import ManageServiceResult
+    from omega_serv.application.tls.inspect_certificate import CertificateReport
+    from omega_serv.bootstrap.container import DependencyContainer
+    from omega_serv.domain.config.entities import OmegaServConfig
+    from omega_serv.domain.security.active_defense.value_objects import AttackClass
+    from omega_serv.domain.security.audit.entities import AuditFinding
+    from omega_serv.interfaces.cli.serve_workers import RiposteChildPort, WorkerContext
+    from omega_serv.ports.service_manager_port import ServiceManagerPort
 
 
 def _print_errors(errors: list[str], prefix: str = _("Erreur")) -> None:
@@ -186,6 +69,12 @@ async def run_server_until_stopped(
     `RuntimeError: asyncio.run() cannot be called from a running event
     loop`, verifie empiriquement en testant ce bouton avant d'ecrire ce
     commentaire."""
+    import asyncio
+
+    from omega_serv.application.config.validate_config import unverified_upstream_tls_warnings
+    from omega_serv.application.server.start_server import build_server, try_reload_server
+    from omega_serv.application.services.pid_file import remove_pid_file, write_pid_file
+    from omega_serv.interfaces.cli.serve_native import log_error_line
     pid_path = container.project_root / "var" / "run" / "omega-serv.pid"
     server = build_server(
         config, container.project_root, container.filesystem, container.logger, container.clock,
@@ -229,7 +118,7 @@ async def run_server_until_stopped(
         stop_event.set()
 
     async def _reload() -> None:
-        print("Rechargement demande (SIGHUP) - regles WAF et zones Auth uniquement, bind/port/TLS inchanges...")
+        print("Rechargement demande (SIGHUP) - WAF, Auth, routage et reverse proxy relus, bind/port/TLS inchanges...")
         if riposte is not None:
             riposte.reload()  # RIPOSTE relit sa propre configuration
         reload_result = load_config(container.configuration, config_path)
@@ -253,6 +142,9 @@ async def run_server_until_stopped(
                 file=sys.stderr,
             )
             return
+        if worker is None or worker.index == 0:  # lot 8 (C15) : une ligne par zone, pas une par worker
+            for warning in unverified_upstream_tls_warnings(reloaded_config):
+                log_error_line(container, reloaded_config, f"avertissement : {warning.log_text}")
         print("Rechargement termine.")
 
     loop = asyncio.get_running_loop()
@@ -306,6 +198,25 @@ def _line_buffered_output() -> None:
 
 
 def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.validate_config import (
+        config_problems,
+        validate_config_environment,
+    )
+    from omega_serv.application.persistence.zone_data import missing_zone_folders
+    from omega_serv.application.server.engine_selection import log_reason
+    from omega_serv.core.platform_info import cpu_info
+    from omega_serv.interfaces.cli.admin_web_entry import build_admin_web_supervisor
+    from omega_serv.interfaces.cli.child_supervisor import ServeCompanions
+    from omega_serv.interfaces.cli.declaration_commands import build_declaration_scheduler
+    from omega_serv.interfaces.cli.riposte_commands import build_riposte_supervisor
+    from omega_serv.interfaces.cli.serve_native import (
+        NativeSupervisor,
+        current_decision,
+        log_error_line,
+        python_fallback_decision,
+        write_python_engine_state,
+    )
+    from omega_serv.interfaces.cli.serve_workers import effective_worker_count
     _line_buffered_output()
     if running_as_root():
         print("Erreur : OMEGA-SERV refuse de demarrer en tant que root (voir plan de developpement §6).", file=sys.stderr)
@@ -327,10 +238,25 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         return 1
 
     config = result.config
+    # Plan proxy natif v2, lot 3 (P7, D17+) : avertissements dans error.log au demarrage, jamais un refus. Sans
+    # resolution DNS : un nom lent ne retarde jamais le demarrage (config check le fait).
+    for warning in config_problems(config).warnings:
+        print(_("Avertissement : {warning}").format(warning=warning.text), file=sys.stderr)
+        log_error_line(container, config, f"avertissement : {warning.log_text}")
+    # Projets 3.0.0 §8.2, P1 : dossier de zone absent (alias, listing) = une ligne dans error.log, jamais un refus.
+    for missing in missing_zone_folders(config, container.project_root):
+        if not missing.blocking:
+            print(_("Avertissement : {warning}").format(warning=missing.message()), file=sys.stderr)
+            log_error_line(container, config, f"avertissement : {missing.log_text()}")
+    # Tableau de bord web, lot 2 : un probleme de l'administration web n'empeche jamais le site de demarrer.
+    for warning in cast("list[Any]", container.admin_web_warnings(config)):
+        print(_("Avertissement : {warning}").format(warning=warning), file=sys.stderr)
     # Processus accompagnant le serveur : RIPOSTE (None si desactive) et l'envoi quotidien de la
     # declaration anonyme (ne fait rien sans accord en mode quotidien). Pilotes ensemble.
+    # Tableau de bord web, lot 2 (2026-11-16) : processus d'administration, lance seulement si l'option est active.
     riposte = ServeCompanions(build_riposte_supervisor(config, args.config),
-                              build_declaration_scheduler(container, args.config))
+                              build_declaration_scheduler(container, args.config),
+                              build_admin_web_supervisor(config, args.config))
 
     # Moteur HTTP (plan moteur C++ lot 3, §16.5) : une seule decision, signalee si le moteur demande n'est pas
     # celui qui tournera.
@@ -342,7 +268,7 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
             print(message, file=sys.stderr)
             log_error_line(container, config, message)
     if decision.effective == "native":
-        supervisor = NativeSupervisor(config, args.config, container, decision, riposte)
+        supervisor = NativeSupervisor(config, args.config, container, decision, riposte, reduce=True)
         try:
             start_failure = supervisor.start() or ""
         except PermissionError:
@@ -356,6 +282,7 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
             print(f"Erreur au demarrage du serveur : {e}", file=sys.stderr)
             return 1
         if not start_failure:
+            supervisor.reduce()  # lot 5 memoire : natif seul -> superviseur reduit (ne revient qu'en cas d'echec)
             return supervisor.run()
         message = f"moteur natif indisponible au demarrage ({start_failure}) - repli sur le moteur Python"
         print(message, file=sys.stderr)
@@ -370,6 +297,8 @@ def cmd_serve(args: argparse.Namespace, container: DependencyContainer) -> int:
         log_error_line(container, config, capped)
     if worker_count > 1:
         return _serve_with_workers(config, args.config, container, worker_count, riposte)
+
+    import asyncio  # moteur Python seulement : le superviseur du natif n'en a pas besoin (7 Mo, 2026-11-19)
 
     async def _run() -> int:
         return await run_server_until_stopped(config, args.config, container, riposte=riposte)
@@ -386,6 +315,11 @@ def _serve_with_workers(
 ) -> int:
     """Mode « boost » (OMEGA-SERV_ETUDE_MODE_BOOST.md) : port et compteurs partages crees ici,
     dans le processus principal, AVANT le lancement des workers (interfaces/cli/serve_workers.py)."""
+    import asyncio
+
+    from omega_serv.application.services.pid_file import remove_pid_file, write_pid_file
+    from omega_serv.infrastructure.waf.shared_counters import SharedCounters
+    from omega_serv.interfaces.cli.serve_workers import open_listen_socket, run_workers
     try:
         listen_socket = open_listen_socket(config.server.bind, config.server.port, config.server.listen_backlog)
     except PermissionError:
@@ -399,6 +333,10 @@ def _serve_with_workers(
         print(f"Erreur au demarrage du serveur : {e}", file=sys.stderr)
         return 1
     counters = SharedCounters.create(f"omega_serv_{config.server.port}")
+    # Memoire (2026-11-19, etude §11) : code du serveur et des options actives charge ici, une fois, avant le fork des
+    # workers (gc.freeze dans run_workers) - partage par tous au lieu d'etre recharge par chacun.
+    from omega_serv.application.server.option_code import preload_server_code
+    preload_server_code(config)
     pid_path = container.project_root / "var" / "run" / "omega-serv.pid"
     write_pid_file(container.filesystem, pid_path, os.getpid())
     print(f"OMEGA-SERV a l'ecoute sur {config.server.bind}:{config.server.port}")
@@ -422,12 +360,18 @@ def _serve_with_workers(
 
 
 def cmd_config_init(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.generate_config import generate_default_config
     result = generate_default_config(container.configuration, container.filesystem, args.config, force=args.force)
     print(result.message)
     return 0 if result.success else 1
 
 
 def cmd_config_check(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.validate_config import (
+        config_problems,
+        validate_config_environment,
+    )
+    from omega_serv.application.persistence.zone_data import missing_zone_folders
     result = load_config(container.configuration, args.config)
     if not result.success:
         _print_errors(result.errors, _("Erreur de configuration"))
@@ -443,6 +387,17 @@ def cmd_config_check(args: argparse.Namespace, container: DependencyContainer) -
         _print_errors(env_errors, _("Erreur d'environnement"))
         return 1
 
+    # Plan proxy natif v2, lot 3 (P7, P8, D17+) : avertissements et avis, la configuration reste valide.
+    problems = config_problems(result.config, resolve_names=True)
+    for warning in problems.warnings:
+        print(_("Avertissement : {warning}").format(warning=warning.text))
+    for notice in problems.notices:
+        print(_("Avis : {notice}").format(notice=notice.text))
+    for missing in missing_zone_folders(result.config, container.project_root):  # projets 3.0.0 §8.2, P1
+        if not missing.blocking:
+            print(_("Avertissement : {warning}").format(warning=missing.message()))
+    for warning in cast("list[Any]", container.admin_web_warnings(result.config)):  # tableau de bord web, lot 2
+        print(_("Avertissement : {warning}").format(warning=warning))
     print(_("{config} : configuration valide.").format(config=args.config))
     return 0
 
@@ -458,6 +413,7 @@ def cmd_config_show(args: argparse.Namespace, container: DependencyContainer) ->
 
 
 def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.persistence.backup import BackupRequest
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
         _print_errors(result.errors, _("Erreur de configuration"))
@@ -478,6 +434,12 @@ def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) 
             include_riposte=getattr(args, "include_riposte", False),
             description=args.description,
         )
+    from dataclasses import replace as _replace
+
+    # Hors --all (decisions de l'auteur du 2026-11-15) : contenu, pas configuration.
+    request = _replace(request, include_site_content=bool(getattr(args, "include_site_content", False)),
+                       include_zone_data=bool(getattr(args, "include_zone_data", False)),
+                       include_exports=bool(getattr(args, "include_exports", False)))
     if (request.include_auth_zones or request.include_certificates) and not args.confirm_secrets:
         print(
             _("Cette sauvegarde inclurait des secrets réels (hash de mot de passe et/ou "
@@ -494,13 +456,59 @@ def cmd_config_backup(args: argparse.Namespace, container: DependencyContainer) 
 
 
 def cmd_config_restore(args: argparse.Namespace, container: DependencyContainer) -> int:
+    conflict = container.backup_port_conflict(args.snapshot_id)
+    after_restore = None
+    if conflict is not None:
+        archived, other = conflict
+        if not getattr(args, "keep_current_port", False):
+            print(_("Conflit : l'archive écoute sur {address}, déjà utilisé par l'instance {name!r}. Relancez avec "
+                    "--keep-current-port pour restaurer en gardant l'adresse, le port et le nom de service de cette "
+                    "instance. Rien n'a été restauré.").format(address=f"{archived.bind}:{archived.port}",
+                                                                name=other.name), file=sys.stderr)
+            return 1
+        current = load_config(container.configuration, args.config)
+        if current.config is not None:
+            from dataclasses import replace as _replace
+
+            server, service_name = current.config.server, container.settings_store.get("service_name", "")
+
+            def after_restore() -> None:
+                restored = load_config(container.configuration, args.config)
+                if restored.config is not None:
+                    container.configuration.save(args.config, _replace(restored.config, server=_replace(
+                        restored.config.server, bind=server.bind, port=server.port)))
+                if service_name:
+                    container.settings_store.set("service_name", service_name)
+    identity = container.backup_identity(args.snapshot_id)
+    if identity is not None and identity.app_version and identity.app_version != container.app_version:
+        print(_("Sauvegarde faite avec omega-serv {old}, celui-ci est en {new} : les réglages qu'il ne connaît pas "
+                "sont ignorés, les nouveaux prennent leur valeur par défaut.").format(
+            old=identity.app_version, new=container.app_version))
     restore_result = container.restore_backup(
-        args.snapshot_id, stop_and_restart=getattr(args, "stop_and_restart", False),
+        args.snapshot_id, stop_and_restart=getattr(args, "stop_and_restart", False), after_restore=after_restore,
     )
     print(restore_result.message)
+    if restore_result.missing_zone_folders:  # projets 3.0.0 §8.2, P1
+        print(_("Dossiers de zones absents après la restauration :"))
+        for message in restore_result.missing_zone_folders:
+            print(f"  - {message}")
     if restore_result.needs_service_stop:
         print(_("Relancez avec --stop-and-restart pour arrêter le service, restaurer puis le redémarrer."))
     return 0 if restore_result.success else 1
+
+
+def cmd_config_export_backup(args: argparse.Namespace, container: DependencyContainer) -> int:
+    result = container.export_backup(args.snapshot_id, Path(args.dest_dir).expanduser())
+    print(result.message, file=sys.stdout if result.success else sys.stderr)
+    return 0 if result.success else 1
+
+
+def cmd_config_import_backup(args: argparse.Namespace, container: DependencyContainer) -> int:
+    config = load_config(container.configuration, args.config).config
+    result = container.import_backup(Path(args.archive).expanduser(),
+                                     config.paths.webroot if config is not None else "webroot")
+    print(result.message, file=sys.stdout if result.success else sys.stderr)
+    return 0 if result.success else 1
 
 
 def cmd_config_list_backups(args: argparse.Namespace, container: DependencyContainer) -> int:
@@ -523,6 +531,7 @@ def cmd_profile_list(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_profile_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
     try:
         profile = container.profiles.load_profile(args.name)
     except (ProfileNotFoundError, ProfileLoadError) as e:
@@ -535,6 +544,8 @@ def cmd_profile_show(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_profile_apply(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.config.apply_profile import plan_profile_application
+    from omega_serv.domain.config.exceptions import ProfileLoadError, ProfileNotFoundError
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -591,6 +602,10 @@ def cmd_option_list(args: argparse.Namespace, container: DependencyContainer) ->
 
 
 def _cmd_option_set(args: argparse.Namespace, container: DependencyContainer, enabled: bool) -> int:
+    from omega_serv.application.config.manage_option import (
+        set_option_enabled,
+        waf_rule_packs_present,
+    )
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -617,6 +632,11 @@ def cmd_option_disable(args: argparse.Namespace, container: DependencyContainer)
 
 
 def cmd_simulate_request(args: argparse.Namespace, container: DependencyContainer) -> int:
+    import asyncio
+
+    from omega_serv.application.server.simulate_request import simulate_request
+    from omega_serv.infrastructure.fastcgi.asyncio_fastcgi_client import AsyncioFastCgiClient
+    from omega_serv.infrastructure.filesystem.safe_path_resolver import SafePathResolver
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -655,6 +675,8 @@ def cmd_waf_never_auto_block(args: argparse.Namespace, container: DependencyCont
     (lot 10 : `ignoreip` des jails, pont Tailscale) - jamais une copie
     de la liste par defaut dans un autre projet. Ne charge aucune regle :
     fonctionne meme si un pack ou une liste est en erreur."""
+    from omega_serv.domain.security.waf.config import parse_waf_config
+    from omega_serv.domain.security.waf.reputation import effective_never_auto_block
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -671,20 +693,31 @@ def cmd_waf_never_auto_block(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_waf_test(args: argparse.Namespace, container: DependencyContainer) -> int:
+    import asyncio
+
+    from omega_serv.application.security.simulate_waf_request import simulate_waf_request
+    from omega_serv.application.server.start_server import build_waf_collaborators
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
         return 1
     assert load_result.config is not None
 
-    waf = build_waf_collaborators(load_result.config, container.project_root, container.filesystem, container.clock, force=True)
+    import tempfile
+
+    # Scan de securite n° 2 (F19) : etat Lua du script Magnet dans un dossier prive, jamais celui de var/.
+    private_dir = tempfile.TemporaryDirectory(prefix="omega-serv-waf-test-")
+    waf = build_waf_collaborators(load_result.config, container.project_root, container.filesystem, container.clock,
+                                  force=True, isolated_magnet_dir=Path(private_dir.name))
     if waf is None:
+        private_dir.cleanup()
         print(_("Erreur : options.waf absent de la configuration (exécuter 'omega-serv config init' ou ajouter la section waf)."), file=sys.stderr)
         return 1
 
-    report = asyncio.run(
-        simulate_waf_request(args.method, args.path, args.query or "", args.body or "", args.remote_ip, waf)
-    )
+    with private_dir:
+        report = asyncio.run(
+            simulate_waf_request(args.method, args.path, args.query or "", args.body or "", args.remote_ip, waf)
+        )
     decision = report.decision
 
     if report.native_decision is not None:
@@ -736,11 +769,16 @@ def cmd_blocklist_list(args: argparse.Namespace, container: DependencyContainer)
         return 0
     for entry in entries:
         expiry = entry.expires_at or _("permanent")
-        print(_("{network}\t{source}\t{expiry}\t{reason}").format(network=entry.network, source=entry.source, expiry=expiry, reason=entry.reason))
+        # Scan de securite n° 2 (2026-11-20, F41) : motif saisi a distance (admin web, maitre) et fichier que le
+        # compte du service peut ecrire - jamais une sequence d'echappement envoyee telle quelle au terminal.
+        print(_("{network}\t{source}\t{expiry}\t{reason}").format(
+            network=_printable(entry.network), source=_printable(entry.source), expiry=_printable(str(expiry)),
+            reason=_printable(entry.reason)))
     return 0
 
 
 def cmd_blocklist_add(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.security.manage_blocklist import add_blocklist_entry
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -757,6 +795,7 @@ def cmd_blocklist_add(args: argparse.Namespace, container: DependencyContainer) 
 
 
 def cmd_blocklist_remove(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.security.manage_blocklist import remove_blocklist_entry
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -779,6 +818,7 @@ def _require_active_defense(
     l'option est desactivee - `cmd_active_defense_status` reste seul a
     ne PAS traiter la desactivation comme une erreur (c'est son role
     precis), donc n'utilise pas ce helper."""
+    from omega_serv.application.server.start_server import build_active_defense_collaborators
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -801,6 +841,7 @@ def _require_active_defense(
 
 
 def cmd_active_defense_status(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.server.start_server import build_active_defense_collaborators
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -824,6 +865,7 @@ def cmd_active_defense_status(args: argparse.Namespace, container: DependencyCon
 
 
 def cmd_threats_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.queries import list_threat_states
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -838,6 +880,7 @@ def cmd_threats_list(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_threats_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.queries import get_threat_state
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -856,6 +899,8 @@ def cmd_threats_show(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_incidents_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.queries import list_incidents
+    from omega_serv.domain.security.active_defense.entities import IncidentFilters
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -875,6 +920,10 @@ def cmd_incidents_list(args: argparse.Namespace, container: DependencyContainer)
 
 
 def cmd_incidents_show(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.queries import (
+        get_incident_timeline,
+        omitted_history_notice,
+    )
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -897,6 +946,11 @@ def cmd_incidents_show(args: argparse.Namespace, container: DependencyContainer)
 
 
 def cmd_incidents_close(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.manage_incidents import close_incident
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
+    from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
+        MarkdownIncidentReportExporter,
+    )
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -921,6 +975,7 @@ def cmd_incidents_close(args: argparse.Namespace, container: DependencyContainer
 
 
 def cmd_incidents_export_ioc(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -943,6 +998,9 @@ def cmd_incidents_export_ioc(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_incidents_generate_report(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
+        MarkdownIncidentReportExporter,
+    )
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -959,6 +1017,7 @@ def cmd_incidents_generate_report(args: argparse.Namespace, container: Dependenc
 
 
 def cmd_deception_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.security.active_defense.policies import is_assignment_active
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -977,6 +1036,7 @@ def cmd_deception_list(args: argparse.Namespace, container: DependencyContainer)
 
 
 def cmd_deception_release(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.active_defense.manage_deception import release_deception
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -991,6 +1051,11 @@ def cmd_active_defense_simulate(args: argparse.Namespace, container: DependencyC
     simulation, dry-run et explication de la decision") - AUCUNE
     ecriture (voir preview_playbook_decision.py), jamais d'impact sur
     l'etat reel ni sur le reseau."""
+    from omega_serv.application.active_defense.preview_playbook_decision import (
+        preview_playbook_decision,
+    )
+    from omega_serv.domain.security.active_defense.policies import source_subject_id
+    from omega_serv.domain.security.active_defense.value_objects import KNOWN_ATTACK_CLASSES
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -1000,7 +1065,8 @@ def cmd_active_defense_simulate(args: argparse.Namespace, container: DependencyC
             file=sys.stderr,
         )
         return 1
-    subject_id = f"{args.ip}:{hash_payload((args.user_agent or '').encode('utf-8'))}"
+    # Scan de securite n° 2 (F34) : la source est l'adresse seule, comme le serveur (option --user-agent retiree).
+    subject_id = source_subject_id(args.ip)
     preview = preview_playbook_decision(
         active_defense.threat_state_repository, active_defense.incident_repository,
         active_defense.deception_assignment_repository, container.clock, active_defense.config,
@@ -1020,6 +1086,11 @@ def cmd_active_defense_purge(args: argparse.Namespace, container: DependencyCont
     ThreatState expires et ferme les incidents redevenus silencieux
     (voir sweep_active_defense.py pour le pourquoi d'un balayage manuel
     plutot qu'un scheduler)."""
+    from omega_serv.application.active_defense.sweep_active_defense import sweep_active_defense
+    from omega_serv.infrastructure.exporters.ioc_exporters import build_ioc_exporters
+    from omega_serv.infrastructure.exporters.markdown_incident_report_exporter import (
+        MarkdownIncidentReportExporter,
+    )
     active_defense = _require_active_defense(args, container)
     if active_defense is None:
         return 1
@@ -1052,6 +1123,11 @@ def cmd_active_defense_purge(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_certs_generate_self_signed(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.tls.generate_self_signed import generate_self_signed_certificate
+    from omega_serv.domain.security.tls.entities import SelfSignedCertParams
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1087,6 +1163,11 @@ def cmd_certs_generate_self_signed(args: argparse.Namespace, container: Dependen
 
 
 def cmd_certs_generate_ca(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.tls.generate_ca_certificate import generate_ca_certificate
+    from omega_serv.domain.security.tls.entities import CaParams
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     password = _resolve_ca_password(args)
     if password is None:
         print(_("Erreur : les deux saisies de passphrase ne correspondent pas."), file=sys.stderr)
@@ -1126,6 +1207,10 @@ def cmd_certs_import(args: argparse.Namespace, container: DependencyContainer) -
     hook de renouvellement Certbot (`--cert`/`--key` pointant vers
     `/etc/letsencrypt/live/<domaine>/`), mais generique - n'importe quelle
     source (CA d'entreprise, certificat achete) fonctionne a l'identique."""
+    from omega_serv.application.tls.import_certificate import import_certificate
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1154,6 +1239,13 @@ def cmd_certs_import(args: argparse.Namespace, container: DependencyContainer) -
 
 
 def cmd_certs_generate_csr(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.tls.generate_certificate_signing_request import (
+        generate_certificate_signing_request,
+    )
+    from omega_serv.domain.security.tls.entities import CsrParams
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     params = CsrParams(
         common_name=args.cn, san_dns=tuple(args.san_dns), san_ip=tuple(args.san_ip),
         organization=args.org, organizational_unit=args.ou, city=args.city, region=args.region,
@@ -1177,6 +1269,12 @@ def cmd_certs_generate_csr(args: argparse.Namespace, container: DependencyContai
 
 
 def cmd_certs_sign_csr(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.tls.sign_certificate_signing_request import (
+        sign_certificate_signing_request,
+    )
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     ca_key_password = _resolve_password(args)
     ca_dir = Path(args.ca_key).parent
     backups_dir = container.project_root / "var" / "backups" / "certificates"
@@ -1198,6 +1296,10 @@ def cmd_certs_sign_csr(args: argparse.Namespace, container: DependencyContainer)
 
 
 def cmd_certs_revoke(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.tls.revoke_certificate import revoke_certificate
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     ca_key_password = _resolve_password(args)
     ca_dir = Path(args.ca_key).parent
 
@@ -1244,6 +1346,10 @@ def _print_certificate_report(report: CertificateReport) -> None:
 
 
 def _cmd_certs_inspect(args: argparse.Namespace, container: DependencyContainer, warn_days: int = 30) -> int:
+    from omega_serv.application.tls.inspect_certificate import inspect_certificate_report
+    from omega_serv.domain.security.tls.exceptions import CertificateToolError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1277,6 +1383,7 @@ def cmd_certs_check_expiry(args: argparse.Namespace, container: DependencyContai
 
 
 def cmd_config_enable_tls(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.config.entities import OmegaServConfig
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1298,6 +1405,7 @@ def cmd_config_enable_tls(args: argparse.Namespace, container: DependencyContain
 
 
 def cmd_config_disable_tls(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.domain.config.entities import OmegaServConfig
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1341,6 +1449,8 @@ def _resolve_ca_password(args: argparse.Namespace) -> str | None:
 
 
 def cmd_auth_add_user(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.auth.manage_users import add_user
+    from omega_serv.application.server.start_server import build_users_repository
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1354,6 +1464,8 @@ def cmd_auth_add_user(args: argparse.Namespace, container: DependencyContainer) 
 
 
 def cmd_auth_remove_user(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.auth.manage_users import remove_user
+    from omega_serv.application.server.start_server import build_users_repository
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1367,6 +1479,8 @@ def cmd_auth_remove_user(args: argparse.Namespace, container: DependencyContaine
 
 
 def cmd_auth_change_password(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.auth.manage_users import change_password
+    from omega_serv.application.server.start_server import build_users_repository
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1380,6 +1494,9 @@ def cmd_auth_change_password(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_auth_create_zone(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.auth.manage_zones import add_zone
+    from omega_serv.application.server.start_server import build_auth_zones_repository
+    from omega_serv.domain.security.auth.entities import AuthZone
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1397,6 +1514,8 @@ def cmd_auth_create_zone(args: argparse.Namespace, container: DependencyContaine
 
 
 def cmd_auth_remove_zone(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.auth.manage_zones import remove_zone
+    from omega_serv.application.server.start_server import build_auth_zones_repository
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1410,6 +1529,10 @@ def cmd_auth_remove_zone(args: argparse.Namespace, container: DependencyContaine
 
 
 def cmd_auth_list(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.server.start_server import (
+        build_auth_zones_repository,
+        build_users_repository,
+    )
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors)
@@ -1451,6 +1574,10 @@ def cmd_auth_check_permissions(args: argparse.Namespace, container: DependencyCo
 
 
 def _build_service_manager(manager_type: str) -> ServiceManagerPort:
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.services.openrc_service_manager import OpenRCServiceManager
+    from omega_serv.infrastructure.services.runit_service_manager import RunitServiceManager
+    from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
     runner = SubprocessRunner()
     if manager_type == "systemd":
         return SystemdServiceManager(runner)
@@ -1460,6 +1587,7 @@ def _build_service_manager(manager_type: str) -> ServiceManagerPort:
 
 
 def _detect_or_fail() -> ServiceManagerPort | None:
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
     manager_type = detect_service_manager_type()
     if manager_type is None:
         print(_("Erreur : aucun gestionnaire de service reconnu (systemd/OpenRC/runit) sur ce système."), file=sys.stderr)
@@ -1469,6 +1597,10 @@ def _detect_or_fail() -> ServiceManagerPort | None:
 
 def cmd_engine_status(args: argparse.Namespace, container: DependencyContainer) -> int:
     """Moteur HTTP demande / effectif / raisons (plan moteur C++ §16.5) - memes lignes que l'ecran Etat."""
+    from omega_serv.application.server.engine_status import (
+        engine_connector_rows,
+        engine_status_rows,
+    )
     result = load_config(container.configuration, args.config)
     if not result.success or result.config is None:
         _print_errors(result.errors)
@@ -1509,6 +1641,8 @@ def cmd_logs_run_automations(args: argparse.Namespace, container: DependencyCont
 
 
 def cmd_service_status(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import get_service_status
+    from omega_serv.domain.services.entities import ServiceStatus
     manager = _detect_or_fail()
     if manager is None:
         return 1
@@ -1539,26 +1673,32 @@ def _cmd_service_control(
 
 
 def cmd_service_start(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import start_service
     return _cmd_service_control(args, container, start_service)
 
 
 def cmd_service_stop(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import stop_service
     return _cmd_service_control(args, container, stop_service)
 
 
 def cmd_service_restart(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import restart_service
     return _cmd_service_control(args, container, restart_service)
 
 
 def cmd_service_reload(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import reload_service
     return _cmd_service_control(args, container, reload_service)
 
 
 def cmd_service_enable(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import enable_service
     return _cmd_service_control(args, container, enable_service)
 
 
 def cmd_service_disable(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.manage_service import disable_service
     return _cmd_service_control(args, container, disable_service)
 
 
@@ -1570,6 +1710,11 @@ def _default_python_executable(container: DependencyContainer) -> Path:
 
 
 def cmd_service_install(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.install_service import install_systemd_service
+    from omega_serv.domain.services.systemd_unit import SystemdUnitParams
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
+    from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
         print(
@@ -1597,6 +1742,10 @@ def cmd_service_install(args: argparse.Namespace, container: DependencyContainer
 
 
 def cmd_service_uninstall(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.services.install_service import uninstall_systemd_service
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
+    from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
         print(_("Erreur : désinstallation d'unité non supportée pour {value}.").format(value=manager_type or _('aucun gestionnaire détecté')), file=sys.stderr)
@@ -1640,6 +1789,11 @@ def cmd_service_permissions(args: argparse.Namespace, container: DependencyConta
     appartenant a root rendus au proprietaire du dossier, puis var/ et secure/auth/ partages avec le groupe du
     service (meme reparation que le bouton de l'ecran Service). Demande sudo elle-meme ; acceptee en root (les
     fichiers sont rendus au proprietaire, jamais crees en root)."""
+    from omega_serv.application.services.install_service import repair_service_permissions
+    from omega_serv.domain.services.exceptions import ServiceControlError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
+    from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
         print(_("Erreur : opération non supportée pour {value} (systemd seulement).").format(
@@ -1661,6 +1815,21 @@ def cmd_service_permissions(args: argparse.Namespace, container: DependencyConta
     return 0 if result.success else 1
 
 
+def _printable(text: str) -> str:
+    """Caracteres de controle (C0, DEL, C1) remplaces par « ? » avant affichage dans un terminal."""
+    return "".join("?" if ord(char) < 0x20 or 0x7F <= ord(char) < 0xA0 else char for char in text)
+
+
+def _service_name_argument(value: str) -> str:
+    """Scan de securite n° 2 (2026-11-20, F14) : `--service-name` finit dans des commandes root (systemctl, chemins
+    de /etc/systemd/system) ; refuse tout ce qui n'est pas un nom d'unite sur. Vide = nom de l'instance."""
+    from omega_serv.domain.services.service_name import is_safe_service_name
+
+    if value and not is_safe_service_name(value):
+        raise argparse.ArgumentTypeError(_("nom de service refusé : {value!r}").format(value=value))
+    return value
+
+
 def cmd_synchro_service_group(args: argparse.Namespace, container: DependencyContainer) -> int:
     """`synchro groupe-service ajouter|retirer` : groupe de la zone neutre donne au service de cette instance
     par un complement systemd (voir application/services/zone_group.py). Demande sudo elle-meme ; acceptee en
@@ -1671,6 +1840,10 @@ def cmd_synchro_service_group(args: argparse.Namespace, container: DependencyCon
         resolve_current_service_name,
     )
     from omega_serv.application.services.zone_group import add_zone_group, remove_zone_group
+    from omega_serv.domain.services.exceptions import ServiceControlError
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.services.detector import detect_service_manager_type
+    from omega_serv.infrastructure.services.systemd_service_manager import SystemdServiceManager
 
     manager_type = detect_service_manager_type()
     if manager_type != "systemd":
@@ -1715,10 +1888,16 @@ def _print_audit_findings(findings: list[AuditFinding]) -> None:
         label = _SEVERITY_LABELS[finding.severity]
         print(_("[{label}] {rule_id} {rule_name}").format(label=label, rule_id=finding.rule_id, rule_name=finding.rule_name))
         print(f"    {finding.message}")
+        for line in finding.detail_lines:
+            print("      - " + line)
         print(_("    -> {recommendation}").format(recommendation=finding.recommendation))
 
 
 def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.security.run_audit import run_audit
+    from omega_serv.domain.security.audit.entities import severity_at_least
+    from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
+    from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
     load_result = load_config(container.configuration, args.config)
     if not load_result.success:
         _print_errors(load_result.errors, _("Erreur de configuration"))
@@ -1754,6 +1933,8 @@ def cmd_audit_security(args: argparse.Namespace, container: DependencyContainer)
 def cmd_version(args: argparse.Namespace, container: DependencyContainer) -> int:
     """Meme verification que Guide d'aide → Contact et support → « Vérifier les mises à jour » (2026-11-07).
     Code de sortie 1 si le site est injoignable ou la liste illisible."""
+    from omega_serv.application.updates.check_updates import check_for_update
+    from omega_serv.domain.updates.release_check import UpdateStatus
     installed = container.app_version
     if not args.check:
         print(installed)
@@ -1795,6 +1976,8 @@ def cmd_synchro_jeton(args: argparse.Namespace, container: DependencyContainer) 
 
 
 def _synchro_service_info(container: DependencyContainer) -> ServiceInfo | None:
+    from omega_lib.synchro.models import ServiceInfo
+
     from omega_serv.application.services.resolve_current_service_name import (
         resolve_current_service_account,
         resolve_current_service_name,
@@ -1865,6 +2048,21 @@ def cmd_synchro_fiche(args: argparse.Namespace, container: DependencyContainer) 
 
 
 def build_parser() -> argparse.ArgumentParser:
+    from omega_serv.bootstrap.paths import CONFIG_FILE
+    from omega_serv.interfaces.cli.admin_web_entry import (
+        register_admin_account_commands,
+        register_admin_master_commands,
+    )
+    from omega_serv.interfaces.cli.command_tree import (
+        add_command,
+        add_group,
+        cmd_help,
+        lazy_command,
+    )
+    from omega_serv.interfaces.cli.declaration_commands import add_declaration_parser
+    from omega_serv.interfaces.cli.riposte_query_commands import (
+        register as register_riposte_queries,
+    )
     parser = argparse.ArgumentParser(
         prog="omega-serv",
         description=_("Serveur web sécurisé (WAF, TLS, RIPOSTE, Active Defense). Sans argument : interface "
@@ -1922,6 +2120,13 @@ def build_parser() -> argparse.ArgumentParser:
     backup_parser.add_argument("--include-logs-library", action="store_true",
                                help=_("Ajoute la bibliothèque des journaux."))
     backup_parser.add_argument("--include-riposte", action="store_true", help=_("Ajoute la base RIPOSTE."))
+    backup_parser.add_argument("--include-site-content", action="store_true", help=_(
+        "Ajoute le contenu du site (webroot) ; jamais compris dans --all, peut être long."))
+    backup_parser.add_argument("--include-zone-data", action="store_true", help=_(
+        "Ajoute les données des zones personnalisées (cible des alias, dossiers du listing, scripts FastCGI) ; "
+        "jamais compris dans --all."))
+    backup_parser.add_argument("--include-exports", action="store_true", help=_(
+        "Ajoute les rapports d'export (dossier des exports) ; jamais compris dans --all."))
     backup_parser.add_argument("--all", action="store_true", help=_(
         "Tout sauvegarder : toutes les options --include-* (secrets compris : demande --confirm-secrets)."))
     backup_parser.add_argument("--confirm-secrets", action="store_true", help=_(
@@ -1934,7 +2139,19 @@ def build_parser() -> argparse.ArgumentParser:
                                 help=_("Identifiant de la sauvegarde (voir config list-backups)."))
     restore_parser.add_argument("--stop-and-restart", action="store_true", help=_(
         "Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne)."))
+    restore_parser.add_argument("--keep-current-port", action="store_true", help=_(
+        "En cas de conflit de port avec une autre instance : garder l'adresse, le port et le nom de service actuels."))
     restore_parser.set_defaults(func=cmd_config_restore)
+    export_parser = add_command(config_sub, "export-backup", _(
+        "Copie une sauvegarde hors du dossier omega-serv, avec son empreinte .sha256."))
+    export_parser.add_argument("--snapshot-id", required=True, metavar=_("ID"),
+                               help=_("Identifiant de la sauvegarde (voir config list-backups)."))
+    export_parser.add_argument("dest_dir", metavar=_("DOSSIER"), help=_("Dossier de destination."))
+    export_parser.set_defaults(func=cmd_config_export_backup)
+    import_parser = add_command(config_sub, "import-backup", _(
+        "Ajoute à la liste une sauvegarde exportée, après vérification (empreinte, contenu)."))
+    import_parser.add_argument("archive", metavar=_("FICHIER"), help=_("Archive .tar.gz, son .sha256 à côté."))
+    import_parser.set_defaults(func=cmd_config_import_backup)
     add_command(config_sub, "list-backups", _("Liste les sauvegardes.")).set_defaults(func=cmd_config_list_backups)
 
     profile_sub = add_group(subparsers, "profile", _("Profils de configuration prêts à l'emploi."), "profile_command")
@@ -2017,8 +2234,6 @@ def build_parser() -> argparse.ArgumentParser:
     simulate_ad_parser.add_argument("--ip", required=True, help=_("Adresse de la source simulée."))
     simulate_ad_parser.add_argument("--path", default="/", metavar=_("CHEMIN"),
                                     help=_("Chemin observé (défaut : /)."))
-    simulate_ad_parser.add_argument("--user-agent", default="", metavar=_("TEXTE"),
-                                    help=_("User-Agent de la source."))
     simulate_ad_parser.add_argument("--attack-class", default="scan", metavar=_("CLASSE"),
                                     help=_("Classe d'attaque (défaut : scan ; liste affichée si inconnue)."))
     simulate_ad_parser.add_argument("--score", type=int, default=10, metavar=_("POINTS"),
@@ -2043,10 +2258,20 @@ def build_parser() -> argparse.ArgumentParser:
         "RIPOSTE : bans de plus en plus longs pour les récidivistes."), "riposte_command")
     add_command(riposte_sub, "run", _(
         "Lance le processus RIPOSTE au premier plan (normalement lancé par serve ; utile au diagnostic).")).set_defaults(
-        func=cmd_riposte_run)
+        func=lazy_command("omega_serv.interfaces.cli.riposte_commands", "cmd_riposte_run"))
     add_command(riposte_sub, "status", _("Affiche l'état de RIPOSTE (lecture seule).")).set_defaults(
         func=cmd_riposte_status)
     register_riposte_queries(riposte_sub)
+
+    admin_web_sub = add_group(subparsers, "admin-web", _(
+        "Administration web : tableau de bord dans le navigateur, sur son propre port."), "admin_web_command")
+    admin_web_run = add_command(admin_web_sub, "run", _(
+        "Lance le processus d'administration web au premier plan (normalement lancé par serve ; utile au "
+        "diagnostic)."))
+    admin_web_run.add_argument("--supervisor-pid", type=int, default=None, help=argparse.SUPPRESS)
+    admin_web_run.set_defaults(func=lazy_command("omega_serv.interfaces.cli.admin_web_commands", "cmd_admin_web_run"))
+    register_admin_account_commands(admin_web_sub)
+    register_admin_master_commands(admin_web_sub)
 
     threats_sub = add_group(subparsers, "threats", _("Menaces suivies par Active Defense."), "threats_command")
     threats_list_parser = add_command(threats_sub, "list", _("Liste les sources suivies avec leur score et leur niveau."))
@@ -2243,12 +2468,12 @@ def build_parser() -> argparse.ArgumentParser:
         ("disable", cmd_service_disable, _("Désactive le démarrage automatique au boot.")),
     ):
         sub = add_command(service_sub, verb, text)
-        sub.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+        sub.add_argument("--service-name", default="omega-serv", type=_service_name_argument, metavar=_("NOM"), help=service_name_help)
         sub.set_defaults(func=func)
 
     install_parser = add_command(service_sub, "install", _(
         "Crée l'unité systemd du service (systemd seulement ; demande les droits administrateur)."))
-    install_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    install_parser.add_argument("--service-name", default="omega-serv", type=_service_name_argument, metavar=_("NOM"), help=service_name_help)
     install_parser.add_argument("--description", default="OMEGA-SERV web server", metavar=_("TEXTE"),
                                 help=_("Description de l'unité (défaut : OMEGA-SERV web server)."))
     install_parser.add_argument("--python-executable", default=None, metavar=_("FICHIER"),
@@ -2265,13 +2490,13 @@ def build_parser() -> argparse.ArgumentParser:
     permissions_parser = add_command(service_sub, "permissions", _(
         "Répare les droits partagés avec le service : fichiers de var/ appartenant à root rendus au propriétaire "
         "du dossier, var/ et secure/auth/ partagés avec le groupe du service (demande les droits administrateur)."))
-    permissions_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    permissions_parser.add_argument("--service-name", default="omega-serv", type=_service_name_argument, metavar=_("NOM"), help=service_name_help)
     permissions_parser.add_argument("--group", default="", metavar=_("NOM"), help=_(
         "Groupe du service (défaut : celui de son unité, sinon omega-serv)."))
     permissions_parser.set_defaults(func=cmd_service_permissions)
 
     uninstall_parser = add_command(service_sub, "uninstall", _("Supprime l'unité du service."))
-    uninstall_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    uninstall_parser.add_argument("--service-name", default="omega-serv", type=_service_name_argument, metavar=_("NOM"), help=service_name_help)
     uninstall_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
     uninstall_parser.set_defaults(func=cmd_service_uninstall)
 
@@ -2283,7 +2508,7 @@ def build_parser() -> argparse.ArgumentParser:
                                  help=_("Format du rapport (défaut : text)."))
     security_parser.add_argument("--min-severity", choices=("critical", "high", "medium", "low", "info"),
                                  default="info", help=_("N'affiche que ce niveau et les plus graves (défaut : info)."))
-    security_parser.add_argument("--service-name", default="omega-serv", metavar=_("NOM"), help=service_name_help)
+    security_parser.add_argument("--service-name", default="omega-serv", type=_service_name_argument, metavar=_("NOM"), help=service_name_help)
     security_parser.add_argument("--unit-path", default=None, metavar=_("FICHIER"), help=unit_path_help)
     security_parser.add_argument("--confirm-self-signed-public-bind", action="store_true", help=confirm_self_signed)
     security_parser.add_argument("--confirm-auth-without-tls", action="store_true", help=confirm_auth_without_tls)
@@ -2309,7 +2534,7 @@ def build_parser() -> argparse.ArgumentParser:
         "omega-connect ; pris en compte au prochain redémarrage du service."))
     group_parser.add_argument("service_group_action", choices=("ajouter", "retirer"), metavar=_("ACTION"),
                               help=_("ajouter ou retirer."))
-    group_parser.add_argument("--service-name", default="", metavar=_("NOM"), help=_(
+    group_parser.add_argument("--service-name", default="", type=_service_name_argument, metavar=_("NOM"), help=_(
         "Nom du service (défaut : celui de cette instance)."))
     group_parser.set_defaults(func=cmd_synchro_service_group)
 
@@ -2326,6 +2551,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     return parser
 
+
+# Attribut garde pour la liste ci-dessous (test_interconnexion_etape1) ; le module RIPOSTE n'est importe qu'a l'appel.
+cmd_riposte_status = lazy_command("omega_serv.interfaces.cli.riposte_commands", "cmd_riposte_status")
 
 _ROOT_ALLOWED_COMMANDS: frozenset[str] = frozenset({
     # Lecture seule (verifie le 2026-11-10 : aucun fichier cree ni modifie dans var/, secure/, config/).
@@ -2373,6 +2601,8 @@ def _refuse_root_for_writing_command(args: argparse.Namespace, project_root: Pat
 
 
 def main(argv: list[str] | None = None) -> int:
+    from omega_serv.application.terminal.select_language import install_interface_language
+    from omega_serv.bootstrap.container import DependencyContainer
     effective_argv = sys.argv[1:] if argv is None else argv
     from omega_serv.infrastructure.persistence.sqlite_snapshot import snapshot_database
 
@@ -2385,6 +2615,10 @@ def main(argv: list[str] | None = None) -> int:
         )
     parser = build_parser()
     args = parser.parse_args(effective_argv)
+    if is_server_process(effective_argv):
+        # Processus qui dure : l'arbre complet des commandes et de leurs aides ne sert plus (0,6 Mo, 2026-11-19).
+        del parser
+        gc.collect()
     refused = _refuse_root_for_writing_command(args, container.project_root)
     if refused is not None:
         return refused

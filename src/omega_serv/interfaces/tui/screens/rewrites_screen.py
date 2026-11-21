@@ -19,6 +19,7 @@ from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.domain.routing.rewrite import RewriteRule, parse_rewrite_rules
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -51,15 +52,17 @@ class RewritesScreen(OmegaScreen):
             )
             yield Static("", id="form-error", classes="omega-hint")
             yield DataTable(id="rewrites-table")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Ajouter"), id="add", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Modifier"), id="edit", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Ajouter"), id="add", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Modifier"), id="edit", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Supprimer"), id="delete", variant="error", disabled=True)
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -96,7 +99,7 @@ class RewritesScreen(OmegaScreen):
             self.dismiss()
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("AJOUTER UN REWRITE"),
                     fields=[
@@ -109,7 +112,7 @@ class RewritesScreen(OmegaScreen):
             return
         if event.button.id == "edit" and self._selected_index is not None:
             rule = self._rules()[self._selected_index]
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(
                     title=_("MODIFIER LE REWRITE"),
                     fields=[
@@ -132,9 +135,13 @@ class RewritesScreen(OmegaScreen):
         rule = RewriteRule(match_prefix=values["match_prefix"], replacement_prefix=values["replacement_prefix"])
         error = _validate_rewrite_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
+            self.report_form_error(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
+        duplicate = duplicate_error(rules, rule, lambda r: r.match_prefix, _("le préfixe {value!r}").format(value=rule.match_prefix))
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         rules.append(rule)
         self._save_rules(rules)
 
@@ -144,9 +151,13 @@ class RewritesScreen(OmegaScreen):
         rule = RewriteRule(match_prefix=values["match_prefix"], replacement_prefix=values["replacement_prefix"])
         error = _validate_rewrite_rule(rule)
         if error is not None:
-            self.query_one("#form-error", Static).update(_("Erreur : {error}").format(error=error))
+            self.report_form_error(_("Erreur : {error}").format(error=error))
             return
         rules = self._rules()
+        duplicate = duplicate_error(rules, rule, lambda r: r.match_prefix, _("le préfixe {value!r}").format(value=rule.match_prefix), self._selected_index)
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         rules[self._selected_index] = rule
         self._save_rules(rules)
 
@@ -160,7 +171,7 @@ class RewritesScreen(OmegaScreen):
     def _save_rules(self, rules: list[RewriteRule]) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("rewrites")
         enabled = existing.enabled if existing is not None else False

@@ -73,9 +73,12 @@ class RestoreLogArchiveScreen(OmegaScreen):
         if self._selected_name is None or self._archive_store is None:
             return
         archive_path = self._archive_store.base_dir / self._selected_name
-        dest_dir = self._container.project_root / "var" / "log" / "restored" / self._selected_name.removesuffix(".tar.gz")
+        # Scan de securite n° 2 (2026-11-20, F6) : var/log est inscriptible par le compte du service - extraction
+        # confinee (dossiers ouverts sans suivre de lien, destination neuve en 0700), jamais via un lien pose.
+        relative_dest = "var/log/restored/" + self._selected_name.removesuffix(".tar.gz")
         try:
-            self._archive_store.extract_archive(archive_path, dest_dir)
+            dest_dir = self._archive_store.extract_archive_confined(
+                archive_path, self._container.project_root, relative_dest)
         except ArchiveStoreError as exc:
             error_widget.update(_("Erreur : {exc}").format(exc=exc))
             return

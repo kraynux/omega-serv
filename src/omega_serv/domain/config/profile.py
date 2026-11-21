@@ -10,7 +10,7 @@ au chargement et a la validation structurelle d'un profil isole.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from omega_serv.core.i18n import _
 
@@ -22,6 +22,9 @@ KNOWN_PROFILE_NAMES: frozenset[str] = frozenset({
 })
 
 
+_METADATA = frozenset({"name", "description", "label", "custom", "selection", "created_at"})
+
+
 @dataclass(frozen=True)
 class Profile:
     """Un profil nomme : les valeurs de configuration qu'il impose,
@@ -31,6 +34,11 @@ class Profile:
     name: str
     description: str
     values: dict[str, Any] = field(default_factory=dict)
+    label: str = ""
+    """Profil personnalise (2026-11-15) : libelle affiche (tableau de bord), choix d'origine, date."""
+    custom: bool = False
+    selection: dict[str, str] = field(default_factory=dict)
+    created_at: str = ""
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Profile:
@@ -38,8 +46,15 @@ class Profile:
         if not name:
             raise ValueError(_("Un profil doit avoir un champ 'name'."))
         description = data.get("description", "")
-        values = {k: v for k, v in data.items() if k not in ("name", "description")}
-        return cls(name=name, description=description, values=values)
+        # Fiche d'un profil personnalise (label, custom, selection, created_at) : jamais des valeurs de configuration.
+        values = {k: v for k, v in data.items() if k not in _METADATA}
+        selection: dict[Any, Any] = cast("dict[Any, Any]", data.get("selection")) if isinstance(data.get("selection"), dict) else {}
+        return cls(name=name, description=description, values=values, label=str(data.get("label", "")),
+                   custom=bool(data.get("custom", False)), selection={str(k): str(v) for k, v in selection.items()},
+                   created_at=str(data.get("created_at", "")))
 
     def to_dict(self) -> dict[str, Any]:
-        return {"name": self.name, "description": self.description, **self.values}
+        data: dict[str, Any] = {"name": self.name, "description": self.description}
+        if self.custom:
+            data.update(label=self.label, custom=True, selection=dict(self.selection), created_at=self.created_at)
+        return {**data, **self.values}

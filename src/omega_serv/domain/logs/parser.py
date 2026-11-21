@@ -73,7 +73,10 @@ une seule passe par ligne - `extract_log_level()` reparcourt ensuite
 l'ensemble trouve) pour preserver la priorite (le niveau le plus
 specifique l'emporte), jamais le premier mot rencontre dans le texte."""
 
-_SERVICE_RE = re.compile(r"(?<!\w)\w+\s+([a-zA-Z0-9_-]+)(?:\[\d+\])?:")
+SERVICE_TAG_PATTERN = re.compile(r"(?:^|\s)[\w.-]+\s+([A-Za-z][\w./-]*)(?:\[\d+\])?:(?=\s|$)")
+"""Etiquette syslog `machine service[pid]:` (retour utilisateur 2026-11-20 : l'ancien motif prenait les heures d'une
+date, `Nov 20 10:00:00` -> service « 10 »). Le service commence par une lettre et les deux-points sont suivis d'un
+blanc : ni une heure, ni une URL `http://...`."""
 """`(?<!\\w)` (2026-11-06, performance, porte d'omega-log) : la recherche ne repart que d'un debut de mot -
 meme resultat (la correspondance la plus a gauche commence toujours a un debut de mot), ~3 fois plus rapide."""
 
@@ -185,7 +188,7 @@ def extract_log_level(line: str) -> LogLevel:
 
 
 def extract_service(line: str) -> str | None:
-    match = _SERVICE_RE.search(line)
+    match = SERVICE_TAG_PATTERN.search(line)
     return match.group(1) if match else None
 
 

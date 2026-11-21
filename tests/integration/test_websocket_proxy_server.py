@@ -66,6 +66,7 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
 
     async def _start_omega_serv(
         self, upstream_port: int, websocket_enabled: bool = True, read_timeout_seconds: float = 2,
+        extra_options: dict | None = None,
     ) -> None:
         self.config = OmegaServConfig.from_dict({
             "server": {"bind": "127.0.0.1", "port": 0},
@@ -77,7 +78,7 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
                     "connect_timeout_seconds": 2, "read_timeout_seconds": read_timeout_seconds,
                     "websocket_enabled": websocket_enabled,
                 }],
-            }},
+            }, **(extra_options or {})},
         })
         self.filesystem = LocalFilesystem()
         self.logger = FileLineLogger()
@@ -154,6 +155,47 @@ class TestWebsocketProxyServerIntegration(unittest.IsolatedAsyncioTestCase):
         await writer.drain()
         status_line = await asyncio.wait_for(reader.readline(), timeout=3)
         self.assertIn(b"502", status_line)
+
+
+    # ------------------------------------------------------------------ plan proxy natif v2, lot 1 (D14)
+    _UPGRADE = (b"GET %s HTTP/1.1\r\nHost: example.test\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n"
+                b"Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
+
+    async def test_refused_upgrade_announces_no_body_and_closes(self):
+        # D14 : le Content-Length du refus du backend etait transmis sans son corps - le client attendait.
+        async def refuse(reader, writer):
+            await reader.read(4096)
+            writer.write(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 6\r\nContent-Type: text/plain\r\n\r\nrefuse")
+            await writer.drain()
+            writer.close()
+
+        upstream = await asyncio.start_server(refuse, "127.0.0.1", 0)
+        self._upstream_servers.append(upstream)
+        await self._start_omega_serv(upstream.sockets[0].getsockname()[1])
+        reader, writer = await self._open_browser_connection()
+        writer.write(self._UPGRADE % b"/ws/chat")
+        await writer.drain()
+        answer = await asyncio.wait_for(reader.read(), timeout=3)  # fin de connexion, sans attente
+        head, _, body = answer.partition(b"\r\n\r\n")
+        self.assertTrue(head.startswith(b"HTTP/1.1 403 "), head[:40])
+        self.assertIn(b"Content-Length: 0", head)
+        self.assertNotIn(b"Content-Length: 6", head)
+        self.assertEqual(body, b"")
+
+    async def test_zone_is_chosen_after_rewrites(self):
+        # D14 : le raccourci WebSocket cherchait sa zone sur le chemin brut ; le routage HTTP, lui, apres reecriture.
+        upstream_port, received = await self._start_websocket_upstream()
+        await self._start_omega_serv(upstream_port, extra_options={"rewrites": {
+            "enabled": True, "list": [{"match_prefix": "/ancien", "replacement_prefix": "/ws"}]}})
+        reader, writer = await self._open_browser_connection()
+        writer.write(self._UPGRADE % b"/ancien/chat")
+        await writer.drain()
+        self.assertIn(b"101", await asyncio.wait_for(reader.readline(), timeout=3))
+        self.assertTrue(received["bytes"].startswith(b"GET /ws/chat "), received["bytes"][:40])
+        await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), timeout=3)
+        writer.write(b"ping")
+        await writer.drain()
+        self.assertEqual(await asyncio.wait_for(reader.read(64), timeout=3), b"echo:ping")  # vrai tunnel
 
 
 if __name__ == "__main__":

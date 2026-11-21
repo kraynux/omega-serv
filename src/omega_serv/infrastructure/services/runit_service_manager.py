@@ -15,6 +15,7 @@ from omega_serv.domain.services.exceptions import (
     ServiceNotFoundError,
     ServiceStatusError,
 )
+from omega_serv.domain.services.service_name import is_safe_service_name
 from omega_serv.ports.process_runner_port import ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
 
@@ -43,6 +44,7 @@ class RunitServiceManager:
         return str(Path(self._service_dir) / service_name)
 
     def _control(self, service_name: str, operation: str) -> bool:
+        _require_safe_name(service_name, operation, "runit")
         result = self._runner.run([self._sv, operation, self._service_path(service_name)], timeout=_TIMEOUT_SECONDS)
         if result.returncode == 0:
             return True
@@ -128,3 +130,10 @@ class RunitServiceManager:
         if "finish:" in output:
             return False, "finish", "finished"
         return False, "unknown", "unknown"
+
+
+def _require_safe_name(service_name: str, operation: str, manager_type: str) -> None:
+    """Scan de securite n° 2 (2026-11-20, F22/F42) : jamais de commande privilegiee sur un nom qui n'est pas un nom
+    d'unite sur (motif `*`, option `-x`, chemin) - il vient souvent de var/settings.json, ecrit par le service."""
+    if not is_safe_service_name(service_name):
+        raise ServiceControlError(service_name, operation, _("nom de service refusé"), manager_type)

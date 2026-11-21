@@ -5,9 +5,13 @@ absolus resolus par l'appelant (infrastructure/filesystem/,
 SafePathResolver)."""
 from __future__ import annotations
 
+import re
+
+from omega_serv.domain.http.admin_cookies import without_admin_cookies
 from omega_serv.domain.http.request import HttpRequest
 
 _SKIPPED_HTTP_HEADERS = frozenset({"content-type", "content-length"})
+_TOKEN_NAME = re.compile(r"[A-Za-z0-9!#$%&'*+.^`|~-]+")
 
 
 def build_cgi_env(
@@ -46,6 +50,16 @@ def build_cgi_env(
     for name, value in request.headers:
         if name.lower() in _SKIPPED_HTTP_HEADERS:
             continue
+        # Scan de securite n° 1 (2026-11-20, F40) : `Proxy:` du client devenait HTTP_PROXY (« httpoxy »), lu par
+        # les bibliotheques HTTP du script comme proxy sortant ; un nom avec « _ » ou hors jeton (RFC 9110 §5.6.2)
+        # pouvait se faire passer pour un en-tete pose par un composant de confiance (X_Forwarded_For). Ignores,
+        # comme Apache, lighttpd et nginx.
+        if name.lower() == "proxy" or not _TOKEN_NAME.fullmatch(name):
+            continue
+        if name.lower() == "cookie":
+            value = without_admin_cookies(value)  # scan n° 2 (F16) : jamais la session de l'administration web
+            if not value:
+                continue
         env["HTTP_" + name.upper().replace("-", "_")] = value
 
     return env

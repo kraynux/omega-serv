@@ -1,0 +1,287 @@
+# Reverse proxy (omega-serv 3.0.0 en preparation, relais natif corrige), 2026-11-14 - tools/bench/proxy/campaign.sh
+# Machine : AMD Ryzen AI 9 365, noyau 7.2 (CachyOS)
+# Coeurs : proxy 0-3 (Zen 5) ; backend 4,5 ; client 6-9
+# Logiciels : nginx 1.30.5, lighttpd 1.4.85, Apache 2.4.69 (event), Caddy 2.11.7, Traefik 3.7.19, OpenSSL 3.6.5, Python 3.14.8 ; campagne 2 processus puis passe 4 processus
+# Backend commun : nginx statique 2 processus (127.0.0.1:18960), en-tete X-Backend verifie ; client oha 1.16.0, 32 connexions, 10 s
+# Colonnes : configuration, fichier, req/s, Mo/s, p50 ms, p99 ms, reponses non 200 ; PSS du proxy au repos et apres la charge
+
+## proxy-c-resultats-v2.txt
+=== repetition 1 14:50:40 charge: 0.01 0.24 0.51
+nginx-2                small.html     171075    175.2     0.2     0.2      0
+nginx-2                medium.png      34414   3523.7     0.8     1.0      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html     150585    154.2     0.2     0.4      0
+nginx-2-tls            medium.png      33005   3379.3     0.8     1.1      0
+nginx-2-tls PSS_Mo repos=7 apres_charge=9
+lighttpd-2             small.html      83330     85.3     0.4     0.5      0
+lighttpd-2             medium.png      34873   3570.7     1.0     1.2      0
+lighttpd-2 PSS_Mo repos=2 apres_charge=3
+lighttpd-2-tls         small.html      77820     79.7     0.5     0.7      0
+lighttpd-2-tls         medium.png      26131   2675.4     1.3     1.7      0
+lighttpd-2-tls PSS_Mo repos=3 apres_charge=6
+apache-2               small.html     124508    127.5     0.2     2.1      0
+apache-2               medium.png      41427   4241.8     0.5     2.1      0
+apache-2 PSS_Mo repos=6 apres_charge=11
+apache-2-tls           small.html     117324    120.1     0.2     1.6      0
+apache-2-tls           medium.png      30842   3157.9     0.8     2.8      0
+apache-2-tls PSS_Mo repos=8 apres_charge=57
+caddy-2                small.html      35419     36.3     0.7     2.9      0
+caddy-2                medium.png      23457   2401.7     1.1     3.6      0
+caddy-2 PSS_Mo repos=50 apres_charge=60
+caddy-2-tls            small.html      34476     35.3     0.7     2.9      0
+caddy-2-tls            medium.png      17360   1777.4     1.5     4.9      0
+caddy-2-tls PSS_Mo repos=54 apres_charge=63
+traefik-2              small.html      43237     44.3     0.6     2.8      0
+traefik-2              medium.png      26753   2739.1     0.9     4.1      0
+traefik-2 PSS_Mo repos=98 apres_charge=123
+traefik-2-tls          small.html      37208     38.1     0.7     3.2      0
+traefik-2-tls          medium.png      18527   1896.8     1.4     5.5      0
+traefik-2-tls PSS_Mo repos=103 apres_charge=127
+omega-py-2-0           small.html      11259     11.5     4.3     5.5      0
+omega-py-2-0           medium.png       9637    986.5     3.3     3.9      0
+omega-py-2-0 PSS_Mo repos=59 apres_charge=66
+omega-py-2-0-tls       small.html      10954     11.2     3.1     4.0      0
+omega-py-2-0-tls       medium.png       8275    847.0     3.7     4.3      0
+omega-py-2-0-tls PSS_Mo repos=58 apres_charge=82
+omega-nat-1-0          small.html     192713    197.3     0.1     0.8      0
+omega-nat-1-0          medium.png      82623   8460.2     0.2     0.9      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     155048    158.8     0.2     0.5      0
+omega-nat-1-0-tls      medium.png      36554   3742.8     0.4     2.1      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=55
+omega-nat-1-1          small.html     190058    194.6     0.1     0.4      0
+omega-nat-1-1          medium.png      80595   8252.6     0.2     0.8      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=57
+omega-nat-1-1-tls      small.html     144794    148.3     0.1     0.7      0
+omega-nat-1-1-tls      medium.png      41529   4252.3     0.4     1.9      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=59
+=== repetition 2 14:57:14 charge: 6.08 5.04 2.82
+nginx-2                small.html     167949    172.0     0.2     0.3      0
+nginx-2                medium.png      36563   3743.8     0.7     1.0      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html     151349    155.0     0.2     0.4      0
+nginx-2-tls            medium.png      34934   3576.9     0.7     1.0      0
+nginx-2-tls PSS_Mo repos=7 apres_charge=9
+lighttpd-2             small.html      83714     85.7     0.4     0.5      0
+lighttpd-2             medium.png      35096   3593.5     0.9     1.0      0
+lighttpd-2 PSS_Mo repos=2 apres_charge=3
+lighttpd-2-tls         small.html      77308     79.2     0.5     0.7      0
+lighttpd-2-tls         medium.png      26732   2737.1     1.2     1.4      0
+lighttpd-2-tls PSS_Mo repos=3 apres_charge=5
+apache-2               small.html     127719    130.8     0.2     1.2      0
+apache-2               medium.png      39248   4018.7     0.6     2.2      0
+apache-2 PSS_Mo repos=6 apres_charge=11
+apache-2-tls           small.html     118652    121.5     0.2     1.3      0
+apache-2-tls           medium.png      30549   3127.9     0.8     3.0      0
+apache-2-tls PSS_Mo repos=7 apres_charge=63
+caddy-2                small.html      36246     37.1     0.7     2.8      0
+caddy-2                medium.png      22715   2325.7     1.1     3.9      0
+caddy-2 PSS_Mo repos=47 apres_charge=58
+caddy-2-tls            small.html      33668     34.5     0.8     3.0      0
+caddy-2-tls            medium.png      16863   1726.4     1.6     4.9      0
+caddy-2-tls PSS_Mo repos=52 apres_charge=61
+traefik-2              small.html      41924     42.9     0.6     2.8      0
+traefik-2              medium.png      25992   2661.3     1.0     4.2      0
+traefik-2 PSS_Mo repos=99 apres_charge=125
+traefik-2-tls          small.html      36803     37.7     0.7     3.2      0
+traefik-2-tls          medium.png      18326   1876.3     1.4     5.6      0
+traefik-2-tls PSS_Mo repos=101 apres_charge=125
+omega-py-2-0           small.html      11548     11.8     3.3     4.1      0
+omega-py-2-0           medium.png       9860   1009.3     3.1     3.6      0
+omega-py-2-0 PSS_Mo repos=60 apres_charge=66
+omega-py-2-0-tls       small.html      10635     10.9     3.9     5.0      0
+omega-py-2-0-tls       medium.png       8291    848.7     3.7     3.9      0
+omega-py-2-0-tls PSS_Mo repos=60 apres_charge=81
+omega-nat-1-0          small.html     196500    201.2     0.1     0.8      0
+omega-nat-1-0          medium.png      80148   8206.8     0.2     1.0      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     151135    154.8     0.2     0.5      0
+omega-nat-1-0-tls      medium.png      39950   4090.6     0.4     2.1      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=55
+omega-nat-1-1          small.html     184660    189.1     0.2     0.7      0
+omega-nat-1-1          medium.png      72054   7378.0     0.3     0.9      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=56
+omega-nat-1-1-tls      small.html     166816    170.8     0.1     1.0      0
+omega-nat-1-1-tls      medium.png      40491   4146.0     0.4     1.9      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=58
+=== repetition 3 15:03:47 charge: 5.35 6.29 4.37
+nginx-2                small.html     171622    175.7     0.2     0.2      0
+nginx-2                medium.png      36195   3706.1     0.7     0.9      0
+nginx-2 PSS_Mo repos=6 apres_charge=7
+nginx-2-tls            small.html     152630    156.3     0.2     0.3      0
+nginx-2-tls            medium.png      35058   3589.6     0.7     1.0      0
+nginx-2-tls PSS_Mo repos=7 apres_charge=9
+lighttpd-2             small.html      82166     84.1     0.6     0.8      0
+lighttpd-2             medium.png      34336   3515.7     0.8     1.3      0
+lighttpd-2 PSS_Mo repos=2 apres_charge=3
+lighttpd-2-tls         small.html      77043     78.9     0.5     0.7      0
+lighttpd-2-tls         medium.png      26178   2680.3     1.0     1.6      0
+lighttpd-2-tls PSS_Mo repos=3 apres_charge=6
+apache-2               small.html     123172    126.1     0.2     2.0      0
+apache-2               medium.png      39576   4052.3     0.6     2.2      0
+apache-2 PSS_Mo repos=6 apres_charge=11
+apache-2-tls           small.html     118073    120.9     0.2     2.0      0
+apache-2-tls           medium.png      30510   3123.9     0.8     3.0      0
+apache-2-tls PSS_Mo repos=7 apres_charge=57
+caddy-2                small.html      36382     37.3     0.7     2.8      0
+caddy-2                medium.png      22903   2345.0     1.1     3.8      0
+caddy-2 PSS_Mo repos=50 apres_charge=57
+caddy-2-tls            small.html      33795     34.6     0.7     3.0      0
+caddy-2-tls            medium.png      17538   1795.6     1.5     4.7      0
+caddy-2-tls PSS_Mo repos=49 apres_charge=61
+traefik-2              small.html      42294     43.3     0.6     2.9      0
+traefik-2              medium.png      27161   2780.9     0.9     4.1      0
+traefik-2 PSS_Mo repos=99 apres_charge=124
+traefik-2-tls          small.html      37196     38.1     0.7     3.1      0
+traefik-2-tls          medium.png      18731   1917.7     1.4     5.4      0
+traefik-2-tls PSS_Mo repos=100 apres_charge=124
+omega-py-2-0           small.html      11530     11.8     3.4     4.3      0
+omega-py-2-0           medium.png       9542    976.8     3.2     3.7      0
+omega-py-2-0 PSS_Mo repos=56 apres_charge=66
+omega-py-2-0-tls       small.html      10482     10.7     4.8     6.1      0
+omega-py-2-0-tls       medium.png       8246    844.1     3.8     4.6      0
+omega-py-2-0-tls PSS_Mo repos=58 apres_charge=81
+omega-nat-1-0          small.html     202618    207.5     0.1     0.7      0
+omega-nat-1-0          medium.png      79830   8174.3     0.3     0.8      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     157540    161.3     0.1     1.3      0
+omega-nat-1-0-tls      medium.png      41137   4212.1     0.4     2.0      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=54
+omega-nat-1-1          small.html     165076    169.0     0.1     2.0      0
+omega-nat-1-1          medium.png      79934   8184.9     0.2     0.7      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=57
+omega-nat-1-1-tls      small.html     133284    136.5     0.1     0.6      0
+omega-nat-1-1-tls      medium.png      39807   4075.9     0.4     2.0      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=58
+
+## proxy-c-4proc-resultats-v2.txt
+=== repetition 1 15:10:20 charge: 5.67 6.28 5.13
+nginx-4                small.html     246595    252.5     0.1     0.4      0
+nginx-4                medium.png      52278   5353.0     0.5     0.9      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+nginx-4-tls            small.html     231994    237.6     0.1     0.2      0
+nginx-4-tls            medium.png      48360   4951.7     0.5     1.0      0
+nginx-4-tls PSS_Mo repos=10 apres_charge=14
+lighttpd-4             small.html     133247    136.4     0.2     0.5      0
+lighttpd-4             medium.png      52409   5366.3     0.6     1.1      0
+lighttpd-4 PSS_Mo repos=3 apres_charge=4
+lighttpd-4-tls         small.html     130572    133.7     0.2     0.5      0
+lighttpd-4-tls         medium.png      48300   4945.6     0.7     0.9      0
+lighttpd-4-tls PSS_Mo repos=4 apres_charge=8
+apache-4               small.html     125078    128.1     0.2     1.4      0
+apache-4               medium.png      40433   4140.0     0.5     2.3      0
+apache-4 PSS_Mo repos=8 apres_charge=15
+apache-4-tls           small.html     116402    119.2     0.2     1.5      0
+apache-4-tls           medium.png      30354   3107.9     0.8     3.2      0
+apache-4-tls PSS_Mo repos=10 apres_charge=66
+caddy-4                small.html      57012     58.4     0.4     2.5      0
+caddy-4                medium.png      33120   3391.1     0.7     3.3      0
+caddy-4 PSS_Mo repos=50 apres_charge=60
+caddy-4-tls            small.html      55322     56.6     0.4     2.5      0
+caddy-4-tls            medium.png      26466   2709.8     0.9     3.9      0
+caddy-4-tls PSS_Mo repos=51 apres_charge=63
+traefik-4              small.html      70465     72.2     0.4     2.1      0
+traefik-4              medium.png      38285   3920.0     0.5     3.4      0
+traefik-4 PSS_Mo repos=101 apres_charge=125
+traefik-4-tls          small.html      62251     63.7     0.4     2.4      0
+traefik-4-tls          medium.png      30456   3118.3     0.7     4.0      0
+traefik-4-tls PSS_Mo repos=102 apres_charge=129
+omega-nat-1-0          small.html     205519    210.4     0.1     0.6      0
+omega-nat-1-0          medium.png      81166   8311.1     0.2     0.8      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     185322    189.8     0.1     0.5      0
+omega-nat-1-0-tls      medium.png      44584   4565.1     0.5     1.5      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=55
+omega-nat-1-1          small.html     190201    194.8     0.1     0.8      0
+omega-nat-1-1          medium.png      73025   7477.4     0.3     0.9      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=56
+omega-nat-1-1-tls      small.html     149842    153.4     0.2     0.4      0
+omega-nat-1-1-tls      medium.png      32411   3318.5     0.5     2.1      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=58
+=== repetition 2 15:16:05 charge: 6.70 8.41 6.65
+nginx-4                small.html     244739    250.6     0.1     0.8      0
+nginx-4                medium.png      56011   5735.2     0.4     0.8      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+nginx-4-tls            small.html     195093    199.8     0.2     0.3      0
+nginx-4-tls            medium.png      42498   4351.5     0.7     1.1      0
+nginx-4-tls PSS_Mo repos=10 apres_charge=14
+lighttpd-4             small.html     129668    132.8     0.2     0.9      0
+lighttpd-4             medium.png      53523   5480.5     0.6     0.9      0
+lighttpd-4 PSS_Mo repos=3 apres_charge=4
+lighttpd-4-tls         small.html     115309    118.1     0.3     0.5      0
+lighttpd-4-tls         medium.png      44642   4571.0     0.5     1.8      0
+lighttpd-4-tls PSS_Mo repos=4 apres_charge=7
+apache-4               small.html     124458    127.4     0.2     2.0      0
+apache-4               medium.png      39110   4004.5     0.6     2.5      0
+apache-4 PSS_Mo repos=8 apres_charge=15
+apache-4-tls           small.html     114898    117.7     0.2     1.4      0
+apache-4-tls           medium.png      29948   3066.3     0.8     3.4      0
+apache-4-tls PSS_Mo repos=10 apres_charge=66
+caddy-4                small.html      55700     57.0     0.4     2.5      0
+caddy-4                medium.png      32701   3348.2     0.6     3.5      0
+caddy-4 PSS_Mo repos=50 apres_charge=60
+caddy-4-tls            small.html      54120     55.4     0.4     2.5      0
+caddy-4-tls            medium.png      26452   2708.3     0.9     4.0      0
+caddy-4-tls PSS_Mo repos=52 apres_charge=63
+traefik-4              small.html      69968     71.6     0.4     2.1      0
+traefik-4              medium.png      39458   4040.2     0.5     3.3      0
+traefik-4 PSS_Mo repos=100 apres_charge=123
+traefik-4-tls          small.html      62462     64.0     0.4     2.4      0
+traefik-4-tls          medium.png      28513   2919.4     0.8     4.3      0
+traefik-4-tls PSS_Mo repos=103 apres_charge=129
+omega-nat-1-0          small.html     203021    207.9     0.1     0.7      0
+omega-nat-1-0          medium.png      80361   8228.7     0.2     0.7      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     129765    132.9     0.2     0.6      0
+omega-nat-1-0-tls      medium.png      42507   4352.3     0.6     1.6      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=55
+omega-nat-1-1          small.html     190954    195.5     0.1     0.8      0
+omega-nat-1-1          medium.png      80961   8290.0     0.2     0.8      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=57
+omega-nat-1-1-tls      small.html     146590    150.1     0.1     0.6      0
+omega-nat-1-1-tls      medium.png      40924   4190.3     0.4     2.1      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=58
+=== repetition 3 15:21:49 charge: 6.95 8.40 7.32
+nginx-4                small.html     250635    256.6     0.1     0.2      0
+nginx-4                medium.png      58167   5956.0     0.4     0.9      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+nginx-4-tls            small.html     202095    206.9     0.1     0.4      0
+nginx-4-tls            medium.png      47609   4874.9     0.5     0.9      0
+nginx-4-tls PSS_Mo repos=10 apres_charge=15
+lighttpd-4             small.html     129827    132.9     0.2     1.2      0
+lighttpd-4             medium.png      53979   5527.1     0.6     0.8      0
+lighttpd-4 PSS_Mo repos=3 apres_charge=4
+lighttpd-4-tls         small.html     133853    137.1     0.2     0.5      0
+lighttpd-4-tls         medium.png      45566   4665.6     0.7     1.3      0
+lighttpd-4-tls PSS_Mo repos=4 apres_charge=7
+apache-4               small.html     122557    125.5     0.2     2.1      0
+apache-4               medium.png      39807   4075.9     0.5     2.4      0
+apache-4 PSS_Mo repos=8 apres_charge=15
+apache-4-tls           small.html     113818    116.5     0.2     1.3      0
+apache-4-tls           medium.png      29630   3033.8     0.8     3.5      0
+apache-4-tls PSS_Mo repos=10 apres_charge=68
+caddy-4                small.html      55910     57.2     0.4     2.5      0
+caddy-4                medium.png      33757   3456.4     0.6     3.4      0
+caddy-4 PSS_Mo repos=50 apres_charge=60
+caddy-4-tls            small.html      54279     55.6     0.4     2.5      0
+caddy-4-tls            medium.png      24876   2546.9     0.9     4.2      0
+caddy-4-tls PSS_Mo repos=54 apres_charge=62
+traefik-4              small.html      70659     72.4     0.4     2.1      0
+traefik-4              medium.png      39419   4036.2     0.5     3.4      0
+traefik-4 PSS_Mo repos=100 apres_charge=123
+traefik-4-tls          small.html      61518     63.0     0.4     2.4      0
+traefik-4-tls          medium.png      27743   2840.5     0.8     4.4      0
+traefik-4-tls PSS_Mo repos=101 apres_charge=128
+omega-nat-1-0          small.html     200760    205.6     0.1     0.5      0
+omega-nat-1-0          medium.png      69277   7093.6     0.3     1.3      0
+omega-nat-1-0 PSS_Mo repos=48 apres_charge=53
+omega-nat-1-0-tls      small.html     130337    133.5     0.2     0.5      0
+omega-nat-1-0-tls      medium.png      36011   3687.2     0.2     2.4      0
+omega-nat-1-0-tls PSS_Mo repos=49 apres_charge=54
+omega-nat-1-1          small.html     163762    167.7     0.2     1.3      0
+omega-nat-1-1          medium.png      69198   7085.5     0.3     1.1      0
+omega-nat-1-1 PSS_Mo repos=52 apres_charge=56
+omega-nat-1-1-tls      small.html     138216    141.5     0.2     0.7      0
+omega-nat-1-1-tls      medium.png      39400   4034.3     0.5     2.0      0
+omega-nat-1-1-tls PSS_Mo repos=53 apres_charge=58
+FIN

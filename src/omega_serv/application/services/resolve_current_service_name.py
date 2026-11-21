@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from omega_serv.domain.services.service_name import is_safe_service_name
 from omega_serv.ports.filesystem_port import FilesystemPort
 from omega_serv.ports.instance_registry_port import InstanceRegistryPort
 from omega_serv.ports.settings_store import SettingsStore
@@ -23,11 +24,15 @@ def resolve_current_service_name(
     settings_store: SettingsStore,
     project_root: Path,
 ) -> str:
+    """Scan de securite n° 2 (2026-11-20, F10/F12/F14/F20/F22/F42) : un nom qui n'est pas un nom d'unite sur
+    (`../x`, `/etc/x`, `*`, `-x`) n'est jamais rendu - `var/settings.json` est ecrit par le compte du service et ce
+    nom finit dans des commandes root (`systemctl`, `tee` dans /etc/systemd/system). Nom par defaut a la place."""
     current_path = filesystem.resolve_real_path(project_root)
     for entry in instance_registry.load():
         if entry.path == current_path:
-            return entry.service_name
-    return settings_store.get(SERVICE_NAME_SETTINGS_KEY, "") or DEFAULT_SERVICE_NAME
+            return entry.service_name if is_safe_service_name(entry.service_name) else DEFAULT_SERVICE_NAME
+    name = settings_store.get(SERVICE_NAME_SETTINGS_KEY, "") or DEFAULT_SERVICE_NAME
+    return name if is_safe_service_name(name) else DEFAULT_SERVICE_NAME
 
 
 def resolve_current_service_account(

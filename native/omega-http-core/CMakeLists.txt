@@ -41,6 +41,11 @@ add_library(omega_core STATIC
     src/waf_filter.cpp
     src/watch_list.cpp
     src/rate_limiter.cpp
+    src/waf_alert.cpp
+    src/upstream.cpp
+    src/balance.cpp
+    src/upstream_tls.cpp
+    src/websocket.cpp
 )
 target_include_directories(omega_core PUBLIC src)
 target_compile_options(omega_core PRIVATE ${OMEGA_WARNINGS} ${OMEGA_HARDENING})
@@ -71,7 +76,7 @@ endif()
 
 # Tests absents de l'archive publiee (build-release.sh) : install.sh ne compile alors que le moteur.
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp")
-    add_executable(omega_tests tests/main.cpp tests/test_http_parser.cpp tests/test_vectors.cpp tests/test_util.cpp tests/test_ipc.cpp tests/test_blocklist.cpp tests/test_waf_filter.cpp tests/test_watch_list.cpp tests/test_rate_limiter.cpp)
+    add_executable(omega_tests tests/main.cpp tests/test_http_parser.cpp tests/test_vectors.cpp tests/test_util.cpp tests/test_ipc.cpp tests/test_blocklist.cpp tests/test_waf_filter.cpp tests/test_watch_list.cpp tests/test_rate_limiter.cpp tests/test_waf_alert.cpp tests/test_config.cpp tests/test_upstream.cpp tests/test_websocket.cpp tests/test_security_scan1.cpp tests/test_security_scan2.cpp)
     target_compile_definitions(omega_tests PRIVATE OMEGA_VECTORS_FILE="${CMAKE_CURRENT_SOURCE_DIR}/tests/vectors/rules.tsv"
         OMEGA_WAF_VECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/vectors")
     target_include_directories(omega_tests PRIVATE third_party/doctest)
@@ -90,7 +95,7 @@ if(OMEGA_SANITIZE)
 endif()
 
 if(OMEGA_FUZZ)
-    foreach(fuzzer fuzz_http_parser fuzz_engine fuzz_ipc fuzz_waf_filter)
+    foreach(fuzzer fuzz_http_parser fuzz_engine fuzz_ipc fuzz_waf_filter fuzz_upstream fuzz_websocket)
         add_executable(${fuzzer} tests/${fuzzer}.cpp)
         target_link_libraries(${fuzzer} PRIVATE omega_core)
         target_compile_definitions(${fuzzer} PRIVATE OMEGA_WAF_VECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/vectors")

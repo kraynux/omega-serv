@@ -1,7 +1,7 @@
 """Tests d'integration Phase II de l'interface (plan interface §12,
 menu 3, hors sous-ecran TLS §7.3 - Phase III) : configuration de base,
 limites, securite generique, alias/redirections/rewrites/dirlisting/
-proxies de confiance (CRUD de regles), FastCGI (enregistrement unique),
+proxies de confiance (CRUD de regles), FastCGI (liste de zones, projets 3.0.0 §8.1),
 cache (zones+extensions), authentification (§7.1). WAF a demenage hors
 de ce menu le 2026-09-13 (retour utilisateur : "le menu WAF va etre
 sorti du menu configuration detaille... sur le MENU PRINCIPAL") - voir
@@ -478,7 +478,10 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-verdict", Input).value = "block"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("verdict", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("verdict", str(pilot.app.screen.query_one("#df-error").content))
+            # Lot V (2026-11-15) : l'erreur s'affiche DANS le formulaire, qui reste ouvert avec la saisie.
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#access-rules-table", DataTable).row_count, 0)
 
     async def _add_upstream_in_editor(
@@ -561,7 +564,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             table = pilot.app.screen.query_one("#proxy-zones-table", DataTable)
             self.assertEqual(table.row_count, 1)
             self.assertEqual(
-                list(table.get_row_at(0)), ["/api/", "round_robin", "127.0.0.1:3000", "Non", "Oui", "Non", "Non"],
+                list(table.get_row_at(0))[:7], ["/api/", "round_robin", "127.0.0.1:3000", "Non", "Oui", "Non", "Non"],
             )
 
             table.move_cursor(row=0)
@@ -587,7 +590,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             self.assertIn('"verify_upstream_tls": false', config_text)
             self.assertIn('"websocket_enabled": true', config_text)
             self.assertEqual(
-                list(table.get_row_at(0)),
+                list(table.get_row_at(0))[:7],  # 8e colonne : Moteur (lot 11)
                 ["/api/", "round_robin", "127.0.0.1:3000, https://127.0.0.1:4001 (poids 2)", "Oui", "Non", "Oui", "Non"],
             )
 
@@ -615,11 +618,12 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
             await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="99999")
-            pilot.app.screen.query_one("#confirm", Button).press()
+            # Lot V (2026-11-15) : backend controle des sa saisie, erreur dans son formulaire, saisie gardee.
+            self.assertIn("port d'upstream invalide", str(pilot.app.screen.query_one("#df-error").content))
+            pilot.app.screen.query_one("#cancel", Button).press()  # formulaire du backend
             await pilot.pause()
-            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
+            pilot.app.screen.query_one("#cancel", Button).press()  # editeur des backends : zone abandonnee
             await pilot.pause()
-            self.assertIn("port d'upstream invalide", str(pilot.app.screen.query_one("#form-error").content))
             self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
 
     async def test_reverse_proxy_rejects_non_numeric_port(self):
@@ -642,7 +646,9 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-port", Input).value = "not-a-number"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("nombres entiers", str(pilot.app.screen.query_one("#upstream-error").content))
+            self.assertIn("nombres entiers", str(pilot.app.screen.query_one("#df-error").content))  # lot V
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
             # Le backend invalide n'a pas ete ajoute a la liste - valider sans aucun backend
             # doit etre rejete par validate_proxy_zone (point unique de validation).
             pilot.app.screen.query_one("#confirm", Button).press()
@@ -667,12 +673,12 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-load_balancing", Input).value = "lottery"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            await self._add_upstream_in_editor(pilot, host="127.0.0.1", port="3000")
-            pilot.app.screen.query_one("#confirm", Button).press()
+            # Lot V : refuse des le premier formulaire, avant de passer aux backends.
+            self.assertIn("load_balancing invalide", str(pilot.app.screen.query_one("#df-error").content))
+            # Lot V (2026-11-15) : l'erreur s'affiche DANS le formulaire, qui reste ouvert avec la saisie.
+            pilot.app.screen.query_one("#cancel", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#confirm", Button).press()  # RoutingRuleEditorScreen, aucune regle
-            await pilot.pause()
-            self.assertIn("load_balancing invalide", str(pilot.app.screen.query_one("#form-error").content))
+
             self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
 
     async def test_reverse_proxy_sticky_session_and_routing_rule_round_trip(self):
@@ -712,7 +718,7 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
 
             table = pilot.app.screen.query_one("#proxy-zones-table", DataTable)
             self.assertEqual(table.row_count, 1)
-            self.assertEqual(list(table.get_row_at(0))[-1], "Oui")  # colonne Sticky
+            self.assertEqual(list(table.get_row_at(0))[6], "Oui")  # colonne Sticky (la 8e est Moteur, lot 11)
 
             config_text = container.config_file.read_text()
             self.assertIn('"sticky_session_enabled": true', config_text)
@@ -745,10 +751,14 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-upstream_key", Input).value = "10.0.0.99:9999"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#confirm", Button).press()  # Valider RoutingRuleEditorScreen
+            # Lot V (2026-11-15) : cible inconnue refusee dans le formulaire de la regle, saisie gardee.
+            error = str(pilot.app.screen.query_one("#df-error").content)
+            self.assertIn("10.0.0.99:9999", error)
+            self.assertIn("inconnu", error)
+            pilot.app.screen.query_one("#cancel", Button).press()  # formulaire de la regle
             await pilot.pause()
-            self.assertIn("upstream_key", str(pilot.app.screen.query_one("#form-error").content))
-            self.assertIn("inconnu", str(pilot.app.screen.query_one("#form-error").content))
+            pilot.app.screen.query_one("#cancel", Button).press()  # editeur des regles : zone abandonnee
+            await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#proxy-zones-table", DataTable).row_count, 0)
 
     async def test_reverse_proxy_real_load_round_trip(self):
@@ -848,7 +858,10 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-allow_outside_webroot", Input).value = "non"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("Erreur", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("Erreur", str(pilot.app.screen.query_one("#df-error").content))
+            # Lot V (2026-11-15) : l'erreur s'affiche DANS le formulaire, qui reste ouvert avec la saisie.
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#aliases-table", DataTable).row_count, 0)
 
     async def test_redirects_full_crud_cycle(self):
@@ -991,60 +1004,108 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-network", Input).value = "not-a-network"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("invalide", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("invalide", str(pilot.app.screen.query_one("#df-error").content))
+            # Lot V (2026-11-15) : l'erreur s'affiche DANS le formulaire, qui reste ouvert avec la saisie.
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
 
-    async def test_fastcgi_saves_and_validates_outside_webroot(self):
+    async def _open_fastcgi(self, pilot) -> DataTable:
+        await self._start(pilot)
+        await self._open_menu3(pilot)
+        pilot.app.screen.query_one("#fastcgi", Button).press()
+        await pilot.pause()
+        return pilot.app.screen.query_one("#fastcgi-table", DataTable)
+
+    async def _select_row(self, pilot, table: DataTable, row: int) -> None:
+        table.move_cursor(row=row)
+        table.action_select_cursor()
+        await pilot.pause()
+
+    def _fastcgi_settings(self, container: DependencyContainer) -> dict:
+        return json.loads(container.config_file.read_text())["options"]["fastcgi"]
+
+    async def test_fastcgi_zones_add_edit_toggle_and_delete(self):
+        """Projets 3.0.0 §8.1 : une liste de zones, chacune avec son interrupteur (maintenance d'une zone sans
+        couper les autres)."""
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
         async with app.run_test(size=(120, 50)) as pilot:
-            await self._start(pilot)
-            await self._open_menu3(pilot)
-            pilot.app.screen.query_one("#fastcgi", Button).press()
+            table = await self._open_fastcgi(pilot)
+            for prefix, root in (("/blog/", "phpapp"), ("/wiki/", "wikiapp")):
+                pilot.app.screen.query_one("#add", Button).press()
+                await pilot.pause()
+                pilot.app.screen.query_one("#df-url_prefix", Input).value = prefix
+                pilot.app.screen.query_one("#df-script_root", Input).value = root
+                pilot.app.screen.query_one("#df-allowed_scripts", Input).value = "index.php, api/router.php"
+                pilot.app.screen.query_one("#confirm", Button).press()
+                await pilot.pause()
+            self.assertEqual(table.row_count, 2)
+            zones = self._fastcgi_settings(container)["zones"]
+            self.assertEqual([(z["url_prefix"], z["script_root"], z["enabled"]) for z in zones],
+                             [("/blog/", "phpapp", True), ("/wiki/", "wikiapp", True)])
+            self.assertEqual(zones[0]["allowed_scripts"], ["index.php", "api/router.php"])
+
+            await self._select_row(pilot, table, 1)
+            pilot.app.screen.query_one("#edit", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#field-script_root", Input).value = "phpapp"
-            pilot.app.screen.query_one("#save", Button).press()
+            self.assertEqual(pilot.app.screen.query_one("#df-allowed_scripts", Input).value,
+                             "index.php, api/router.php")
+            pilot.app.screen.query_one("#df-url_prefix", Input).value = "/blog"
+            pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
-        self.assertIn('"script_root": "phpapp"', container.config_file.read_text())
+            self.assertIn("Doublon", str(pilot.app.screen.query_one("#df-error", Static).content))
+            pilot.app.screen.query_one("#cancel", Button).press()
+            await pilot.pause()
+
+            await self._select_row(pilot, table, 1)
+            pilot.app.screen.query_one("#toggle", Button).press()
+            await pilot.pause()
+            self.assertEqual([z["enabled"] for z in self._fastcgi_settings(container)["zones"]], [True, False])
+            await self._select_row(pilot, table, 1)
+            self.assertEqual(str(pilot.app.screen.query_one("#toggle", Button).label), "Activer")
+
+            await self._select_row(pilot, table, 0)
+            pilot.app.screen.query_one("#delete", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual([z["url_prefix"] for z in self._fastcgi_settings(container)["zones"]], ["/wiki/"])
 
     async def test_fastcgi_rejects_script_root_inside_webroot(self):
         container = self._container()
         self._generate_config(container)
         app = OmegaServApp(container)
         async with app.run_test(size=(120, 50)) as pilot:
-            await self._start(pilot)
-            await self._open_menu3(pilot)
-            pilot.app.screen.query_one("#fastcgi", Button).press()
+            await self._open_fastcgi(pilot)
+            pilot.app.screen.query_one("#add", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#field-script_root", Input).value = "webroot/app"
-            pilot.app.screen.query_one("#save", Button).press()
+            pilot.app.screen.query_one("#df-script_root", Input).value = "webroot/app"
+            pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("interdit", str(pilot.app.screen.query_one("#form-error").content))
+            self.assertIn("interdit", str(pilot.app.screen.query_one("#df-error", Static).content))
 
-    async def test_fastcgi_allowed_scripts_saved_and_reloaded(self):
+    async def test_fastcgi_legacy_record_is_one_zone_then_saved_as_a_list(self):
         container = self._container()
         self._generate_config(container)
+        load_result = load_config(container.configuration, container.config_file)
+        assert load_result.config is not None
+        new_options = dict(load_result.config.options)
+        new_options["fastcgi"] = Option(name="fastcgi", enabled=True, settings={
+            "url_prefix": "/app/", "script_root": "phpapp", "socket_path": "var/run/php-fpm.sock"})
+        container.configuration.save(container.config_file, replace(load_result.config, options=new_options))
         app = OmegaServApp(container)
         async with app.run_test(size=(120, 50)) as pilot:
-            await self._start(pilot)
-            await self._open_menu3(pilot)
-            pilot.app.screen.query_one("#fastcgi", Button).press()
+            table = await self._open_fastcgi(pilot)
+            self.assertEqual(table.row_count, 1)
+            await self._select_row(pilot, table, 0)
+            pilot.app.screen.query_one("#toggle", Button).press()
             await pilot.pause()
-            pilot.app.screen.query_one("#field-script_root", Input).value = "phpapp"
-            pilot.app.screen.query_one("#field-allowed_scripts", Input).value = "index.php, api/router.php"
-            pilot.app.screen.query_one("#save", Button).press()
-            await pilot.pause()
-            self.assertEqual(str(pilot.app.screen.query_one("#form-error").content), "")
-
-            pilot.app.screen.query_one("#back", Button).press()
-            await pilot.pause()
-            pilot.app.screen.query_one("#fastcgi", Button).press()
-            await pilot.pause()
-            self.assertEqual(
-                pilot.app.screen.query_one("#field-allowed_scripts", Input).value, "index.php, api/router.php"
-            )
-        self.assertIn('"allowed_scripts"', container.config_file.read_text())
+        settings = self._fastcgi_settings(container)
+        self.assertNotIn("url_prefix", settings)
+        self.assertTrue(settings["enabled"])
+        self.assertEqual([(z["url_prefix"], z["script_root"], z["enabled"]) for z in settings["zones"]],
+                         [("/app/", "phpapp", False)])
 
     async def test_cache_zones_and_extensions_crud(self):
         container = self._container()
@@ -1158,6 +1219,26 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             zones_table = pilot.app.screen.query_one("#zones-table", DataTable)
             self.assertEqual(zones_table.row_count, 1)
 
+            # Modifier (2026-11-15) : formulaire pre-rempli ; une saisie invalide reste affichee avec l'erreur.
+            zones_table.move_cursor(row=0)
+            zones_table.action_select_cursor()
+            await pilot.pause()
+            pilot.app.screen.query_one("#edit-zone", Button).press()
+            await pilot.pause()
+            self.assertEqual(pilot.app.screen.query_one("#df-path_prefix", Input).value, "/admin/")
+            self.assertEqual(pilot.app.screen.query_one("#df-allowed_users", Input).value, "alice")
+            pilot.app.screen.query_one("#df-path_prefix", Input).value = "gestion/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIn("/", str(pilot.app.screen.query_one("#df-error").content))
+            self.assertEqual(pilot.app.screen.query_one("#df-path_prefix", Input).value, "gestion/")
+            pilot.app.screen.query_one("#df-path_prefix", Input).value = "/gestion/"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            zones_table = pilot.app.screen.query_one("#zones-table", DataTable)
+            self.assertEqual(zones_table.row_count, 1)
+            self.assertEqual(str(zones_table.get_row_at(0)[0]), "/gestion/")
+
             # Changer le mot de passe : selection dans la table, aucun champ
             # nom d'utilisateur a remplir (deja connu de la selection).
             users_table.move_cursor(row=0)
@@ -1182,6 +1263,37 @@ class TestTuiServerConfig(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
             self.assertEqual(pilot.app.screen.query_one("#users-table", DataTable).row_count, 0)
+
+    async def test_auth_password_protection_settings(self):
+        """Retour utilisateur 2026-11-21 : cache des succes et limite des echecs reglables dans Authentification."""
+        container = self._container()
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_menu3(pilot)
+            pilot.app.screen.query_one("#auth", Button).press()
+            await pilot.pause()
+            table = pilot.app.screen.query_one("#protection-table", DataTable)
+            self.assertEqual(table.row_count, 7)
+            self.assertEqual(str(table.get_row("failures_per_ip")[1]), "10")
+
+            pilot.app.screen.query_one("#edit-protection", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-failures_per_ip", Input).value = "0"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIn("10000", str(pilot.app.screen.query_one("#df-error").content))  # « entre 1 et 10000 »
+            pilot.app.screen.query_one("#df-failures_per_ip", Input).value = "5"
+            pilot.app.screen.query_one("#df-success_ttl_seconds", Input).value = "120"
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertEqual(str(pilot.app.screen.query_one("#protection-table", DataTable).get_row("failures_per_ip")[1]), "5")
+
+        config = load_config(container.configuration, container.config_file).config
+        assert config is not None
+        saved = config.options["auth"].settings["password_protection"]
+        self.assertEqual((saved["failures_per_ip"], saved["success_ttl_seconds"], saved["failures_per_user"]), (5, 120, 30))
 
     async def test_auth_rejects_mismatched_password_confirmation(self):
         container = self._container()

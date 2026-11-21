@@ -107,6 +107,32 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(pilot.app.screen, TlsStatusScreen)
             self.assertIn("Aucun certificat", str(pilot.app.screen.query_one("#status-text").content))
 
+    async def test_expiry_screen_lists_local_certificates(self):
+        """Etude modules du panneau web, module 3 (2026-11-17) : TLS -> Echeances des certificats."""
+        from omega_serv.interfaces.tui.screens.certificate_expiry_screen import CertificateExpiryScreen
+        container = self._container()
+        self._generate_config(container)
+        target = self.root / "secure" / "certificates" / "server"
+        target.mkdir(parents=True, exist_ok=True)
+        import subprocess
+        subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "20", "-subj", "/CN=essai",
+                        "-keyout", str(target / "server.key"), "-out", str(target / "server.pem")],
+                       check=True, capture_output=True)
+        async with OmegaServApp(container).run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_tls_menu(pilot)
+            pilot.app.screen.query_one("#expiry", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, CertificateExpiryScreen)
+            text = ""
+            for _attempt in range(50):  # openssl dans un fil : attendre le resultat
+                await pilot.pause()
+                text = str(pilot.app.screen.query_one("#certificates-text").render())
+                if "server.pem" in text:
+                    break
+            self.assertIn("secure/certificates/server/server.pem", text)
+            self.assertIn("expire dans", text)
+
     async def test_generate_self_signed_certificate(self):
         container = self._container()
         self._generate_config(container)
@@ -270,7 +296,9 @@ class TestTuiTls(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#df-password_confirm", Input).value = "two"
             pilot.app.screen.query_one("#confirm", Button).press()
             await pilot.pause()
-            self.assertIn("ne correspondent pas", str(pilot.app.screen.query_one("#wizard-log").content))
+            # Lot V (2026-11-15) : erreur dans le formulaire, saisie gardee (avant : formulaire ferme, tout a retaper).
+            self.assertIn("ne correspondent pas", str(pilot.app.screen.query_one("#df-error").content))
+            self.assertEqual(pilot.app.screen.query_one("#df-cn", Input).value, "Test Root CA")
         ca_key = self.root / "secure" / "certificates" / "ca" / "root-ca.key"
         self.assertFalse(ca_key.exists())
 

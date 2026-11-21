@@ -60,6 +60,10 @@ std::optional<std::array<std::uint8_t, 4>> parse_ipv4(std::string_view text) {
 // ipaddress.IPv6Address._ip_int_from_string (sans la zone)
 std::optional<std::array<std::uint8_t, 16>> parse_ipv6(std::string_view text) {
     if (text.empty()) return std::nullopt;
+    // Scan de securite n° 1 (2026-11-20, F31) : les marqueurs internes « %v4hi »/« %v4lo » ne doivent jamais pouvoir
+    // venir du texte lu (une entree de blocklist « 2001:db8::%v4hi/128 » faisait lire un vecteur vide). Aucun « % »
+    // ici : la zone (« fe80::1%eth0 ») est retiree par parse_ip_address avant l'appel.
+    if (text.find('%') != std::string_view::npos) return std::nullopt;
     std::vector<std::string_view> parts = split(text, ':');
     constexpr std::size_t min_parts = 3;
     if (parts.size() < min_parts) return std::nullopt;
@@ -357,10 +361,15 @@ std::vector<std::string> header_hops(std::string_view header_name, std::string_v
 }
 
 std::string rightmost_untrusted(const std::vector<std::string>& hops, const std::vector<IpNetwork>& trusted) {
+    // Scan de securite n° 2 (2026-11-20, F40/F44), comme trusted_proxy.py : un relais qui n'est pas une adresse
+    // (texte libre du client) rend "" et resolve_client_ip garde le pair TCP ; avant, le texte devenait l'« IP ».
+    auto chosen = [](const std::string& hop) -> std::string {
+        return hop.size() <= max_ip_text && parse_ip_address(hop) ? normalize_ip(hop) : std::string();
+    };
     for (auto it = hops.rbegin(); it != hops.rend(); ++it) {
-        if (!is_trusted_proxy(*it, trusted)) return normalize_ip(*it);
+        if (!is_trusted_proxy(*it, trusted)) return chosen(*it);
     }
-    return normalize_ip(hops.front());
+    return chosen(hops.front());
 }
 
 }  // namespace omega

@@ -5,6 +5,7 @@ permissions. Le mot de passe est toujours saisi en double masque
 en argument (meme regle que la CLI, `_resolve_password`)."""
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
@@ -17,10 +18,28 @@ from omega_serv.application.auth.manage_users import (
     change_password,
     remove_user,
 )
-from omega_serv.application.auth.manage_zones import ManageZonesResult, add_zone, remove_zone
+from omega_serv.application.auth.manage_zones import (
+    ManageZonesResult,
+    add_zone,
+    remove_zone,
+    update_zone,
+)
+from omega_serv.application.auth.password_protection import (
+    protection_error_messages,
+    protection_labels,
+    protection_to_settings,
+)
 from omega_serv.application.config.load_config import load_config
 from omega_serv.core.i18n import _
+from omega_serv.domain.config.option import Option
 from omega_serv.domain.security.auth.entities import AuthZone
+from omega_serv.domain.security.auth.password_protection import (
+    SETTINGS_KEY,
+    PasswordProtection,
+    parse_protection,
+    protection_from_settings,
+)
+from omega_serv.domain.security.auth.zones import validate_auth_zone
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
@@ -62,13 +81,28 @@ class AuthMenuScreen(OmegaScreen):
                 with Container(classes="omega-btn-frame"):
                     yield Button(_("Créer une zone"), id="create-zone", variant="primary")
                 with Container(classes="omega-btn-frame"):
+                    yield Button(_("Modifier"), id="edit-zone", disabled=True)
+                with Container(classes="omega-btn-frame"):
                     yield Button(_("Supprimer"), id="remove-zone", variant="error", disabled=True)
 
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Vérifier les permissions"), id="check-permissions")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+            # Retour utilisateur 2026-11-21 : cache des succes et limite des echecs reglables ici.
+            yield Static(_("PROTECTION DES MOTS DE PASSE"), classes="omega-subtitle")
+            yield Static(
+                _("Une vérification coûte 0,3 à 0,5 s de calcul : un succès est retenu, les mauvais mots de passe "
+                  "répétés reçoivent 429 sans calcul, et au-delà des vérifications en attente, 503."),
+                classes="omega-hint",
+            )
+            yield DataTable(id="protection-table")
+            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
+                yield Button(_("Modifier les réglages"), id="edit-protection", variant="primary")
+
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Vérifier les permissions"), id="check-permissions")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -79,6 +113,7 @@ class AuthMenuScreen(OmegaScreen):
         zones_table = self.query_one("#zones-table", DataTable)
         zones_table.cursor_type = "row"
         zones_table.add_columns(_("Préfixe URL"), _("Realm"), _("Utilisateurs autorisés"), _("Méthodes"))
+        self.query_one("#protection-table", DataTable).add_columns(_("Réglage"), _("Valeur"))
 
         self._refresh_lists()
 
@@ -97,6 +132,7 @@ class AuthMenuScreen(OmegaScreen):
         self.query_one("#change-password", Button).disabled = True
         self.query_one("#remove-user", Button).disabled = True
         self.query_one("#remove-zone", Button).disabled = True
+        self.query_one("#edit-zone", Button).disabled = True
 
         if config is None:
             self.query_one("#form-error", Static).update(_("Erreur de configuration."))
@@ -107,6 +143,11 @@ class AuthMenuScreen(OmegaScreen):
 
         for user in users_repo.load():
             users_table.add_row(user.username, key=user.username)
+        protection_table = self.query_one("#protection-table", DataTable)
+        protection_table.clear()
+        values = protection_to_settings(self._protection(config))
+        for name, label in protection_labels().items():
+            protection_table.add_row(label, str(values[name]), key=name)
 
         for zone in zones_repo.load():
             methods = ", ".join(zone.allow_methods) or _("toutes")
@@ -123,6 +164,7 @@ class AuthMenuScreen(OmegaScreen):
         elif event.data_table.id == "zones-table":
             self._selected_zone_prefix = str(event.row_key.value)
             self.query_one("#remove-zone", Button).disabled = False
+            self.query_one("#edit-zone", Button).disabled = False
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
@@ -166,16 +208,20 @@ class AuthMenuScreen(OmegaScreen):
             return
         if button_id == "create-zone":
             self.app.push_screen(
-                DynamicFormScreen(
-                    title=_("CRÉER UNE ZONE PROTÉGÉE"),
-                    fields=[
-                        ("path_prefix", _("Préfixe URL (ex: /admin/)"), ""),
-                        ("realm", _("Realm"), ""),
-                        ("allowed_users", _("Utilisateurs autorisés (séparés par des virgules)"), ""),
-                        ("allow_methods", _("Méthodes autorisées (vide = toutes)"), ""),
-                    ],
-                ),
+                DynamicFormScreen(title=_("CRÉER UNE ZONE PROTÉGÉE"), fields=self._zone_fields(None),
+                                  validate=self._zone_form_error),
                 self._create_zone,
+            )
+            return
+        if button_id == "edit-zone" and self._selected_zone_prefix is not None:
+            original = self._find_zone(self._selected_zone_prefix)
+            if original is None:
+                self._refresh_lists()
+                return
+            self.app.push_screen(
+                DynamicFormScreen(title=_("MODIFIER LA ZONE PROTÉGÉE"), fields=self._zone_fields(original),
+                                  validate=self._zone_form_error),
+                lambda values: self._update_zone(original.path_prefix, values),
             )
             return
         if button_id == "remove-zone" and self._selected_zone_prefix is not None:
@@ -187,6 +233,48 @@ class AuthMenuScreen(OmegaScreen):
             return
         if button_id == "check-permissions":
             self._check_permissions()
+        if button_id == "edit-protection":
+            config = self._config()
+            if config is None:
+                return
+            values = protection_to_settings(self._protection(config))
+            self.push_form(
+                DynamicFormScreen(title=_("PROTECTION DES MOTS DE PASSE"),
+                                  fields=[(name, label, str(values[name])) for name, label in protection_labels().items()]),
+                self._save_protection,
+            )
+
+    @staticmethod
+    def _protection(config: OmegaServConfig) -> PasswordProtection:
+        option = config.options.get("auth")
+        return protection_from_settings(option.settings if option is not None else None)
+
+    def _save_protection(self, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
+        raw: dict[str, object] = {}
+        for name, text in values.items():
+            try:
+                raw[name] = int(text.strip())
+            except ValueError:
+                raw[name] = text
+        errors = protection_error_messages(raw)
+        if errors:
+            self.report_form_error("\n".join(errors))
+            return
+        load_result = load_config(self._container.configuration, self._container.config_file)
+        if not load_result.success or load_result.config is None:
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
+            return
+        existing = load_result.config.options.get("auth")
+        settings = dict(existing.settings) if existing is not None else {}
+        settings[SETTINGS_KEY] = protection_to_settings(parse_protection(raw))
+        options = dict(load_result.config.options)
+        options["auth"] = Option(name="auth", enabled=existing.enabled if existing is not None else False,
+                                 settings=settings)
+        self._container.configuration.save(self._container.config_file, replace(load_result.config, options=options))
+        self._refresh_lists()
+        notify_reload_required(self, self._container, _("Protection des mots de passe mise à jour."))
 
     def _repos(self) -> tuple[UsersRepositoryPort, AuthZonesRepositoryPort] | None:
         config = self._config()
@@ -236,19 +324,51 @@ class AuthMenuScreen(OmegaScreen):
             return
         self._report(change_password(repos[0], username, values["password"]))
 
-    def _create_zone(self, values: dict[str, str] | None) -> None:
-        if values is None:
-            return
-        zone = AuthZone(
+    @staticmethod
+    def _zone_fields(zone: AuthZone | None) -> list[tuple[str, str, str]]:
+        """Memes champs pour Creer et Modifier ; Modifier les pre-remplit avec la zone choisie."""
+        return [
+            ("path_prefix", _("Préfixe URL (ex: /admin/)"), zone.path_prefix if zone else ""),
+            ("realm", _("Realm"), zone.realm if zone else ""),
+            ("allowed_users", _("Utilisateurs autorisés (séparés par des virgules)"),
+             ", ".join(zone.allowed_users) if zone else ""),
+            ("allow_methods", _("Méthodes autorisées (vide = toutes)"), ", ".join(zone.allow_methods) if zone else ""),
+        ]
+
+    @staticmethod
+    def _zone_from_values(values: dict[str, str]) -> AuthZone:
+        return AuthZone(
             path_prefix=values["path_prefix"],
             realm=values["realm"],
             allowed_users=tuple(item.strip() for item in values["allowed_users"].split(",") if item.strip()),
             allow_methods=tuple(item.strip().upper() for item in values["allow_methods"].split(",") if item.strip()),
         )
+
+    def _zone_form_error(self, values: dict[str, str]) -> str | None:
+        """Erreur affichee DANS le formulaire, saisie gardee (une faute de frappe ne fait plus tout recommencer)."""
+        return validate_auth_zone(self._zone_from_values(values))
+
+    def _find_zone(self, path_prefix: str) -> AuthZone | None:
+        repos = self._repos()
+        if repos is None:
+            return None
+        return next((zone for zone in repos[1].load() if zone.path_prefix == path_prefix), None)
+
+    def _create_zone(self, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
         repos = self._repos()
         if repos is None:
             return
-        self._report(add_zone(repos[1], zone))
+        self._report(add_zone(repos[1], self._zone_from_values(values)))
+
+    def _update_zone(self, original_prefix: str, values: dict[str, str] | None) -> None:
+        if values is None:
+            return
+        repos = self._repos()
+        if repos is None:
+            return
+        self._report(update_zone(repos[1], original_prefix, self._zone_from_values(values)))
 
     def _do_remove_zone(self, path_prefix: str, confirmed: bool | None) -> None:
         if not confirmed:

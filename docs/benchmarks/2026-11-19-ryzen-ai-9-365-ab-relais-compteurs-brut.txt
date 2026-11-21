@@ -1,0 +1,80 @@
+# A/B entrelace du relais natif (reverse proxy, omega-nat-1-0, HTTP), machine C (Ryzen AI 9 365), 2026-11-19 16:39-16:48
+# But : cout du compteur de requetes par backend (tableau de bord par type d'instance, 2026-11-16) et du comptage du
+# trafic des sites (lot 9b, 2026-11-17). 4 binaires compiles des memes sources (Release -O3, Ninja) : actuel ; sans-trafic
+# (socket_traffic coupe) ; sans-compteur (requests.fetch_add coupe) ; sans-les-deux. Protocole proxy/run.sh (oha 10 s),
+# serveur 0-3, backend nginx 4,5, client 6-9 ; nginx-4 en reference a chaque repetition ; script tools : ab-relais.sh (banc).
+# Resultat (ratio vs nginx-4, repetitions 3-4, machine chaude ; 1-2 bruitees pour toutes les variantes, nginx compris) :
+#   1 Ko : actuel 0,82 ; sans-trafic 0,82 ; sans-compteur 0,79 ; sans-les-deux 0,81 -> aucun cout mesurable.
+#   100 Ko : actuel 1,44 ; sans-trafic 1,42 ; sans-compteur 1,40 ; sans-les-deux 1,44.
+#   Le 0,68 de la remesure memoire du matin (machine utilisee par l'auteur) ne se reproduit pas : 0,82 = valeur du 14 novembre.
+# A/B relais natif, machine C, 2026-11-19 16:39:28 ; coeurs serveur 0-3 backend 4,5 client 6-9
+compile actuel : 2840edf8dd23
+compile sans-trafic : bd95cf1c8947
+compile sans-compteur : 07ce22835ef0
+compile sans-les-deux : 5d170045e551
+nginx: [warn] could not build optimal types_hash, you should increase either types_hash_max_size: 1024 or types_hash_bucket_size: 64; ignoring types_hash_bucket_size
+=== repetition 1 16:39:59 charge: 3.97 1.51 0.91
+nginx-4                small.html     217760    223.0     0.1     0.5      0
+nginx-4                medium.png      48763   4993.0     0.4     2.3      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+actuel          small.html     157474    161.3     0.1     2.0      0
+actuel          medium.png      72575   7431.3     0.3     1.4      0
+actuel PSS_Mo repos=29 apres_charge=33
+sans-trafic          small.html     154286    158.0     0.1     2.0      0
+sans-trafic          medium.png      74523   7630.8     0.2     1.4      0
+sans-trafic PSS_Mo repos=29 apres_charge=33
+sans-compteur          small.html     160055    163.9     0.1     2.0      0
+sans-compteur          medium.png      69074   7072.9     0.3     1.4      0
+sans-compteur PSS_Mo repos=29 apres_charge=33
+sans-les-deux          small.html     161398    165.3     0.1     2.0      0
+sans-les-deux          medium.png      74072   7584.7     0.3     1.5      0
+sans-les-deux PSS_Mo repos=29 apres_charge=33
+=== repetition 2 16:42:05 charge: 8.16 4.04 1.92
+nginx-4                small.html     235875    241.5     0.1     0.4      0
+nginx-4                medium.png      51595   5283.0     0.4     1.8      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+actuel          small.html     147321    150.9     0.1     2.0      0
+actuel          medium.png      71726   7344.4     0.3     1.5      0
+actuel PSS_Mo repos=29 apres_charge=33
+sans-trafic          small.html     178192    182.5     0.1     1.2      0
+sans-trafic          medium.png      58671   6007.6     0.4     1.5      0
+sans-trafic PSS_Mo repos=29 apres_charge=33
+sans-compteur          small.html     175695    179.9     0.1     1.5      0
+sans-compteur          medium.png      77323   7917.6     0.2     1.5      0
+sans-compteur PSS_Mo repos=29 apres_charge=33
+sans-les-deux          small.html     201833    206.7     0.2     0.3      0
+sans-les-deux          medium.png      80827   8276.3     0.2     1.1      0
+sans-les-deux PSS_Mo repos=29 apres_charge=33
+=== repetition 3 16:44:12 charge: 8.20 5.64 2.79
+nginx-4                small.html     250719    256.7     0.1     0.3      0
+nginx-4                medium.png      54655   5596.3     0.4     1.5      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+actuel          small.html     200942    205.8     0.1     0.6      0
+actuel          medium.png      76941   7878.5     0.2     1.2      0
+actuel PSS_Mo repos=29 apres_charge=33
+sans-trafic          small.html     205768    210.7     0.1     0.5      0
+sans-trafic          medium.png      79701   8161.0     0.2     1.3      0
+sans-trafic PSS_Mo repos=29 apres_charge=33
+sans-compteur          small.html     201587    206.4     0.1     0.8      0
+sans-compteur          medium.png      75958   7777.8     0.3     1.3      0
+sans-compteur PSS_Mo repos=29 apres_charge=34
+sans-les-deux          small.html     206092    211.0     0.1     0.5      0
+sans-les-deux          medium.png      79523   8142.9     0.2     1.1      0
+sans-les-deux PSS_Mo repos=29 apres_charge=33
+=== repetition 4 16:46:18 charge: 7.83 6.33 3.40
+nginx-4                small.html     247850    253.8     0.1     1.1      0
+nginx-4                medium.png      54632   5594.0     0.4     0.9      0
+nginx-4 PSS_Mo repos=10 apres_charge=11
+actuel          small.html     205491    210.4     0.1     0.6      0
+actuel          medium.png      79899   8181.3     0.2     1.5      0
+actuel PSS_Mo repos=29 apres_charge=33
+sans-trafic          small.html     201878    206.7     0.1     0.8      0
+sans-trafic          medium.png      75514   7732.4     0.2     1.2      0
+sans-trafic PSS_Mo repos=29 apres_charge=33
+sans-compteur          small.html     192179    196.8     0.1     1.1      0
+sans-compteur          medium.png      77288   7913.9     0.2     1.1      0
+sans-compteur PSS_Mo repos=29 apres_charge=33
+sans-les-deux          small.html     197384    202.1     0.1     1.1      0
+sans-les-deux          medium.png      77383   7923.7     0.2     1.0      0
+sans-les-deux PSS_Mo repos=29 apres_charge=33
+FIN

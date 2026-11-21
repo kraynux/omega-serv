@@ -2,7 +2,6 @@
 toujours livre dans l'archive), repli sur les metadonnees du paquet installe."""
 from __future__ import annotations
 
-import importlib.metadata
 import re
 from pathlib import Path
 
@@ -16,6 +15,8 @@ def application_version(project_root: Path) -> str:
         match = None
     if match:
         return match.group(1)
+    import importlib.metadata  # repli seulement : importe email et zipfile, inutiles au serveur (2026-11-18)
+
     try:
         return importlib.metadata.version("omega-serv")
     except importlib.metadata.PackageNotFoundError:

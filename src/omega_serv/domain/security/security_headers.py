@@ -60,12 +60,10 @@ def apply_security_headers(
     if not security.security_headers_enabled:
         return
 
-    for name, value in STATIC_SECURITY_HEADERS.items():
-        response.force_security_header(name, value)
-
-    policy = csp_policy_for_path(path, security.csp_zones)
-    response.force_security_header(csp_header_name(security.csp_mode), policy)
-    response.force_security_header("Cross-Origin-Embedder-Policy", security.coep_mode)
-
+    # 2026-11-19 (ETUDE_PROXY_ET_MEMOIRE §12) : imposes en une passe, meme ordre et meme regle qu'un par un.
+    forced = list(STATIC_SECURITY_HEADERS.items())
+    forced.append((csp_header_name(security.csp_mode), csp_policy_for_path(path, security.csp_zones)))
+    forced.append(("Cross-Origin-Embedder-Policy", security.coep_mode))
     if security.hsts_enabled and tls_enabled:
-        response.force_security_header("Strict-Transport-Security", _build_hsts_value(security))
+        forced.append(("Strict-Transport-Security", _build_hsts_value(security)))
+    response.force_security_headers(forced)

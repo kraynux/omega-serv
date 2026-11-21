@@ -16,45 +16,16 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import signal
 import sys
-import time
-from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from omega_serv.application.config.load_config import load_config
-from omega_serv.application.declaration.use_cases import (
-    declaration_status,
-    declare,
-    preview_payload,
-    send_scheduled,
-    withdraw,
-)
-from omega_serv.bootstrap.container import DependencyContainer
-from omega_serv.core.i18n import _
-from omega_serv.domain.declaration.countries import COUNTRY_CODES
-from omega_serv.domain.declaration.model import (
-    CONTINENTS,
-    MODE_DAILY,
-    MODES,
-    OTHER,
-    RECEPTION_URL,
-    daily_send_due,
-    do_not_track,
-)
-from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
-from omega_serv.infrastructure.process.child_process import SpawnedChild
-from omega_serv.interfaces.cli.command_tree import add_command, add_group
-from omega_serv.interfaces.cli.serve_native import log_error_line
-from omega_serv.ports.declaration_port import DeclarationStorePort
+if TYPE_CHECKING:
+    from omega_serv.bootstrap.container import DependencyContainer
 
-FIRST_CHECK_SECONDS = 60.0
-"""Premier controle une minute apres le demarrage : un demarrage n'attend jamais la reception."""
-CHECK_EVERY_SECONDS = 3600.0
-SPAWN_INTERVAL_SECONDS = 24 * 3600.0
-"""Garde-fou en memoire : meme si le journal des envois ne peut pas etre ecrit, jamais plus d'un
-envoi par 24 h depuis ce processus."""
+from omega_serv.domain.services.python_command import python_module_argv
+from omega_serv.interfaces.cli.declaration_scheduler import DeclarationScheduler
 
 
 def _when(value: datetime | None) -> str:
@@ -62,6 +33,9 @@ def _when(value: datetime | None) -> str:
 
 
 def cmd_declaration_status(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.declaration.use_cases import declaration_status
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.declaration.model import MODE_DAILY, RECEPTION_URL
     status = declaration_status(container.declaration_store, os.environ)
     if status.declaration is None:
         print(_("Non déclaré (aucune clé sur cette installation)."))
@@ -83,6 +57,10 @@ def cmd_declaration_status(args: argparse.Namespace, container: DependencyContai
 
 
 def cmd_declaration_declare(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.declaration.use_cases import declare, preview_payload
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.declaration.model import RECEPTION_URL
+    from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
     store = container.declaration_store
     version = container.app_version
     continent = args.continent or ""
@@ -112,6 +90,9 @@ def cmd_declaration_declare(args: argparse.Namespace, container: DependencyConta
 
 
 def cmd_declaration_withdraw(args: argparse.Namespace, container: DependencyContainer) -> int:
+    from omega_serv.application.declaration.use_cases import withdraw
+    from omega_serv.core.i18n import _
+    from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
     result = withdraw(container.declaration_store, HttpsDeclarationSender(container.app_version))
     if not result.was_declared:
         print(_("Non déclaré : rien à retirer."))
@@ -127,6 +108,10 @@ def cmd_declaration_withdraw(args: argparse.Namespace, container: DependencyCont
 def cmd_declaration_send_scheduled(args: argparse.Namespace, container: DependencyContainer) -> int:
     """Processus lance par `serve` : un envoi au plus, puis fin. Une seule ligne au journal
     d'erreurs par serie d'echecs (rien tant que ca ne remarche pas)."""
+    from omega_serv.application.config.load_config import load_config
+    from omega_serv.application.declaration.use_cases import send_scheduled
+    from omega_serv.infrastructure.declaration.https_sender import HttpsDeclarationSender
+    from omega_serv.interfaces.cli.serve_native import log_error_line
     store = container.declaration_store
     previous_error = store.load_service_log().last_error
     version = container.app_version
@@ -145,108 +130,21 @@ def cmd_declaration_send_scheduled(args: argparse.Namespace, container: Dependen
     return 0
 
 
-class DeclarationScheduler:
-    """Pilote l'envoi quotidien depuis `serve`. `tick()` est appele toutes les secondes par la
-    boucle du serveur ; il ne fait presque toujours qu'une comparaison d'horloge."""
-
-    def __init__(
-        self,
-        argv: Sequence[str],
-        store: DeclarationStorePort,
-        *,
-        now: Callable[[], datetime],
-        environ: Mapping[str, str] = os.environ,
-        spawn: Callable[[Sequence[str]], SpawnedChild] = SpawnedChild.spawn,
-        monotonic: Callable[[], float] = time.monotonic,
-        log: Callable[[str], None] | None = None,
-    ) -> None:
-        self._argv = list(argv)
-        self._store = store
-        self._now = now
-        self._environ = environ
-        self._spawn = spawn
-        self._monotonic = monotonic
-        self._log = log or (lambda message: print(message, file=sys.stderr))
-        self._child: SpawnedChild | None = None
-        self._next_check = 0.0
-        self._last_spawn: float | None = None
-
-    def start(self) -> None:
-        self._next_check = self._monotonic() + FIRST_CHECK_SECONDS
-
-    def tick(self) -> None:
-        if self._child is not None and not self._child.is_running():
-            self._child = None
-        now = self._monotonic()
-        if now < self._next_check:
-            return
-        self._next_check = now + CHECK_EVERY_SECONDS
-        if self._child is not None:
-            return
-        if self._last_spawn is not None and now - self._last_spawn < SPAWN_INTERVAL_SECONDS:
-            return
-        if not self._due():
-            return
-        try:
-            self._child = self._spawn(self._argv)
-        except OSError as error:
-            self._log(f"declaration anonyme : lancement de l'envoi impossible ({error})")
-        self._last_spawn = now
-
-    def _due(self) -> bool:
-        try:
-            stored = self._store.load()
-            log = self._store.load_service_log()
-        except (OSError, ValueError):
-            return False
-        attempts = [t for t in (log.last_attempt, stored.last_attempt if stored else None) if t is not None]
-        return daily_send_due(stored.declaration if stored else None, max(attempts) if attempts else None,
-                              self._now(), do_not_track_set=do_not_track(self._environ))
-
-    def reload(self) -> None:
-        """Rien a relire : l'accord et le mode sont relus a chaque controle."""
-
-    def stop(self) -> None:
-        """Jamais attendu : un envoi en cours est simplement abandonne."""
-        if self._child is not None:
-            self._child.send_signal(signal.SIGTERM)
-            self._child = None
-
-
 def build_declaration_scheduler(container: DependencyContainer, config_path: Path) -> DeclarationScheduler:
-    argv = [sys.executable, "-m", "omega_serv", "--config", str(config_path), "declaration", "send-scheduled"]
+    argv = python_module_argv(sys.executable, "omega_serv", "--config", str(config_path), "declaration", "send-scheduled")
     return DeclarationScheduler(argv, container.declaration_store, now=container.clock.now)
 
 
-class ServeCompanions:
-    """Processus accompagnant `serve` (RIPOSTE, envoi quotidien), pilotes ensemble : meme contrat
-    que RiposteChildPort (start, tick, reload, stop)."""
-
-    def __init__(self, *members: object) -> None:
-        self._members = [member for member in members if member is not None]
-
-    def start(self) -> None:
-        for member in self._members:
-            member.start()  # type: ignore[attr-defined]
-
-    def tick(self) -> None:
-        for member in self._members:
-            member.tick()  # type: ignore[attr-defined]
-
-    def reload(self) -> None:
-        for member in self._members:
-            member.reload()  # type: ignore[attr-defined]
-
-    def stop(self) -> None:
-        for member in self._members:
-            member.stop()  # type: ignore[attr-defined]
-
-
 def _country_argument(value: str) -> str:
+    from omega_serv.domain.declaration.model import OTHER
     return OTHER if value.lower() == OTHER else value.upper()
 
 
 def add_declaration_parser(subparsers: argparse._SubParsersAction) -> None:
+    from omega_serv.core.i18n import _
+    from omega_serv.domain.declaration.countries import COUNTRY_CODES
+    from omega_serv.domain.declaration.model import CONTINENTS, MODES, OTHER
+    from omega_serv.interfaces.cli.command_tree import add_command, add_group
     declaration_sub = add_group(subparsers, "declaration", _(
         "Déclaration anonyme d'utilisateur (volontaire, désactivée par défaut)."), "declaration_command")
     add_command(declaration_sub, "status", _("Affiche l'état de la déclaration.")).set_defaults(

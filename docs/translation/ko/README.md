@@ -7,7 +7,7 @@
 
 **독립형이며 이식 가능하고 기본으로 강화된 HTTP/1.1 웹 서버.**
 
-OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP도 제공합니다. 실행이 간단하고, 터미널에서 관리하기 쉬우며, 잘못 쓰기 어렵도록 설계되었습니다: HTTP 프로토콜 검사는 시작부터 활성화되어 있고, 더 고급 기능(WAF, TLS, 인증, 리버스 프록시)은 선택 사항으로 남아 의도적으로 켜야 합니다.
+OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP를, 또는 리버스 프록시를 통해 여러분의 애플리케이션도 제공합니다. 실행이 간단하고, 터미널에서 관리하기 쉬우며, 잘못 쓰기 어렵도록 설계되었습니다: HTTP 프로토콜 검사는 시작부터 활성화되어 있고, 더 고급 기능(WAF, TLS, 인증, 리버스 프록시)은 선택 사항으로 남아 의도적으로 켜야 합니다.
 
 > [kraynux](https://github.com/kraynux)가 [Omega-Server](https://kraynux.snake-mackarel.ts.net)를 위해 개발
 
@@ -15,7 +15,8 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 [전체 가이드](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ko/guide.html) ·
 [스크린샷](https://kraynux.snake-mackarel.ts.net/omega-serv/screenshots/) ·
 [데모 서버](https://craftdark.snake-mackarel.ts.net) ·
-[웹 서버 비교](comparatif-serveurs-web.md)
+[웹 서버 비교](comparatif-serveurs-web.md) ·
+[웹 서버 그래픽 비교](comparatif-server-web-graphique.md)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -33,7 +34,7 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 
 ---
 
-**OMEGA-SERV**는 순수 Python(서버 핵심부는 표준 라이브러리만 사용)으로 작성된 HTTP/1.1 서버로, 정적 콘텐츠를 제공하고 선택적으로 PHP-FPM을 실행하도록 설계되었습니다. 기본으로 활성화된 프로토콜 강화와, 강제가 아니라 필요에 따라 겹쳐 쓸 수 있는 보안 모듈(WAF, TLS, 인증)을 갖추고 있습니다. 선택 사항인 네이티브 C++ 엔진이 같은 보안 검사를 유지한 채 Python 엔진 대신 요청을 처리할 수 있습니다. 원격 대상이 아니라 자신을 실행하는 로컬 머신에 작용합니다(`omega-fire`와 같은 계열). Clean Architecture로 구성되며, `bootstrap/`이 컴포지션 루트 역할을 합니다.
+**OMEGA-SERV**는 순수 Python(서버 핵심부는 표준 라이브러리만 사용)으로 작성된 HTTP/1.1 서버로, 정적 콘텐츠를 제공하고 선택적으로 PHP-FPM이나 리버스 프록시 뒤의 애플리케이션을 제공하도록 설계되었습니다. 기본으로 활성화된 프로토콜 강화와, 강제가 아니라 필요에 따라 겹쳐 쓸 수 있는 보안 모듈(WAF, TLS, 인증)을 갖추고 있습니다. 선택 사항인 네이티브 C++ 엔진이 같은 보안 검사를 유지한 채 Python 엔진 대신 요청을 처리할 수 있습니다. 원격 대상이 아니라 자신을 실행하는 로컬 머신에 작용합니다(`omega-fire`와 같은 계열). Clean Architecture로 구성되며, `bootstrap/`이 컴포지션 루트 역할을 합니다.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/A.png" width="24%" />
@@ -74,6 +75,7 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 - [6b. HTTP 엔진과 프로세스 수](#6b-http-엔진과-프로세스-수)
 - [7. 선택 모듈](#7-선택-모듈)
   - [7a. 아웃바운드 리버스 프록시 — 상세](#7a-아웃바운드-리버스-프록시--상세)
+  - [7b. 웹 관리(대시보드)](#7b-웹-관리대시보드)
 - [8. HTTP 강화(기본으로 활성화)](#8-http-강화기본으로-활성화)
 - [9. TLS](#9-tls)
   - [9a. 자체 서명 인증서(최소)](#9a-자체-서명-인증서최소)
@@ -101,10 +103,12 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 
 - 안전한 경로 해석(traversal, 이중 인코딩, 심볼릭 링크)을 갖춘 정적 콘텐츠 제공(파일, 선택적 디렉터리 목록, 별칭, 리디렉션, 재작성, 캐시). 큰 파일은 디스크에서 블록 단위로 전송되며 메모리에 적재되지 않습니다. 모든 파일에는 `ETag`와 `Last-Modified`가 붙고(새로 고침 = 빈 304 응답), 부분 요청 `Range`(다운로드 재개, 동영상)를 받아들입니다. 이미지, 미디어, 글꼴, CSS, JS에는 기본 `Cache-Control`이 붙으며 캐시 화면에서 바꿀 수 있습니다. 미리 압축한 텍스트 파일: `site.css` 옆에 `site.css.br` 또는 `site.css.gz`가 있고(`brotli -k site.css` 또는 `gzip -k site.css`로 생성) 브라우저가 받아들이면 그것을 대신 전송하며, 원본보다 오래된 버전을 보내는 일은 없습니다.
 - 기본적으로 HTTP 프로토콜을 강화합니다: 끌 수 있는 옵션이 없는 엄격한 요청 분석(`Content-Length`/`Transfer-Encoding` 모호성 거부), 명시적인 허용 메서드, `Host` 헤더 검증, 사이트 응답과 그 오류 페이지의 보안 헤더와 기본 CSP.
-- 선택 사항: WAF 필터링(시그니처, 요청 제한, 차단 목록), 직접 TLS(자체 서명 인증서, 로컬 CA 서명, 또는 자동 갱신되는 Let's Encrypt/Certbot 공개 인증서), 영역별 HTTP Basic 인증, FastCGI/PHP-FPM을 통한 PHP, 격리된 업로드 영역.
-- 여러 서버 프로세스, Python 엔진에서는 머신의 물리 코어당 최대 하나(내구성과 제한 화면). 보안 카운터(rate limit, 재범)는 프로세스 간에 공유되며 정확하게 유지됩니다.
+- 선택 사항: WAF 필터링(시그니처, 요청 제한, 차단 목록), 직접 TLS(자체 서명 인증서, 로컬 CA 서명, 또는 자동 갱신되는 Let's Encrypt/Certbot 공개 인증서), 영역별 HTTP Basic 인증, FastCGI/PHP-FPM을 통한 PHP(여러 영역, 영역마다 자체 스위치), 격리된 업로드 영역.
+- 선택 사항: 하나 이상의 애플리케이션으로 가는 **리버스 프록시**(부하 분산, 백엔드 상태 점검, 캐시, WebSocket, 백엔드로의 TLS. 네이티브 엔진은 응답을 스트리밍으로 중계 — [7a](#7a-아웃바운드-리버스-프록시--상세) 참조)와 두 가지 방어 모듈: **Active Defense**(미끼, 감속, 인시던트 — [11](#11-active-defensedeception--전쟁-모드) 참조)와 **RIPOSTE**(다시 찾아오는 주소에 점점 길어지는 차단 — [11d](#11d-riposte시간에-걸친-단계적-대응) 참조).
+- 선택 사항: 자체 포트에서 동작하는 **웹 대시보드**(원격 관리)로, 휴대폰이나 다른 컴퓨터에서 인스턴스를 지켜볼 수 있습니다 — 상태, 로그, 보안, 30일 기록, 트래픽, 인증서, 로컬 경보. 읽기 또는 관리 계정, TOTP, 머신 밖에서는 TLS 필수. 운영(차단, RIPOSTE, 백엔드, 로그 보관, 다시 로드)에는 작용하지만 설정은 결코 건드리지 않습니다([7b](#7b-웹-관리대시보드) 참조).
+- 두 엔진 중 선택: Python(기본값) 또는 모든 코어를 쓰는 네이티브 C++([6b](#6b-http-엔진과-프로세스-수) 참조). Python 엔진에서는 여러 서버 프로세스, 물리 코어당 최대 하나(내구성과 제한 화면). 보안 카운터(rate limit, 재범)는 프로세스 간에 공유되며 정확하게 유지됩니다.
 - 자신의 설정을 감사하고(`audit security`) 시스템 서비스(systemd/OpenRC/runit)로 스스로를 설치합니다.
-- 처음부터 끝까지 스크립트로 쓸 수 있는 비대화형 CLI와, **똑같은 사용 사례를 감싸는 대화형 인터페이스(Textual)**. 인터페이스는 **마우스 및/또는 키보드로 완전히 조작할 수 있습니다**: 기능 레지스트리, 프로필/옵션, 상세 설정(별칭/리디렉션/재작성/FastCGI/dirlisting/인증/캐시/WAF/신뢰 프록시/아웃바운드 리버스 프록시/TLS), 로그 관리(라이브러리/즐겨찾기, 3가지 뷰어 — 단순/클래식/통합 lnav —, IP 보기 및 처리, 통계, SSH 원격 소스, 순환/백업/자동화/복원/삭제/내보내기, 로그 상태), 시스템 서비스, 다중 인스턴스(레지스트리, 생성), 확인/시뮬레이션/감사, 설정 백업/복원, 첫 실행 마법사, 애플리케이션 설정(테마, 렌더링 프로필, 내보내기/스크린샷 경로), 상황별 도움말 가이드(구체적인 예가 담긴 화면별 안내, FAQ, HTML 내보내기, 테스트로 검증된 빠짐없는 범위), 저장할 때마다 다시 로드/재시작 여부를 항상 표시, 파일을 직접 편집하지 않는 Active Defense의 전체 설정.
+- 처음부터 끝까지 스크립트로 쓸 수 있는 비대화형 CLI와, **똑같은 사용 사례를 감싸는 대화형 인터페이스(Textual)**. 인터페이스는 **마우스 및/또는 키보드로 완전히 조작할 수 있습니다**: 기능 레지스트리, 프로필/옵션(사용자 정의 프로필 포함), 상세 설정(별칭/리디렉션/재작성/FastCGI/dirlisting/인증/캐시/WAF/신뢰 프록시/아웃바운드 리버스 프록시/TLS), 로그 관리(라이브러리/즐겨찾기, 3가지 뷰어 — 단순/클래식/통합 lnav —, IP 보기 및 처리, 통계, SSH 원격 소스, 순환/백업/자동화/복원/삭제/내보내기, 로그 상태), 시스템 서비스, 다중 인스턴스(레지스트리, 생성, 원격 설정), 확인/시뮬레이션/감사, 설정 백업/복원(재설치를 위한 내보내기와 가져오기), 전체 보고서(설정되고 활성화된 모든 것, HTML/TXT/JSON 내보내기), 첫 실행 마법사, 애플리케이션 설정(테마, 렌더링 프로필, 내보내기/스크린샷 경로), 상황별 도움말 가이드(구체적인 예가 담긴 화면별 안내, FAQ, HTML 내보내기, 테스트로 검증된 빠짐없는 범위), 저장할 때마다 다시 로드/재시작 여부를 항상 표시, 파일을 직접 편집하지 않는 Active Defense의 전체 설정.
 
 ### OMEGA-SERV가 하지 않는 일
 
@@ -116,6 +120,7 @@ OMEGA-SERV는 정적 사이트를 제공하며, 원하면 PHP-FPM을 통해 PHP�
 ### 시장의 웹 서버와 비교한 OMEGA-SERV
 
 [측정 및 비교](comparatif-serveurs-web.md) 참조  
+[웹 서버 그래픽 비교](comparatif-server-web-graphique.md) — 성능 게이지, 범주별 순위  
 측정 기반 비교: [Nginx](https://nginx.org/) · [Lighttpd](https://www.lighttpd.net/) · [Caddy](https://caddyserver.com/) · [Apache](https://www.apache.org) · [Traefik](https://traefik.io/) · [Omega-Serv](https://kraynux.snake-mackarel.ts.net/omega-serv/translation/ko/)
 
 ### 사용상 경고
@@ -130,10 +135,10 @@ Omega-serv는 **root로 시작하기를 거부합니다**. 제공되는 어떤 �
 
 ### 다운로드
 
-최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-2.6.2.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
+최신 버전 아카이브와 각 버전의 SHA-256 지문: [omega-serv-3.0.0.tar.gz](https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-3.0.0.tar.gz) · [sha.txt](https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt)
 
 ```bash
-wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-2.6.2.tar.gz
+wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/omega-serv-3.0.0.tar.gz
 wget https://kraynux.snake-mackarel.ts.net/omega-serv/download/sha.txt
 sha256sum -c --ignore-missing sha.txt
 ```
@@ -143,7 +148,7 @@ sha256sum -c --ignore-missing sha.txt
 ## 2. 설치
 
 ```bash
-tar -xzf omega-serv-2.6.2.tar.gz
+tar -xzf omega-serv-3.0.0.tar.gz
 cd omega-serv/
 chmod +x install.sh
 ./install.sh
@@ -163,7 +168,7 @@ chmod +x install.sh
 
 ```bash
 # omega-serv/의 상위 폴더에서 실행(절대 안에서 실행하지 않음)
-tar -xzf omega-serv-2.6.2.tar.gz
+tar -xzf omega-serv-3.0.0.tar.gz
 cd omega-serv/
 ./install.sh
 ```
@@ -241,7 +246,7 @@ serv
 
 ### 전체 흐름
 
-시작 화면(스플래시, 키나 클릭으로 닫힘) → 메인 메뉴(첫 실행 마법사 / 기능 레지스트리 / 프로필 / 상세 설정 / 능동 보안 / 로그 관리 / 서비스 / 다중 인스턴스 / 상태 및 리소스 / 감사 / 백업) → 섹션을 고른 다음 동작을 선택, 모든 양식은 계속하기 전에 필수 항목을 검증 → 민감하거나 파괴적인 작업(재시작, 삭제, 복원...) 전에는 명시적 확인 → 제공 중인 설정을 바꾸는 저장 후에는 다음 단계를 항상 표시(자동 핫 리로드, 또는 완전한 재시작 확인). 터미널 적응(색상, 크기, 렌더링 프로필의 구조적 축소)은 자동이며 수동 플래그가 필요 없습니다.
+시작 화면(스플래시, 키나 클릭으로 닫힘) → 메인 메뉴(첫 실행 마법사 / 기능 레지스트리 / 프로필 / 상세 설정 / 능동 보안 / 로그 관리 / 서비스 / 다중 인스턴스 / 상태 및 리소스 / 감사 / 백업 / 전체 보고서 / 도움말 / 옵션) → 섹션을 고른 다음 동작을 선택, 모든 양식은 계속하기 전에 필수 항목을 검증 → 민감하거나 파괴적인 작업(재시작, 삭제, 복원...) 전에는 명시적 확인 → 제공 중인 설정을 바꾸는 저장 후에는 다음 단계를 항상 표시(자동 핫 리로드, 또는 완전한 재시작 확인). 터미널 적응(색상, 크기, 렌더링 프로필의 구조적 축소)은 자동이며 수동 플래그가 필요 없습니다.
 
 #### 키보드 단축키(대화형 인터페이스)
 
@@ -272,15 +277,16 @@ serv
 
 - **첫 실행 마법사** — 8단계 안내 과정(환영 → 읽기 전용 기능 확인 → 프로필 선택 → bind/포트 → 선택적 TLS → 확인 → 요약 + 기록 → 서비스 설치 제안). CLI를 몰라도 완전한 설정을 만들고 서버를 실행할 수 있습니다.
 - **기능 레지스트리** — 읽기 전용 시스템 조사(init 시스템, 설정한 포트가 이미 사용 중인지, `openssl`/`logrotate`/`tailscale`/`lnav` 유무, 디스크 공간, 파일 디스크립터 한도...), JSON/HTML 내보내기.
-- **프로필** — CLI의 `profile`과 같은 사용 사례이며, 기록 전에 항상 diff를 보여 줍니다.
-- **서버 상세 설정** — 별칭/리디렉션/재작성/dirlisting/신뢰 프록시/아웃바운드 리버스 프록시/FastCGI/캐시/인증/접근 제어/오류 페이지의 완전한 CRUD와 하위 메뉴 **TLS**(상태, 자체 서명 생성, 로컬 CA 마법사, Let's Encrypt/Certbot 마법사, 자동 갱신, 폐기, 활성화/비활성화). 두 번째 틀 **옵션 및 확인**에는 **옵션**(CLI `option`)과 **설정 확인**(CLI `config check`)으로 가는 바로 가기가 모여 있습니다 — 설정을 조정한 뒤 확인하는 같은 흐름이며, 이 두 화면은 더 이상 메인 메뉴에서 바로 열 수 없습니다. WAF는 더 이상 여기에 없습니다(아래 「능동 보안」 참조): WAF가 주로 보여 주는 것은 계속 변하는 운영 상태이지, 단순한 정적 설정 양식이 아니기 때문입니다. 저장할 때마다 다음 단계를 항상 밝힙니다: 서비스가 실행 중이면 자동으로 조용히 핫 리로드(dirlisting, 접근, 별칭/리디렉션/재작성, 캐시, 오류 페이지, 신뢰 프록시, 리버스 프록시/FastCGI 영역, 인증 사용자/영역), 변경이 수신 소켓, TLS, Active Defense에 관련되면 완전한 재시작의 명시적 확인 — 이제 어떤 화면도 서버를 다시 시작해야 하는지 추측하게 하지 않습니다.
-- **능동 보안** — 세 블록을 공격의 순서대로 나란히 모은 단일 화면: **WAF**, **Active Defense**, **RIPOSTE**(시간에 걸친 단계적 대응). **Active Defense**(상태, 점수/수준이 있는 추적 중인 위협, 타임라인/IoC 내보내기/보고서가 있는 인시던트, Deception 할당, 드라이런으로 결정 시뮬레이션, **설정** — `config/omega-serve.json`을 직접 편집하지 않는 전체 설정)와 **WAF**(상태, 모듈 — 모드/규칙 팩/차단 목록, 요청 테스트, Custom — 사용자 규칙 작성과 마우스로 편집할 수 있는 경로/키워드 목록 불러오기, Magnet — 활성화 전에 호환성을 확인하고 외부 `mod_magnet` 스크립트 가져오기). 세 블록 아래의 **수동 개입**: IP 주소를 직접 차단하거나 차단 해제하고, 모든 차단의 상태를 확인.
+- **프로필** — CLI의 `profile`과 같은 사용 사례이며, 기록 전에 항상 diff를 보여 줍니다. **사용자 정의 프로필 만들기**: 최소 서버에서 출발해 각 보호 기능을 드롭다운 목록에서 고릅니다(보안 헤더, CSP, 메서드, 제한, 옵션). 부족한 점은 실시간으로 표시되며, 저장을 막거나 하나씩 수락해야 합니다([5. 프로필](#5-프로필) 참조).
+- **서버 상세 설정** — 별칭/리디렉션/재작성/dirlisting/신뢰 프록시/아웃바운드 리버스 프록시/FastCGI/캐시/인증/접근 제어/오류 페이지의 완전한 CRUD와 하위 메뉴 **TLS**(상태, 자체 서명 생성, 로컬 CA 마법사, Let's Encrypt/Certbot 마법사, 자동 갱신, 폐기, 활성화/비활성화, **인증서 만료일**). 두 번째 틀 **옵션 및 확인**에는 **옵션**(CLI `option`)과 **설정 확인**(CLI `config check`)으로 가는 바로 가기가 모여 있습니다 — 설정을 조정한 뒤 확인하는 같은 흐름이며, 이 두 화면은 더 이상 메인 메뉴에서 바로 열 수 없습니다. WAF는 더 이상 여기에 없습니다(아래 「능동 보안」 참조): WAF가 주로 보여 주는 것은 계속 변하는 운영 상태이지, 단순한 정적 설정 양식이 아니기 때문입니다. 저장할 때마다 다음 단계를 항상 밝힙니다: 서비스가 실행 중이면 자동으로 조용히 핫 리로드(dirlisting, 접근, 별칭/리디렉션/재작성, 캐시, 오류 페이지, 신뢰 프록시, 리버스 프록시/FastCGI 영역, 인증 사용자/영역), 변경이 수신 소켓, TLS, Active Defense에 관련되면 완전한 재시작의 명시적 확인 — 이제 어떤 화면도 서버를 다시 시작해야 하는지 추측하게 하지 않습니다.
+- **능동 보안** — 세 블록을 공격의 순서대로 나란히 모은 단일 화면: **WAF**, **Active Defense**, **RIPOSTE**(시간에 걸친 단계적 대응). **Active Defense**(상태, 점수/수준이 있는 추적 중인 위협, 타임라인/IoC 내보내기/보고서가 있는 인시던트, Deception 할당, 드라이런으로 결정 시뮬레이션, **설정** — `config/omega-serve.json`을 직접 편집하지 않는 전체 설정)와 **WAF**(상태, 모듈 — 모드/규칙 팩/차단 목록, 요청 테스트, 제한 — 폴더별 및 IP/네트워크별 요청 규칙, Custom — 사용자 규칙 작성과 마우스로 편집할 수 있는 경로/키워드 목록 불러오기, Magnet — 활성화 전에 호환성을 확인하고 외부 `mod_magnet` 스크립트 가져오기). 세 블록 아래의 **수동 개입**: IP 주소를 직접 차단하거나 차단 해제하고, 모든 차단의 상태를 확인.
 - **로그 관리** — 2열 메뉴. **라이브러리** 열: 처리할 모든 로그를 참조하는 중심(수동 추가, 클릭 한 번으로 인스턴스 고유 로그 추가 — access/error/네이티브 WAF, + 켜져 있으면 magnet 스크립트 —, 또는 SSH로 가져온 **원격 소스**, 아래 참조). **즐겨찾기**(로그 + 뷰어 조합을 이름으로 저장해 바로 실행). **로그 보기**는 선택한 로그 수에 따라 3가지 뷰어 중에서 고릅니다 — 단순(실시간 tail + 모든 형식에서 IP/오류/HTTP 코드의 일반 통계), 클래식(읽기 + 추적), 통합 `lnav`(인터페이스 안의 실제 터미널 렌더링, magnet 로그 자동 포함 + 세션 간에 유지되도록 **고정한** 수동 경로). **IP 보기 및 처리**(선택한 하나 이상의 로그의 상위 IP, 기간 24시간/7일/30일/파일 전체, 진행 표시와 함께 백그라운드에서 계산, IP 제거). **통계**(하나 이상의 로그에 대한 전체 보고서 — 요약, HTTP 상태, 상위 IP, 경로, 시간대별 분포, 일별 추이 — JSON/HTML로 내보내기 가능). **유지 관리** 열: 수동 또는 크기 기준 자동 순환/보관, 즉시 백업 생성, 예약 자동화 설정/관리(매일 밤 systemd 타이머로, OpenRC/runit에서는 crontab 한 줄로 실행), 보관 파일 복원/삭제, 목록 내보내기. **로그 상태**(로그, 디스크, 보관 파일의 읽기 전용 점검 — 권한, 조용하거나 손상된 로그, 순환, logrotate, 디스크가 가득 찰 때까지 남은 일수 —, 발견 사항마다 해야 할 조치 표시, 권한 수정 — 필요하면 sudo로 —, JSON/HTML/TXT 내보내기). 사용자 계정으로 읽을 수 없는 로그는 통계와 IP 보기 및 처리가 sudo 비밀번호를 요청한 뒤 읽습니다.
-- **서비스** — CLI의 `service`와 같은 동작. 동작마다 일시적으로 `sudo`로 권한을 올리며, 애플리케이션 전체를 root로 실행하지 않습니다.
-- **다중 인스턴스** — 머신에서 알려진 설치의 전역 레지스트리(`~/.config/omega-serv/instances.json`, 어떤 프로젝트 디렉터리에도 속하지 않음)와 각 설치의 systemd 상태. 인터페이스에서 바로 새 인스턴스를 만들 수 있습니다(트리 복사, 전용 가상 환경과 의존성, 다른 포트를 쓰는 새 설정, 중첩과 포트 충돌 검사). 설치가 하나뿐이면 버튼이 사실상 드러나지 않고(2개 이상 알려지면 레이블 「다중 인스턴스」가 「Instances (N)」으로 바뀜), 다른 인스턴스로 완전히 전환할 수 있으며(`os.execv`, 명시적 확인, 재시작 시 전환을 알리는 전용 스플래시), 인스턴스를 완전히 제거할 수도 있습니다(유닛 제거, 다른 인스턴스가 더 이상 쓰지 않으면 전용 시스템 계정 제거, 그리고 선택적으로 디렉터리 삭제 — 기본으로 삭제하는 일은 없음).
-- **상태 및 리소스** — 2초마다 새로 고치는 한눈에 보는 개요: 서버 상태(프로세스/PID, 시스템 서비스 상태, 프로필/켜진 옵션/TLS/포트), 실시간 접근 로그 흐름(처리량, 상태 코드별 분포, 고유 IP, 오류율), 시스템 리소스(CPU/RAM/디스크/스왑/부하/네트워크, `psutil` 사용). **요청 시뮬레이션** 바로 가기도 여기에 있습니다(해당 CLI 명령과 같은 사용 사례).
-- **보안 감사** — 해당 CLI 명령과 같은 사용 사례.
-- **설정 백업** — 설정 파일의 tar.gz 아카이브와, 명시적으로 고르면 WAF 규칙/인증 영역/인증서(실제 비밀 정보를 포함하면 확인 필수)/Active Defense 데이터베이스, 복원, 목록, 삭제.
+- **서비스** — CLI의 `service`와 같은 동작이며, 사용 순서대로 다섯 줄짜리 양식으로 보여 줍니다(서비스 이름, 설치, 머신과 함께 시작, 권한, 제어). 쓸 수 있는 버튼만 활성화되고, 상태는 저절로 갱신되며, **퍼미션 복구**는 서비스 계정과의 `var/` 공유를 바로잡습니다. 동작마다 일시적으로 `sudo`로 권한을 올리며, 애플리케이션 전체를 root로 실행하지 않습니다.
+- **다중 인스턴스** — 머신에서 알려진 설치의 전역 레지스트리(`~/.config/omega-serv/instances.json`, 어떤 프로젝트 디렉터리에도 속하지 않음)와 각 설치의 systemd 상태. 인터페이스에서 바로 새 인스턴스를 만들 수 있습니다(트리 복사, 전용 가상 환경과 의존성, 다른 포트를 쓰는 새 설정, 중첩과 포트 충돌 검사). 설치가 하나뿐이면 버튼이 사실상 드러나지 않고(2개 이상 알려지면 레이블 「다중 인스턴스」가 「Instances (N)」으로 바뀜), 다른 인스턴스로 완전히 전환할 수 있으며(`os.execv`, 명시적 확인, 재시작 시 전환을 알리는 전용 스플래시), 인스턴스를 완전히 제거할 수도 있습니다(유닛 제거, 다른 인스턴스가 더 이상 쓰지 않으면 전용 시스템 계정 제거, 그리고 선택적으로 디렉터리 삭제 — 기본으로 삭제하는 일은 없음). 현재 인스턴스는 항상 맨 위에 있으며 **원격 접근** 열이 있습니다. 두 버튼이 **원격 설정**(웹 관리, [7b](#7b-웹-관리대시보드) 참조)과 **마스터에 연결**로 이어집니다.
+- **상태 및 리소스** — 2초마다 새로 고치는 한눈에 보는 개요: 서버 상태(프로세스/PID, 시스템 서비스 상태, 프로필/켜진 옵션/TLS/포트), 실시간 접근 로그 흐름(처리량, 상태 코드별 분포, 고유 IP, 오류율), 시스템 리소스(CPU/RAM/디스크/스왑/부하/네트워크, `psutil` 사용). 인스턴스 유형이 맨 위에 표시됩니다(사이트, PHP 애플리케이션, 리버스 프록시 또는 혼합). 리버스 프록시가 있으면 **백엔드** 섹션이 백엔드마다 상태, 요청 수, 502/504, 평균 시간을 보여 줍니다. **요청 시뮬레이션** 바로 가기도 여기에 있습니다(해당 CLI 명령과 같은 사용 사례).
+- **보안 감사** — 해당 CLI 명령과 같은 사용 사례. 발견된 민감한 파일마다 이름을 밝히고, 그 이유와 실제로 담긴 내용을 보여 줍니다.
+- **설정 백업** — 설정 파일의 tar.gz 아카이브와, 명시적으로 고르면 WAF 규칙/인증 영역/인증서(실제 비밀 정보를 포함하면 확인 필수)/Active Defense 및 RIPOSTE 데이터베이스, 복원, 목록, 삭제. 사이트 콘텐츠는 선택 항목입니다. **내보내기**는 백업을 지문과 함께 omega-serv 폴더 밖으로 복사하고, **가져오기**는 받아들이기 전에 백업을 검증합니다: 제거하고 다시 설치해도 서버를 되찾을 수 있습니다. 복원하기 전에 백업의 버전과 포트 충돌 가능성을 알려 줍니다.
+- **전체 보고서** — 설정되고 활성화된 모든 것을 한 번에: 화면에는 요약이, HTML, TXT 또는 JSON 내보내기에는 원하는 상세 내용(영역, 리버스 프록시, WAF 규칙, Active Defense…)이 담깁니다. 비밀 정보는 전혀 들어가지 않습니다: 비밀번호, 토큰, 키는 참 또는 거짓으로 바뀝니다.
 
 > 예약된 순환 자동화에 대한 참고: 첫 자동화를 만들면 매일 실행되는 작업이 설치됩니다 — systemd 타이머(sudo 비밀번호 요청), 그렇지 않으면 사용자 crontab의 한 줄(OpenRC, runit 또는 서비스 관리자가 없는 경우, cron 데몬이 실행 중이어야 함), 그것도 안 되면 직접 추가할 줄이 표시됩니다. 매일 밤 `omega-serv logs run-automations`가 기한이 된 각 로그를 사용자 계정으로 보관합니다. 마지막 자동화를 삭제하면 작업도 제거됩니다.
 
@@ -289,7 +295,7 @@ serv
 인터페이스 환경설정일 뿐이며, `config/omega-serve.json`(서버 설정)과 섞이지 않습니다: 현재 테마, 렌더링 프로필(`complete`/`standard`/`reduced`/`mono`, 재시작 필요), 내보내기 경로(기본값 `var/exports/`), 스크린샷 경로(기본값 `var/screenshots/`), 두 폴더 중 하나의 비우기(확인 필수).
 
 ```bash
-# 서버 실행(포그라운드, SIGTERM = 유예 기간이 있는 정상 종료, SIGHUP = WAF/Auth 핫 리로드)
+# 서버 실행(포그라운드, SIGTERM = 유예 기간이 있는 정상 종료, SIGHUP = 설정 핫 리로드)
 ./omega-serv.sh serve
 
 # 설정
@@ -367,6 +373,12 @@ serv
 ./omega-serv.sh config backup --include-active-defense --description "menaces/incidents"
 ./omega-serv.sh config list-backups
 ./omega-serv.sh config restore --snapshot-id snapshot_20260908_170003_762484
+./omega-serv.sh config export-backup --snapshot-id snapshot_20260908_170003_762484 ~/sauvegardes
+./omega-serv.sh config import-backup ~/sauvegardes/omega-serv-principale-snapshot_20260908_170003_762484.tar.gz
+
+# 웹 관리(브라우저의 대시보드, 옵션 admin_web)
+./omega-serv.sh admin-web account add alice --role administration
+./omega-serv.sh admin-web account totp-enable alice
 
 # 시스템 서비스(systemd/OpenRC/runit, 자동 감지)
 ./omega-serv.sh service install --user omega-serv --group omega-serv
@@ -436,6 +448,8 @@ man omega-serv                          # 설명서 페이지(install.sh가 설�
 | `hardened` | 최소 권한 노출: 기본은 로컬 bind(인터넷에는 리버스 프록시 권장), 메서드는 GET/HEAD로 제한, 엄격한 CSP, slowloris 방어 — 여기서도 WAF가 자동으로 켜지는 일은 **절대** 없음 |
 | `development` | 로컬 개발 전용이며 인터넷에 적합하다고 소개되지 않음: 루프백 bind 필수, report-only CSP, 상세한 오류 페이지 |
 
+**사용자 정의 프로필**: *프로필 → 사용자 정의 프로필 만들기*는 끌 수 있는 보호 기능이 하나도 없는 최소 서버에서 출발하며, 이후 모든 선택은 드롭다운 목록에서 합니다. 부족한 점은 실시간으로 검사됩니다: 어떤 것은 저장을 막고, 어떤 것은 하나씩 수락해야 합니다. 사용자 정의 프로필은 보안과 옵션 상태만 정하며, 주소, 포트, TLS, 경로, 로그는 인스턴스의 것을 그대로 씁니다. 수정할 수는 없습니다: 기존 프로필의 선택에서 다시 출발해 새로 만듭니다. `config/profiles/custom/`에 저장되며, 모든 백업에 포함됩니다.
+
 설정 병합 순서: 내장된 안전한 값 → 선택한 프로필 → 현재 켜진 옵션 유지(프로필을 바꿔도 남음) → 사용자의 명시적 덮어쓰기. 기록 전에는 항상 완전한 diff가 표시됩니다(`profile apply`).
 
 [↑ 목차](#목차)
@@ -456,7 +470,7 @@ src/omega_serv/
 └── bootstrap/         DependencyContainer, 프로젝트 루트 해석
 ```
 
-`import-linter`가 검증하는 규칙(계약 8개): `domain`/`core`는 바깥 계층에 결코 의존하지 않음. `interfaces.tui`는 `infrastructure`에 결코 직접 의존하지 않음. `textual`은 `interfaces.tui`에 한정. `subprocess`는 `infrastructure/process/subprocess_runner.py`(그리고 대화형 PTY 흐름인 `infrastructure/lnav/`)에 한정. `ssl`은 `infrastructure/tls/ssl_context_builder.py`에 한정. `jinja2`는 `infrastructure/exporters/html_exporter.py`에 한정. `sqlite3`는 `infrastructure/persistence/sqlite_active_defense_connection.py`에 한정(프로젝트의 유일한 관계형 저장소이며 Active Defense 전용). `lupa`는 `infrastructure/waf/lua_waf_adapter.py`에 한정(보조 WAF 스크립트 「magnet」).
+`import-linter`가 검증하는 규칙(계약 8개): `domain`/`core`는 바깥 계층에 결코 의존하지 않음. `interfaces.tui`는 `infrastructure`에 결코 직접 의존하지 않음. `textual`은 `interfaces.tui`에 한정. `subprocess`는 `infrastructure/process/subprocess_runner.py`(그리고 대화형 PTY 흐름인 `infrastructure/lnav/`)에 한정. `ssl`은 `infrastructure/tls/ssl_context_builder.py`에 한정. `jinja2`는 `infrastructure/exporters/html_exporter.py`에 한정. `sqlite3`는 `infrastructure/persistence/`에 한정(Active Defense와 RIPOSTE의 데이터베이스, 백업을 위한 일관된 복사). `lupa`는 `infrastructure/waf/lua_waf_adapter.py`에 한정(보조 WAF 스크립트 「magnet」).
 
 [↑ 목차](#목차)
 
@@ -465,8 +479,8 @@ src/omega_serv/
 요청을 처리할 수 있는 엔진은 두 가지입니다. 기본값인 **Python 엔진**에서는 Python 인터프리터가 모든 요청을 처리합니다. **네이티브 엔진**(C++, `bin/omega-http-core`)은 요청을 직접 읽고, 분석하고, 응답합니다. Python 서버는 설정, 감시, 보안 결정을 맡습니다.
 
 - **두 가지 설정**: 엔진(**기본 설정** 화면)과 프로세스 수(**내구성과 제한** 화면). 프로세스 수는 엔진과 감지된 프로세서에 따라 제한됩니다: Python 엔진에서는 물리 코어당 최대 하나, 이미 모든 코어를 사용하는 네이티브 엔진에서는 보안 검사용 프로세스로 1개 또는 물리 코어가 4개 이상이면 2개입니다. 화면은 이 머신에서 늘렸을 때의 효과를 보여 주고 너무 큰 값은 거부합니다. 실행 중인 내용은 그대로 표시됩니다(「네이티브 엔진, 프로세스 1개」). 엔진이나 프로세스 수를 바꾸려면 완전히 다시 시작해야 합니다. 선택이 바꾸는 것(측정값): 가이드의 FAQ와 [웹 서버 비교](comparatif-serveurs-web.md).
-- **같은 응답, 같은 로그**: 네이티브 엔진에서는 정적 콘텐츠, 리디렉션, 다시 쓰기, 별칭, 캐시, 오류 페이지, 보안 헤더를 네이티브 엔진이 처리합니다. WAF 규칙도 직접 검사하여 어떤 규칙에도 해당하지 않는 요청은 혼자 응답하고, 그 밖의 모든 요청(WAF 일치 또는 의심, Active Defense, 인증)은 똑같은 검사를 하고 같은 보안 로그를 기록하는 Python 프로세스를 거칩니다(RIPOSTE와 omega-jail은 아무런 차이도 보지 못합니다). 디렉터리 목록과 내부 페이지는 Python에 요청하고, 리버스 프록시, FastCGI, 파일 전송, WebSocket은 연결 전체를 Python에 맡깁니다. 직접 TLS는 같은 라이브러리와 같은 설정으로 네이티브 엔진이 처리합니다.
-- **절대 섞지 않음**: 하나의 규칙이 실제 엔진을 정하고 모든 곳에서 그것을 표시합니다(**상태 및 리소스** 화면, `omega-serv engine status`). 네이티브 엔진이 모든 것을 처리할 수 없거나(직접 TLS와 리버스 프록시·FastCGI·파일 전송의 동시 사용) 시작되지 않으면 Python 엔진이 처리하며, 이유가 표시됩니다. **기본 설정**에서는 활성화된 기능이 막는 동안 네이티브 선택 항목이 회색으로 표시되며, 가능하게 하려면 무엇을 바꿔야 하는지 알려 줍니다. 네이티브 엔진을 쓸 수 없게 만드는 설정을 다른 곳에서 저장하면 먼저 확인을 요청합니다.
+- **같은 응답, 같은 로그**: 네이티브 엔진에서는 정적 콘텐츠, 리디렉션, 다시 쓰기, 별칭, 캐시, 오류 페이지, 보안 헤더를 네이티브 엔진이 처리합니다. WAF 규칙도 직접 검사하여 어떤 규칙에도 해당하지 않는 요청은 혼자 응답하고, 그 밖의 모든 요청(WAF 일치 또는 의심, Active Defense, 인증)은 똑같은 검사를 하고 같은 보안 로그를 기록하는 Python 프로세스를 거칩니다(RIPOSTE와 omega-jail은 아무런 차이도 보지 못합니다). 디렉터리 목록과 내부 페이지는 Python에 요청합니다. 리버스 프록시는 WebSocket과 백엔드로의 TLS를 포함해 네이티브 엔진이 중계합니다. 연결 전체를 Python에 맡기는 것은 캐시가 있는 영역, FastCGI, 파일 전송뿐입니다. 직접 TLS는 같은 라이브러리와 같은 설정으로 네이티브 엔진이 처리합니다.
+- **절대 섞지 않음**: 하나의 규칙이 실제 엔진을 정하고 모든 곳에서 그것을 표시합니다(**상태 및 리소스** 화면, `omega-serv engine status`). 네이티브 엔진이 모든 것을 처리할 수 없거나(직접 TLS와 캐시가 있는 리버스 프록시 영역·FastCGI·파일 전송의 동시 사용) 시작되지 않으면 Python 엔진이 처리하며, 이유가 표시됩니다. **기본 설정**에서는 활성화된 기능이 막는 동안 네이티브 선택 항목이 회색으로 표시되며, 가능하게 하려면 무엇을 바꿔야 하는지 알려 줍니다. 네이티브 엔진을 쓸 수 없게 만드는 설정을 다른 곳에서 저장하면 먼저 확인을 요청합니다.
 - **Python 검사가 응답하지 않으면** `waf.on_internal_error`가 결정합니다: 검사 없이 응답하거나 거부합니다(503). 이 경우 인증 구역은 항상 거부되고, 이미 차단된 주소도 계속 거부됩니다(451).
 
 [↑ 목차](#목차)
@@ -478,17 +492,20 @@ src/omega_serv/
 | 모듈 | 역할 |
 |---|---|
 | `waf` | 시그니처(민감한 경로, 스캐너 UA/Referer, 본문 안의 SQLi/XSS/CMDi), 텍스트 파일로 편집할 수 있는 목록(키워드, 또는 `!` 예외가 있는 민감한 경로, 목록마다의 관찰 모드와 재범 — 참조 목록 두 개 제공, 명시적으로 불러오기), 요청 제한(토큰 버킷, 폴더별 및 IP/네트워크별 규칙), 차단 목록(CIDR + 만료), 평판/에스컬레이션, 기존 Lighttpd용 WAF 스크립트 `mod_magnet`을 「magnet」 형태의 선택적 보강으로 가져오기(다시 쓰지 않음, 추가 항목 `pip install -e ".[magnet]"` — 가산적이며 네이티브 차단을 결코 해제할 수 없음. 가져올 때 호환성 확인, 전용 TUI 화면) — `log-only` 모드는 구조적으로 차단할 수 없음 |
-| TLS | 직접(자체 서명, 로컬 CA, 또는 자동 갱신되는 Let's Encrypt/Certbot 공개 인증서), V1에는 mTLS/OCSP 없음 |
+| TLS | 직접(자체 서명, 로컬 CA, 또는 자동 갱신되는 Let's Encrypt/Certbot 공개 인증서), mTLS도 OCSP도 없음 |
 | 인증 | 영역별 HTTP Basic(`url_prefix`), 타이밍 공격 방어가 있는 `hashlib.scrypt`(알 수 없는 사용자에게도 일정한 시간) |
-| FastCGI/PHP-FPM | `(url_prefix, script_root)`는 하나뿐이며, `script_root`는 설계상 `webroot/` 밖에 한정(정적 처리기가 PHP 소스를 노출할 수 없음) |
-| 아웃바운드 리버스 프록시 | Omega-serv 자신이 하나 이상의 백엔드로 가는 프록시로 동작(`server.tls.mode = "behind_proxy"`와 반대 방향) — 부하 분산(round-robin, 가중치, least-connections, ip-hash, least-response-time, 실제 부하), 세션 고정과 헤더 기반 라우팅 규칙, 수동적·능동적 상태 점검, 응답 캐시(`Vary`에 따른 여러 변형), 백프레셔, 루프 방지, 실시간 관리 API |
-| 업로드 | 격리된 영역, 영역별 할당량, 서버가 생성하는 파일 이름 — V1에는 스트리밍 없음(`server.max_request_size`로 제한) |
+| FastCGI/PHP-FPM | 하나 이상의 `(url_prefix, script_root)` 영역, 영역마다 자체 스위치(꺼진 영역 = 503 점검 중)와 최대 요청 크기가 있으며, `script_root`는 설계상 `webroot/` 밖에 한정(정적 처리기가 PHP 소스를 노출할 수 없음) |
+| 아웃바운드 리버스 프록시 | Omega-serv 자신이 하나 이상의 백엔드로 가는 프록시로 동작(`server.tls.mode = "behind_proxy"`와 반대 방향) — 부하 분산(round-robin, 가중치, least-connections, ip-hash, least-response-time, 실제 부하), 세션 고정과 헤더 기반 라우팅 규칙, 수동적·능동적 상태 점검, 응답 캐시(`Vary`에 따른 여러 변형), 백프레셔, 루프 방지, WebSocket, 실시간 관리 API. 네이티브 엔진을 고르면 네이티브 엔진이 중계합니다(캐시가 있는 영역 제외) |
+| 업로드 | 격리된 영역, 영역별 할당량, 서버가 생성하는 파일 이름 — 파일은 쓰기 전에 전부 수신하며(스트리밍 없음), `server.max_request_size`로 제한. 느린 전송도 진행되는 한 받아들입니다 |
 | `active_defense` | 이미 계산된 WAF 신호를 바탕으로 한 Deception + 전쟁 모드(두 번째 점수를 매기지 않음): 정적 미끼, 대상을 좁힌 감속/상세 로그/요청 제한, 인시던트 + IoC 내보내기 |
 | `riposte` | 시간에 걸친 단계적 대응: 주소별 재범 기억, 점점 더 긴 차단(WAF blocklist, omega-jail을 통한 네트워크 차단) 또는 미끼 연장, 해제와 비상 정지 — 별도 프로세스 |
+| `admin_web` | 자체 포트(기본값 9643)에서 동작하는 웹 대시보드(원격 관리), 별도 프로세스 — [7b](#7b-웹-관리대시보드) 참조 |
 
 ### 7a. 아웃바운드 리버스 프록시 — 상세
 
 OMEGA-SERV는 스스로 하나 이상의 HTTP/HTTPS 백엔드로 가는 리버스 프록시로 동작할 수 있습니다 — `server.tls.mode = "behind_proxy"`(OMEGA-SERV가 프록시 **뒤에** 있는, 반대 메커니즘)와 절대 혼동하지 마십시오. 영역은 완전한 CRUD로 설정할 수 있고(TUI: *상세 설정 → Reverse Proxy*), 영역마다 하나 이상의 upstream을 둡니다.
+
+- **엔진** — 네이티브 엔진에서는 각 영역을 네이티브 엔진이 직접 중계합니다(스트리밍 응답, 백프레셔, 백엔드 연결 풀, WebSocket, 백엔드로의 TLS, 직접 TLS). 캐시가 있는 영역만 Python에 맡깁니다. Python 엔진에서는 백엔드의 응답을 보내기 전에 전부 읽으며, `max_response_body_mb`(기본값 256 MB)로 제한됩니다. 설정 `options.reverse_proxy.engine`(*공통 설정* 버튼)의 기본값은 `auto`입니다. `python`은 모든 영역을 Python에 맡기며, 다시 컴파일하지 않고 되돌리는 방법입니다. `native`는 네이티브 엔진이 중계할 수 없는 영역을 시작할 때 거부합니다. 백엔드로 보내기 전에는 같은 보안 검사가 적용되고, 로그는 두 엔진에서 동일합니다.
 
 - **부하 분산** — `round_robin`(기본값), `weighted_round_robin`/`weighted_least_connections`/`ip_hash`(가중치), `least_connections`, `least_response_time`, `real_load`(실제 부하). 네이티브 `real_load` 모드(프로브 `/.omega-serv-load/`, 「상태 및 리소스」 화면과 같은 `psutil` 측정값을 재사용하며 두 번째 호출은 하지 않음) 또는 선언적 모드(서드파티 HTTP 프로브, 최소 형식 `{"load_percent": ...}` 또는 숫자만) — upstream 단위로 세분화되며, 한 영역에서 둘을 섞을 수 있습니다.
 - **세션 고정과 조건부 라우팅** — 불투명한 sticky 쿠키(실제 host:port를 클라이언트에 결코 노출하지 않음)와 헤더 기반 규칙(같음 또는 접두사). 둘 다 대상 upstream의 적격성으로 걸러집니다(대상 upstream을 쓸 수 없으면 현재 전략으로 깔끔하게 되돌아감).
@@ -496,8 +513,19 @@ OMEGA-SERV는 스스로 하나 이상의 HTTP/HTTPS 백엔드로 가는 리버�
 - **백프레셔** — upstream마다 설정할 수 있는 활성 연결 상한. 포화된 upstream은 503으로 깔끔하게 거절하며, 고장 난 upstream(502, 그래도 재시도됨)과 구별됩니다.
 - **응답 캐시** — GET/HEAD만, 오류 응답은 결코 캐시하지 않고, 영역에서 명시적으로 허용하지 않는 한 `Set-Cookie`도 캐시하지 않습니다. upstream의 `Cache-Control`/`Vary`를 존중합니다(끌 수 있지만 위험한 옵션이며, TLS 검증과 같은 철학). 같은 리소스의 여러 변형(`Vary`)이 실제로 디스크에 함께 존재하며, 단순히 「나중에 온 것이 이기는」 방식이 아닙니다. 스탬피드 방지 잠금(동시 요청 중 하나만 실제로 캐시를 다시 구성). 모든 응답에 진단 헤더 `X-Omega-Cache: HIT`/`MISS`/`BYPASS`. 전용 TUI 화면(*리버스 프록시 캐시*)에서 감시/비우기.
 - **루프 방지** — hop-by-hop 헤더 제거, `X-Forwarded-*`는 항상 덮어씀(클라이언트의 것과 결코 합치지 않음), 중계할 때마다 카운터 `X-Omega-Proxy-Hops` 증가(5홉을 넘으면 깔끔하게 거절 — 로컬 설정 검증만으로는 결코 보이지 않는, 두 인스턴스 사이의 간접 루프를 감지).
-- **WebSocket** — 영역별로 업그레이드를 허용할 수 있으며, 연결된 뒤에는 통로가 유지되는 동안 하나의 upstream에 고정되고 애플리케이션 수준 타임아웃이 없습니다.
+- **WebSocket** — 영역별로 업그레이드를 허용할 수 있으며, 연결된 뒤에는 통로가 유지되는 동안 하나의 upstream에 고정됩니다. 유휴 터널은 기본으로 1시간 뒤에 닫히며(영역의 `websocket_idle_timeout_seconds`, 0 = 닫지 않음), 양방향으로 1001 종료 프레임을 보냅니다. 서버를 멈출 때도 유예 기간이 끝나면 같은 방식으로 터널을 닫습니다. `access.log`는 터널이 닫힐 때 클라이언트에 보낸 바이트 수와 함께 `101` 줄을 하나 기록합니다.
 - **실시간 관리** — 작은 로컬 HTTP API(`/.omega-serv-admin/`, 네이티브 부하 프로브처럼 `trusted_proxy`로 보호)로 TUI가 백엔드의 DRAINING/MAINTENANCE 상태를 읽거나 강제하고, **실제로 실행 중인 서버**의 캐시 적중/실패 비율을 읽을 수 있습니다(전용 화면 *백엔드 실시간 상태*) — TUI와 서버는 메모리를 공유하지 않는 별개의 두 프로세스이므로, 이 로컬 HTTP 채널이 둘을 잇는 유일한 다리입니다.
+
+### 7b. 웹 관리(대시보드)
+
+`admin_web` 옵션, 기본은 비활성화: 다른 기기(휴대폰, 노트북)에서 인스턴스를 지켜보고 운영에 작용하기 위한 브라우저 패널입니다. 설정이나 계정은 결코 바꾸지 않으며, 서버를 다시 시작하는 일도 없습니다.
+
+- **TUI에서 시작하기** — *다중 인스턴스 → 원격 설정*: **상태** 틀이 모든 준비가 되었는지, 무엇이 빠졌는지 알려 주며, 빠진 것마다 버튼이 있습니다(활성화, 인증서 생성, 계정 만들기, omega-fire로 방화벽 포트 열기, 재시작). 준비가 끝나면 다른 기기에서 열 주소를 알려 줍니다. 다른 곳에서 입력할 것은 없습니다.
+- **사이트와 분리** — 별도의 관리 프로세스로, 서비스 계정으로 `serve`가 실행하며, 두 엔진 모두에서 동작하고, 자체 포트(기본값 9643, 사이트의 포트와는 결코 같지 않음)를 쓰며, 기본으로 127.0.0.1에서 수신합니다. 패널의 문제(인증서 없음, 포트 사용 중)가 사이트의 시작을 막는 일은 결코 없습니다.
+- **보호된 접근** — 머신 밖에서는 TLS 필수(사이트 인증서 또는 전용 인증서). 허용된 네트워크만 로그인 페이지를 볼 수 있습니다(기본값은 이 머신, Tailscale, 로컬 네트워크). 「읽기」 또는 「관리」 계정은 TUI나 CLI에서만 만들 수 있으며, 비밀번호는 해시로 저장됩니다(scrypt). QR 코드와 백업 코드 10개를 갖춘 TOTP는 머신 밖에서 관리 계정에 필수입니다. TOTP는 표준(RFC 6238: 6자리, 30초마다)을 따르므로 흔히 쓰는 인증 앱과 함께 동작합니다: Aegis, FreeOTP, 2FAS, Google Authenticator, Microsoft Authenticator, 또는 코드를 다루는 비밀번호 관리자(Bitwarden, KeePassXC, 1Password, Proton Pass). QR 코드를 스캔할 수 없으면 비밀 키를 직접 입력하거나 `otpauth://` 링크를 휴대폰에서 바로 열 수 있습니다. 다섯 번 실패하면 대기 시간이 부과되며, 모든 동작은 `var/log/admin-audit.log`에 기록됩니다.
+- **화면** — 상태 및 리소스, 로그, 보안(차단, RIPOSTE, 인시던트), **기록**(10초마다 측정, 1시간부터 30일까지: 프로세서, 메모리, 네트워크, 요청, 디스크, 온도, 사이트 트래픽), **트래픽**(페이지, 404, 주소, 상태, 리퍼러, 브라우저와 로봇), **인증서**와 만료일, **로컬 경보**(디스크, 메모리, 프로세서, 5xx 비율, 중단된 백엔드, 인시던트, 인증서. 머신 밖으로는 아무것도 보내지 않음), 열린 **세션**, 감사 로그. TUI의 10가지 테마, 휴대폰에 맞춘 페이지.
+- **관리**(관리 계정) — IP 주소 차단 또는 차단 해제, 인시던트 닫기, RIPOSTE 비상 정지와 재개, 백엔드 상태(DRAINING, MAINTENANCE 또는 자동), 로그 보관, 설정 다시 로드. 모든 동작은 확인 페이지를 거칩니다.
+- **마스터 인스턴스** — 한 인스턴스가 다른 인스턴스들을 지켜보고 제어할 수 있으며(**인스턴스** 페이지), 일회용 페어링 코드로 연결됩니다. 그 인스턴스들의 인증서 지문은 고정됩니다.
 
 [↑ 목차](#목차)
 
@@ -505,6 +533,8 @@ OMEGA-SERV는 스스로 하나 이상의 HTTP/HTTPS 백엔드로 가는 리버�
 
 - 끌 수 있는 옵션이 없는 요청 분석: 헤더/요청 줄은 읽는 **도중에** 제한하며(나중이 아님), 오래된 헤더 접기는 거부하고, `Transfer-Encoding`은 항상 거부합니다(추측하지 않음).
 - 중복된 `Content-Length`는 거부. `Expect` 헤더(예: `100-continue`)는 깔끔하게 거부(417).
+- 요청 대상은 모든 경로에서, 두 엔진 모두에서 검사: 제어 문자, 또는 그대로 쓰였거나 인코딩된(`%2e`, `%2f`, `%5c`) `.`/`..` 세그먼트 → 400 — `/api/../admin`은 더 이상 영역 밖으로 나갈 수 없습니다.
+- 너무 느리게 전송되는 본문: 초당 최소 500바이트씩 진행해야 하며(Apache `mod_reqtimeout`과 같은 규칙), 그렇지 않으면 408. 꾸준한 전송은 길더라도 결코 끊기지 않습니다. 응답 전에 떠난 클라이언트는 요청을 취소시키며, 백엔드로 가는 요청도 함께 취소됩니다(로그에 `499`).
 - 명시적인 메서드 허용 목록(아니면 405 + `Allow`), `Host` 헤더 검증(없음/비어 있음/같아도 중복/제어 문자 → 400). 이 검사는 기본으로 활성화되어 있으며 설정에서만 끌 수 있습니다(`security.require_valid_host`).
 - 보안 헤더와 기본 CSP(`enforce`/`report-only`)를 사이트 응답과 그 오류 페이지(403, 404…)에 적용하며, 모듈이 이를 제거하거나 덮어쓰는 일은 없습니다. 예외: 요청을 처리하기 전에 보내는 응답(잘못된 형식이거나 너무 큰 요청, 시간 초과, 잘못된 `Host`, 거부된 메서드, 포화된 서버)은 이 헤더 없이 나갑니다 — 사이트 내용이 없는 짧은 오류 페이지입니다. 기본으로 활성화되어 있으며, **일반 보안** 화면에서만 끌 수 있습니다(`security.security_headers_enabled`). `Cross-Origin-Opener-Policy`/`Cross-Origin-Resource-Policy`는 항상 `same-origin`이며, 사이트를 망가뜨릴 실제 위험이 없습니다. `Cross-Origin-Embedder-Policy`는 항상 명시적으로 보내며(결코 빠지지 않음 — 외부 스캐너가 「고려하지 않음」과 「의도적으로 허용」을 구별할 수 있음), `hardened`를 포함한 **모든** 프로필에서 기본값은 `unsafe-none`입니다: 앞의 두 가지와 달리 `require-corp`/`credentialless`는 실제로 제공하는 사이트 고유의 교차 출처 리소스(글꼴, 이미지, 서드파티 iframe)를 막을 수 있기 때문입니다 — 조정 가능(`security.coep_mode`). CSP 영역(`security.csp_zones`): 경로 접두사별 **명시적** 예외(예: 정말로 필요한 `/un-dossier/` 아래에서만 `unsafe-inline`)이며, 각 영역은 그 접두사에 대해 기본 정책을 완전히 대체합니다 — 결코 병합하지 않고, 결코 전체적으로 완화하지 않습니다. 모든 예외는 의도적이더라도 `audit security`에 계속 보입니다(CSP-001/CSP-002는 영역도 검사). 지시어별 마법사(**일반 보안** 화면)로 만들 수 있으며, 각 항목에는 전역 정책의 **현재** 값이 미리 채워집니다 — 빈 항목에서 시작해 다른 지시어를 무심코 잃는 대신 바꿔야 할 것만 바꾸기 위해서입니다. 조립한 영역이 `unsafe-inline`/`unsafe-eval`/일반 출처 `*`를 완화하면 추가로 명시적 확인을 요구합니다.
 - IPv4 매핑 IPv6 주소(`::ffff:x.x.x.x`)는 모든 비교(차단 목록, 신뢰 프록시, 요청 제한) 전에 정규화합니다 — 그렇지 않으면 알려진 우회 수단이 됩니다.
@@ -516,7 +546,7 @@ OMEGA-SERV는 스스로 하나 이상의 HTTP/HTTPS 백엔드로 가는 리버�
 
 ### 9a. 자체 서명 인증서(최소)
 
-로컬/실험실/VPN(Tailscale...)의 현실적인 용도를 다룹니다: 단일 리스너, 직접 `ssl.SSLContext`, RSA 2048/4096 또는 ECDSA P-256/P-384.
+로컬/실험실/VPN(Tailscale...)의 현실적인 용도를 다룹니다: 직접 TLS의 단일 리스너(Python 엔진 또는 네이티브 엔진이 같은 설정으로 처리), RSA 2048/4096 또는 ECDSA P-256/P-384.
 
 ### 9b. 로컬 CA
 
@@ -530,7 +560,7 @@ secure/certificates/ca/
 └── index.txt      # 0600 - 서명한 인증서별 V(유효)/R(폐기) 상태 관리
 ```
 
-흐름: `certs generate-ca`(CA 키 암호 문구 **필수**, `--password`를 생략하면 이중 확인이 있는 대화형 입력) → `certs generate-csr`(서버 키 + CSR) → `certs sign-csr`(CA로 서명, CSR의 SAN 복사, 요청하면 `fullchain.pem` 생성) → `tls.certificate.certificate_path`를 이 `fullchain.pem`으로 지정. 유출된 인증서는 `certs revoke`로 철회합니다(`index.txt`에 표시하며, 먼저 그 인증서가 정말 이 CA에서 나왔는지 확인 — 아니면 거부). V1에는 CRL 배포도, 외부 CA/제3자 기관용 CSR도, mTLS도 없습니다.
+흐름: `certs generate-ca`(CA 키 암호 문구 **필수**, `--password`를 생략하면 이중 확인이 있는 대화형 입력) → `certs generate-csr`(서버 키 + CSR) → `certs sign-csr`(CA로 서명, CSR의 SAN 복사, 요청하면 `fullchain.pem` 생성) → `tls.certificate.certificate_path`를 이 `fullchain.pem`으로 지정. 유출된 인증서는 `certs revoke`로 철회합니다(`index.txt`에 표시하며, 먼저 그 인증서가 정말 이 CA에서 나왔는지 확인 — 아니면 거부). CRL 배포도, 외부 CA/제3자 기관용 CSR도, mTLS도 없습니다.
 
 ### 9c. Let's Encrypt / ACME(Certbot) — 공개, 자체 호스팅
 
@@ -546,13 +576,13 @@ Omega-serv 범위 밖의 필요 조건: 공인 IP를 가리키는 도메인(DDNS
 
 ## 10. 보안 감사
 
-`audit security`는 **차단하지 않습니다**: `config check`의 차단 게이트를 `CRITICAL`로 다시 실행한 뒤, 권고 규칙(TLS, CSP, 위험한 메서드, 타임아웃, 순수 업로드 위생, 파일 권한, 인증서 만료, 설치된 systemd 유닛, 실제 I/O로 본 로그 크기)을 적용합니다. `WAF-001`(WAF가 `log-only`로 남아 있음)은 작은 상태 파일(`var/run/waf-mode-state.json`)로 시간에 걸쳐 관찰되며 — 반복 실행에서 `log-only`가 14일 이상 관찰된 뒤에만 발생하고, 첫 `audit`에서는 발생하지 않습니다.
+`audit security`는 **차단하지 않습니다**: `config check`의 차단 게이트를 `CRITICAL`로 다시 실행한 뒤, 권고 규칙(TLS, CSP, 위험한 메서드, 타임아웃, 순수 업로드 위생, 파일 권한, 인증서 만료, 설치된 systemd 유닛, 실제 I/O로 본 로그 크기)을 적용합니다. `WAF-001`(WAF가 `log-only`로 남아 있음)은 작은 상태 파일(`var/run/waf-mode-state.json`)로 시간에 걸쳐 관찰되며 — 반복 실행에서 `log-only`가 14일 이상 관찰된 뒤에만 발생하고, 첫 `audit`에서는 발생하지 않습니다. webroot 아래에서 발견된 민감한 파일마다 이름을 밝히고, 그 이유(`.env` 같은 알려진 이름, 또는 `.key` 같은 확장자)와 파일 앞부분을 읽어 확인한 실제 내용을 보여 줍니다. 빈 파일은 정보일 뿐이며, `.git` 폴더는 폴더 자체가 보고됩니다.
 
 [↑ 목차](#목차)
 
 ## 11. Active Defense(deception + 전쟁 모드)
 
-선택 모듈(`option enable active_defense`, 기본 비활성화)로, 이미 계산된 WAF 신호(`WafDecision`/평판/차단 목록 — 독립적인 두 번째 점수 계산은 결코 하지 않음)에서 적대적 행동을 판정하며, 출처를 미끼로 돌리고, 응답을 늦추며 더 자세히 기록하고, 활용할 수 있는 인시던트를 만든 뒤, 침해 지표(IoC)를 내보낼 수 있습니다. 트래픽 자체를 차단하지는 않습니다 — 네트워크 차단은 여전히 `omega-fire`의 몫이며, Active Defense는 관찰하고, 우회시키고, 늦추고, 기록합니다.
+선택 모듈(`option enable active_defense`, 기본 비활성화)로, 이미 계산된 WAF 신호(`WafDecision`/평판/차단 목록 — 독립적인 두 번째 점수 계산은 결코 하지 않음)에서 적대적 행동을 판정하며, 출처를 미끼로 돌리고, 응답을 늦추며 더 자세히 기록하고, 활용할 수 있는 인시던트를 만든 뒤, 침해 지표(IoC)를 내보낼 수 있습니다. 주소를 스스로 차단하지는 않습니다 — 차단은 RIPOSTE(WAF 차단 목록, omega-jail을 통한 네트워크 차단)와 방화벽 `omega-fire`의 몫이며, Active Defense는 관찰하고, 우회시키고, 늦추고, 기록합니다.
 
 **위협과 점수**: 각 출처(`IP + User-Agent의 SHA-256 해시`)는 점수를 쌓으며(차단한 `WAF-001` +10, 평판 에스컬레이션 +25, 이미 알려진 차단 +25, 이미 할당된 미끼로의 POST +30 — 새 이벤트 없이 15분마다 -5 감소) `normal`/`suspicious`/`hostile`/`contained`로 분류됩니다(`contained`에는 이미 알려진 차단도 필요). `mode: monitor`는 행동하지 않고 관찰만 하며, `mode: enforce`는 아래 동작을 실제로 적용합니다.
 
@@ -562,7 +592,7 @@ Omega-serv 범위 밖의 필요 조건: 공인 IP를 가리키는 도메인(DDNS
 - `rate_limit` — 출처별 전용 요청 제한(`war_mode.rate_limit.requests`/`window_seconds`), 별도의 키로 WAF와 같은 메커니즘을 재사용.
 - `create_incident` — `thresholds.incident_score`를 넘으면 인시던트를 자동으로 열거나 병합.
 
-**Deception**: `hostile`/`contained` 출처는 관찰된 공격 유형(`deception.profiles.<이름>.match_attack_classes`, `scan`/`credential_stuffing`/`sqli`/`xss`/`path_traversal`/`upload_probe`/`api_probe`/`unknown` 중 하나 이상)에 따라 고른 정적 미끼(`fake_admin`, `fake_cms`, `fake_api`, `fake_secrets` — 그럴듯하지만 항상 고정된 응답이며, 실제 파일을 읽거나 하위 프로세스를 실행하지 않음)에 할당될 수 있습니다. 격리 수준은 두 가지이며, 그대로 받아들이고 문서화합니다:
+**Deception**: `hostile`/`contained` 출처는 관찰된 공격 유형(`deception.profiles.<이름>.match_attack_classes`, `scan`/`credential_stuffing`/`sqli`/`xss`/`path_traversal`/`upload_probe`/`api_probe`/`command_injection`/`unknown` 중 하나 이상)에 따라 고른 정적 미끼(`fake_admin`, `fake_cms`, `fake_api`, `fake_secrets` — 그럴듯하지만 항상 고정된 응답이며, 실제 파일을 읽거나 하위 프로세스를 실행하지 않음)에 할당될 수 있습니다. 격리 수준은 두 가지이며, 그대로 받아들이고 문서화합니다:
 - **수준 1**(프로세스 내 fixture, `isolation_level: "fixture"`, 기본값) — 명시적으로 약한 격리: 운영과 같은 프로세스, 같은 OS 사용자이며, fixture가 정적 템플릿을 돌려주는 것 외에는 아무것도 하지 않기 때문에만 허용됩니다. 프로필 이름은 위의 4가지 fixture 중 하나와 정확히 같아야 하며 — 아니면 검증(`validate_active_defense_config`)에서 거부됩니다. 이름이 잘못된 미끼가 조용히 한 번도 작동하지 않는 함정을 피하기 위해서입니다.
 - **수준 2**(실제로 격리된 백엔드, `isolation_level: "proxy"`) — `options.active_defense.settings.deception.decoy_zones.<이름>`(이미 실행 중인 서버의 upstream `host`/`port`, 자동으로 만들지 않음. `options.reverse_proxy`에서 읽지 않음 — 미끼가 실수로 운영 영역을 가리킬 수 없으며, `config check`에서 검증)을 통해 별도 프로세스로 중계하며, 운영과 같은 아웃바운드 리버스 프록시 메커니즘(`serve_proxy()`)을 재사용합니다 — 실제 요청 시점에 upstream에 닿을 수 없으면 공격자에게 502를 돌려주며, 결코 충돌하지 않습니다.
 
@@ -598,6 +628,8 @@ WAF의 요청 제한(토큰 버킷, `options.waf.rate_limit`, 기본값 IP당 60
 - **IP/네트워크별 규칙**(`network`, `requests`, `window_seconds`, `trusted`): 같은 원리이며, 가장 구체적인 네트워크가 이깁니다. 우선순위: 폴더, 그다음 IP/네트워크, 그다음 전역 제한.
 - **일반 사용자에 대한 차단은 그대로**: 공인 IP의 초과는 여전히 `waf-alerts.log`에 `"action": "block"`으로 기록되므로 omega-jail이 차단할 수 있습니다(10분에 거부 3회 → 12시간). **안전한 출처** — `never_auto_block` 네트워크 또는 `trusted: true`로 표시한 규칙 — 는 여전히 429를 받지만 `"action": "throttle"`로 기록되며, jail은 이를 결코 세지 않습니다.
 - **magnet 스크립트**: 그 자체의 요청 제한(429 응답)은 결코 탐지로 세지 않으므로 자동 차단으로 이어지지 않습니다. 폴더 또는 IP/네트워크 규칙에 해당하는 요청에서는 네이티브 규칙이 기준이 되며 magnet의 429는 무시됩니다(공격 시그니처는 계속 적용).
+- **주소마다 제한은 하나뿐**: 엔진과 경로(정적, 리버스 프록시)에 관계없이 한 요청이 두 번 세어지는 일은 결코 없습니다.
+- **WAF를 끄면**: 요청 속도 제한과 차단(451 페이지)은 WAF의 일부입니다. WAF를 끄면 이것들도 꺼집니다.
 - 요청 제한 규칙은 WAF 검사를 **결코** 끄지 않습니다. 반대로 검사 제외(`exclusions.path_prefixes`)가 rate limit을 해제하는 일도 결코 없습니다. `trusted_proxy`가 켜져 있지 않으면 `127.0.0.1`/`::1`을 포함하는 규칙은 무시됩니다(`never_auto_block`과 같은 안전장치).
 
 [↑ 목차](#목차)
@@ -628,13 +660,13 @@ WAF의 요청 제한(토큰 버킷, `options.waf.rate_limit`, 기본값 IP당 60
 
 ## 12. 서비스와 운영
 
-systemd/OpenRC/runit 자동 감지(`service install/status/start/stop/restart/enable/disable/uninstall`). 생성되는 systemd 유닛은 기본으로 타협할 수 없는 강화를 적용합니다: `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`, `ProtectHome`, `var/`로 한정한 `ReadWritePaths`, 전용 사용자/그룹 필수, `UMask=0007`, `Restart=on-failure`. SIGTERM에 정상 종료(진행 중인 연결을 배수하고, 설정 가능한 유예 기간 후 강제 종료). SIGHUP에 핫 리로드(WAF 규칙과 Auth 영역만 — bind/포트/TLS와 Active Defense는 완전한 재시작 없이는 결코 바꿀 수 없음).
+systemd/OpenRC/runit 자동 감지(`service install/status/start/stop/restart/enable/disable/uninstall`). 생성되는 systemd 유닛은 기본으로 타협할 수 없는 강화를 적용합니다: `NoNewPrivileges`, `PrivateTmp`, `ProtectSystem=strict`, `ProtectHome`, `var/`로 한정한 `ReadWritePaths`, 전용 사용자/그룹 필수, `UMask=0007`, `Restart=on-failure`. SIGTERM에 정상 종료(진행 중인 연결을 배수하고, 설정 가능한 유예 기간 후 강제 종료). SIGHUP에 핫 리로드(설정: WAF 규칙, Auth 영역, 라우팅, 리버스 프록시 영역, FastCGI — bind/포트/TLS와 Active Defense는 완전한 재시작 없이는 결코 바꿀 수 없음). 리로드는 프로그램 자체를 결코 다시 읽지 않습니다: 업데이트 후에는 서비스를 재시작하세요.
 
 [↑ 목차](#목차)
 
 ## 13. 로그
 
-`var/log/access.log`(Apache combined 형식 + `request_id`, 로그 주입 방지 이스케이프), `var/log/error.log`. 크기/보관 파일 수에 따른 순환(`logs.rotation`). 네이티브 WAF: `var/log/waf-alerts.log`(`options.waf.logging.path`). magnet 스크립트: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, 기본값 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — magnet이 켜져 있을 때만 라이브러리에 바로 추가됩니다(*Omega-Serv의 알려진 로그 추가* 버튼). 반면 `lnav`는 항상 이를 제안합니다(없는 파일은 실행할 때 그냥 무시됨).
+`var/log/access.log`(Apache combined 형식 + `request_id`, 로그 주입 방지 이스케이프; 응답 전에 떠난 클라이언트는 `499`; WebSocket 터널마다 닫힐 때 기록되는 `101` 줄 하나), `var/log/error.log`(HTTPS 백엔드의 인증서 거부 포함, 백엔드마다 1분에 최대 한 줄). 크기/보관 파일 수에 따른 순환(`logs.rotation`). 네이티브 WAF: `var/log/waf-alerts.log`(`options.waf.logging.path`). magnet 스크립트: `options.waf.magnet.paths.alerts_log`/`.blocklist_log`, 기본값 `var/log/waf-magnet-alerts.log`/`var/log/waf-magnet-blocklist.log` — magnet이 켜져 있을 때만 라이브러리에 바로 추가됩니다(*Omega-Serv의 알려진 로그 추가* 버튼). 반면 `lnav`는 항상 이를 제안합니다(없는 파일은 실행할 때 그냥 무시됨). 웹 관리: `var/log/admin-audit.log`(로그인과 동작)와 `var/log/alertes.log`(로컬 경보, 30일).
 
 ### 13a. 로그 관리자
 

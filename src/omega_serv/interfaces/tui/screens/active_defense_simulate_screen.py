@@ -18,7 +18,7 @@ from omega_serv.application.active_defense.preview_playbook_decision import (
     preview_playbook_decision,
 )
 from omega_serv.core.i18n import _
-from omega_serv.domain.security.active_defense.policies import hash_payload
+from omega_serv.domain.security.active_defense.policies import source_subject_id
 from omega_serv.domain.security.active_defense.value_objects import (
     KNOWN_ATTACK_CLASSES,
     AttackClass,
@@ -49,7 +49,6 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
             )
             yield Input(value="203.0.113.42", id="sim-ip-input")
             yield Input(value="/wp-login.php", id="sim-path-input")
-            yield Input(placeholder="user-agent", id="sim-user-agent-input")
             yield Input(value="scan", id="sim-attack-class-input")
             yield Input(value="10", id="sim-score-input")
             with Horizontal(classes="omega-actions"):
@@ -85,8 +84,8 @@ class ActiveDefenseSimulateScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScr
             result_widget.update(_("Score invalide (entier attendu)."))
             return
         ip = self.query_one("#sim-ip-input", Input).value.strip() or "203.0.113.42"
-        user_agent = self.query_one("#sim-user-agent-input", Input).value.strip()
-        subject_id = f"{ip}:{hash_payload(user_agent.encode('utf-8'))}"
+        # Scan de securite n° 2 (F34) : la source est l'adresse seule, comme le serveur (champ User-Agent retire).
+        subject_id = source_subject_id(ip)
 
         preview = preview_playbook_decision(
             active_defense.threat_state_repository, active_defense.incident_repository,

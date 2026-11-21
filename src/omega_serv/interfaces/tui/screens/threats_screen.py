@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Static
@@ -34,8 +35,10 @@ class ThreatsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
             yield Static("", id="threats-error", classes="omega-hint")
             yield DataTable(id="threats-table")
             yield Static("", id="threat-detail", classes="omega-hint")
-            with Horizontal(classes="omega-actions"), Container(classes="omega-btn-frame"):
-                yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"), Container(classes="omega-btn-frame"):
+            yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -55,7 +58,7 @@ class ThreatsScreen(ActiveDefenseCollaboratorsCacheMixin, OmegaScreen):
         table.clear()
         for state in list_threat_states(active_defense.threat_state_repository):
             table.add_row(
-                state.subject_id, str(state.score), state.level,
+                Text(state.subject_id), str(state.score), state.level,  # F44 : jamais du balisage
                 state.updated_at.isoformat(), state.expires_at.isoformat(),
                 key=state.subject_id,
             )

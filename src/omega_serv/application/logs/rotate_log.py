@@ -5,6 +5,8 @@ rotations les plus anciennes au-dela de `keep`, recree un fichier vide
 pour que le logger continue d'ecrire dedans."""
 from __future__ import annotations
 
+import os
+import stat
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,6 +35,10 @@ def rotate_log_if_needed(
         now = datetime.now(timezone.utc)
     if not filesystem.exists(log_path):
         return RotateLogResult(False, _("Log introuvable : {log_path}").format(log_path=log_path))
+    # Scan de securite n° 2 (2026-11-20, F24) : var/log est inscriptible par le compte du service ; un log remplace
+    # par un lien faisait vider la cible avec les droits de l'operateur (ou de son timer nocturne).
+    if log_path.is_symlink():
+        return RotateLogResult(False, _("Log refusé : {log_path} est un lien symbolique.").format(log_path=log_path))
 
     size = filesystem.file_size(log_path)
     existing = sorted(p.name for p in archive_store.list_archives(f"{log_path.name}.*.tar.gz"))
@@ -44,9 +50,19 @@ def rotate_log_if_needed(
     archive_store.create_archive(plan.archive_name, [log_path])
     for old_name in plan.rotations_to_delete:
         archive_store.delete_archive(archive_store.base_dir / old_name)
-    filesystem.write_text(log_path, "")
+    _truncate_without_following(log_path)
 
     message = _("Log tourné : {archive_name}.").format(archive_name=plan.archive_name)
     if plan.rotations_to_delete:
         message += _(" {count} ancienne(s) rotation(s) supprimée(s).").format(count=len(plan.rotations_to_delete))
     return RotateLogResult(True, message)
+
+
+def _truncate_without_following(log_path: Path) -> None:
+    """Vide le log par un descripteur ouvert sans suivre de lien (F24) ; un lien pose entre-temps echoue."""
+    descriptor = os.open(log_path, os.O_WRONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK)
+    try:
+        if stat.S_ISREG(os.fstat(descriptor).st_mode):
+            os.ftruncate(descriptor, 0)
+    finally:
+        os.close(descriptor)

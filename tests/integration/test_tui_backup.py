@@ -141,6 +141,13 @@ class TestTuiBackup(unittest.IsolatedAsyncioTestCase):
                                 "#include-riposte", "#include-error-pages", "#include-preferences",
                                 "#include-logs-library"):
                 self.assertTrue(pilot.app.screen.query_one(checkbox_id, Checkbox).value, checkbox_id)
+            # Contenu, pas configuration (decisions de l'auteur du 2026-11-15) : jamais coches par « Tout ».
+            for checkbox_id in ("#include-site-content", "#include-zone-data", "#include-exports"):
+                self.assertFalse(pilot.app.screen.query_one(checkbox_id, Checkbox).value, checkbox_id)
+            pilot.app.screen.query_one("#include-exports", Checkbox).value = True
+            pilot.app.screen.query_one("#include-exports", Checkbox).value = False
+            await pilot.pause()
+            self.assertTrue(pilot.app.screen.query_one("#include-all", Checkbox).value)  # pas une case de « Tout »
             pilot.app.screen.query_one("#create", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, ConfirmScreen)  # secrets : toujours confirmes
@@ -266,6 +273,93 @@ class TestTuiBackup(unittest.IsolatedAsyncioTestCase):
             pilot.app.screen.query_one("#back", Button).press()
             await pilot.pause()
             self.assertIsInstance(pilot.app.screen, HomeScreen)
+
+
+    # --- 2026-11-15 (projets 3.0.0 §7.4) : export, import, conflit de port, contenu du site ---
+
+    async def _create_and_select(self, pilot, container) -> None:
+        pilot.app.screen.query_one("#create", Button).press()
+        for _ in range(100):
+            await pilot.pause(0.05)
+            if container.list_backups():
+                break
+        await pilot.pause(0.2)
+        table = pilot.app.screen.query_one("#backups-table", DataTable)
+        table.move_cursor(row=0)
+        table.action_select_cursor()
+        await pilot.pause()
+
+    async def test_export_then_import_through_the_screen(self):
+        exports = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, exports, ignore_errors=True)
+        container = self._container(instance_registry_path=self.root / "registre.json")
+        self._generate_config(container)
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_backup_screen(pilot)
+            await self._create_and_select(pilot, container)
+            pilot.app.screen.query_one("#export", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-dest_dir", Input).value = str(exports / "absent")
+            pilot.app.screen.query_one("#confirm", Button).press()
+            await pilot.pause()
+            self.assertIn("introuvable", str(pilot.app.screen.query_one("#df-error").content))  # formulaire garde
+            pilot.app.screen.query_one("#df-dest_dir", Input).value = str(exports)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            for _ in range(100):
+                await pilot.pause(0.05)
+                if list(exports.glob("*.sha256")):
+                    break
+            archive = next(exports.glob("*.tar.gz"))
+            pilot.app.screen.query_one("#import", Button).press()
+            await pilot.pause()
+            pilot.app.screen.query_one("#df-archive", Input).value = str(archive)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            for _ in range(100):
+                await pilot.pause(0.05)
+                if len(container.list_backups()) == 2:
+                    break
+        self.assertEqual(len(container.list_backups()), 2)
+        self.assertTrue(any("importée" in m.description for m in container.list_backups()))
+
+    async def test_port_conflict_is_explained_and_current_port_kept(self):
+        from datetime import datetime, timezone
+
+        from omega_serv.application.config.load_config import load_config
+        from omega_serv.domain.instances.entities import InstanceEntry
+
+        container = self._container(instance_registry_path=self.root / "registre.json")
+        self._generate_config(container)
+        config = load_config(container.configuration, container.config_file).config
+        archived_port = config.server.port
+        container.instance_registry.save([InstanceEntry(
+            name="voisine", path=self.root.parent / "voisine", bind=config.server.bind, port=archived_port,
+            service_name="omega-serv-voisine", created_at=datetime(2026, 11, 15, tzinfo=timezone.utc))])
+        app = OmegaServApp(container)
+        async with app.run_test(size=(120, 50)) as pilot:
+            await self._start(pilot)
+            await self._open_backup_screen(pilot)
+            await self._create_and_select(pilot, container)
+            # cette instance change de port apres la sauvegarde
+            from dataclasses import replace
+            current = load_config(container.configuration, container.config_file).config
+            container.configuration.save(container.config_file,
+                                         replace(current, server=replace(current.server, port=archived_port + 1)))
+            pilot.app.screen.query_one("#restore", Button).press()
+            await pilot.pause()
+            self.assertIsInstance(pilot.app.screen, ConfirmScreen)
+            message = " ".join(str(s.content) for s in pilot.app.screen.query("Static"))
+            self.assertIn("voisine", message)
+            self.assertIn(str(archived_port + 1), message)
+            pilot.app.screen.query_one("#confirm", Button).press()
+            for _ in range(100):
+                await pilot.pause(0.05)
+                if not pilot.app.screen.query_one("#backups-table", DataTable).loading:
+                    break
+            await pilot.pause(0.2)
+        restored = load_config(container.configuration, container.config_file).config
+        self.assertEqual(restored.server.port, archived_port + 1)
 
 
 if __name__ == "__main__":

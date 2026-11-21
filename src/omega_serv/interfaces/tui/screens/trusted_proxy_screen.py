@@ -25,6 +25,7 @@ from omega_serv.application.config.load_config import load_config
 from omega_serv.core.i18n import _
 from omega_serv.domain.config.option import Option
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
 from omega_serv.interfaces.tui.screens.restart_prompt import notify_reload_required
@@ -118,7 +119,7 @@ class TrustedProxyScreen(OmegaScreen):
             self.dismiss()
             return
         if event.button.id == "add":
-            self.app.push_screen(
+            self.push_form(
                 DynamicFormScreen(title=_("AJOUTER UN RÉSEAU"), fields=[("network", _("Réseau CIDR (ex: 10.0.0.0/8)"), "")]),
                 self._add_network,
             )
@@ -139,10 +140,16 @@ class TrustedProxyScreen(OmegaScreen):
         try:
             ipaddress.ip_network(network_text, strict=False)
         except ValueError:
-            self.query_one("#form-error", Static).update(_("Réseau CIDR invalide : {network_text!r}").format(network_text=network_text))
+            self.report_form_error(_("Réseau CIDR invalide : {network_text!r}").format(network_text=network_text))
             return
         settings = self._settings()
         networks = list(settings.get("trusted_networks", []))
+        normalized = str(ipaddress.ip_network(network_text, strict=False))
+        duplicate = duplicate_error(networks, normalized, lambda v: str(ipaddress.ip_network(v, strict=False)),
+                                    _("le réseau {value!r}").format(value=normalized))
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         networks.append(network_text)
         self._save_settings(trusted_networks=networks)
 
@@ -159,11 +166,11 @@ class TrustedProxyScreen(OmegaScreen):
             item.strip() for item in self.query_one("#header-preference-input", Input).value.split(",") if item.strip()
         ]
         if not headers:
-            self.query_one("#form-error", Static).update(_("La liste des en-têtes ne peut pas être vide."))
+            self.report_form_error(_("La liste des en-têtes ne peut pas être vide."))
             return
         invalid = [header for header in headers if not _HEADER_NAME.match(header)]
         if invalid:
-            self.query_one("#form-error", Static).update(
+            self.report_form_error(
                 _("Nom d'en-tête invalide : {invalid}").format(invalid=", ".join(invalid))
             )
             return
@@ -172,7 +179,7 @@ class TrustedProxyScreen(OmegaScreen):
     def _save_settings(self, **updates: object) -> None:
         load_result = load_config(self._container.configuration, self._container.config_file)
         if not load_result.success or load_result.config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         existing = load_result.config.options.get("trusted_proxy")
         enabled = existing.enabled if existing is not None else False

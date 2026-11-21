@@ -157,7 +157,7 @@ def test_without_any_scheduler_the_line_is_shown(tmp_path: Path) -> None:
 
 # ---- Sante des logs : automatisations (2026-11-07) ----------------------------------
 
-from omega_serv.domain.logs.health import HealthLevel, evaluate_automations  # noqa: E402
+from omega_serv.domain.logs.health import HealthLevel, evaluate_automations
 
 
 def test_health_flags_missing_schedule_overdue_and_failing() -> None:

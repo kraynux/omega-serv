@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import asyncio
 import re
+import urllib.parse
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from omega_serv.domain.http.headers import has_control_characters
@@ -73,12 +75,64 @@ async def _read_line_bounded(reader: asyncio.StreamReader, max_size: int, on_too
     except asyncio.IncompleteReadError as e:
         if not e.partial:
             raise ConnectionClosedCleanly() from e
+        if len(e.partial) > max_size + 1:
+            # Plan proxy natif v2, lot 1N (D38) : une ligne deja trop longue ne pouvait plus devenir valide (un `\r`
+            # final tient encore dans max_size + 1) - meme statut que si le CRLF etait arrive, comme le natif (avant :
+            # 400 ici, 414 / 431 en natif).
+            raise HttpParseError(on_too_long, "ligne trop longue") from e
         raise HttpParseError(HttpStatus.BAD_REQUEST, "connexion fermée de manière inattendue") from e
 
     line = raw[:-2]  # retire le CRLF final
     if len(line) > max_size:
         raise HttpParseError(on_too_long, "ligne trop longue")
     return line
+
+
+_TARGET_CONTROL_CHARACTER = re.compile(r"[\x00-\x20\x7f]")
+"""Octet de controle dans la cible (< 0x21 ou 0x7F, lot 1 D26/P12) : une recherche en C au lieu d'un `ord` par
+caractere (2026-11-19, ETUDE_PROXY_ET_MEMOIRE §12)."""
+
+
+def is_supported_target_form(target: str) -> bool:
+    """Scan de securite n° 2 (2026-11-20, F1-F3) : seules la forme origine (`/...`), la forme absolue http(s) et
+    `*` (OPTIONS) sont servies. `GET private/x HTTP/1.1` etait accepte : aucune zone d'authentification ni regle
+    d'acces (prefixe `/private`) ne le reconnaissait, mais le resolveur de fichiers servait `webroot/private/x`.
+    Meme regle dans le natif (http_parser.cpp, is_supported_target_form)."""
+    if target.startswith("/") or target == "*":
+        return True
+    lowered = target[:8].lower()
+    return lowered.startswith(("http://", "https://"))
+
+
+def has_dot_segment(target: str) -> bool:
+    """Plan proxy natif v2, lot 1 (D26, decision de l'auteur) : segment « . » ou « .. » dans le chemin de la cible,
+    ecrit tel quel ou encode (%2e ; %2f et %5c comptes comme separateurs, comme un backend qui les decode). Avant,
+    `/api/../admin` restait dans la zone proxy /api/ et les regles d'acces voyaient le chemin brut."""
+    # 2026-11-19 (ETUDE_PROXY_ET_MEMOIRE §12) : raccourci a resultat identique. Un segment « . » ou « .. » commence
+    # par un point precede d'un « / » ; sans « % » ni « \\ » (seules sources d'un point ou d'un separateur encodes),
+    # il faut donc un « /. » litteral dans la cible.
+    if "/." not in target and "%" not in target and "\\" not in target:
+        return False
+    path = target
+    if not target.startswith("/"):
+        scheme_end = target.find("://")
+        if scheme_end < 0:
+            return False  # « * » ou forme d'autorite : aucun chemin
+        rest = target[scheme_end + 3:]
+        slash = rest.find("/")
+        path = rest[slash:] if slash >= 0 else ""
+    path = path.split("?", 1)[0].split("#", 1)[0]
+    # Scan de securite n° 1 (2026-11-20, F18/F19/F23/F26/F29) : DEUX passes de decodage, comme le resolveur de
+    # fichiers (path_policy._MAX_DECODE_PASSES). Une seule passe laissait passer `%252e%252e`, qui devenait `..`
+    # au service du fichier et sortait d'une zone `allow`. Decodage octet par octet (latin-1) : jamais d'erreur.
+    for _ in range(2):
+        decoded = urllib.parse.unquote(path, encoding="latin-1")
+        if decoded == path:
+            break
+        path = decoded
+    # Scan de securite n° 2 (2026-11-20, F15) : `..;jsessionid` est un `..` pour un backend Java (parametre de
+    # chemin), il sortait de la zone proxy : seule la partie avant `;` compte.
+    return any(segment.split(";", 1)[0] in (".", "..") for segment in path.replace("\\", "/").split("/"))
 
 
 def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
@@ -89,6 +143,14 @@ def _parse_request_line(raw_line: bytes) -> tuple[str, str, str]:
     method, target, http_version = parts
     if not method or not target or not http_version.startswith("HTTP/"):
         raise HttpParseError(HttpStatus.BAD_REQUEST, "ligne de requête malformée")
+    # Plan proxy natif v2, lot 1 (D26, P12, RFC 9112 §3.2) : aucun octet de controle dans la cible (< 0x21 ou 0x7F),
+    # sur toutes les routes - le proxy la recopiait telle quelle vers le backend. Meme regle dans le natif.
+    if _TARGET_CONTROL_CHARACTER.search(target) is not None:
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "caractère de contrôle dans la cible")
+    if not is_supported_target_form(target):
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "cible de requête hors forme origine")
+    if has_dot_segment(target):
+        raise HttpParseError(HttpStatus.BAD_REQUEST, "segment . ou .. dans la cible")
     # Durcissement 2026-11-02 (RFC 9112 §2.3, RFC 9110 §6.2 ; plan moteur C++ §14) : toute version commencant
     # par « HTTP/ » etait servie (HTTP/9.9, HTTP/abc...). Version mal ecrite -> 400 ; majeure autre que 1 ->
     # 505 ; 1.2 a 1.9 -> traitee comme 1.1 (plus haute version 1.x prise en charge).
@@ -125,11 +187,18 @@ async def read_request_head(
     reader: asyncio.StreamReader,
     max_request_line_size: int,
     max_header_size: int,
+    on_request_line: Callable[[], object] | None = None,
 ) -> ParsedRequestHead:
     """Lit et parse la ligne de requete et les en-tetes - jamais le
     corps (voir read_and_discard_body). Chaque limite est appliquee
-    PENDANT la lecture, jamais seulement verifiee apres coup."""
+    PENDANT la lecture, jamais seulement verifiee apres coup.
+
+    `on_request_line` (lot 7 du plan proxy natif) : appele des que la
+    ligne de requete est lue - la connexion n'attend plus sa requete
+    suivante, l'arret doit lui laisser le delai de grace."""
     raw_request_line = await _read_line_bounded(reader, max_request_line_size, HttpStatus.URI_TOO_LONG)
+    if on_request_line is not None:
+        on_request_line()
     headers: list[tuple[str, str]] = []
     try:
         method, target, http_version = _parse_request_line(raw_request_line)
@@ -184,6 +253,8 @@ async def read_and_discard_body(
     head: ParsedRequestHead,
     max_request_size: int,
     capture_max_bytes: int = 0,
+    reject_over: int | None = None,
+    timeout: float | None = None,
 ) -> tuple[int, bytes]:
     """Consomme le corps eventuel d'une requete (necessaire pour garder
     le flux synchronise avant la prochaine requete en keep-alive, meme
@@ -197,6 +268,9 @@ async def read_and_discard_body(
     Refuse explicitement `Transfer-Encoding` (jamais devine) et tout
     Content-Length incoherent - la gestion fine de l'ambiguite
     Content-Length/Transfer-Encoding est un chantier de la Phase 2.
+
+    `timeout` (lot 11, F1) : delai relance a chaque bloc recu, avec un debit moyen minimal
+    (BODY_MIN_RATE_BYTES_PER_SECOND) ; asyncio.TimeoutError au-dela. None : aucun delai ici (l'appelant borne).
 
     Returns:
         (nombre d'octets de corps effectivement consommes, extrait capture).
@@ -218,8 +292,14 @@ async def read_and_discard_body(
     content_length = int(content_length_header)
     if content_length > max_request_size:
         raise HttpParseError(HttpStatus.PAYLOAD_TOO_LARGE, "corps de requête trop volumineux")
+    if reject_over is not None and content_length > reject_over:
+        # Plan proxy natif v2, lot 2 : waf.inspect.body_over_limit = reject - rien de non inspecte ne passe.
+        raise HttpParseError(HttpStatus.PAYLOAD_TOO_LARGE,
+                             "corps plus grand que la partie inspectée par le WAF (waf.inspect.body_over_limit = reject)")
 
     captured = b""
+    if content_length > 0 and timeout is not None:
+        return content_length, await _read_body_with_deadline(reader, content_length, capture_max_bytes, timeout)
     if content_length > 0:
         try:
             body = await reader.readexactly(content_length)
@@ -228,3 +308,31 @@ async def read_and_discard_body(
         if capture_max_bytes > 0:
             captured = body[:capture_max_bytes]
     return content_length, captured
+
+
+BODY_MIN_RATE_BYTES_PER_SECOND = 500
+"""Lot 11, constat F1 (decision de l'auteur du 2026-11-14 : dans le code, pas une option) : le corps n'a plus a arriver
+en entier dans `read_timeout_seconds`. Echeance = min(dernier octet + delai, debut du corps + delai + recu / 500 o/s),
+comme mod_reqtimeout d'Apache (body=20,MinRate=500) - meme regle que le moteur natif (server.cpp, body_deadline)."""
+
+
+async def _read_body_with_deadline(reader: asyncio.StreamReader, content_length: int, capture_max_bytes: int,
+                                   timeout: float) -> bytes:
+    """Lit `content_length` octets ; asyncio.TimeoutError si l'echeance (relancee a chaque bloc) est depassee. Ne
+    garde que les `capture_max_bytes` premiers octets (le reste est lu puis jete)."""
+    loop = asyncio.get_running_loop()
+    started = last = loop.time()
+    received = 0
+    kept = bytearray()
+    while received < content_length:
+        remaining = min(last + timeout, started + timeout + received / BODY_MIN_RATE_BYTES_PER_SECOND) - loop.time()
+        if remaining <= 0:
+            raise asyncio.TimeoutError
+        chunk = await asyncio.wait_for(reader.read(min(65536, content_length - received)), remaining)
+        if not chunk:
+            raise HttpParseError(HttpStatus.BAD_REQUEST, "corps de requête incomplet")
+        received += len(chunk)
+        last = loop.time()
+        if len(kept) < capture_max_bytes:
+            kept += chunk[:capture_max_bytes - len(kept)]
+    return bytes(kept)

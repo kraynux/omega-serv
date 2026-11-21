@@ -24,9 +24,11 @@ std::vector<std::string_view> py_split_whitespace(std::string_view utf8);  // st
 
 // UTF-8 -> latin-1 (encodage des en-tetes de reponse cote Python) ; nullopt si un caractere depasse U+00FF
 // (Python leve alors UnicodeEncodeError et la connexion est fermee sans reponse).
+// Lot 11 : aucun octet >= 0x80.
+bool all_ascii(std::string_view text);
 std::optional<std::string> utf8_to_latin1(std::string_view utf8);
 
-// access_log_format.py::sanitize_log_field : caracteres 0x00-0x1F -> espace, puis s[:max_length].
+// access_log_format.py::sanitize_log_field : caracteres 0x00-0x1F, DEL, C1 et U+2028/2029 -> espace (scan n° 2, F29), puis s[:max_length].
 std::string sanitize_log_field(std::string_view utf8, std::size_t max_length);
 
 }  // namespace omega

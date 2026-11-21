@@ -204,5 +204,23 @@ class TestIsExpired(unittest.TestCase):
         self.assertTrue(is_expired(entry, now=200.0))
 
 
+class TestLot1CacheRules(unittest.TestCase):
+    """Plan proxy natif v2, lot 1 (D13, §2.1 point 6)."""
+
+    def test_partial_content_is_never_stored(self):
+        self.assertFalse(is_cacheable_response(206, (("Content-Range", "bytes 0-9/100"),), allow_set_cookie=False))
+
+    def test_vary_star_is_never_stored(self):
+        self.assertFalse(is_cacheable_response(200, (("Vary", "Accept, *"),), allow_set_cookie=False))
+        self.assertTrue(is_cacheable_response(200, (("Vary", "Accept"),), allow_set_cookie=False))
+
+    def test_authenticated_request_stored_only_when_public(self):
+        private = (("Cache-Control", "max-age=60"),)
+        public = (("Cache-Control", "Public, max-age=60"),)
+        self.assertFalse(is_cacheable_response(200, private, allow_set_cookie=False, request_had_authorization=True))
+        self.assertTrue(is_cacheable_response(200, public, allow_set_cookie=False, request_had_authorization=True))
+        self.assertTrue(is_cacheable_response(200, private, allow_set_cookie=False))  # garde : sans Authorization
+
+
 if __name__ == "__main__":
     unittest.main()

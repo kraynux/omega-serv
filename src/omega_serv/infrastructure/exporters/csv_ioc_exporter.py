@@ -30,7 +30,7 @@ class CsvIoCExporter:
         writer.writeheader()
         for indicator in shareable:
             writer.writerow({
-                "kind": indicator.kind, "value": indicator.value, "confidence": indicator.confidence,
+                "kind": indicator.kind, "value": _neutral_cell(indicator.value), "confidence": indicator.confidence,
                 "first_seen": indicator.first_seen.isoformat(), "last_seen": indicator.last_seen.isoformat(),
             })
         content = buffer.getvalue()
@@ -39,3 +39,9 @@ class CsvIoCExporter:
         self._filesystem.atomic_write_text(path, content)
         write_export_checksum(self._filesystem, path, content)
         return ExportResult(path=path, export_format="csv", bytes_written=len(content.encode("utf-8")))
+
+
+def _neutral_cell(value: str) -> str:
+    """Scan de securite n° 2 (2026-11-20, F40) : une valeur commencant par = + - @ tabulation ou retour chariot est
+    lue comme une formule par un tableur (injection CSV) ; prefixee d'une apostrophe, elle reste du texte."""
+    return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value

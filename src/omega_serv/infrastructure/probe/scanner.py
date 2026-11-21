@@ -46,7 +46,7 @@ _REVERSE_PROXY_BINARIES = ("nginx", "caddy")
 
 class SystemCapabilityScanner:
     """Implementation reelle de CapabilityScannerPort. `configured_port`
-    et `fastcgi_socket` sont figes a la construction (deja resolus
+    et `fastcgi_sockets` sont figes a la construction (deja resolus
     depuis la configuration chargee par l'appelant) - `scan()` lui-meme
     ne prend aucun parametre, conformement au port."""
 
@@ -55,19 +55,19 @@ class SystemCapabilityScanner:
         project_root: Path,
         filesystem: FilesystemPort,
         configured_port: int,
-        fastcgi_socket: Path | None,
+        fastcgi_sockets: tuple[Path, ...] = (),
     ) -> None:
         self._project_root = project_root
         self._filesystem = filesystem
         self._configured_port = configured_port
-        self._fastcgi_socket = fastcgi_socket
+        self._fastcgi_sockets = fastcgi_sockets
 
     def scan(self) -> tuple[Capability, ...]:
         capabilities: list[Capability] = [
             self._probe_service_manager(),
             self._probe_python_version(),
             self._probe_port(self._configured_port, "port-configure", _("Port configuré")),
-            *self._probe_fastcgi_socket(),
+            *(self._probe_fastcgi_socket(index, path) for index, path in enumerate(self._fastcgi_sockets)),
             self._probe_magnet_dependency(),
             *(self._probe_binary(name, (name,), "outil") for name in _OPTIONAL_BINARIES),
             self._probe_directory("var"),
@@ -128,23 +128,23 @@ class SystemCapabilityScanner:
             id=capability_id, status=CapabilityStatus.AVAILABLE, reason=_("{label} : libre").format(label=label), category="reseau",
         )
 
-    def _probe_fastcgi_socket(self) -> tuple[Capability, ...]:
-        if self._fastcgi_socket is None:
-            return ()
+    def _probe_fastcgi_socket(self, index: int, fastcgi_socket: Path) -> Capability:
+        """Une ligne par socket des zones FastCGI actives (projets 3.0.0 §8.1 : une socket par zone possible)."""
+        capability_id = "fastcgi-socket" + ("" if index == 0 else "-" + str(index + 1))
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                 sock.settimeout(1.0)
-                sock.connect(str(self._fastcgi_socket))
+                sock.connect(str(fastcgi_socket))
         except OSError as exc:
-            return (Capability(
-                id="fastcgi-socket", status=CapabilityStatus.MISSING,
-                reason=_("Socket PHP-FPM injoignable ({fastcgi_socket}) : {value}").format(fastcgi_socket=self._fastcgi_socket, value=exc.strerror or exc),
+            return Capability(
+                id=capability_id, status=CapabilityStatus.MISSING,
+                reason=_("Socket PHP-FPM injoignable ({fastcgi_socket}) : {value}").format(fastcgi_socket=fastcgi_socket, value=exc.strerror or exc),
                 category="fastcgi",
-            ),)
-        return (Capability(
-            id="fastcgi-socket", status=CapabilityStatus.AVAILABLE,
-            reason=_("Socket PHP-FPM opérationnel ({fastcgi_socket})").format(fastcgi_socket=self._fastcgi_socket), category="fastcgi",
-        ),)
+            )
+        return Capability(
+            id=capability_id, status=CapabilityStatus.AVAILABLE,
+            reason=_("Socket PHP-FPM opérationnel ({fastcgi_socket})").format(fastcgi_socket=fastcgi_socket), category="fastcgi",
+        )
 
     def _probe_magnet_dependency(self) -> Capability:
         """Script WAF complementaire "magnet" (options.waf.magnet,

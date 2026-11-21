@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from omega_serv.infrastructure.waf.rate_limit_store import InMemoryRateLimitStore
+from omega_serv.infrastructure.waf.rate_limit_store import MAX_TRACKED_KEYS, InMemoryRateLimitStore
 
 
 class _FakeClock:
@@ -17,6 +17,20 @@ class TestInMemoryRateLimitStore(unittest.TestCase):
         self.now = datetime(2026, 9, 5, tzinfo=timezone.utc)
         self.clock = _FakeClock(self.now)
         self.store = InMemoryRateLimitStore(self.clock)
+
+    def test_tracked_addresses_are_capped_least_recent_replaced(self):
+        # Plan proxy natif v2, lot A (D33) : une entree par adresse gardee 1 h sans plafond (une source IPv6 qui change
+        # d'adresse a chaque requete remplissait la table). Plafond : la moins recemment vue est remplacee.
+        store = InMemoryRateLimitStore(self.clock, max_tracked_keys=3)
+        for key in ("a", "b", "c"):
+            self.assertTrue(store.check(key, requests=1, window_seconds=60).allowed)
+        self.assertFalse(store.check("a", requests=1, window_seconds=60).allowed)  # « a » vue a nouveau
+        self.assertTrue(store.check("d", requests=1, window_seconds=60).allowed)   # table pleine : « b » remplacee
+        self.assertFalse(store.check("a", requests=1, window_seconds=60).allowed)  # jamais remise a zero
+        self.assertTrue(store.check("b", requests=1, window_seconds=60).allowed)   # repart a pleine capacite
+
+    def test_default_cap_is_the_native_one(self):
+        self.assertEqual(MAX_TRACKED_KEYS, 100_000)  # rate_limiter.cpp::kMaxTrackedKeys - les deux moteurs (C20)
 
     def test_allows_within_quota(self):
         result = self.store.check("203.0.113.1", requests=2, window_seconds=60)

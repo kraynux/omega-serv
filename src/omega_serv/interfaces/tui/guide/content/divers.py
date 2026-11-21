@@ -43,17 +43,74 @@ PROFILES_SCREEN = ScreenGuide(
     screen_class_name="ProfilesScreen",
     title=_("Profils"),
     acces=_("Accueil -> Profils"),
-    definition=_("Liste et décrit les 4 profils de base preconfigures (minimal/standard/hardened/development)."),
+    definition=_("Liste les 4 profils fournis (minimal/standard/hardened/development) et vos profils "
+                 "personnalisés (colonne Type), avec leur libellé."),
     fields=(
         FieldGuide(
             label=_("Appliquer"),
             definition=_("Ouvre l'écran de confirmation d'application du profil sélectionné."),
             utilisation=_("Sélectionner un profil active ce bouton."),
             action=_("Ouvre ApplyProfileScreen."),
-            reaction=_("Aucun effet ici - voir la fiche d'ApplyProfileScreen."),
+            reaction=_("Un profil personnalisé ne fixe que la sécurité et l'état des options : adresse, port, TLS, "
+                       "chemins, journaux et réglages des options (zones, listes) restent ceux de l'instance."),
+        ),
+        FieldGuide(
+            label=_("Créer un profil personnalisé"),
+            definition=_("Ouvre l'assistant. Si un profil personnalisé est sélectionné, l'assistant repart de ses "
+                         "choix (un profil personnalisé ne se modifie pas : on en recrée un)."),
+            utilisation=_("Aucune limite de nombre : un seul profil est appliqué à la fois."),
+            action=_("Enregistre config/profiles/custom/<nom>.json ; la configuration n'est pas touchée."),
+            reaction=_("Compris dans toute sauvegarde de configuration et repris lors d'une mise à jour."),
+        ),
+        FieldGuide(
+            label=_("Supprimer"),
+            definition=_("Supprime le profil personnalisé sélectionné, après confirmation."),
+            utilisation=_("Grisé pour les profils fournis."),
+            action=_("Efface son fichier ; la configuration actuelle n'est pas modifiée."),
+            reaction=_("Aucun effet sur le serveur."),
         ),
     ),
-    consequences=_("Purement consultatif - aucune modification depuis cet écran lui-même."),
+    consequences=_("Aucune modification de la configuration depuis cet écran lui-même."),
+)
+
+CUSTOM_PROFILE_SCREEN = ScreenGuide(
+    screen_class_name="CustomProfileScreen",
+    title=_("Créer un profil personnalisé"),
+    acces=_("Accueil -> Profils -> Créer un profil personnalisé"),
+    definition=_("Assistant guidé : on part d'un serveur web minimal sans protection et on choisit chaque réglage "
+                 "dans une liste. Ce que le cœur HTTP impose (analyse stricte, confinement au webroot, rejet de la "
+                 "traversée, normalisation, HSTS jamais sans TLS) reste toujours actif et n'est pas proposé."),
+    fields=(
+        FieldGuide(
+            label=_("Nom, libellé, description"),
+            definition=_("Identification du profil, relue par le tableau de bord."),
+            utilisation=_("Nom : 3 à 32 caractères a-z, 0-9, « - », « _ » (nom du fichier), jamais celui d'un autre "
+                          "profil. Libellé : 3 à 40 caractères imprimables. Description : 200 au plus."),
+            action=_("Vérifiés à chaque frappe ; l'erreur s'affiche sous le champ, rien n'est effacé."),
+            reaction=_("Enregistrer reste grisé tant qu'un champ est faux."),
+        ),
+        FieldGuide(
+            label=_("Choix"),
+            definition=_("En-têtes de sécurité, CSP, fichiers cachés, Host, méthodes HTTP, WAF, authentification, "
+                         "directory listing, FastCGI, cache, proxy de confiance, contrôle d'accès, reverse proxy."),
+            utilisation=_("Listes déroulantes uniquement : aucune valeur à deviner ou à taper."),
+            action=_("La vérification se met à jour à chaque changement."),
+            reaction=_("Les réglages détaillés (zones, listes, règles) se font ensuite dans la Configuration "
+                       "détaillée, comme pour tout profil."),
+        ),
+        FieldGuide(
+            label=_("Vérification"),
+            definition=_("Les « trous » de la combinaison choisie : bloquants (ex. FastCGI sans POST) ou à accepter "
+                         "(ex. pas d'en-têtes de sécurité, fichiers cachés servis, pas de WAF), plus les contrôles "
+                         "de la configuration qui en résulterait."),
+            utilisation=_("Un trou bloquant se corrige en changeant un choix ; chaque trou à accepter est décrit, "
+                          "suivi de sa propre case « J'accepte ce point »."),
+            action=_("Enregistrer n'est actif que sans trou bloquant et avec chaque trou accepté."),
+            reaction=_("Jamais une erreur découverte après coup."),
+        ),
+    ),
+    consequences=_("Enregistrer crée le profil sans l'appliquer : appliquez-le ensuite depuis l'écran Profils, "
+                   "avec la différence complète affichée avant."),
 )
 
 APPLY_PROFILE_SCREEN = ScreenGuide(
@@ -92,6 +149,18 @@ AUDIT_SCREEN = ScreenGuide(
             utilisation=_("Aucune saisie - un premier audit a déjà lieu automatiquement à l'ouverture de l'écran."),
             action=_("Relit la configuration et recalculé toutes les règles d'audit."),
             reaction=_("Aucun effet sur le serveur (lecture seule) - notifie explicitement le résultat sur un clic explicite."),
+        ),
+        FieldGuide(
+            label=_("Fichiers sensibles sous webroot (PERM-003, PERM-004)"),
+            definition=_("Chaque fichier est nommé sous le constat, avec la raison (nom connu comme .env, ou "
+                         "extension comme .key) et ce qu'il contient vraiment, lu dans le fichier et non deviné "
+                         "d'après son nom : clé privée, certificat, conteneur PKCS#12, dossier, contenu présent ou "
+                         "fichier vide."),
+            utilisation=_("Un fichier qui a du contenu est critique (PERM-003). Un fichier vide, par exemple un "
+                          "exemple posé pour l'icône du directory listing, est seulement une information (PERM-004)."),
+            action=_("Dix fichiers au plus sont listés à l'écran, puis « et N autres » ; la liste complète est "
+                     "dans « omega-serv audit security --format json »."),
+            reaction=_("Rien n'est déplacé ni supprimé : à vous de sortir ces fichiers du webroot (ex. secure/)."),
         ),
     ),
     consequences=_("Purement consultatif - ne modifie jamais rien."),
@@ -150,6 +219,58 @@ BACKUP_SCREEN = ScreenGuide(
             reaction=_("Aucun effet immédiat."),
         ),
         FieldGuide(
+            label=_("Inclure le contenu du site (webroot)"),
+            definition=_("Ajoute tout le dossier du site (pages, images, fichiers), en plus de la configuration."),
+            utilisation=_("Case à cocher, jamais comprise dans « Tout sauvegarder » : ce n'est pas de la "
+                          "configuration, et un gros site rend la sauvegarde longue et lourde."),
+            action=_("La liste affiche un indicateur d'attente pendant la création ; l'écran reste utilisable."),
+            reaction=_("La configuration, elle, contient déjà tout ce qui a été saisi à la main (alias, rewrites, "
+                       "redirections, directory listing, cache, reverse proxy et ses zones)."),
+        ),
+        FieldGuide(
+            label=_("Inclure les données des zones personnalisées"),
+            definition=_("Ajoute les dossiers vers lesquels pointent les zones : cible des alias, dossiers du "
+                         "listing (avec leurs fichiers HEADER et README), scripts FastCGI (hors du site par "
+                         "construction). Les réglages de toutes les zones sont déjà dans la configuration."),
+            utilisation=_("Case à cocher, jamais comprise dans « Tout sauvegarder ». Rewrites, redirections et cache "
+                          "n'ont que des réglages ; le cache du reverse proxy se reconstruit et n'est jamais sauvegardé."),
+            action=_("Un dossier déjà couvert par le contenu du site n'est archivé qu'une fois. Une cible hors du "
+                     "dossier omega-serv (alias vers /srv/..., par exemple) est signalée après la création, pas "
+                     "sauvegardée."),
+            reaction=_("À l'import, ces dossiers sont acceptés seulement si la configuration de l'archive les "
+                       "désigne, jamais un emplacement de l'installation (src, tools, native...)."),
+        ),
+        FieldGuide(
+            label=_("Inclure les rapports d'export"),
+            definition=_("Ajoute le dossier des exports (rapports HTML, TXT, JSON, IoC...) : celui choisi dans "
+                         "Réglages, var/exports par défaut."),
+            utilisation=_("Case à cocher, jamais comprise dans « Tout sauvegarder » : ce sont des documents produits, "
+                          "pas de la configuration."),
+            action=_("Un dossier d'export hors du dossier omega-serv est signalé, pas sauvegardé."),
+            reaction=_("Aucun effet immédiat - juste le contenu de la sauvegarde créée."),
+        ),
+        FieldGuide(
+            label=_("Exporter"),
+            definition=_("Copie la sauvegarde SÉLECTIONNÉE hors du dossier omega-serv, avec son empreinte .sha256."),
+            utilisation=_("Dossier de destination (votre dossier personnel par défaut). Un fichier déjà présent "
+                          "n'est jamais écrasé ; l'archive est lisible par vous seul (elle peut contenir des secrets)."),
+            action=_("Écrit omega-serv-<instance>-<id>.tar.gz et le fichier .sha256 à côté."),
+            reaction=_("Une sauvegarde exportée survit à la désinstallation d'omega-serv (le dossier var/backups "
+                       "est supprimé avec l'instance)."),
+        ),
+        FieldGuide(
+            label=_("Importer une sauvegarde"),
+            definition=_("Ajoute à la liste une sauvegarde exportée, par exemple sur une installation neuve."),
+            utilisation=_("Chemin de l'archive ; son fichier .sha256 doit être à côté. Refusée si l'empreinte est "
+                          "absente ou fausse, si l'archive contient un chemin absolu, « .. », un lien ou un "
+                          "emplacement qu'une sauvegarde omega-serv ne contient pas, ou si elle n'a pas de "
+                          "config/omega-serve.json."),
+            action=_("Copie l'archive vérifiée dans la liste ; rien n'est encore restauré."),
+            reaction=_("La restauration reste une étape à part, confirmée : la fenêtre signale une version "
+                       "d'omega-serv différente et un conflit de port avec une autre instance (on peut alors "
+                       "garder l'adresse, le port et le nom de service de l'instance actuelle)."),
+        ),
+        FieldGuide(
             label=_("Description"),
             definition=_("Note libre associée à la sauvegarde, pour la retrouver plus tard."),
             utilisation=_("Texte libre, optionnel."),
@@ -165,6 +286,11 @@ BACKUP_SCREEN = ScreenGuide(
                 _("Nécessite TOUJOURS un REDÉMARRAGE COMPLET par prudence - une restauration peut "
                 "écraser n'importe quel fichier (configuration, certificats TLS...), et un "
                 "certificat déjà en mémoire ne se recharge jamais tout seul.")
+                + " "
+                + _("Après la restauration, les dossiers des zones actives qui manquent sur le disque (cible d'un "
+                "alias, dossier d'un listing, scripts d'une zone FastCGI) sont listés sous la liste des "
+                "sauvegardes : un alias ou un listing absent répond 404, une zone FastCGI active sans dossier "
+                "empêche le serveur de démarrer.")
             ),
         ),
         FieldGuide(
@@ -360,13 +486,55 @@ DECLARATION_SCREEN = ScreenGuide(
     ),
 )
 
+FULL_REPORT_SCREEN = ScreenGuide(
+    screen_class_name="FullReportScreen",
+    title=_("Rapport complet"),
+    acces=_("Accueil -> Rapport complet"),
+    definition=_("Ce qui est configuré et actif, d'un coup d'œil, sans passer par chaque menu : réglages et système, "
+                 "jamais le trafic des visiteurs. Aucun secret : mots de passe, clés et jetons apparaissent au plus "
+                 "comme « défini » ou « absent »."),
+    fields=(
+        FieldGuide(
+            label=_("Sommaire"),
+            definition=_("Le minimum, toujours présent : identité (instance, dossier, version, profil, machine), "
+                         "fonctionnement (service, unité, en marche, démarrage, uptime, compte, processus), adresse "
+                         "et mode (site web, reverse proxy ou les deux), moteur utilisé, TLS (expiration), options, "
+                         "nombres de zones, sécurité, contrôles de la configuration, sauvegardes, journaux."),
+            utilisation=_("Actualiser relit tout ; un indicateur d'attente s'affiche pendant la génération."),
+            action=_("Lecture seule."),
+            reaction=_("L'écran ne gèle jamais, même sur un serveur très configuré."),
+        ),
+        FieldGuide(
+            label=_("Détail à inclure dans l'export"),
+            definition=_("Zones détaillées, reverse proxy, règles WAF, Active Defense et RIPOSTE, journaux suivis, "
+                         "réglages de toutes les options, audit de sécurité complet."),
+            utilisation=_("Cases à cocher ; le détail ne s'affiche pas à l'écran, il va seulement dans l'export."),
+            action=_("L'audit complet peut prendre quelques secondes."),
+            reaction=_("Les clés qui évoquent un secret (mot de passe, jeton, clé, hachage) sont remplacées par "
+                       "vrai ou faux."),
+        ),
+        FieldGuide(
+            label=_("Exporter"),
+            definition=_("HTML dans l'un des 5 thèmes d'export, TXT, ou JSON (données brutes, comparables d'une date "
+                         "à l'autre)."),
+            utilisation=_("Choisir le format, le thème pour le HTML, puis Exporter."),
+            action=_("Écrit omega-serv-rapport.<date>.<format> dans le dossier d'exports (Options), dans la langue "
+                     "des exports."),
+            reaction=_("Aucun effet sur le serveur."),
+        ),
+    ),
+    consequences=_("Purement consultatif - ne modifie jamais rien."),
+)
+
 ALL_DIVERS_GUIDES: tuple[ScreenGuide, ...] = (
     CAPABILITIES_SCREEN,
     CAPABILITY_DETAIL_SCREEN,
     PROFILES_SCREEN,
+    CUSTOM_PROFILE_SCREEN,
     APPLY_PROFILE_SCREEN,
     AUDIT_SCREEN,
     BACKUP_SCREEN,
+    FULL_REPORT_SCREEN,
     SETTINGS_SCREEN,
     CONTACT_SUPPORT_SCREEN,
     DECLARATION_SCREEN,

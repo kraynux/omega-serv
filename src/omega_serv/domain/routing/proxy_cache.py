@@ -124,10 +124,22 @@ def is_cacheable_request(method: str) -> bool:
 
 def is_cacheable_response(
     status_code: int, response_headers: tuple[tuple[str, str], ...], *, allow_set_cookie: bool,
+    request_had_authorization: bool = False,
 ) -> bool:
-    if status_code >= 400:
+    """Plan proxy natif v2, lot 1 (D13, §2.1 point 6) : jamais de 206 (morceau d'une reponse) ; `Vary: *` ne
+    designe aucune variante reutilisable ; une reponse a une requete authentifiee n'est partagee que si le backend
+    la declare `public` (RFC 9111 §3.5) - sinon une page privee pouvait etre servie a un autre visiteur."""
+    if status_code >= 400 or status_code == 206:
         return False
-    return allow_set_cookie or not any(name.lower() == "set-cookie" for name, _ in response_headers)
+    if not allow_set_cookie and any(name.lower() == "set-cookie" for name, _ in response_headers):
+        return False
+    vary = ",".join(value for name, value in response_headers if name.lower() == "vary")
+    if any(token.strip() == "*" for token in vary.split(",")):
+        return False
+    if request_had_authorization:
+        cache_control = ",".join(value for name, value in response_headers if name.lower() == "cache-control")
+        return "public" in {token.strip().lower().split("=", 1)[0] for token in cache_control.split(",")}
+    return True
 
 
 def primary_cache_key(method: str, host: str, path: str, query: str) -> str:

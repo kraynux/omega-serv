@@ -15,7 +15,7 @@ from textual.widgets import Button, Footer, Header, Static
 from omega_serv.application.config.load_config import load_config
 from omega_serv.core.i18n import _
 from omega_serv.domain.security.audit.entities import Severity
-from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._base import OmegaScreen, main_menu_title
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -44,14 +44,16 @@ class AuditScreen(OmegaScreen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with VerticalScroll(classes="omega-panel"):
-            yield Static(_("AUDIT DE SÉCURITÉ"), classes="omega-title")
+        with VerticalScroll(classes="omega-panel omega-main-panel"):
+            yield main_menu_title(_("AUDIT DE SÉCURITÉ"))
             yield Static("", id="audit-result")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Auditer"), id="audit", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Hors de la zone qui defile (demande de l'auteur du 2026-11-15) : le resultat peut etre long ; Retour seul
+        # et centre, sous l'action.
+        with Horizontal(classes="omega-actions omega-riposte-actions"), Container(classes="omega-btn-frame"):
+            yield Button(_("Auditer"), id="audit", variant="primary")
+        with Horizontal(classes="omega-actions omega-riposte-actions omega-service-back"), \
+                Container(classes="omega-btn-frame"):
+            yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -107,6 +109,7 @@ class AuditScreen(OmegaScreen):
                 label = _SEVERITY_LABELS[finding.severity]
                 lines.append(f"[{label}] {finding.rule_id} {finding.rule_name}")
                 lines.append(f"    {finding.message}")
+                lines.extend(f"      - {line}" for line in finding.detail_lines)
                 lines.append(f"    -> {finding.recommendation}")
         summary = audit.summary
         lines.append("")

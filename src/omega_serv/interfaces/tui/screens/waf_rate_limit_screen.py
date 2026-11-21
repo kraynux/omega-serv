@@ -36,6 +36,7 @@ from omega_serv.domain.security.waf.config import (
     validate_rate_limit_config,
 )
 from omega_serv.interfaces.tui.screens._base import OmegaScreen
+from omega_serv.interfaces.tui.screens._duplicates import duplicate_error
 from omega_serv.interfaces.tui.screens._service_reload import reload_service_after_waf_change
 from omega_serv.interfaces.tui.screens.confirm import ConfirmScreen
 from omega_serv.interfaces.tui.screens.dynamic_form_screen import DynamicFormScreen
@@ -128,11 +129,13 @@ class WafRateLimitScreen(OmegaScreen):
             yield Input(id="exclusion-extensions-input")
             yield Static(_("Dossiers dont le corps n'est pas inspecté (ex. /upload/)"), classes="omega-hint")
             yield Input(id="exclusion-body-prefixes-input")
-            with Horizontal(classes="omega-actions"):
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Enregistrer"), id="save-exclusions", variant="primary")
-                with Container(classes="omega-btn-frame"):
-                    yield Button(_("Retour"), id="back")
+        # Barre d'actions HORS de la zone qui defile, toujours visible (demande de l'auteur du 2026-11-15, modele RIPOSTE) :
+        # la liste peut grandir, Retour et la derniere rangee restent a portee sans derouler.
+        with Horizontal(classes="omega-actions omega-riposte-actions"):
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Enregistrer les exclusions"), id="save-exclusions", variant="primary")
+            with Container(classes="omega-btn-frame"):
+                yield Button(_("Retour"), id="back")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -155,7 +158,7 @@ class WafRateLimitScreen(OmegaScreen):
     def _refresh(self) -> None:
         config = self._config()
         if config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration."))
+            self.report_form_error(_("Erreur de configuration."))
             return
         waf_config = parse_waf_config(self._waf_settings(config))
         rate_limit = waf_config.rate_limit
@@ -254,7 +257,7 @@ class WafRateLimitScreen(OmegaScreen):
             return
         policies = parse_waf_config(self._waf_settings(config)).rate_limit.path_policies
         current = policies[index] if index is not None and index < len(policies) else PathRateLimitPolicy("/", 600, 60)
-        self.app.push_screen(
+        self.push_form(
             DynamicFormScreen(
                 title=_("RÈGLE DE DÉBIT PAR DOSSIER"),
                 fields=[
@@ -275,7 +278,7 @@ class WafRateLimitScreen(OmegaScreen):
             policies[index] if index is not None and index < len(policies)
             else SourceRateLimitPolicy("", 600, 60, False)
         )
-        self.app.push_screen(
+        self.push_form(
             DynamicFormScreen(
                 title=_("RÈGLE DE DÉBIT PAR IP / RÉSEAU"),
                 fields=[
@@ -292,7 +295,7 @@ class WafRateLimitScreen(OmegaScreen):
         try:
             return int(values["requests"] or "0"), int(values["window_seconds"] or "60")
         except ValueError:
-            self.query_one("#form-error", Static).update(_("Valeur invalide : un nombre entier est attendu."))
+            self.report_form_error(_("Valeur invalide : un nombre entier est attendu."))
             return None
 
     def _store_path(self, index: int | None, values: dict[str, str] | None) -> None:
@@ -304,6 +307,11 @@ class WafRateLimitScreen(OmegaScreen):
             return
         policy = PathRateLimitPolicy(prefix=values["prefix"], requests=counts[0], window_seconds=counts[1])
         policies = list(parse_waf_config(self._waf_settings(config)).rate_limit.path_policies)
+        duplicate = duplicate_error(policies, policy, lambda p: p.prefix,
+                                    _("une règle pour {value!r}").format(value=policy.prefix), index)
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         if index is None or index >= len(policies):
             policies.append(policy)
         else:
@@ -321,6 +329,11 @@ class WafRateLimitScreen(OmegaScreen):
             network=values["network"], requests=counts[0], window_seconds=counts[1], trusted=is_yes(values["trusted"]),
         )
         policies = list(parse_waf_config(self._waf_settings(config)).rate_limit.source_policies)
+        duplicate = duplicate_error(policies, policy, lambda p: p.network.strip(),
+                                    _("une règle pour {value!r}").format(value=policy.network), index)
+        if duplicate is not None:
+            self.report_form_error(duplicate)
+            return
         if index is None or index >= len(policies):
             policies.append(policy)
         else:
@@ -348,15 +361,19 @@ class WafRateLimitScreen(OmegaScreen):
     # --- enregistrement -----------------------------------------------
 
     def _save_global(self) -> None:
+        invalid = self.yes_no_inputs_error("#enabled-input")
+        if invalid is not None:
+            self.query_one("#form-error", Static).update(invalid)
+            return
         config = self._config()
         if config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         try:
             requests = int(self.query_one("#global-requests-input", Input).value.strip())
             window_seconds = int(self.query_one("#global-window-input", Input).value.strip())
         except ValueError:
-            self.query_one("#form-error", Static).update(_("Valeur invalide : un nombre entier est attendu."))
+            self.report_form_error(_("Valeur invalide : un nombre entier est attendu."))
             return
         settings = self._waf_settings(config)
         rate_limit = dict(settings.get("rate_limit", {}))
@@ -378,7 +395,7 @@ class WafRateLimitScreen(OmegaScreen):
     def _save_exclusions(self) -> None:
         config = self._config()
         if config is None:
-            self.query_one("#form-error", Static).update(_("Erreur de configuration - impossible d'enregistrer."))
+            self.report_form_error(_("Erreur de configuration - impossible d'enregistrer."))
             return
         settings = self._waf_settings(config)
         exclusions = dict(settings.get("exclusions", {}))
@@ -389,7 +406,7 @@ class WafRateLimitScreen(OmegaScreen):
         )
         invalid = [p for p in exclusions["path_prefixes"] + exclusions["do_not_inspect_body_path_prefixes"] if not p.startswith("/")]
         if invalid:
-            self.query_one("#form-error", Static).update(
+            self.report_form_error(
                 _("Un dossier doit commencer par « / » : {invalid}").format(invalid=", ".join(invalid))
             )
             return
@@ -400,7 +417,7 @@ class WafRateLimitScreen(OmegaScreen):
         error_widget = self.query_one("#form-error", Static)
         errors = validate_rate_limit_config(parse_waf_config(settings).rate_limit)
         if errors:
-            error_widget.update("\n".join(errors))
+            self.report_form_error("\n".join(errors))
             return
         existing = config.options.get("waf")
         enabled = existing.enabled if existing is not None else False

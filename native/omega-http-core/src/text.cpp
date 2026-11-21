@@ -91,7 +91,14 @@ std::vector<std::string_view> py_split_whitespace(std::string_view utf8) {
     return parts;
 }
 
+bool all_ascii(std::string_view text) {
+    unsigned char any = 0;
+    for (char c : text) any |= static_cast<unsigned char>(c);
+    return any < 0x80;
+}
+
 std::optional<std::string> utf8_to_latin1(std::string_view utf8) {
+    if (all_ascii(utf8)) return std::string(utf8);  // lot 11 (mesures) : cas des en-tetes, meme resultat
     std::string out;
     out.reserve(utf8.size());
     for (std::size_t i = 0; i < utf8.size();) {
@@ -103,9 +110,18 @@ std::optional<std::string> utf8_to_latin1(std::string_view utf8) {
 }
 
 std::string sanitize_log_field(std::string_view utf8, std::size_t max_length) {
-    std::string out(utf8_take(utf8, max_length));
-    for (char& c : out) {
-        if (static_cast<unsigned char>(c) < 0x20) c = ' ';
+    // Scan de securite n° 2 (2026-11-20, F29), comme error_log_line.py : controles C0, DEL, C1 (dont U+0085, NEL)
+    // et U+2028/U+2029 -> espace ; des lecteurs y voient une fin de ligne. Un caractere remplace par un seul espace.
+    const std::string taken(utf8_take(utf8, max_length));
+    std::string out;
+    out.reserve(taken.size());
+    for (std::size_t i = 0; i < taken.size();) {
+        const std::size_t start = i;
+        const char32_t cp = next_code_point(taken, i);
+        if (cp < 0x20 || cp == 0x7F || (cp >= 0x80 && cp < 0xA0) || cp == 0x2028 || cp == 0x2029)
+            out.push_back(' ');
+        else
+            out.append(taken, start, i - start);
     }
     return out;
 }

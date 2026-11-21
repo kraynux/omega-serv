@@ -176,6 +176,59 @@ int recv_frame_nowait(int socket_fd, Frame& frame, std::string* error) {
     return decode(std::string_view(buffer.data(), static_cast<std::size_t>(received)), frame, error) ? 0 : -1;
 }
 
+int recv_frame_nowait(int socket_fd, Frame& frame, int* received_fd, std::string* error) {
+    // Plan proxy natif v2, lot 4 : canal de donnees avec descripteurs (HANDOFF_DONE). Meme regle que recv_frame : tout
+    // descripteur recu est pris en charge ici, jamais une fuite.
+    if (received_fd) *received_fd = -1;
+    thread_local std::string buffer(kHeaderSize + kMaxPayload, '\0');
+    iovec io{buffer.data(), buffer.size()};
+    msghdr message{};
+    message.msg_iov = &io;
+    message.msg_iovlen = 1;
+    alignas(cmsghdr) char control[CMSG_SPACE(sizeof(int) * 4)];
+    message.msg_control = control;
+    message.msg_controllen = sizeof control;
+    ssize_t received = 0;
+    do {
+        received = ::recvmsg(socket_fd, &message, MSG_DONTWAIT | MSG_CMSG_CLOEXEC);
+    } while (received < 0 && errno == EINTR);
+    if (received == 0) return 1;
+    if (received < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) return 2;
+        if (error) *error = std::string("lecture du canal : ") + std::strerror(errno);
+        return -1;
+    }
+    std::vector<int> fds;
+    for (cmsghdr* header = CMSG_FIRSTHDR(&message); header != nullptr; header = CMSG_NXTHDR(&message, header)) {
+        if (header->cmsg_level != SOL_SOCKET || header->cmsg_type != SCM_RIGHTS) continue;
+        const std::size_t count = (header->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+        for (std::size_t i = 0; i < count; ++i) {
+            int fd = -1;
+            std::memcpy(&fd, CMSG_DATA(header) + i * sizeof(int), sizeof(int));
+            fds.push_back(fd);
+        }
+    }
+    auto close_from = [&](std::size_t first) {
+        for (std::size_t i = first; i < fds.size(); ++i) ::close(fds[i]);
+    };
+    if ((message.msg_flags & (MSG_TRUNC | MSG_CTRUNC)) != 0) {
+        close_from(0);
+        if (error) *error = "trame tronquee a la reception";
+        return -1;
+    }
+    if (!decode(std::string_view(buffer.data(), static_cast<std::size_t>(received)), frame, error)) {
+        close_from(0);
+        return -1;
+    }
+    if (received_fd != nullptr && !fds.empty()) {
+        *received_fd = fds.front();
+        close_from(1);
+    } else {
+        close_from(0);
+    }
+    return 0;
+}
+
 int recv_frame(int socket_fd, Frame& frame, int* received_fd, std::string* error) {
     if (received_fd) *received_fd = -1;
     std::string buffer(kHeaderSize + kMaxPayload, '\0');

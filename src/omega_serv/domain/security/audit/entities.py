@@ -45,6 +45,8 @@ class AuditFinding:
     message: str
     recommendation: str
     details: dict[str, Any] = field(default_factory=dict)
+    detail_lines: tuple[str, ...] = ()
+    """Lignes lisibles affichees sous le message (ecran Audit, CLI texte) : ce qui ne va pas, en detail."""
 
     def to_dict(self) -> dict[str, Any]:
         return {

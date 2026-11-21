@@ -122,6 +122,7 @@ rsync -a \
     --exclude='.pytest_cache/' --exclude='.mypy_cache/' --exclude='.ruff_cache/' \
     --exclude='.import_linter_cache/' --exclude='.hypothesis/' \
     --exclude='.git/' --exclude='.claude/' \
+    --exclude='/CLAUDE-SECURITY-*/' \
     --exclude='docs/assets/' \
     --exclude='/var/' --exclude='/secure/auth/' \
     --exclude='var/log/*' --exclude='var/cache/*' --exclude='var/run/*' \
@@ -140,6 +141,7 @@ rsync -a \
     --exclude='secure/waf/rules/custom.json' --exclude='secure/waf/scripts/waf-personal.lua' \
     --exclude='secure/waf/rules/keywords/*.txt' \
     --exclude='config/omega-serve.json' \
+    --exclude='config/profiles/custom/' \
     --exclude='*~' --exclude='*.bak' --exclude='*.swp' \
     --exclude='.coverage' --exclude='htmlcov/' \
     --exclude='build-release.sh' --exclude='omega-serv*.tar.gz' --exclude='dist/' \

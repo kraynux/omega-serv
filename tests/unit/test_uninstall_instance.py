@@ -61,6 +61,8 @@ class TestUninstallInstance(unittest.TestCase):
         self.registry = JsonInstanceRegistry(self.filesystem, self.root / "instances.json")
         self.instance_dir = self.root / "omega-serv-test"
         self.instance_dir.mkdir()
+        self.current_dir = self.root / "omega-serv-courante"
+        self.current_dir.mkdir()
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -76,12 +78,29 @@ class TestUninstallInstance(unittest.TestCase):
     def _register(self, entry: InstanceEntry) -> None:
         self.registry.save([*self.registry.load(), entry])
 
+    def test_refuses_the_running_instance_and_any_directory_containing_it(self):
+        manager = _FakeServiceManager()
+        for target in (self.current_dir, self.root):
+            entry = InstanceEntry(name="moi", path=target, bind="127.0.0.1", port=8080,
+                                  service_name="omega-serv-moi", created_at=datetime(2026, 1, 1, tzinfo=timezone.utc))
+            self._register(entry)
+            unit_path = self.unit_dir / "omega-serv-moi.service"
+            unit_path.write_text(f"[Service]\nWorkingDirectory={target}\n")
+            result = uninstall_instance(self.filesystem, self.registry, manager, self.unit_dir, entry=entry,
+                                        delete_directory=True, current_path=self.current_dir)
+            self.assertFalse(result.success)
+            self.assertIn("ne peut pas se désinstaller elle-même", result.message)
+            self.assertTrue(unit_path.exists())
+            self.assertTrue(self.current_dir.exists())
+            self.assertIn(entry, self.registry.load())
+        self.assertEqual(manager.calls, [])
+
     def test_no_unit_installed_still_removes_registry_entry(self):
         entry = self._entry()
         self._register(entry)
         result = uninstall_instance(
             self.filesystem, self.registry, _FakeServiceManager(), self.unit_dir,
-            entry=entry, delete_directory=False,
+            entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertEqual(self.registry.load(), [])
@@ -95,7 +114,7 @@ class TestUninstallInstance(unittest.TestCase):
         unit_path.write_text(f"[Service]\nUser=omega-serv\nWorkingDirectory={entry.path}\n")
         manager = _FakeServiceManager()
         result = uninstall_instance(
-            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False,
+            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertFalse(unit_path.exists())
@@ -109,7 +128,7 @@ class TestUninstallInstance(unittest.TestCase):
         unit_path.write_text(f"[Service]\nUser=omega-serv\nWorkingDirectory={entry.path}\n")
         manager = _FakeServiceManager()
         result = uninstall_instance(
-            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False,
+            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertIn(("remove-system-user", "omega-serv:omega-serv"), manager.calls)
         self.assertIn("Compte système 'omega-serv' retiré", result.message)
@@ -124,7 +143,7 @@ class TestUninstallInstance(unittest.TestCase):
         )
         manager = _FakeServiceManager()
         result = uninstall_instance(
-            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False,
+            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertNotIn(("remove-system-user", "omega-serv:omega-serv"), manager.calls)
@@ -137,7 +156,7 @@ class TestUninstallInstance(unittest.TestCase):
         unit_path.write_text(f"[Service]\nUser=omega-serv\nWorkingDirectory={entry.path}\n")
         manager = _FakeServiceManager(with_remove_system_user=False)
         result = uninstall_instance(
-            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False,
+            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)  # ne plante pas sans remove_system_user
 
@@ -147,7 +166,7 @@ class TestUninstallInstance(unittest.TestCase):
         unit_path = self.unit_dir / f"{entry.service_name}.service"
         unit_path.write_text(f"[Service]\nUser=omega-serv\nWorkingDirectory={entry.path}\n")
         result = uninstall_instance(
-            self.filesystem, self.registry, None, self.unit_dir, entry=entry, delete_directory=False,
+            self.filesystem, self.registry, None, self.unit_dir, entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertEqual(self.registry.load(), [])
@@ -158,7 +177,7 @@ class TestUninstallInstance(unittest.TestCase):
         self._register(entry)
         result = uninstall_instance(
             self.filesystem, self.registry, _FakeServiceManager(), self.unit_dir,
-            entry=entry, delete_directory=True,
+            entry=entry, delete_directory=True, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertFalse(self.instance_dir.exists())
@@ -169,7 +188,7 @@ class TestUninstallInstance(unittest.TestCase):
         self._register(entry)
         result = uninstall_instance(
             self.filesystem, self.registry, _FakeServiceManager(), self.unit_dir,
-            entry=entry, delete_directory=False,
+            entry=entry, delete_directory=False, current_path=self.current_dir,
         )
         self.assertTrue(result.success)
         self.assertTrue(self.instance_dir.exists())
@@ -182,7 +201,7 @@ class TestUninstallInstance(unittest.TestCase):
         unit_path.write_text(f"[Service]\nUser=omega-serv\nWorkingDirectory={entry.path}\n")
         manager = _FailingRemoveServiceManager()
         result = uninstall_instance(
-            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=True,
+            self.filesystem, self.registry, manager, self.unit_dir, entry=entry, delete_directory=True, current_path=self.current_dir,
         )
         self.assertFalse(result.success)
         self.assertEqual(len(self.registry.load()), 1)

@@ -2,7 +2,7 @@
 
 # omega-serv vergeleken met de webservers op de markt
 
-**Gemeten vergelijking: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5**
+**Gemeten vergelijking: nginx · lighttpd · Apache · Caddy · Traefik · omega-serv 2.5 en 3.0.0**
 
 🌐 [Français](../../comparatif-serveurs-web.md) · [English](../en/comparatif-serveurs-web.md) · [Español](../es/comparatif-serveurs-web.md) · [Português (Brasil)](../pt-BR/comparatif-serveurs-web.md) · [Italiano](../it/comparatif-serveurs-web.md) · [Deutsch](../de/comparatif-serveurs-web.md) · **Nederlands** · [Polski](../pl/comparatif-serveurs-web.md) · [Русский](../ru/comparatif-serveurs-web.md) · [中文](../zh-CN/comparatif-serveurs-web.md) · [Tiếng Việt](../vi/comparatif-serveurs-web.md) · [ไทย](../th/comparatif-serveurs-web.md) · [Bahasa Indonesia](../id/comparatif-serveurs-web.md) · [日本語](../ja/comparatif-serveurs-web.md) · [한국어](../ko/comparatif-serveurs-web.md) · [हिन्दी](../hi/comparatif-serveurs-web.md) · [العربية](../ar/comparatif-serveurs-web.md)
 
@@ -12,7 +12,7 @@ Dit document plaatst omega-serv tussen de meest gebruikte webservers. Het probee
 2. een **functievergelijking**, elke functie gecontroleerd in de officiële documentatie van elke server (links aan het einde van het document), met onderscheid tussen wat ingebouwd is en wat een module of plugin vereist;
 3. wat omega-serv **echt extra biedt**, en wat de anderen **beter doen dan hij**.
 
-Alle prestatiemetingen zijn uitgevoerd op 3 en 4 november 2026. Geen enkel cijfer is van een andere site overgenomen of geschat. De ruwe cijfers worden met dit document gepubliceerd.
+De metingen als bestandsserver zijn uitgevoerd op 3 en 4 november 2026 (omega-serv 2.5), die als reverse proxy op 14 november 2026 (omega-serv 3.0.0, in voorbereiding). Het geheugen van omega-serv 3.0.0, sindsdien flink verkleind, is op 19 november 2026 opnieuw gemeten op alle drie de machines, met hetzelfde protocol (§4, §5 en §6). Geen enkel cijfer is van een andere site overgenomen of geschat. De ruwe cijfers worden met dit document gepubliceerd.
 
 ---
 
@@ -22,14 +22,15 @@ Alle prestatiemetingen zijn uitgevoerd op 3 en 4 november 2026. Geen enkel cijfe
 2. [Hoe deze vergelijking te lezen](#2-hoe-deze-vergelijking-te-lezen)
 3. [Meetmethode](#3-meetmethode)
 4. [Prestaties: omega-serv vergeleken met nginx, lighttpd, Apache en Caddy](#4-prestaties-omega-serv-vergeleken-met-nginx-lighttpd-apache-en-caddy)
-5. [De versies van omega-serv: 1.0 → 2.0 → 2.5](#5-de-versies-van-omega-serv-10--20--25)
-6. [Functievergelijking](#6-functievergelijking)
-7. [Beheer en gebruiksgemak](#7-beheer-en-gebruiksgemak)
-8. [Wat omega-serv extra biedt](#8-wat-omega-serv-extra-biedt)
-9. [Wat de anderen beter doen](#9-wat-de-anderen-beter-doen)
-10. [Welke server voor welk gebruik](#10-welke-server-voor-welk-gebruik)
-11. [De metingen reproduceren](#11-de-metingen-reproduceren)
-12. [Bronnen](#12-bronnen)
+5. [Prestaties als reverse proxy: omega-serv vergeleken met nginx, lighttpd, Apache, Caddy en Traefik](#5-prestaties-als-reverse-proxy-omega-serv-vergeleken-met-nginx-lighttpd-apache-caddy-en-traefik)
+6. [De versies van omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0](#6-de-versies-van-omega-serv-10--20--25--300)
+7. [Functievergelijking](#7-functievergelijking)
+8. [Beheer en gebruiksgemak](#8-beheer-en-gebruiksgemak)
+9. [Wat omega-serv extra biedt](#9-wat-omega-serv-extra-biedt)
+10. [Wat de anderen beter doen](#10-wat-de-anderen-beter-doen)
+11. [Welke server voor welk gebruik](#11-welke-server-voor-welk-gebruik)
+12. [De metingen reproduceren](#12-de-metingen-reproduceren)
+13. [Bronnen](#13-bronnen)
 
 ---
 
@@ -41,7 +42,8 @@ Alle prestatiemetingen zijn uitgevoerd op 3 en 4 november 2026. Geen enkel cijfe
 - **Met de WAF actief** inspecteert omega-serv elk verzoek, wat de andere gemeten servers niet doen. Met de native engine levert hij dan **0,53 tot 0,56 keer** de snelheid van nginx (zonder WAF) op de machines A en B, en 1,07 keer op machine C (4 kernen tegen 2): de WAF kost hem maar 5 tot 22 % van zijn doorvoer. Hij blijft voor Apache en Caddy, die zonder WAF gemeten zijn.
 - **Middelgrote bestanden (100 KB)**: dit is het huidige zwakke punt van de native engine, met **0,3 tot 0,6 keer** nginx, achter Apache.
 - **Grote bestanden (5 MB)**: nginx, lighttpd, Apache en omega-serv native halen dezelfde orde van doorvoer. Caddy is duidelijk trager op de snelste machine.
-- **Geheugen**: lighttpd (1 MB), nginx (4 tot 5 MB) en Apache (4 tot 9 MB) zijn zeer zuinig. omega-serv gebruikt **30 tot 65 MB** afhankelijk van de modus, Caddy **50 tot 67 MB**.
+- **Als reverse proxy (3.0.0)** stuurt de native engine kleine antwoorden door met **0,82 tot 0,91 keer nginx**, en antwoorden van 100 KB **even snel als nginx of sneller** (0,97 tot 1,43). Hij staat **tweede achter nginx**, voor lighttpd, Apache, Traefik en Caddy. In HTTPS blijft hij tweede bij kleine antwoorden op de machines A en B; lighttpd evenaart hem op machine C.
+- **Geheugen**: lighttpd (1 MB), nginx (4 tot 5 MB) en Apache (4 tot 9 MB) zijn zeer zuinig. omega-serv 3.0.0 gebruikt **10 tot 16 MB** met de native engine, **20 tot 33 MB** met de Python-engine of de WAF, en 35 tot 55 MB met 2 processen; Caddy **50 tot 67 MB**. Versie 2.5 gebruikte 28 tot 57 MB.
 - **Wat omega-serv extra heeft**: volledig beheer in een terminalinterface, in 17 talen; een ingebouwde WAF en actieve verdediging; exacte beveiligingslimieten met meerdere processen; het importeren van lighttpd-mod_magnet-scripts; het beheer van meerdere instanties.
 - **Wat hij niet heeft**: HTTP/2 en HTTP/3, compressie on-the-fly, service discovery voor Docker/Kubernetes, een ingebouwde ACME-client (hij gebruikt Certbot), een ecosysteem van modules.
 
@@ -85,10 +87,10 @@ Machine A is een oude laptop, machine B een zuinige mini-pc, machine C een recen
 | lighttpd | 1.4.85 |
 | Apache HTTP Server | 2.4.69, MPM `event` |
 | Caddy | 2.11.4 (A, B), 2.11.7 (C) |
-| omega-serv | 1.0.0 en 2.0.0 (gepubliceerde archieven) en 2.5, onder Python 3.14 |
+| omega-serv | 1.0.0 en 2.0.0 (gepubliceerde archieven), 2.5 en 3.0.0, onder Python 3.14 |
 | Belastingclient | [oha](https://github.com/hatoo/oha) 1.16.0 (geschreven in Rust) |
 
-Traefik is niet gemeten: het is geen bestandsserver (zie §6). Het staat alleen in de functievergelijking.
+Traefik is niet gemeten als bestandsserver: dat is het niet (zie §7). Het wordt gemeten als reverse proxy, zijn eigenlijke rol, in §5.
 
 ### Protocol
 
@@ -98,7 +100,7 @@ Traefik is niet gemeten: het is geen bestandsserver (zie §6). Het staat alleen 
 - **HTTP/1.1 onversleuteld, persistente verbindingen (keep-alive)**. De gelijktijdigheid is 32 verbindingen voor de bestanden van 1 KB en 100 KB, en 8 voor het bestand van 5 MB.
 - **Duur**: 10 seconden per bestand en per configuratie.
 - **Herhalingen**: 3 volledige, verweven rondes (alle configuraties in ronde 1, dan alle in ronde 2, enz.). De tabellen geven de **mediaan** van de drie rondes. Van ronde tot ronde blijft het verschil meestal onder 5 %.
-- **Geheugen**: PSS van alle processen van de server, gemeten in rust en daarna na de belasting.
+- **Geheugen**: PSS van alle processen van de server, gemeten in rust en daarna na de belasting. Dat van omega-serv 3.0.0 is op 19 november 2026 opnieuw gemeten, met nginx als referentie in dezelfde sessie: nginx blijft bij kleine bestanden binnen 3 % van zijn doorvoer van 4 november, en zijn geheugen binnen 1 MB.
 - **Configuraties**:
   - nginx, lighttpd, Apache en Caddy in hun basisconfiguratie: statische bestanden en toegangslogboek;
   - omega-serv met het profiel `standard`, de WAF uitgeschakeld en daarna ingeschakeld met alle meegeleverde regels (zonder snelheidsbeperking).
@@ -109,11 +111,11 @@ Traefik is niet gemeten: het is geen bestandsserver (zie §6). Het staat alleen 
 
 - **Wat we vergelijken, zijn de verhoudingen.** De absolute waarden zouden op uw hardware, of op een dedicated server, anders zijn.
 - **Loopback (127.0.0.1)**: de meting gaat niet over een echt netwerk. Op een echt netwerk is de doorvoer van grote bestanden bijna altijd beperkt door de bandbreedte, niet door de server. De doorvoer van enkele tientallen GB/s op machine C is alleen via loopback mogelijk.
-- **Geen TLS** in deze metingen.
+- **Geen TLS** in de metingen als bestandsserver (§4 en §6). De reverse proxy (§5) wordt gemeten in HTTP en in HTTPS.
 - **Machine A**: de productiedienst omega-serv van deze machine draaide op de achtergrond, zonder verkeer te ontvangen.
 - **Machine C**: hybride processor (Zen 5- en Zen 5c-kernen). De server kreeg de 4 snelle kernen, de client de 6 andere.
 - **Basisconfiguraties**: geen enkele server is geoptimaliseerd. Een ervaren beheerder zou ongetwijfeld meer uit elke server halen, omega-serv inbegrepen.
-- **Ruwe cijfers**: [`docs/benchmarks/`](../../benchmarks/) (één bestand per machine).
+- **Ruwe cijfers**: [`docs/benchmarks/`](../../benchmarks/) (één bestand per machine en per campagne; nieuwe meting van 3.0.0: `2026-11-19-*-memoire-3.0.0-brut.txt`).
 
 ---
 
@@ -183,30 +185,34 @@ Met 1 enkel proces haalt nginx 0,52 tot 0,73, lighttpd 0,81 tot 1,43, Apache 0,3
 
 ### Geheugen (PSS, alle processen van de server): in rust → na de belasting
 
+omega-serv: versie 3.0.0, opnieuw gemeten op 19 november 2026 (de waarden van 2.5 staan in §6). Andere servers: campagne van 4 november.
+
 | Server | Machine A | Machine B | Machine C |
 |---|---:|---:|---:|
 | lighttpd | 1 → 1 MB | 1 → 1 MB | 1 → 1 MB |
 | nginx | 4 → 5 MB | 5 → 5 MB | 4 → 4 MB |
 | Apache | 4 → 7 MB | 4 → 7 MB | 4 → 7 MB |
-| omega-serv, Python-engine | 28 → 32 MB | 29 → 33 MB | 30 → 34 MB |
-| **omega-serv, native engine** | **33 → 34 MB** | **34 → 35 MB** | **35 → 39 MB** |
-| omega-serv, native + WAF † | 45 → 47 MB | 43 → 44 MB | 44 → 48 MB |
-| omega-serv, Python-engine, 2 processen | 40 → 50 MB | 43 → 51 MB | 42 → 51 MB |
-| omega-serv, native + WAF, 2 beveiligingsprocessen † | 45 → 47 MB | 43 → 44 MB | 55 → 57 MB |
+| **omega-serv, native engine** | **10 → 10 MB** | **10 → 12 MB** | **12 → 16 MB** |
+| omega-serv, Python-engine | 20 → 23 MB | 21 → 24 MB | 22 → 28 MB |
+| omega-serv, native + WAF | 28 → 30 MB | 29 → 32 MB | 30 → 33 MB |
+| omega-serv, Python-engine, 2 processen | 35 → 46 MB | 36 → 46 MB | 38 → 48 MB |
+| omega-serv, native + WAF, 2 beveiligingsprocessen ‡ | 28 → 28 MB | 29 → 31 MB | 51 → 55 MB |
 | Caddy, 2 processen | 50 → 57 MB | 46 → 54 MB | 48 → 62 MB |
+
+‡ Op de machines A en B heeft de server maar 2 kernen: omega-serv start daar maar één beveiligingsproces (vanaf 4 kernen start hij er 2). Op machine C, met 2 beveiligingsprocessen, behoudt de Python-supervisor zijn volledige vorm, die nodig is voor de tellers die ze delen: 51 MB in plaats van 30.
 
 ### Bij een gelijk aantal kernen: machine C met 4 processen
 
-Aparte campagne van 3 november, hetzelfde protocol, op machine C: elke server krijgt 4 processen (of 4 kernen voor Caddy en de native engine). Referentie: nginx met 4 processen. De native engine met WAF staat hier niet meer in: gemeten vóór de optimalisatie van de WAF, is hij nog niet opnieuw met 4 processen gemeten.
+Aparte campagne van 3 november, hetzelfde protocol, op machine C: elke server krijgt 4 processen (of 4 kernen voor Caddy en de native engine). Referentie: nginx met 4 processen. De native engine met WAF staat hier niet meer in: gemeten vóór de optimalisatie van de WAF, is hij nog niet opnieuw met 4 processen gemeten. Geheugen van omega-serv: 3.0.0, opnieuw gemeten op 19 november (doorvoer: 2.5, 3 november).
 
 | Server | 1 KB | 100 KB | 5 MB | Geheugen |
 |---|---:|---:|---:|---:|
 | lighttpd, 4 processen | 638.907 (**1,46**) | 312.402 (**1,21**) | 41.982 MB/s (0,93) | 1 → 2 MB |
 | nginx, 4 processen | 438.496 (1,00) | 258.242 (1,00) | 45.162 MB/s (1,00) | 5 → 5 MB |
-| **omega-serv, native engine** | **294.083 tot 310.972 (0,67 tot 0,71)** | **108.991 tot 109.955 (0,42)** | **40.137 tot 40.463 MB/s (0,89 tot 0,90)** | **35 → 38 MB** |
+| **omega-serv, native engine** | **294.083 tot 310.972 (0,67 tot 0,71)** | **108.991 tot 109.955 (0,42)** | **40.137 tot 40.463 MB/s (0,89 tot 0,90)** | **12 → 16 tot 18 MB** |
 | Apache, 4 processen | 200.592 (0,46) | 162.607 (0,63) | 39.664 MB/s (0,88) | 6 → 9 MB |
 | Caddy, 4 kernen | 97.085 (0,22) | 35.900 (0,14) | 5.998 MB/s (0,13) | 52 → 67 MB |
-| omega-serv, Python-engine, 4 processen | 37.697 (0,09) | 35.064 (0,14) | 37.123 MB/s (0,82) | 48 → 66 MB |
+| omega-serv, Python-engine, 4 processen | 37.697 (0,09) | 35.064 (0,14) | 37.123 MB/s (0,82) | 45 → 60 MB |
 
 ### Lezing
 
@@ -224,14 +230,131 @@ Aparte campagne van 3 november, hetzelfde protocol, op machine C: elke server kr
   - nginx, lighttpd, Apache en Caddy zijn **zonder** WAF gemeten. Een WAF die aan deze servers wordt toegevoegd (ModSecurity, Coraza) heeft ook kosten, die we niet gemeten hebben. De vergelijking „met WAF” is dus niet eerlijk, en we beweren niet dat omega-serv sneller zou zijn dan een andere server met een WAF.
 - **Meerdere beveiligingsprocessen helpen het gewone verkeer niet meer**: het gaat niet meer via hen, en de doorvoer blijft gelijk met 2 processen (−2 tot −4 %, binnen de meetruis). Ze helpen alleen wanneer veel verzoeken via Python gaan (magnet actief, aanval): gemeten vóór de optimalisatie, toen alle verzoeken erlangs gingen, vermenigvuldigden 2 beveiligingsprocessen de doorvoer met WAF met 1,5 tot 1,7 op 4 kernen, maar brachten ze op 2 kernen maar 5 tot 12 %.
 - **De Python-engine schaalt met de processen** (×1,6 tot ×2 met 2 processen, ongeveer ×3,5 met 4), maar blijft op 5 tot 11 % van nginx.
-- **Geheugen**: omega-serv gebruikt enkele tientallen MB meer dan nginx, lighttpd of Apache, vooral door Python, en evenveel als Caddy. Met de native engine zonder WAF blijft het geheugen tijdens de belasting bijna stabiel.
+- **Geheugen**: met de native engine zonder WAF gebruikt omega-serv 3.0.0 10 tot 16 MB, twee tot vier keer zoveel als nginx of Apache en drie tot zes keer minder dan Caddy. Met de WAF of de Python-engine komt het op 20 tot 33 MB, vooral door Python: een Python-proces met asyncio kost minstens 10 MB. Met één proces is dat 30 tot 70 % minder dan in 2.5 (§6).
 - **Om deze cijfers te plaatsen**: zelfs het traagste geval, de Python-engine met WAF op machine B (564 req/s), staat voor bijna 50 miljoen verzoeken per dag. Dat ligt ver boven de behoeften van een persoonlijke site, een interne dienst of een lab. Snelheid is alleen echt doorslaggevend voor een site met veel verkeer.
 
 ---
 
-## 5. De versies van omega-serv: 1.0 → 2.0 → 2.5
+## 5. Prestaties als reverse proxy: omega-serv vergeleken met nginx, lighttpd, Apache, Caddy en Traefik
 
-De drie versies zijn gemeten in dezelfde sessie als §4, op alle drie de machines, met hetzelfde protocol. Tussen haakjes: de verhouding met nginx (2 processen) van dezelfde sessie. †: campagne van 4 november na de optimalisatie van de WAF (zie §4).
+Hier levert geen enkele server bestanden: elke server **stuurt** de verzoeken **door** naar een applicatieserver (de *backend*) en geeft diens antwoord terug. Metingen van 14 november 2026, met omega-serv 3.0.0 (in voorbereiding), waarvan de native engine de reverse proxy zelf afhandelt.
+
+### Eigen protocol van deze metingen
+
+- **Dezelfde backend voor iedereen**: een statische nginx met 2 processen, die `small.html` (1 KB) en `medium.png` (100 KB) levert. Elke meting controleert dat het antwoord echt van de backend komt (een header die hij toevoegt): de proxy stuurt door, hij levert het bestand nooit zelf.
+- **Kernen**: machine A, de proxy op één fysieke kern (threads 0 en 2), de client en de backend op de andere (1 en 3); machine B, de proxy op de kernen 0 en 1, de client en de backend op 2 en 3; machine C, de proxy op de 4 Zen 5-kernen (0 tot 3), de backend op 2 Zen 5c-kernen (4 en 5), de client op de 4 andere (6 tot 9).
+- **Processen**: 2 op de machines A en B, **4 op machine C**, zodat elke server alle kernen gebruikt die de proxy krijgt. De native engine van omega-serv gebruikt altijd al deze kernen, met één Python-beveiligingsproces.
+- **HTTP en HTTPS** aan de clientkant (zelfondertekend ECDSA P-256-certificaat); de backend wordt altijd via HTTP benaderd.
+- **Configuraties**:
+  - nginx: `proxy_pass` naar een `upstream`-groep die zijn verbindingen naar de backend openhoudt (`keepalive 64`); zonder deze instelling, die in zijn basisconfiguratie ontbreekt, opent nginx één verbinding per verzoek;
+  - lighttpd: `mod_proxy`, basisconfiguratie;
+  - Apache: `mod_proxy` en `mod_proxy_http`, MPM `event`, één regel `ProxyPass`;
+  - Caddy: `reverse_proxy`, basisconfiguratie;
+  - Traefik 3.7: één router en één service, basisconfiguratie;
+  - omega-serv: een reverse-proxyzone op `/`, profiel `standard`, native engine zonder en daarna met de WAF (alle meegeleverde regels, zonder snelheidsbeperking), en Python-engine met 2 processen.
+- **De rest verandert niet** (§3): toegangslogboek overal actief, oha, 32 persistente verbindingen, 10 seconden, 3 verweven rondes, mediaan. **Geen enkele fout**: alle antwoorden zijn 200.
+
+Tussen haakjes: de verhouding tot nginx met hetzelfde aantal processen, gemeten in dezelfde sessie (= 1,00).
+
+### Kleine antwoorden (1 KB): verzoeken per seconde
+
+| Server | Machine A (2 processen) | Machine B (2 processen) | Machine C (4 processen) |
+|---|---:|---:|---:|
+| nginx | 11.151 (1,00) | 11.049 (1,00) | 246.595 (1,00) |
+| **omega-serv, native engine** | **9.507 (0,85)** | **10.098 (0,91)** | **203.021 (0,82)** |
+| omega-serv, native + WAF | 9.078 (0,81) | 9.857 (0,89) | 190.201 (0,77) |
+| lighttpd | 6.752 (0,61) | 6.242 (0,56) | 129.827 (0,53) |
+| Apache | 6.616 (0,59) | 5.872 (0,53) | 124.458 (0,50) |
+| Traefik | 3.940 (0,35) | 3.890 (0,35) | 70.465 (0,29) |
+| Caddy | 3.578 (0,32) | 3.117 (0,28) | 55.910 (0,23) |
+| omega-serv, Python-engine | 1.039 (0,09) | 859 (0,08) | — \* |
+
+\* De Python-engine is op machine C alleen met 2 processen gemeten: 11.530 req/s, dus 0,07 keer nginx met 2 processen (171.075 req/s).
+
+### Middelgrote antwoorden (100 KB): verzoeken per seconde
+
+| Server | Machine A | Machine B | Machine C |
+|---|---:|---:|---:|
+| **omega-serv, native engine** | **4.281 (1,11)** | **3.497 (0,97)** | **80.361 (1,43)** |
+| omega-serv, native + WAF | 4.236 (1,10) | 3.335 (0,93) | 73.025 (1,30) |
+| nginx | 3.855 (1,00) | 3.605 (1,00) | 56.011 (1,00) |
+| lighttpd | 2.834 (0,74) | 2.252 (0,62) | 53.523 (0,96) |
+| Apache | 2.404 (0,62) | 2.357 (0,65) | 39.807 (0,71) |
+| Traefik | 2.477 (0,64) | 2.181 (0,60) | 39.419 (0,70) |
+| Caddy | 2.294 (0,60) | 1.956 (0,54) | 33.120 (0,59) |
+| omega-serv, Python-engine | 821 (0,21) | 669 (0,19) | — |
+
+### HTTPS: verzoeken per seconde
+
+| Server | 1 KB: A | 1 KB: B | 1 KB: C | 100 KB: A | 100 KB: B | 100 KB: C |
+|---|---:|---:|---:|---:|---:|---:|
+| nginx | 9.203 (1,00) | 9.305 (1,00) | 202.095 (1,00) | 780 (1,00) | 2.338 (1,00) | 47.609 (1,00) |
+| **omega-serv, native engine** | **6.840 (0,74)** | **7.976 (0,86)** | **130.337 (0,64) †** | **690 (0,88)** | **1.917 (0,82)** | **42.507 (0,89)** |
+| omega-serv, native + WAF | 6.372 (0,69) | 7.456 (0,80) | 146.590 (0,73) † | 683 (0,88) | 1.882 (0,80) | 39.400 (0,83) |
+| lighttpd | 5.188 (0,56) | 5.513 (0,59) | 130.572 (0,65) | 638 (0,82) | 1.381 (0,59) | 45.566 (0,96) |
+| Apache | 5.038 (0,55) | 4.193 (0,45) | 114.898 (0,57) | 588 (0,75) | 1.368 (0,59) | 29.948 (0,63) |
+| Traefik | 3.389 (0,37) | 3.195 (0,34) | 62.251 (0,31) | 889 (**1,14**) | 1.548 (0,66) | 28.513 (0,60) |
+| Caddy | 3.263 (0,35) | 2.733 (0,29) | 54.279 (0,27) | 1.135 (**1,46**) | 1.424 (0,61) | 26.452 (0,56) |
+| omega-serv, Python-engine | 922 (0,10) | 759 (0,08) | — | 423 (0,54) | 549 (0,23) | — |
+
+† Op machine C varieert de native engine in HTTPS sterk van ronde tot ronde: 130.000 tot 185.000 req/s zonder WAF, 138.000 tot 150.000 met. Het verschil tussen de twee regels valt dus binnen de ruis van deze meting.
+
+### p99-latentie bij kleine antwoorden (HTTP)
+
+| Server | Machine A | Machine B | Machine C |
+|---|---:|---:|---:|
+| nginx | 7,7 ms | 7,8 ms | 0,4 ms |
+| **omega-serv, native engine** | **10,5 ms** | **9,7 ms** | **0,6 ms** |
+| omega-serv, native + WAF | 9,6 ms | 11,0 ms | 0,8 ms |
+| lighttpd | 11,9 ms | 14,0 ms | 0,9 ms |
+| Apache | 14,7 ms | 21,3 ms | 2,0 ms |
+| Traefik | 25,9 ms | 26,5 ms | 2,1 ms |
+| Caddy | 23,9 ms | 27,2 ms | 2,5 ms |
+| omega-serv, Python-engine | 41,0 ms | 47,6 ms | — |
+
+### Geheugen van de proxy (PSS): in rust → na de belasting, in HTTP
+
+omega-serv: versie 3.0.0, opnieuw gemeten op 19 november 2026; de doorvoer hierboven dateert van 14 november.
+
+| Server | Machine A | Machine B | Machine C |
+|---|---:|---:|---:|
+| lighttpd | 3 → 4 MB | 3 → 4 MB | 3 → 4 MB |
+| nginx | 7 → 8 MB | 7 → 8 MB | 10 → 11 MB |
+| Apache | 6 → 12 MB | 6 → 12 MB | 8 → 15 MB |
+| **omega-serv, native engine** | **27 → 28 MB** | **27 → 28 MB** | **29 → 33 MB** |
+| omega-serv, native + WAF | 29 → 30 MB | 29 → 31 MB | 31 → 36 MB |
+| Caddy | 48 → 57 MB | 48 → 59 MB | 50 → 60 MB |
+| omega-serv, Python-engine | 42 → 50 MB | 43 → 51 MB | — |
+| Traefik | 93 → 117 MB | 107 → 131 MB | 100 → 123 MB |
+
+In HTTPS stijgt het geheugen na de belasting met 0 tot 5 MB voor de meeste servers, meer voor Apache (tot 66 MB op machine C) en de Python-engine (tot 72 MB): zie de ruwe cijfers.
+
+### Lezing
+
+- **Als reverse proxy staat omega-serv met de native engine tweede achter nginx**, op alle drie de machines.
+  - Bij kleine antwoorden stuurt hij 0,82 tot 0,91 keer zoveel door als nginx. Dat is 1,4 tot 1,7 keer lighttpd en Apache, en 2,4 tot 3,6 keer Traefik en Caddy.
+  - Zijn p99-latentie is de laagste na die van nginx.
+- **Bij antwoorden van 100 KB speelt hij gelijk met nginx of gaat hij erover** (0,97 tot 1,43). De native engine stuurt het antwoord gaandeweg door, met een begrensde buffer. In zijn basisconfiguratie houdt nginx per doorgestuurd antwoord maar enkele tientallen KB in het geheugen (`proxy_buffers`) en kan hij de rest naar een tijdelijk bestand schrijven. We hebben dit punt niet aangepast.
+- **In HTTPS** blijft de native engine tweede bij kleine antwoorden op de machines A en B. Op machine C zitten lighttpd en hij op hetzelfde niveau.
+  - Bij antwoorden van 100 KB gaat lighttpd hem op machine C voorbij.
+  - Op machine A gaan Caddy en Traefik iedereen voorbij, nginx inbegrepen. Ze zijn geschreven in Go, met hun eigen TLS-bibliotheek, die op deze processor uit 2010 blijkbaar efficiënter is. We hebben dat niet verder onderzocht.
+- **De WAF kost weinig als reverse proxy**: 1 tot 9 % van de doorvoer in HTTP, met alle regels actief. De andere servers zijn zonder WAF gemeten: de vergelijking „met WAF” is niet eerlijk (zie §4).
+- **Geheugen**: met de native engine gebruikt omega-serv 3.0.0 ongeveer 30 MB (27 tot 36 MB). Dat totaal omvat de Python-supervisor, het beveiligingsproces en de native engine. Dat is meerdere keren nginx, lighttpd of Apache, maar minder dan Caddy en drie tot vier keer minder dan Traefik. Bij de meting van 14 november (3.0.0 in voorbereiding) gebruikte hij ongeveer 50 MB.
+- **De Python-engine** stuurt kleine antwoorden door met 0,08 tot 0,10 keer nginx: hij blijft de terugvalengine. De reverse-proxyzones met cache worden hem nog steeds toevertrouwd, en behouden dus zijn doorvoer.
+- **Een correctie vóór deze metingen.** Een eerste meetreeks, op dezelfde dag en met hetzelfde protocol, plaatste de native engine bij kleine antwoorden op 0,32 tot 0,69 keer nginx. Op machine C bleef hij steken rond 78.000 req/s, ongeacht het aantal kernen. Zijn voorraad verbindingen naar de backend was te klein: hij opende er elke vijf verzoeken een nieuwe. Deze voorraad is vergroot en het doorsturen lichter gemaakt vóór de meetreeks die hier gepubliceerd is. De cijfers van de eerste meetreeks worden ook gepubliceerd.
+
+### Grenzen van deze metingen
+
+- **nginx is in zijn voordeel ingesteld**: hij houdt zijn verbindingen naar de backend open, wat hij in zijn basisconfiguratie niet doet. De andere servers staan in hun basisconfiguratie.
+- **De backend draait op dezelfde machine**, via loopback. Op de machines A en B deelt hij zijn kernen met de client. Alleen de verhoudingen tussen servers, gemeten onder dezelfde omstandigheden, tellen dus. Op zichzelf levert deze backend ongeveer 345.000 req/s op machine C: hij beperkt daar geen enkele proxy.
+- **Alleen HTTP/1.1**, naar de client net als naar de backend: omega-serv spreekt geen HTTP/2.
+- **Ruwe cijfers**: [`docs/benchmarks/`](../../benchmarks/), bestanden `2026-11-14-*-reverse-proxy-brut.txt`, waaronder de eerste meetreeks (`2026-11-14-reverse-proxy-avant-correctif-brut.txt`).
+
+---
+
+## 6. De versies van omega-serv: 1.0 → 2.0 → 2.5 → 3.0.0
+
+De drie versies zijn gemeten in dezelfde sessie als §4, op alle drie de machines, met hetzelfde protocol. Tussen haakjes: de verhouding met nginx (2 processen) van dezelfde sessie. †: campagne van 4 november na de optimalisatie van de WAF (zie §4). Versie 3.0.0 is gemeten op 19 november, met hetzelfde protocol; de verhoudingen ervan zijn berekend ten opzichte van nginx (2 processen), opnieuw gemeten in die sessie, dat binnen 3 % van zijn waarde van 4 november blijft.
 
 ### Kleine bestanden (1 KB): verzoeken per seconde
 
@@ -250,6 +373,13 @@ De drie versies zijn gemeten in dezelfde sessie als §4, op alle drie de machine
 | **2.5, native engine** | **15.222 (0,70)** | **16.542 (0,67)** | **285.213 (1,15)** |
 | **2.5, native engine + WAF †** | **11.990 (0,56)** | **12.998 (0,53)** | **264.484 (1,07)** |
 | **2.5, native engine + WAF, 2 beveiligingsprocessen †** | **11.746 (0,55)** | **12.718 (0,52)** | **253.527 (1,02)** |
+| 3.0.0, Python-engine | 1.309 (0,06) | 752 (0,03) | 9.482 (0,04) |
+| 3.0.0, Python-engine + WAF | 1.168 (0,05) | 653 (0,03) | 8.788 (0,04) |
+| 3.0.0, Python-engine, 2 processen | 1.733 (0,08) | 1.154 (0,05) | 17.234 (0,07) |
+| 3.0.0, Python-engine + WAF, 2 processen | 1.605 (0,07) | 994 (0,04) | 14.873 (0,06) |
+| **3.0.0, native engine** | **14.503 (0,68)** | **15.075 (0,63)** | **276.938 (1,15)** |
+| **3.0.0, native engine + WAF** | **12.762 (0,60)** | **11.618 (0,48)** | **257.741 (1,07)** |
+| **3.0.0, native engine + WAF, 2 beveiligingsprocessen** | **12.974 (0,61)** | **11.957 (0,50)** | **253.993 (1,06)** |
 
 ### Middelgrote bestanden, groot bestand en geheugen (1 proces, zonder WAF)
 
@@ -259,6 +389,8 @@ De drie versies zijn gemeten in dezelfde sessie als §4, op alle drie de machine
 | 2.0.0 | 1.570 / 603 / 9.469 | 1.665 / 1.470 / 14.058 | 26 → 30 / 27 → 31 / 28 → 32 MB |
 | 2.5, Python-engine | 1.329 / 611 / 9.805 | 1.686 / 1.472 / 14.227 | 28 → 32 / 29 → 33 / 30 → 34 MB |
 | **2.5, native engine** | **4.738 / 3.115 / 96.277** | **2.294 / 1.936 / 37.918** | **33 → 34 / 34 → 35 / 35 → 39 MB** |
+| 3.0.0, Python-engine | 1.185 / 606 / 8.655 | 1.765 / 1.318 / 13.028 | 20 → 23 / 21 → 24 / 22 → 28 MB |
+| **3.0.0, native engine** | **4.665 / 3.026 / 100.513** | **2.399 / 1.932 / 40.755** | **10 → 10 / 10 → 12 / 12 → 16 MB** |
 
 ### Grote gelijktijdige downloads
 
@@ -270,6 +402,8 @@ Test: 3 gelijktijdige downloads van een bestand van 300 MB, terwijl een kleine p
 | 2.0.0 | 39 tot 42 MB | 3 ms / 4 tot 6 ms / 1 ms |
 | 2.5, Python-engine | 41 tot 44 MB | 2 ms / 4 ms / 1 ms |
 | 2.5, native engine | 49 tot 55 MB | 1 tot 2 ms / 2 tot 4 ms / minder dan 1 ms |
+| 3.0.0, Python-engine | 39 MB | 3 ms / 5 tot 8 ms / 1 ms |
+| 3.0.0, native engine | 23 tot 26 MB | 1 ms / 2 tot 3 ms / minder dan 1 ms |
 
 ### Kosten van de actieve verdediging (1.0 → 2.0)
 
@@ -292,20 +426,28 @@ De mediaan wordt gedeeld door 12. Het maximum is in 2.0 daarentegen hoger: enkel
   - 2.0 voegt meerdere processen toe, die de doorvoer van kleine pagina's afhankelijk van de machine met 25 % tot bijna 100 % verhogen.
   1.0 laadde elk bestand volledig in het geheugen voordat het verstuurd werd. 2.0 verstuurt het in blokken, of laat het aan de kernel over.
 - **Van 2.0 naar 2.5 verandert de Python-engine niet van snelheid**: de verschillen blijven onder 4 % op de machines B en C, en binnen de meetruis van machine A (−13 % tot +9 %), de gevoeligste voor achtergrondbelasting. De hele winst van 2.5 komt van de **native engine**: ongeveer ×10 tot ×27 bij kleine bestanden ten opzichte van de Python-engine, en de latentie gedeeld door 5 tot 15.
-- **De native engine gebruikt in rust ongeveer 5 MB meer** dan de Python-engine (PSS): dat is de prijs van het tweede programma. Met de WAF gebruikt hij nog ongeveer 8 MB meer: de regels die in de native engine geladen zijn.
+- **In 2.5 gebruikte de native engine in rust ongeveer 5 MB meer** dan de Python-engine (PSS): de prijs van het tweede programma. Met de WAF nog ongeveer 8 MB meer: de regels die in de native engine geladen zijn.
+- **Van 2.5 naar 3.0.0 daalt het geheugen met 30 tot 70 %** met één proces:
+  - native engine: 33-35 → 10-12 MB in rust. Als niets anders het vereist, krimpt de Python-supervisor tot een klein bewakingsprogramma, dat noch de configuratie noch de Python-server in het geheugen houdt;
+  - Python-engine: 28-30 → 20-22 MB. De code van een optie wordt alleen geladen als die actief is, en de TLS-bibliotheek alleen als die gebruikt wordt;
+  - native + WAF: 43-45 → 28-30 MB. Het beveiligingsproces ontstaat uit de verkleinde supervisor en deelt zijn geheugenpagina's met hem;
+  - Python-engine met 2 processen: 40-43 → 35-38 MB;
+  - tijdens grote downloads: 39 MB (Python) en 23 tot 26 MB (native), tegenover 41 tot 55 MB;
+  - de native engine gebruikt nu half zoveel geheugen als de Python-engine.
+- **Het werk aan het geheugen verandert de doorvoer niet**: een verweven test op de machines B en C, met de code van 3.0.0 vóór en na dit werk, geeft 1 tot 4 % verschil. Ten opzichte van 2.5 levert de Python-engine met 2 processen 12 tot 13 % minder op de machines B en C (26 % op machine A, de gevoeligste voor achtergrondbelasting); de code van 3.0.0 van vóór dit werk toont dezelfde achteruitgang, die dus van andere wijzigingen in 3.0.0 komt en nog onderzocht moet worden. De andere verschillen met 2.5 lopen van −13 % tot +13 %, in beide richtingen.
 
 ### Wat u over de native engine moet weten
 
 - Hij is **optioneel**: de Python-engine blijft de standaardengine, en de terugvalengine.
 - Hij levert zelf statische inhoud, omleidingen, herschrijvingen, aliassen, de cache, de foutpagina's, de beveiligingsheaders en TLS.
 - Hij doorzoekt zelf de WAF-regels en handelt een verzoek waarop er geen enkele van toepassing is alleen af. Elk ander verzoek (overeenkomst of twijfel van de WAF, Active Defense, authenticatie) wordt door Python beslist, met precies dezelfde controles en dezelfde logs. Een instelbare controle legt toch één schoon verzoek op N aan Python voor, om na te gaan dat beide hetzelfde oordeel geven.
-- De mapweergave en de interne pagina's worden aan Python gevraagd; de reverse proxy, FastCGI, bestandsupload en WebSocket worden hem voor de hele verbinding toevertrouwd. Deze functies behouden dus de snelheid van de Python-engine.
-- Met direct TLS worden de reverse proxy, FastCGI en bestandsupload niet door de native engine ondersteund: dan handelt de Python-engine af, en de interface meldt het.
+- Hij handelt de reverse proxy zelf af, WebSocket inbegrepen (sinds 3.0.0). De mapweergave en de interne pagina's worden aan Python gevraagd; FastCGI, bestandsupload en de reverse-proxyzones met cache worden hem voor de hele verbinding toevertrouwd. Die functies behouden dus de snelheid van de Python-engine.
+- Met direct TLS worden FastCGI, bestandsupload en de reverse-proxyzones met cache niet door de native engine ondersteund: dan handelt de Python-engine af, en de interface meldt het.
 - Hij vereist glibc 2.38 of nieuwer en OpenSSL 3. Start hij niet, dan compileert de installatie hem ter plaatse opnieuw, en anders blijft omega-serv op de Python-engine.
 
 ---
 
-## 6. Functievergelijking
+## 7. Functievergelijking
 
 Legenda:
 - ✅ ingebouwd;
@@ -372,7 +514,7 @@ Getrapte blokkades: steeds langere blokkades voor adressen die terugkomen, over 
 
 ---
 
-## 7. Beheer en gebruiksgemak
+## 8. Beheer en gebruiksgemak
 
 | Server | Belangrijkste beheerwijze | Interface | Herladen zonder onderbreking |
 |---|---|---|---|
@@ -389,7 +531,7 @@ Daartegenover laat de aanpak „configuratiebestand” van nginx, Apache en Cadd
 
 ---
 
-## 8. Wat omega-serv extra biedt
+## 9. Wat omega-serv extra biedt
 
 Deze sectie neemt alleen op wat geen van de vergeleken servers zo levert, zonder module van derden of extern hulpmiddel.
 
@@ -427,11 +569,15 @@ Deze sectie neemt alleen op wat geen van de vergeleken servers zo levert, zonder
 
 ---
 
-## 9. Wat de anderen beter doen
+## 10. Wat de anderen beter doen
 
 - **Doorvoer**: lighttpd en nginx blijven de snelste bij kleine en middelgrote bestanden, op alle drie de machines. Zelfs met de native engine levert omega-serv ongeveer 0,7 keer nginx en 0,5 keer lighttpd bij kleine bestanden, en 0,3 tot 0,6 keer nginx bij bestanden van 100 KB. Voor een site met veel verkeer, een openbare API of een CDN zijn zij de juiste keuze.
 - **Middelgrote bestanden**: Apache levert bestanden van 100 KB sneller dan de native engine van omega-serv, op alle drie de machines.
-- **Geheugen**: lighttpd (1 MB), nginx (4 tot 5 MB) en Apache (4 tot 9 MB) passen bij zeer beperkte machines (embedded, kleine containers). omega-serv heeft er 30 tot 65 nodig.
+- **Reverse proxy**:
+  - nginx stuurt kleine antwoorden 10 tot 22 % sneller door dan de native engine, en tot 1,6 keer sneller in HTTPS op machine C;
+  - in HTTPS, bij antwoorden van 100 KB, gaat lighttpd hem voorbij op machine C, en Caddy en Traefik op machine A;
+  - nginx, lighttpd en Apache sturen door met 4 tot 15 MB geheugen, omega-serv met ongeveer 30.
+- **Geheugen**: lighttpd (1 MB), nginx (4 tot 5 MB) en Apache (4 tot 9 MB) passen bij zeer beperkte machines (embedded, kleine containers). omega-serv 3.0.0 heeft er afhankelijk van de modus 10 tot 55 nodig.
 - **Kosten van de beveiliging**: de WAF heeft nog steeds kosten. Met de native engine kost hij 5 tot 22 % van de doorvoer bij kleine bestanden, snelheidsbeperking inbegrepen: omega-serv met WAF levert op de machines A en B 0,53 tot 0,56 keer nginx zonder WAF. Een verdacht of twijfelachtig verzoek (overeenkomst van een regel, niet-ASCII-tekst, bron die Active Defense volgt) gaat altijd via Python, en wordt met de snelheid van de Python-engine afgehandeld. Met magnet actief gaan alle verzoeken via Python, en deelt de WAF de doorvoer van de native engine dan door 4 tot 7, zoals vóór de optimalisatie.
 - **Protocollen**: HTTP/2 bij alle anderen, HTTP/3 bij nginx, Caddy en Traefik. omega-serv spreekt alleen HTTP/1.1.
 - **Automatisch HTTPS**: Caddy en Traefik hebben het standaard ingebouwd, nginx (`ngx_http_acme_module`) en Apache (`mod_md`) met een officiële module. omega-serv delegeert aan Certbot, met een assistent en een geplande vernieuwing.
@@ -441,18 +587,19 @@ Deze sectie neemt alleen op wat geen van de vergeleken servers zo levert, zonder
 
 ---
 
-## 10. Welke server voor welk gebruik
+## 11. Welke server voor welk gebruik
 
 | Behoefte | Aanbevolen keuze |
 |---|---|
 | Site met veel verkeer, openbare API, CDN, maximale doorvoer | **nginx** of **lighttpd** |
+| Reverse proxy met maximale doorvoer, HTTP/2 of HTTP/3 naar de clients | **nginx** |
 | Zeer beperkte machine, embedded, statische bestanden | **lighttpd** |
 | Snelle start met automatisch HTTPS, korte configuratie | **Caddy** |
 | Historische PHP-applicatie, `.htaccess`, gedeelde hosting | **Apache** |
 | Docker, Kubernetes, microservices | **Traefik** |
 | Kleine of middelgrote site, interne dienst, lab, VPN, beheer zonder bestanden te bewerken | **omega-serv** (native engine indien mogelijk) |
 | Blootgestelde server waarvan je de beveiliging (WAF, getrapte blokkades, lokazen) vanuit één interface wilt zien en sturen | **omega-serv** |
-| Interne reverse proxy met lastverdeling, gezondheid en cache, aangestuurd vanuit een interface | **omega-serv** |
+| Reverse proxy met lastverdeling, gezondheid, cache en WAF, aangestuurd vanuit een interface | **omega-serv** (native engine: tweede achter nginx in doorvoer) |
 | HTTP-verharding en actieve verdediging leren | **omega-serv** |
 
 Deze hulpmiddelen laten zich ook combineren. Bijvoorbeeld:
@@ -461,9 +608,9 @@ Deze hulpmiddelen laten zich ook combineren. Bijvoorbeeld:
 
 ---
 
-## 11. De metingen reproduceren
+## 12. De metingen reproduceren
 
-De hulpmiddelen worden in de repository meegeleverd, onder `tools/bench/`. Je hebt geïnstalleerde nginx, lighttpd, Apache, Caddy en oha nodig, de ontwikkelomgeving van omega-serv (`.venv`) en, voor de native engine, het binaire bestand gecompileerd in `native/omega-http-core/build-release`.
+De hulpmiddelen worden in de repository meegeleverd, onder `tools/bench/`. Je hebt geïnstalleerde nginx, lighttpd, Apache, Caddy en oha nodig (en Traefik voor de reverse proxy), de ontwikkelomgeving van omega-serv (`.venv`) en, voor de native engine, het binaire bestand gecompileerd in `native/omega-http-core/build-release`.
 
 ```sh
 # 1. een meetmap voorbereiden (testbestanden, configuraties, omega-serv 1.0, 2.0 en huidige versie)
@@ -487,6 +634,15 @@ BENCH_SRC=/pad/meting/v1-archive/omega-serv/src \
 BENCH_EXTRA_PATH=/pad/meting/v1-archive/omega-serv/vendor/omega-lib/src \
   .venv/bin/python tools/bench/bigfile.py
 
+# reverse proxy (§5): backend, certificaat, configuraties van de 6 proxy's, daarna 3 verweven herhalingen
+#    machine C: SRV_CPUS=0-3 BACK_CPUS=4,5 CLI_CPUS=6-9 en CONFIGS="nginx-4 lighttpd-4 apache-4 caddy-4 traefik-4 omega-nat-1-0 omega-nat-1-1"
+tools/bench/proxy/setup.sh /pad/proxy /pad/naar/traefik
+SRV_CPUS=0,1 CLI_CPUS=2,3 tools/bench/proxy/campaign.sh /pad/proxy > proxy.txt
+python3 tools/bench/proxy/summarize.py proxy.txt
+
+# alleen omega-serv opnieuw meten (geheugen van 3.0.0): bestanden, grote downloads en reverse proxy, nginx als referentie
+MACHINE=a SRV_CPUS=0,2 CLI_CPUS=1,3 tools/bench/memoire-3.0.0.sh /pad/meting > geheugen.txt
+
 # een willekeurige andere, al draaiende server meten, zonder oha
 python3 tools/bench/bench_any.py --make-files /srv/test-webroot
 python3 tools/bench/bench_any.py --port 8080
@@ -494,11 +650,13 @@ python3 tools/bench/bench_any.py --port 8080
 
 Namen van de configuraties: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N` (N processen, of N kernen voor Caddy); `omega-vX-N-W` voor omega-serv (versie `v1`, `v20` of `v2` voor de huidige versie, N processen, W = 0 zonder WAF of 1 met), gevolgd door `-native` voor de native engine.
 
+Voor de reverse proxy: `nginx-N`, `lighttpd-N`, `apache-N`, `caddy-N`, `traefik-N`, `omega-py-N-W` (Python-engine) en `omega-nat-N-W` (native engine, N beveiligingsprocessen), gevolgd door `-tls` voor HTTPS aan de clientkant.
+
 Om uw eigen resultaten te publiceren, vermeld de machine, de versies, de verdeling van de kernen en de drie herhalingen.
 
 ---
 
-## 12. Bronnen
+## 13. Bronnen
 
 Functies van de andere servers, volgens hun officiële documentatie (geraadpleegd op 26 oktober 2026).
 
@@ -548,4 +706,4 @@ Functies van de andere servers, volgens hun officiële documentatie (geraadpleeg
 
 ---
 
-*Vergelijking gemaakt door kraynux voor omega-serv 2.5: metingen van 3 en 4 november 2026 op drie machines (actieve verdediging: 26 oktober 2026). Meet voor elke capaciteitsbeslissing op uw eigen hardware met de meegeleverde hulpmiddelen.*
+*Vergelijking gemaakt door kraynux voor omega-serv 2.5 en 3.0.0: metingen van 3 en 4 november 2026 op drie machines (reverse proxy: 14 november 2026; geheugen van omega-serv 3.0.0: 19 november 2026; actieve verdediging: 26 oktober 2026). Meet voor elke capaciteitsbeslissing op uw eigen hardware met de meegeleverde hulpmiddelen.*

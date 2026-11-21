@@ -1,4 +1,4 @@
-# omega-serv 2.6.2 : aide de la ligne de commande
+# omega-serv 3.0.0 : aide de la ligne de commande
 
 > Fichier généré par `tools/cli_reference.py` depuis le code : ne pas le modifier à la main.
 
@@ -51,6 +51,9 @@ config                  Fichier de configuration : création, vérification, TLS
   backup                Crée une sauvegarde : la configuration toujours, le reste selon les options
                         --include-*.
   restore               Restaure une sauvegarde.
+  export-backup         Copie une sauvegarde hors du dossier omega-serv, avec son empreinte .sha256.
+  import-backup         Ajoute à la liste une sauvegarde exportée, après vérification (empreinte,
+                        contenu).
   list-backups          Liste les sauvegardes.
 profile                 Profils de configuration prêts à l'emploi.
   list                  Liste les profils disponibles.
@@ -117,6 +120,38 @@ riposte                 RIPOSTE : bans de plus en plus longs pour les récidivis
   stop                  Arrêt d'urgence : RIPOSTE ne décide plus rien, même après un redémarrage,
                         jusqu'à riposte resume.
   resume                Lève l'arrêt d'urgence.
+admin-web               Administration web : tableau de bord dans le navigateur, sur son propre
+                        port.
+  run                   Lance le processus d'administration web au premier plan (normalement lancé
+                        par serve ; utile au diagnostic).
+  account               Comptes de l'administration web (créés ici ou dans le TUI, jamais depuis le
+                        web).
+    list                Liste les comptes, leur rôle et leur TOTP.
+    add                 Crée un compte (mot de passe demandé deux fois).
+    remove              Supprime un compte (ses sessions ouvertes sont fermées).
+    password            Change le mot de passe (demandé deux fois).
+    totp-enable         Active TOTP : QR code, secret et lien, puis vérification d'un code ; affiche
+                        les codes de secours.
+    totp-disable        Désactive TOTP pour ce compte.
+    backup-codes        Génère 10 nouveaux codes de secours (les anciens ne marchent plus, le TOTP
+                        du téléphone ne change pas).
+    role                Change le rôle d'un compte.
+  master                Maître accepté par cette instance (un seul) : la suivre et la piloter depuis
+                        une autre instance.
+    show                Montre le maître accepté, ses droits et la fenêtre d'appairage.
+    accept              Accepte un maître (utilisé par « Relier au maître » du TUI) : affiche en
+                        JSON le jeton et l'empreinte du certificat, à déposer chez le maître.
+    pairing-code        Ouvre une fenêtre d'appairage de 10 minutes et affiche le code à saisir sur
+                        le maître.
+    revoke              Révoque le maître accepté : ses appels sont refusés aussitôt.
+  instances             Instances suivies par ce maître (page Instances du tableau de bord web).
+    identity            Affiche en JSON l'identifiant et le nom de ce maître.
+    list                Liste les instances suivies et les sondes.
+    add                 Ajoute une instance avec le jeton et l'empreinte rendus par « admin-web
+                        master accept » (« Relier au maître » du TUI).
+    pair                Relie une instance avec son code d'appairage.
+    add-probe           Ajoute une sonde HTTP (backend qui n'est pas omega-serv).
+    remove              Retire une instance suivie ou une sonde (identifiant de « list »).
 threats                 Menaces suivies par Active Defense.
   list                  Liste les sources suivies avec leur score et leur niveau.
   show                  Affiche le détail d'une source suivie.
@@ -204,6 +239,7 @@ help                    Affiche l'arbre de toutes les commandes, ou d'une branch
 - [`logs`](#logs) : Logs d'omega-serv.
 - [`engine`](#engine) : Moteur HTTP (Python ou natif).
 - [`riposte`](#riposte) : RIPOSTE : bans de plus en plus longs pour les récidivistes.
+- [`admin-web`](#admin-web) : Administration web : tableau de bord dans le navigateur, sur son propre port.
 - [`threats`](#threats) : Menaces suivies par Active Defense.
 - [`incidents`](#incidents) : Incidents Active Defense.
 - [`deception`](#deception) : Leurres Active Defense.
@@ -297,7 +333,7 @@ omega-serv config disable-tls
 Crée une sauvegarde : la configuration toujours, le reste selon les options --include-*.
 
 ```text
-omega-serv config backup [--include-waf] [--include-auth] [--include-certificates] [--include-active-defense] [--include-error-pages] [--include-preferences] [--include-logs-library] [--include-riposte] [--all] [--confirm-secrets] [--description TEXTE]
+omega-serv config backup [--include-waf] [--include-auth] [--include-certificates] [--include-active-defense] [--include-error-pages] [--include-preferences] [--include-logs-library] [--include-riposte] [--include-site-content] [--include-zone-data] [--include-exports] [--all] [--confirm-secrets] [--description TEXTE]
 ```
 
 | Argument | Rôle |
@@ -310,6 +346,9 @@ omega-serv config backup [--include-waf] [--include-auth] [--include-certificate
 | `--include-preferences` | Ajoute les préférences de l'interface. |
 | `--include-logs-library` | Ajoute la bibliothèque des journaux. |
 | `--include-riposte` | Ajoute la base RIPOSTE. |
+| `--include-site-content` | Ajoute le contenu du site (webroot) ; jamais compris dans --all, peut être long. |
+| `--include-zone-data` | Ajoute les données des zones personnalisées (cible des alias, dossiers du listing, scripts FastCGI) ; jamais compris dans --all. |
+| `--include-exports` | Ajoute les rapports d'export (dossier des exports) ; jamais compris dans --all. |
 | `--all` | Tout sauvegarder : toutes les options --include-* (secrets compris : demande --confirm-secrets). |
 | `--confirm-secrets` | Confirme l'ajout de secrets non chiffrés (hash de mots de passe, clés privées). |
 | `--description TEXTE` | Texte libre enregistré avec la sauvegarde. |
@@ -319,13 +358,39 @@ omega-serv config backup [--include-waf] [--include-auth] [--include-certificate
 Restaure une sauvegarde.
 
 ```text
-omega-serv config restore --snapshot-id ID [--stop-and-restart]
+omega-serv config restore --snapshot-id ID [--stop-and-restart] [--keep-current-port]
 ```
 
 | Argument | Rôle |
 |---|---|
 | `--snapshot-id ID` | Identifiant de la sauvegarde (voir config list-backups). **(obligatoire)** |
 | `--stop-and-restart` | Arrête le service, restaure, puis le redémarre (nécessaire si le service tourne). |
+| `--keep-current-port` | En cas de conflit de port avec une autre instance : garder l'adresse, le port et le nom de service actuels. |
+
+### config export-backup
+
+Copie une sauvegarde hors du dossier omega-serv, avec son empreinte .sha256.
+
+```text
+omega-serv config export-backup --snapshot-id ID DOSSIER
+```
+
+| Argument | Rôle |
+|---|---|
+| `--snapshot-id ID` | Identifiant de la sauvegarde (voir config list-backups). **(obligatoire)** |
+| `DOSSIER` | Dossier de destination. |
+
+### config import-backup
+
+Ajoute à la liste une sauvegarde exportée, après vérification (empreinte, contenu).
+
+```text
+omega-serv config import-backup FICHIER
+```
+
+| Argument | Rôle |
+|---|---|
+| `FICHIER` | Archive .tar.gz, son .sha256 à côté. |
 
 ### config list-backups
 
@@ -534,14 +599,13 @@ omega-serv active-defense status
 Montre la décision qu'Active Defense prendrait pour une source, sans rien écrire.
 
 ```text
-omega-serv active-defense simulate --ip IP [--path CHEMIN] [--user-agent TEXTE] [--attack-class CLASSE] [--score POINTS]
+omega-serv active-defense simulate --ip IP [--path CHEMIN] [--attack-class CLASSE] [--score POINTS]
 ```
 
 | Argument | Rôle |
 |---|---|
 | `--ip IP` | Adresse de la source simulée. **(obligatoire)** |
 | `--path CHEMIN` | Chemin observé (défaut : /). |
-| `--user-agent TEXTE` | User-Agent de la source. |
 | `--attack-class CLASSE` | Classe d'attaque (défaut : scan ; liste affichée si inconnue). |
 | `--score POINTS` | Points ajoutés au score de menace (défaut : 10). |
 
@@ -896,6 +960,256 @@ Lève l'arrêt d'urgence.
 ```text
 omega-serv riposte resume
 ```
+
+## admin-web
+
+Administration web : tableau de bord dans le navigateur, sur son propre port.
+
+```text
+omega-serv admin-web COMMANDE
+```
+
+### admin-web run
+
+Lance le processus d'administration web au premier plan (normalement lancé par serve ; utile au diagnostic).
+
+```text
+omega-serv admin-web run
+```
+
+### admin-web account
+
+Comptes de l'administration web (créés ici ou dans le TUI, jamais depuis le web).
+
+```text
+omega-serv admin-web account COMMANDE
+```
+
+### admin-web account list
+
+Liste les comptes, leur rôle et leur TOTP.
+
+```text
+omega-serv admin-web account list
+```
+
+### admin-web account add
+
+Crée un compte (mot de passe demandé deux fois).
+
+```text
+omega-serv admin-web account add USERNAME [--role {lecture,administration}]
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+| `--role {lecture,administration}` | lecture : Tableau de bord seulement ; administration : Tableau de bord et Administration. |
+
+### admin-web account remove
+
+Supprime un compte (ses sessions ouvertes sont fermées).
+
+```text
+omega-serv admin-web account remove USERNAME
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+
+### admin-web account password
+
+Change le mot de passe (demandé deux fois).
+
+```text
+omega-serv admin-web account password USERNAME
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+
+### admin-web account totp-enable
+
+Active TOTP : QR code, secret et lien, puis vérification d'un code ; affiche les codes de secours.
+
+```text
+omega-serv admin-web account totp-enable USERNAME
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+
+### admin-web account totp-disable
+
+Désactive TOTP pour ce compte.
+
+```text
+omega-serv admin-web account totp-disable USERNAME
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+
+### admin-web account backup-codes
+
+Génère 10 nouveaux codes de secours (les anciens ne marchent plus, le TOTP du téléphone ne change pas).
+
+```text
+omega-serv admin-web account backup-codes USERNAME
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+
+### admin-web account role
+
+Change le rôle d'un compte.
+
+```text
+omega-serv admin-web account role USERNAME {lecture,administration}
+```
+
+| Argument | Rôle |
+|---|---|
+| `USERNAME` | Identifiant. |
+| `{lecture,administration}` | lecture ou administration. |
+
+### admin-web master
+
+Maître accepté par cette instance (un seul) : la suivre et la piloter depuis une autre instance.
+
+```text
+omega-serv admin-web master COMMANDE
+```
+
+### admin-web master show
+
+Montre le maître accepté, ses droits et la fenêtre d'appairage.
+
+```text
+omega-serv admin-web master show
+```
+
+### admin-web master accept
+
+Accepte un maître (utilisé par « Relier au maître » du TUI) : affiche en JSON le jeton et l'empreinte du certificat, à déposer chez le maître.
+
+```text
+omega-serv admin-web master accept --master-id MASTER-ID [--master-name MASTER-NAME] [--rights {lecture,administration}] [--replace]
+```
+
+| Argument | Rôle |
+|---|---|
+| `--master-id MASTER-ID` | Identifiant du maître (admin-web instances identity). **(obligatoire)** |
+| `--master-name MASTER-NAME` | Nom du maître, affiché ici. |
+| `--rights {lecture,administration}` | lecture : voir seulement ; administration : voir et agir. |
+| `--replace` | Remplace le maître déjà accepté (révoqué aussitôt). |
+
+### admin-web master pairing-code
+
+Ouvre une fenêtre d'appairage de 10 minutes et affiche le code à saisir sur le maître.
+
+```text
+omega-serv admin-web master pairing-code [--rights {lecture,administration}] [--replace]
+```
+
+| Argument | Rôle |
+|---|---|
+| `--rights {lecture,administration}` | lecture : voir seulement ; administration : voir et agir. |
+| `--replace` | Remplace le maître déjà accepté (révoqué aussitôt). |
+
+### admin-web master revoke
+
+Révoque le maître accepté : ses appels sont refusés aussitôt.
+
+```text
+omega-serv admin-web master revoke
+```
+
+### admin-web instances
+
+Instances suivies par ce maître (page Instances du tableau de bord web).
+
+```text
+omega-serv admin-web instances COMMANDE
+```
+
+### admin-web instances identity
+
+Affiche en JSON l'identifiant et le nom de ce maître.
+
+```text
+omega-serv admin-web instances identity
+```
+
+### admin-web instances list
+
+Liste les instances suivies et les sondes.
+
+```text
+omega-serv admin-web instances list
+```
+
+### admin-web instances add
+
+Ajoute une instance avec le jeton et l'empreinte rendus par « admin-web master accept » (« Relier au maître » du TUI).
+
+```text
+omega-serv admin-web instances add ADDRESS PORT --fingerprint FINGERPRINT [--token TOKEN] [--name NAME]
+```
+
+| Argument | Rôle |
+|---|---|
+| `ADDRESS` | Adresse IP de l'instance. |
+| `PORT` | Port de son administration web. |
+| `--fingerprint FINGERPRINT` | Empreinte SHA-256 de son certificat (vide : HTTP en boucle locale seulement). **(obligatoire)** |
+| `--token TOKEN` | Jeton ; sans cette option, il est lu sur l'entrée standard (jamais dans l'historique du shell). |
+| `--name NAME` | Nom affiché. |
+
+### admin-web instances pair
+
+Relie une instance avec son code d'appairage.
+
+```text
+omega-serv admin-web instances pair ADDRESS PORT CODE [--name NAME]
+```
+
+| Argument | Rôle |
+|---|---|
+| `ADDRESS` | Adresse IP de l'instance. |
+| `PORT` | Port de son administration web. |
+| `CODE` | Code affiché par l'instance (comme K7QF-3M9X). |
+| `--name NAME` | Nom affiché. |
+
+### admin-web instances add-probe
+
+Ajoute une sonde HTTP (backend qui n'est pas omega-serv).
+
+```text
+omega-serv admin-web instances add-probe URL [--name NAME]
+```
+
+| Argument | Rôle |
+|---|---|
+| `URL` | URL sondée (http://... ou https://...). |
+| `--name NAME` | Nom affiché. |
+
+### admin-web instances remove
+
+Retire une instance suivie ou une sonde (identifiant de « list »).
+
+```text
+omega-serv admin-web instances remove INSTANCE-ID
+```
+
+| Argument | Rôle |
+|---|---|
+| `INSTANCE-ID` | Identifiant à 12 caractères. |
 
 ## threats
 

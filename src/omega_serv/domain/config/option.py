@@ -30,6 +30,7 @@ KNOWN_OPTION_NAMES: frozenset[str] = frozenset({
     "reverse_proxy",
     "active_defense",
     "riposte",
+    "admin_web",  # tableau de bord web, lot 2 (OMEGA-SERV_PLAN-DETAILLE_TABLEAU_DE_BORD_WEB.md, 2026-11-16)
 })
 
 

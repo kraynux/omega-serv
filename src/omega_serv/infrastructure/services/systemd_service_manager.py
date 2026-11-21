@@ -19,6 +19,8 @@ action, pas par lancement). Les operations en lecture seule
 privilegiees - systemd les autorise nativement a tout utilisateur."""
 from __future__ import annotations
 
+import json
+import sys
 from pathlib import Path
 
 from omega_serv.core.i18n import _
@@ -29,6 +31,7 @@ from omega_serv.domain.services.exceptions import (
     ServiceNotFoundError,
     ServiceStatusError,
 )
+from omega_serv.domain.services.service_name import is_safe_service_name
 from omega_serv.ports.process_runner_port import ProcessResult, ProcessRunnerPort
 from omega_serv.ports.service_manager_port import ServiceManagerType
 
@@ -85,8 +88,9 @@ class SystemdServiceManager:
         return self._runner.run(["sudo", *args], input_text=input_text, timeout=timeout)
 
     def _control(self, service_name: str, operation: str) -> bool:
+        _require_safe_name(service_name, operation, "systemd")
         result = self._run_privileged(
-            [self._systemctl, operation, service_name], timeout=_CONTROL_TIMEOUT_SECONDS
+            [self._systemctl, operation, "--", service_name], timeout=_CONTROL_TIMEOUT_SECONDS
         )
         if result.returncode == 0:
             return True
@@ -235,6 +239,7 @@ class SystemdServiceManager:
 
     def grant_directory_access(
         self, path: Path, group: str, extra_user: str, private_subdirs: tuple[str, ...] = (),
+        open_subdirs: tuple[str, ...] = (),
     ) -> None:
         """Partage `path` (typiquement `var/`) avec le compte systeme
         dedie (retour utilisateur 2026-09-10, second vrai bug trouve
@@ -256,25 +261,15 @@ class SystemdServiceManager:
         UMask=0007` (necessaire en plus de ceci : sans quoi les
         NOUVEAUX fichiers crees par le service restent illisibles au
         groupe malgre le repertoire partage)."""
-        # private_subdirs (2026-11-10, etude de l'interconnecteur) : sous-dossiers jamais partages avec
-        # le groupe - var/backups contient users.json, les certificats et leurs cles privees. Ils sont
-        # sautes par find (-prune) puis remis en acces proprietaire seul (go-rwx).
-        # Liens symboliques jamais suivis (2026-11-10, lot E de l'etape 3 d'omega-connect) : var/ est inscriptible
-        # par le compte du service. Un lien var/x -> /etc/shadow aurait fait faire a root `chgrp omega-serv` et
-        # `chmod g+rw` sur la cible (chgrp et chmod suivent un lien passe en argument). `! -type l` les ecarte,
-        # `chgrp -h` traite le lien lui-meme s'il apparait entre find et chgrp.
-        prune: list[str] = []
-        for name in private_subdirs:
-            prune += ["-path", str(path / name), "-prune", "-o"]
+        # private_subdirs (2026-11-10) : sous-dossiers jamais partages avec le groupe - var/backups contient
+        # users.json, les certificats et leurs cles privees ; remis en acces proprietaire seul (go-rwx).
+        # Scan de securite n° 2 (2026-11-20, F11/F21/F23) : plus de `find ... -exec chgrp/chmod {} +` en root sur un
+        # dossier que le service peut ecrire (un lien pose entre find et chgrp redirigeait root vers /etc). Parcours
+        # par descripteurs, sans jamais suivre de lien : secure_tree.py.
         commands: list[tuple[list[str], str]] = [
-            (["find", str(path), *prune, "!", "-type", "l", "-exec", "chgrp", "-h", group, "{}", "+"],
-             "grant-directory-access-chgrp"),
-            (["find", str(path), *prune, "!", "-type", "l", "-exec", "chmod", "g+rwX", "{}", "+"],
-             "grant-directory-access-chmod"),
-            (["find", str(path), *prune, "-type", "d", "-exec", "chmod", "g+s", "{}", "+"],
-             "grant-directory-access-setgid"),
-            *((["find", str(path / name), "!", "-type", "l", "-exec", "chmod", "go-rwx", "{}", "+"],
-               "grant-directory-access-private") for name in private_subdirs if (path / name).exists()),
+            (_secure_tree_command({"op": "share", "root": str(path), "group": group,
+                                   "private": list(private_subdirs), "open": list(open_subdirs)}),
+             "grant-directory-access"),
             (["usermod", "-aG", group, extra_user], "grant-directory-access-usermod"),
         ]
         for args, operation in commands:
@@ -290,7 +285,7 @@ class SystemdServiceManager:
         que le service ne pouvait plus modifier (incident craftdark du 2026-10-18 : liste noire root 600, puis
         502). Meme systeme de fichiers seulement, liens jamais suivis (`chown -h`)."""
         result = self._run_privileged(
-            ["find", str(path), "-xdev", "-user", "root", "!", "-type", "l", "-exec", "chown", "-h", owner, "{}", "+"])
+            _secure_tree_command({"op": "return_root_owned", "root": str(path), "owner": owner}))
         if result.returncode != 0:
             raise ServiceControlError(
                 str(path), "return-root-owned", result.stderr.strip() or _("code {returncode}").format(returncode=result.returncode), "systemd",
@@ -360,3 +355,18 @@ class SystemdServiceManager:
                 if len(parts) > 1:
                     return parts[1].strip()
         return ""
+
+
+def _require_safe_name(service_name: str, operation: str, manager_type: str) -> None:
+    """Scan de securite n° 2 (2026-11-20, F22/F42) : jamais de commande privilegiee sur un nom qui n'est pas un nom
+    d'unite sur (motif `*`, option `-x`, chemin) - il vient souvent de var/settings.json, ecrit par le service."""
+    if not is_safe_service_name(service_name):
+        raise ServiceControlError(service_name, operation, _("nom de service refusé"), manager_type)
+
+
+def _secure_tree_command(spec: dict[str, object]) -> list[str]:
+    """`python -I secure_tree.py '<json>'` : -I = jamais le dossier courant ni l'environnement dans le chemin
+    d'import (lance par root). Le fichier est dans src/, que le compte du service ne peut pas ecrire."""
+    from omega_serv.infrastructure.services import secure_tree
+
+    return [sys.executable, "-I", secure_tree.__file__, json.dumps(spec)]

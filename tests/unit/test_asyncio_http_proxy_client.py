@@ -18,7 +18,11 @@ from omega_serv.infrastructure.process.subprocess_runner import SubprocessRunner
 from omega_serv.infrastructure.proxy.asyncio_http_proxy_client import AsyncioHttpProxyClient
 from omega_serv.infrastructure.tls.openssl_certificate_tool import OpensslCertificateTool
 from omega_serv.infrastructure.tls.ssl_context_builder import build_client_ssl_context
-from omega_serv.ports.http_proxy_client_port import HttpProxyConnectionError
+from omega_serv.ports.http_proxy_client_port import (
+    HttpProxyConnectionError,
+    HttpProxyResponseTooLargeError,
+    HttpProxyTimeoutError,
+)
 
 _OPENSSL_MISSING = shutil.which("openssl") is None
 
@@ -531,6 +535,167 @@ class TestCorrectif262ProxyClient(unittest.IsolatedAsyncioTestCase):
         _first, second = await self._run(backend, [("GET", "/a"), ("GET", "/b")])
         self.assertIsInstance(second, HttpProxyConnectionError)
         self.assertEqual(len(backend.received), 2)  # coupee en pleine reponse : jamais rejouee
+
+
+class TestLot1ResponseReading(unittest.IsolatedAsyncioTestCase):
+    """Plan proxy natif v2, lot 1 (C5, S7 a S14) : lecture stricte des reponses du backend - la reference du natif."""
+
+    async def _run(self, backend, calls, read_timeout=2.0, max_body_bytes=None):
+        server = await asyncio.start_server(backend.handle, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+        client = AsyncioHttpProxyClient()
+        results = []
+        try:
+            for method, path in calls:
+                try:
+                    results.append(await client.forward_request(
+                        "127.0.0.1", port, method, path, (), b"", 2.0, read_timeout, None, max_body_bytes))
+                except HttpProxyConnectionError as e:
+                    results.append(e)
+        finally:
+            await _close_pooled_connections(client)
+            for writer in backend.writers:
+                writer.close()
+            server.close()
+            await server.wait_closed()
+        return results
+
+    async def test_head_204_and_304_have_no_body_and_keep_the_connection(self):
+        # D1, D2 : on attendait un corps qui ne venait pas -> delai depasse, 502 et un echec de sante.
+        backend = _ScriptedBackend([b"HTTP/1.1 200 OK\r\nContent-Length: 50\r\n\r\n",
+                                    b"HTTP/1.1 204 No Content\r\n\r\n",
+                                    b"HTTP/1.1 304 Not Modified\r\nContent-Length: 50\r\n\r\n"])
+        head, no_content, not_modified, last = await self._run(
+            backend, [("HEAD", "/h"), ("GET", "/n"), ("GET", "/m"), ("GET", "/x")], read_timeout=0.5)
+        self.assertEqual((head.status_code, head.body), (200, b""))
+        self.assertIn(("Content-Length", "50"), head.headers)
+        self.assertEqual((no_content.status_code, no_content.body), (204, b""))
+        self.assertEqual((not_modified.status_code, not_modified.body), (304, b""))
+        self.assertEqual(last.body, b"reel")
+        self.assertEqual(backend.connections, 1)  # une seule connexion, recyclee a chaque fois
+
+    async def test_interim_1xx_responses_are_skipped(self):
+        backend = _ScriptedBackend([(b"HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 103 Early Hints\r\nLink: </a>\r\n\r\n"
+                                     b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")])
+        (result,) = await self._run(backend, [("GET", "/")])
+        self.assertEqual((result.status_code, result.body), (200, b"ok"))
+
+    async def test_chunked_body_is_decoded_trailers_dropped_and_connection_reused(self):
+        # D3 : relayee avec son decoupage brut ; S11 : trailers valides puis retires.
+        backend = _ScriptedBackend([(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n"
+                                     b"5\r\nhello\r\n6;ext=1\r\n world\r\n0\r\nX-Trailer: t\r\n\r\n")])
+        chunked, after = await self._run(backend, [("GET", "/c"), ("GET", "/d")])
+        self.assertEqual((chunked.status_code, chunked.body), (200, b"hello world"))
+        self.assertNotIn("transfer-encoding", {name.lower() for name, _ in chunked.headers})
+        self.assertNotIn("x-trailer", {name.lower() for name, _ in chunked.headers})
+        self.assertEqual(after.body, b"reel")
+        self.assertEqual(backend.connections, 1)
+
+    async def test_invalid_responses_are_refused(self):
+        ok_head = b"HTTP/1.1 200 OK\r\n"
+        cases = {
+            "statut HTTP/2": b"HTTP/2 200 OK\r\nContent-Length: 0\r\n\r\n",
+            "statut a deux chiffres": b"HTTP/1.1 20 OK\r\nContent-Length: 0\r\n\r\n",
+            "statut 600": b"HTTP/1.1 600 X\r\nContent-Length: 0\r\n\r\n",
+            "protocole inconnu": b"ICY 200 OK\r\nContent-Length: 0\r\n\r\n",
+            "en-tete replie": ok_head + b"X-A: 1\r\n  suite\r\nContent-Length: 0\r\n\r\n",
+            "nom avec espace": ok_head + b"Bad Name: 1\r\nContent-Length: 0\r\n\r\n",
+            "ligne sans deux-points": ok_head + b"sans-separateur\r\nContent-Length: 0\r\n\r\n",
+            "controle dans la valeur": ok_head + b"X-A: a\x01b\r\nContent-Length: 0\r\n\r\n",
+            "NUL dans la valeur": ok_head + b"X-A: a\x00b\r\nContent-Length: 0\r\n\r\n",
+            "trop d'en-tetes": ok_head + b"".join(b"X-%d: v\r\n" % i for i in range(101)) + b"\r\n",
+            "gzip, chunked": ok_head + b"Transfer-Encoding: gzip, chunked\r\n\r\n0\r\n\r\n",
+            "gzip seul": ok_head + b"Transfer-Encoding: gzip\r\n\r\nabc",
+            "taille signee": ok_head + b"Transfer-Encoding: chunked\r\n\r\n+5\r\nhello\r\n0\r\n\r\n",
+            "taille trop longue": ok_head + b"Transfer-Encoding: chunked\r\n\r\n" + b"0" * 17 + b"5\r\nhello\r\n0\r\n\r\n",
+            "bloc sans CRLF": ok_head + b"Transfer-Encoding: chunked\r\n\r\n5\r\nhelloXX0\r\n\r\n",
+            "ligne de taille en LF seul": ok_head + b"Transfer-Encoding: chunked\r\n\r\n5\nhello\r\n0\r\n\r\n",
+            "trailers trop nombreux": ok_head + b"Transfer-Encoding: chunked\r\n\r\n0\r\n"
+                                      + b"".join(b"T-%d: v\r\n" % i for i in range(33)) + b"\r\n",
+            "101 sans mise a niveau": b"HTTP/1.1 101 Switching Protocols\r\n\r\n",
+        }
+        for name, raw in cases.items():
+            with self.subTest(cas=name):
+                backend = _ScriptedBackend([raw], close_after=(0,))
+                (result,) = await self._run(backend, [("GET", "/")], read_timeout=0.5)
+                self.assertIsInstance(result, HttpProxyConnectionError)
+                self.assertNotIsInstance(result, HttpProxyTimeoutError)
+
+    async def test_body_limit_applies_to_every_framing(self):
+        # D23 : corps borne par options.reverse_proxy.max_response_body_mb (ici 10 octets).
+        cases = {
+            "longueur": b"HTTP/1.1 200 OK\r\nContent-Length: 11\r\n\r\nhello world",
+            "chunked": b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n6\r\nhello \r\n5\r\nworld\r\n0\r\n\r\n",
+            "fermeture": b"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nhello world",
+        }
+        for name, raw in cases.items():
+            with self.subTest(cas=name):
+                backend = _ScriptedBackend([raw], close_after=(0,))
+                (result,) = await self._run(backend, [("GET", "/")], max_body_bytes=10)
+                self.assertIsInstance(result, HttpProxyResponseTooLargeError)
+        backend = _ScriptedBackend([cases["longueur"]])
+        (result,) = await self._run(backend, [("GET", "/")], max_body_bytes=11)
+        self.assertEqual(result.body, b"hello world")  # garde : a la limite exacte, servi
+
+    async def test_silent_backend_is_a_timeout_not_a_connection_error(self):
+        # §2.1 point 4 : requete envoyee, aucune reponse -> 504 (HttpProxyTimeoutError) ; injoignable -> 502.
+        async def silent(reader, writer):
+            await asyncio.sleep(3)
+            writer.close()
+
+        server = await asyncio.start_server(silent, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+        client = AsyncioHttpProxyClient()
+        try:
+            with self.assertRaises(HttpProxyTimeoutError):
+                await client.forward_request("127.0.0.1", port, "GET", "/", (), b"", 2.0, 0.3)
+        finally:
+            server.close()
+        with socket_closed_port() as closed_port:
+            with self.assertRaises(HttpProxyConnectionError) as refused:
+                await client.forward_request("127.0.0.1", closed_port, "GET", "/", (), b"", 0.5, 0.5)
+            self.assertNotIsInstance(refused.exception, HttpProxyTimeoutError)
+
+    async def test_read_timeout_applies_between_blocks_not_to_the_whole_body(self):
+        # C11 : un corps qui arrive lentement mais sans pause plus longue que le delai est servi.
+        async def slow(reader, writer):
+            await reader.readuntil(b"\r\n\r\n")
+            writer.write(b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nab")
+            for part in (b"cd", b"ef"):
+                await writer.drain()
+                await asyncio.sleep(0.25)
+                writer.write(part)
+            await writer.drain()
+            writer.close()
+
+        server = await asyncio.start_server(slow, "127.0.0.1", 0)
+        port = server.sockets[0].getsockname()[1]
+        try:
+            result = await AsyncioHttpProxyClient().forward_request("127.0.0.1", port, "GET", "/", (), b"", 2.0, 0.4)
+        finally:
+            server.close()
+        self.assertEqual(result.body, b"abcdef")
+
+    def test_pool_key_separates_tls_verification_policies(self):
+        # D4 : une connexion ouverte sans verification ne doit jamais servir une zone qui l'exige.
+        client = AsyncioHttpProxyClient()
+        verified, unverified = ssl.create_default_context(), ssl.create_default_context()
+        self.assertNotEqual(client._pool_key("h", 443, verified), client._pool_key("h", 443, unverified))
+        self.assertNotEqual(client._pool_key("h", 443, verified), client._pool_key("h", 443, None))
+        self.assertEqual(client._pool_key("h", 443, verified), client._pool_key("h", 443, verified))
+
+
+class socket_closed_port:
+    """Port local sur lequel personne n'ecoute (ouvert puis referme)."""
+
+    def __enter__(self) -> int:
+        import socket
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            return probe.getsockname()[1]
+
+    def __exit__(self, *exc) -> None:
+        return None
 
 
 if __name__ == "__main__":
