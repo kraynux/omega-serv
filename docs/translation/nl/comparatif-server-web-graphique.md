@@ -87,7 +87,7 @@ Hoe korter de balk, hoe zuiniger de server. lighttpd, nginx en Apache zijn de zu
 Samenvatting van de drie machines bij het leveren van statische bestanden.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/nl/omega-serv/stats-8.png" alt="Ranglijst normale webmodus" width="1024">
 </div>
@@ -119,10 +119,10 @@ Twee toepassingen, twee ranglijsten. Een server kan in de ene schitteren en in d
 
 | Server | Positionering |
 |---|---|
-| 🟢 **omega-serv native** | De meest veelzijdige: 3e bij web, **2e bij reverse proxy**. De enige server met een ingebouwde WAF die bij doorsturen voor lighttpd en Apache blijft. Het beste compromis voor één enkel hulpmiddel dat beide toepassingen dekt, met extra beveiliging. |
+| 🟢 **omega-serv native** | De meest veelzijdige: 4e bij web, **2e bij reverse proxy**. De enige server met een ingebouwde WAF die bij doorsturen voor lighttpd en Apache blijft. Het beste compromis voor één enkel hulpmiddel dat beide toepassingen dekt, met extra beveiliging. |
 | 🔵 **nginx** | De meest constante: 2e bij web, **1e bij reverse proxy**. Altijd in de top van de ranglijst, zonder opvallende zwakte. De standaardkeuze zonder bijzondere eisen. |
 | 🟢 **lighttpd** | De sprinter voor statische inhoud: **1e bij web**, maar 4e bij doorsturen. De beste keuze voor puur statische inhoud, laat het veld aan omega-serv of nginx zodra er een reverse proxy bij komt. |
-| 🔴 **Apache** | Het tegenvoorbeeld: 4e bij web, 5e bij doorsturen. Bij grote bestanden verrast hij zelfs nginx (machine C). Niet de snelste en niet de lichtste: zijn troef blijft het PHP-ecosysteem. |
+| 🔴 **Apache** | Het tegenvoorbeeld: 3e bij web, 5e bij doorsturen. Bij grote bestanden verrast hij zelfs nginx (machine C). Niet de snelste en niet de lichtste: zijn troef blijft het PHP-ecosysteem. |
 | 🟠 **Caddy** | Eenvoud boven snelheid: 5e bij web, **7e bij doorsturen**. Niet gemaakt voor doorvoer: automatische HTTPS en korte configuratie. Te reserveren voor kleine projecten. |
 | 🟣 **Traefik** | Buiten de webcategorie: geen bestandsserver, 6e bij doorsturen. Zijn terrein blijft Docker en Kubernetes, niet de ruwe prestaties. |
 

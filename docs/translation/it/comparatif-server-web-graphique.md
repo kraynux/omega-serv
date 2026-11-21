@@ -87,7 +87,7 @@ Più la barra è corta, più il server è parco. lighttpd, nginx e Apache sono i
 Sintesi delle tre macchine nel servire file statici.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/it/omega-serv/stats-8.png" alt="Classement web normal" width="1024">
 </div>
@@ -119,10 +119,10 @@ Due usi, due classifiche. Un server può brillare nell'una e deludere nell'altra
 
 | Server | Posizionamento |
 |---|---|
-| 🟢 **omega-serv nativo** | Il più versatile: 3º come web, **2º come reverse proxy**. Unico server con un WAF integrato che resta davanti a lighttpd e Apache nell'inoltro. Il miglior compromesso per un solo strumento che copra i due usi, con in più la sicurezza. |
+| 🟢 **omega-serv nativo** | Il più versatile: 4º come web, **2º come reverse proxy**. Unico server con un WAF integrato che resta davanti a lighttpd e Apache nell'inoltro. Il miglior compromesso per un solo strumento che copra i due usi, con in più la sicurezza. |
 | 🔵 **nginx** | Il più regolare: 2º come web, **1º come reverse proxy**. Sempre in alto in classifica, senza punti deboli marcati. La scelta predefinita senza esigenze particolari. |
 | 🟢 **lighttpd** | Lo sprinter dello statico: **1º come web**, ma 4º nell'inoltro. Scelta migliore per lo statico puro, lascia il posto a omega-serv o nginx non appena si aggiunge il reverse proxy. |
-| 🔴 **Apache** | Il controesempio: 4º come web, 5º nell'inoltro. Sui file grandi sorprende persino nginx (macchina C). Né il più veloce né il più leggero: il suo punto di forza resta l'ecosistema PHP. |
+| 🔴 **Apache** | Il controesempio: 3º come web, 5º nell'inoltro. Sui file grandi sorprende persino nginx (macchina C). Né il più veloce né il più leggero: il suo punto di forza resta l'ecosistema PHP. |
 | 🟠 **Caddy** | La semplicità prima della velocità: 5º come web, **7º nell'inoltro**. Non è fatto per il throughput: HTTPS automatico e configurazione breve. Da riservare ai piccoli progetti. |
 | 🟣 **Traefik** | Fuori categoria web: non è un server di file, 6º nell'inoltro. Il suo terreno resta Docker e Kubernetes, non le prestazioni pure. |
 

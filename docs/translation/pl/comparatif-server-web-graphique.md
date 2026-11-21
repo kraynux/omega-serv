@@ -87,7 +87,7 @@ Im krótszy słupek, tym bardziej oszczędny serwer. lighttpd, nginx i Apache s�
 Podsumowanie trzech maszyn w serwowaniu plików statycznych.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/pl/omega-serv/stats-8.png" alt="Classement web normal" width="1024">
 </div>
@@ -119,10 +119,10 @@ Dwa zastosowania, dwa rankingi. Serwer może błyszczeć w jednym i rozczarowywa
 
 | Serwer | Pozycjonowanie |
 |---|---|
-| 🟢 **omega-serv natywny** | Najbardziej wszechstronny: 3. w WWW, **2. w reverse proxy**. Jedyny serwer z wbudowanym WAF, który w przekazywaniu pozostaje przed lighttpd i Apache. Najlepszy kompromis dla jednego narzędzia obejmującego oba zastosowania, z bezpieczeństwem w dodatku. |
+| 🟢 **omega-serv natywny** | Najbardziej wszechstronny: 4. w WWW, **2. w reverse proxy**. Jedyny serwer z wbudowanym WAF, który w przekazywaniu pozostaje przed lighttpd i Apache. Najlepszy kompromis dla jednego narzędzia obejmującego oba zastosowania, z bezpieczeństwem w dodatku. |
 | 🔵 **nginx** | Najrówniejszy: 2. w WWW, **1. w reverse proxy**. Zawsze w czołówce rankingu, bez wyraźnej słabości. Domyślny wybór bez szczególnych wymagań. |
 | 🟢 **lighttpd** | Sprinter plików statycznych: **1. w WWW**, ale 4. w przekazywaniu. Najlepszy wybór do czystej statyki, ustępuje miejsca omega-serv lub nginx, gdy tylko dochodzi reverse proxy. |
-| 🔴 **Apache** | Kontrprzykład: 4. w WWW, 5. w przekazywaniu. Przy dużych plikach zaskakuje nawet nginx (maszyna C). Ani najszybszy, ani najlżejszy: jego atutem pozostaje ekosystem PHP. |
+| 🔴 **Apache** | Kontrprzykład: 3. w WWW, 5. w przekazywaniu. Przy dużych plikach zaskakuje nawet nginx (maszyna C). Ani najszybszy, ani najlżejszy: jego atutem pozostaje ekosystem PHP. |
 | 🟠 **Caddy** | Prostota przed szybkością: 5. w WWW, **7. w przekazywaniu**. Nie jest stworzony do przepustowości: automatyczny HTTPS i krótka konfiguracja. Do zarezerwowania dla małych projektów. |
 | 🟣 **Traefik** | Poza kategorią WWW: nie jest serwerem plików, 6. w przekazywaniu. Jego terenem pozostają Docker i Kubernetes, a nie surowa wydajność. |
 

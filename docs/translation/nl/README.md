@@ -584,7 +584,7 @@ Vereisten volledig buiten de reikwijdte van Omega-serv: domein dat naar het publ
 
 Optionele module (`option enable active_defense`, standaard uitgeschakeld) die vijandig gedrag kwalificeert op basis van de al berekende WAF-signalen (`WafDecision`/reputatie/blokkeerlijst — nooit een tweede, onafhankelijke scoreberekening) en een bron naar een lokaas kan omleiden, haar antwoorden kan vertragen en fijner kan loggen, een bruikbaar incident kan opbouwen en daarna indicatoren van compromittering (IoC) kan exporteren. Verbant nooit zelf een adres — bans zijn de taak van RIPOSTE (blokkeerlijst van de WAF, netwerkban door omega-jail) en van de firewall `omega-fire`; Active Defense observeert, leidt om, vertraagt en legt vast.
 
-**Dreigingen en score**: elke bron (`IP + SHA-256-hash van de User-Agent`) bouwt een score op (`WAF-001` blokkerend +10, reputatie-escalatie +25, bekende ban +25, POST op een al toegewezen lokaas +30 — afname van -5 per 15 minuten zonder nieuwe gebeurtenis), gekwalificeerd als `normal`/`suspicious`/`hostile`/`contained` (`contained` vereist bovendien een al bekende ban). `mode: monitor` observeert zonder te handelen; `mode: enforce` past de onderstaande acties echt toe.
+**Dreigingen en score**: elke bron (`IP + SHA-256-hash van de User-Agent`) bouwt een score op (`WAF-001` blokkerend +10, reputatie-escalatie +25, bekende ban +25, POST op een al toegewezen lokaas +30 — afname van -5 per 15 minuten zonder nieuwe gebeurtenis), gekwalificeerd als `normal`/`suspicious`/`hostile`/`contained` (`contained` vereist bovendien een al bekende ban). `mode: monitor` observeert zonder te handelen; `mode: enforce` past de onderstaande acties echt toe. De bekende ban komt uit het banjournaal van de omega-connect-zone, waarin omega-fire en omega-jail (fail2ban) hun bans publiceren: elke 5 seconden opnieuw gelezen zonder herstart, RIPOSTE-bans uitgezonderd.
 
 **Oorlogsmodus** (`options.active_defense.settings.war_mode`): een `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`), geactiveerd door instelbare drempels, voor elke bron die niet `normal` is:
 - `enrich_log` — aparte JSONL-log (`var/log/active-defense-enriched.jsonl`, nooit vermengd met de WAF-/productielog), headers geredigeerd, HTTP-body gehasht (SHA-256) of ingekort volgens `logging.capture_request_body`.
@@ -707,7 +707,6 @@ Structuur: `tests/unit/` (domein/applicatie, test-doubles), `tests/integration/`
 - Kale CGI (alleen FastCGI/PHP-FPM)
 - mTLS (clientauthenticatie via certificaat), OCSP-stapling
 - Externe CA / CSR voor een derde instantie, volledige CRL-distributie
-- Active Defense: echte integratie met de ban-gebeurtenissen van `omega-fire` (geblokkeerd aan de kant van `omega-fire`, dat vandaag geen enkele leesinterface biedt)
 
 [↑ Inhoud](#inhoud)
 

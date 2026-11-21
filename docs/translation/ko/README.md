@@ -584,7 +584,7 @@ Omega-serv 범위 밖의 필요 조건: 공인 IP를 가리키는 도메인(DDNS
 
 선택 모듈(`option enable active_defense`, 기본 비활성화)로, 이미 계산된 WAF 신호(`WafDecision`/평판/차단 목록 — 독립적인 두 번째 점수 계산은 결코 하지 않음)에서 적대적 행동을 판정하며, 출처를 미끼로 돌리고, 응답을 늦추며 더 자세히 기록하고, 활용할 수 있는 인시던트를 만든 뒤, 침해 지표(IoC)를 내보낼 수 있습니다. 주소를 스스로 차단하지는 않습니다 — 차단은 RIPOSTE(WAF 차단 목록, omega-jail을 통한 네트워크 차단)와 방화벽 `omega-fire`의 몫이며, Active Defense는 관찰하고, 우회시키고, 늦추고, 기록합니다.
 
-**위협과 점수**: 각 출처(`IP + User-Agent의 SHA-256 해시`)는 점수를 쌓으며(차단한 `WAF-001` +10, 평판 에스컬레이션 +25, 이미 알려진 차단 +25, 이미 할당된 미끼로의 POST +30 — 새 이벤트 없이 15분마다 -5 감소) `normal`/`suspicious`/`hostile`/`contained`로 분류됩니다(`contained`에는 이미 알려진 차단도 필요). `mode: monitor`는 행동하지 않고 관찰만 하며, `mode: enforce`는 아래 동작을 실제로 적용합니다.
+**위협과 점수**: 각 출처(`IP + User-Agent의 SHA-256 해시`)는 점수를 쌓으며(차단한 `WAF-001` +10, 평판 에스컬레이션 +25, 이미 알려진 차단 +25, 이미 할당된 미끼로의 POST +30 — 새 이벤트 없이 15분마다 -5 감소) `normal`/`suspicious`/`hostile`/`contained`로 분류됩니다(`contained`에는 이미 알려진 차단도 필요). `mode: monitor`는 행동하지 않고 관찰만 하며, `mode: enforce`는 아래 동작을 실제로 적용합니다. 알려진 차단은 omega-fire와 omega-jail(fail2ban)이 차단을 게시하는 omega-connect 존의 차단 저널에서 가져옵니다. 재시작 없이 5초마다 다시 읽으며 RIPOSTE 차단은 제외합니다.
 
 **전쟁 모드**(`options.active_defense.settings.war_mode`): 설정 가능한 임곗값으로 발동되는 `DefensePlaybook`(`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`)을 `normal`이 아닌 모든 출처에 적용합니다:
 - `enrich_log` — 별도의 JSONL 로그(`var/log/active-defense-enriched.jsonl`, WAF/운영 로그와 결코 섞지 않음), 헤더는 가림 처리, HTTP 본문은 `logging.capture_request_body`에 따라 해시(SHA-256)하거나 잘라냄.
@@ -707,7 +707,6 @@ mypy src
 - 원시 CGI(FastCGI/PHP-FPM만)
 - mTLS(인증서를 통한 클라이언트 인증), OCSP stapling
 - 외부 CA / 제3자 기관용 CSR, 완전한 CRL 배포
-- Active Defense: `omega-fire` 차단 이벤트와의 실제 통합(`omega-fire` 쪽에서 막혀 있음. 현재 읽기용 인터페이스를 전혀 제공하지 않음)
 
 [↑ 목차](#목차)
 

@@ -87,7 +87,7 @@
 세 머신에서 정적 파일을 제공할 때의 종합입니다.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ko/omega-serv/stats-8.png" alt="일반 웹 모드 순위" width="1024">
 </div>
@@ -119,10 +119,10 @@ nginx가 여전히 기준이며, omega-serv 네이티브는 그에 가장 가까
 
 | 서버 | 위치 |
 |---|---|
-| 🟢 **omega-serv 네이티브** | 가장 다재다능: 웹 3위, **리버스 프록시 2위**. WAF를 내장하고 중계에서 lighttpd와 Apache보다 앞서는 유일한 서버. 두 용도를 하나의 도구로 처리하면서 보안까지 갖추고 싶을 때 가장 좋은 절충안. |
+| 🟢 **omega-serv 네이티브** | 가장 다재다능: 웹 4위, **리버스 프록시 2위**. WAF를 내장하고 중계에서 lighttpd와 Apache보다 앞서는 유일한 서버. 두 용도를 하나의 도구로 처리하면서 보안까지 갖추고 싶을 때 가장 좋은 절충안. |
 | 🔵 **nginx** | 가장 꾸준함: 웹 2위, **리버스 프록시 1위**. 항상 순위 상단에 있으며 뚜렷한 약점이 없음. 특별한 요구가 없을 때의 기본 선택. |
 | 🟢 **lighttpd** | 정적 파일의 단거리 주자: **웹 1위**, 하지만 중계는 4위. 순수 정적 파일에는 최고의 선택이지만, 리버스 프록시가 더해지면 omega-serv나 nginx에 자리를 내줌. |
-| 🔴 **Apache** | 반례: 웹 4위, 중계 5위. 큰 파일에서는 nginx마저 앞섬(머신 C). 가장 빠르지도 가볍지도 않으며, 강점은 PHP 생태계. |
+| 🔴 **Apache** | 반례: 웹 3위, 중계 5위. 큰 파일에서는 nginx마저 앞섬(머신 C). 가장 빠르지도 가볍지도 않으며, 강점은 PHP 생태계. |
 | 🟠 **Caddy** | 속도보다 단순함: 웹 5위, **중계 7위**. 처리량을 위한 서버가 아니며 자동 HTTPS와 짧은 설정이 강점. 소규모 프로젝트용. |
 | 🟣 **Traefik** | 웹 범주 밖: 파일 서버가 아니며 중계 6위. 주 무대는 Docker와 Kubernetes이며 순수 성능이 아님. |
 

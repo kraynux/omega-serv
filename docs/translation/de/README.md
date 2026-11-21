@@ -584,7 +584,7 @@ Voraussetzungen vollständig außerhalb des Umfangs von Omega-serv: Domain auf d
 
 Optionales Modul (`option enable active_defense`, standardmäßig deaktiviert), das feindliches Verhalten auf Basis der bereits berechneten WAF-Signale qualifiziert (`WafDecision`/Reputation/Sperrliste — niemals eine zweite, unabhängige Punktberechnung) und eine Quelle zu einem Köder umleiten, ihre Antworten verlangsamen und feiner protokollieren, einen verwertbaren Vorfall aufbauen und dann Kompromittierungsindikatoren (IoC) exportieren kann. Sperrt niemals selbst eine Adresse — Sperren sind Sache von RIPOSTE (Sperrliste des WAF, Netzwerksperre durch omega-jail) und der Firewall `omega-fire`; Active Defense beobachtet, lenkt um, verlangsamt und dokumentiert.
 
-**Bedrohungen und Punktzahl**: Jede Quelle (`IP + SHA-256-Hash des User-Agent`) sammelt eine Punktzahl (`WAF-001` blockierend +10, Reputationseskalation +25, bekannte Sperre +25, POST auf einen bereits zugewiesenen Köder +30 — Abnahme um -5 alle 15 Minuten ohne neues Ereignis), qualifiziert als `normal`/`suspicious`/`hostile`/`contained` (`contained` erfordert zusätzlich eine bereits bekannte Sperre). `mode: monitor` beobachtet, ohne zu handeln; `mode: enforce` wendet die folgenden Aktionen tatsächlich an.
+**Bedrohungen und Punktzahl**: Jede Quelle (`IP + SHA-256-Hash des User-Agent`) sammelt eine Punktzahl (`WAF-001` blockierend +10, Reputationseskalation +25, bekannte Sperre +25, POST auf einen bereits zugewiesenen Köder +30 — Abnahme um -5 alle 15 Minuten ohne neues Ereignis), qualifiziert als `normal`/`suspicious`/`hostile`/`contained` (`contained` erfordert zusätzlich eine bereits bekannte Sperre). `mode: monitor` beobachtet, ohne zu handeln; `mode: enforce` wendet die folgenden Aktionen tatsächlich an. Die bekannte Sperre stammt aus dem Sperrjournal der omega-connect-Zone, in dem omega-fire und omega-jail (fail2ban) ihre Sperren veröffentlichen: alle 5 Sekunden ohne Neustart neu gelesen, RIPOSTE-Sperren ausgenommen.
 
 **Kriegsmodus** (`options.active_defense.settings.war_mode`): ein `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`), ausgelöst durch konfigurierbare Schwellen, für jede Quelle, die nicht `normal` ist:
 - `enrich_log` — separates JSONL-Log (`var/log/active-defense-enriched.jsonl`, niemals mit dem WAF-/Produktionslog vermischt), geschwärzte Header, HTTP-Body gehasht (SHA-256) oder gekürzt je nach `logging.capture_request_body`.
@@ -707,7 +707,6 @@ Struktur: `tests/unit/` (Domäne/Anwendung, Test-Doubles), `tests/integration/` 
 - Reines CGI (nur FastCGI/PHP-FPM)
 - mTLS (Client-Authentifizierung per Zertifikat), OCSP-Stapling
 - Externe CA / CSR für eine Drittstelle, vollständige CRL-Verteilung
-- Active Defense: echte Integration mit den Sperrereignissen von `omega-fire` (auf Seiten von `omega-fire` blockiert, das derzeit keine Leseschnittstelle bereitstellt)
 
 [↑ Inhalt](#inhalt)
 

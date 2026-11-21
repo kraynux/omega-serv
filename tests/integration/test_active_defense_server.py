@@ -551,3 +551,44 @@ class TestSecurityEventsJournal(_ActiveDefenseServerTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestActiveDefenseKnownBans(_ActiveDefenseServerTestCase):
+    """Journal des bans (plan omega-connect, phase 3, 2026-11-21) : une adresse bannie ailleurs sur la machine
+    (sshd via fail2ban, omega-fire) gagne +25 a l'observation ; un ban RIPOSTE ne compte jamais (anti-boucle)."""
+
+    async def _score_with_zone(self, origin: str | None) -> int:
+        import os
+        from unittest import mock
+
+        from omega_lib.infrastructure.synchro.ban_writer import new_ban_event, record_ban_events
+        from omega_lib.synchro.models import BanAction
+
+        zone = self.root / "zone"
+        (zone / "bans").mkdir(parents=True, exist_ok=True)
+        if origin is not None:
+            record_ban_events([new_ban_event(BanAction.BAN, "127.0.0.1", origin, host="h")], zone=zone)
+        with mock.patch.dict(os.environ, {"OMEGA_SYNCHRO_DIR": str(zone)}):
+            await self._start(active_defense_settings={"war_mode": {"enabled": True}}, waf_mode="log-only")
+            await self._request("GET", "/index.html?q=1%20union%20select%20pwd%20from%20users")
+        self.server.flush_active_defense()
+        states = self._load_threat_states("var/lib/active-defense.sqlite3")
+        self.assertEqual(len(states), 1)
+        return states[0].score
+
+    async def test_ban_sshd_fait_monter_le_score_http(self):
+        score = await self._score_with_zone("fail2ban:sshd")
+        await self.server.close()
+        (self.root / "var" / "lib" / "active-defense.sqlite3").unlink()
+        (self.root / "zone" / "bans" / "actifs.json").unlink()
+        (self.root / "zone" / "bans" / "journal.jsonl").unlink()
+        baseline = await self._score_with_zone(None)
+        self.assertEqual(score - baseline, 25)
+
+    async def test_ban_riposte_ignore(self):
+        score = await self._score_with_zone("fail2ban:omega-serv-riposte-404")
+        await self.server.close()
+        (self.root / "var" / "lib" / "active-defense.sqlite3").unlink()
+        (self.root / "zone" / "bans" / "actifs.json").unlink()
+        (self.root / "zone" / "bans" / "journal.jsonl").unlink()
+        self.assertEqual(score, await self._score_with_zone(None))

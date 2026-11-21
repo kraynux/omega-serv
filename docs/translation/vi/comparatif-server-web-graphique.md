@@ -87,7 +87,7 @@ Thanh càng ngắn thì máy chủ càng tiết kiệm. lighttpd, nginx và Apac
 Tổng hợp ba máy về phục vụ tệp tĩnh.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/vi/omega-serv/stats-8.png" alt="Xếp hạng web thông thường" width="1024">
 </div>
@@ -119,10 +119,10 @@ Hai cách dùng, hai bảng xếp hạng. Một máy chủ có thể nổi bật
 
 | Máy chủ | Vị trí |
 |---|---|
-| 🟢 **omega-serv native** | Đa năng nhất: thứ 3 về web, **thứ 2 về reverse proxy**. Máy chủ duy nhất có WAF tích hợp mà vẫn đứng trước lighttpd và Apache khi chuyển tiếp. Sự dung hòa tốt nhất cho một công cụ duy nhất bao phủ cả hai cách dùng, kèm thêm bảo mật. |
+| 🟢 **omega-serv native** | Đa năng nhất: thứ 4 về web, **thứ 2 về reverse proxy**. Máy chủ duy nhất có WAF tích hợp mà vẫn đứng trước lighttpd và Apache khi chuyển tiếp. Sự dung hòa tốt nhất cho một công cụ duy nhất bao phủ cả hai cách dùng, kèm thêm bảo mật. |
 | 🔵 **nginx** | Ổn định nhất: thứ 2 về web, **thứ 1 về reverse proxy**. Luôn ở nhóm đầu bảng xếp hạng, không có điểm yếu nổi bật. Lựa chọn mặc định khi không có yêu cầu đặc biệt. |
 | 🟢 **lighttpd** | Vận động viên chạy nước rút của tệp tĩnh: **thứ 1 về web**, nhưng thứ 4 khi chuyển tiếp. Lựa chọn tốt nhất cho tệp tĩnh thuần túy, nhường chỗ cho omega-serv hoặc nginx ngay khi thêm reverse proxy. |
-| 🔴 **Apache** | Phản ví dụ: thứ 4 về web, thứ 5 khi chuyển tiếp. Với tệp lớn, nó thậm chí còn làm nginx bất ngờ (máy C). Không nhanh nhất cũng không nhẹ nhất: thế mạnh của nó vẫn là hệ sinh thái PHP. |
+| 🔴 **Apache** | Phản ví dụ: thứ 3 về web, thứ 5 khi chuyển tiếp. Với tệp lớn, nó thậm chí còn làm nginx bất ngờ (máy C). Không nhanh nhất cũng không nhẹ nhất: thế mạnh của nó vẫn là hệ sinh thái PHP. |
 | 🟠 **Caddy** | Đơn giản hơn tốc độ: thứ 5 về web, **thứ 7 khi chuyển tiếp**. Không sinh ra cho thông lượng: HTTPS tự động và cấu hình ngắn gọn. Nên dành cho các dự án nhỏ. |
 | 🟣 **Traefik** | Ngoài nhóm web: không phải máy chủ tệp, thứ 6 khi chuyển tiếp. Sân chơi của nó vẫn là Docker và Kubernetes, không phải hiệu năng thô. |
 

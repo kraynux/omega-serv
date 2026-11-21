@@ -30,6 +30,8 @@ from omega_serv.ports.filesystem_port import FilesystemPort
 SERV_TOOL = "omega-serv"
 SERV_CONTRACTS: dict[str, tuple[int, ...]] = {
     "omega-fiche": (1,), "blocklist": (1,), "waf-log": (1,), "riposte-decisions": (1,),
+    # Journal des bans (plan omega-connect, phase 3, 2026-11-21) : lu par Active Defense.
+    "omega-ban": (1,), "omega-bans-actifs": (1,),
 }
 SERV_OFFERS = ("waf-logs", "blocklist", "riposte-decisions", "protected-list")
 SERV_WANTS = ("external-bans",)

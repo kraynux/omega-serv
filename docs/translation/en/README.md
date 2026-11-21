@@ -585,7 +585,7 @@ Prerequisites entirely outside Omega-serv's scope: a domain pointed at the publi
 
 Optional module (`option enable active_defense`, disabled by default) that qualifies hostile behavior from already-computed WAF signals (`WafDecision`/reputation/blocklist — never an independent second score calculation), and can switch a source over to a decoy, slow down its responses and log more finely, build an actionable incident, then export indicators of compromise (IoC). Never bans an address itself — bans are the job of RIPOSTE (WAF blocklist, network ban through omega-jail) and of the `omega-fire` firewall; Active Defense observes, deceives, slows down and records.
 
-**Threats and score**: each source (`IP + SHA-256 hash of the User-Agent`) accumulates a score (blocking `WAF-001` +10, reputation escalation +25, known ban +25, POST on an already-assigned decoy +30 — decays by -5 every 15 minutes with no new event) qualified as `normal`/`suspicious`/`hostile`/`contained` (`contained` additionally requires an already-known ban). `mode: monitor` observes without acting; `mode: enforce` actually applies the actions below.
+**Threats and score**: each source (`IP + SHA-256 hash of the User-Agent`) accumulates a score (blocking `WAF-001` +10, reputation escalation +25, known ban +25, POST on an already-assigned decoy +30 — decays by -5 every 15 minutes with no new event) qualified as `normal`/`suspicious`/`hostile`/`contained` (`contained` additionally requires an already-known ban). `mode: monitor` observes without acting; `mode: enforce` actually applies the actions below. The known ban comes from the ban journal of the omega-connect zone, where omega-fire and omega-jail (fail2ban) publish their bans: re-read every 5 seconds without a restart, RIPOSTE bans excluded.
 
 **War mode** (`options.active_defense.settings.war_mode`): a `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`) triggered by configurable thresholds, for any non-`normal` source:
 - `enrich_log` — a separate JSONL log (`var/log/active-defense-enriched.jsonl`, never mixed with the WAF/production log), headers redacted, HTTP body hashed (SHA-256) or truncated depending on `logging.capture_request_body`.
@@ -708,7 +708,6 @@ Structure: `tests/unit/` (domain/application, test doubles), `tests/integration/
 - Raw CGI (FastCGI/PHP-FPM only)
 - mTLS (client certificate authentication), OCSP stapling
 - External CA / CSR for a third-party authority, full CRL distribution
-- Active Defense: real integration with `omega-fire`'s ban events (blocked on `omega-fire`'s side, which currently exposes no read surface)
 
 [↑ Contents](#contents)
 

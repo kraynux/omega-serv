@@ -584,7 +584,7 @@ Các điều kiện tiên quyết hoàn toàn nằm ngoài phạm vi của Omega
 
 Mô-đun tùy chọn (`option enable active_defense`, tắt mặc định) đánh giá hành vi thù địch dựa trên các tín hiệu WAF đã được tính (`WafDecision`/danh tiếng/danh sách chặn — không bao giờ tính điểm độc lập lần thứ hai), và có thể chuyển một nguồn sang mồi nhử, làm chậm phản hồi của nó và ghi log chi tiết hơn, dựng một sự cố có thể khai thác, rồi xuất các chỉ báo xâm phạm (IoC). Không bao giờ tự cấm một địa chỉ — các lệnh cấm thuộc về RIPOSTE (danh sách chặn của WAF, cấm ở tầng mạng qua omega-jail) và tường lửa `omega-fire`; Active Defense quan sát, chuyển hướng, làm chậm và ghi nhận.
 
-**Mối đe dọa và điểm số**: mỗi nguồn (`IP + hash SHA-256 của User-Agent`) tích lũy điểm (`WAF-001` chặn +10, leo thang danh tiếng +25, đã bị cấm từ trước +25, POST lên một mồi nhử đã được gán +30 — giảm -5 mỗi 15 phút không có sự kiện mới) được phân loại thành `normal`/`suspicious`/`hostile`/`contained` (`contained` còn đòi hỏi nguồn đã bị cấm từ trước). `mode: monitor` quan sát mà không hành động; `mode: enforce` thực sự áp dụng các hành động bên dưới.
+**Mối đe dọa và điểm số**: mỗi nguồn (`IP + hash SHA-256 của User-Agent`) tích lũy điểm (`WAF-001` chặn +10, leo thang danh tiếng +25, đã bị cấm từ trước +25, POST lên một mồi nhử đã được gán +30 — giảm -5 mỗi 15 phút không có sự kiện mới) được phân loại thành `normal`/`suspicious`/`hostile`/`contained` (`contained` còn đòi hỏi nguồn đã bị cấm từ trước). `mode: monitor` quan sát mà không hành động; `mode: enforce` thực sự áp dụng các hành động bên dưới. Lệnh cấm đã biết lấy từ nhật ký cấm của vùng omega-connect, nơi omega-fire và omega-jail (fail2ban) công bố các lệnh cấm: đọc lại mỗi 5 giây mà không cần khởi động lại, không tính lệnh cấm của RIPOSTE.
 
 **Chế độ chiến tranh** (`options.active_defense.settings.war_mode`): một `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`) được kích hoạt bởi các ngưỡng có thể cấu hình, cho mọi nguồn không phải `normal`:
 - `enrich_log` — log JSONL riêng (`var/log/active-defense-enriched.jsonl`, không bao giờ trộn với log WAF/production), tiêu đề được che, phần thân HTTP được băm (SHA-256) hoặc cắt ngắn theo `logging.capture_request_body`.
@@ -707,7 +707,6 @@ Cấu trúc: `tests/unit/` (domain/application, test double), `tests/integration
 - CGI thô (chỉ FastCGI/PHP-FPM)
 - mTLS (xác thực client bằng chứng chỉ), OCSP stapling
 - CA bên ngoài / CSR cho cơ quan bên thứ ba, phân phối CRL đầy đủ
-- Active Defense: tích hợp thực sự với các sự kiện cấm của `omega-fire` (bị chặn ở phía `omega-fire`, hiện chưa cung cấp bề mặt đọc nào)
 
 [↑ Mục lục](#mục-lục)
 

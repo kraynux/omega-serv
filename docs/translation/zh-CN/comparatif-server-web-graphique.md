@@ -87,7 +87,7 @@
 三台机器在静态文件服务上的综合结果。
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/zh-CN/omega-serv/stats-8.png" alt="普通 Web 排名" width="1024">
 </div>
@@ -119,10 +119,10 @@ nginx 仍是基准；omega-serv 原生是它最接近的亚军，远远领先其
 
 | 服务器 | 定位 |
 |---|---|
-| 🟢 **omega-serv 原生** | 最全能：Web 第3，**反向代理第2**。唯一内置 WAF 且在转发上仍领先于 lighttpd 和 Apache 的服务器。用一个工具覆盖两种用途并额外获得安全性，这是最佳折中。 |
+| 🟢 **omega-serv 原生** | 最全能：Web 第4，**反向代理第2**。唯一内置 WAF 且在转发上仍领先于 lighttpd 和 Apache 的服务器。用一个工具覆盖两种用途并额外获得安全性，这是最佳折中。 |
 | 🔵 **nginx** | 最稳定：Web 第2，**反向代理第1**。始终处于排名上游，没有明显短板。没有特殊要求时的默认选择。 |
 | 🟢 **lighttpd** | 静态文件的短跑选手：**Web 第1**，但转发第4。纯静态场景的最佳选择，一旦加入反向代理，就应让位于 omega-serv 或 nginx。 |
-| 🔴 **Apache** | 反例：Web 第4，转发第5。在大文件上，它甚至让 nginx 感到意外（机器 C）。既不是最快的也不是最轻的：其优势仍是 PHP 生态。 |
+| 🔴 **Apache** | 反例：Web 第3，转发第5。在大文件上，它甚至让 nginx 感到意外（机器 C）。既不是最快的也不是最轻的：其优势仍是 PHP 生态。 |
 | 🟠 **Caddy** | 简单优先于速度：Web 第5，**转发第7**。不是为吞吐量而生：自动 HTTPS 和简短的配置。适合留给小项目。 |
 | 🟣 **Traefik** | 不属于 Web 类别：不是文件服务器，转发第6。它的主场仍是 Docker 和 Kubernetes，而不是原始性能。 |
 

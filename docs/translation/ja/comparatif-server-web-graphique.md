@@ -87,7 +87,7 @@
 三台のマシンでの静的ファイル配信の総括。
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ja/omega-serv/stats-8.png" alt="通常のウェブモードのランキング" width="1024">
 </div>
@@ -119,10 +119,10 @@ nginx が引き続き基準で、omega-serv ネイティブはそれに最も近
 
 | サーバー | 位置づけ |
 |---|---|
-| 🟢 **omega-serv ネイティブ** | 最も万能：ウェブで3位、**リバースプロキシで2位**。WAF を内蔵し、中継で lighttpd と Apache の上に位置する唯一のサーバー。両方の用途を一つのツールでこなし、さらにセキュリティも得たい場合の最良の折衷案。 |
+| 🟢 **omega-serv ネイティブ** | 最も万能：ウェブで4位、**リバースプロキシで2位**。WAF を内蔵し、中継で lighttpd と Apache の上に位置する唯一のサーバー。両方の用途を一つのツールでこなし、さらにセキュリティも得たい場合の最良の折衷案。 |
 | 🔵 **nginx** | 最も安定：ウェブで2位、**リバースプロキシで1位**。常に上位にあり、目立った弱点なし。特に要件がない場合の標準的な選択肢。 |
 | 🟢 **lighttpd** | 静的ファイルのスプリンター：**ウェブで1位**、ただし中継では4位。純粋な静的配信には最良の選択で、リバースプロキシが加わると omega-serv や nginx に譲る。 |
-| 🔴 **Apache** | 反例：ウェブで4位、中継で5位。大きなファイルでは nginx をも上回る（マシン C）。最速でも最軽量でもなく、強みは PHP のエコシステム。 |
+| 🔴 **Apache** | 反例：ウェブで3位、中継で5位。大きなファイルでは nginx をも上回る（マシン C）。最速でも最軽量でもなく、強みは PHP のエコシステム。 |
 | 🟠 **Caddy** | 速度よりシンプルさ：ウェブで5位、**中継で7位**。スループット向きではなく、自動 HTTPS と短い設定が強み。小規模なプロジェクト向け。 |
 | 🟣 **Traefik** | ウェブの対象外：ファイルサーバーではなく、中継で6位。本領は Docker と Kubernetes であり、純粋な性能ではない。 |
 

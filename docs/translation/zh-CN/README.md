@@ -584,7 +584,7 @@ secure/certificates/ca/
 
 可选模块（`option enable active_defense`，默认禁用），基于已计算的 WAF 信号（`WafDecision`/信誉/封禁列表 —— 绝不另算第二个独立评分）对敌对行为进行定性，并可将某个来源引向诱饵、放慢其响应并更详细地记录日志、构建可利用的事件，然后导出入侵指标（IoC）。它本身从不封禁地址 —— 封禁由 RIPOSTE（WAF 的封禁列表、通过 omega-jail 的网络封禁）和 `omega-fire` 防火墙负责；Active Defense 负责观察、引流、减速和记录。
 
-**威胁与评分**：每个来源（`IP + User-Agent 的 SHA-256 哈希`）都会累积评分（阻断性 `WAF-001` +10、信誉升级 +25、已知封禁 +25、对已分配诱饵发起 POST +30 —— 无新事件时每 15 分钟衰减 -5），并被定性为 `normal`/`suspicious`/`hostile`/`contained`（`contained` 还要求已知封禁）。`mode: monitor` 只观察不行动；`mode: enforce` 会真正执行以下操作。
+**威胁与评分**：每个来源（`IP + User-Agent 的 SHA-256 哈希`）都会累积评分（阻断性 `WAF-001` +10、信誉升级 +25、已知封禁 +25、对已分配诱饵发起 POST +30 —— 无新事件时每 15 分钟衰减 -5），并被定性为 `normal`/`suspicious`/`hostile`/`contained`（`contained` 还要求已知封禁）。`mode: monitor` 只观察不行动；`mode: enforce` 会真正执行以下操作。 已知封禁来自 omega-connect 区域的封禁日志，omega-fire 和 omega-jail（fail2ban）在其中发布各自的封禁：每 5 秒重新读取，无需重启，不包括 RIPOSTE 的封禁。
 
 **战争模式**（`options.active_defense.settings.war_mode`）：一个 `DefensePlaybook`（`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`），由可配置阈值触发，适用于任何非 `normal` 的来源：
 - `enrich_log` —— 单独的 JSONL 日志（`var/log/active-defense-enriched.jsonl`，绝不与 WAF/生产日志混在一起），请求头经脱敏处理，HTTP 请求体按 `logging.capture_request_body` 进行哈希（SHA-256）或截断。
@@ -707,7 +707,6 @@ mypy src
 - 原生 CGI（仅 FastCGI/PHP-FPM）
 - mTLS（通过证书进行客户端认证）、OCSP stapling
 - 外部 CA / 第三方机构 CSR、完整的 CRL 分发
-- Active Defense：与 `omega-fire` 封禁事件的真正集成（受阻于 `omega-fire` 一侧，它目前没有提供任何读取接口）
 
 [↑ 目录](#目录)
 

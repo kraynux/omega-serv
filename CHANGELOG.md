@@ -20,6 +20,17 @@ réduite, deux audits de sécurité complets (87 failles corrigées). Résumé p
 `omega-serv-3.0.0-nouveautes.txt`. Lot A (correctifs prioritaires) : chaque défaut a d'abord été prouvé par un
 essai, puis corrigé, avec des tests qui échouent sur la 2.6.2.
 
+### Ajouté (journal des bans, 2026-11-21)
+
+- **Active Defense tient compte des bans posés ailleurs sur la machine** (plan omega-connect, phase 3 ; levée de
+  la limite « Hors périmètre » du README) : `infrastructure/active_defense/known_bans_journal.py` lit le journal
+  des bans de la zone omega-synchro (`bans/actifs.json` puis `bans/journal.jsonl` suivi par position, omega-lib
+  0.3.0), publié par omega-fire (`omega-fire:manual`) et l'action fail2ban d'omega-jail (`fail2ban:<jail>`).
+  Une observation d'une adresse bannie ailleurs reçoit `known_ban` (+25, condition du niveau « contained »).
+  Relu au plus toutes les 5 s, sans redémarrage ni fil ; jails RIPOSTE ignorés (anti-boucle) ; zone absente ou
+  illisible = aucune adresse connue. Le contrat `OmegaFireEventsPort`/`FirewallEvent`, jamais implémenté, est
+  remplacé par `KnownBansPort.is_banned()`. La fiche déclare les contrats `omega-ban` et `omega-bans-actifs`.
+
 ### Sécurité
 
 - **Authentification Basic : mots de passe faux limités AVANT le calcul (2026-11-20).** Une vérification scrypt

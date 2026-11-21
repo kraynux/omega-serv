@@ -87,7 +87,7 @@ Semakin pendek batang, semakin hemat server. lighttpd, nginx, dan Apache paling 
 Rangkuman ketiga mesin dalam penyajian berkas statis.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/id/omega-serv/stats-8.png" alt="Peringkat web normal" width="1024">
 </div>
@@ -119,10 +119,10 @@ Dua penggunaan, dua peringkat. Sebuah server bisa bersinar di satu dan mengecewa
 
 | Server | Posisi |
 |---|---|
-| 🟢 **omega-serv native** | Yang paling serbaguna: ke-3 di web, **ke-2 di reverse proxy**. Satu-satunya server dengan WAF bawaan yang tetap berada di depan lighttpd dan Apache dalam relai. Kompromi terbaik untuk satu alat yang mencakup kedua penggunaan, dengan keamanan tambahan. |
+| 🟢 **omega-serv native** | Yang paling serbaguna: ke-4 di web, **ke-2 di reverse proxy**. Satu-satunya server dengan WAF bawaan yang tetap berada di depan lighttpd dan Apache dalam relai. Kompromi terbaik untuk satu alat yang mencakup kedua penggunaan, dengan keamanan tambahan. |
 | 🔵 **nginx** | Yang paling konsisten: ke-2 di web, **ke-1 di reverse proxy**. Selalu di papan atas, tanpa kelemahan menonjol. Pilihan default bila tidak ada kebutuhan khusus. |
 | 🟢 **lighttpd** | Pelari cepat statis: **ke-1 di web**, tetapi ke-4 dalam relai. Pilihan terbaik untuk statis murni, memberi tempat kepada omega-serv atau nginx begitu reverse proxy ditambahkan. |
-| 🔴 **Apache** | Contoh tandingan: ke-4 di web, ke-5 dalam relai. Pada berkas besar, ia bahkan mengejutkan nginx (mesin C). Bukan yang tercepat maupun teringan: keunggulannya tetap ekosistem PHP. |
+| 🔴 **Apache** | Contoh tandingan: ke-3 di web, ke-5 dalam relai. Pada berkas besar, ia bahkan mengejutkan nginx (mesin C). Bukan yang tercepat maupun teringan: keunggulannya tetap ekosistem PHP. |
 | 🟠 **Caddy** | Kesederhanaan di atas kecepatan: ke-5 di web, **ke-7 dalam relai**. Tidak dibuat untuk throughput: HTTPS otomatis dan konfigurasi singkat. Cocok untuk proyek kecil. |
 | 🟣 **Traefik** | Di luar kategori web: bukan server berkas, ke-6 dalam relai. Medannya tetap Docker dan Kubernetes, bukan kinerja mentah. |
 

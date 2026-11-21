@@ -87,7 +87,7 @@
 خلاصة الأجهزة الثلاثة في تقديم الملفات الثابتة.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/ar/omega-serv/stats-8.png" alt="ترتيب وضع الويب العادي" width="1024">
 </div>
@@ -119,10 +119,10 @@
 
 | الخادم | الموقع |
 |---|---|
-| 🟢 **omega-serv الأصلي** | الأكثر تنوعًا: المركز 3 في الويب، **المركز 2 في الوكيل العكسي**. الخادم الوحيد المزوّد بـ WAF مدمج الذي يبقى متقدمًا على lighttpd وApache في التمرير. أفضل حل وسط لأداة واحدة تغطي الاستخدامين، مع الأمان فوق ذلك. |
+| 🟢 **omega-serv الأصلي** | الأكثر تنوعًا: المركز 4 في الويب، **المركز 2 في الوكيل العكسي**. الخادم الوحيد المزوّد بـ WAF مدمج الذي يبقى متقدمًا على lighttpd وApache في التمرير. أفضل حل وسط لأداة واحدة تغطي الاستخدامين، مع الأمان فوق ذلك. |
 | 🔵 **nginx** | الأكثر انتظامًا: المركز 2 في الويب، **المركز 1 في الوكيل العكسي**. دائمًا في أعلى الترتيب، دون نقطة ضعف بارزة. الخيار الافتراضي عند عدم وجود متطلبات خاصة. |
 | 🟢 **lighttpd** | عدّاء الملفات الثابتة: **المركز 1 في الويب**، لكنه في المركز 4 في التمرير. الأفضل للمحتوى الثابت الخالص، ويفسح المجال لـ omega-serv أو nginx متى أُضيف وكيل عكسي. |
-| 🔴 **Apache** | المثال المعاكس: المركز 4 في الويب، والمركز 5 في التمرير. في الملفات الكبيرة يفاجئ حتى nginx (الجهاز C). ليس الأسرع ولا الأخف: تبقى ميزته منظومة PHP. |
+| 🔴 **Apache** | المثال المعاكس: المركز 3 في الويب، والمركز 5 في التمرير. في الملفات الكبيرة يفاجئ حتى nginx (الجهاز C). ليس الأسرع ولا الأخف: تبقى ميزته منظومة PHP. |
 | 🟠 **Caddy** | البساطة قبل السرعة: المركز 5 في الويب، **المركز 7 في التمرير**. ليس مصممًا للإنتاجية: HTTPS تلقائي وإعداد قصير. يُخصَّص للمشاريع الصغيرة. |
 | 🟣 **Traefik** | خارج فئة الويب: ليس خادم ملفات، والمركز 6 في التمرير. ميدانه Docker وKubernetes، لا الأداء الخام. |
 

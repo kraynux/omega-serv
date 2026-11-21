@@ -749,6 +749,18 @@ FAQ_ENTRIES: tuple[FaqEntry, ...] = (
     ),
     FaqEntry(
         category=_("RIPOSTE"),
+        question=_("Active Defense tient-il compte des bans posés par fail2ban ou omega-fire ?"),
+        answer=(
+            _("Oui, quand omega-connect relie vos outils : omega-fire (ses bans manuels) et omega-jail (action "
+              "fail2ban de ses jails, et de ceux choisis avec « --journal sshd ») publient chaque ban dans le journal "
+              "des bans de la zone omega-connect. Active Defense le relit toutes les 5 secondes, sans redémarrage : "
+              "une requête suspecte d'une adresse bannie ailleurs gagne 25 points. Les jails RIPOSTE d'omega-serv "
+              "sont ignorés (sinon une même attaque serait comptée deux fois). Le service doit être dans le groupe "
+              "omega-synchro, ce que règle omega-connect.")
+        ),
+    ),
+    FaqEntry(
+        category=_("RIPOSTE"),
         question=_("Pourquoi omega-fire n'affiche-t-il que les bans fail2ban ?"),
         answer=(
             _("omega-fire lit fail2ban et le pare-feu. Les bans d'omega-serv (liste de blocage du WAF, page 451 : "

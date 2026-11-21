@@ -87,7 +87,7 @@ Je kürzer der Balken, desto sparsamer der Server. lighttpd, nginx und Apache si
 Zusammenfassung der drei Maschinen beim Ausliefern statischer Dateien.
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/de/omega-serv/stats-8.png" alt="Rangliste normaler Webmodus" width="1024">
 </div>
@@ -119,10 +119,10 @@ Zwei Einsatzzwecke, zwei Ranglisten. Ein Server kann in dem einen glänzen und i
 
 | Server | Einordnung |
 |---|---|
-| 🟢 **omega-serv nativ** | Der Vielseitigste: 3. im Web, **2. im Reverse Proxy**. Der einzige Server mit integriertem WAF, der beim Weiterleiten vor lighttpd und Apache bleibt. Der beste Kompromiss für ein einziges Werkzeug, das beide Einsatzzwecke abdeckt, mit zusätzlicher Sicherheit. |
+| 🟢 **omega-serv nativ** | Der Vielseitigste: 4. im Web, **2. im Reverse Proxy**. Der einzige Server mit integriertem WAF, der beim Weiterleiten vor lighttpd und Apache bleibt. Der beste Kompromiss für ein einziges Werkzeug, das beide Einsatzzwecke abdeckt, mit zusätzlicher Sicherheit. |
 | 🔵 **nginx** | Der Gleichmäßigste: 2. im Web, **1. im Reverse Proxy**. Immer im oberen Teil der Rangliste, ohne nennenswerte Schwäche. Die Standardwahl ohne besondere Anforderungen. |
 | 🟢 **lighttpd** | Der Sprinter für Statisches: **1. im Web**, aber nur 4. beim Weiterleiten. Die beste Wahl für rein statische Inhalte, überlässt omega-serv oder nginx das Feld, sobald ein Reverse Proxy hinzukommt. |
-| 🔴 **Apache** | Das Gegenbeispiel: 4. im Web, 5. beim Weiterleiten. Bei großen Dateien überrascht er sogar nginx (Maschine C). Weder der Schnellste noch der Leichteste: Sein Trumpf bleibt das PHP-Ökosystem. |
+| 🔴 **Apache** | Das Gegenbeispiel: 3. im Web, 5. beim Weiterleiten. Bei großen Dateien überrascht er sogar nginx (Maschine C). Weder der Schnellste noch der Leichteste: Sein Trumpf bleibt das PHP-Ökosystem. |
 | 🟠 **Caddy** | Einfachheit vor Geschwindigkeit: 5. im Web, **7. beim Weiterleiten**. Nicht auf Durchsatz ausgelegt: automatisches HTTPS und kurze Konfiguration. Kleinen Projekten vorbehalten. |
 | 🟣 **Traefik** | Außerhalb der Web-Kategorie: kein Dateiserver, 6. beim Weiterleiten. Sein Einsatzgebiet bleiben Docker und Kubernetes, nicht die rohe Leistung. |
 

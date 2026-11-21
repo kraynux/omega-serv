@@ -584,7 +584,7 @@ secure/certificates/ca/
 
 وحدة اختيارية (`option enable active_defense`، معطّلة افتراضيًا) تصنّف السلوك العدائي انطلاقًا من إشارات WAF المحسوبة مسبقًا (`WafDecision`/السمعة/قائمة الحظر — لا حساب درجة ثانيًا مستقلًا أبدًا)، ويمكنها تحويل مصدر نحو طُعم، وإبطاء استجاباته وتسجيله بدقة أكبر، وبناء حادثة قابلة للاستغلال، ثم تصدير مؤشرات الاختراق (IoC). لا تحظر أي عنوان بنفسها أبدًا — فالحظر من اختصاص RIPOSTE (قائمة حظر WAF، والحظر الشبكي عبر omega-jail) والجدار الناري `omega-fire`؛ أما Active Defense فيرصد ويحوّل ويبطئ ويسجّل.
 
-**التهديدات والدرجة**: يراكم كل مصدر (`IP + تجزئة SHA-256 لـ User-Agent`) درجة (`WAF-001` المانعة +10، وتصعيد السمعة +25، وحظر معروف +25، وPOST على طُعم معيّن مسبقًا +30 — مع تناقص -5 كل 15 دقيقة دون حدث جديد) تُصنَّف إلى `normal`/`suspicious`/`hostile`/`contained` (يتطلب `contained` أيضًا حظرًا معروفًا مسبقًا). `mode: monitor` يرصد دون فعل؛ و`mode: enforce` يطبّق فعليًا الإجراءات أدناه.
+**التهديدات والدرجة**: يراكم كل مصدر (`IP + تجزئة SHA-256 لـ User-Agent`) درجة (`WAF-001` المانعة +10، وتصعيد السمعة +25، وحظر معروف +25، وPOST على طُعم معيّن مسبقًا +30 — مع تناقص -5 كل 15 دقيقة دون حدث جديد) تُصنَّف إلى `normal`/`suspicious`/`hostile`/`contained` (يتطلب `contained` أيضًا حظرًا معروفًا مسبقًا). `mode: monitor` يرصد دون فعل؛ و`mode: enforce` يطبّق فعليًا الإجراءات أدناه. يأتي الحظر المعروف من سجل الحظر في منطقة omega-connect، حيث ينشر omega-fire وomega-jail (fail2ban) حظرهما: يُعاد قراءته كل 5 ثوانٍ دون إعادة تشغيل، مع استبعاد حظر RIPOSTE.
 
 **وضع الحرب** (`options.active_defense.settings.war_mode`): `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`) ينطلق بعتبات قابلة للتهيئة، لكل مصدر غير `normal`:
 - `enrich_log` — سجل JSONL منفصل (`var/log/active-defense-enriched.jsonl`، لا يُخلط أبدًا مع سجل WAF/الإنتاج)، مع تنقيح الترويسات، وتجزئة جسم HTTP (SHA-256) أو اقتطاعه حسب `logging.capture_request_body`.
@@ -707,7 +707,6 @@ mypy src
 - CGI الخام (FastCGI/PHP-FPM فقط)
 - mTLS (مصادقة العميل بالشهادة)، وOCSP stapling
 - سلطة شهادات خارجية / CSR لسلطة طرف ثالث، وتوزيع كامل لقوائم CRL
-- Active Defense: تكامل فعلي مع أحداث الحظر في `omega-fire` (معطّل من جهة `omega-fire`، الذي لا يوفر اليوم أي واجهة قراءة)
 
 [↑ المحتويات](#المحتويات)
 

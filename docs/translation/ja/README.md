@@ -584,7 +584,7 @@ Omega-serv の範囲外の前提条件：パブリック IP を指すドメイ�
 
 オプションモジュール（`option enable active_defense`、デフォルトは無効）で、すでに計算済みの WAF シグナル（`WafDecision`/レピュテーション/ブロックリスト — 独立した 2 回目のスコア計算は決してしない）から敵対的な振る舞いを判定し、送信元をおとりへ振り向け、応答を遅らせてより詳細にログを取り、活用できるインシデントを構築し、侵害の痕跡（IoC）をエクスポートできます。自らアドレスを BAN することは決してありません — BAN は RIPOSTE（WAF のブロックリスト、omega-jail によるネットワーク BAN）とファイアウォール `omega-fire` の役割で、Active Defense は観察し、逸らし、遅らせ、記録します。
 
-**脅威とスコア**：各送信元（`IP + User-Agent の SHA-256 ハッシュ`）はスコアを蓄積し（ブロックした `WAF-001` +10、レピュテーションのエスカレーション +25、既知の BAN +25、すでに割り当てられたおとりへの POST +30 — 新しいイベントがなければ 15 分ごとに -5 減衰）、`normal`/`suspicious`/`hostile`/`contained` に分類されます（`contained` にはさらに既知の BAN が必要）。`mode: monitor` は何もせずに観察し、`mode: enforce` は以下の操作を実際に適用します。
+**脅威とスコア**：各送信元（`IP + User-Agent の SHA-256 ハッシュ`）はスコアを蓄積し（ブロックした `WAF-001` +10、レピュテーションのエスカレーション +25、既知の BAN +25、すでに割り当てられたおとりへの POST +30 — 新しいイベントがなければ 15 分ごとに -5 減衰）、`normal`/`suspicious`/`hostile`/`contained` に分類されます（`contained` にはさらに既知の BAN が必要）。`mode: monitor` は何もせずに観察し、`mode: enforce` は以下の操作を実際に適用します。 既知の BAN は omega-connect ゾーンの BAN ジャーナルから取得します。omega-fire と omega-jail（fail2ban）がそこに BAN を公開し、再起動なしで 5 秒ごとに読み直します（RIPOSTE の BAN は除外）。
 
 **戦闘モード**（`options.active_defense.settings.war_mode`）：設定可能なしきい値で発動する `DefensePlaybook`（`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`）を、`normal` 以外のすべての送信元に適用します：
 - `enrich_log` — 別の JSONL ログ（`var/log/active-defense-enriched.jsonl`、WAF/本番のログと決して混ぜない）、ヘッダーは秘匿化、HTTP ボディは `logging.capture_request_body` に従ってハッシュ化（SHA-256）または切り詰め。
@@ -707,7 +707,6 @@ mypy src
 - 生の CGI（FastCGI/PHP-FPM のみ）
 - mTLS（証明書によるクライアント認証）、OCSP stapling
 - 外部 CA / 第三者認証局向けの CSR、完全な CRL 配布
-- Active Defense：`omega-fire` の BAN イベントとの実際の統合（`omega-fire` 側で止まっており、現時点で読み取り用のインターフェースを一切公開していないため）
 
 [↑ 目次](#目次)
 

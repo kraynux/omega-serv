@@ -584,7 +584,7 @@ Prasyarat yang sepenuhnya di luar cakupan Omega-serv: domain yang diarahkan ke I
 
 Modul opsional (`option enable active_defense`, dinonaktifkan secara bawaan) yang menilai perilaku bermusuhan dari sinyal WAF yang sudah dihitung (`WafDecision`/reputasi/daftar blokir — tidak pernah penghitungan skor independen kedua), dan dapat mengalihkan sumber ke umpan, memperlambat responsnya dan mencatat lebih rinci, membangun insiden yang dapat ditindaklanjuti, lalu mengekspor indikator kompromi (IoC). Tidak pernah memblokir alamat sendiri — blokir adalah tugas RIPOSTE (daftar blokir WAF, blokir jaringan melalui omega-jail) dan firewall `omega-fire`; Active Defense mengamati, mengalihkan, memperlambat, dan mencatat.
 
-**Ancaman dan skor**: setiap sumber (`IP + hash SHA-256 dari User-Agent`) mengumpulkan skor (`WAF-001` memblokir +10, eskalasi reputasi +25, larangan yang sudah dikenal +25, POST ke umpan yang sudah ditetapkan +30 — penurunan -5 setiap 15 menit tanpa peristiwa baru) yang dikategorikan sebagai `normal`/`suspicious`/`hostile`/`contained` (`contained` juga mensyaratkan larangan yang sudah dikenal). `mode: monitor` mengamati tanpa bertindak; `mode: enforce` benar-benar menerapkan tindakan di bawah.
+**Ancaman dan skor**: setiap sumber (`IP + hash SHA-256 dari User-Agent`) mengumpulkan skor (`WAF-001` memblokir +10, eskalasi reputasi +25, larangan yang sudah dikenal +25, POST ke umpan yang sudah ditetapkan +30 — penurunan -5 setiap 15 menit tanpa peristiwa baru) yang dikategorikan sebagai `normal`/`suspicious`/`hostile`/`contained` (`contained` juga mensyaratkan larangan yang sudah dikenal). `mode: monitor` mengamati tanpa bertindak; `mode: enforce` benar-benar menerapkan tindakan di bawah. Blokir yang diketahui berasal dari jurnal blokir zona omega-connect, tempat omega-fire dan omega-jail (fail2ban) menerbitkan blokir mereka: dibaca ulang setiap 5 detik tanpa mulai ulang, blokir RIPOSTE dikecualikan.
 
 **Mode perang** (`options.active_defense.settings.war_mode`): sebuah `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`) yang dipicu oleh ambang yang dapat dikonfigurasi, untuk setiap sumber yang bukan `normal`:
 - `enrich_log` — log JSONL terpisah (`var/log/active-defense-enriched.jsonl`, tidak pernah dicampur dengan log WAF/produksi), header disamarkan, badan HTTP di-hash (SHA-256) atau dipotong sesuai `logging.capture_request_body`.
@@ -707,7 +707,6 @@ Struktur: `tests/unit/` (domain/aplikasi, test double), `tests/integration/` (se
 - CGI mentah (hanya FastCGI/PHP-FPM)
 - mTLS (autentikasi klien dengan sertifikat), OCSP stapling
 - CA eksternal / CSR untuk otoritas pihak ketiga, distribusi CRL lengkap
-- Active Defense: integrasi nyata dengan peristiwa larangan `omega-fire` (terhambat di sisi `omega-fire`, yang saat ini belum menyediakan antarmuka baca apa pun)
 
 [↑ Daftar isi](#daftar-isi)
 

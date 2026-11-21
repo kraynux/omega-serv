@@ -87,7 +87,7 @@
 स्थिर फ़ाइलें परोसने में तीनों मशीनों का सार।
 
 <!-- 🖼️ IMAGE : classement-web.png -->
-<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 omega-serv natif — très bon, 2ᵉ en reverse proxy · 4. Apache — bon, robuste, écosystème · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
+<!-- Contenu : 1. 🥇 lighttpd — meilleur en petits & moyens fichiers · 2. 🥈 nginx — référence, excellent partout · 3. 🥉 Apache — bon, robuste, écosystème · 4. omega-serv natif — très bon, 2ᵉ en reverse proxy · 5. Caddy — simple, HTTPS auto · 6. omega-serv Python — moteur de repli -->
 <div align="center">
   <img src="https://raw.githubusercontent.com/kraynux/kraynux/refs/heads/main/docs/translation/hi/omega-serv/stats-8.png" alt="सामान्य वेब रैंकिंग" width="1024">
 </div>
@@ -119,10 +119,10 @@ nginx संदर्भ बना रहता है; नेटिव omega-se
 
 | सर्वर | स्थिति |
 |---|---|
-| 🟢 **omega-serv नेटिव** | सबसे बहुमुखी: वेब में 3रा, **रिवर्स प्रॉक्सी में 2रा**। रिले में lighttpd और Apache से आगे रहने वाला अंतर्निहित WAF वाला एकमात्र सर्वर। दोनों उपयोगों को सँभालने वाले एक ही टूल के लिए, सुरक्षा के साथ, सबसे अच्छा समझौता। |
+| 🟢 **omega-serv नेटिव** | सबसे बहुमुखी: वेब में 4था, **रिवर्स प्रॉक्सी में 2रा**। रिले में lighttpd और Apache से आगे रहने वाला अंतर्निहित WAF वाला एकमात्र सर्वर। दोनों उपयोगों को सँभालने वाले एक ही टूल के लिए, सुरक्षा के साथ, सबसे अच्छा समझौता। |
 | 🔵 **nginx** | सबसे नियमित: वेब में 2रा, **रिवर्स प्रॉक्सी में 1ला**। हमेशा रैंकिंग के ऊपरी हिस्से में, कोई उल्लेखनीय कमज़ोरी नहीं। कोई विशेष आवश्यकता न होने पर डिफ़ॉल्ट विकल्प। |
 | 🟢 **lighttpd** | स्थिर का स्प्रिंटर: **वेब में 1ला**, लेकिन रिले में 4था। शुद्ध स्थिर सामग्री के लिए सबसे अच्छा विकल्प, पर रिवर्स प्रॉक्सी जुड़ते ही omega-serv या nginx को जगह दे देता है। |
-| 🔴 **Apache** | प्रतिउदाहरण: वेब में 4था, रिले में 5वाँ। बड़ी फ़ाइलों पर वह nginx को भी चौंका देता है (मशीन C)। न सबसे तेज़ न सबसे हल्का: उसकी ताकत PHP इकोसिस्टम है। |
+| 🔴 **Apache** | प्रतिउदाहरण: वेब में 3रा, रिले में 5वाँ। बड़ी फ़ाइलों पर वह nginx को भी चौंका देता है (मशीन C)। न सबसे तेज़ न सबसे हल्का: उसकी ताकत PHP इकोसिस्टम है। |
 | 🟠 **Caddy** | गति से पहले सरलता: वेब में 5वाँ, **रिले में 7वाँ**। थ्रूपुट के लिए नहीं बना: स्वचालित HTTPS और छोटा कॉन्फ़िगरेशन। छोटे प्रोजेक्ट के लिए रखें। |
 | 🟣 **Traefik** | वेब श्रेणी से बाहर: फ़ाइल सर्वर नहीं, रिले में 6ठा। उसका मैदान Docker और Kubernetes है, शुद्ध प्रदर्शन नहीं। |
 

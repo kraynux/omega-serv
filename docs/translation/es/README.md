@@ -584,7 +584,7 @@ Requisitos previos completamente fuera del alcance de Omega-serv: un dominio que
 
 Módulo opcional (`option enable active_defense`, desactivado por defecto) que califica un comportamiento hostil a partir de las señales WAF ya calculadas (`WafDecision`/reputación/lista de bloqueo — nunca un segundo cálculo de puntuación independiente), y puede desviar una fuente hacia un señuelo, ralentizar sus respuestas y registrarla con más detalle, construir un incidente aprovechable y después exportar indicadores de compromiso (IoC). Nunca banea una dirección por sí mismo — los baneos corresponden a RIPOSTE (lista de bloqueo del WAF, baneo de red mediante omega-jail) y al cortafuegos `omega-fire`; Active Defense observa, desvía, ralentiza y registra.
 
-**Amenazas y puntuación**: cada fuente (`IP + hash SHA-256 del User-Agent`) acumula una puntuación (`WAF-001` bloqueante +10, escalada de reputación +25, baneo conocido +25, POST sobre un señuelo ya asignado +30 — decremento de -5 cada 15 minutos sin un nuevo evento) calificada como `normal`/`suspicious`/`hostile`/`contained` (`contained` exige además un baneo ya conocido). `mode: monitor` observa sin actuar; `mode: enforce` aplica realmente las acciones siguientes.
+**Amenazas y puntuación**: cada fuente (`IP + hash SHA-256 del User-Agent`) acumula una puntuación (`WAF-001` bloqueante +10, escalada de reputación +25, baneo conocido +25, POST sobre un señuelo ya asignado +30 — decremento de -5 cada 15 minutos sin un nuevo evento) calificada como `normal`/`suspicious`/`hostile`/`contained` (`contained` exige además un baneo ya conocido). `mode: monitor` observa sin actuar; `mode: enforce` aplica realmente las acciones siguientes. El bloqueo conocido procede del diario de bloqueos de la zona de omega-connect, donde omega-fire y omega-jail (fail2ban) publican sus bloqueos: releído cada 5 segundos sin reinicio, excluidos los bloqueos de RIPOSTE.
 
 **Modo guerra** (`options.active_defense.settings.war_mode`): un `DefensePlaybook` (`actions: ["redirect_to_decoy", "enrich_log", "delay", "rate_limit", "create_incident", "export_ioc"]`) desencadenado por umbrales configurables, para toda fuente que no sea `normal`:
 - `enrich_log` — registro JSONL separado (`var/log/active-defense-enriched.jsonl`, nunca mezclado con el log WAF/de producción), cabeceras ocultadas, cuerpo HTTP con hash (SHA-256) o truncado según `logging.capture_request_body`.
@@ -707,7 +707,6 @@ Estructura: `tests/unit/` (dominio/aplicación, dobles de prueba), `tests/integr
 - CGI en bruto (solo FastCGI/PHP-FPM)
 - mTLS (autenticación de cliente por certificado), OCSP stapling
 - CA externa / CSR para una autoridad de terceros, distribución completa de CRL
-- Active Defense: integración real con los eventos de baneo de `omega-fire` (bloqueada del lado de `omega-fire`, que hoy no expone ninguna superficie de lectura)
 
 [↑ Índice](#índice)
 

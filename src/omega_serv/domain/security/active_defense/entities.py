@@ -200,17 +200,3 @@ class PlaybookPreview:
     delay_range_ms: tuple[int, int] | None
     would_rate_limit: bool
     explanation: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class FirewallEvent:
-    """Evenement omega-fire normalise (plan §"Integration omega-fire") -
-    aucune implementation reelle du port qui les produit tant
-    qu'omega-fire n'expose rien (voir OmegaFireEventsPort)."""
-    event_id: str
-    timestamp: datetime
-    event_type: Literal["ban_applied", "ban_released"]
-    subject_ip: str
-    jail: str
-    duration_seconds: int
-    reason: str

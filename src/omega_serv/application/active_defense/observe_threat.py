@@ -63,7 +63,7 @@ def _build_observation(
         contributions.append((REPUTATION_ESCALATION_SCORE_DELTA, reputation_decision.reason))
         kind = kind or "reputation_escalation"
     if known_ban:
-        contributions.append((OMEGA_FIRE_BAN_SCORE_DELTA, "ban omega-fire connu"))
+        contributions.append((OMEGA_FIRE_BAN_SCORE_DELTA, "ban connu (journal des bans : omega-fire ou fail2ban)"))
         kind = kind or "omega_fire_ban"
 
     if not contributions or kind is None:

@@ -1,19 +1,17 @@
-"""Contrat de lecture des evenements de ban omega-fire
-(plan_active_defense_omega_serv.md, section "Integration omega-fire") -
-volontairement en lecture seule, omega-fire demeure la source
-d'autorite pour les bans reseau. AUCUNE implementation reelle tant
-qu'omega-fire n'expose pas lui-meme une surface de lecture stable (ni
-JSONL, ni table SQLite dediee, ni socket n'existent aujourd'hui cote
-omega-fire, verifie dans le code reel) - seul un double de test exerce
-ce port avant cette phase de maturite."""
+# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
+"""Bans connus ailleurs sur la machine (plan_active_defense_omega_serv.md, section "Integration omega-fire" ;
+plan omega-connect, phase 3, 2026-11-21) - lecture seule : omega-fire et fail2ban (action d'omega-jail) restent
+les seules autorites des bans reseau ; ils publient leurs bans dans le journal des bans de la zone omega-synchro.
+
+Remplace le contrat `OmegaFireEventsPort` (jamais implemente : omega-fire n'exposait rien) par la seule question
+qu'Active Defense pose reellement : cette adresse est-elle bannie ailleurs en ce moment ?"""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Protocol
 
-from omega_serv.domain.security.active_defense.entities import FirewallEvent
 
-
-class OmegaFireEventsPort(Protocol):
-    def recent_events(self, subject_ip: str, since: datetime) -> list[FirewallEvent]:
+class KnownBansPort(Protocol):
+    def is_banned(self, ip: str) -> bool:
+        """Vrai si l'adresse est couverte par un ban actif publie par un autre outil (jamais par un jail RIPOSTE
+        d'omega-serv lui-meme : anti-boucle). Jamais une exception : faux si rien n'est lisible."""
         ...

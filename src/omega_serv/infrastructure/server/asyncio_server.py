@@ -117,6 +117,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
     from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
     from omega_serv.ports.logger_port import LoggerPort
+    from omega_serv.ports.omega_fire_events_port import KnownBansPort
     from omega_serv.ports.proxy_cache_store_port import ProxyCacheStorePort
     from omega_serv.ports.rate_limit_port import RateLimitPort
     from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
@@ -215,6 +216,7 @@ class AsyncioHttpServer:
         active_defense_security_events_path: Path | None = None,
         clock: ClockPort | None = None,
         active_defense_writer: ActiveDefenseWriterPort | None = None,
+        known_bans: KnownBansPort | None = None,
     ):
         from omega_serv.infrastructure.clock.system_clock import SystemClock
         self._config = config
@@ -264,6 +266,7 @@ class AsyncioHttpServer:
         self._active_defense_security_events_path = active_defense_security_events_path
         self._decoy_proxy_client = decoy_proxy_client
         self._active_defense_writer = active_defense_writer
+        self._known_bans = known_bans
         self._active_defense_guard_failing = False
         self._decoy_load_balancer = ProxyLoadBalancerState()
         self._decoy_health_state = ProxyHealthState()
@@ -1478,9 +1481,11 @@ class AsyncioHttpServer:
         assert self._active_defense_playbook is not None
         playbook = self._active_defense_playbook
         subject_id = self._active_defense_subject_id(request)
+        # Ban publie ailleurs sur la machine (omega-fire, fail2ban : journal des bans, plan omega-connect phase 3).
+        known_ban = self._known_bans is not None and self._known_bans.is_banned(request.remote_ip)
         state, observation, escalation = observe_threat(
             self._threat_state_repository, self._clock, self._active_defense_config,
-            subject_id=subject_id, waf_decision=decision,
+            subject_id=subject_id, waf_decision=decision, known_ban=known_ban,
         )
         if escalation is not None:
             self._write_security_event(

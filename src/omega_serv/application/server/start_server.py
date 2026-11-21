@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from omega_serv.ports.http_proxy_client_port import HttpProxyClientPort
     from omega_serv.ports.incident_repository_port import IncidentRepositoryPort
     from omega_serv.ports.logger_port import LoggerPort
+    from omega_serv.ports.omega_fire_events_port import KnownBansPort
     from omega_serv.ports.rate_limit_port import RateLimitPort
     from omega_serv.ports.reputation_tracker_port import ReputationTrackerPort
     from omega_serv.ports.threat_state_repository_port import ThreatStateRepositoryPort
@@ -252,6 +253,9 @@ class ActiveDefenseCollaborators:
     """Seulement pour le serveur (`write_behind=True`) : la CLI et la TUI ecrivent directement."""
     security_events_path: Path | None = None
     """Journal des evenements de securite (lot 1 RIPOSTE), voir ActiveDefenseLoggingConfig."""
+    known_bans: KnownBansPort | None = None
+    """Bans publies par omega-fire et fail2ban dans la zone omega-synchro (plan omega-connect, phase 3) ;
+    seulement pour le serveur."""
 
 
 def incident_maintenance(
@@ -318,6 +322,7 @@ def build_active_defense_collaborators(
     from omega_serv.infrastructure.active_defense.asyncio_delay_scheduler import (
         AsyncioDelayScheduler,
     )
+    from omega_serv.infrastructure.active_defense.known_bans_journal import JournalKnownBans
     from omega_serv.infrastructure.clock.system_clock import SystemClock
     from omega_serv.infrastructure.decoys.in_process_fixture_dispatcher import (
         InProcessFixtureDispatcher,
@@ -374,6 +379,7 @@ def build_active_defense_collaborators(
         decoy_proxy_client=AsyncioHttpProxyClient(),
         writer=writer,
         security_events_path=project_root / active_defense_config.logging.security_events_path,
+        known_bans=JournalKnownBans() if write_behind else None,
     )
 
 
@@ -567,6 +573,7 @@ def build_server(
         active_defense_security_events_path=active_defense.security_events_path if active_defense else None,
         decoy_proxy_client=active_defense.decoy_proxy_client if active_defense else None,
         active_defense_writer=active_defense.writer if active_defense else None,
+        known_bans=active_defense.known_bans if active_defense else None,
         clock=clock,
     )
     # Gardes par le serveur : un rechargement a chaud les reutilise (compteurs de securite

@@ -60,6 +60,10 @@ ACTIVE_DEFENSE_STATUS_SCREEN = ScreenGuide(
             "des actions automatiques (redirection vers un leurre, journalisation enrichie, "
             "ralentissement, création d'incident).")
         ),
+        _("Une adresse déjà bannie ailleurs sur la machine (fail2ban, par exemple sshd, ou omega-fire) gagne 25 "
+          "points de plus à chaque observation : omega-serv lit le journal des bans publié par omega-fire et "
+          "omega-jail dans la zone omega-connect, relu toutes les 5 secondes, sans redémarrage. Les bans des "
+          "jails RIPOSTE d'omega-serv lui-même ne comptent jamais. Sans omega-connect, rien ne change."),
     ),
 )
 
