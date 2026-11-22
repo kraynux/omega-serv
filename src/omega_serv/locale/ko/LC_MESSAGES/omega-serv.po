@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-21 16:39+0100\n"
+"POT-Creation-Date: 2026-11-22 16:52+0100\n"
 "PO-Revision-Date: 2026-10-23 23:55+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: 한국어\n"
@@ -12144,7 +12144,7 @@ msgid ""
 msgstr "복원하면 대상 파일을 바로 덮어씁니다 - 해당 항목 참조."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:491
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:1263
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 #: src/omega_serv/interfaces/tui/screens/home.py:93
@@ -13213,7 +13213,7 @@ msgstr "HTML 내보내기를 클릭할 때 사용합니다."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:20
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:70
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:523
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:524
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:290
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:525
 msgid "Aucun effet sur le serveur."
@@ -13613,7 +13613,7 @@ msgid ""
 msgstr "아무것도 옮기거나 삭제하지 않습니다. 이 파일들은 직접 webroot 밖(예: secure/)으로 옮기십시오."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:166
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:526
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:527
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:542
 msgid "Purement consultatif - ne modifie jamais rien."
 msgstr "조회 전용 - 아무것도 바꾸지 않습니다."
@@ -13851,7 +13851,7 @@ msgid ""
 msgstr "omega-serv 폴더 밖의 내보내기 폴더는 알려 주며 백업되지 않습니다."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:253
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:517
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:89
 #: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:68
@@ -14302,10 +14302,13 @@ msgstr "업데이트 확인 / 새로운 소식 보기"
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:427
 msgid ""
 "Compare la version installée (aussi affichée dans la barre de titre) à la "
-"liste des versions publiées sur le site (download/sha.txt)."
-msgstr "설치된 버전(제목 표시줄에도 표시됨)을 사이트에 게시된 버전 목록(download/sha.txt)과 비교합니다."
+"dernière version publiée : sur la Release GitHub, sinon sur le site kraynux,"
+" sinon sur le site craftdark (liste sha.txt)."
+msgstr ""
+"설치된 버전(제목 표시줄에도 표시)을 최신 게시 버전과 비교합니다: GitHub Release, 없으면 kraynux 사이트, 그것도 "
+"없으면 craftdark 사이트(sha.txt 목록)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:429
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:430
 msgid ""
 "Seulement sur votre clic : aucune vérification automatique, rien n'est "
 "envoyé. Même vérification en ligne de commande : omega-serv version --check."
@@ -14313,13 +14316,13 @@ msgstr ""
 "클릭할 때만 실행됩니다: 자동 확인은 없으며 아무것도 전송되지 않습니다. 명령줄에서의 동일한 확인: omega-serv version "
 "--check."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:431
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:432
 msgid ""
 "Affiche « à jour », la nouvelle version avec l'adresse de son archive, ou "
 "une version en cours plus récente que la dernière publiée."
 msgstr "\"최신 상태\", 새 버전과 그 아카이브 주소, 또는 게시된 최신 버전보다 더 최신인 개발 중 버전을 표시합니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:433
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:434
 msgid ""
 "Si une version plus récente existe, « Voir les nouveautés » ouvre son résumé"
 " dans votre navigateur. Rien n'est installé : la mise à jour se fait comme "
@@ -14328,13 +14331,13 @@ msgstr ""
 "더 최신 버전이 있으면 \"새로운 소식 보기\"가 브라우저에서 그 요약을 엽니다. 아무것도 설치되지 않습니다: 업데이트는 README에 "
 "설명된 대로 진행합니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:437
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:438
 msgid ""
 "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de "
 "déclaration) ou sur Ne plus me déclarer."
 msgstr "「보내기」(등록 양식) 또는 「등록 취소」를 명시적으로 누르지 않으면 아무것도 전송되지 않습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:443
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:124
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:61
@@ -14342,11 +14345,11 @@ msgstr "「보내기」(등록 양식) 또는 「등록 취소」를 명시적�
 msgid "Se déclarer utilisateur (anonyme)"
 msgstr "사용자로 등록(익명)"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
 msgid "Contact et support -> Se déclarer utilisateur (anonyme)"
 msgstr "문의 및 지원 -> 사용자로 등록(익명)"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:446
 msgid ""
 "Déclaration volontaire et anonyme : elle compte les utilisateurs d'omega-"
 "serv et, si vous le souhaitez, leur continent ou leur pays. Rien n'est "
@@ -14354,22 +14357,22 @@ msgid ""
 msgstr ""
 "자발적이고 익명인 등록: omega-serv 사용자 수와, 원하시면 대륙 또는 국가를 셉니다. 기본적으로 아무것도 켜져 있지 않습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:449
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:85
 msgid "Envoi"
 msgstr "전송"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
 msgid "Une seule fois, ou chaque jour."
 msgstr "한 번, 또는 매일."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
 msgid ""
 "Obligatoire, aucun choix présélectionné : Envoyer reste grisé tant qu'il "
 "n'est pas choisi."
 msgstr "필수이며 미리 선택된 값이 없습니다: 선택할 때까지 「보내기」는 비활성 상태입니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:453
 msgid ""
 "Une seule fois : un envoi maintenant. Chaque jour : le service omega-serv "
 "renvoie le même message au plus une fois par 24 h, ce qui permet de compter "
@@ -14378,7 +14381,7 @@ msgstr ""
 "한 번: 지금 한 번 전송합니다. 매일: omega-serv 서비스가 같은 메시지를 최대 24시간에 한 번 다시 보내 활성 설치 수를 셀"
 " 수 있게 합니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:454
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:455
 msgid ""
 "L'envoi quotidien tourne dans un processus à part : il ne ralentit jamais le"
 " serveur, ni au démarrage ni à l'arrêt. DO_NOT_TRACK=1 dans l'environnement "
@@ -14387,49 +14390,49 @@ msgstr ""
 "매일 전송은 별도 프로세스에서 실행됩니다: 시작할 때도 멈출 때도 서버를 느리게 하지 않습니다. 서비스 환경에 "
 "DO_NOT_TRACK=1을 설정하면 꺼집니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:458
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
 msgid "Continent / Pays"
 msgstr "대륙 / 국가"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
 msgid ""
 "Deux listes indépendantes, facultatives, chacune avec « Autre (non "
 "référencé) »."
 msgstr "서로 독립된 선택 목록 두 개이며, 각각 「기타(목록에 없음)」가 있습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
 msgid "Laisser « Non précisé » pour ne rien envoyer de ce champ."
 msgstr "이 항목을 보내지 않으려면 「지정 안 함」으로 두세요."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
 msgid "Ajoute le code choisi au message (EU, FR... ou autre)."
 msgstr "선택한 코드를 메시지에 추가합니다(EU, FR... 또는 autre)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:463
 msgid "Ni ville, ni texte libre."
 msgstr "도시도, 자유 입력 텍스트도 없습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:465
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:102
 msgid "Message envoyé"
 msgstr "전송되는 메시지"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
 msgid "Le message exact, mis à jour à chaque choix."
 msgstr "선택할 때마다 갱신되는 실제 메시지입니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:197
 msgid "Lecture seule."
 msgstr "읽기 전용."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
 #: src/omega_serv/interfaces/tui/guide/content/wizard.py:45
 msgid "Aucune."
 msgstr "없음."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:470
 msgid ""
 "Une clé tirée au hasard (32 caractères) est créée au premier envoi, sous "
 "var/lib/declaration/ ; elle ne dérive ni de la machine ni de vous."
@@ -14437,38 +14440,38 @@ msgstr ""
 "첫 전송 때 var/lib/declaration/ 아래에 무작위 키(32자)가 만들어집니다. 이 키는 컴퓨터에서도 사용자에게서도 파생되지"
 " 않습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:473
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:115
 msgid "Envoyer"
 msgstr "보내기"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
 msgid "Envoie la déclaration en HTTPS vers le site du développeur."
 msgstr "개발자 사이트로 HTTPS를 통해 등록을 보냅니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
 msgid "5 secondes au plus ; l'écran ne se fige pas."
 msgstr "최대 5초이며 화면이 멈추지 않습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
 msgid "Succès : retour à Contact et support, état « déclaré »."
 msgstr "성공: 「문의 및 지원」으로 돌아가며 상태는 「등록됨」입니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:478
 msgid ""
 "Réception injoignable : en « une seule fois », rien n'est enregistré ; en « "
 "chaque jour », l'accord est gardé et le service réessaie dans 24 h."
 msgstr ""
 "수신처에 연결할 수 없음: 「한 번」이면 아무것도 기록되지 않고, 「매일」이면 동의가 유지되며 서비스가 24시간 후에 다시 시도합니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:482
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:483
 msgid ""
 "L'adresse IP n'est pas enregistrée dans les déclarations, mais comme pour "
 "toute visite d'un site, elle passe par les contrôles de sécurité et le "
 "journal technique du serveur de réception."
 msgstr "IP 주소는 등록 정보에 기록되지 않지만, 모든 웹사이트 방문과 마찬가지로 수신 서버의 보안 검사와 기술 로그를 거칩니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:484
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:485
 msgid ""
 "Ligne de commande : omega-serv declaration status | declare --mode "
 "unique|quotidien [--continent X] [--pays Y] --yes | withdraw."
@@ -14476,11 +14479,11 @@ msgstr ""
 "명령줄: omega-serv declaration status | declare --mode unique|quotidien "
 "[--continent X] [--pays Y] --yes | withdraw."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
 msgid "Accueil -> Rapport complet"
 msgstr "홈 -> 전체 보고서"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:494
 msgid ""
 "Ce qui est configuré et actif, d'un coup d'œil, sans passer par chaque menu "
 ": réglages et système, jamais le trafic des visiteurs. Aucun secret : mots "
@@ -14490,11 +14493,11 @@ msgstr ""
 "설정되어 활성화된 것을 메뉴를 하나하나 거치지 않고 한눈에 봅니다: 설정과 시스템이며, 방문자 트래픽은 절대 포함하지 않습니다. 비밀 "
 "정보 없음: 비밀번호, 키, 토큰은 기껏해야 ‘설정됨’ 또는 ‘없음’으로 나타납니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:498
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
 msgid "Sommaire"
 msgstr "요약"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:500
 msgid ""
 "Le minimum, toujours présent : identité (instance, dossier, version, profil,"
 " machine), fonctionnement (service, unité, en marche, démarrage, uptime, "
@@ -14506,22 +14509,22 @@ msgstr ""
 "계정, 프로세스), 주소와 모드(웹사이트, 리버스 프록시 또는 둘 다), 사용 중인 엔진, TLS(만료), 옵션, 영역 수, 보안, 설정"
 " 점검, 백업, 로그."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:503
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
 msgid ""
 "Actualiser relit tout ; un indicateur d'attente s'affiche pendant la "
 "génération."
 msgstr "새로 고침은 모두 다시 읽습니다. 생성하는 동안 대기 표시가 나타납니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:506
 msgid "L'écran ne gèle jamais, même sur un serveur très configuré."
 msgstr "설정이 아주 많은 서버에서도 화면이 멈추지 않습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:508
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:53
 msgid "Détail à inclure dans l'export"
 msgstr "내보내기에 포함할 상세"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:510
 msgid ""
 "Zones détaillées, reverse proxy, règles WAF, Active Defense et RIPOSTE, "
 "journaux suivis, réglages de toutes les options, audit de sécurité complet."
@@ -14529,33 +14532,33 @@ msgstr ""
 "영역 상세, 리버스 프록시, WAF 규칙, Active Defense와 RIPOSTE, 추적 중인 로그, 모든 옵션의 설정, 전체 보안 "
 "감사."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:511
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
 msgid ""
 "Cases à cocher ; le détail ne s'affiche pas à l'écran, il va seulement dans "
 "l'export."
 msgstr "체크박스. 상세는 화면에 표시되지 않고 내보내기에만 들어갑니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
 msgid "L'audit complet peut prendre quelques secondes."
 msgstr "전체 감사는 몇 초 걸릴 수 있습니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:514
 msgid ""
 "Les clés qui évoquent un secret (mot de passe, jeton, clé, hachage) sont "
 "remplacées par vrai ou faux."
 msgstr "비밀을 암시하는 키(비밀번호, 토큰, 키, 해시)는 참 또는 거짓으로 바뀝니다."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:519
 msgid ""
 "HTML dans l'un des 5 thèmes d'export, TXT, ou JSON (données brutes, "
 "comparables d'une date à l'autre)."
 msgstr "5가지 내보내기 테마 중 하나를 쓴 HTML, TXT, 또는 JSON(원시 데이터, 날짜별로 비교 가능)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:520
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
 msgid "Choisir le format, le thème pour le HTML, puis Exporter."
 msgstr "형식, HTML용 테마를 고른 다음 내보내기."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:522
 msgid ""
 "Écrit omega-serv-rapport.<date>.<format> dans le dossier d'exports "
 "(Options), dans la langue des exports."

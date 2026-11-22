@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-21 16:39+0100\n"
+"POT-Creation-Date: 2026-11-22 16:52+0100\n"
 "PO-Revision-Date: 2026-10-22 01:30+0200\n"
 "Last-Translator: omega-serv\n"
 "Language-Team: Русский\n"
@@ -12774,7 +12774,7 @@ msgstr ""
 "собственную карточку."
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:491
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:1263
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 #: src/omega_serv/interfaces/tui/screens/home.py:93
@@ -13948,7 +13948,7 @@ msgstr "Используется при нажатии Экспорт HTML."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:20
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:70
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:523
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:524
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:290
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:525
 msgid "Aucun effet sur le serveur."
@@ -14392,7 +14392,7 @@ msgstr ""
 "(напр. в secure/)."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:166
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:526
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:527
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:542
 msgid "Purement consultatif - ne modifie jamais rien."
 msgstr "Только просмотр - никогда ничего не изменяет."
@@ -14660,7 +14660,7 @@ msgid ""
 msgstr "Папка экспорта вне папки omega-serv указывается и не сохраняется."
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:253
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:517
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:89
 #: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:68
@@ -15156,12 +15156,14 @@ msgstr "Проверить обновления / Что нового"
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:427
 msgid ""
 "Compare la version installée (aussi affichée dans la barre de titre) à la "
-"liste des versions publiées sur le site (download/sha.txt)."
+"dernière version publiée : sur la Release GitHub, sinon sur le site kraynux,"
+" sinon sur le site craftdark (liste sha.txt)."
 msgstr ""
-"Сравнивает установленную версию (она также показана в строке заголовка) со "
-"списком версий, опубликованных на сайте (download/sha.txt)."
+"Сравнивает установленную версию (она показана и в строке заголовка) с "
+"последней опубликованной: в GitHub Release, иначе на сайте kraynux, иначе на"
+" сайте craftdark (список sha.txt)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:429
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:430
 msgid ""
 "Seulement sur votre clic : aucune vérification automatique, rien n'est "
 "envoyé. Même vérification en ligne de commande : omega-serv version --check."
@@ -15169,7 +15171,7 @@ msgstr ""
 "Только по вашему нажатию: автоматической проверки нет, ничего не "
 "отправляется. Та же проверка в командной строке: omega-serv version --check."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:431
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:432
 msgid ""
 "Affiche « à jour », la nouvelle version avec l'adresse de son archive, ou "
 "une version en cours plus récente que la dernière publiée."
@@ -15177,7 +15179,7 @@ msgstr ""
 "Показывает «актуально», новую версию с адресом её архива или текущую версию,"
 " более новую, чем последняя опубликованная."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:433
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:434
 msgid ""
 "Si une version plus récente existe, « Voir les nouveautés » ouvre son résumé"
 " dans votre navigateur. Rien n'est installé : la mise à jour se fait comme "
@@ -15187,7 +15189,7 @@ msgstr ""
 "браузере. Ничего не устанавливается: обновление выполняется так, как описано"
 " в README."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:437
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:438
 msgid ""
 "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de "
 "déclaration) ou sur Ne plus me déclarer."
@@ -15195,7 +15197,7 @@ msgstr ""
 "Ничего не отправляется без явного нажатия «Отправить» (форма регистрации) "
 "или «Больше не регистрировать меня»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:443
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:124
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:61
@@ -15203,12 +15205,12 @@ msgstr ""
 msgid "Se déclarer utilisateur (anonyme)"
 msgstr "Зарегистрироваться как пользователь (анонимно)"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
 msgid "Contact et support -> Se déclarer utilisateur (anonyme)"
 msgstr ""
 "Контакты и поддержка -> Зарегистрироваться как пользователь (анонимно)"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:446
 msgid ""
 "Déclaration volontaire et anonyme : elle compte les utilisateurs d'omega-"
 "serv et, si vous le souhaitez, leur continent ou leur pays. Rien n'est "
@@ -15217,16 +15219,16 @@ msgstr ""
 "Добровольная анонимная регистрация: она считает пользователей omega-serv и, "
 "по вашему желанию, их континент или страну. По умолчанию ничего не включено."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:449
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:85
 msgid "Envoi"
 msgstr "Отправка"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
 msgid "Une seule fois, ou chaque jour."
 msgstr "Один раз или каждый день."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
 msgid ""
 "Obligatoire, aucun choix présélectionné : Envoyer reste grisé tant qu'il "
 "n'est pas choisi."
@@ -15234,7 +15236,7 @@ msgstr ""
 "Обязательно, ничего не выбрано заранее: «Отправить» остаётся неактивной, "
 "пока не сделан выбор."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:453
 msgid ""
 "Une seule fois : un envoi maintenant. Chaque jour : le service omega-serv "
 "renvoie le même message au plus une fois par 24 h, ce qui permet de compter "
@@ -15244,7 +15246,7 @@ msgstr ""
 "отправляет то же сообщение не чаще раза в 24 ч, что позволяет считать "
 "активные установки."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:454
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:455
 msgid ""
 "L'envoi quotidien tourne dans un processus à part : il ne ralentit jamais le"
 " serveur, ni au démarrage ni à l'arrêt. DO_NOT_TRACK=1 dans l'environnement "
@@ -15254,11 +15256,11 @@ msgstr ""
 "сервер ни при запуске, ни при остановке. DO_NOT_TRACK=1 в окружении службы "
 "её отключает."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:458
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
 msgid "Continent / Pays"
 msgstr "Континент / Страна"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
 msgid ""
 "Deux listes indépendantes, facultatives, chacune avec « Autre (non "
 "référencé) »."
@@ -15266,39 +15268,39 @@ msgstr ""
 "Два независимых необязательных списка, в каждом есть «Другое (нет в "
 "списке)»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
 msgid "Laisser « Non précisé » pour ne rien envoyer de ce champ."
 msgstr "Оставьте «Не указан», чтобы ничего не отправлять из этого поля."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
 msgid "Ajoute le code choisi au message (EU, FR... ou autre)."
 msgstr "Добавляет выбранный код в сообщение (EU, FR... или autre)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:463
 msgid "Ni ville, ni texte libre."
 msgstr "Ни города, ни произвольного текста."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:465
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:102
 msgid "Message envoyé"
 msgstr "Отправляемое сообщение"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
 msgid "Le message exact, mis à jour à chaque choix."
 msgstr "Точное сообщение, обновляется при каждом выборе."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:197
 msgid "Lecture seule."
 msgstr "Только чтение."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
 #: src/omega_serv/interfaces/tui/guide/content/wizard.py:45
 msgid "Aucune."
 msgstr "Нет."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:470
 msgid ""
 "Une clé tirée au hasard (32 caractères) est créée au premier envoi, sous "
 "var/lib/declaration/ ; elle ne dérive ni de la machine ni de vous."
@@ -15306,24 +15308,24 @@ msgstr ""
 "При первой отправке в var/lib/declaration/ создаётся случайный ключ (32 "
 "символа); он не выводится ни из машины, ни из ваших данных."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:473
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:115
 msgid "Envoyer"
 msgstr "Отправить"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
 msgid "Envoie la déclaration en HTTPS vers le site du développeur."
 msgstr "Отправляет регистрацию по HTTPS на сайт разработчика."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
 msgid "5 secondes au plus ; l'écran ne se fige pas."
 msgstr "Не более 5 секунд; экран никогда не зависает."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
 msgid "Succès : retour à Contact et support, état « déclaré »."
 msgstr "Успех: возврат к «Контакты и поддержка», статус «зарегистрирован»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:478
 msgid ""
 "Réception injoignable : en « une seule fois », rien n'est enregistré ; en « "
 "chaque jour », l'accord est gardé et le service réessaie dans 24 h."
@@ -15331,7 +15333,7 @@ msgstr ""
 "Приёмник недоступен: при «один раз» ничего не сохраняется; при «каждый день»"
 " согласие сохраняется, и служба повторит попытку через 24 ч."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:482
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:483
 msgid ""
 "L'adresse IP n'est pas enregistrée dans les déclarations, mais comme pour "
 "toute visite d'un site, elle passe par les contrôles de sécurité et le "
@@ -15341,7 +15343,7 @@ msgstr ""
 " он проходит через проверки безопасности и технический журнал принимающего "
 "сервера."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:484
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:485
 msgid ""
 "Ligne de commande : omega-serv declaration status | declare --mode "
 "unique|quotidien [--continent X] [--pays Y] --yes | withdraw."
@@ -15349,11 +15351,11 @@ msgstr ""
 "Командная строка: omega-serv declaration status | declare --mode "
 "unique|quotidien [--continent X] [--pays Y] --yes | withdraw."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
 msgid "Accueil -> Rapport complet"
 msgstr "Главная -> Полный отчёт"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:494
 msgid ""
 "Ce qui est configuré et actif, d'un coup d'œil, sans passer par chaque menu "
 ": réglages et système, jamais le trafic des visiteurs. Aucun secret : mots "
@@ -15364,11 +15366,11 @@ msgstr ""
 "настройки и система, никогда трафик посетителей. Никаких секретов: пароли, "
 "ключи и токены в лучшем случае показываются как «задан» или «отсутствует»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:498
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
 msgid "Sommaire"
 msgstr "Сводка"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:500
 msgid ""
 "Le minimum, toujours présent : identité (instance, dossier, version, profil,"
 " machine), fonctionnement (service, unité, en marche, démarrage, uptime, "
@@ -15382,7 +15384,7 @@ msgstr ""
 "используемый движок, TLS (срок действия), параметры, количество зон, "
 "безопасность, проверки конфигурации, резервные копии, журналы."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:503
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
 msgid ""
 "Actualiser relit tout ; un indicateur d'attente s'affiche pendant la "
 "génération."
@@ -15390,18 +15392,18 @@ msgstr ""
 "«Обновить» перечитывает всё; во время формирования показывается индикатор "
 "ожидания."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:506
 msgid "L'écran ne gèle jamais, même sur un serveur très configuré."
 msgstr ""
 "Экран никогда не зависает, даже на сервере с очень большим количеством "
 "настроек."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:508
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:53
 msgid "Détail à inclure dans l'export"
 msgstr "Подробности для экспорта"
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:510
 msgid ""
 "Zones détaillées, reverse proxy, règles WAF, Active Defense et RIPOSTE, "
 "journaux suivis, réglages de toutes les options, audit de sécurité complet."
@@ -15409,7 +15411,7 @@ msgstr ""
 "Подробные зоны, reverse proxy, правила WAF, Active Defense и RIPOSTE, "
 "отслеживаемые журналы, настройки всех параметров, полный аудит безопасности."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:511
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
 msgid ""
 "Cases à cocher ; le détail ne s'affiche pas à l'écran, il va seulement dans "
 "l'export."
@@ -15417,11 +15419,11 @@ msgstr ""
 "Флажки; подробности не показываются на экране, они попадают только в "
 "экспорт."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
 msgid "L'audit complet peut prendre quelques secondes."
 msgstr "Полный аудит может занять несколько секунд."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:514
 msgid ""
 "Les clés qui évoquent un secret (mot de passe, jeton, clé, hachage) sont "
 "remplacées par vrai ou faux."
@@ -15429,7 +15431,7 @@ msgstr ""
 "Ключи, указывающие на секрет (пароль, токен, ключ, хеш), заменяются на "
 "«истина» или «ложь»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:519
 msgid ""
 "HTML dans l'un des 5 thèmes d'export, TXT, ou JSON (données brutes, "
 "comparables d'une date à l'autre)."
@@ -15437,11 +15439,11 @@ msgstr ""
 "HTML в одной из 5 тем экспорта, TXT или JSON (исходные данные, которые можно"
 " сравнивать между датами)."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:520
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
 msgid "Choisir le format, le thème pour le HTML, puis Exporter."
 msgstr "Выберите формат, тему для HTML, затем «Экспорт»."
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:522
 msgid ""
 "Écrit omega-serv-rapport.<date>.<format> dans le dossier d'exports "
 "(Options), dans la langue des exports."

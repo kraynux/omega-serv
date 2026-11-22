@@ -424,8 +424,9 @@ CONTACT_SUPPORT_SCREEN = ScreenGuide(
         ),
         FieldGuide(
             label=_("Vérifier les mises à jour / Voir les nouveautés"),
-            definition=_("Compare la version installée (aussi affichée dans la barre de titre) à la liste des "
-                         "versions publiées sur le site (download/sha.txt)."),
+            definition=_("Compare la version installée (aussi affichée dans la barre de titre) à la dernière "
+                         "version publiée : sur la Release GitHub, sinon sur le site kraynux, sinon sur le site "
+                         "craftdark (liste sha.txt)."),
             utilisation=_("Seulement sur votre clic : aucune vérification automatique, rien n'est envoyé. Même "
                           "vérification en ligne de commande : omega-serv version --check."),
             action=_("Affiche « à jour », la nouvelle version avec l'adresse de son archive, ou une version en "

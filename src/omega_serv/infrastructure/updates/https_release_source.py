@@ -1,31 +1,28 @@
-"""Lecture HTTPS de download/sha.txt (verification manuelle des mises a jour, 2026-11-07) : un GET, bibliotheque
-standard seulement (urllib), meme modele que l'envoi de la declaration anonyme
-(infrastructure/declaration/https_sender.py). Certificat verifie, 5 s au plus, 64 Kio lus au plus ; ne leve
-jamais : tout echec donne None. Rien n'est envoye d'autre que la requete elle-meme (User-Agent avec la version)."""
+# Copyright (c) 2026 kraynux - kraynux@proton.me - Licence MIT (voir fichier LICENSE)
+"""Liste des versions publiees (verification MANUELLE des mises a jour, sur clic) : depuis le 2026-11-22, la Release
+GitHub, puis le site kraynux, puis le site craftdark (procedure de l'auteur), lues par omega-lib
+(`default_release_source` : HTTPS, certificat verifie, 5 s au plus, taille bornee ; ne leve jamais, tout echec donne
+None). Auparavant : le seul download/sha.txt du site kraynux."""
 from __future__ import annotations
-
-import urllib.error
-import urllib.request
-
-from omega_serv.domain.updates.release_check import SHA_LIST_URL
 
 TIMEOUT_SECONDS = 5.0
 MAX_BYTES = 64 * 1024
 
 
 class HttpsReleaseSource:
-    def __init__(self, version: str, url: str = SHA_LIST_URL, timeout: float = TIMEOUT_SECONDS) -> None:
-        self._version = version
-        self._url = url
+    """GitHub, puis le site kraynux, puis le site craftdark (omega-lib `default_release_source`) ; `base_url` et
+    `from_github` : la source qui a repondu (liens d'archive et de nouveautes)."""
+
+    def __init__(self, version: str, timeout: float = TIMEOUT_SECONDS) -> None:
+        from omega_lib.infrastructure.declaration.https_release_source import default_release_source
+
+        self._chain = default_release_source("omega-serv", version)
         self._timeout = timeout
+        self.base_url = ""
+        self.from_github = False
 
     def fetch_sha_list(self) -> str | None:
-        request = urllib.request.Request(self._url, headers={"User-Agent": f"omega-serv/{self._version}"})
-        try:
-            with urllib.request.urlopen(request, timeout=self._timeout) as response:
-                if not 200 <= response.status < 300:
-                    return None
-                body: bytes = response.read(MAX_BYTES)
-                return body.decode("utf-8", errors="replace")
-        except (urllib.error.URLError, OSError, ValueError):
-            return None
+        text = self._chain.fetch_sha_list()
+        self.base_url = self._chain.base_url
+        self.from_github = self._chain.from_github
+        return text

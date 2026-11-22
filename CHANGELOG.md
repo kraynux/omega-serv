@@ -13,6 +13,12 @@ client retenue) et aux **corrections de sécurité** : ce sont les changements l
 plus susceptibles d'affecter une installation déjà en production, donc toujours
 signalés explicitement, même mineurs.
 
+## À venir (pas encore dans une archive)
+
+- **Vérifier les mises à jour : trois sources** : la Release GitHub ; si
+  absente ou injoignable, le site kraynux ; si absent ou injoignable, le site craftdark (omega-lib). Les liens
+  d'archive et de nouveautés sont ceux de la source qui a répondu 
+
 ## version 3.0.0 : Construite le 2026-11-21
 
 Version majeure : reverse proxy relayé par le moteur natif (plan v2, lots A à 11), tableau de bord web, mémoire

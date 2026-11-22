@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: omega-serv\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-21 16:39+0100\n"
+"POT-Creation-Date: 2026-11-22 16:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10974,7 +10974,7 @@ msgid "Restaurer ÉCRASE directement les fichiers vises - voir sa propre fiche."
 msgstr ""
 
 #: src/omega_serv/interfaces/tui/guide/content/accueil.py:96
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:491
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
 #: src/omega_serv/interfaces/tui/guide/content/faq.py:1263
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:94
 #: src/omega_serv/interfaces/tui/screens/home.py:93
@@ -11788,7 +11788,7 @@ msgstr ""
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:20
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:70
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:523
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:524
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:290
 #: src/omega_serv/interfaces/tui/guide/content/logs.py:525
 msgid "Aucun effet sur le serveur."
@@ -12098,7 +12098,7 @@ msgid "Rien n'est déplacé ni supprimé : à vous de sortir ces fichiers du web
 msgstr ""
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:166
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:526
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:527
 #: src/omega_serv/interfaces/tui/guide/content/service_et_instances.py:542
 msgid "Purement consultatif - ne modifie jamais rien."
 msgstr ""
@@ -12275,7 +12275,7 @@ msgid "Un dossier d'export hors du dossier omega-serv est signalé, pas sauvegar
 msgstr ""
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:253
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:517
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
 #: src/omega_serv/interfaces/tui/screens/backup_screen.py:89
 #: src/omega_serv/interfaces/tui/screens/ban_status_screen.py:92
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:68
@@ -12622,26 +12622,26 @@ msgid "Vérifier les mises à jour / Voir les nouveautés"
 msgstr ""
 
 #: src/omega_serv/interfaces/tui/guide/content/divers.py:427
-msgid "Compare la version installée (aussi affichée dans la barre de titre) à la liste des versions publiées sur le site (download/sha.txt)."
+msgid "Compare la version installée (aussi affichée dans la barre de titre) à la dernière version publiée : sur la Release GitHub, sinon sur le site kraynux, sinon sur le site craftdark (liste sha.txt)."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:429
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:430
 msgid "Seulement sur votre clic : aucune vérification automatique, rien n'est envoyé. Même vérification en ligne de commande : omega-serv version --check."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:431
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:432
 msgid "Affiche « à jour », la nouvelle version avec l'adresse de son archive, ou une version en cours plus récente que la dernière publiée."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:433
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:434
 msgid "Si une version plus récente existe, « Voir les nouveautés » ouvre son résumé dans votre navigateur. Rien n'est installé : la mise à jour se fait comme décrit dans le README."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:437
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:438
 msgid "Rien n'est envoyé sans un clic explicite sur Envoyer (formulaire de déclaration) ou sur Ne plus me déclarer."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:443
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
 #: src/omega_serv/interfaces/tui/guide/menu_tree.py:124
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:55
 #: src/omega_serv/interfaces/tui/screens/contact_support_screen.py:61
@@ -12649,162 +12649,162 @@ msgstr ""
 msgid "Se déclarer utilisateur (anonyme)"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:444
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
 msgid "Contact et support -> Se déclarer utilisateur (anonyme)"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:445
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:446
 msgid "Déclaration volontaire et anonyme : elle compte les utilisateurs d'omega-serv et, si vous le souhaitez, leur continent ou leur pays. Rien n'est activé par défaut."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:449
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:85
 msgid "Envoi"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:450
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
 msgid "Une seule fois, ou chaque jour."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:451
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
 msgid "Obligatoire, aucun choix présélectionné : Envoyer reste grisé tant qu'il n'est pas choisi."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:452
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:453
 msgid "Une seule fois : un envoi maintenant. Chaque jour : le service omega-serv renvoie le même message au plus une fois par 24 h, ce qui permet de compter les installations actives."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:454
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:455
 msgid "L'envoi quotidien tourne dans un processus à part : il ne ralentit jamais le serveur, ni au démarrage ni à l'arrêt. DO_NOT_TRACK=1 dans l'environnement du service le désactive."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:458
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
 msgid "Continent / Pays"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:459
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
 msgid "Deux listes indépendantes, facultatives, chacune avec « Autre (non référencé) »."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:460
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
 msgid "Laisser « Non précisé » pour ne rien envoyer de ce champ."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:461
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
 msgid "Ajoute le code choisi au message (EU, FR... ou autre)."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:462
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:463
 msgid "Ni ville, ni texte libre."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:465
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:102
 msgid "Message envoyé"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:466
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
 msgid "Le message exact, mis à jour à chaque choix."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:467
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
 #: src/omega_serv/interfaces/tui/guide/content/riposte.py:197
 msgid "Lecture seule."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:468
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
 #: src/omega_serv/interfaces/tui/guide/content/wizard.py:45
 msgid "Aucune."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:469
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:470
 msgid "Une clé tirée au hasard (32 caractères) est créée au premier envoi, sous var/lib/declaration/ ; elle ne dérive ni de la machine ni de vous."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:473
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
 #: src/omega_serv/interfaces/tui/screens/declaration_screen.py:115
 msgid "Envoyer"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:474
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
 msgid "Envoie la déclaration en HTTPS vers le site du développeur."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:475
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
 msgid "5 secondes au plus ; l'écran ne se fige pas."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:476
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
 msgid "Succès : retour à Contact et support, état « déclaré »."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:477
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:478
 msgid "Réception injoignable : en « une seule fois », rien n'est enregistré ; en « chaque jour », l'accord est gardé et le service réessaie dans 24 h."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:482
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:483
 msgid "L'adresse IP n'est pas enregistrée dans les déclarations, mais comme pour toute visite d'un site, elle passe par les contrôles de sécurité et le journal technique du serveur de réception."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:484
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:485
 msgid "Ligne de commande : omega-serv declaration status | declare --mode unique|quotidien [--continent X] [--pays Y] --yes | withdraw."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:492
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
 msgid "Accueil -> Rapport complet"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:493
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:494
 msgid "Ce qui est configuré et actif, d'un coup d'œil, sans passer par chaque menu : réglages et système, jamais le trafic des visiteurs. Aucun secret : mots de passe, clés et jetons apparaissent au plus comme « défini » ou « absent »."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:498
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
 msgid "Sommaire"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:499
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:500
 msgid "Le minimum, toujours présent : identité (instance, dossier, version, profil, machine), fonctionnement (service, unité, en marche, démarrage, uptime, compte, processus), adresse et mode (site web, reverse proxy ou les deux), moteur utilisé, TLS (expiration), options, nombres de zones, sécurité, contrôles de la configuration, sauvegardes, journaux."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:503
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:504
 msgid "Actualiser relit tout ; un indicateur d'attente s'affiche pendant la génération."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:505
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:506
 msgid "L'écran ne gèle jamais, même sur un serveur très configuré."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:508
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
 #: src/omega_serv/interfaces/tui/screens/full_report_screen.py:53
 msgid "Détail à inclure dans l'export"
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:509
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:510
 msgid "Zones détaillées, reverse proxy, règles WAF, Active Defense et RIPOSTE, journaux suivis, réglages de toutes les options, audit de sécurité complet."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:511
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
 msgid "Cases à cocher ; le détail ne s'affiche pas à l'écran, il va seulement dans l'export."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:512
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
 msgid "L'audit complet peut prendre quelques secondes."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:513
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:514
 msgid "Les clés qui évoquent un secret (mot de passe, jeton, clé, hachage) sont remplacées par vrai ou faux."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:518
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:519
 msgid "HTML dans l'un des 5 thèmes d'export, TXT, ou JSON (données brutes, comparables d'une date à l'autre)."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:520
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
 msgid "Choisir le format, le thème pour le HTML, puis Exporter."
 msgstr ""
 
-#: src/omega_serv/interfaces/tui/guide/content/divers.py:521
+#: src/omega_serv/interfaces/tui/guide/content/divers.py:522
 msgid "Écrit omega-serv-rapport.<date>.<format> dans le dossier d'exports (Options), dans la langue des exports."
 msgstr ""
 
